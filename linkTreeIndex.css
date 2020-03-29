@@ -1,24 +1,29 @@
 body {
   background-image: linear-gradient(to right, #74ebd5 0%, #9face6 100%);
 }
-h1{
+
+h1 {
   font-size: 4em;
 }
+
 .titleContainer {
   text-align: center;
   font-family: 'Caveat', cursive;
 }
 
 .buttonContainer {
-  max-width: 600px;
+  max-width: 550px;
   width: auto;
   margin: 0px auto;
   font-family: 'Baloo Da 2', cursive;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
 }
 
-.linkButton {
-  display: flex;
-
+.buttonContainer .linkButton {
+  cursor: pointer;
+  align-items: center;  
   height: 50px;
   margin-bottom: 16px;
   overflow: hidden;
@@ -28,21 +33,19 @@ h1{
   border-style: solid;
   border-color: #3d3b3c;
   background-color: #3d3b3c;
-  justify-content: center;
-  align-items: center; 
 }
 
-.linkButton a {
-  cursor: pointer;
+.buttonContainer a {
   text-decoration: none;
   font-weight: 700;
   font-size: 16px;
   color: #ffffff;
-  width: 100%;
 }
 
-.linkButton:hover {
+.buttonContainer .linkButton:hover {
   background-color: transparent;
   color: #3d3b3c;
   border-color: #3d3b3c;
+  transition: .4s cubic-bezier(0.39, 0.575, 0.565, 1);
 }
+
