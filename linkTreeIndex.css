@@ -11,19 +11,59 @@ h1 {
   font-family: 'Caveat', cursive;
 }
 
-.buttonContainer {
-  max-width: 550px;
-  width: auto;
-  margin: 0px auto;
-  font-family: 'Baloo Da 2', cursive;
-  display: flex;
-  justify-content: center;
-  flex-direction: column;
+.buttonContainer button,
+.buttonContainer button::after {
+  -webkit-transition: all 0.3s;
+  -moz-transition: all 0.3s;
+  -o-transition: all 0.3s;
+  transition: all 0.3s;
+}
+
+.buttonContainer button {
+  background: none;
+  border: 3px solid #fff;
+  border-radius: 5px;
+  color: #fff;
+  display: block;
+  font-size: 1.6em;
+  font-weight: bold;
+  margin: 1em auto;
+  padding: 1em 6em;
+  position: relative;
+  text-transform: uppercase;
+  width: 30%;
+}
+
+.buttonContainer button::before,
+.buttonContainer button::after {
+  background: #fff;
+  content: '';
+  position: absolute;
+  z-index: -1;
+}
+
+.buttonContainer button:hover {
+  color: black;
+}
+
+/* BUTTON 3 */
+.buttonContainer .btn::after {
+  height: 0;
+  left: 50%;
+  top: 50%;
+  width: 0;
+}
+
+.buttonContainer .btn:hover:after {
+  height: 100%;
+  left: 0;
+  top: 0;
+  width: 100%;
 }
 
 .buttonContainer .linkButton {
   cursor: pointer;
-  align-items: center;  
+  align-items: center;
   height: 50px;
   margin-bottom: 16px;
   overflow: hidden;
@@ -48,4 +88,3 @@ h1 {
   border-color: #3d3b3c;
   transition: .4s cubic-bezier(0.39, 0.575, 0.565, 1);
 }
-

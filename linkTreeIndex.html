@@ -3,8 +3,7 @@
     <meta property="og:url" content="/linkTree/linkTreeIndex.html" />
     <meta prefix="og: http://ogp.me/ns#" property="og:type" content="website" /> <!-- 類型 -->
     <meta prefix="og: http://ogp.me/ns#" property="og:title" content="Steve | LinkTree" />
-    <meta prefix="og: http://ogp.me/ns#" property="og:image"
-        content="/linkTree/treeView.jpg" />
+    <meta prefix="og: http://ogp.me/ns#" property="og:image" content="/linkTree/treeView.jpg" />
     <meta prefix="og: http://ogp.me/ns#" property="og:site_name" content="treeView" />
     <meta prefix="og: http://ogp.me/ns#" property="og:description" content="我的樹" />
 
@@ -12,31 +11,33 @@
     <link rel="icon" href="logo.ico" />
     <link rel="stylesheet" type="text/css" href="linkTreeIndex.css" />
     <link href="https://fonts.googleapis.com/css?family=Baloo+Da+2|Caveat&display=swap" rel="stylesheet">
-    <title>steve LinkTree</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous">
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous">
+    </script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous">
+    </script>
 </head>
 
 <body>
-    <div class="titleContainer">
-        <h1>Steve Tree View</h1>
-    </div>
-    <div class="buttonContainer">
-        <a target="_blank" href="https://www.instagram.com/chenhan20/">
-            <div class="linkButton">Instagram</div>
-        </a>
-        <a target="_blank" href="https://www.facebook.com/profile.php?id=100000189117019">
-            <div class="linkButton">Facebook</div>
-        </a>
-        <a target="_blank" href="https://www.youtube.com/user/chenhan20">
-            <div class="linkButton">Youtube</div>
-        </a>
-        <a target="_blank" href="https://calm-woodland-74729.herokuapp.com/SteveCard">
-            <div class="linkButton">Resume</div>
-        </a>
-        <a target="_blank" href="https://www.linkedin.com/in/%E6%89%BF%E7%BF%B0-%E8%8E%8A-4159b7139/">
-            <div class="linkButton">Linkedin</div>
-        </a>
-        <a target="_blank" href="https://github.com/chenhan20">
-            <div class="linkButton">Github</div>
-        </a>
+    <div class="container-fluid linkTreeContainer">
+
+        <div class="titleContainer">
+            <h1>Steve Tree View</h1>
+        </div>
+        <div class="buttonContainer">
+            <button class="btn" data-url='https://www.instagram.com/chenhan20/'>Instagram</button>
+            <button class="btn" data-url='https://www.facebook.com/profile.php?id=100000189117019'>Facebook</button>
+            <button class="btn" data-url='https://www.youtube.com/user/chenhan20'>Youtube</button>
+            <button class="btn" data-url='https://calm-woodland-74729.herokuapp.com/SteveCard'>Resume</button>
+            <button class="btn" data-url='https://www.linkedin.com/in/%E6%89%BF%E7%BF%B0-%E8%8E%8A-4159b7139/'>Linkedin</button>
+            <button class="btn" data-url='https://github.com/chenhan20'>Github</button>
+        </div>
     </div>
 </body>
+<script src="linkTreeIndex.js" type="text/javascript" language=javascript></script>
