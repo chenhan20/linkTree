@@ -1,5 +1,4 @@
-# linkTree
-steve link tree
+## SteveChuang link tree
 
 使用github靜態頁面展示類似linktree效果
 
@@ -8,4 +7,3 @@ steve link tree
 * fontawesome
 * bootsrap4
 * jquery
-
