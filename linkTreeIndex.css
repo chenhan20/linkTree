@@ -1,5 +1,10 @@
 body {
-  background-image: linear-gradient(to right, #74ebd5 0%, #9face6 100%);
+  /* background-image: linear-gradient(to right, #74ebd5 0%, #9face6 100%); */
+  background-image: url("backgroundImage01.jpg");
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-position: center;
+  background-size: cover;
 }
 
 h1 {
@@ -7,8 +12,9 @@ h1 {
 }
 
 .titleContainer {
+  margin: 50px;
   text-align: center;
-  font-family: 'Caveat', cursive;
+  font-family: 'Bungee', cursive;
 }
 
 .buttonContainer {
