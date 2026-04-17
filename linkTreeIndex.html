@@ -1,93 +1,242 @@
-<head>
-    <!-- Global site tag (gtag.js) - Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-162414014-2"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
 
-        function gtag() {
-            dataLayer.push(arguments);
-        }
-        gtag('js', new Date());
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+.space-root{
+  min-height:100vh;
+  display:flex;flex-direction:column;align-items:center;
+  padding:2.5rem 1rem 3.5rem;
+  position:relative;overflow:hidden;
+  background:#050818;
+}
+canvas#stars-bg{
+  position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;
+}
+.nebula{
+  position:absolute;border-radius:50%;pointer-events:none;z-index:0;
+  animation:nebula-pulse 8s ease-in-out infinite alternate;
+}
+@keyframes nebula-pulse{0%{opacity:.18;transform:scale(1)}100%{opacity:.32;transform:scale(1.12)}}
+.orbit-ring{
+  position:relative;width:120px;height:120px;margin-bottom:1.2rem;z-index:1;
+  animation:avatar-drop .7s cubic-bezier(.34,1.56,.64,1) both;
+}
+@keyframes avatar-drop{from{transform:translateY(-40px) scale(.5);opacity:0}to{transform:none;opacity:1}}
+.orbit-ring svg{position:absolute;inset:0;width:100%;height:100%}
+.orbit-ring .planet{
+  position:absolute;width:14px;height:14px;border-radius:50%;top:50%;left:50%;
+  transform-origin:0 0;
+  animation:orbit-go 5s linear infinite;
+}
+.orbit-ring .planet::before{
+  content:'';display:block;width:100%;height:100%;border-radius:50%;
+  background:var(--p-color);
+  animation:planet-glow 2s ease-in-out infinite alternate;
+}
+@keyframes planet-glow{0%{opacity:.8}100%{opacity:1;box-shadow:0 0 6px 2px var(--p-color)}}
+@keyframes orbit-go{to{transform:rotate(360deg) translateX(52px) rotate(-360deg)}}
+.avatar-circle{
+  position:absolute;inset:14px;border-radius:50%;
+  background:linear-gradient(135deg,#1a1060 0%,#2d1b7a 50%,#0a2a6e 100%);
+  border:1.5px solid rgba(127,119,221,.5);
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;font-weight:500;color:#c8c4f8;letter-spacing:1px;
+}
+.sc-name{
+  font-size:24px;font-weight:500;color:#e8e4ff;
+  letter-spacing:2px;text-transform:uppercase;z-index:1;
+  animation:fade-up .5s .2s both;
+}
+.sc-sub{
+  font-size:12px;color:#8884bb;letter-spacing:3px;text-transform:uppercase;
+  margin-top:5px;margin-bottom:2rem;z-index:1;
+  animation:fade-up .5s .32s both;
+}
+.divider{
+  width:60px;height:1px;background:linear-gradient(90deg,transparent,#7F77DD,transparent);
+  margin-bottom:2rem;z-index:1;
+  animation:divider-grow .6s .4s both;
+}
+@keyframes divider-grow{from{width:0;opacity:0}to{width:60px;opacity:1}}
+@keyframes fade-up{from{transform:translateY(12px);opacity:0}to{transform:none;opacity:1}}
+.links-wrap{width:100%;max-width:400px;display:flex;flex-direction:column;gap:10px;z-index:1}
+.sp-btn{
+  display:flex;align-items:center;gap:14px;
+  width:100%;padding:13px 18px;
+  border-radius:10px;
+  border:1px solid rgba(127,119,221,.22);
+  background:rgba(10,8,40,.65);
+  color:#ddd8ff;
+  font-size:14px;font-weight:500;
+  cursor:pointer;text-align:left;
+  position:relative;overflow:hidden;
+  transition:transform .18s ease,border-color .2s,background .2s;
+  animation:btn-in .45s both;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+}
+.sp-btn::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent,rgba(127,119,221,.08),transparent);
+  transform:translateX(-100%);
+  transition:transform .4s;
+}
+.sp-btn:hover::before,.sp-btn:active::before{transform:translateX(100%)}
+.sp-btn:hover,.sp-btn:active{
+  transform:translateX(5px) scale(1.012);
+  border-color:var(--b-color);
+  background:rgba(20,14,60,.8);
+}
+.sp-btn:active{transform:translateX(5px) scale(.97)}
+@keyframes btn-in{from{transform:translateX(-24px);opacity:0}to{transform:none;opacity:1}}
+.btn-icon{
+  width:34px;height:34px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--b-bg);border:1px solid var(--b-color);
+  transition:transform .3s cubic-bezier(.34,1.56,.64,1);
+}
+.sp-btn:hover .btn-icon,.sp-btn:active .btn-icon{transform:rotate(20deg) scale(1.18)}
+.btn-icon svg{width:16px;height:16px;fill:var(--b-color)}
+.btn-label{flex:1;color:#ddd8ff}
+.btn-arrow{font-size:14px;color:#6660aa;opacity:0;transform:translateX(-6px);transition:opacity .2s,transform .2s}
+.sp-btn:hover .btn-arrow{opacity:1;transform:none}
+.ripple{position:absolute;border-radius:50%;transform:scale(0);animation:ripple .55s linear;opacity:.18;pointer-events:none}
+@keyframes ripple{to{transform:scale(5);opacity:0}}
+.shooting-star{
+  position:absolute;height:1px;border-radius:1px;
+  background:linear-gradient(90deg,transparent,#fff,transparent);
+  pointer-events:none;z-index:0;
+  animation:shoot linear forwards;
+}
+@keyframes shoot{0%{opacity:0;transform:translateX(0)}10%{opacity:1}90%{opacity:.6}100%{opacity:0;transform:translateX(260px)}}
+.footer{
+  margin-top:2rem;font-size:11px;color:#4a4870;letter-spacing:2px;
+  text-transform:uppercase;z-index:1;
+  animation:fade-up .5s 1.2s both;
+}
+.scan-line{
+  position:absolute;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(127,119,221,.15),transparent);
+  pointer-events:none;z-index:0;
+  animation:scan 7s linear infinite;
+}
+@keyframes scan{0%{top:0;opacity:0}5%{opacity:1}95%{opacity:.4}100%{top:100%;opacity:0}}
+</style>
 
-        gtag('config', 'UA-162414014-2');
-    </script>
+<div class="space-root" id="root">
+  <canvas id="stars-bg"></canvas>
+  <div class="nebula" style="width:340px;height:340px;top:-80px;left:-80px;background:radial-gradient(circle,#2d1b7a 0%,transparent 70%)"></div>
+  <div class="nebula" style="width:280px;height:280px;bottom:-60px;right:-60px;background:radial-gradient(circle,#0a2a6e 0%,transparent 70%);animation-delay:3s"></div>
+  <div class="scan-line"></div>
 
-    <!-- LinkedIn -->
-    <meta property="og:url" content="/linkTree/linkTreeIndex.html" />
-    <meta prefix="og: http://ogp.me/ns#" property="og:type" content="website" /> <!-- 類型 -->
-    <meta prefix="og: http://ogp.me/ns#" property="og:title" content="Steve | LinkTree" />
-    <meta prefix="og: http://ogp.me/ns#" property="og:image" content="/linkTree/treeViewPreview.jpg" />
-    <meta prefix="og: http://ogp.me/ns#" property="og:site_name" content="treeView" />
-    <meta prefix="og: http://ogp.me/ns#" property="og:description" content="我的樹" />
-    <title>TreeLink | Steve </title>
-    <meta charset="utf-8"> <!-- 指定網頁編碼 -->
-    <link rel="icon" href="logo.ico" />
-    <link rel="stylesheet" type="text/css" href="linkTreeIndex.css" />
-    <link href="https://fonts.googleapis.com/css?family=Baloo+Da+2|Caveat|Bungee&display=swap" rel="stylesheet">
-    
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css" rel="stylesheet">
-    <!-- Latest compiled and minified CSS -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
-    <!-- fontawesome -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/js/all.min.js"></script>
-    <!-- jQuery library -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-    <!-- Popper JS -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
-    <!-- Latest compiled JavaScript -->
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
-</head>
+  <div class="orbit-ring" id="orbit">
+    <svg viewBox="0 0 120 120" fill="none">
+      <circle cx="60" cy="60" r="52" stroke="rgba(127,119,221,0.18)" stroke-width="1" stroke-dasharray="4 6"/>
+      <circle cx="60" cy="60" r="38" stroke="rgba(100,180,255,0.12)" stroke-width="0.5" stroke-dasharray="2 8"/>
+    </svg>
+    <div class="planet" style="--p-color:#7F77DD;animation-duration:5s"></div>
+    <div class="planet" style="--p-color:#2AABEE;animation-duration:8s;animation-delay:-3s"></div>
+    <div class="avatar-circle">SC</div>
+  </div>
 
-<body>
-    <div class="container-fluid linkTreeContainer">
-        <div class="titleContainer">
-            <h1>SteveChuang Link Tree </h1>
-        </div>
-        <div class="buttonContainer">
-            <div class="row">
-                <div class="col-12 offset-xl-2 col-xl-8">
-                    <button class="btn" data-url='https://www.instagram.com/chenhan20/'><i class="fab fa-instagram"></i>
-                        Instagram</button>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-12 offset-xl-2 col-xl-8">
-                    <button class="btn" data-url='https://www.facebook.com/profile.php?id=100000189117019'><i
-                            class="fab fa-facebook-square"></i> Facebook</button>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-12 offset-xl-2 col-xl-8">
-                    <button class="btn" data-url='https://www.youtube.com/user/chenhan20'><i class="fab fa-youtube"></i>
-                        Youtube</button>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-12 offset-xl-2 col-xl-8">
-                    <button class="btn" data-url='https://calm-woodland-74729.herokuapp.com/SteveCard'><i
-                            class="fas fa-address-card"></i> Resume</button>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-12 offset-xl-2 col-xl-8">
-                    <button class="btn"
-                        data-url='https://www.linkedin.com/in/%E6%89%BF%E7%BF%B0-%E8%8E%8A-4159b7139/'><i
-                            class="fab fa-linkedin"></i> Linkedin</button>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-12 offset-xl-2 col-xl-8">
-                    <button class="btn" data-url='https://github.com/chenhan20'><i class="fab fa-github-square"></i>
-                        Github</button>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-12 offset-xl-2 col-xl-8">
-                    <button class="btn" data-url='https://t.me/stevechuang_bot'><i class="fab fa-telegram"></i>
-                        SteveBot</button>
-                </div>
-            </div>
-        </div>
-    </div>
-</body>
-<script src="linkTreeIndex.js"></script>
+  <div class="sc-name">SteveChuang</div>
+  <div class="sc-sub">Developer · Cyclist · Creator</div>
+  <div class="divider"></div>
+  <div class="links-wrap" id="links"></div>
+  <div class="footer">— Mission Control —</div>
+</div>
+
+<script>
+const links=[
+  {label:'Instagram', url:'https://www.instagram.com/chenhan20/', color:'#E1306C', bg:'rgba(225,48,108,.1)', delay:.4,
+   icon:'<path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>'},
+  {label:'Facebook', url:'https://www.facebook.com/profile.php?id=100000189117019', color:'#4A8EF5', bg:'rgba(74,142,245,.1)', delay:.5,
+   icon:'<path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>'},
+  {label:'Youtube', url:'https://www.youtube.com/user/chenhan20', color:'#FF4545', bg:'rgba(255,69,69,.1)', delay:.6,
+   icon:'<path d="M23.495 6.205a3.007 3.007 0 0 0-2.088-2.088c-1.87-.501-9.396-.501-9.396-.501s-7.507-.01-9.396.501A3.007 3.007 0 0 0 .527 6.205a31.247 31.247 0 0 0-.522 5.805 31.247 31.247 0 0 0 .522 5.783 3.007 3.007 0 0 0 2.088 2.088c1.868.502 9.396.502 9.396.502s7.506 0 9.396-.502a3.007 3.007 0 0 0 2.088-2.088 31.247 31.247 0 0 0 .5-5.783 31.247 31.247 0 0 0-.5-5.805zM9.609 15.601V8.408l6.264 3.602z"/>'},
+  {label:'Strava', url:'https://www.strava.com/athletes/161539959', color:'#FC4C02', bg:'rgba(252,76,2,.1)', delay:.68,
+   icon:'<path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/>'},
+  {label:'Resume', url:'https://calm-woodland-74729.herokuapp.com/SteveCard', color:'#2ECFA0', bg:'rgba(46,207,160,.1)', delay:.76,
+   icon:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM6 20V4h5v7h7v9H6z"/>'},
+  {label:'LinkedIn', url:'https://www.linkedin.com/in/%E6%89%BF%E7%BF%B0-%E8%8E%8A-4159b7139/', color:'#5BA8F5', bg:'rgba(91,168,245,.1)', delay:.84,
+   icon:'<path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>'},
+  {label:'GitHub', url:'https://github.com/chenhan20', color:'#9B96DD', bg:'rgba(155,150,221,.1)', delay:.92,
+   icon:'<path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>'},
+  {label:'SteveBot', url:'https://t.me/stevechuang_bot', color:'#2AABEE', bg:'rgba(42,171,238,.1)', delay:1.0,
+   icon:'<path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>'},
+];
+
+const wrap=document.getElementById('links');
+links.forEach(l=>{
+  const btn=document.createElement('button');
+  btn.className='sp-btn';
+  btn.style.cssText=`--b-color:${l.color};--b-bg:${l.bg};animation-delay:${l.delay}s`;
+  btn.innerHTML=`<span class="btn-icon"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">${l.icon}</svg></span><span class="btn-label">${l.label}</span><span class="btn-arrow">→</span>`;
+  btn.addEventListener('click',e=>{
+    const r=btn.getBoundingClientRect();
+    const rp=document.createElement('span');
+    const sz=Math.max(btn.offsetWidth,btn.offsetHeight);
+    rp.className='ripple';
+    rp.style.cssText=`width:${sz}px;height:${sz}px;left:${e.clientX-r.left-sz/2}px;top:${e.clientY-r.top-sz/2}px;background:${l.color}`;
+    btn.appendChild(rp);
+    setTimeout(()=>rp.remove(),600);
+    setTimeout(()=>window.open(l.url,'_blank'),220);
+  });
+  wrap.appendChild(btn);
+});
+
+const canvas=document.getElementById('stars-bg');
+const ctx=canvas.getContext('2d');
+let W,H,stars=[];
+
+function resize(){
+  W=canvas.width=canvas.offsetWidth;
+  H=canvas.height=canvas.offsetHeight||window.innerHeight;
+}
+
+function initStars(){
+  stars=[];
+  const count=Math.floor((W*H)/3000);
+  for(let i=0;i<count;i++){
+    stars.push({
+      x:Math.random()*W,y:Math.random()*H,
+      r:Math.random()*1.4,
+      a:Math.random(),
+      da:(Math.random()-.5)*.008,
+      speed:Math.random()*.15+.02,
+    });
+  }
+}
+
+function drawStars(){
+  ctx.clearRect(0,0,W,H);
+  stars.forEach(s=>{
+    s.a+=s.da;
+    if(s.a<0||s.a>1) s.da*=-1;
+    s.y-=s.speed;
+    if(s.y<0) s.y=H;
+    ctx.beginPath();
+    ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+    ctx.fillStyle=`rgba(200,196,255,${s.a})`;
+    ctx.fill();
+  });
+  requestAnimationFrame(drawStars);
+}
+
+resize();initStars();drawStars();
+window.addEventListener('resize',()=>{resize();initStars();});
+
+function shootStar(){
+  const root=document.getElementById('root');
+  const el=document.createElement('div');
+  el.className='shooting-star';
+  const top=Math.random()*60+5;
+  const left=Math.random()*30-20;
+  const len=80+Math.random()*120;
+  const dur=.6+Math.random()*.5;
+  el.style.cssText=`top:${top}%;left:${left}%;width:${len}px;animation-duration:${dur}s`;
+  root.appendChild(el);
+  setTimeout(()=>el.remove(),(dur+.1)*1000);
+}
+setInterval(shootStar,2200);
+shootStar();
+</script>
