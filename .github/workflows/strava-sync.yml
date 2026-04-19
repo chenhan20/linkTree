@@ -1,0 +1,46 @@
+# .github/workflows/strava-sync.yml
+#
+# 每天早上 8:00 (台灣時間) 自動執行
+# 台灣 UTC+8，所以 cron 設 00:00 UTC = 08:00 台灣時間
+
+name: Strava Daily Sync
+
+on:
+  schedule:
+    - cron: '0 0 * * *'   # 每天 00:00 UTC = 台灣早上 8:00
+
+  workflow_dispatch:        # 讓你可以在 GitHub 網頁手動觸發（測試用）
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. 把 repo clone 下來
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      # 2. 裝 Node.js（fetch-strava.js 用的是內建 https 模組，不需要 npm install）
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # 3. 執行 script，把 GitHub Secrets 注入成環境變數
+      - name: Run Strava fetch script
+        env:
+          STRAVA_CLIENT_ID:     ${{ secrets.STRAVA_CLIENT_ID }}
+          STRAVA_CLIENT_SECRET: ${{ secrets.STRAVA_CLIENT_SECRET }}
+          STRAVA_REFRESH_TOKEN: ${{ secrets.STRAVA_REFRESH_TOKEN }}
+          STRAVA_ATHLETE_ID:    ${{ secrets.STRAVA_ATHLETE_ID }}
+        run: node fetch-strava.js
+
+      # 4. 如果 strava.json 有變動，commit 並 push 回 repo
+      - name: Commit and push strava.json
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add strava.json
+          # 如果沒有變動就不 commit（避免空 commit）
+          git diff --staged --quiet || git commit -m "chore: update strava data $(date -u '+%Y-%m-%d')"
+          git push
