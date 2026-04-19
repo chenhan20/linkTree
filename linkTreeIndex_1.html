@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SteveChuang</title>
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<style>
+/* ── reset ── */
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+
+/* ── shared ── */
+:root{
+  --space-bg:#050818;
+  --purple:#7F77DD;
+  --blue:#378ADD;
+  --pink:#D4537E;
+  --teal:#1D9E75;
+  --text:#ddd8ff;
+  --muted:#8884bb;
+}
+
+/* ════════════════════════════════
+   SPACE CANVAS (always behind)
+════════════════════════════════ */
+#star-canvas{
+  position:fixed;inset:0;width:100%;height:100%;
+  background:#050818;z-index:0;pointer-events:none;
+}
+.nebula{
+  position:fixed;border-radius:50%;pointer-events:none;z-index:0;
+  animation:neb 8s ease-in-out infinite alternate;
+}
+@keyframes neb{0%{opacity:.16;transform:scale(1)}100%{opacity:.28;transform:scale(1.1)}}
+.scan{
+  position:fixed;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(127,119,221,.12),transparent);
+  pointer-events:none;z-index:0;
+  animation:scan 9s linear infinite;
+}
+@keyframes scan{0%{top:0;opacity:0}5%{opacity:1}95%{opacity:.3}100%{top:100%;opacity:0}}
+
+/* ── app wrapper ── */
+#app{position:relative;z-index:1;min-height:100vh}
+
+/* ════════════════════════════════
+   PAGE TRANSITIONS
+════════════════════════════════ */
+.slide-enter-active,.slide-leave-active{transition:transform .45s cubic-bezier(.77,0,.175,1),opacity .35s ease}
+.slide-enter-from{transform:translateX(100%);opacity:0}
+.slide-leave-to{transform:translateX(-40%);opacity:0}
+
+/* ════════════════════════════════
+   LINKTREE PAGE
+════════════════════════════════ */
+.lt-page{
+  min-height:100vh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:2.5rem 1rem 3.5rem;
+}
+
+/* orbit avatar */
+.orbit-wrap{position:relative;width:110px;height:110px;margin-bottom:1.2rem;animation:drop .7s cubic-bezier(.34,1.56,.64,1) both}
+@keyframes drop{from{transform:translateY(-40px) scale(.5);opacity:0}to{transform:none;opacity:1}}
+.orbit-svg{position:absolute;inset:0;width:100%;height:100%}
+.planet{
+  position:absolute;width:12px;height:12px;border-radius:50%;
+  top:50%;left:50%;transform-origin:0 0;
+}
+.planet::before{content:'';display:block;width:100%;height:100%;border-radius:50%;background:var(--pc);animation:pglow 2s ease-in-out infinite alternate}
+@keyframes pglow{0%{opacity:.8}100%{opacity:1;box-shadow:0 0 6px 2px var(--pc)}}
+.p1{--pc:#7F77DD;animation:orb 5s linear infinite}
+.p2{--pc:#2AABEE;animation:orb 8s linear infinite;animation-delay:-3s}
+@keyframes orb{to{transform:rotate(360deg) translateX(48px) rotate(-360deg)}}
+.avatar-inner{
+  position:absolute;inset:13px;border-radius:50%;
+  background:linear-gradient(135deg,#1a1060,#2d1b7a,#0a2a6e);
+  border:1.5px solid rgba(127,119,221,.5);
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;font-weight:500;color:#c8c4f8;letter-spacing:1px;
+}
+.lt-name{font-size:22px;font-weight:500;color:#e8e4ff;letter-spacing:2px;text-transform:uppercase;animation:fup .5s .2s both}
+.lt-sub{font-size:11px;color:var(--muted);letter-spacing:3px;text-transform:uppercase;margin-top:4px;margin-bottom:1.8rem;animation:fup .5s .3s both}
+@keyframes fup{from{transform:translateY(12px);opacity:0}to{transform:none;opacity:1}}
+.divider{width:50px;height:1px;background:linear-gradient(90deg,transparent,var(--purple),transparent);margin-bottom:1.8rem;animation:dw .6s .4s both}
+@keyframes dw{from{width:0;opacity:0}to{width:50px;opacity:1}}
+
+/* buttons */
+.links{width:100%;max-width:390px;display:flex;flex-direction:column;gap:10px}
+.sp-btn{
+  display:flex;align-items:center;gap:14px;
+  width:100%;padding:13px 18px;border-radius:10px;
+  border:1px solid rgba(127,119,221,.2);
+  background:rgba(10,8,40,.65);
+  color:var(--text);font-size:14px;font-weight:500;
+  cursor:pointer;text-align:left;position:relative;overflow:hidden;
+  transition:transform .18s ease,border-color .2s,background .2s;
+  animation:btn-in .45s both;
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation;
+}
+.sp-btn::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent,rgba(127,119,221,.07),transparent);
+  transform:translateX(-100%);transition:transform .4s;
+}
+.sp-btn:hover::before,.sp-btn:active::before{transform:translateX(100%)}
+.sp-btn:hover,.sp-btn:active{transform:translateX(5px) scale(1.012);background:rgba(20,14,60,.8)}
+.sp-btn:active{transform:translateX(5px) scale(.97)}
+@keyframes btn-in{from{transform:translateX(-22px);opacity:0}to{transform:none;opacity:1}}
+.btn-icon{
+  width:32px;height:32px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  transition:transform .3s cubic-bezier(.34,1.56,.64,1);
+}
+.sp-btn:hover .btn-icon,.sp-btn:active .btn-icon{transform:rotate(18deg) scale(1.18)}
+.btn-icon svg{width:16px;height:16px}
+.btn-label{flex:1}
+.btn-arrow{font-size:13px;color:#6660aa;opacity:0;transform:translateX(-6px);transition:opacity .2s,transform .2s}
+.sp-btn:hover .btn-arrow{opacity:1;transform:none}
+.ripple{position:absolute;border-radius:50%;transform:scale(0);animation:rip .55s linear;opacity:.2;pointer-events:none}
+@keyframes rip{to{transform:scale(5);opacity:0}}
+.lt-footer{margin-top:1.8rem;font-size:11px;color:#3d3a60;letter-spacing:2px;text-transform:uppercase}
+
+/* ════════════════════════════════
+   CV PAGE
+════════════════════════════════ */
+.cv-page{
+  min-height:100vh;
+  background:rgba(5,8,24,.92);
+  padding:0;
+}
+.cv-topbar{
+  position:sticky;top:0;z-index:10;
+  display:flex;align-items:center;gap:12px;
+  padding:14px 20px;
+  background:rgba(5,8,24,.95);
+  border-bottom:1px solid rgba(127,119,221,.15);
+  backdrop-filter:blur(8px);
+}
+.cv-back{
+  display:flex;align-items:center;gap:6px;
+  background:rgba(127,119,221,.12);
+  border:1px solid rgba(127,119,221,.25);
+  border-radius:20px;padding:6px 14px;
+  color:#c8c4f8;font-size:13px;font-weight:500;
+  cursor:pointer;transition:background .2s;
+  -webkit-tap-highlight-color:transparent;
+}
+.cv-back:hover{background:rgba(127,119,221,.22)}
+.cv-topbar-title{font-size:14px;color:var(--muted);letter-spacing:1px}
+
+.cv-body{max-width:780px;margin:0 auto;padding:2rem 1.2rem 5rem}
+
+/* hero */
+.cv-hero{
+  display:flex;align-items:center;gap:1.5rem;
+  padding:2rem 0 1.5rem;flex-wrap:wrap;
+}
+.cv-avatar{
+  width:72px;height:72px;border-radius:50%;flex-shrink:0;
+  background:linear-gradient(135deg,#1a1060,#2d1b7a);
+  border:2px solid rgba(127,119,221,.5);
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;font-weight:500;color:#c8c4f8;
+}
+.cv-hero-info h1{font-size:26px;font-weight:500;color:#e8e4ff;letter-spacing:.5px}
+.cv-hero-info p{font-size:13px;color:var(--muted);margin-top:4px;letter-spacing:.5px}
+.cv-contact{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}
+.cv-contact a{
+  font-size:12px;color:#9b96dd;text-decoration:none;
+  border:1px solid rgba(127,119,221,.2);border-radius:20px;padding:3px 10px;
+  transition:border-color .2s,color .2s;
+}
+.cv-contact a:hover{color:#e8e4ff;border-color:rgba(127,119,221,.5)}
+
+/* section */
+.cv-section{margin-top:2.2rem}
+.cv-section-title{
+  font-size:11px;font-weight:500;color:var(--purple);letter-spacing:3px;
+  text-transform:uppercase;margin-bottom:1rem;
+  padding-bottom:.5rem;border-bottom:1px solid rgba(127,119,221,.15);
+}
+.cv-summary{font-size:14px;color:#b0acdd;line-height:1.8}
+
+/* timeline */
+.cv-timeline{display:flex;flex-direction:column;gap:1.2rem}
+.cv-item{
+  display:flex;gap:1rem;
+  padding:1rem 1.1rem;border-radius:10px;
+  border:1px solid rgba(127,119,221,.12);
+  background:rgba(20,14,60,.35);
+  transition:border-color .2s,background .2s;
+}
+.cv-item:hover{border-color:rgba(127,119,221,.3);background:rgba(20,14,60,.55)}
+.cv-dot{
+  width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0;
+}
+.cv-item-content{flex:1;min-width:0}
+.cv-item-header{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:4px}
+.cv-item-title{font-size:14px;font-weight:500;color:#ddd8ff}
+.cv-item-date{font-size:11px;color:var(--muted);white-space:nowrap}
+.cv-item-sub{font-size:12px;color:var(--purple);margin-top:2px}
+.cv-item-desc{font-size:13px;color:#9b96dd;margin-top:6px;line-height:1.7}
+.cv-item-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.cv-tag{
+  font-size:11px;padding:2px 8px;border-radius:12px;
+  background:rgba(127,119,221,.12);color:#9b96dd;
+  border:1px solid rgba(127,119,221,.18);
+}
+
+/* skills grid */
+.cv-skills{display:flex;flex-direction:column;gap:.8rem}
+.cv-skill-row{display:flex;align-items:center;gap:10px}
+.cv-skill-name{font-size:13px;color:#b0acdd;width:90px;flex-shrink:0}
+.cv-skill-bar{flex:1;height:4px;background:rgba(127,119,221,.15);border-radius:4px;overflow:hidden}
+.cv-skill-fill{height:100%;border-radius:4px;transition:width 1s cubic-bezier(.25,.46,.45,.94)}
+.cv-skill-pct{font-size:11px;color:var(--muted);width:28px;text-align:right;flex-shrink:0}
+
+/* projects grid */
+.cv-projects{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.cv-proj{
+  padding:1rem;border-radius:10px;
+  border:1px solid rgba(127,119,221,.15);
+  background:rgba(20,14,60,.35);
+  transition:border-color .2s,transform .2s;
+  text-decoration:none;display:block;
+}
+.cv-proj:hover{border-color:rgba(127,119,221,.4);transform:translateY(-3px)}
+.cv-proj-title{font-size:13px;font-weight:500;color:#ddd8ff}
+.cv-proj-desc{font-size:12px;color:#8884bb;margin-top:4px;line-height:1.6}
+.cv-proj-stack{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+
+/* shooting stars */
+.shooting-star{
+  position:fixed;height:1px;border-radius:1px;
+  background:linear-gradient(90deg,transparent,#fff 60%,transparent);
+  pointer-events:none;z-index:0;
+  animation:shoot linear forwards;
+}
+@keyframes shoot{0%{opacity:0;transform:translateX(0)}10%{opacity:1}90%{opacity:.5}100%{opacity:0;transform:translateX(280px)}}
+
+/* vue transition for skill bars */
+.bar-enter-active{transition:width 1.2s cubic-bezier(.25,.46,.45,.94)}
+.bar-enter-from{width:0!important}
+
+/* strava sport section */
+.strava-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:1rem}
+.strava-badge{
+  display:flex;align-items:center;gap:6px;
+  font-size:11px;color:#FC4C02;letter-spacing:.5px;
+  border:1px solid rgba(252,76,2,.3);border-radius:20px;padding:3px 10px;
+  text-decoration:none;transition:border-color .2s,background .2s;
+}
+.strava-badge:hover{background:rgba(252,76,2,.08);border-color:rgba(252,76,2,.6)}
+.strava-badge svg{width:14px;height:14px;fill:#FC4C02;flex-shrink:0}
+.strava-api-note{
+  font-size:11px;color:var(--muted);padding:6px 10px;
+  border-left:2px solid rgba(252,76,2,.4);
+  background:rgba(252,76,2,.05);border-radius:0 6px 6px 0;
+  margin-bottom:1rem;line-height:1.6;
+}
+.strava-api-note code{color:#FC4C02;font-family:monospace;font-size:10px}
+.strava-stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-bottom:1.2rem}
+.strava-stat{
+  padding:.9rem 1rem;border-radius:10px;
+  border:1px solid rgba(252,76,2,.18);
+  background:rgba(252,76,2,.06);
+  text-align:center;
+}
+.strava-stat-val{font-size:22px;font-weight:500;color:#FF8C5A;line-height:1}
+.strava-stat-unit{font-size:10px;color:rgba(252,76,2,.7);margin-top:1px}
+.strava-stat-label{font-size:11px;color:var(--muted);margin-top:4px}
+.strava-recent{display:flex;flex-direction:column;gap:8px}
+.strava-ride{
+  display:flex;align-items:center;gap:12px;
+  padding:.7rem 1rem;border-radius:8px;
+  border:1px solid rgba(252,76,2,.12);
+  background:rgba(20,8,0,.3);
+  transition:border-color .2s;
+}
+.strava-ride:hover{border-color:rgba(252,76,2,.3)}
+.strava-ride-icon{font-size:18px;flex-shrink:0;width:32px;text-align:center}
+.strava-ride-info{flex:1;min-width:0}
+.strava-ride-name{font-size:13px;font-weight:500;color:#ddd8ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.strava-ride-meta{font-size:11px;color:var(--muted);margin-top:2px}
+.strava-ride-dist{font-size:13px;font-weight:500;color:#FC4C02;flex-shrink:0}
+.strava-mode-toggle{
+  display:flex;gap:6px;margin-bottom:.8rem;flex-wrap:wrap;
+}
+.strava-tab{
+  font-size:11px;padding:3px 10px;border-radius:12px;cursor:pointer;
+  border:1px solid rgba(127,119,221,.2);color:var(--muted);background:transparent;
+  transition:all .2s;
+}
+.strava-tab.active{background:rgba(252,76,2,.15);border-color:rgba(252,76,2,.4);color:#FC4C02}
+
+@media(max-width:480px){
+  .cv-hero{gap:1rem}
+  .cv-projects{grid-template-columns:1fr}
+  .cv-hero-info h1{font-size:20px}
+  .strava-stats{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+
+<canvas id="star-canvas"></canvas>
+<div class="nebula" style="width:320px;height:320px;top:-80px;left:-80px;background:radial-gradient(circle,#2d1b7a,transparent 70%)"></div>
+<div class="nebula" style="width:260px;height:260px;bottom:-60px;right:-60px;background:radial-gradient(circle,#0a2a6e,transparent 70%);animation-delay:3s"></div>
+<div class="scan"></div>
+
+<div id="app">
+  <!-- Vue SPA root -->
+  <transition name="slide" mode="out-in">
+
+    <!-- ══ PAGE: LINKTREE ══ -->
+    <div v-if="page==='home'" key="home" class="lt-page">
+      <div class="orbit-wrap">
+        <svg class="orbit-svg" viewBox="0 0 110 110" fill="none">
+          <circle cx="55" cy="55" r="48" stroke="rgba(127,119,221,.18)" stroke-width="1" stroke-dasharray="4 6"/>
+          <circle cx="55" cy="55" r="34" stroke="rgba(100,180,255,.1)" stroke-width=".5" stroke-dasharray="2 8"/>
+        </svg>
+        <div class="planet p1"></div>
+        <div class="planet p2"></div>
+        <div class="avatar-inner">SC</div>
+      </div>
+
+      <div class="lt-name">SteveChuang</div>
+      <div class="lt-sub">Developer · Cyclist · Creator</div>
+      <div class="divider"></div>
+
+      <div class="links">
+        <button
+          v-for="(link, i) in links"
+          :key="link.label"
+          class="sp-btn"
+          :style="{
+            borderColor: 'rgba('+link.rgb+',.22)',
+            animationDelay: (0.38 + i*0.08)+'s'
+          }"
+          @click="handleLink(link, $event)"
+        >
+          <!-- icon -->
+          <span class="btn-icon"
+            :style="{background:'rgba('+link.rgb+',.12)', border:'1px solid rgba('+link.rgb+',.35)'}">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"
+              :style="{fill:'rgb('+link.rgb+')'}">
+              <path :d="link.icon"/>
+            </svg>
+          </span>
+          <span class="btn-label">{{ link.label }}</span>
+          <span class="btn-arrow">→</span>
+        </button>
+      </div>
+
+      <div class="lt-footer">— Mission Control —</div>
+    </div>
+
+    <!-- ══ PAGE: CV ══ -->
+    <div v-else key="cv" class="cv-page">
+      <div class="cv-topbar">
+        <button class="cv-back" @click="page='home'">← Back</button>
+        <span class="cv-topbar-title">Curriculum Vitae</span>
+      </div>
+
+      <div class="cv-body">
+
+        <!-- hero -->
+        <div class="cv-hero">
+          <div class="cv-avatar">SC</div>
+          <div class="cv-hero-info">
+            <h1>莊承翰 Steve Chuang</h1>
+            <p>Full-Stack Developer · Cyclist · Side-project Enthusiast</p>
+            <div class="cv-contact">
+              <a href="https://github.com/chenhan20" target="_blank">GitHub</a>
+              <a href="https://www.linkedin.com/in/%E6%89%BF%E7%BF%B0-%E8%8E%8A-4159b7139/" target="_blank">LinkedIn</a>
+              <a href="https://www.instagram.com/chenhan20/" target="_blank">Instagram</a>
+              <a href="https://www.strava.com/athletes/161539959" target="_blank">Strava</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- summary -->
+        <div class="cv-section">
+          <div class="cv-section-title">About</div>
+          <p class="cv-summary">
+            熱愛動手做的全端開發者，喜歡把想法快速變成可以跑的東西。
+            工作之外是認真的自行車騎士，對資料視覺化、爬蟲、即時通訊等技術有高度興趣。
+            習慣用 side project 學新東西，做完才算真的懂。
+          </p>
+        </div>
+
+        <!-- experience -->
+        <div class="cv-section">
+          <div class="cv-section-title">Experience</div>
+          <div class="cv-timeline">
+            <div v-for="exp in experience" :key="exp.title" class="cv-item">
+              <div class="cv-dot" :style="{background: exp.color}"></div>
+              <div class="cv-item-content">
+                <div class="cv-item-header">
+                  <span class="cv-item-title">{{ exp.title }}</span>
+                  <span class="cv-item-date">{{ exp.date }}</span>
+                </div>
+                <div class="cv-item-sub">{{ exp.company }}</div>
+                <div class="cv-item-desc">{{ exp.desc }}</div>
+                <div class="cv-item-tags">
+                  <span v-for="t in exp.tags" :key="t" class="cv-tag">{{ t }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- projects -->
+        <div class="cv-section">
+          <div class="cv-section-title">Projects</div>
+          <div class="cv-projects">
+            <a v-for="proj in projects" :key="proj.title"
+              class="cv-proj" :href="proj.url" target="_blank">
+              <div class="cv-proj-title">{{ proj.title }}</div>
+              <div class="cv-proj-desc">{{ proj.desc }}</div>
+              <div class="cv-proj-stack">
+                <span v-for="t in proj.stack" :key="t" class="cv-tag">{{ t }}</span>
+              </div>
+            </a>
+          </div>
+        </div>
+
+        <!-- skills -->
+        <div class="cv-section">
+          <div class="cv-section-title">Skills</div>
+          <div class="cv-skills">
+            <div v-for="skill in skills" :key="skill.name" class="cv-skill-row">
+              <span class="cv-skill-name">{{ skill.name }}</span>
+              <div class="cv-skill-bar">
+                <div class="cv-skill-fill"
+                  :style="{
+                    width: skillsVisible ? skill.pct+'%' : '0%',
+                    background: skill.color
+                  }">
+                </div>
+              </div>
+              <span class="cv-skill-pct">{{ skill.pct }}%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- strava -->
+        <div class="cv-section">
+          <div class="strava-header">
+            <div class="cv-section-title" style="margin-bottom:0;border-bottom:none;padding-bottom:0">Athletics</div>
+            <a class="strava-badge" href="https://www.strava.com/athletes/161539959" target="_blank">
+              <svg viewBox="0 0 24 24"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/></svg>
+              View on Strava
+            </a>
+          </div>
+
+          <!-- tabs: manual / api guide -->
+          <div class="strava-mode-toggle">
+            <button class="strava-tab" :class="{active: stravaTab==='stats'}" @click="stravaTab='stats'">Stats</button>
+            <button class="strava-tab" :class="{active: stravaTab==='rides'}" @click="stravaTab='rides'">Recent Rides</button>
+            <button class="strava-tab" :class="{active: stravaTab==='api'}" @click="stravaTab='api'">How to connect API</button>
+          </div>
+
+          <!-- stats tab -->
+          <div v-if="stravaTab==='stats'">
+            <div class="strava-stats">
+              <div class="strava-stat" v-for="s in stravaStats" :key="s.label">
+                <div class="strava-stat-val">{{ s.val }}</div>
+                <div class="strava-stat-unit">{{ s.unit }}</div>
+                <div class="strava-stat-label">{{ s.label }}</div>
+              </div>
+            </div>
+            <div style="font-size:11px;color:var(--muted);text-align:right">* 手動填入，可接 Strava API 自動更新</div>
+          </div>
+
+          <!-- recent rides tab -->
+          <div v-if="stravaTab==='rides'">
+            <div class="strava-recent">
+              <div class="strava-ride" v-for="ride in stravaRides" :key="ride.name">
+                <div class="strava-ride-icon">🚴</div>
+                <div class="strava-ride-info">
+                  <div class="strava-ride-name">{{ ride.name }}</div>
+                  <div class="strava-ride-meta">{{ ride.date }} · {{ ride.time }} · ↑{{ ride.elev }}m</div>
+                </div>
+                <div class="strava-ride-dist">{{ ride.dist }} km</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- api guide tab -->
+          <div v-if="stravaTab==='api'">
+            <div class="strava-api-note">
+              <strong style="color:#FC4C02">Strava API 接入方向</strong><br><br>
+              <strong>① 取得 Access Token（OAuth 2.0）</strong><br>
+              到 <code>strava.com/settings/api</code> 建立 App，拿到 <code>client_id</code> 和 <code>client_secret</code>。<br>
+              用瀏覽器跑一次 OAuth flow → 換到 <code>refresh_token</code>（只需做一次）。<br><br>
+
+              <strong>② 定期刷新 token + 抓資料</strong><br>
+              <code>POST https://www.strava.com/oauth/token</code> 換新的 <code>access_token</code>（6小時有效）。<br>
+              <code>GET https://www.strava.com/api/v3/athlete/activities</code> 拿最近活動。<br>
+              <code>GET https://www.strava.com/api/v3/athletes/{id}/stats</code> 拿總統計。<br><br>
+
+              <strong>③ 你可以這樣串</strong><br>
+              用你熟悉的 <code>Node.js + Express</code> 寫一支 API server，定時刷 token 存到 DB 或 JSON 檔，前端 Vue fetch 你自己的 endpoint，這樣不用把 secret 暴露在前端。<br><br>
+
+              <strong>④ 更懶的方式</strong><br>
+              用 <code>GitHub Actions</code> 排程每天跑 script 更新 <code>strava.json</code> 推到 repo，GitHub Pages 前端直接 fetch raw JSON。零 server 成本。
+            </div>
+          </div>
+        </div>
+
+        <!-- education -->
+        <div class="cv-section">
+          <div class="cv-section-title">Education</div>
+          <div class="cv-timeline">
+            <div v-for="edu in education" :key="edu.school" class="cv-item">
+              <div class="cv-dot" style="background:#7F77DD"></div>
+              <div class="cv-item-content">
+                <div class="cv-item-header">
+                  <span class="cv-item-title">{{ edu.degree }}</span>
+                  <span class="cv-item-date">{{ edu.date }}</span>
+                </div>
+                <div class="cv-item-sub">{{ edu.school }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- interests -->
+        <div class="cv-section">
+          <div class="cv-section-title">Interests</div>
+          <div class="cv-item-tags" style="padding:.2rem 0">
+            <span v-for="i in interests" :key="i" class="cv-tag" style="font-size:12px;padding:4px 12px">{{ i }}</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </transition>
+</div>
+
+<script>
+const { createApp, ref, watch, nextTick } = Vue
+
+createApp({
+  setup() {
+    const page = ref('home')
+    const skillsVisible = ref(false)
+
+    /* ── linktree data ── */
+    const links = [
+      { label:'Instagram', url:'https://www.instagram.com/chenhan20/', rgb:'225,48,108',
+        icon:'M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z' },
+      { label:'Facebook', url:'https://www.facebook.com/profile.php?id=100000189117019', rgb:'74,142,245',
+        icon:'M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z' },
+      { label:'Youtube', url:'https://www.youtube.com/user/chenhan20', rgb:'255,69,69',
+        icon:'M23.495 6.205a3.007 3.007 0 0 0-2.088-2.088c-1.87-.501-9.396-.501-9.396-.501s-7.507-.01-9.396.501A3.007 3.007 0 0 0 .527 6.205a31.247 31.247 0 0 0-.522 5.805 31.247 31.247 0 0 0 .522 5.783 3.007 3.007 0 0 0 2.088 2.088c1.868.502 9.396.502 9.396.502s7.506 0 9.396-.502a3.007 3.007 0 0 0 2.088-2.088 31.247 31.247 0 0 0 .5-5.783 31.247 31.247 0 0 0-.5-5.805zM9.609 15.601V8.408l6.264 3.602z' },
+      { label:'Strava', url:'https://www.strava.com/athletes/161539959', rgb:'252,76,2',
+        icon:'M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169' },
+      { label:'Resume', page:'cv', rgb:'46,207,160',
+        icon:'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM6 20V4h5v7h7v9H6z' },
+      { label:'LinkedIn', url:'https://www.linkedin.com/in/%E6%89%BF%E7%BF%B0-%E8%8E%8A-4159b7139/', rgb:'91,168,245',
+        icon:'M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z' },
+      { label:'GitHub', url:'https://github.com/chenhan20', rgb:'155,150,221',
+        icon:'M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12' },
+    ]
+
+    /* ── CV data ── */
+    const experience = [
+      {
+        title: 'Full-Stack Developer',
+        company: '— (請填入公司名稱)',
+        date: '20XX – Present',
+        color: '#7F77DD',
+        desc: '負責前後端開發與維護，參與系統架構設計，導入 CI/CD 流程提升部署效率。',
+        tags: ['Node.js','Vue','Express','MySQL','AWS'],
+      },
+      {
+        title: 'Side Project — SteveChuangCard',
+        company: '個人專案',
+        date: '2020',
+        color: '#2AABEE',
+        desc: 'Node.js + Express + Vue 個人履歷網站，整合 NBA 爬蟲（puppeteer + cheerio）、即時聊天室（socket.io），部署於 Heroku。',
+        tags: ['Node.js','Vue','Express','Socket.io','Puppeteer','Webpack'],
+      },
+      {
+        title: 'Side Project — LinkTree',
+        company: '個人專案',
+        date: '2020',
+        color: '#1D9E75',
+        desc: '以 GitHub Pages 靜態部署，Bootstrap 4 + FontAwesome 實作個人連結頁面，後升級為太空主題動畫版本。',
+        tags: ['HTML','CSS','jQuery','Bootstrap4','GitHub Pages'],
+      },
+    ]
+
+    const projects = [
+      {
+        title: 'NBA Dashboard',
+        url: 'https://github.com/chenhan20/SteveChuangCard',
+        desc: '爬取 NBA 即時比分、BOX SCORE、各節比分，Vue.js 前端呈現，支援日期切換。',
+        stack: ['Node.js','Puppeteer','Vue','Cheerio'],
+      },
+      {
+        title: 'Live Chat Room',
+        url: 'https://github.com/chenhan20/SteveChuangCard',
+        desc: 'Socket.io 雙向即時聊天練習，實作房間、廣播、上線通知等功能。',
+        stack: ['Socket.io','Express','Node.js'],
+      },
+      {
+        title: 'Space LinkTree',
+        url: 'https://chenhan20.github.io/linkTree/linkTreeIndex.html',
+        desc: '太空主題 linktree，Canvas 星空、流星、軌道動畫，Vue 3 SPA 整合 CV 頁面。',
+        stack: ['Vue 3','CSS Animation','Canvas','HTML'],
+      },
+    ]
+
+    const skills = [
+      { name:'JavaScript', pct:85, color:'linear-gradient(90deg,#7F77DD,#5DCAA5)' },
+      { name:'Node.js',    pct:80, color:'linear-gradient(90deg,#1D9E75,#378ADD)' },
+      { name:'Vue.js',     pct:75, color:'linear-gradient(90deg,#4A8EF5,#7F77DD)' },
+      { name:'HTML/CSS',   pct:88, color:'linear-gradient(90deg,#D4537E,#E1306C)' },
+      { name:'Express',    pct:78, color:'linear-gradient(90deg,#7F77DD,#D4537E)' },
+      { name:'Git',        pct:82, color:'linear-gradient(90deg,#FC4C02,#EF9F27)' },
+      { name:'SASS',       pct:72, color:'linear-gradient(90deg,#D4537E,#7F77DD)' },
+      { name:'MySQL/DB',   pct:65, color:'linear-gradient(90deg,#378ADD,#1D9E75)' },
+    ]
+
+    const education = [
+      { degree:'資訊管理 / 資訊工程學系', school:'（請填入學校名稱）', date:'20XX – 20XX' },
+    ]
+
+    const stravaTab = ref('stats')
+
+    const stravaStats = [
+      { val: '東三塔', unit: '', label: '代表路線' },
+      { val: '—', unit: 'km', label: '年度總里程' },
+      { val: '—', unit: 'm', label: '年度爬升' },
+      { val: '—', unit: 'rides', label: '年度次數' },
+      { val: '—', unit: 'km/h', label: '最高均速' },
+      { val: '—', unit: 'km', label: '最長單次' },
+    ]
+
+    const stravaRides = [
+      { name: '東三塔挑戰 — 台2線濱海', date: '2025/01', dist: '120+', time: '4h+', elev: '800' },
+      { name: '— 填入你的活動名稱', date: '—', dist: '—', time: '—', elev: '—' },
+      { name: '— 或接 Strava API 自動帶入', date: '—', dist: '—', time: '—', elev: '—' },
+    ]
+
+    const interests = ['自行車 Cycling','東三塔挑戰','Side Projects','爬蟲 Web Scraping','資料視覺化','Socket 即時應用','開源貢獻']
+
+    /* ── handlers ── */
+    function handleLink(link, e) {
+      if (link.page === 'cv') {
+        page.value = 'cv'
+        nextTick(() => { skillsVisible.value = true })
+        return
+      }
+      if (!link.url) return
+      // ripple
+      const btn = e.currentTarget
+      const r = btn.getBoundingClientRect()
+      const rp = document.createElement('span')
+      const sz = Math.max(btn.offsetWidth, btn.offsetHeight)
+      rp.className = 'ripple'
+      rp.style.cssText = `width:${sz}px;height:${sz}px;left:${e.clientX-r.left-sz/2}px;top:${e.clientY-r.top-sz/2}px;background:rgb(${link.rgb})`
+      btn.appendChild(rp)
+      setTimeout(() => rp.remove(), 600)
+      setTimeout(() => window.open(link.url, '_blank'), 220)
+    }
+
+    watch(page, (v) => {
+      if (v === 'cv') {
+        nextTick(() => { skillsVisible.value = true })
+      } else {
+        skillsVisible.value = false
+      }
+    })
+
+    return { page, links, experience, projects, skills, education, interests, skillsVisible, handleLink, stravaTab, stravaStats, stravaRides }
+  }
+}).mount('#app')
+
+/* ── star canvas ── */
+;(function(){
+  const c = document.getElementById('star-canvas')
+  const ctx = c.getContext('2d')
+  let W, H, stars = []
+  function resize(){
+    W = c.width = window.innerWidth
+    H = c.height = window.innerHeight
+  }
+  function init(){
+    stars = []
+    const n = Math.floor(W * H / 2800)
+    for(let i=0;i<n;i++) stars.push({
+      x:Math.random()*W, y:Math.random()*H,
+      r:Math.random()*1.4, a:Math.random(),
+      da:(Math.random()-.5)*.007,
+      speed:Math.random()*.12+.02
+    })
+  }
+  function draw(){
+    ctx.clearRect(0,0,W,H)
+    stars.forEach(s=>{
+      s.a += s.da
+      if(s.a<0||s.a>1) s.da*=-1
+      s.y -= s.speed
+      if(s.y<0) s.y=H
+      ctx.beginPath()
+      ctx.arc(s.x,s.y,s.r,0,Math.PI*2)
+      ctx.fillStyle=`rgba(200,196,255,${s.a})`
+      ctx.fill()
+    })
+    requestAnimationFrame(draw)
+  }
+  resize(); init(); draw()
+  window.addEventListener('resize',()=>{resize();init()})
+
+  /* shooting stars */
+  function shoot(){
+    const el = document.createElement('div')
+    el.className = 'shooting-star'
+    const top = Math.random()*60+5
+    const left = Math.random()*30-20
+    const len = 80+Math.random()*120
+    const dur = (.6+Math.random()*.5).toFixed(2)
+    el.style.cssText = `top:${top}%;left:${left}%;width:${len}px;animation-duration:${dur}s`
+    document.body.appendChild(el)
+    setTimeout(()=>el.remove(),(+dur+.15)*1000)
+  }
+  setInterval(shoot, 2400)
+  shoot()
+})()
+</script>
+</body>
+</html>
