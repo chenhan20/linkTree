@@ -38,9 +38,11 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
   width:80px;height:80px;border-radius:50%;flex-shrink:0;
   background:linear-gradient(135deg,#1a0800,#3d1200);
   border:2.5px solid #FC4C02;
-  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;
   box-shadow:0 0 18px rgba(252,76,2,.25);
+  display:flex;align-items:center;justify-content:center;
 }
+.avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}
 .avatar svg{width:38px;height:38px;fill:#FC4C02}
 .hero-info h1{font-size:26px;font-weight:600;color:#fff;display:flex;align-items:center;gap:8px}
 .verified{width:20px;height:20px;fill:#FC4C02;flex-shrink:0}
@@ -121,6 +123,13 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 .activity-info{flex:1;min-width:0}
 .activity-name{font-size:14px;font-weight:500;color:#eeebe8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .activity-meta{font-size:11px;color:#666;margin-top:3px}
+.activity-meta .tag{
+  display:inline-flex;align-items:center;gap:3px;
+  background:rgba(252,76,2,.08);border:1px solid rgba(252,76,2,.15);
+  border-radius:4px;padding:1px 6px;margin-right:4px;margin-top:3px;
+  color:#b05030;font-size:10px;white-space:nowrap;
+}
+.activity-meta .tag.hr{border-color:rgba(220,60,60,.2);background:rgba(220,60,60,.06);color:#c04040}
 .activity-dist{font-size:15px;font-weight:600;color:#FC4C02;flex-shrink:0;white-space:nowrap}
 .empty{font-size:13px;color:#555;padding:2rem 0;text-align:center}
 
@@ -222,25 +231,34 @@ function groupByDate(list) {
 function renderTimeline(list, type) {
   if (!list || !list.length) return '<div class="empty">暫無資料</div>'
   const isWeight = type === 'weight'
+  const isSwim   = type === 'swim'
+  const isRun    = type === 'run'
   const icon = ICONS[type] || ICONS.ride
   const groups = groupByDate(list)
   return groups.map(([date, acts]) => `
     <div class="timeline-day">
       <div class="timeline-date">${fmtDate(date)}</div>
-      ${acts.map(a => `
+      ${acts.map(a => {
+        // 組合 meta tags
+        const tags = []
+        if (!isWeight) tags.push(`<span class="tag">⏱ ${fmtMovingTime(a.moving_time_hr || 0)}</span>`)
+        if (isWeight)  tags.push(`<span class="tag">⏱ ${fmtMovingTime(a.moving_time_hr || 0)}</span>`)
+        if (!isWeight && !isSwim && a.elevation_m != null) tags.push(`<span class="tag">↑${a.elevation_m}m</span>`)
+        if (isRun && a.avg_pace_km)    tags.push(`<span class="tag">💨 ${a.avg_pace_km}/km</span>`)
+        if (isRun && a.avg_cadence_spm)tags.push(`<span class="tag">🦵 ${a.avg_cadence_spm} spm</span>`)
+        if (!isRun && !isSwim && !isWeight && a.avg_speed_kmh) tags.push(`<span class="tag">${a.avg_speed_kmh} km/h</span>`)
+        if (isSwim && a.pace_per_100m) tags.push(`<span class="tag">💧 ${a.pace_per_100m}/100m</span>`)
+        if (a.avg_heartrate)           tags.push(`<span class="tag hr">♥️ ${a.avg_heartrate} bpm</span>`)
+        return `
         <div class="activity-card">
           <div class="activity-icon"><svg viewBox="0 0 24 24">${icon}</svg></div>
           <div class="activity-info">
             <div class="activity-name">${a.name || '—'}</div>
-            <div class="activity-meta">${
-              isWeight
-                ? fmtMovingTime(a.moving_time_hr || 0)
-                : `${fmtMovingTime(a.moving_time_hr || 0)} &nbsp;·&nbsp; ↑${a.elevation_m || 0}m &nbsp;·&nbsp; ${a.avg_speed_kmh || 0} km/h`
-            }</div>
+            <div class="activity-meta">${tags.join('')}</div>
           </div>
           ${isWeight ? '' : `<div class="activity-dist">${a.distance_km} <small style="font-size:11px;font-weight:400">km</small></div>`}
-        </div>
-      `).join('')}
+        </div>`
+      }).join('')}
     </div>
   `).join('')
 }
@@ -279,7 +297,9 @@ function render(data) {
   document.getElementById('content').innerHTML = `
     <div class="hero">
       <div class="avatar">
-        <svg viewBox="0 0 24 24">${ICONS.ride}</svg>
+        <img src="docs/avatar.jpg" alt="SC"
+          onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <svg viewBox="0 0 24 24" style="display:none">${ICONS.ride}</svg>
       </div>
       <div class="hero-info">
         <h1>承翰 莊

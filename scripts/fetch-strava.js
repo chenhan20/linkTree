@@ -140,24 +140,60 @@ function buildJSON(stats, activities) {
   history.sort((a, b) => a.month.localeCompare(b.month))
 
   // ── 最近各類型活動（各取最近 10 筆）──
-  function mapActivity(a) {
-    return {
-      name:           a.name,
-      date:           a.start_date.slice(0, 10),
-      distance_km:    Math.round(a.distance / 10) / 100,
-      moving_time_hr: Math.round(a.moving_time / 360) / 10,
-      elevation_m:    Math.round(a.total_elevation_gain),
-      avg_speed_kmh:  Math.round(a.average_speed * 36) / 10,
-    }
+
+  // 配速 min/km，格式 "M:SS"
+  function fmtPaceKm(speed_ms) {
+    if (!speed_ms || speed_ms <= 0) return null
+    const secPerKm = 1000 / speed_ms
+    const m = Math.floor(secPerKm / 60)
+    const s = Math.round(secPerKm % 60)
+    return `${m}:${String(s).padStart(2,'0')}`
   }
 
-  const recentRides   = activities.filter(a => isType(a, RIDE_TYPES)).slice(0, 10).map(mapActivity)
-  const recentRuns    = activities.filter(a => isType(a, RUN_TYPES)).slice(0, 10).map(mapActivity)
-  const recentSwims   = activities.filter(a => isType(a, SWIM_TYPES)).slice(0, 10).map(mapActivity)
-  const recentWeights = activities.filter(a => isType(a, WEIGHT_TYPES)).slice(0, 10).map(a => ({
-    name: a.name,
-    date: a.start_date.slice(0, 10),
+  // 游泳配速 /100m，格式 "M:SS"
+  function fmtPace100m(distance_m, moving_time_s) {
+    if (!distance_m || distance_m <= 0) return null
+    const secPer100m = (moving_time_s / distance_m) * 100
+    const m = Math.floor(secPer100m / 60)
+    const s = Math.round(secPer100m % 60)
+    return `${m}:${String(s).padStart(2,'0')}`
+  }
+
+  const recentRides = activities.filter(a => isType(a, RIDE_TYPES)).slice(0, 10).map(a => ({
+    name:           a.name,
+    date:           a.start_date.slice(0, 10),
+    distance_km:    Math.round(a.distance / 10) / 100,
     moving_time_hr: Math.round(a.moving_time / 360) / 10,
+    elevation_m:    Math.round(a.total_elevation_gain),
+    avg_speed_kmh:  Math.round(a.average_speed * 36) / 10,
+    avg_heartrate:  a.average_heartrate ? Math.round(a.average_heartrate) : null,
+  }))
+
+  const recentRuns = activities.filter(a => isType(a, RUN_TYPES)).slice(0, 10).map(a => ({
+    name:           a.name,
+    date:           a.start_date.slice(0, 10),
+    distance_km:    Math.round(a.distance / 10) / 100,
+    moving_time_hr: Math.round(a.moving_time / 360) / 10,
+    elevation_m:    Math.round(a.total_elevation_gain),
+    avg_pace_km:    fmtPaceKm(a.average_speed),
+    avg_cadence_spm: a.average_cadence ? Math.round(a.average_cadence * 2) : null, // Strava 給單腳，*2 = 雙腳步頻
+    avg_heartrate:  a.average_heartrate ? Math.round(a.average_heartrate) : null,
+  }))
+
+  const recentSwims = activities.filter(a => isType(a, SWIM_TYPES)).slice(0, 10).map(a => ({
+    name:             a.name,
+    date:             a.start_date.slice(0, 10),
+    distance_km:      Math.round(a.distance / 10) / 100,
+    moving_time_hr:   Math.round(a.moving_time / 360) / 10,
+    pace_per_100m:    fmtPace100m(a.distance, a.moving_time),
+    avg_heartrate:    a.average_heartrate ? Math.round(a.average_heartrate) : null,
+  }))
+
+  const recentWeights = activities.filter(a => isType(a, WEIGHT_TYPES)).slice(0, 10).map(a => ({
+    name:          a.name,
+    date:          a.start_date.slice(0, 10),
+    moving_time_hr: Math.round(a.moving_time / 360) / 10,
+    avg_heartrate: a.average_heartrate ? Math.round(a.average_heartrate) : null,
   }))
 
   return {
