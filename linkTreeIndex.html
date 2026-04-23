@@ -338,127 +338,16 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
       </div>
     </div>
 
-    <!-- ════ PAGE: STRAVA ════ -->
-    <div v-else-if="page==='strava'" key="strava" class="sub-page">
-      <div class="sub-topbar">
-        <button class="sub-back" @click="page='home'">← BACK</button>
-        <span class="sub-topbar-title">Athletics · Strava</span>
-      </div>
-      <div class="sub-body">
-
-        <!-- loading -->
-        <div v-if="sv.loading" class="sv-loading">FETCHING TELEMETRY...</div>
-        <div v-else-if="sv.error" class="sv-error">{{ sv.error }}</div>
-
-        <template v-else>
-          <!-- hero -->
-          <div class="sv-hero">
-            <div class="sv-hero-left">
-              <div class="sv-logo">
-                <svg viewBox="0 0 24 24"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/></svg>
-              </div>
-              <div>
-                <div class="sv-hero-name">承翰 莊</div>
-                <div class="sv-hero-sub">STRAVA · CYCLIST · ATHLETE</div>
-              </div>
-            </div>
-            <div class="sv-updated">UPDATED {{ sv.data.updated_at ? sv.data.updated_at.slice(0,10) : '—' }}</div>
-          </div>
-
-          <!-- YTD stat cards -->
-          <div class="sv-stats-grid">
-            <div class="sv-stat" style="--sc:#FC4C02">
-              <div class="sv-stat-val">{{ fmt(sv.data.summary.ytd_distance_km) }}</div>
-              <div class="sv-stat-unit">km</div>
-              <div class="sv-stat-label">今年里程</div>
-            </div>
-            <div class="sv-stat" style="--sc:#e06020">
-              <div class="sv-stat-val">{{ fmt(sv.data.summary.ytd_elevation_m) }}</div>
-              <div class="sv-stat-unit">m</div>
-              <div class="sv-stat-label">今年爬升</div>
-            </div>
-            <div class="sv-stat" style="--sc:#c04010">
-              <div class="sv-stat-val">{{ sv.data.summary.ytd_rides }}</div>
-              <div class="sv-stat-unit">rides</div>
-              <div class="sv-stat-label">今年次數</div>
-            </div>
-            <div class="sv-stat" style="--sc:#a03010">
-              <div class="sv-stat-val">{{ sv.data.summary.ytd_moving_time_hr }}</div>
-              <div class="sv-stat-unit">hrs</div>
-              <div class="sv-stat-label">今年時數</div>
-            </div>
-          </div>
-
-          <!-- monthly bar chart -->
-          <div class="sv-chart-section">
-            <div class="sv-chart-title">月里程趨勢 · Monthly Distance (km)</div>
-            <div class="sv-chart" v-if="sv.data.monthly_history && sv.data.monthly_history.length">
-              <div v-for="row in sv.data.monthly_history" :key="row.month" class="sv-bar-row">
-                <span class="sv-bar-month">{{ row.month.slice(5) }}</span>
-                <div class="sv-bar-track" :class="{'sv-bar-today': isThisMonth(row.month)}">
-                  <div class="sv-bar-fill" :style="{width: chartVisible ? barWidth(row.distance_km)+'%' : '0%'}">
-                    <span class="sv-bar-val" v-if="barWidth(row.distance_km) > 25">{{ row.distance_km }}</span>
-                  </div>
-                </div>
-                <span class="sv-bar-val" v-if="barWidth(row.distance_km) <= 25" style="font-size:9px;color:#5a4030;font-family:monospace;flex-shrink:0;width:36px">{{ row.distance_km }}</span>
-                <span class="sv-this-month-badge" v-if="isThisMonth(row.month)">← NOW</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- recent rides -->
-          <div class="cv-section">
-            <div class="sv-chart-title" style="margin-top:1.8rem">最近活動 · Recent Rides</div>
-            <div class="sv-rides">
-              <div v-for="ride in sv.data.recent_rides" :key="ride.name+ride.date" class="sv-ride">
-                <div class="sv-ride-icon">🚴</div>
-                <div class="sv-ride-info">
-                  <div class="sv-ride-name">{{ ride.name }}</div>
-                  <div class="sv-ride-meta">{{ ride.date }} · {{ ride.moving_time_hr }}h · ↑{{ ride.elevation_m }}m · {{ ride.avg_speed_kmh }} km/h</div>
-                </div>
-                <div class="sv-ride-right">
-                  <div class="sv-ride-dist">{{ ride.distance_km }}<span class="sv-ride-dist-unit"> km</span></div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- all time strip -->
-          <div class="sv-alltime">
-            <div class="sv-at-item">
-              <div class="sv-at-val">{{ fmt(sv.data.summary.all_time_distance_km) }}</div>
-              <div class="sv-at-label">Total km</div>
-            </div>
-            <div class="sv-at-item">
-              <div class="sv-at-val">{{ fmt(sv.data.summary.all_time_elevation_m) }}</div>
-              <div class="sv-at-label">Total elev</div>
-            </div>
-            <div class="sv-at-item">
-              <div class="sv-at-val">{{ sv.data.summary.all_time_rides }}</div>
-              <div class="sv-at-label">Total rides</div>
-            </div>
-          </div>
-
-          <a class="sv-open-btn" href="https://www.strava.com/athletes/161539959" target="_blank">
-            <svg viewBox="0 0 24 24"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/></svg>
-            View full profile on Strava
-          </a>
-        </template>
-
-      </div>
-    </div>
-
   </transition>
 </div>
 
 <script>
-const { createApp, ref, reactive, watch, nextTick, computed } = Vue
+const { createApp, ref, watch, nextTick } = Vue
 
 createApp({
   setup() {
     const page = ref('home')
     const skillsVisible = ref(false)
-    const chartVisible = ref(false)
 
     /* ── links ── */
     const links = [
@@ -468,7 +357,7 @@ createApp({
         icon:'M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z' },
       { label:'Youtube', url:'https://www.youtube.com/user/chenhan20', rgb:'255,69,69',
         icon:'M23.495 6.205a3.007 3.007 0 0 0-2.088-2.088c-1.87-.501-9.396-.501-9.396-.501s-7.507-.01-9.396.501A3.007 3.007 0 0 0 .527 6.205a31.247 31.247 0 0 0-.522 5.805 31.247 31.247 0 0 0 .522 5.783 3.007 3.007 0 0 0 2.088 2.088c1.868.502 9.396.502 9.396.502s7.506 0 9.396-.502a3.007 3.007 0 0 0 2.088-2.088 31.247 31.247 0 0 0 .5-5.783 31.247 31.247 0 0 0-.5-5.805zM9.609 15.601V8.408l6.264 3.602z' },
-      { label:'Strava', page:'strava', rgb:'252,76,2',
+      { label:'Strava', url:'strava.html', rgb:'252,76,2',
         icon:'M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169' },
       { label:'Resume', page:'cv', rgb:'46,207,160',
         icon:'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM6 20V4h5v7h7v9H6z' },
@@ -502,80 +391,27 @@ createApp({
     const education = [{ degree:'資訊管理 / 資訊工程學系', school:'（請填入學校名稱）', date:'20XX – 20XX' }]
     const interests = ['自行車 Cycling','東三塔挑戰','Side Projects','爬蟲 Web Scraping','資料視覺化','Socket 即時應用','開源貢獻']
 
-    /* ── Strava state ── */
-    const MOCK = {
-      updated_at: new Date().toISOString(),
-      summary: {
-        ytd_distance_km: 1842.3, ytd_elevation_m: 18420,
-        ytd_rides: 47, ytd_moving_time_hr: 142.5,
-        all_time_distance_km: 18240, all_time_elevation_m: 142000, all_time_rides: 312,
-      },
-      recent_rides: [
-        { name:'東三塔挑戰 — 台2線濱海', date:'2026-04-17', distance_km:125.4, moving_time_hr:4.5, elevation_m:820, avg_speed_kmh:27.8 },
-        { name:'新北市濱海公路晨騎', date:'2026-04-12', distance_km:68.2, moving_time_hr:2.4, elevation_m:310, avg_speed_kmh:28.4 },
-        { name:'台北河濱公園 easy ride', date:'2026-04-08', distance_km:42.1, moving_time_hr:1.5, elevation_m:88, avg_speed_kmh:28.1 },
-        { name:'內湖山區爬坡訓練', date:'2026-04-03', distance_km:55.6, moving_time_hr:2.2, elevation_m:640, avg_speed_kmh:25.3 },
-        { name:'基隆外木山來回', date:'2026-03-29', distance_km:94.3, moving_time_hr:3.4, elevation_m:520, avg_speed_kmh:27.7 },
-      ],
-      monthly_history: [
-        { month:'2026-01', distance_km:380, elevation_m:3200, rides:8 },
-        { month:'2026-02', distance_km:420, elevation_m:3800, rides:10 },
-        { month:'2026-03', distance_km:510, elevation_m:4100, rides:12 },
-        { month:'2026-04', distance_km:531, elevation_m:7300, rides:17 },
-      ],
-    }
-
-    const sv = reactive({ loading: false, error: null, data: MOCK })
-
-    async function loadStrava() {
-      sv.loading = true; sv.error = null
-      try {
-        // 真實版：fetch('./strava.json')
-        // 現在先用 MOCK，Actions 跑完後把下面兩行取消註解、MOCK 那行刪掉
-        // const res = await fetch('./strava.json')
-        // if (!res.ok) throw new Error('strava.json 尚未生成，請先跑 GitHub Actions')
-        // sv.data = await res.json()
-        await new Promise(r => setTimeout(r, 600)) // 模擬載入
-        sv.data = MOCK
-      } catch(e) {
-        sv.error = e.message
-      } finally {
-        sv.loading = false
-        nextTick(() => { chartVisible.value = true })
-      }
-    }
-
-    /* chart helpers */
-    const maxDist = computed(() => {
-      if (!sv.data.monthly_history?.length) return 1
-      return Math.max(...sv.data.monthly_history.map(r => r.distance_km))
-    })
-    function barWidth(d) { return Math.round(d / maxDist.value * 100) }
-    function isThisMonth(m) {
-      const now = new Date()
-      return m === `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`
-    }
-    function fmt(n) { return n ? n.toLocaleString() : '—' }
-
     /* ── handlers ── */
     function handleLink(link, e) {
       if (link.page === 'cv') { page.value = 'cv'; nextTick(()=>{ skillsVisible.value=true }); return }
-      if (link.page === 'strava') { page.value = 'strava'; loadStrava(); return }
       if (!link.url) return
       const btn=e.currentTarget, r=btn.getBoundingClientRect()
       const rp=document.createElement('span'), sz=Math.max(btn.offsetWidth,btn.offsetHeight)
       rp.className='ripple'; rp.style.cssText=`width:${sz}px;height:${sz}px;left:${e.clientX-r.left-sz/2}px;top:${e.clientY-r.top-sz/2}px;background:rgb(${link.rgb})`
-      btn.appendChild(rp); setTimeout(()=>rp.remove(),700); setTimeout(()=>window.open(link.url,'_blank'),230)
+      btn.appendChild(rp); setTimeout(()=>rp.remove(),700)
+      setTimeout(() => {
+        if (link.url.startsWith('http')) window.open(link.url, '_blank')
+        else window.location.href = link.url
+      }, 230)
     }
 
     watch(page, v => {
       if (v==='cv') nextTick(()=>{ skillsVisible.value=true })
       else skillsVisible.value=false
-      if (v!=='strava') chartVisible.value=false
     })
 
     return { page, links, experience, projects, skills, education, interests,
-             skillsVisible, handleLink, sv, chartVisible, barWidth, isThisMonth, fmt }
+             skillsVisible, handleLink }
   }
 }).mount('#app')
 
