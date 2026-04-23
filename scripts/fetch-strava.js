@@ -17,11 +17,11 @@ const OUT_FILE = path.join(__dirname, '..', 'strava.json')
 function request(options, body = null) {
   return new Promise((resolve, reject) => {
     const req = https.request(options, res => {
-      let data = ''
-      res.on('data', chunk => data += chunk)
+      const chunks = []
+      res.on('data', chunk => chunks.push(chunk))
       res.on('end', () => {
-        try { resolve(JSON.parse(data)) }
-        catch (e) { reject(new Error('JSON parse error: ' + data)) }
+        try { resolve(JSON.parse(Buffer.concat(chunks).toString('utf8'))) }
+        catch (e) { reject(new Error('JSON parse error: ' + Buffer.concat(chunks).toString('utf8'))) }
       })
     })
     req.on('error', reject)
