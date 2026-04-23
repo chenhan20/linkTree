@@ -69,19 +69,30 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 
 /* ── monthly chart ── */
 .monthly-chart{margin-bottom:2.2rem}
-.chart-rows{display:flex;flex-direction:column;gap:8px}
+.chart-rows{display:flex;flex-direction:column;gap:6px}
 .chart-row{display:flex;align-items:center;gap:10px}
-.chart-label{font-size:12px;color:#777;width:24px;text-align:right;flex-shrink:0}
-.chart-bar-wrap{flex:1;height:30px;background:rgba(252,76,2,.07);border-radius:5px;overflow:hidden}
+.chart-label{font-size:12px;color:#aaa;width:24px;text-align:right;flex-shrink:0}
+.chart-bar-wrap{flex:1;height:44px;background:rgba(252,76,2,.1);border-radius:6px;overflow:hidden}
 .chart-bar{
-  height:100%;border-radius:5px;
-  background:linear-gradient(90deg,#C03800,#FC4C02,#FF8C5A);
+  height:100%;border-radius:6px;
+  background:linear-gradient(90deg,#992b00,#FC4C02,#ff7040);
   display:flex;align-items:center;justify-content:flex-end;
-  padding-right:8px;min-width:36px;
+  padding-right:10px;min-width:44px;
   width:0;transition:width 1s cubic-bezier(.25,.46,.45,.94);
 }
-.chart-bar-val{font-size:11px;font-weight:600;color:#fff;white-space:nowrap}
-.chart-unit-label{font-size:11px;color:#555;width:28px;flex-shrink:0}
+.chart-bar-val{font-size:12px;font-weight:700;color:#fff;white-space:nowrap}
+.chart-unit-label{font-size:11px;color:#666;width:28px;flex-shrink:0}
+
+/* ── chart year toggle ── */
+.chart-year-header{
+  display:flex;align-items:center;gap:8px;
+  font-size:11px;font-weight:700;color:#FC4C02;letter-spacing:2.5px;
+  text-transform:uppercase;padding:12px 0 4px;
+  cursor:pointer;user-select:none;opacity:.8;
+}
+.chart-year-header:hover{opacity:1}
+.chart-year-arrow{transition:transform .25s;font-style:normal;font-size:10px}
+.chart-year-rows{overflow:hidden;transition:max-height .35s ease}
 
 /* ── sport tabs ── */
 .sport-tabs{display:flex;gap:8px;margin-bottom:1.2rem;flex-wrap:wrap}
@@ -141,13 +152,6 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
   transition:background .2s;text-transform:uppercase;
 }
 .show-more-btn:hover{background:rgba(252,76,2,.1)}
-
-/* ── chart year divider ── */
-.chart-year{
-  font-size:10px;font-weight:700;color:#FC4C02;letter-spacing:2.5px;
-  text-transform:uppercase;padding:10px 0 2px;
-  opacity:.55;
-}
 
 /* ── bottom totals ── */
 .totals-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:2rem}
@@ -412,7 +416,7 @@ function render(data) {
                 <span class="chart-year-arrow" id="arrow-${year}">${collapsed ? '▶' : '▼'}</span>
                 ${year}
               </div>
-              <div class="chart-year-rows${collapsed ? ' collapsed' : ''}" id="year-rows-${year}" style="max-height:${collapsed ? 0 : rowHeight + 20}px">
+              <div class="chart-year-rows" id="year-rows-${year}" style="max-height:${collapsed ? '0' : '9999px'}" data-collapsed="${collapsed ? '1' : ''}">
                 ${rows}
               </div>
             `
@@ -467,10 +471,10 @@ function render(data) {
       const year = header.dataset.year
       const rows = document.getElementById(`year-rows-${year}`)
       const arrow = document.getElementById(`arrow-${year}`)
-      const isCollapsed = rows.classList.contains('collapsed')
+      const isCollapsed = rows.dataset.collapsed === '1'
       if (isCollapsed) {
+        rows.dataset.collapsed = ''
         rows.style.maxHeight = rows.scrollHeight + 'px'
-        rows.classList.remove('collapsed')
         arrow.textContent = '▼'
         // animate newly visible bars
         rows.querySelectorAll('.chart-bar').forEach(bar => {
@@ -479,10 +483,18 @@ function render(data) {
             setTimeout(() => { bar.style.width = bar.dataset.pct + '%' }, 60)
           })
         })
+        // after transition, set to unrestricted so content can grow
+        setTimeout(() => { if (rows.dataset.collapsed !== '1') rows.style.maxHeight = '9999px' }, 400)
       } else {
-        rows.style.maxHeight = '0'
-        rows.classList.add('collapsed')
-        arrow.textContent = '▶'
+        // set explicit height first so transition has a from-value
+        rows.style.maxHeight = rows.scrollHeight + 'px'
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            rows.style.maxHeight = '0'
+            rows.dataset.collapsed = '1'
+            arrow.textContent = '▶'
+          })
+        })
       }
     })
   }
