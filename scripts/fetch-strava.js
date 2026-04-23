@@ -66,19 +66,42 @@ async function fetchStats(token) {
   return data
 }
 
-// ── Step 3：抓最近 100 筆活動（涵蓋多種運動類型）──
+// ── Step 3：抓活動（FETCH_ALL=1 時分頁抓全部，否則只抓最近 100 筆）──
 async function fetchRecentActivities(token) {
-  const data = await request({
-    hostname: 'www.strava.com',
-    path:     '/api/v3/athlete/activities?per_page=100&page=1',
-    method:   'GET',
-    headers:  { Authorization: `Bearer ${token}` },
-  })
-  if (!Array.isArray(data)) {
-    throw new Error('activities API 回傳非陣列：' + JSON.stringify(data))
+  const fetchAll = process.env.FETCH_ALL === '1'
+
+  if (!fetchAll) {
+    const data = await request({
+      hostname: 'www.strava.com',
+      path:     '/api/v3/athlete/activities?per_page=100&page=1',
+      method:   'GET',
+      headers:  { Authorization: `Bearer ${token}` },
+    })
+    if (!Array.isArray(data)) throw new Error('activities API 回傳非陣列：' + JSON.stringify(data))
+    console.log(`✅ 最近活動抓取成功，共 ${data.length} 筆`)
+    return data
   }
-  console.log(`✅ 最近活動抓取成功，共 ${data.length} 筆`)
-  return data
+
+  // 全量模式：逐頁抓直到空
+  console.log('🔄 FETCH_ALL 模式：分頁抓取所有活動...')
+  let all = [], page = 1
+  while (true) {
+    const data = await request({
+      hostname: 'www.strava.com',
+      path:     `/api/v3/athlete/activities?per_page=200&page=${page}`,
+      method:   'GET',
+      headers:  { Authorization: `Bearer ${token}` },
+    })
+    if (!Array.isArray(data)) throw new Error('activities API 回傳非陣列：' + JSON.stringify(data))
+    if (data.length === 0) break
+    all = all.concat(data)
+    console.log(`  第 ${page} 頁：${data.length} 筆，累計 ${all.length} 筆`)
+    page++
+    if (data.length < 200) break // 最後一頁
+    await new Promise(r => setTimeout(r, 300)) // 避免打太快
+  }
+  console.log(`✅ 全量活動抓取完成，共 ${all.length} 筆`)
+  return all
 }
 
 // ── Step 4：組合資料、處理 monthly_history ──
@@ -105,38 +128,35 @@ function buildJSON(stats, activities) {
   function sumDist(arr) { return Math.round(arr.reduce((s, a) => s + a.distance, 0) / 10) / 100 }
   function sumElev(arr) { return Math.round(arr.reduce((s, a) => s + a.total_elevation_gain, 0)) }
 
-  // ── 本月各類型活動 ──
-  const thisMonthActs = activities.filter(a => a.start_date.startsWith(thisMonth))
-  const monthRides   = thisMonthActs.filter(a => isType(a, RIDE_TYPES))
-  const monthRuns    = thisMonthActs.filter(a => isType(a, RUN_TYPES))
-  const monthSwims   = thisMonthActs.filter(a => isType(a, SWIM_TYPES))
-  const monthWeights = thisMonthActs.filter(a => isType(a, WEIGHT_TYPES))
+  // ── 計算 monthly_history（FETCH_ALL 時算全部月份，否則只算本月）──
+  const fetchAll = process.env.FETCH_ALL === '1'
+  const monthsToCalc = fetchAll
+    ? [...new Set(activities.map(a => a.start_date.slice(0, 7)))].sort()
+    : [thisMonth]
 
-  const thisMonthData = {
-    month: thisMonth,
-    ride: {
-      distance_km: sumDist(monthRides),
-      elevation_m: sumElev(monthRides),
-      count: monthRides.length,
-    },
-    run: {
-      distance_km: sumDist(monthRuns),
-      count: monthRuns.length,
-    },
-    swim: {
-      distance_km: sumDist(monthSwims),
-      count: monthSwims.length,
-    },
-    weight_training: {
-      count: monthWeights.length,
-    },
+  function calcMonthData(month) {
+    const acts = activities.filter(a => a.start_date.startsWith(month))
+    const rides   = acts.filter(a => isType(a, RIDE_TYPES))
+    const runs    = acts.filter(a => isType(a, RUN_TYPES))
+    const swims   = acts.filter(a => isType(a, SWIM_TYPES))
+    const weights = acts.filter(a => isType(a, WEIGHT_TYPES))
+    return {
+      month,
+      ride:            { distance_km: sumDist(rides), elevation_m: sumElev(rides), count: rides.length },
+      run:             { distance_km: sumDist(runs),  count: runs.length },
+      swim:            { distance_km: sumDist(swims), count: swims.length },
+      weight_training: { count: weights.length },
+    }
   }
 
-  // 更新 monthly_history
+  // 更新 monthly_history：覆寫計算的月份，保留其他歷史
   const history = existing.monthly_history || []
-  const idx = history.findIndex(h => h.month === thisMonth)
-  if (idx >= 0) history[idx] = thisMonthData
-  else history.push(thisMonthData)
+  for (const month of monthsToCalc) {
+    const data = calcMonthData(month)
+    const idx = history.findIndex(h => h.month === month)
+    if (idx >= 0) history[idx] = data
+    else history.push(data)
+  }
   history.sort((a, b) => a.month.localeCompare(b.month))
 
   // ── 最近各類型活動（各取最近 10 筆）──

@@ -10,6 +10,11 @@ on:
     - cron: '0 0 * * *'   # 每天 00:00 UTC = 台灣早上 8:00
 
   workflow_dispatch:        # 讓你可以在 GitHub 網頁手動觸發（測試用）
+    inputs:
+      fetch_all:
+        description: '全量抓取所有歷史活動並重建 monthly_history（第一次設定用）'
+        type: boolean
+        default: false
 
 jobs:
   sync:
@@ -35,6 +40,7 @@ jobs:
           STRAVA_CLIENT_SECRET: ${{ secrets.STRAVA_CLIENT_SECRET }}
           STRAVA_REFRESH_TOKEN: ${{ secrets.STRAVA_REFRESH_TOKEN }}
           STRAVA_ATHLETE_ID:    ${{ secrets.STRAVA_ATHLETE_ID }}
+          FETCH_ALL:            ${{ inputs.fetch_all == true && '1' || '0' }}
         run: node scripts/fetch-strava.js
 
       # 4. 如果 strava.json 有變動，commit 並 push 回 repo
