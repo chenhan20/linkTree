@@ -130,12 +130,13 @@ function buildJSON(stats, activities) {
 
   // ── 計算 monthly_history（FETCH_ALL 時算全部月份，否則只算本月）──
   const fetchAll = process.env.FETCH_ALL === '1'
+  // 用 start_date_local 切日（台灣時間區）
   const monthsToCalc = fetchAll
-    ? [...new Set(activities.map(a => a.start_date.slice(0, 7)))].sort()
+    ? [...new Set(activities.map(a => (a.start_date_local || a.start_date).slice(0, 7)))].sort()
     : [thisMonth]
 
   function calcMonthData(month) {
-    const acts = activities.filter(a => a.start_date.startsWith(month))
+    const acts = activities.filter(a => (a.start_date_local || a.start_date).slice(0, 7) === month)
     const rides   = acts.filter(a => isType(a, RIDE_TYPES))
     const runs    = acts.filter(a => isType(a, RUN_TYPES))
     const swims   = acts.filter(a => isType(a, SWIM_TYPES))
@@ -179,9 +180,14 @@ function buildJSON(stats, activities) {
     return `${m}:${String(s).padStart(2,'0')}`
   }
 
+  // 用 start_date_local 切日切時（台灣時間）
+  function localDate(a) { return (a.start_date_local || a.start_date).slice(0, 10) }
+  function localTime(a) { return (a.start_date_local || a.start_date).slice(11, 16) }
+
   const recentRides = activities.filter(a => isType(a, RIDE_TYPES)).slice(0, 10).map(a => ({
     name:           a.name,
-    date:           a.start_date.slice(0, 10),
+    date:           localDate(a),
+    time:           localTime(a),
     distance_km:    Math.round(a.distance / 10) / 100,
     moving_time_hr: Math.round(a.moving_time / 360) / 10,
     elevation_m:    Math.round(a.total_elevation_gain),
@@ -191,18 +197,20 @@ function buildJSON(stats, activities) {
 
   const recentRuns = activities.filter(a => isType(a, RUN_TYPES)).slice(0, 10).map(a => ({
     name:           a.name,
-    date:           a.start_date.slice(0, 10),
+    date:           localDate(a),
+    time:           localTime(a),
     distance_km:    Math.round(a.distance / 10) / 100,
     moving_time_hr: Math.round(a.moving_time / 360) / 10,
     elevation_m:    Math.round(a.total_elevation_gain),
     avg_pace_km:    fmtPaceKm(a.average_speed),
-    avg_cadence_spm: a.average_cadence ? Math.round(a.average_cadence * 2) : null, // Strava 給單腳，*2 = 雙腳步頻
+    avg_cadence_spm: a.average_cadence ? Math.round(a.average_cadence * 2) : null,
     avg_heartrate:  a.average_heartrate ? Math.round(a.average_heartrate) : null,
   }))
 
   const recentSwims = activities.filter(a => isType(a, SWIM_TYPES)).slice(0, 10).map(a => ({
     name:             a.name,
-    date:             a.start_date.slice(0, 10),
+    date:             localDate(a),
+    time:             localTime(a),
     distance_km:      Math.round(a.distance / 10) / 100,
     moving_time_hr:   Math.round(a.moving_time / 360) / 10,
     pace_per_100m:    fmtPace100m(a.distance, a.moving_time),
@@ -211,7 +219,8 @@ function buildJSON(stats, activities) {
 
   const recentWeights = activities.filter(a => isType(a, WEIGHT_TYPES)).slice(0, 10).map(a => ({
     name:          a.name,
-    date:          a.start_date.slice(0, 10),
+    date:          localDate(a),
+    time:          localTime(a),
     moving_time_hr: Math.round(a.moving_time / 360) / 10,
     avg_heartrate: a.average_heartrate ? Math.round(a.average_heartrate) : null,
   }))

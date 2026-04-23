@@ -240,7 +240,13 @@ function groupByDate(list) {
     if (!map[d]) map[d] = []
     map[d].push(a)
   })
-  return Object.entries(map).sort((a, b) => b[0].localeCompare(a[0]))
+  // days: newest first; within each day: earliest first (by time field)
+  return Object.entries(map)
+    .sort((a, b) => b[0].localeCompare(a[0]))
+    .map(([d, acts]) => [
+      d,
+      acts.slice().sort((a, b) => (a.time || '').localeCompare(b.time || ''))
+    ])
 }
 
 /* ── render timeline ── */
@@ -301,7 +307,11 @@ function render(data) {
   ;(data.recent_runs    || []).forEach(a => allList.push({...a, _type:'run'}))
   ;(data.recent_swims   || []).forEach(a => allList.push({...a, _type:'swim'}))
   ;(data.recent_weights || []).forEach(a => allList.push({...a, _type:'weight'}))
-  allList.sort((a,b) => (b.date||'').localeCompare(a.date||''))
+  // sort by date desc, then time desc (so groupByDate re-sorts within day asc)
+  allList.sort((a,b) => {
+    const dc = (b.date||'').localeCompare(a.date||'')
+    return dc !== 0 ? dc : (b.time||'').localeCompare(a.time||'')
+  })
 
   // tabs config
   const tabs = [
