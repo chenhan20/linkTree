@@ -212,57 +212,6 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 </style>
 </head>
 <body>
-<<<<<<< HEAD
-    <div class="container-fluid linkTreeContainer">
-        <div class="titleContainer">
-            <h1>SteveChuang</h1>
-            <h2>Link Tree</h2>
-        </div>
-        <div class="buttonContainer">
-            <div class="row">
-                <div class="col-12 offset-xl-2 col-xl-8">
-                    <button class="btn" data-url='https://www.instagram.com/chenhan20/'><i class="fab fa-instagram"></i>
-                        Instagram</button>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-12 offset-xl-2 col-xl-8">
-                    <button class="btn" data-url='https://www.facebook.com/profile.php?id=100000189117019'><i
-                            class="fab fa-facebook-square"></i> Facebook</button>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-12 offset-xl-2 col-xl-8">
-                    <button class="btn" data-url='https://www.youtube.com/user/chenhan20'><i class="fab fa-youtube"></i>
-                        Youtube</button>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-12 offset-xl-2 col-xl-8">
-                    <button class="btn" data-url='https://calm-woodland-74729.herokuapp.com/SteveCard'><i
-                            class="fas fa-address-card"></i> Resume</button>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-12 offset-xl-2 col-xl-8">
-                    <button class="btn"
-                        data-url='https://www.linkedin.com/in/%E6%89%BF%E7%BF%B0-%E8%8E%8A-4159b7139/'><i
-                            class="fab fa-linkedin"></i> Linkedin</button>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-12 offset-xl-2 col-xl-8">
-                    <button class="btn" data-url='https://github.com/chenhan20'><i class="fab fa-github-square"></i>
-                        Github</button>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-12 offset-xl-2 col-xl-8">
-                    <button class="btn" data-url='https://t.me/stevechuang_bot'><i class="fab fa-telegram"></i>
-                        SteveBot</button>
-                </div>
-            </div>
-=======
 <canvas id="star-canvas"></canvas>
 <div class="grid-bg"></div>
 <div class="hud tl"></div><div class="hud tr"></div><div class="hud bl"></div><div class="hud br"></div>
@@ -286,7 +235,6 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
             <div class="r-flame-mid"></div>
             <div class="r-flame-core"></div>
           </div>
->>>>>>> claude
         </div>
       </div>
       <div class="lt-name">SteveChuang</div>
@@ -447,7 +395,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
             <div class="sv-chart" v-if="sv.data.monthly_history && sv.data.monthly_history.length">
               <div v-for="row in sv.data.monthly_history" :key="row.month" class="sv-bar-row">
                 <span class="sv-bar-month">{{ row.month.slice(5) }}</span>
-                <div class="sv-bar-track" :class="{svBarToday: isThisMonth(row.month)}">
+                <div class="sv-bar-track" :class="{'sv-bar-today': isThisMonth(row.month)}">
                   <div class="sv-bar-fill" :style="{width: chartVisible ? barWidth(row.distance_km)+'%' : '0%'}">
                     <span class="sv-bar-val" v-if="barWidth(row.distance_km) > 25">{{ row.distance_km }}</span>
                   </div>
