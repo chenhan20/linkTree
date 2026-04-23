@@ -378,27 +378,42 @@ function render(data) {
     ${history.length ? `
     <div class="monthly-chart">
       <div class="section-title">月度里程分佈 <span class="muted">· MONTHLY DISTANCE (KM)</span></div>
-      <div class="chart-rows">
+      <div class="chart-rows" id="chart-rows">
         ${(() => {
-          let lastYear = null
-          return history.map(h => {
-            const dist = monthDist(h)
-            const pct = dist > 0 ? Math.max((dist / maxDist) * 100, 4) : 0
-            const year = h.month.slice(0, 4)
-            const yearDiv = year !== lastYear
-              ? `<div class="chart-year">${year}</div>`
-              : ''
-            lastYear = year
-            return `
-              ${yearDiv}
-              <div class="chart-row">
-                <div class="chart-label">${fmtMonthLabel(h.month)}</div>
-                <div class="chart-bar-wrap">
-                  <div class="chart-bar" data-pct="${pct}">
-                    <span class="chart-bar-val">${dist}</span>
+          // group by year
+          const byYear = {}
+          history.forEach(h => {
+            const y = h.month.slice(0, 4)
+            if (!byYear[y]) byYear[y] = []
+            byYear[y].push(h)
+          })
+          const years = Object.keys(byYear).sort((a,b) => b.localeCompare(a)) // newest first
+          const currentYear = new Date().getFullYear().toString()
+          return years.map(year => {
+            const collapsed = year !== currentYear
+            const rows = byYear[year].map(h => {
+              const dist = monthDist(h)
+              const pct = dist > 0 ? Math.max((dist / maxDist) * 100, 4) : 0
+              return `
+                <div class="chart-row">
+                  <div class="chart-label">${fmtMonthLabel(h.month)}</div>
+                  <div class="chart-bar-wrap">
+                    <div class="chart-bar" data-pct="${pct}">
+                      <span class="chart-bar-val">${dist}</span>
+                    </div>
                   </div>
+                  <div class="chart-unit-label">km</div>
                 </div>
-                <div class="chart-unit-label">km</div>
+              `
+            }).join('')
+            const rowHeight = byYear[year].length * 50 // approx px per row
+            return `
+              <div class="chart-year-header" data-year="${year}">
+                <span class="chart-year-arrow" id="arrow-${year}">${collapsed ? '▶' : '▼'}</span>
+                ${year}
+              </div>
+              <div class="chart-year-rows${collapsed ? ' collapsed' : ''}" id="year-rows-${year}" style="max-height:${collapsed ? 0 : rowHeight + 20}px">
+                ${rows}
               </div>
             `
           }).join('')
@@ -432,7 +447,7 @@ function render(data) {
     </a>
   `
 
-  // animate chart bars
+  // animate chart bars (only visible ones)
   requestAnimationFrame(() => {
     document.querySelectorAll('.chart-bar').forEach(bar => {
       const pct = bar.dataset.pct
@@ -442,6 +457,35 @@ function render(data) {
       })
     })
   })
+
+  // year collapse toggle
+  const chartRows = document.getElementById('chart-rows')
+  if (chartRows) {
+    chartRows.addEventListener('click', e => {
+      const header = e.target.closest('.chart-year-header')
+      if (!header) return
+      const year = header.dataset.year
+      const rows = document.getElementById(`year-rows-${year}`)
+      const arrow = document.getElementById(`arrow-${year}`)
+      const isCollapsed = rows.classList.contains('collapsed')
+      if (isCollapsed) {
+        rows.style.maxHeight = rows.scrollHeight + 'px'
+        rows.classList.remove('collapsed')
+        arrow.textContent = '▼'
+        // animate newly visible bars
+        rows.querySelectorAll('.chart-bar').forEach(bar => {
+          bar.style.width = '0'
+          requestAnimationFrame(() => {
+            setTimeout(() => { bar.style.width = bar.dataset.pct + '%' }, 60)
+          })
+        })
+      } else {
+        rows.style.maxHeight = '0'
+        rows.classList.add('collapsed')
+        arrow.textContent = '▶'
+      }
+    })
+  }
 
   // tab switching
   document.getElementById('sport-tabs').addEventListener('click', e => {
