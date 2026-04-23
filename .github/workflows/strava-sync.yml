@@ -35,7 +35,7 @@ jobs:
           STRAVA_CLIENT_SECRET: ${{ secrets.STRAVA_CLIENT_SECRET }}
           STRAVA_REFRESH_TOKEN: ${{ secrets.STRAVA_REFRESH_TOKEN }}
           STRAVA_ATHLETE_ID:    ${{ secrets.STRAVA_ATHLETE_ID }}
-        run: node fetch-strava.js
+        run: node scripts/fetch-strava.js
 
       # 4. 如果 strava.json 有變動，commit 並 push 回 repo
       - name: Commit and push strava.json

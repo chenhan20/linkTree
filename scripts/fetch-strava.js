@@ -11,7 +11,7 @@ const CLIENT_SECRET = process.env.STRAVA_CLIENT_SECRET
 const REFRESH_TOKEN = process.env.STRAVA_REFRESH_TOKEN
 const ATHLETE_ID    = process.env.STRAVA_ATHLETE_ID  // 你的 161539959
 
-const OUT_FILE = path.join(__dirname, 'strava.json')
+const OUT_FILE = path.join(__dirname, '..', 'strava.json')
 
 // ── 簡單的 HTTPS helper（不裝額外套件）──
 function request(options, body = null) {
