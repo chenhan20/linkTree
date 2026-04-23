@@ -66,11 +66,11 @@ async function fetchStats(token) {
   return data
 }
 
-// ── Step 3：抓最近 5 筆活動 ──
+// ── Step 3：抓最近 100 筆活動（涵蓋多種運動類型）──
 async function fetchRecentActivities(token) {
   const data = await request({
     hostname: 'www.strava.com',
-    path:     '/api/v3/athlete/activities?per_page=5&page=1',
+    path:     '/api/v3/athlete/activities?per_page=100&page=1',
     method:   'GET',
     headers:  { Authorization: `Bearer ${token}` },
   })
@@ -92,58 +92,93 @@ function buildJSON(stats, activities) {
     catch (e) { console.warn('⚠️  現有 JSON 讀取失敗，重新建立') }
   }
 
-  // 算本月里程（從最近活動撈同月的加總）
   const now = new Date()
   const thisMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
 
-  // 用 ytd totals 和歷史月份推算（Strava API 沒有直接給單月，用 ytd 扣前幾月）
-  // 簡單做法：直接用本月活動加總
-  const thisMonthRides = activities.filter(a => {
-    return a.type === 'Ride' && a.start_date.startsWith(thisMonth.replace('-', '-'))
-  })
-  // 注意：per_page=5 可能不含完整本月，這裡用 ytd 的最後差值會更準
-  // 但對每天更新來說這樣已經夠用，之後可以改用 /activities?after=epoch
+  // ── 判斷運動類型 ──
+  const RIDE_TYPES   = ['Ride', 'VirtualRide', 'EBikeRide', 'MountainBikeRide']
+  const RUN_TYPES    = ['Run', 'VirtualRun', 'TrailRun']
+  const SWIM_TYPES   = ['Swim']
+  const WEIGHT_TYPES = ['WeightTraining', 'Workout', 'CrossFit', 'Yoga', 'Pilates']
+
+  function isType(a, types) { return types.includes(a.type) }
+  function sumDist(arr) { return Math.round(arr.reduce((s, a) => s + a.distance, 0) / 10) / 100 }
+  function sumElev(arr) { return Math.round(arr.reduce((s, a) => s + a.total_elevation_gain, 0)) }
+
+  // ── 本月各類型活動 ──
+  const thisMonthActs = activities.filter(a => a.start_date.startsWith(thisMonth))
+  const monthRides   = thisMonthActs.filter(a => isType(a, RIDE_TYPES))
+  const monthRuns    = thisMonthActs.filter(a => isType(a, RUN_TYPES))
+  const monthSwims   = thisMonthActs.filter(a => isType(a, SWIM_TYPES))
+  const monthWeights = thisMonthActs.filter(a => isType(a, WEIGHT_TYPES))
 
   const thisMonthData = {
-    month:        thisMonth,
-    distance_km:  Math.round(s.ytd_ride_totals.distance / 10) / 100,
-    elevation_m:  Math.round(s.ytd_ride_totals.elevation_gain),
-    rides:        s.ytd_ride_totals.count,
+    month: thisMonth,
+    ride: {
+      distance_km: sumDist(monthRides),
+      elevation_m: sumElev(monthRides),
+      count: monthRides.length,
+    },
+    run: {
+      distance_km: sumDist(monthRuns),
+      count: monthRuns.length,
+    },
+    swim: {
+      distance_km: sumDist(monthSwims),
+      count: monthSwims.length,
+    },
+    weight_training: {
+      count: monthWeights.length,
+    },
   }
 
-  // 更新 monthly_history：找本月那筆更新，找不到就 append
+  // 更新 monthly_history
   const history = existing.monthly_history || []
   const idx = history.findIndex(h => h.month === thisMonth)
   if (idx >= 0) history[idx] = thisMonthData
   else history.push(thisMonthData)
-  // 按月份排序
   history.sort((a, b) => a.month.localeCompare(b.month))
 
-  // 組最近活動
-  const recentRides = activities
-    .filter(a => a.type === 'Ride')
-    .slice(0, 5)
-    .map(a => ({
-      name:          a.name,
-      date:          a.start_date.slice(0, 10),
-      distance_km:   Math.round(a.distance / 10) / 100,
+  // ── 最近各類型活動（各取最近 10 筆）──
+  function mapActivity(a) {
+    return {
+      name:           a.name,
+      date:           a.start_date.slice(0, 10),
+      distance_km:    Math.round(a.distance / 10) / 100,
       moving_time_hr: Math.round(a.moving_time / 360) / 10,
-      elevation_m:   Math.round(a.total_elevation_gain),
-      avg_speed_kmh: Math.round(a.average_speed * 36) / 10,
-    }))
+      elevation_m:    Math.round(a.total_elevation_gain),
+      avg_speed_kmh:  Math.round(a.average_speed * 36) / 10,
+    }
+  }
+
+  const recentRides   = activities.filter(a => isType(a, RIDE_TYPES)).slice(0, 10).map(mapActivity)
+  const recentRuns    = activities.filter(a => isType(a, RUN_TYPES)).slice(0, 10).map(mapActivity)
+  const recentSwims   = activities.filter(a => isType(a, SWIM_TYPES)).slice(0, 10).map(mapActivity)
+  const recentWeights = activities.filter(a => isType(a, WEIGHT_TYPES)).slice(0, 10).map(a => ({
+    name: a.name,
+    date: a.start_date.slice(0, 10),
+    moving_time_hr: Math.round(a.moving_time / 360) / 10,
+  }))
 
   return {
     updated_at: new Date().toISOString(),
     summary: {
-      ytd_distance_km:    Math.round(s.ytd_ride_totals.distance / 10) / 100,
-      ytd_elevation_m:    Math.round(s.ytd_ride_totals.elevation_gain),
-      ytd_rides:          s.ytd_ride_totals.count,
-      ytd_moving_time_hr: Math.round(s.ytd_ride_totals.moving_time / 360) / 10,
+      ytd_distance_km:      Math.round(s.ytd_ride_totals.distance / 10) / 100,
+      ytd_elevation_m:      Math.round(s.ytd_ride_totals.elevation_gain),
+      ytd_rides:            s.ytd_ride_totals.count,
+      ytd_moving_time_hr:   Math.round(s.ytd_ride_totals.moving_time / 360) / 10,
+      ytd_run_distance_km:  Math.round(s.ytd_run_totals.distance / 10) / 100,
+      ytd_runs:             s.ytd_run_totals.count,
+      ytd_swim_distance_km: Math.round((s.ytd_swim_totals?.distance || 0) / 10) / 100,
+      ytd_swims:            s.ytd_swim_totals?.count || 0,
       all_time_distance_km: Math.round(s.all_ride_totals.distance / 10) / 100,
-      all_time_rides:     s.all_ride_totals.count,
+      all_time_rides:       s.all_ride_totals.count,
       all_time_elevation_m: Math.round(s.all_ride_totals.elevation_gain),
     },
     recent_rides:    recentRides,
+    recent_runs:     recentRuns,
+    recent_swims:    recentSwims,
+    recent_weights:  recentWeights,
     monthly_history: history,
   }
 }
@@ -164,8 +199,9 @@ async function main() {
 
   fs.writeFileSync(OUT_FILE, JSON.stringify(result, null, 2), 'utf8')
   console.log(`✅ strava.json 寫入完成 (${OUT_FILE})`)
-  console.log(`   今年里程：${result.summary.ytd_distance_km} km`)
-  console.log(`   今年次數：${result.summary.ytd_rides} rides`)
+  console.log(`   單車 YTD：${result.summary.ytd_distance_km} km / ${result.summary.ytd_rides} rides`)
+  console.log(`   跑步 YTD：${result.summary.ytd_run_distance_km} km / ${result.summary.ytd_runs} runs`)
+  console.log(`   游泳 YTD：${result.summary.ytd_swim_distance_km} km / ${result.summary.ytd_swims} swims`)
 }
 
 main().catch(err => {
