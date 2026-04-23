@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Athletics · SteveChuang</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#060810;color:#ddd}
+
+#star-canvas{position:fixed;inset:0;width:100%;height:100%;background:#060810;z-index:0;pointer-events:none}
+
+#app{position:relative;z-index:1;min-height:100vh;max-width:800px;margin:0 auto;padding:0 1.2rem 5rem}
+
+/* ── topbar ── */
+.topbar{
+  position:sticky;top:0;z-index:10;
+  display:flex;align-items:center;gap:12px;
+  padding:14px 1.2rem;margin:0 -1.2rem;
+  border-bottom:1px solid rgba(252,76,2,.15);
+  background:rgba(6,8,16,.95);
+  backdrop-filter:blur(8px);
+}
+.back-btn{
+  display:flex;align-items:center;gap:6px;
+  background:rgba(252,76,2,.1);border:1px solid rgba(252,76,2,.3);
+  border-radius:20px;padding:6px 14px;
+  color:#FC4C02;font-size:13px;font-weight:500;
+  cursor:pointer;text-decoration:none;transition:background .2s;
+  -webkit-tap-highlight-color:transparent;
+}
+.back-btn:hover{background:rgba(252,76,2,.2)}
+.topbar-title{font-size:12px;color:rgba(252,76,2,.55);letter-spacing:2.5px;text-transform:uppercase}
+
+/* ── hero ── */
+.hero{display:flex;align-items:center;gap:1.5rem;padding:2rem 0 1.5rem;flex-wrap:wrap}
+.avatar{
+  width:80px;height:80px;border-radius:50%;flex-shrink:0;
+  background:linear-gradient(135deg,#1a0800,#3d1200);
+  border:2.5px solid #FC4C02;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 18px rgba(252,76,2,.25);
+}
+.avatar svg{width:38px;height:38px;fill:#FC4C02}
+.hero-info h1{font-size:26px;font-weight:600;color:#fff;display:flex;align-items:center;gap:8px}
+.verified{width:20px;height:20px;fill:#FC4C02;flex-shrink:0}
+.hero-sub{font-size:11px;color:#FC4C02;letter-spacing:3px;text-transform:uppercase;margin-top:5px}
+.hero-updated{font-size:11px;color:rgba(252,76,2,.35);letter-spacing:1.5px;text-transform:uppercase;margin-top:5px}
+
+/* ── stats grid ── */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:2.2rem}
+.stat-card{
+  padding:.9rem 1rem;border-radius:10px;
+  border:1px solid rgba(252,76,2,.2);background:rgba(252,76,2,.05);
+}
+.stat-val{font-size:20px;font-weight:600;color:#FF6B35;line-height:1}
+.stat-unit{font-size:10px;color:rgba(252,76,2,.55);margin-top:2px}
+.stat-label{font-size:11px;color:#777;margin-top:5px}
+
+/* ── section title ── */
+.section-title{
+  font-size:11px;font-weight:600;color:#FC4C02;letter-spacing:3px;text-transform:uppercase;
+  margin-bottom:1rem;padding-bottom:.5rem;
+  border-bottom:1px solid rgba(252,76,2,.15);
+}
+.section-title .muted{color:rgba(252,76,2,.4)}
+
+/* ── monthly chart ── */
+.monthly-chart{margin-bottom:2.2rem}
+.chart-rows{display:flex;flex-direction:column;gap:8px}
+.chart-row{display:flex;align-items:center;gap:10px}
+.chart-label{font-size:12px;color:#777;width:24px;text-align:right;flex-shrink:0}
+.chart-bar-wrap{flex:1;height:30px;background:rgba(252,76,2,.07);border-radius:5px;overflow:hidden}
+.chart-bar{
+  height:100%;border-radius:5px;
+  background:linear-gradient(90deg,#C03800,#FC4C02,#FF8C5A);
+  display:flex;align-items:center;justify-content:flex-end;
+  padding-right:8px;min-width:36px;
+  width:0;transition:width 1s cubic-bezier(.25,.46,.45,.94);
+}
+.chart-bar-val{font-size:11px;font-weight:600;color:#fff;white-space:nowrap}
+.chart-unit-label{font-size:11px;color:#555;width:28px;flex-shrink:0}
+
+/* ── sport tabs ── */
+.sport-tabs{display:flex;gap:8px;margin-bottom:1.2rem;flex-wrap:wrap}
+.sport-tab{
+  display:flex;align-items:center;gap:5px;
+  font-size:12px;padding:5px 14px;border-radius:20px;
+  border:1px solid rgba(252,76,2,.2);color:#777;background:transparent;
+  cursor:pointer;transition:all .2s;-webkit-tap-highlight-color:transparent;
+}
+.sport-tab.active{background:rgba(252,76,2,.14);border-color:#FC4C02;color:#FC4C02}
+.sport-tab:hover:not(.active){border-color:rgba(252,76,2,.4);color:#FC4C02}
+
+/* ── timeline ── */
+.timeline{margin-bottom:2.2rem}
+.timeline-day{margin-bottom:1.4rem}
+.timeline-date{
+  font-size:17px;font-weight:600;color:#FC4C02;
+  margin-bottom:.75rem;padding-left:22px;position:relative;
+}
+.timeline-date::before{
+  content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);
+  width:10px;height:10px;border-radius:50%;
+  background:#FC4C02;box-shadow:0 0 8px rgba(252,76,2,.7);
+}
+.activity-card{
+  display:flex;align-items:center;gap:12px;
+  padding:.85rem 1rem;border-radius:9px;
+  border:1px solid rgba(252,76,2,.12);background:rgba(10,4,0,.45);
+  margin-bottom:8px;margin-left:22px;
+  transition:border-color .2s,background .2s;
+}
+.activity-card:hover{border-color:rgba(252,76,2,.32);background:rgba(22,8,0,.55)}
+.activity-icon{
+  width:36px;height:36px;border-radius:8px;flex-shrink:0;
+  background:rgba(252,76,2,.1);
+  display:flex;align-items:center;justify-content:center;
+}
+.activity-icon svg{width:18px;height:18px;fill:#FC4C02}
+.activity-info{flex:1;min-width:0}
+.activity-name{font-size:14px;font-weight:500;color:#eeebe8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.activity-meta{font-size:11px;color:#666;margin-top:3px}
+.activity-dist{font-size:15px;font-weight:600;color:#FC4C02;flex-shrink:0;white-space:nowrap}
+.empty{font-size:13px;color:#555;padding:2rem 0;text-align:center}
+
+/* ── bottom totals ── */
+.totals-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:2rem}
+.total-card{
+  padding:1rem;border-radius:10px;
+  border:1px solid rgba(252,76,2,.12);background:rgba(10,4,0,.3);text-align:center;
+}
+.total-val{font-size:20px;font-weight:600;color:#FF6B35}
+.total-label{font-size:10px;color:#555;letter-spacing:2px;text-transform:uppercase;margin-top:5px}
+
+/* ── CTA button ── */
+.strava-cta{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  width:100%;padding:14px;border-radius:10px;
+  background:rgba(252,76,2,.1);border:1px solid rgba(252,76,2,.4);
+  color:#FC4C02;font-size:14px;font-weight:500;
+  text-decoration:none;transition:background .2s,border-color .2s;
+}
+.strava-cta:hover{background:rgba(252,76,2,.2);border-color:#FC4C02}
+.strava-cta svg{width:16px;height:16px;fill:#FC4C02;flex-shrink:0}
+
+/* ── loading / error ── */
+.loading{text-align:center;padding:4rem 0;color:#555;font-size:14px}
+
+@media(max-width:520px){
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .hero-info h1{font-size:22px}
+  .stat-val{font-size:18px}
+  .totals-grid{grid-template-columns:repeat(3,1fr)}
+  .total-val{font-size:16px}
+}
+</style>
+</head>
+<body>
+
+<canvas id="star-canvas"></canvas>
+
+<div id="app">
+  <div class="topbar">
+    <a class="back-btn" href="javascript:history.length>1?history.back():location.href='linkTreeIndex.html'">← BACK</a>
+    <span class="topbar-title">Athletics · Strava</span>
+  </div>
+  <div id="content"><div class="loading">Loading athlete data…</div></div>
+</div>
+
+<script>
+/* ── star canvas ── */
+;(function(){
+  const c=document.getElementById('star-canvas'),ctx=c.getContext('2d')
+  let W,H,stars=[]
+  function resize(){W=c.width=innerWidth;H=c.height=innerHeight}
+  function init(){stars=[];const n=Math.floor(W*H/3500);for(let i=0;i<n;i++)stars.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.2,a:Math.random(),da:(Math.random()-.5)*.006,speed:Math.random()*.1+.02})}
+  function draw(){ctx.clearRect(0,0,W,H);stars.forEach(s=>{s.a+=s.da;if(s.a<0||s.a>1)s.da*=-1;s.y-=s.speed;if(s.y<0)s.y=H;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fillStyle=`rgba(220,160,120,${s.a*.5})`;ctx.fill()});requestAnimationFrame(draw)}
+  resize();init();draw()
+  addEventListener('resize',()=>{resize();init()})
+})()
+
+/* ── SVG icons ── */
+const ICONS = {
+  ride:   '<path d="M5 20.5A3.5 3.5 0 0 1 1.5 17 3.5 3.5 0 0 1 5 13.5 3.5 3.5 0 0 1 8.5 17 3.5 3.5 0 0 1 5 20.5M5 12A5 5 0 0 0 0 17a5 5 0 0 0 5 5 5 5 0 0 0 5-5 5 5 0 0 0-5-5m8.8-5.4L11 9.5l1.5 1.5H16v2h-4.5l-2.5-2.5L11.5 8H9.8l-1.5 4.5 2.2 2.2A5 5 0 0 0 14 17a5 5 0 0 0 5 5 5 5 0 0 0 5-5 5 5 0 0 0-5-5l-1.1.1-2.7-2.6.8-2H18V6h-3.2l-.9 2.6M14.5 5a1.5 1.5 0 0 0 1.5-1.5A1.5 1.5 0 0 0 14.5 2 1.5 1.5 0 0 0 13 3.5 1.5 1.5 0 0 0 14.5 5m4.5 7a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5A3.5 3.5 0 0 1 15.5 17 3.5 3.5 0 0 1 19 13.5z"/>',
+  run:    '<path d="M13.49 5.48c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm-3.6 13.9l1-4.4 2.1 2v6h2v-7.5l-2.1-2 .6-3c1.3 1.5 3.3 2.5 5.5 2.5v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1l-5.2 2.2v4.7h2v-3.4l1.8-.7-1.6 8.1-4.9-1-.4 2 7 1.4z"/>',
+  swim:   '<path d="M2 12c.7 0 1.3.3 2 1 1 1 2.2 1.5 3.5 1.5S10 14 11 13c.7-.7 1.3-1 2-1s1.3.3 2 1c1 1 2.2 1.5 3.5 1.5s2.5-.5 3.5-1.5c.7-.7 1.3-1 2-1v-2c-1.3 0-2.5.5-3.5 1.5-.7.7-1.3 1-2 1s-1.3-.3-2-1C15.5 10.5 14.3 10 13 10s-2.5.5-3.5 1.5C8.8 12.2 8.2 12.5 7.5 12.5s-1.3-.3-2-1C4.5 10.5 3.3 10 2 10v2m0 5c.7 0 1.3.3 2 1 1 1 2.2 1.5 3.5 1.5S10 19 11 18c.7-.7 1.3-1 2-1s1.3.3 2 1c1 1 2.2 1.5 3.5 1.5s2.5-.5 3.5-1.5c.7-.7 1.3-1 2-1v-2c-1.3 0-2.5.5-3.5 1.5-.7.7-1.3 1-2 1s-1.3-.3-2-1C15.5 15.5 14.3 15 13 15s-2.5.5-3.5 1.5c-.7.7-1.3 1-2 1s-1.3-.3-2-1C4.5 15.5 3.3 15 2 15v2M17.5 7.3c-.7.7-1.2 1.7-3 1.7-1.5 0-2.2-.7-3-1.5C10.7 6.7 9.8 6 8.5 6 7 6 5.8 6.7 5 7.5L6.5 9c.5-.5 1-.9 2-.9 1.5 0 2.2.7 3 1.5.8.8 1.7 1.5 3 1.5 1.5 0 2.5-.7 3.3-1.5L19 8c-.2-.3-.5-.5-.8-.8l-.7.1z"/>',
+  weight: '<path d="M20.57 14.86L22 13.43 20.57 12 17 15.57 8.43 7 12 3.43 10.57 2 9.14 3.43 7.71 2 5.57 4.14 4.14 2.71 2.71 4.14l1.43 1.43L2 7.71l1.43 1.43L2 10.57 3.43 12 7 8.43 15.57 17 12 20.57 13.43 22l1.43-1.43L16.29 22l2.14-2.14 1.43 1.43 1.43-1.43-1.43-1.43L22 16.29l-1.43-1.43z"/>',
+}
+
+/* ── helpers ── */
+function fmtMovingTime(hr) {
+  const h = Math.floor(hr)
+  const m = Math.round((hr - h) * 60)
+  return `${h}:${String(m).padStart(2,'0')}`
+}
+function fmtDate(d) {
+  // "2026-04-22" → "04 / 22"
+  const [,mm,dd] = d.split('-')
+  return `${mm} / ${dd}`
+}
+function fmtMonthLabel(m) {
+  return m.replace(/^\d{4}-/, '')
+}
+function monthDist(h) {
+  if (h.ride && typeof h.ride === 'object') return h.ride.distance_km || 0
+  return h.distance_km || 0
+}
+
+/* ── group activities by date ── */
+function groupByDate(list) {
+  const map = {}
+  ;(list || []).forEach(a => {
+    const d = (a.date || '').slice(0, 10)
+    if (!map[d]) map[d] = []
+    map[d].push(a)
+  })
+  return Object.entries(map).sort((a, b) => b[0].localeCompare(a[0]))
+}
+
+/* ── render timeline ── */
+function renderTimeline(list, type) {
+  if (!list || !list.length) return '<div class="empty">暫無資料</div>'
+  const isWeight = type === 'weight'
+  const icon = ICONS[type] || ICONS.ride
+  const groups = groupByDate(list)
+  return groups.map(([date, acts]) => `
+    <div class="timeline-day">
+      <div class="timeline-date">${fmtDate(date)}</div>
+      ${acts.map(a => `
+        <div class="activity-card">
+          <div class="activity-icon"><svg viewBox="0 0 24 24">${icon}</svg></div>
+          <div class="activity-info">
+            <div class="activity-name">${a.name || '—'}</div>
+            <div class="activity-meta">${
+              isWeight
+                ? fmtMovingTime(a.moving_time_hr || 0)
+                : `${fmtMovingTime(a.moving_time_hr || 0)} &nbsp;·&nbsp; ↑${a.elevation_m || 0}m &nbsp;·&nbsp; ${a.avg_speed_kmh || 0} km/h`
+            }</div>
+          </div>
+          ${isWeight ? '' : `<div class="activity-dist">${a.distance_km} <small style="font-size:11px;font-weight:400">km</small></div>`}
+        </div>
+      `).join('')}
+    </div>
+  `).join('')
+}
+
+/* ── main render ── */
+function render(data) {
+  const s = data.summary || {}
+  const history = (data.monthly_history || []).slice().reverse()
+  const maxDist = Math.max(...history.map(monthDist), 1)
+
+  // tabs config
+  const tabs = [
+    { key:'ride',   label:'🚴 單車',  list: data.recent_rides   },
+    { key:'run',    label:'🏃 跑步',  list: data.recent_runs    },
+    { key:'swim',   label:'🏊 游泳',  list: data.recent_swims   },
+    { key:'weight', label:'🏋️ 重訓', list: data.recent_weights },
+  ]
+  // only show tabs that have data
+  const activeTabs = tabs.filter(t => t.list && t.list.length > 0)
+  // fallback: if new format not yet available, show recent_rides only
+  if (!activeTabs.length && data.recent_rides && data.recent_rides.length) {
+    activeTabs.push(tabs[0])
+  }
+  let activeTab = activeTabs[0]?.key || 'ride'
+
+  function tabHTML() {
+    return activeTabs.map(t => `
+      <button class="sport-tab${t.key === activeTab ? ' active' : ''}" data-tab="${t.key}">${t.label}</button>
+    `).join('')
+  }
+  function timelineHTML() {
+    const t = activeTabs.find(t => t.key === activeTab)
+    return renderTimeline(t?.list, activeTab)
+  }
+
+  document.getElementById('content').innerHTML = `
+    <div class="hero">
+      <div class="avatar">
+        <svg viewBox="0 0 24 24">${ICONS.ride}</svg>
+      </div>
+      <div class="hero-info">
+        <h1>承翰 莊
+          <svg class="verified" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+        </h1>
+        <div class="hero-sub">Strava · Cyclist · Athlete</div>
+        <div class="hero-updated">Updated ${(data.updated_at || '').slice(0, 10)}</div>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-val">${s.ytd_distance_km ?? '—'}</div>
+        <div class="stat-unit">km</div>
+        <div class="stat-label">今年里程</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val">${s.ytd_elevation_m ?? '—'}</div>
+        <div class="stat-unit">m</div>
+        <div class="stat-label">今年爬升</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val">${s.ytd_rides ?? '—'}</div>
+        <div class="stat-unit">rides</div>
+        <div class="stat-label">今年次數</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val">${s.ytd_moving_time_hr ?? '—'}</div>
+        <div class="stat-unit">hrs</div>
+        <div class="stat-label">今年時數</div>
+      </div>
+    </div>
+
+    ${history.length ? `
+    <div class="monthly-chart">
+      <div class="section-title">月度里程分佈 <span class="muted">· MONTHLY DISTANCE (KM)</span></div>
+      <div class="chart-rows">
+        ${history.map(h => {
+          const dist = monthDist(h)
+          const pct = dist > 0 ? Math.max((dist / maxDist) * 100, 4) : 0
+          return `
+            <div class="chart-row">
+              <div class="chart-label">${fmtMonthLabel(h.month)}</div>
+              <div class="chart-bar-wrap">
+                <div class="chart-bar" data-pct="${pct}">
+                  <span class="chart-bar-val">${dist}</span>
+                </div>
+              </div>
+              <div class="chart-unit-label">km</div>
+            </div>
+          `
+        }).join('')}
+      </div>
+    </div>
+    ` : ''}
+
+    <div class="section-title">活動紀錄 <span class="muted">· ACTIVITY LOG</span></div>
+    <div class="sport-tabs" id="sport-tabs">${tabHTML()}</div>
+    <div class="timeline" id="timeline">${timelineHTML()}</div>
+
+    <div class="totals-grid">
+      <div class="total-card">
+        <div class="total-val">${s.all_time_distance_km ?? '—'}</div>
+        <div class="total-label">Total KM</div>
+      </div>
+      <div class="total-card">
+        <div class="total-val">${s.all_time_elevation_m ?? '—'}</div>
+        <div class="total-label">Total Elev</div>
+      </div>
+      <div class="total-card">
+        <div class="total-val">${s.all_time_rides ?? '—'}</div>
+        <div class="total-label">Total Rides</div>
+      </div>
+    </div>
+
+    <a class="strava-cta" href="https://www.strava.com/athletes/161539959" target="_blank">
+      <svg viewBox="0 0 24 24"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/></svg>
+      View full profile on Strava
+    </a>
+  `
+
+  // animate chart bars
+  requestAnimationFrame(() => {
+    document.querySelectorAll('.chart-bar').forEach(bar => {
+      const pct = bar.dataset.pct
+      bar.style.width = '0'
+      requestAnimationFrame(() => {
+        setTimeout(() => { bar.style.width = pct + '%' }, 80)
+      })
+    })
+  })
+
+  // tab switching
+  document.getElementById('sport-tabs').addEventListener('click', e => {
+    const btn = e.target.closest('.sport-tab')
+    if (!btn) return
+    activeTab = btn.dataset.tab
+    document.querySelectorAll('.sport-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === activeTab))
+    document.getElementById('timeline').innerHTML = timelineHTML()
+  })
+}
+
+/* ── fetch strava.json ── */
+fetch('strava.json')
+  .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json() })
+  .then(render)
+  .catch(err => {
+    document.getElementById('content').innerHTML = `
+      <div class="loading" style="color:#FC4C02">
+        載入失敗：${err.message}<br><br>
+        <span style="color:#555;font-size:12px">請先執行 GitHub Actions 產生 strava.json</span>
+      </div>
+    `
+  })
+</script>
+</body>
+</html>
