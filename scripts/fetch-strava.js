@@ -74,6 +74,9 @@ async function fetchRecentActivities(token) {
     method:   'GET',
     headers:  { Authorization: `Bearer ${token}` },
   })
+  if (!Array.isArray(data)) {
+    throw new Error('activities API 回傳非陣列：' + JSON.stringify(data))
+  }
   console.log(`✅ 最近活動抓取成功，共 ${data.length} 筆`)
   return data
 }
