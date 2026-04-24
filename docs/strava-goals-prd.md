@@ -5,7 +5,7 @@
 - **文件類型**: Product Requirements Document (PRD)
 - **適用頁面**: `strava.html`, `strava_aespa.html`
 - **相關資料來源**: `strava.json`, GitHub Actions / Strava data sync script
-- **版本**: v1
+- **版本**: v2 (含 System Monitor Edition 增補)
 - **狀態**: Draft / Planning
 
 ---
@@ -313,3 +313,162 @@
 4. 更新 `strava_aespa.html`
 5. 修正 duration formatter
 6. 驗證 desktop / mobile 版面
+
+---
+
+# 📡 Addendum v2 — System Monitor Edition (三鐵訓練監控儀表板)
+
+> 本章節為 Gemini 提案版本之整合，將 v1 的「月度目標」延伸為「系統級監控儀表板 (System Monitor)」。新增功能與 v1 不衝突，視為 v1 的 superset。
+
+## A1. 專案背景與目標 (Context & Objective)
+
+- **使用者 Persona**: 資深 Java 後端工程師、備戰 113km 半程鐵人三項的業餘運動員、新手爸爸。需要兼顧工作、高額房貸與育兒壓力。
+- **目標**: 將現有的 Strava 靜態展示頁，升級為具備「目標追蹤 (Goal Tracking)」、「疲勞預警 (Fatigue Warning)」與「精準數據萃取 (Data Extraction)」的系統級監控儀表板。
+- **核心痛點**:
+  1. 無法快速看出當月四項主要運動 (單車、跑步、游泳、重訓) 的紀律達標率。
+  2. 單次活動的「平均數據」會被暖身 / 緩和稀釋，無法反映主課表真實強度。
+  3. 時間格式 (如 `1:00`) 容易產生歧義。
+  4. 缺乏整體系統的疲勞度 (System Load) 監控。
+
+---
+
+## A2. 新增 / 強化功能需求 (Functional Requirements v2)
+
+### FR-V2-1: 月度目標與紀律追蹤 (Monthly SLA)
+> 對應 v1 FR-2，僅微調命名與燈號文案，**狀態值定義對齊如下**：
+
+- **指標項目**: 🚴 單車 (含 `VirtualRide` 飛輪)、🏃 跑步、🏊 游泳、🏋️ 重訓
+- **目標設定**: 每項預設 `4 次/月`
+- **狀態燈號 (count / target)**:
+  - `< 50%` → 🔴 嚴重落後 (`danger`)
+  - `50% ~ 99%` → 🟡 近期需補課 (`warning`)
+  - `100% ~ 149%` → 🟢 達標 (`success` / 對應 v1 `done`)
+  - `>= 150%` → 🔥 超標運作 (`over`)
+
+> ⚠️ 命名對齊決策：JSON `status` 欄位以 v1 既有為準（`danger` / `warning` / `done` / `over`），若採 Gemini 命名 `success`，需於資料同步階段做 alias 對應。
+
+### FR-V2-2: 本週任務清單 (Weekly Quest)
+> 與 v1 FR-3 相同；保留 ✅ / ⬜ Checkbox 視角，計算區間為「本週一 00:00 → 當前時間」。
+
+### FR-V2-3: 系統負載監控 (7-Day System Load) 🆕
+使用 Strava API 的 `suffer_score` (心率相對努力積分) 作為系統壓力指標，置於 Hero 下方明顯位置。
+
+- **計算方式**: 加總過去 7 天內所有活動的 `suffer_score`
+- **燈號邏輯**:
+  - `< 200` → 🟢 系統穩定 (`idle`)
+  - `200 ~ 400` → 🟡 高負載 (`warning`)
+  - `> 400` → 🔴 降頻保護中 (`overloaded`)
+
+### FR-V2-4: 時間格式無歧義化 (Duration Formatting)
+> 與 v1 FR-4 完全一致，作為強制驗收條件：禁止任何頁面渲染 `1:00` 這種格式。
+
+### FR-V2-5: 活動日誌進階渲染 (Activity Log Upgrade) 🆕
+將活動列表升級為「膠囊標籤 (Pill Tags)」風格，並具備以下能力：
+
+1. **外部跳轉**
+   - 活動名稱包 `<a>`，連結至 `https://www.strava.com/activities/{id}`
+   - 在新分頁開啟（`target="_blank" rel="noopener"`）
+
+2. **單次疲勞燈號**
+   - 依該活動 `suffer_score` 標示 Emoji：
+     - `> 70` → 🔴
+     - `30 ~ 70` → 🟡
+     - `< 30` → 🟢
+
+3. **主課表自動擷取 (Lap Extraction)**
+   - 適用 Type：`Ride` / `VirtualRide` / `Run`
+   - 從 `laps` 陣列中找出：`average_heartrate` 最高且 `moving_time > 5 分鐘` 的 Lap
+   - 在該活動卡片下方縮排顯示：Lap 名稱 / 時間 / 心率 / 平均功率 (AP)
+
+4. **AI 教練短評 (LLM Integration)**
+   - 讀取 JSON 內 `ai_comment` 欄位
+   - 顯示於活動卡片底部，視為可選欄位（缺失時不顯示區塊）
+
+---
+
+## A3. 資料結構契約 v2 (Data Schema Contract)
+
+> 此為 v1 schema 的 superset，欄位皆為新增/可選；前端需具備 fallback 能力。
+
+```json
+{
+  "system_load": {
+    "7_day_suffer_score": 285,
+    "status": "warning"
+  },
+  "monthly_summary": {
+    "ride_km": 180.51,
+    "run_km": 25.06,
+    "swim_m": 6830,
+    "weight_count": 11
+  },
+  "monthly_goals": {
+    "ride":   { "count": 3, "target": 4, "status": "warning" },
+    "run":    { "count": 5, "target": 4, "status": "done" },
+    "swim":   { "count": 2, "target": 4, "status": "danger" },
+    "weight": { "count": 8, "target": 4, "status": "over" }
+  },
+  "weekly_quest": {
+    "ride": false,
+    "run": true,
+    "swim": false,
+    "weight": true
+  },
+  "recent_activities": [
+    {
+      "id": 12345678,
+      "name": "劍中劍菜單",
+      "type": "Ride",
+      "suffer_score": 85,
+      "suffer_status": "danger",
+      "moving_time_str": "1 小時 18 分",
+      "distance_km": 23.44,
+      "elevation_m": 532,
+      "average_heartrate": 136,
+      "main_lap": {
+        "name": "Lap 2",
+        "moving_time_str": "14 分 30 秒",
+        "average_heartrate": 168,
+        "average_watts": 245
+      },
+      "ai_comment": "🤖 輸出及格，但心率偏高，記得回家幫女兒換尿布收心。"
+    }
+  ]
+}
+```
+
+---
+
+## A4. v2 Layout 調整建議
+
+更新後頁面層級（在 v1 基礎上插入 System Load 與升級活動卡片）：
+
+1. Hero
+2. **🆕 System Load Monitor (7-day suffer score)**
+3. 月度 summary（四大運動主指標）
+4. Monthly Consistency
+5. Weekly Quest
+6. 月度里程圖表
+7. **活動紀錄（Pill Tags 升級版 + Main Lap + AI Comment）**
+8. 總累積 summary / CTA / footer
+
+---
+
+## A5. v2 Open Questions
+
+1. `suffer_score` 在 Strava API 為 Summit 功能，free tier 帳號是否一定有值？fallback 策略？
+2. `ai_comment` 由誰產生？（GitHub Actions 內呼叫 LLM？手動填入？）成本與頻率限制？
+3. Lap Extraction 對於沒有功率計的跑步活動，`average_watts` 應顯示為 `—` 還是隱藏？
+4. 單次活動疲勞燈號是否要與 `system_load` 共用同一套門檻邏輯？
+5. v2 status 命名（`success` vs v1 `done`）最終以何者為準？
+
+---
+
+## A6. v2 Suggested Next Steps
+
+1. 確認 A5 open questions（特別是 `suffer_score` 與 `ai_comment` 的資料來源）
+2. 擴充資料同步 script，輸出 `system_load` / `recent_activities[].suffer_*` / `main_lap` / `ai_comment`
+3. 在 `strava.html` 與 `strava_aespa.html` 加入 System Load 卡片
+4. 重構活動列表為 Pill Tags 元件（含外部連結、Emoji 燈號、Main Lap 縮排、AI 短評）
+5. 加入 schema fallback 防呆，確保舊版 `strava.json` 不會讓頁面崩潰
+6. desktop / mobile 雙版面驗收
