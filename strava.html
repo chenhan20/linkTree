@@ -59,6 +59,39 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 .stat-unit{font-size:10px;color:rgba(252,76,2,.55);margin-top:2px}
 .stat-label{font-size:11px;color:#777;margin-top:5px}
 
+/* ── monthly consistency ── */
+.consistency-list{display:flex;flex-direction:column;gap:10px;margin-bottom:2.2rem}
+.consistency-row{
+  display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;
+  padding:.7rem .9rem;border-radius:9px;
+  border:1px solid rgba(252,76,2,.15);background:rgba(10,4,0,.4);
+}
+.consistency-name{font-size:13px;color:#eeebe8;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.consistency-name .count{font-size:12px;color:#aaa;margin-left:4px}
+.consistency-name .count b{color:#FC4C02;font-weight:600}
+.progress-bar{position:relative;height:8px;border-radius:6px;background:rgba(252,76,2,.1);overflow:hidden}
+.progress-fill{height:100%;border-radius:6px;width:0;transition:width .8s cubic-bezier(.25,.46,.45,.94)}
+.progress-fill.danger {background:linear-gradient(90deg,#7a1010,#c83232)}
+.progress-fill.warning{background:linear-gradient(90deg,#7a5510,#e0a020)}
+.progress-fill.done   {background:linear-gradient(90deg,#1e6b1e,#3fcc4a)}
+.progress-fill.over   {background:linear-gradient(90deg,#992b00,#FC4C02,#ff7040)}
+.status-badge{font-size:10px;padding:3px 8px;border-radius:10px;white-space:nowrap;letter-spacing:.5px}
+.status-badge.danger {background:rgba(220,60,60,.12);color:#e06060;border:1px solid rgba(220,60,60,.3)}
+.status-badge.warning{background:rgba(224,160,32,.12);color:#e0b040;border:1px solid rgba(224,160,32,.3)}
+.status-badge.done   {background:rgba(63,204,74,.12);color:#5fd060;border:1px solid rgba(63,204,74,.3)}
+.status-badge.over   {background:rgba(252,76,2,.15);color:#ff7040;border:1px solid rgba(252,76,2,.4)}
+
+/* ── weekly quest ── */
+.quest-list{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:2.2rem}
+.quest-pill{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:7px 14px;border-radius:18px;font-size:13px;
+  border:1px solid rgba(252,76,2,.15);background:rgba(10,4,0,.4);color:#777;
+  transition:all .2s;
+}
+.quest-pill.on{border-color:rgba(63,204,74,.4);background:rgba(63,204,74,.08);color:#7fd57f}
+.quest-pill .mark{font-size:14px}
+
 /* ── section title ── */
 .section-title{
   font-size:11px;font-weight:600;color:#FC4C02;letter-spacing:3px;text-transform:uppercase;
@@ -182,6 +215,8 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
   .stat-val{font-size:18px}
   .totals-grid{grid-template-columns:repeat(3,1fr)}
   .total-val{font-size:16px}
+  .consistency-row{grid-template-columns:auto 1fr;row-gap:8px}
+  .consistency-row .status-badge{grid-column:1 / -1;justify-self:start}
 }
 </style>
 </head>
@@ -219,9 +254,67 @@ const ICONS = {
 
 /* ── helpers ── */
 function fmtMovingTime(hr) {
-  const h = Math.floor(hr)
-  const m = Math.round((hr - h) * 60)
-  return `${h}:${String(m).padStart(2,'0')}`
+  // PRD FR-4: 避免 "1:00" 歧義，改為 "45 分" / "1 小時" / "1 小時 30 分"
+  const totalMin = Math.max(0, Math.round((hr || 0) * 60))
+  if (totalMin < 60) return `${totalMin} 分`
+  const h = Math.floor(totalMin / 60)
+  const m = totalMin % 60
+  if (m === 0) return `${h} 小時`
+  return `${h} 小時 ${m} 分`
+}
+const SPORT_META = {
+  ride:   { icon: '🚴', label: '單車' },
+  run:    { icon: '🏃', label: '跑步' },
+  swim:   { icon: '🏊', label: '游泳' },
+  weight: { icon: '🏋️', label: '重訓' },
+}
+const STATUS_META = {
+  danger:  { emoji: '🔴', text: '嚴重落後' },
+  warning: { emoji: '🟡', text: '近期需補課' },
+  done:    { emoji: '🟢', text: '達標' },
+  over:    { emoji: '🔥', text: '超標' },
+}
+function renderMonthlySummary(ms) {
+  if (!ms) return ''
+  return `
+    <div class="section-title">本月訓練量 <span class="muted">· MONTHLY SUMMARY</span></div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-val">${ms.ride_km ?? 0}</div><div class="stat-unit">km</div><div class="stat-label">🚴 單車</div></div>
+      <div class="stat-card"><div class="stat-val">${ms.run_km ?? 0}</div><div class="stat-unit">km</div><div class="stat-label">🏃 跑步</div></div>
+      <div class="stat-card"><div class="stat-val">${ms.swim_m ?? 0}</div><div class="stat-unit">m</div><div class="stat-label">🏊 游泳</div></div>
+      <div class="stat-card"><div class="stat-val">${ms.weight_count ?? 0}</div><div class="stat-unit">次</div><div class="stat-label">🏋️ 重訓</div></div>
+    </div>`
+}
+function renderMonthlyGoals(mg) {
+  if (!mg) return ''
+  const order = ['ride','run','swim','weight']
+  const rows = order.map(k => {
+    const g = mg[k]; if (!g) return ''
+    const meta = SPORT_META[k]
+    const sm = STATUS_META[g.status] || STATUS_META.danger
+    const pct = Math.min(100, g.target > 0 ? (g.count / g.target) * 100 : 0)
+    return `
+      <div class="consistency-row">
+        <div class="consistency-name">${meta.icon} ${meta.label}<span class="count"><b>${g.count}</b> / ${g.target}</span></div>
+        <div class="progress-bar"><div class="progress-fill ${g.status}" data-pct="${pct}"></div></div>
+        <div class="status-badge ${g.status}">${sm.emoji} ${sm.text}</div>
+      </div>`
+  }).join('')
+  return `
+    <div class="section-title">月度紀律 <span class="muted">· MONTHLY CONSISTENCY (TARGET 4 / MONTH)</span></div>
+    <div class="consistency-list">${rows}</div>`
+}
+function renderWeeklyQuest(wq) {
+  if (!wq) return ''
+  const order = ['ride','run','swim','weight']
+  const pills = order.map(k => {
+    const meta = SPORT_META[k]
+    const on = !!wq[k]
+    return `<span class="quest-pill${on ? ' on' : ''}"><span class="mark">${on ? '✅' : '⬜'}</span>${meta.icon} ${meta.label}</span>`
+  }).join('')
+  return `
+    <div class="section-title">本週任務 <span class="muted">· WEEKLY QUEST</span></div>
+    <div class="quest-list">${pills}</div>`
 }
 function fmtDate(d) {
   // "2026-04-22" → "04 / 22"
@@ -356,28 +449,9 @@ function render(data) {
       </div>
     </div>
 
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-val">${s.ytd_distance_km ?? '—'}</div>
-        <div class="stat-unit">km</div>
-        <div class="stat-label">今年里程</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-val">${s.ytd_elevation_m ?? '—'}</div>
-        <div class="stat-unit">m</div>
-        <div class="stat-label">今年爬升</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-val">${s.ytd_rides ?? '—'}</div>
-        <div class="stat-unit">rides</div>
-        <div class="stat-label">今年次數</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-val">${s.ytd_moving_time_hr ?? '—'}</div>
-        <div class="stat-unit">hrs</div>
-        <div class="stat-label">今年時數</div>
-      </div>
-    </div>
+    ${renderMonthlySummary(data.monthly_summary)}
+    ${renderMonthlyGoals(data.monthly_goals)}
+    ${renderWeeklyQuest(data.weekly_quest)}
 
     ${history.length ? `
     <div class="monthly-chart">
@@ -458,6 +532,14 @@ function render(data) {
       bar.style.width = '0'
       requestAnimationFrame(() => {
         setTimeout(() => { bar.style.width = pct + '%' }, 80)
+      })
+    })
+    // animate consistency bars
+    document.querySelectorAll('.progress-fill').forEach(fill => {
+      const pct = fill.dataset.pct
+      fill.style.width = '0'
+      requestAnimationFrame(() => {
+        setTimeout(() => { fill.style.width = pct + '%' }, 120)
       })
     })
   })

@@ -225,6 +225,64 @@ function buildJSON(stats, activities) {
     avg_heartrate: a.average_heartrate ? Math.round(a.average_heartrate) : null,
   }))
 
+  // ── Monthly Summary / Goals & Weekly Quest（PRD v1：FR-1 / FR-2 / FR-3）──
+  // 區間皆以 Asia/Taipei 為準；activity.start_date_local 已是 TPE 牆鐘時間字串
+  function statusOf(count, target) {
+    const ratio = target > 0 ? count / target : 0
+    if (ratio >= 1.5) return 'over'
+    if (ratio >= 1.0) return 'done'
+    if (ratio >= 0.5) return 'warning'
+    return 'danger'
+  }
+
+  // 取得 TPE 當下時間（用 UTC getters 讀出 TPE 牆鐘）
+  const tpeNow = new Date(Date.now() + 8 * 3600 * 1000)
+  const tpeYear  = tpeNow.getUTCFullYear()
+  const tpeMonth = tpeNow.getUTCMonth()
+  const tpeDate  = tpeNow.getUTCDate()
+  const tpeDow   = tpeNow.getUTCDay() // 0=Sun..6=Sat
+
+  // 本月開頭：YYYY-MM
+  const monthPrefix = `${tpeYear}-${String(tpeMonth + 1).padStart(2, '0')}`
+
+  // 本週一 00:00 (TPE) 的字串前綴 YYYY-MM-DD
+  const daysFromMon = (tpeDow + 6) % 7 // Sun→6, Mon→0
+  const mondayUtc = new Date(Date.UTC(tpeYear, tpeMonth, tpeDate - daysFromMon))
+  const weekStartPrefix = `${mondayUtc.getUTCFullYear()}-${String(mondayUtc.getUTCMonth() + 1).padStart(2, '0')}-${String(mondayUtc.getUTCDate()).padStart(2, '0')}`
+
+  function startLocal(a) { return (a.start_date_local || a.start_date) }
+  function inThisMonth(a) { return startLocal(a).slice(0, 7) === monthPrefix }
+  function inThisWeek(a)  { return startLocal(a).slice(0, 10) >= weekStartPrefix }
+
+  const monthActs = activities.filter(inThisMonth)
+  const monthRides   = monthActs.filter(a => isType(a, RIDE_TYPES))
+  const monthRuns    = monthActs.filter(a => isType(a, RUN_TYPES))
+  const monthSwims   = monthActs.filter(a => isType(a, SWIM_TYPES))
+  const monthWeights = monthActs.filter(a => isType(a, WEIGHT_TYPES))
+
+  const monthly_summary = {
+    ride_km:      Math.round(monthRides.reduce((s, a) => s + (a.distance || 0), 0) / 10) / 100,
+    run_km:       Math.round(monthRuns.reduce((s, a) => s + (a.distance || 0), 0) / 10) / 100,
+    swim_m:       Math.round(monthSwims.reduce((s, a) => s + (a.distance || 0), 0)),
+    weight_count: monthWeights.length,
+  }
+
+  const TARGET = 4
+  const monthly_goals = {
+    ride:   { count: monthRides.length,   target: TARGET, status: statusOf(monthRides.length,   TARGET) },
+    run:    { count: monthRuns.length,    target: TARGET, status: statusOf(monthRuns.length,    TARGET) },
+    swim:   { count: monthSwims.length,   target: TARGET, status: statusOf(monthSwims.length,   TARGET) },
+    weight: { count: monthWeights.length, target: TARGET, status: statusOf(monthWeights.length, TARGET) },
+  }
+
+  const weekActs = activities.filter(inThisWeek)
+  const weekly_quest = {
+    ride:   weekActs.some(a => isType(a, RIDE_TYPES)),
+    run:    weekActs.some(a => isType(a, RUN_TYPES)),
+    swim:   weekActs.some(a => isType(a, SWIM_TYPES)),
+    weight: weekActs.some(a => isType(a, WEIGHT_TYPES)),
+  }
+
   return {
     updated_at: new Date().toISOString(),
     summary: {
@@ -245,6 +303,9 @@ function buildJSON(stats, activities) {
     recent_swims:    recentSwims,
     recent_weights:  recentWeights,
     monthly_history: history,
+    monthly_summary,
+    monthly_goals,
+    weekly_quest,
   }
 }
 
