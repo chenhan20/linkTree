@@ -116,56 +116,58 @@ async function fetchActivityDetail(token, activityId) {
   return data
 }
 
-// ── 從 laps 陣列找主課段：moving_time > 5 分，取 avg_heartrate 最高的 ──
-function extractMainLap(laps) {
-  if (!Array.isArray(laps) || laps.length === 0) return null
-  const candidates = laps.filter(l => (l.moving_time || 0) > 300) // 5 min+
-  if (candidates.length === 0) return null
-  // 優先心率最高；無心率則功率最高；再無則時間最長
+// ── 從 laps 陣列取所有合格分段：moving_time > 5 分 且 avg_watts ≥ 150W ──
+function extractTopLaps(laps) {
+  if (!Array.isArray(laps) || laps.length === 0) return []
+  const candidates = laps.filter(l => (l.moving_time || 0) > 300 && (l.average_watts || 0) >= 150)
+  if (candidates.length === 0) return []
   candidates.sort((a, b) => {
     if (a.average_heartrate && b.average_heartrate) return b.average_heartrate - a.average_heartrate
-    if (a.average_watts && b.average_watts) return b.average_watts - a.average_watts
     return b.moving_time - a.moving_time
   })
-  const lap = candidates[0]
-  const totalMin = Math.round((lap.moving_time || 0) / 60)
-  const h = Math.floor(totalMin / 60), m = totalMin % 60
-  const moving_time_str = h > 0 ? (m > 0 ? `${h} 小時 ${m} 分` : `${h} 小時`) : `${m} 分`
-  return {
-    name:              lap.name || 'Main Lap',
-    moving_time_str,
-    average_heartrate: lap.average_heartrate ? Math.round(lap.average_heartrate) : null,
-    average_watts:     lap.average_watts     ? Math.round(lap.average_watts)     : null,
-  }
+  return candidates.map(lap => {
+    const totalMin = Math.round((lap.moving_time || 0) / 60)
+    const h = Math.floor(totalMin / 60), m = totalMin % 60
+    const moving_time_str = h > 0 ? (m > 0 ? `${h} 小時 ${m} 分` : `${h} 小時`) : `${m} 分`
+    return {
+      name:              lap.name || 'Lap',
+      moving_time_str,
+      average_heartrate: lap.average_heartrate ? Math.round(lap.average_heartrate) : null,
+      average_watts:     lap.average_watts     ? Math.round(lap.average_watts)     : null,
+    }
+  })
 }
 
 // ── Step 4b：Lap enrichment（ID-based 快取，避免重複打 API）──
 async function enrichRideLaps(token, recentRides, existingRides) {
-  // 從舊 JSON 建 id → main_lap 快取（null 也要快取，代表已試過無資料）
+  // 從舊 JSON 建 id → top_laps 快取
+  // 只有明確存過 top_laps 陣列才快取；若欄位不存在（舊格式 main_lap）則強制重抓
+  // REFRESH_LAPS=1 時跳過快取（調整過濾條件後用）
   const cache = {}
-  for (const r of (existingRides || [])) {
-    if (r.id != null) cache[String(r.id)] = r.main_lap ?? null
+  if (process.env.REFRESH_LAPS !== '1') {
+    for (const r of (existingRides || [])) {
+      if (r.id != null && Array.isArray(r.top_laps)) cache[String(r.id)] = r.top_laps
+    }
   }
 
   let fetchCount = 0
   for (const ride of recentRides) {
-    if (ride.id == null) { ride.main_lap = null; continue }
+    if (ride.id == null) { ride.top_laps = []; continue }
     const key = String(ride.id)
     if (key in cache) {
-      // 快取命中：直接沿用，不打 API
-      ride.main_lap = cache[key]
+      ride.top_laps = cache[key] || []
       continue
     }
     // 新活動：打 detail API
     try {
-      await new Promise(r => setTimeout(r, 350)) // 避免打太快
+      await new Promise(r => setTimeout(r, 350))
       const detail = await fetchActivityDetail(token, ride.id)
-      ride.main_lap = extractMainLap(detail.laps)
+      ride.top_laps = extractTopLaps(detail.laps)
       fetchCount++
-      console.log(`  🔍 ${ride.name}：main_lap = ${ride.main_lap ? ride.main_lap.name + ' ❤️' + ride.main_lap.average_heartrate : '無'}`)
+      console.log(`  🔍 ${ride.name}：${ride.top_laps.length} 分段常合格`)
     } catch (e) {
       console.warn(`  ⚠️  Lap 抓取失敗 (id=${ride.id})：${e.message}`)
-      ride.main_lap = null
+      ride.top_laps = []
     }
   }
   console.log(`✅ Lap enrichment 完成，新打 API ${fetchCount} 次（快取命中 ${recentRides.length - fetchCount} 次）`)

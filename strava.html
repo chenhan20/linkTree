@@ -177,7 +177,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 .activity-dist{font-size:15px;font-weight:600;color:#FC4C02;flex-shrink:0;white-space:nowrap}
 /* lap strip */
 .lap-strip{
-  margin-top:6px;padding:4px 8px;border-radius:5px;
+  margin-top:4px;padding:4px 8px;border-radius:5px;
   background:rgba(252,76,2,.06);border:1px solid rgba(252,76,2,.14);
   font-size:11px;color:#888;display:flex;align-items:center;gap:8px;flex-wrap:wrap;
 }
@@ -382,8 +382,10 @@ function renderTimeline(list, type, expanded) {
         if (!aIsRun && !aIsSwim && !aIsWeight && a.avg_speed_kmh) tags.push(`<span class="tag">${a.avg_speed_kmh} km/h</span>`)
         if (aIsSwim && a.pace_per_100m)  tags.push(`<span class="tag">💧 ${a.pace_per_100m}/100m</span>`)
         if (a.avg_heartrate)             tags.push(`<span class="tag hr">♥️ ${a.avg_heartrate} bpm</span>`)
-        const lapHtml = (aIsRide && a.main_lap)
-          ? `<div class="lap-strip"><span class="lap-name">🏁 ${a.main_lap.name}</span><span class="lap-tag">⏱ ${a.main_lap.moving_time_str}</span>${a.main_lap.average_heartrate ? `<span class="lap-tag">♥️ ${a.main_lap.average_heartrate}</span>` : ''}${a.main_lap.average_watts ? `<span class="lap-tag">⚡ ${a.main_lap.average_watts}W</span>` : ''}</div>`
+        const lapHtml = (aIsRide && a.top_laps && a.top_laps.length)
+          ? a.top_laps.map(lap =>
+              `<div class="lap-strip"><span class="lap-name">🏁 ${lap.name}</span><span class="lap-tag">⏱ ${lap.moving_time_str}</span>${lap.average_heartrate ? `<span class="lap-tag">♥️ ${lap.average_heartrate}</span>` : ''}${lap.average_watts ? `<span class="lap-tag">⚡ ${lap.average_watts}W</span>` : ''}</div>`
+            ).join('')
           : ''
         return `
         <div class="activity-card">
