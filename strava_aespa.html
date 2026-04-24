@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Athletics · aespa · SteveChuang</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#080614;color:#ddd}
+
+#star-canvas{position:fixed;inset:0;width:100%;height:100%;background:#080614;z-index:0;pointer-events:none}
+
+#app{position:relative;z-index:1;min-height:100vh;max-width:800px;margin:0 auto;padding:0 1.2rem 5rem}
+
+/* ── topbar ── */
+.topbar{
+  position:sticky;top:0;z-index:10;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 1.2rem;margin:0 -1.2rem;
+  border-bottom:1px solid rgba(168,85,247,.2);
+  background:rgba(8,6,20,.95);
+  backdrop-filter:blur(8px);
+}
+.topbar-left{display:flex;align-items:center;gap:12px}
+.back-btn{
+  display:flex;align-items:center;gap:6px;
+  background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.35);
+  border-radius:20px;padding:6px 14px;
+  color:#a855f7;font-size:13px;font-weight:500;
+  cursor:pointer;text-decoration:none;transition:background .2s;
+  -webkit-tap-highlight-color:transparent;
+}
+.back-btn:hover{background:rgba(168,85,247,.2)}
+.topbar-title{font-size:12px;color:rgba(168,85,247,.6);letter-spacing:2.5px;text-transform:uppercase}
+.topbar-updated{font-size:10px;color:rgba(168,85,247,.35);letter-spacing:1.5px;text-transform:uppercase}
+
+/* ── hero ── */
+.hero{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:1.5rem;padding:2rem 0 1.5rem;flex-wrap:wrap;
+  border-bottom:1px solid rgba(168,85,247,.12);
+}
+.hero-left{display:flex;align-items:center;gap:1.2rem}
+.avatar{
+  width:110px;height:110px;border-radius:50%;flex-shrink:0;
+  background:linear-gradient(135deg,#1a0a2e,#2d1060);
+  border:2.5px solid #a855f7;
+  overflow:hidden;
+  box-shadow:0 0 22px rgba(168,85,247,.45),0 0 44px rgba(168,85,247,.15);
+  display:flex;align-items:center;justify-content:center;
+}
+.avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.avatar svg{width:52px;height:52px;fill:#a855f7}
+.hero-info h1{font-size:22px;font-weight:600;color:#fff}
+.hero-sub{font-size:11px;color:#a855f7;letter-spacing:3px;text-transform:uppercase;margin-top:5px}
+.hero-right{text-align:right;flex-shrink:0}
+.aespa-brand{
+  font-family:Georgia,'Times New Roman',serif;
+  font-size:52px;font-weight:700;font-style:italic;
+  background:linear-gradient(135deg,#a855f7,#e879f9,#c084fc);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  line-height:1;letter-spacing:-2px;
+}
+.aespa-tagline{
+  font-size:9px;letter-spacing:4px;text-transform:uppercase;
+  color:rgba(168,85,247,.5);margin-top:6px;
+}
+
+/* ── stats grid ── */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:1.5rem 0 2.2rem}
+.stat-card{
+  padding:.9rem 1rem;border-radius:10px;
+  background:rgba(168,85,247,.06);
+  backdrop-filter:blur(8px);
+  border:1px solid rgba(168,85,247,.3);
+  box-shadow:0 0 15px rgba(168,85,247,.1),inset 0 1px 0 rgba(255,255,255,.08);
+}
+.stat-val{font-size:20px;font-weight:600;color:#e879f9;line-height:1}
+.stat-unit{font-size:10px;color:rgba(168,85,247,.55);margin-top:2px}
+.stat-label{font-size:11px;color:#777;margin-top:5px}
+
+/* ── section title ── */
+.section-title{
+  font-size:11px;font-weight:600;color:#a855f7;letter-spacing:3px;text-transform:uppercase;
+  margin-bottom:1rem;padding-bottom:.5rem;
+  border-bottom:1px solid rgba(168,85,247,.18);
+  display:flex;align-items:center;gap:8px;
+}
+
+/* ── monthly chart ── */
+.monthly-chart{margin-bottom:2.2rem}
+.chart-rows{display:flex;flex-direction:column;gap:10px}
+.chart-row{display:flex;align-items:center;gap:10px;padding:4px 0}
+.chart-label{font-size:12px;color:#aaa;width:24px;text-align:right;flex-shrink:0}
+.chart-bar-wrap{
+  flex:1;height:44px;
+  background:rgba(168,85,247,.08);
+  border-radius:8px;overflow:hidden;
+  border:1px solid rgba(168,85,247,.15);
+}
+.chart-bar{
+  height:100%;border-radius:8px;
+  background:linear-gradient(90deg,#4a1a9e,#a855f7,#c084fc);
+  position:relative;overflow:hidden;
+  display:flex;align-items:center;justify-content:flex-end;
+  padding-right:10px;min-width:44px;
+  width:0;transition:width 1s cubic-bezier(.25,.46,.45,.94);
+  box-shadow:0 0 12px rgba(168,85,247,.5),inset 0 1px 0 rgba(255,255,255,.12);
+}
+/* diamond pattern overlay */
+.chart-bar::before{
+  content:'';
+  position:absolute;inset:0;
+  background:
+    repeating-linear-gradient(45deg,rgba(255,255,255,.06) 0,rgba(255,255,255,.06) 1px,transparent 1px,transparent 8px),
+    repeating-linear-gradient(-45deg,rgba(255,255,255,.06) 0,rgba(255,255,255,.06) 1px,transparent 1px,transparent 8px);
+  pointer-events:none;
+}
+.chart-bar-val{font-size:12px;font-weight:700;color:#fff;white-space:nowrap;position:relative;z-index:1}
+.chart-unit-label{font-size:11px;color:#666;width:28px;flex-shrink:0}
+
+/* ── chart year toggle ── */
+.chart-year-header{
+  display:flex;align-items:center;gap:8px;
+  font-size:11px;font-weight:700;color:#a855f7;letter-spacing:2.5px;
+  text-transform:uppercase;padding:12px 0 4px;
+  cursor:pointer;user-select:none;opacity:.8;
+}
+.chart-year-header:hover{opacity:1}
+.chart-year-arrow{transition:transform .25s;font-style:normal;font-size:10px}
+.chart-year-rows{overflow:hidden;transition:max-height .35s ease}
+
+/* ── sport tabs ── */
+.sport-tabs{display:flex;gap:8px;margin-bottom:1.2rem;flex-wrap:wrap}
+.sport-tab{
+  display:flex;align-items:center;gap:5px;
+  font-size:12px;padding:5px 14px;border-radius:20px;
+  border:1px solid rgba(168,85,247,.2);color:#777;background:transparent;
+  cursor:pointer;transition:all .2s;-webkit-tap-highlight-color:transparent;
+}
+.sport-tab.active{background:rgba(168,85,247,.14);border-color:#a855f7;color:#c084fc}
+.sport-tab:hover:not(.active){border-color:rgba(168,85,247,.4);color:#a855f7}
+
+/* ── timeline ── */
+.timeline{margin-bottom:2.2rem}
+.timeline-day{margin-bottom:1.4rem}
+.timeline-date{
+  font-size:16px;font-weight:600;color:#c084fc;
+  margin-bottom:.75rem;padding-left:22px;position:relative;
+}
+.timeline-date::before{
+  content:'✦';position:absolute;left:0;top:50%;transform:translateY(-50%);
+  font-size:10px;color:#a855f7;
+}
+.activity-card{
+  display:flex;align-items:center;gap:12px;
+  padding:.85rem 1rem;border-radius:9px;
+  background:rgba(168,85,247,.06);
+  backdrop-filter:blur(8px);
+  border:1px solid rgba(168,85,247,.2);
+  box-shadow:0 0 15px rgba(168,85,247,.08),inset 0 1px 0 rgba(255,255,255,.06);
+  margin-bottom:8px;margin-left:22px;
+  transition:border-color .2s,background .2s;
+}
+.activity-card:hover{border-color:rgba(168,85,247,.45);background:rgba(168,85,247,.1)}
+.activity-icon{
+  width:46px;height:46px;border-radius:10px;flex-shrink:0;
+  background:rgba(168,85,247,.18);border:1px solid rgba(168,85,247,.35);
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;
+}
+.activity-icon svg{width:24px;height:24px;fill:#a855f7}
+.activity-info{flex:1;min-width:0}
+.activity-name{font-size:14px;font-weight:500;color:#eeebe8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.activity-meta{font-size:11px;color:#666;margin-top:3px}
+.activity-meta .tag{
+  display:inline-flex;align-items:center;gap:3px;
+  background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.2);
+  border-radius:4px;padding:1px 6px;margin-right:4px;margin-top:3px;
+  color:#b07fd0;font-size:10px;white-space:nowrap;
+}
+.activity-meta .tag.hr{border-color:rgba(232,121,249,.25);background:rgba(232,121,249,.06);color:#d86ef5}
+.activity-dist{
+  font-size:15px;font-weight:600;color:#e879f9;flex-shrink:0;white-space:nowrap;
+}
+.activity-dist::after{content:' ✦';font-size:10px;color:rgba(168,85,247,.5)}
+.empty{font-size:13px;color:#555;padding:2rem 0;text-align:center}
+
+/* ── show more ── */
+.show-more-btn{
+  width:100%;padding:10px;border-radius:8px;margin-top:6px;
+  border:1px solid rgba(168,85,247,.25);background:transparent;
+  color:#a855f7;font-size:12px;cursor:pointer;letter-spacing:1.5px;
+  transition:background .2s;text-transform:uppercase;
+}
+.show-more-btn:hover{background:rgba(168,85,247,.1)}
+
+/* ── bottom totals ── */
+.totals-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:2rem}
+.total-card{
+  padding:1rem;border-radius:10px;
+  background:rgba(168,85,247,.06);
+  backdrop-filter:blur(8px);
+  border:1px solid rgba(168,85,247,.2);
+  box-shadow:0 0 12px rgba(168,85,247,.08),inset 0 1px 0 rgba(255,255,255,.06);
+  text-align:center;
+}
+.total-val{font-size:20px;font-weight:600;color:#e879f9}
+.total-label{font-size:10px;color:#555;letter-spacing:2px;text-transform:uppercase;margin-top:5px}
+
+/* ── CTA button ── */
+.strava-cta{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  width:100%;padding:14px;border-radius:10px;
+  background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.4);
+  color:#a855f7;font-size:14px;font-weight:500;
+  text-decoration:none;transition:background .2s,border-color .2s;
+  box-shadow:0 0 20px rgba(168,85,247,.1);
+}
+.strava-cta:hover{background:rgba(168,85,247,.2);border-color:#a855f7}
+.strava-cta svg{width:16px;height:16px;fill:#a855f7;flex-shrink:0}
+
+/* ── footer ── */
+.page-footer{
+  text-align:center;padding:3rem 0 1rem;
+}
+.footer-members{
+  font-size:10px;letter-spacing:4px;text-transform:uppercase;
+  color:rgba(168,85,247,.4);margin-bottom:.6rem;
+}
+.footer-aespa{
+  font-family:Georgia,'Times New Roman',serif;
+  font-size:32px;font-weight:700;font-style:italic;
+  background:linear-gradient(135deg,#a855f7,#e879f9,#c084fc);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  opacity:.25;
+}
+
+/* ── loading / error ── */
+.loading{text-align:center;padding:4rem 0;color:#555;font-size:14px}
+
+@media(max-width:520px){
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .hero{flex-direction:column;align-items:flex-start}
+  .hero-right{align-self:flex-end}
+  .aespa-brand{font-size:38px}
+  .stat-val{font-size:18px}
+  .totals-grid{grid-template-columns:repeat(3,1fr)}
+  .total-val{font-size:16px}
+}
+</style>
+</head>
+<body>
+
+<canvas id="star-canvas"></canvas>
+
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-left">
+      <a class="back-btn" href="linkTreeIndex.html">← BACK</a>
+      <span class="topbar-title">Athletics · Strava</span>
+    </div>
+    <span class="topbar-updated" id="topbar-date">UPDATED —</span>
+  </div>
+  <div id="content"><div class="loading">Loading athlete data…</div></div>
+</div>
+
+<script>
+/* ── purple star canvas ── */
+;(function(){
+  const c=document.getElementById('star-canvas'),ctx=c.getContext('2d')
+  let W,H,stars=[],nebs=[]
+  function resize(){
+    W=c.width=innerWidth;H=c.height=innerHeight
+    nebs=[
+      {x:W*.2,y:H*.15,r:260,cr:'rgba(100,20,180,'},
+      {x:W*.8,y:H*.75,r:200,cr:'rgba(140,30,200,'},
+      {x:W*.5,y:H*.5,r:150,cr:'rgba(60,10,120,'}
+    ]
+  }
+  function init(){
+    stars=[]
+    const n=Math.floor(W*H/1800)
+    for(let i=0;i<n;i++) stars.push({
+      x:Math.random()*W,y:Math.random()*H,
+      r:Math.random()*1.5+.15,
+      a:Math.random(),da:(Math.random()-.5)*.006,
+      speed:Math.random()*.08+.01
+    })
+  }
+  function draw(){
+    ctx.clearRect(0,0,W,H)
+    nebs.forEach(n=>{
+      const g=ctx.createRadialGradient(n.x,n.y,0,n.x,n.y,n.r)
+      g.addColorStop(0,n.cr+'.2)')
+      g.addColorStop(1,'transparent')
+      ctx.fillStyle=g;ctx.beginPath();ctx.arc(n.x,n.y,n.r,0,Math.PI*2);ctx.fill()
+    })
+    stars.forEach(s=>{
+      s.a+=s.da;if(s.a<0||s.a>1)s.da*=-1
+      s.y-=s.speed;if(s.y<0)s.y=H
+      ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2)
+      ctx.fillStyle='rgba(200,150,255,'+s.a+')'
+      ctx.fill()
+    })
+    requestAnimationFrame(draw)
+  }
+  resize();init();draw()
+  addEventListener('resize',()=>{resize();init()})
+})()
+
+/* ── SVG icons ── */
+const ICONS = {
+  ride:   '<path d="M5 20.5A3.5 3.5 0 0 1 1.5 17 3.5 3.5 0 0 1 5 13.5 3.5 3.5 0 0 1 8.5 17 3.5 3.5 0 0 1 5 20.5M5 12A5 5 0 0 0 0 17a5 5 0 0 0 5 5 5 5 0 0 0 5-5 5 5 0 0 0-5-5m8.8-5.4L11 9.5l1.5 1.5H16v2h-4.5l-2.5-2.5L11.5 8H9.8l-1.5 4.5 2.2 2.2A5 5 0 0 0 14 17a5 5 0 0 0 5 5 5 5 0 0 0 5-5 5 5 0 0 0-5-5l-1.1.1-2.7-2.6.8-2H18V6h-3.2l-.9 2.6M14.5 5a1.5 1.5 0 0 0 1.5-1.5A1.5 1.5 0 0 0 14.5 2 1.5 1.5 0 0 0 13 3.5 1.5 1.5 0 0 0 14.5 5m4.5 7a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5A3.5 3.5 0 0 1 15.5 17 3.5 3.5 0 0 1 19 13.5z"/>',
+  run:    '<path d="M13.49 5.48c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm-3.6 13.9l1-4.4 2.1 2v6h2v-7.5l-2.1-2 .6-3c1.3 1.5 3.3 2.5 5.5 2.5v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1l-5.2 2.2v4.7h2v-3.4l1.8-.7-1.6 8.1-4.9-1-.4 2 7 1.4z"/>',
+  swim:   '<path d="M2 12c.7 0 1.3.3 2 1 1 1 2.2 1.5 3.5 1.5S10 14 11 13c.7-.7 1.3-1 2-1s1.3.3 2 1c1 1 2.2 1.5 3.5 1.5s2.5-.5 3.5-1.5c.7-.7 1.3-1 2-1v-2c-1.3 0-2.5.5-3.5 1.5-.7.7-1.3 1-2 1s-1.3-.3-2-1C15.5 10.5 14.3 10 13 10s-2.5.5-3.5 1.5C8.8 12.2 8.2 12.5 7.5 12.5s-1.3-.3-2-1C4.5 10.5 3.3 10 2 10v2m0 5c.7 0 1.3.3 2 1 1 1 2.2 1.5 3.5 1.5S10 19 11 18c.7-.7 1.3-1 2-1s1.3.3 2 1c1 1 2.2 1.5 3.5 1.5s2.5-.5 3.5-1.5c.7-.7 1.3-1 2-1v-2c-1.3 0-2.5.5-3.5 1.5-.7.7-1.3 1-2 1s-1.3-.3-2-1C15.5 15.5 14.3 15 13 15s-2.5.5-3.5 1.5c-.7.7-1.3 1-2 1s-1.3-.3-2-1C4.5 15.5 3.3 15 2 15v2M17.5 7.3c-.7.7-1.2 1.7-3 1.7-1.5 0-2.2-.7-3-1.5C10.7 6.7 9.8 6 8.5 6 7 6 5.8 6.7 5 7.5L6.5 9c.5-.5 1-.9 2-.9 1.5 0 2.2.7 3 1.5.8.8 1.7 1.5 3 1.5 1.5 0 2.5-.7 3.3-1.5L19 8c-.2-.3-.5-.5-.8-.8l-.7.1z"/>',
+  weight: '<path d="M20.57 14.86L22 13.43 20.57 12 17 15.57 8.43 7 12 3.43 10.57 2 9.14 3.43 7.71 2 5.57 4.14 4.14 2.71 2.71 4.14l1.43 1.43L2 7.71l1.43 1.43L2 10.57 3.43 12 7 8.43 15.57 17 12 20.57 13.43 22l1.43-1.43L16.29 22l2.14-2.14 1.43 1.43 1.43-1.43-1.43-1.43L22 16.29l-1.43-1.43z"/>',
+}
+
+/* ── helpers ── */
+function fmtMovingTime(hr) {
+  const h = Math.floor(hr)
+  const m = Math.round((hr - h) * 60)
+  return `${h}:${String(m).padStart(2,'0')}`
+}
+function fmtDate(d) {
+  const [,mm,dd] = d.split('-')
+  return `${mm} / ${dd}`
+}
+function fmtMonthLabel(m) {
+  return m.replace(/^\d{4}-/, '')
+}
+function monthDist(h) {
+  if (h.ride && typeof h.ride === 'object') return h.ride.distance_km || 0
+  return h.distance_km || 0
+}
+
+/* ── group activities by date ── */
+function groupByDate(list) {
+  const map = {}
+  ;(list || []).forEach(a => {
+    const d = (a.date || '').slice(0, 10)
+    if (!map[d]) map[d] = []
+    map[d].push(a)
+  })
+  return Object.entries(map)
+    .sort((a, b) => b[0].localeCompare(a[0]))
+    .map(([d, acts]) => [
+      d,
+      acts.slice().sort((a, b) => (a.time || '').localeCompare(b.time || ''))
+    ])
+}
+
+/* ── render timeline ── */
+function renderTimeline(list, type, expanded) {
+  if (!list || !list.length) return '<div class="empty">暫無資料</div>'
+  const isAll    = type === 'all'
+  const groups = groupByDate(list)
+  const LIMIT = 10
+  const hasMore = !expanded && groups.length > LIMIT
+  const visible = hasMore ? groups.slice(0, LIMIT) : groups
+
+  const html = visible.map(([date, acts]) => `
+    <div class="timeline-day">
+      <div class="timeline-date">${fmtDate(date)}</div>
+      ${acts.map(a => {
+        const aType    = isAll ? (a._type || 'ride') : type
+        const aIsWeight = aType === 'weight'
+        const aIsSwim   = aType === 'swim'
+        const aIsRun    = aType === 'run'
+        const aIcon = ICONS[aType] || ICONS.ride
+        const tags = []
+        tags.push(`<span class="tag">⏱ ${fmtMovingTime(a.moving_time_hr || 0)}</span>`)
+        if (!aIsWeight && !aIsSwim && a.elevation_m != null) tags.push(`<span class="tag">↑${a.elevation_m}m</span>`)
+        if (aIsRun && a.avg_pace_km)     tags.push(`<span class="tag">💨 ${a.avg_pace_km}/km</span>`)
+        if (aIsRun && a.avg_cadence_spm) tags.push(`<span class="tag">🦵 ${a.avg_cadence_spm} spm</span>`)
+        if (!aIsRun && !aIsSwim && !aIsWeight && a.avg_speed_kmh) tags.push(`<span class="tag">${a.avg_speed_kmh} km/h</span>`)
+        if (aIsSwim && a.pace_per_100m)  tags.push(`<span class="tag">💧 ${a.pace_per_100m}/100m</span>`)
+        if (a.avg_heartrate)             tags.push(`<span class="tag hr">♥️ ${a.avg_heartrate} bpm</span>`)
+        return `
+        <div class="activity-card">
+          <div class="activity-icon"><svg viewBox="0 0 24 24">${aIcon}</svg></div>
+          <div class="activity-info">
+            <div class="activity-name">${a.name || '—'}</div>
+            <div class="activity-meta">${tags.join('')}</div>
+          </div>
+          ${aIsWeight ? '' : `<div class="activity-dist">${a.distance_km} <small style="font-size:11px;font-weight:400">km</small></div>`}
+        </div>`
+      }).join('')}
+    </div>
+  `).join('')
+
+  const moreBtn = hasMore
+    ? `<button class="show-more-btn" id="show-more-btn">▼ 顯示全部 ${groups.length} 天記錄</button>`
+    : ''
+  return html + moreBtn
+}
+
+/* ── main render ── */
+function render(data) {
+  const s = data.summary || {}
+  const history = (data.monthly_history || []).slice().reverse()
+  const maxDist = Math.max(...history.map(monthDist), 1)
+
+  // update topbar date
+  const updatedAt = (data.updated_at || '').slice(0, 10)
+  const topbarDate = document.getElementById('topbar-date')
+  if (topbarDate) topbarDate.textContent = 'UPDATED ' + (updatedAt || '—')
+
+  // build ALL list
+  const allList = []
+  ;(data.recent_rides   || []).forEach(a => allList.push({...a, _type:'ride'}))
+  ;(data.recent_runs    || []).forEach(a => allList.push({...a, _type:'run'}))
+  ;(data.recent_swims   || []).forEach(a => allList.push({...a, _type:'swim'}))
+  ;(data.recent_weights || []).forEach(a => allList.push({...a, _type:'weight'}))
+  allList.sort((a,b) => {
+    const dc = (b.date||'').localeCompare(a.date||'')
+    return dc !== 0 ? dc : (b.time||'').localeCompare(a.time||'')
+  })
+
+  const tabs = [
+    { key:'all',    label:'📋 全部',   list: allList             },
+    { key:'ride',   label:'🚴 單車',   list: data.recent_rides   },
+    { key:'run',    label:'🏃 跑步',   list: data.recent_runs    },
+    { key:'swim',   label:'🏊 游泳',   list: data.recent_swims   },
+    { key:'weight', label:'🏋️ 重訓', list: data.recent_weights },
+  ]
+  const activeTabs = tabs.filter(t => t.list && t.list.length > 0)
+  let activeTab = activeTabs[0]?.key || 'all'
+  const showMore = {}
+
+  function tabHTML() {
+    return activeTabs.map(t => `
+      <button class="sport-tab${t.key === activeTab ? ' active' : ''}" data-tab="${t.key}">${t.label}</button>
+    `).join('')
+  }
+  function timelineHTML() {
+    const t = activeTabs.find(t => t.key === activeTab)
+    return renderTimeline(t?.list, activeTab, showMore[activeTab] || false)
+  }
+
+  document.getElementById('content').innerHTML = `
+    <div class="hero">
+      <div class="hero-left">
+        <div class="avatar">
+          <img src="docs/avatar.jpg" alt="SC"
+            onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <svg viewBox="0 0 24 24" style="display:none">${ICONS.ride}</svg>
+        </div>
+        <div class="hero-info">
+          <h1>承翰 莊 ✦</h1>
+          <div class="hero-sub">Strava · Cyclist · Athlete</div>
+        </div>
+      </div>
+      <div class="hero-right">
+        <div class="aespa-brand">aespa</div>
+        <div class="aespa-tagline">WELCOME TO MY WORLD</div>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-val">${s.ytd_distance_km ?? '—'}</div>
+        <div class="stat-unit">km</div>
+        <div class="stat-label">今年里程</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val">${s.ytd_elevation_m ?? '—'}</div>
+        <div class="stat-unit">m</div>
+        <div class="stat-label">今年爬升</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val">${s.ytd_rides ?? '—'}</div>
+        <div class="stat-unit">rides</div>
+        <div class="stat-label">今年次數</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val">${s.ytd_moving_time_hr ?? '—'}</div>
+        <div class="stat-unit">hrs</div>
+        <div class="stat-label">今年時數</div>
+      </div>
+    </div>
+
+    ${history.length ? `
+    <div class="monthly-chart">
+      <div class="section-title"><span>✦</span> 月度里程分佈 <span style="color:rgba(168,85,247,.4);font-size:10px">· MONTHLY DISTANCE (KM)</span></div>
+      <div class="chart-rows" id="chart-rows">
+        ${(() => {
+          const byYear = {}
+          history.forEach(h => {
+            const y = h.month.slice(0, 4)
+            if (!byYear[y]) byYear[y] = []
+            byYear[y].push(h)
+          })
+          const years = Object.keys(byYear).sort((a,b) => b.localeCompare(a))
+          const currentYear = new Date().getFullYear().toString()
+          return years.map(year => {
+            const collapsed = year !== currentYear
+            const rows = byYear[year].map(h => {
+              const dist = monthDist(h)
+              const pct = dist > 0 ? Math.max((dist / maxDist) * 100, 4) : 0
+              return `
+                <div class="chart-row">
+                  <div class="chart-label">${fmtMonthLabel(h.month)}</div>
+                  <div class="chart-bar-wrap">
+                    <div class="chart-bar" data-pct="${pct}">
+                      <span class="chart-bar-val">${dist}</span>
+                    </div>
+                  </div>
+                  <div class="chart-unit-label">km</div>
+                </div>
+              `
+            }).join('')
+            return `
+              <div class="chart-year-header" data-year="${year}">
+                <span class="chart-year-arrow" id="arrow-${year}">${collapsed ? '▶' : '▼'}</span>
+                ${year}
+              </div>
+              <div class="chart-year-rows" id="year-rows-${year}" style="max-height:${collapsed ? '0' : '9999px'}" data-collapsed="${collapsed ? '1' : ''}">
+                ${rows}
+              </div>
+            `
+          }).join('')
+        })()}
+      </div>
+    </div>
+    ` : ''}
+
+    <div class="section-title"><span>✦</span> 活動紀錄 <span style="color:rgba(168,85,247,.4);font-size:10px">· ACTIVITY LOG</span></div>
+    <div class="sport-tabs" id="sport-tabs">${tabHTML()}</div>
+    <div class="timeline" id="timeline">${timelineHTML()}</div>
+
+    <div class="totals-grid">
+      <div class="total-card">
+        <div class="total-val">${s.all_time_distance_km ?? '—'}</div>
+        <div class="total-label">Total KM</div>
+      </div>
+      <div class="total-card">
+        <div class="total-val">${s.all_time_elevation_m ?? '—'}</div>
+        <div class="total-label">Total Elev</div>
+      </div>
+      <div class="total-card">
+        <div class="total-val">${s.all_time_rides ?? '—'}</div>
+        <div class="total-label">Total Rides</div>
+      </div>
+    </div>
+
+    <a class="strava-cta" href="https://www.strava.com/athletes/161539959" target="_blank">
+      <svg viewBox="0 0 24 24"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/></svg>
+      View full profile on Strava
+    </a>
+
+    <div class="page-footer">
+      <div class="footer-members">KARINA · GISELLE · WINTER · NINGNING</div>
+      <div class="footer-aespa">aespa</div>
+    </div>
+  `
+
+  // animate chart bars
+  requestAnimationFrame(() => {
+    document.querySelectorAll('.chart-bar').forEach(bar => {
+      const pct = bar.dataset.pct
+      bar.style.width = '0'
+      requestAnimationFrame(() => {
+        setTimeout(() => { bar.style.width = pct + '%' }, 80)
+      })
+    })
+  })
+
+  // year collapse toggle
+  const chartRows = document.getElementById('chart-rows')
+  if (chartRows) {
+    chartRows.addEventListener('click', e => {
+      const header = e.target.closest('.chart-year-header')
+      if (!header) return
+      const year = header.dataset.year
+      const rows = document.getElementById(`year-rows-${year}`)
+      const arrow = document.getElementById(`arrow-${year}`)
+      const isCollapsed = rows.dataset.collapsed === '1'
+      if (isCollapsed) {
+        rows.dataset.collapsed = ''
+        rows.style.maxHeight = rows.scrollHeight + 'px'
+        arrow.textContent = '▼'
+        rows.querySelectorAll('.chart-bar').forEach(bar => {
+          bar.style.width = '0'
+          requestAnimationFrame(() => {
+            setTimeout(() => { bar.style.width = bar.dataset.pct + '%' }, 60)
+          })
+        })
+        setTimeout(() => { if (rows.dataset.collapsed !== '1') rows.style.maxHeight = '9999px' }, 400)
+      } else {
+        rows.style.maxHeight = rows.scrollHeight + 'px'
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            rows.style.maxHeight = '0'
+            rows.dataset.collapsed = '1'
+            arrow.textContent = '▶'
+          })
+        })
+      }
+    })
+  }
+
+  // tab switching
+  document.getElementById('sport-tabs').addEventListener('click', e => {
+    const btn = e.target.closest('.sport-tab')
+    if (!btn) return
+    activeTab = btn.dataset.tab
+    document.querySelectorAll('.sport-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === activeTab))
+    document.getElementById('timeline').innerHTML = timelineHTML()
+  })
+
+  // show more
+  document.getElementById('timeline').addEventListener('click', e => {
+    if (e.target.id === 'show-more-btn') {
+      showMore[activeTab] = true
+      document.getElementById('timeline').innerHTML = timelineHTML()
+    }
+  })
+}
+
+/* ── fetch strava.json ── */
+fetch('strava.json')
+  .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json() })
+  .then(render)
+  .catch(err => {
+    document.getElementById('content').innerHTML = `
+      <div class="loading" style="color:#a855f7">
+        載入失敗：${err.message}<br><br>
+        <span style="color:#555;font-size:12px">請先執行 GitHub Actions 產生 strava.json</span>
+      </div>
+    `
+  })
+</script>
+</body>
+</html>
