@@ -6,7 +6,7 @@
 - **適用頁面**: `strava.html`, `strava_aespa.html`
 - **相關資料來源**: `strava.json`, GitHub Actions / Strava data sync script
 - **版本**: v2 (含 System Monitor Edition 增補)
-- **狀態**: Draft / Planning
+- **狀態**: v1 已完成 ✅ / v2 Planning
 
 ---
 
@@ -87,7 +87,9 @@
 
 ## 6. Functional Requirements
 
-### FR-1: 月度 summary 改為四大運動主指標
+> ✅ v1 (FR-1 ~ FR-4) 已於 commit `2957a4d` 完成並推上 master。
+
+### FR-1: 月度 summary 改為四大運動主指標 ✅
 
 頁面最上方 summary 卡片需改為顯示四個運動項目的本月數據：
 
@@ -108,7 +110,7 @@
 
 ---
 
-### FR-2: 新增 Monthly Consistency 區塊
+### FR-2: 新增 Monthly Consistency 區塊 ✅
 
 在月度 summary 區塊下方新增 **Monthly Consistency** 區塊。
 
@@ -140,7 +142,7 @@
 
 ---
 
-### FR-3: 新增 Weekly Quest 區塊
+### FR-3: 新增 Weekly Quest 區塊 ✅
 
 在 Monthly Consistency 下方新增 **Weekly Quest** 區塊。
 
@@ -160,7 +162,7 @@
 
 ---
 
-### FR-4: 修正活動 duration 顯示規則
+### FR-4: 修正活動 duration 顯示規則 ✅
 
 目前 activity 顯示中的 `moving_time_hr` 會被格式化為 `1:00` 之類的字串，容易產生歧義。
 
@@ -282,11 +284,12 @@
 
 ## 11. Open Questions
 
-1. 單車 monthly / weekly 計算是否包含 `VirtualRide` / 飛輪？
-2. 重訓是否只統計 activity count，而非訓練組數 / 重量？
-3. 游泳 summary 是否永遠顯示 `m`，還是長距離時可自動轉為 `km`？
-4. Weekly Quest 是否確定包含重訓？
-5. 未來是否需要把 monthly target 從固定 4 變成可設定值？
+> ✅ v1 關鍵項目已決定：
+> 1. 單車包含 `VirtualRide` / 飛輪 ✅
+> 2. 重訓只統計 activity count ✅
+> 3. 游泳 summary 固定顯示 `m`，不自動轉 km ✅
+> 4. Weekly Quest 包含重訓 ✅
+> 5. monthly target 固定 4，不做可設定值 ✅
 
 ---
 
@@ -307,12 +310,14 @@
 
 ## 13. Suggested Next Steps
 
-1. 確認 open questions
-2. 更新資料同步腳本 / workflow 輸出 `strava.json`
-3. 更新 `strava.html`
-4. 更新 `strava_aespa.html`
-5. 修正 duration formatter
-6. 驗證 desktop / mobile 版面
+> ✅ v1 已完成（commit `2957a4d`）。以下原始步驟供歷史參考：
+
+1. 確認 open questions ✅
+2. 更新資料同步腳本 / workflow 輸出 `strava.json` ✅
+3. 更新 `strava.html` ✅
+4. 更新 `strava_aespa.html` ✅
+5. 修正 duration formatter ✅
+6. 驗證 desktop / mobile 版面 ✅（待使用者實際驗收）
 
 ---
 
