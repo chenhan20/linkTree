@@ -175,6 +175,14 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 }
 .activity-meta .tag.hr{border-color:rgba(220,60,60,.2);background:rgba(220,60,60,.06);color:#c04040}
 .activity-dist{font-size:15px;font-weight:600;color:#FC4C02;flex-shrink:0;white-space:nowrap}
+/* lap strip */
+.lap-strip{
+  margin-top:6px;padding:4px 8px;border-radius:5px;
+  background:rgba(252,76,2,.06);border:1px solid rgba(252,76,2,.14);
+  font-size:11px;color:#888;display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+}
+.lap-strip .lap-name{color:#b05030;font-weight:500;font-size:11px}
+.lap-strip .lap-tag{color:#999;white-space:nowrap}
 .empty{font-size:13px;color:#555;padding:2rem 0;text-align:center}
 
 /* ── show more ── */
@@ -364,6 +372,7 @@ function renderTimeline(list, type, expanded) {
         const aIsWeight = aType === 'weight'
         const aIsSwim   = aType === 'swim'
         const aIsRun    = aType === 'run'
+        const aIsRide   = aType === 'ride'
         const aIcon = ICONS[aType] || ICONS.ride
         const tags = []
         tags.push(`<span class="tag">⏱ ${fmtMovingTime(a.moving_time_hr || 0)}</span>`)
@@ -373,12 +382,16 @@ function renderTimeline(list, type, expanded) {
         if (!aIsRun && !aIsSwim && !aIsWeight && a.avg_speed_kmh) tags.push(`<span class="tag">${a.avg_speed_kmh} km/h</span>`)
         if (aIsSwim && a.pace_per_100m)  tags.push(`<span class="tag">💧 ${a.pace_per_100m}/100m</span>`)
         if (a.avg_heartrate)             tags.push(`<span class="tag hr">♥️ ${a.avg_heartrate} bpm</span>`)
+        const lapHtml = (aIsRide && a.main_lap)
+          ? `<div class="lap-strip"><span class="lap-name">🏁 ${a.main_lap.name}</span><span class="lap-tag">⏱ ${a.main_lap.moving_time_str}</span>${a.main_lap.average_heartrate ? `<span class="lap-tag">♥️ ${a.main_lap.average_heartrate}</span>` : ''}${a.main_lap.average_watts ? `<span class="lap-tag">⚡ ${a.main_lap.average_watts}W</span>` : ''}</div>`
+          : ''
         return `
         <div class="activity-card">
           <div class="activity-icon"><svg viewBox="0 0 24 24">${aIcon}</svg></div>
           <div class="activity-info">
             <div class="activity-name">${a.name || '—'}</div>
             <div class="activity-meta">${tags.join('')}</div>
+            ${lapHtml}
           </div>
           ${aIsWeight ? '' : `<div class="activity-dist">${a.distance_km} <small style="font-size:11px;font-weight:400">km</small></div>`}
         </div>`
