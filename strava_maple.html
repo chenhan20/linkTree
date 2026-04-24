@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>莊成翰 · Strava Cyclist (Maple)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+:root{
+  --wood-1:#8a5a2b;
+  --wood-2:#6b4220;
+  --wood-3:#3e2410;
+  --paper:#fff5d8;
+  --paper-2:#ffe9b0;
+  --grass-1:#7bd24a;
+  --grass-2:#4ea832;
+  --gold-1:#ffd84a;
+  --gold-2:#e5a418;
+  --sky-1:#7ec8ee;
+  --sky-2:#a8dff5;
+  --leaf:#3fa030;
+  --ink:#2a1a08;
+  --shadow:rgba(38,22,8,.25);
+}
+*{box-sizing:border-box;margin:0;padding:0;image-rendering:pixelated}
+html,body{
+  min-height:100%;
+  font-family:'DotGothic16','Press Start 2P','Microsoft JhengHei',sans-serif;
+  color:var(--ink);
+  background:
+    linear-gradient(#7ec8ee 0%, #a8dff5 45%, #c8ecf8 80%, #d6dca8 100%);
+  background-attachment:fixed;
+  letter-spacing:.5px;
+}
+
+/* pixel cloud field (CSS-only) */
+body::before{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:
+    radial-gradient(circle at 12% 14%, #fff 0 22px, transparent 23px),
+    radial-gradient(circle at 18% 12%, #fff 0 18px, transparent 19px),
+    radial-gradient(circle at 80% 10%, #fff 0 24px, transparent 25px),
+    radial-gradient(circle at 86% 16%, #fff 0 18px, transparent 19px),
+    radial-gradient(circle at 50% 6%,  #fff 0 16px, transparent 17px);
+  opacity:.85;
+}
+
+#app{position:relative;z-index:1;max-width:780px;margin:0 auto;padding:14px 14px 60px}
+
+/* ── pixel-frame mixin via box-shadow staircase ── */
+.frame{
+  background:var(--paper);
+  border:3px solid var(--wood-3);
+  border-radius:6px;
+  box-shadow:
+    0 0 0 3px var(--paper),
+    0 0 0 6px var(--wood-3),
+    6px 6px 0 6px var(--shadow);
+  padding:14px 16px;
+  margin-bottom:18px;
+}
+
+/* ── topbar ── */
+.topbar{
+  display:flex;align-items:center;gap:10px;
+  background:var(--paper);
+  border:3px solid var(--wood-3);
+  border-radius:8px;
+  padding:8px 12px;
+  margin-bottom:14px;
+  box-shadow:0 3px 0 var(--wood-3);
+}
+.back-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  background:var(--gold-1);border:2px solid var(--wood-3);
+  border-radius:4px;padding:5px 10px;
+  font-family:inherit;font-size:13px;color:var(--ink);
+  text-decoration:none;cursor:pointer;
+  box-shadow:0 2px 0 var(--wood-3);
+}
+.back-btn:hover{background:var(--gold-2)}
+.topbar-title{font-size:12px;color:var(--wood-2);letter-spacing:1px}
+.topbar-spacer{flex:1}
+.topbar-portal{font-size:18px}
+
+/* ── hero (wooden sign) ── */
+.hero{
+  position:relative;
+  background:
+    repeating-linear-gradient(180deg, #a06a35 0 6px, #8a5a2b 6px 12px, #7a4d23 12px 18px);
+  border:4px solid var(--wood-3);
+  border-radius:10px;
+  padding:18px 16px 16px;
+  margin-bottom:18px;
+  box-shadow:
+    0 0 0 3px #5a3614,
+    8px 8px 0 var(--shadow);
+  display:grid;
+  grid-template-columns:auto 1fr auto;
+  gap:14px;align-items:center;
+}
+.hero::before,.hero::after{
+  content:'🍁';position:absolute;font-size:22px;
+}
+.hero::before{top:-12px;left:14px;transform:rotate(-15deg)}
+.hero::after{top:-10px;right:18px;transform:rotate(20deg)}
+
+.hero-char{
+  width:78px;height:78px;
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(180deg,#7bd24a,#4ea832);
+  border:3px solid var(--wood-3);border-radius:8px;
+  box-shadow:inset 0 -4px 0 rgba(0,0,0,.18);
+  font-size:42px;line-height:1;
+  flex-shrink:0;
+}
+.hero-char img{width:100%;height:100%;object-fit:contain;image-rendering:pixelated}
+.hero-name{
+  text-align:center;
+  text-shadow:2px 2px 0 var(--wood-3);
+}
+.hero-name h1{
+  font-size:30px;color:var(--paper);
+  letter-spacing:6px;font-weight:normal;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.hero-name .sub{
+  margin-top:6px;font-size:11px;color:var(--gold-1);
+  letter-spacing:3px;
+}
+.hero-name .sub::before{content:'✦ '}
+.hero-name .sub::after{content:' ✦'}
+.hero-portal{
+  width:60px;height:60px;
+  background:radial-gradient(circle, #6ee7ff 0 18px, #3b82f6 19px 26px, transparent 27px);
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:32px;
+  flex-shrink:0;
+  filter:drop-shadow(0 0 6px rgba(110,231,255,.7));
+}
+.hero-updated{
+  position:absolute;bottom:-22px;left:50%;transform:translateX(-50%);
+  background:var(--paper);border:2px solid var(--wood-3);
+  border-radius:4px;padding:2px 10px;
+  font-size:10px;color:var(--wood-2);letter-spacing:1px;
+  white-space:nowrap;
+}
+
+/* ── stats row ── */
+.stats-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:0;
+  align-items:end;
+}
+.stat-card{
+  text-align:center;
+  padding:4px 6px;
+  border-right:2px dashed rgba(106,66,32,.25);
+}
+.stat-card:last-child{border-right:none}
+.stat-card .stat-icon{font-size:18px;display:block;margin-bottom:2px}
+.stat-card .stat-label{font-size:11px;color:var(--wood-2);letter-spacing:1px}
+.stat-card .stat-val{font-size:22px;color:var(--ink);line-height:1.1;margin-top:4px;font-weight:normal}
+.stat-card .stat-unit{font-size:10px;color:var(--wood-2);margin-top:2px}
+
+/* ── two column row (chart + goals) ── */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
+@media(max-width:640px){.two-col{grid-template-columns:1fr}}
+
+/* card with leaf header */
+.section-head{
+  display:flex;align-items:center;gap:6px;
+  font-size:14px;color:var(--ink);letter-spacing:1px;
+  margin-bottom:10px;
+  padding-bottom:6px;
+  border-bottom:2px dashed rgba(106,66,32,.3);
+}
+.section-head .ico{font-size:16px}
+.section-head .right{margin-left:auto;font-size:10px;color:var(--wood-2);letter-spacing:1px}
+
+/* ── monthly bar chart (本月里程分佈) ── */
+.bar-chart{
+  display:grid;
+  grid-template-rows:auto 1fr auto;
+  gap:6px;
+  height:170px;
+}
+.bar-chart-grid{
+  position:relative;
+  border-left:2px solid var(--wood-2);
+  border-bottom:2px solid var(--wood-2);
+  margin:8px 4px 0 28px;
+  height:120px;
+}
+.bar-chart-y{
+  position:absolute;left:-26px;top:0;bottom:0;width:24px;
+  display:flex;flex-direction:column;justify-content:space-between;
+  font-size:9px;color:var(--wood-2);text-align:right;
+  padding-right:4px;
+}
+.bar-chart-bars{
+  position:absolute;inset:0;
+  display:flex;align-items:flex-end;justify-content:space-around;
+  padding:0 8px;
+}
+.bar-col{
+  width:14%;height:100%;
+  display:flex;flex-direction:column;justify-content:flex-end;align-items:center;
+  position:relative;
+}
+.bar-col .bar{
+  width:100%;
+  background:linear-gradient(180deg,#9be466 0%,#5ab832 100%);
+  border:2px solid var(--wood-3);border-bottom:none;
+  border-radius:3px 3px 0 0;
+  transition:height .8s cubic-bezier(.25,.46,.45,.94);
+  height:0;
+}
+.bar-col.current .bar{
+  background:linear-gradient(180deg,var(--gold-1),var(--gold-2));
+}
+.bar-col .bar-val{
+  position:absolute;top:-16px;left:50%;transform:translateX(-50%);
+  font-size:10px;color:var(--wood-3);white-space:nowrap;
+}
+.bar-chart-x{
+  display:flex;justify-content:space-around;
+  font-size:11px;color:var(--wood-2);
+  margin-top:4px;padding:0 8px 0 32px;
+}
+.bar-chart-x span{width:14%;text-align:center}
+.bar-unit-hint{font-size:9px;color:var(--wood-2);text-align:right}
+
+/* ── monthly goals (CLEAR! badges) ── */
+.goals-list{display:flex;flex-direction:column;gap:8px}
+.goal-row{
+  display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;
+}
+.goal-row .gico{font-size:18px;width:22px;text-align:center}
+.goal-row .gname{font-size:12px;color:var(--ink);min-width:46px}
+.goal-row .gname .gcount{font-size:11px;color:var(--wood-2);margin-left:3px}
+.goal-row .gbar{
+  position:relative;height:12px;
+  background:#e6d2a0;border:2px solid var(--wood-3);border-radius:8px;
+  overflow:hidden;
+}
+.goal-row .gfill{
+  height:100%;width:0;
+  transition:width .8s cubic-bezier(.25,.46,.45,.94);
+}
+.gfill.danger{background:linear-gradient(90deg,#d04848,#e87070)}
+.gfill.warning{background:linear-gradient(90deg,#e0a020,#f0c050)}
+.gfill.done{background:linear-gradient(90deg,#4ea832,#7bd24a)}
+.gfill.over{background:linear-gradient(90deg,#e88030,#f0a050)}
+.goal-row .gbadge{
+  font-family:'Press Start 2P',inherit;
+  font-size:9px;letter-spacing:1px;
+  background:var(--gold-1);color:var(--wood-3);
+  border:2px solid var(--wood-3);border-radius:4px;
+  padding:4px 6px;
+  box-shadow:0 2px 0 var(--wood-3);
+  white-space:nowrap;
+}
+.gbadge.danger{background:#f0c0c0}
+.gbadge.warning{background:#f0e0a0}
+.gbadge.done,.gbadge.over{background:var(--gold-1)}
+
+/* ── weekly quest ── */
+.quest-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.quest-tile{
+  background:#e6d2a0;
+  border:3px solid var(--wood-3);border-radius:8px;
+  padding:10px 6px;
+  text-align:center;
+  box-shadow:0 3px 0 var(--wood-3);
+}
+.quest-tile .qico{font-size:26px;display:block;line-height:1}
+.quest-tile .qlabel{font-size:13px;color:var(--ink);margin-top:4px;letter-spacing:2px}
+.quest-tile .qstamp{
+  display:inline-block;margin-top:6px;
+  font-family:'Press Start 2P',inherit;font-size:8px;
+  padding:3px 6px;border-radius:3px;border:2px solid;
+  letter-spacing:1px;
+}
+.quest-tile.done .qstamp{
+  background:#c8f0b8;color:#1d6420;border-color:#1d6420;
+}
+.quest-tile.todo{opacity:.55;filter:saturate(.5)}
+.quest-tile.todo .qstamp{
+  background:#e0e0e0;color:#666;border-color:#666;
+}
+
+/* ── activity log timeline ── */
+.timeline{position:relative;padding-left:22px;margin-top:6px}
+.timeline::before{
+  content:'';position:absolute;left:6px;top:6px;bottom:6px;
+  width:3px;background:var(--gold-2);
+  border-radius:2px;
+}
+.timeline-day{position:relative;margin-bottom:10px}
+.timeline-date{
+  display:inline-block;font-family:'Press Start 2P',inherit;
+  font-size:10px;background:var(--gold-1);color:var(--wood-3);
+  border:2px solid var(--wood-3);border-radius:4px;
+  padding:3px 8px;margin-bottom:6px;margin-left:-22px;
+  position:relative;
+  box-shadow:0 2px 0 var(--wood-3);
+  letter-spacing:1px;
+}
+.timeline-day::before{
+  content:'';position:absolute;left:-22px;top:8px;
+  width:11px;height:11px;border-radius:50%;
+  background:var(--gold-1);border:2px solid var(--wood-3);
+  z-index:1;
+}
+.act-card{
+  display:flex;align-items:center;gap:10px;
+  background:#fff5d8;border:2px solid var(--wood-3);border-radius:8px;
+  padding:8px 12px;margin-bottom:6px;
+  box-shadow:0 2px 0 var(--wood-3);
+}
+.act-icon{
+  width:34px;height:34px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  background:#e6d2a0;border:2px solid var(--wood-3);border-radius:6px;
+  font-size:20px;
+}
+.act-info{flex:1;min-width:0}
+.act-name{font-size:13px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.act-meta{font-size:10px;color:var(--wood-2);margin-top:2px;letter-spacing:.5px}
+.act-meta .sep{margin:0 5px;color:#c0a070}
+.act-dist{
+  font-family:'Press Start 2P',inherit;font-size:14px;
+  color:#c54a0d;flex-shrink:0;white-space:nowrap;letter-spacing:1px;
+}
+.act-dist small{font-size:9px;color:var(--wood-2);margin-left:2px}
+
+/* lap strip (cycling only) */
+.act-lap{
+  margin-top:6px;padding:3px 8px;
+  background:rgba(255,216,74,.25);
+  border:1px dashed var(--wood-2);border-radius:4px;
+  font-size:10px;color:var(--wood-3);
+  display:flex;flex-wrap:wrap;gap:6px;
+}
+.act-lap .lap-name{color:#a04018;font-weight:bold}
+
+.show-more-btn{
+  width:100%;font-family:inherit;font-size:12px;
+  background:var(--gold-1);color:var(--wood-3);
+  border:2px solid var(--wood-3);border-radius:6px;
+  padding:8px;cursor:pointer;letter-spacing:2px;
+  box-shadow:0 3px 0 var(--wood-3);
+  margin-top:6px;
+}
+.show-more-btn:hover{background:var(--gold-2)}
+
+/* sport tabs */
+.sport-tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.sport-tab{
+  font-family:inherit;font-size:12px;
+  background:#e6d2a0;color:var(--wood-3);
+  border:2px solid var(--wood-3);border-radius:6px;
+  padding:5px 10px;cursor:pointer;
+  box-shadow:0 2px 0 var(--wood-3);
+}
+.sport-tab.active{background:var(--gold-1);transform:translateY(1px);box-shadow:0 1px 0 var(--wood-3)}
+
+/* footer image area (decoration anchor) */
+.deco-floor{
+  display:flex;justify-content:space-between;align-items:flex-end;
+  font-size:32px;margin:14px 4px 0;
+}
+.deco-floor .grass{font-size:18px;color:var(--leaf)}
+
+.empty{font-size:12px;color:var(--wood-2);padding:20px;text-align:center}
+.loading{
+  text-align:center;padding:60px 0;color:var(--wood-3);
+  font-size:14px;letter-spacing:2px;
+}
+
+/* CTA button */
+.strava-cta{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  width:100%;padding:12px;border-radius:8px;
+  background:#fc4c02;border:3px solid var(--wood-3);color:#fff;
+  font-family:inherit;font-size:14px;letter-spacing:2px;
+  text-decoration:none;
+  box-shadow:0 4px 0 var(--wood-3);
+  margin-top:12px;
+}
+.strava-cta:hover{background:#e54400}
+
+/* placeholder image fallback (if user adds <img> later) */
+.pixel-img{image-rendering:pixelated;image-rendering:crisp-edges}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <div class="topbar">
+    <a class="back-btn" href="javascript:history.length>1?history.back():location.href='linkTreeIndex.html'">← BACK</a>
+    <span class="topbar-title">MAPLE WORLD · STRAVA</span>
+    <span class="topbar-spacer"></span>
+    <span class="topbar-portal">🍄</span>
+  </div>
+
+  <div id="content"><div class="loading">⛏ Loading adventurer data…</div></div>
+</div>
+
+<script>
+/* ── helpers ── */
+function fmtMovingTime(hr) {
+  const totalMin = Math.max(0, Math.round((hr || 0) * 60))
+  if (totalMin < 60) return `${totalMin} 分`
+  const h = Math.floor(totalMin / 60)
+  const m = totalMin % 60
+  return m === 0 ? `${h} 小時` : `${h} 小時 ${m} 分`
+}
+const SPORT_META = {
+  ride:   { icon:'🚴', label:'單車' },
+  run:    { icon:'🏃', label:'跑步' },
+  swim:   { icon:'🏊', label:'游泳' },
+  weight: { icon:'🏋️', label:'重訓' },
+}
+const STATUS_TEXT = { danger:'TRAIN!', warning:'KEEP!', done:'CLEAR!', over:'BONUS!' }
+
+function fmtDate(d){ const [,mm,dd]=d.split('-'); return `${mm} / ${dd}` }
+
+/* ── renderers ── */
+function renderHero(updatedAt){
+  return `
+    <div class="hero">
+      <div class="hero-char">
+        <img class="pixel-img" src="docs/maple-char.png" alt=""
+             onerror="this.style.display='none';this.parentElement.innerHTML='🚴'">
+      </div>
+      <div class="hero-name">
+        <h1>莊成翰</h1>
+        <div class="sub">STRAVA CYCLIST</div>
+      </div>
+      <div class="hero-portal">🌀</div>
+      <div class="hero-updated">UPDATED ${(updatedAt||'').slice(0,10) || '—'}</div>
+    </div>`
+}
+
+function renderStats(s){
+  s = s || {}
+  return `
+    <div class="frame">
+      <div class="stats-grid">
+        <div class="stat-card"><span class="stat-icon">🚴</span><div class="stat-label">總距離</div><div class="stat-val">${(s.all_time_distance_km ?? 0).toLocaleString()}</div><div class="stat-unit">km</div></div>
+        <div class="stat-card"><span class="stat-icon">⛰</span><div class="stat-label">總爬升</div><div class="stat-val">${(s.all_time_elevation_m ?? 0).toLocaleString()}</div><div class="stat-unit">m</div></div>
+        <div class="stat-card"><span class="stat-icon">🏆</span><div class="stat-label">總騎乘次數</div><div class="stat-val">${(s.all_time_rides ?? 0).toLocaleString()}</div><div class="stat-unit">次</div></div>
+        <div class="stat-card"><span class="stat-icon">⏱</span><div class="stat-label">總時數</div><div class="stat-val">${(s.ytd_moving_time_hr ?? 0).toLocaleString()}</div><div class="stat-unit">hrs (YTD)</div></div>
+      </div>
+    </div>`
+}
+
+/* monthly distance chart (current year only, last 4 months) */
+function renderMonthChart(history){
+  // take current year, last 4 months including current
+  const now = new Date(Date.now() + 8*3600*1000)
+  const tY = now.getUTCFullYear(), tM = now.getUTCMonth()+1
+  const months = []
+  for (let i=3;i>=0;i--){
+    const m = tM - i
+    if (m < 1) continue
+    const key = `${tY}-${String(m).padStart(2,'0')}`
+    const h = (history||[]).find(x => x.month === key)
+    const dist = h ? (h.ride?.distance_km || 0) : 0
+    months.push({ label:String(m).padStart(2,'0'), dist, current:i===0 })
+  }
+  if (months.length === 0) return ''
+  const max = Math.max(...months.map(x=>x.dist), 1)
+  // round max up to nice value
+  const ceil = max < 200 ? 200 : max < 400 ? 400 : max < 600 ? 600 : Math.ceil(max/200)*200
+  const ticks = [ceil, Math.round(ceil*0.75), Math.round(ceil*0.5), Math.round(ceil*0.25), 0]
+
+  const bars = months.map(m => `
+    <div class="bar-col ${m.current?'current':''}">
+      <div class="bar-val">${m.dist}</div>
+      <div class="bar" data-h="${(m.dist/ceil)*100}"></div>
+    </div>`).join('')
+  const xLabels = months.map(m => `<span>${m.label}</span>`).join('')
+
+  return `
+    <div class="frame">
+      <div class="section-head"><span class="ico">🍃</span>本月里程分佈<span class="right">單位 : km</span></div>
+      <div class="bar-chart">
+        <div></div>
+        <div class="bar-chart-grid">
+          <div class="bar-chart-y">${ticks.map(t=>`<div>${t}</div>`).join('')}</div>
+          <div class="bar-chart-bars">${bars}</div>
+        </div>
+        <div class="bar-chart-x">${xLabels}</div>
+      </div>
+    </div>`
+}
+
+function renderGoals(mg){
+  if (!mg) return ''
+  const order = ['ride','run','swim','weight']
+  const rows = order.map(k => {
+    const g = mg[k]; if (!g) return ''
+    const meta = SPORT_META[k]
+    const pct = Math.min(100, g.target>0 ? (g.count/g.target)*100 : 0)
+    const stamp = STATUS_TEXT[g.status] || 'TRAIN!'
+    return `
+      <div class="goal-row">
+        <span class="gico">${meta.icon}</span>
+        <div>
+          <span class="gname">${meta.label} <span class="gcount">${g.count}/${g.target}</span></span>
+          <div class="gbar"><div class="gfill ${g.status}" data-pct="${pct}"></div></div>
+        </div>
+        <span class="gbadge ${g.status}">${stamp}</span>
+      </div>`
+  }).join('')
+  return `
+    <div class="frame">
+      <div class="section-head"><span class="ico">🎯</span>月度目標進度</div>
+      <div class="goals-list">${rows}</div>
+    </div>`
+}
+
+function renderQuest(wq){
+  if (!wq) return ''
+  const order = ['ride','run','swim','weight']
+  const tiles = order.map(k => {
+    const meta = SPORT_META[k], on = !!wq[k]
+    return `
+      <div class="quest-tile ${on?'done':'todo'}">
+        <span class="qico">${meta.icon}</span>
+        <div class="qlabel">${meta.label}</div>
+        <span class="qstamp">${on ? '✅COMPLETE!' : '⬜ TODO'}</span>
+      </div>`
+  }).join('')
+  return `
+    <div class="frame">
+      <div class="section-head"><span class="ico">🍁</span>本週任務</div>
+      <div class="quest-row">${tiles}</div>
+    </div>`
+}
+
+function groupByDate(list){
+  const map={}; (list||[]).forEach(a=>{ const d=(a.date||'').slice(0,10); (map[d]=map[d]||[]).push(a) })
+  return Object.entries(map)
+    .sort((a,b)=>b[0].localeCompare(a[0]))
+    .map(([d,acts])=>[d, acts.slice().sort((a,b)=>(a.time||'').localeCompare(b.time||''))])
+}
+
+function renderTimeline(list, type, expanded){
+  if (!list || !list.length) return '<div class="empty">暫無資料</div>'
+  const isAll = type === 'all'
+  const groups = groupByDate(list)
+  const LIMIT = 6
+  const hasMore = !expanded && groups.length > LIMIT
+  const visible = hasMore ? groups.slice(0, LIMIT) : groups
+
+  const html = visible.map(([date, acts]) => `
+    <div class="timeline-day">
+      <div class="timeline-date">${fmtDate(date)}</div>
+      ${acts.map(a => {
+        const aType = isAll ? (a._type || 'ride') : type
+        const meta = SPORT_META[aType] || SPORT_META.ride
+        const aIsWeight = aType === 'weight'
+        const aIsSwim   = aType === 'swim'
+        const aIsRun    = aType === 'run'
+        const aIsRide   = aType === 'ride'
+        const metas = []
+        if (aIsRide && a.avg_speed_kmh)  metas.push(`${a.avg_speed_kmh} km/h`)
+        if (aIsRun  && a.avg_pace_km)    metas.push(`${a.avg_pace_km}/km`)
+        if (aIsSwim && a.pace_per_100m)  metas.push(`${a.pace_per_100m}/100m`)
+        if (!aIsWeight && !aIsSwim && a.elevation_m != null) metas.push(`${a.elevation_m} m`)
+        if (a.avg_heartrate)             metas.push(`♥ ${a.avg_heartrate}`)
+        metas.push(fmtMovingTime(a.moving_time_hr || 0))
+        const lapHtml = (aIsRide && a.top_laps && a.top_laps.length)
+          ? a.top_laps.map(lap =>
+              `<div class="act-lap"><span class="lap-name">🏁 ${lap.name}</span><span>⏱ ${lap.moving_time_str}</span>${lap.average_heartrate?`<span>♥ ${lap.average_heartrate}</span>`:''}${lap.average_watts?`<span>⚡ ${lap.average_watts}W</span>`:''}</div>`
+            ).join('')
+          : ''
+        const dist = aIsWeight ? '' :
+          aIsSwim ? `<div class="act-dist">${Math.round((a.distance_km||0)*1000)}<small>m</small></div>`
+                  : `<div class="act-dist">${a.distance_km}<small>km</small></div>`
+        return `
+          <div class="act-card">
+            <div class="act-icon">${meta.icon}</div>
+            <div class="act-info">
+              <div class="act-name">${a.name || '—'}</div>
+              <div class="act-meta">${metas.join('<span class="sep">·</span>')}</div>
+              ${lapHtml}
+            </div>
+            ${dist}
+          </div>`
+      }).join('')}
+    </div>
+  `).join('')
+  return html + (hasMore ? `<button class="show-more-btn" id="show-more-btn">▼ 顯示全部 ${groups.length} 天</button>` : '')
+}
+
+/* ── main render ── */
+function render(data){
+  const s = data.summary || {}
+
+  // fallback derive monthly_summary/goals/quest from monthly_history if missing
+  if (!data.monthly_summary || !data.monthly_goals || !data.weekly_quest) {
+    const tpeNow = new Date(Date.now() + 8*3600*1000)
+    const tY = tpeNow.getUTCFullYear(), tM = tpeNow.getUTCMonth(), tD = tpeNow.getUTCDate()
+    const thisMonth = tY + '-' + String(tM+1).padStart(2,'0')
+    const mh = (data.monthly_history || []).find(h => h.month === thisMonth)
+    const TARGET = 4
+    const sOf = c => { const r = c/TARGET; return r>=1.5?'over':r>=1?'done':r>=0.5?'warning':'danger' }
+    if (!data.monthly_goals && mh) {
+      const rc = mh.ride?.count ?? 0, rnc = mh.run?.count ?? 0, sc = mh.swim?.count ?? 0, wc = mh.weight_training?.count ?? 0
+      data.monthly_goals = {
+        ride:   { count:rc,  target:TARGET, status:sOf(rc)  },
+        run:    { count:rnc, target:TARGET, status:sOf(rnc) },
+        swim:   { count:sc,  target:TARGET, status:sOf(sc)  },
+        weight: { count:wc,  target:TARGET, status:sOf(wc)  },
+      }
+    }
+    if (!data.weekly_quest) {
+      const dow = tpeNow.getUTCDay(), daysFromMon = (dow+6)%7
+      const weekStart = new Date(Date.UTC(tY, tM, tD - daysFromMon)).toISOString().slice(0,10)
+      const inWeek = a => (a.date || '') >= weekStart
+      data.weekly_quest = {
+        ride:   (data.recent_rides   || []).some(inWeek),
+        run:    (data.recent_runs    || []).some(inWeek),
+        swim:   (data.recent_swims   || []).some(inWeek),
+        weight: (data.recent_weights || []).some(inWeek),
+      }
+    }
+  }
+
+  // build ALL list
+  const allList = []
+  ;(data.recent_rides   || []).forEach(a => allList.push({...a, _type:'ride'}))
+  ;(data.recent_runs    || []).forEach(a => allList.push({...a, _type:'run'}))
+  ;(data.recent_swims   || []).forEach(a => allList.push({...a, _type:'swim'}))
+  ;(data.recent_weights || []).forEach(a => allList.push({...a, _type:'weight'}))
+  allList.sort((a,b)=>{
+    const dc = (b.date||'').localeCompare(a.date||'')
+    return dc!==0 ? dc : (b.time||'').localeCompare(a.time||'')
+  })
+
+  const tabs = [
+    { key:'all',    label:'📋 全部', list: allList },
+    { key:'ride',   label:'🚴 單車', list: data.recent_rides },
+    { key:'run',    label:'🏃 跑步', list: data.recent_runs },
+    { key:'swim',   label:'🏊 游泳', list: data.recent_swims },
+    { key:'weight', label:'🏋️ 重訓', list: data.recent_weights },
+  ].filter(t => t.list && t.list.length > 0)
+  let activeTab = tabs[0]?.key || 'all'
+  const showMore = {}
+
+  function tabHTML(){
+    return tabs.map(t => `<button class="sport-tab${t.key===activeTab?' active':''}" data-tab="${t.key}">${t.label}</button>`).join('')
+  }
+  function timelineHTML(){
+    const t = tabs.find(t => t.key === activeTab)
+    return renderTimeline(t?.list, activeTab, showMore[activeTab] || false)
+  }
+
+  document.getElementById('content').innerHTML = `
+    ${renderHero(data.updated_at)}
+    ${renderStats(s)}
+    <div class="two-col">
+      ${renderMonthChart(data.monthly_history)}
+      ${renderGoals(data.monthly_goals)}
+    </div>
+    ${renderQuest(data.weekly_quest)}
+
+    <div class="frame">
+      <div class="section-head"><span class="ico">🍀</span>活動紀錄<span class="right">ACTIVITY LOG</span></div>
+      <div class="sport-tabs" id="sport-tabs">${tabHTML()}</div>
+      <div class="timeline" id="timeline">${timelineHTML()}</div>
+    </div>
+
+    <div class="deco-floor">
+      <span>🐷</span>
+      <span class="grass">🌿 🌱 🌿 🌱 🌿 🌱 🌿</span>
+      <span>🍄</span>
+    </div>
+
+    <a class="strava-cta" href="https://www.strava.com/athletes/161539959" target="_blank">
+      ✦ View on Strava ✦
+    </a>
+  `
+
+  // animate bars
+  requestAnimationFrame(() => {
+    document.querySelectorAll('.bar-col .bar').forEach(b => {
+      const h = b.dataset.h || 0
+      setTimeout(() => { b.style.height = h + '%' }, 80)
+    })
+    document.querySelectorAll('.gfill').forEach(f => {
+      const p = f.dataset.pct || 0
+      setTimeout(() => { f.style.width = p + '%' }, 120)
+    })
+  })
+
+  // tab switching
+  document.getElementById('sport-tabs').addEventListener('click', e => {
+    const btn = e.target.closest('.sport-tab')
+    if (!btn) return
+    activeTab = btn.dataset.tab
+    document.querySelectorAll('.sport-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === activeTab))
+    document.getElementById('timeline').innerHTML = timelineHTML()
+  })
+  // show more
+  document.getElementById('timeline').addEventListener('click', e => {
+    if (e.target.id === 'show-more-btn') {
+      showMore[activeTab] = true
+      document.getElementById('timeline').innerHTML = timelineHTML()
+    }
+  })
+}
+
+fetch('strava.json')
+  .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json() })
+  .then(render)
+  .catch(err => {
+    document.getElementById('content').innerHTML = `
+      <div class="loading">
+        ⚠ 載入失敗：${err.message}
+      </div>`
+  })
+</script>
+</body>
+</html>
