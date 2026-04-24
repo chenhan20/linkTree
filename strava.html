@@ -165,13 +165,13 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 }
 .activity-icon svg{width:24px;height:24px;fill:#FC4C02}
 .activity-info{flex:1;min-width:0}
-.activity-name{font-size:14px;font-weight:500;color:#eeebe8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.activity-name{font-size:16px;font-weight:500;color:#eeebe8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .activity-meta{font-size:11px;color:#666;margin-top:3px}
 .activity-meta .tag{
   display:inline-flex;align-items:center;gap:3px;
   background:rgba(252,76,2,.08);border:1px solid rgba(252,76,2,.15);
-  border-radius:4px;padding:1px 6px;margin-right:4px;margin-top:3px;
-  color:#b05030;font-size:10px;white-space:nowrap;
+  border-radius:4px;padding:2px 8px;margin-right:4px;margin-top:3px;
+  color:#b05030;font-size:12px;white-space:nowrap;
 }
 .activity-meta .tag.hr{border-color:rgba(220,60,60,.2);background:rgba(220,60,60,.06);color:#c04040}
 .activity-dist{font-size:15px;font-weight:600;color:#FC4C02;flex-shrink:0;white-space:nowrap}
@@ -396,6 +396,45 @@ function renderTimeline(list, type, expanded) {
 function render(data) {
   const s = data.summary || {}
   const history = (data.monthly_history || []).slice().reverse()
+
+  // ── Fallback: derive monthly data from existing JSON if Action hasn't run yet ──
+  if (!data.monthly_summary || !data.monthly_goals || !data.weekly_quest) {
+    const tpeNow = new Date(Date.now() + 8 * 3600 * 1000)
+    const tY = tpeNow.getUTCFullYear(), tM = tpeNow.getUTCMonth(), tD = tpeNow.getUTCDate()
+    const thisMonth = tY + '-' + String(tM + 1).padStart(2, '0')
+    const mh = (data.monthly_history || []).find(h => h.month === thisMonth)
+    const TARGET = 4
+    const sOf = c => { const r = c / TARGET; return r >= 1.5 ? 'over' : r >= 1 ? 'done' : r >= 0.5 ? 'warning' : 'danger' }
+    if (!data.monthly_summary && mh) {
+      data.monthly_summary = {
+        ride_km:      mh.ride?.distance_km ?? 0,
+        run_km:       mh.run?.distance_km ?? 0,
+        swim_m:       Math.round((mh.swim?.distance_km ?? 0) * 1000),
+        weight_count: mh.weight_training?.count ?? 0,
+      }
+    }
+    if (!data.monthly_goals && mh) {
+      const rc = mh.ride?.count ?? 0, rnc = mh.run?.count ?? 0, sc = mh.swim?.count ?? 0, wc = mh.weight_training?.count ?? 0
+      data.monthly_goals = {
+        ride:   { count: rc,  target: TARGET, status: sOf(rc)  },
+        run:    { count: rnc, target: TARGET, status: sOf(rnc) },
+        swim:   { count: sc,  target: TARGET, status: sOf(sc)  },
+        weight: { count: wc,  target: TARGET, status: sOf(wc)  },
+      }
+    }
+    if (!data.weekly_quest) {
+      const dow = tpeNow.getUTCDay()
+      const daysFromMon = (dow + 6) % 7
+      const weekStart = new Date(Date.UTC(tY, tM, tD - daysFromMon)).toISOString().slice(0, 10)
+      const inWeek = a => (a.date || '') >= weekStart
+      data.weekly_quest = {
+        ride:   (data.recent_rides   || []).some(inWeek),
+        run:    (data.recent_runs    || []).some(inWeek),
+        swim:   (data.recent_swims   || []).some(inWeek),
+        weight: (data.recent_weights || []).some(inWeek),
+      }
+    }
+  }
   const maxDist = Math.max(...history.map(monthDist), 1)
 
   // build ALL list (merged, sorted by date)
