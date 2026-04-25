@@ -354,11 +354,12 @@ function buildJSON(stats, activities) {
   }
 
   const TARGET = 4
+  const TARGET_WEIGHT = 10
   const monthly_goals = {
-    ride:   { count: monthRides.length,   target: TARGET, status: statusOf(monthRides.length,   TARGET) },
-    run:    { count: monthRuns.length,    target: TARGET, status: statusOf(monthRuns.length,    TARGET) },
-    swim:   { count: monthSwims.length,   target: TARGET, status: statusOf(monthSwims.length,   TARGET) },
-    weight: { count: monthWeights.length, target: TARGET, status: statusOf(monthWeights.length, TARGET) },
+    ride:   { count: monthRides.length,   target: TARGET,        status: statusOf(monthRides.length,   TARGET)        },
+    run:    { count: monthRuns.length,    target: TARGET,        status: statusOf(monthRuns.length,    TARGET)        },
+    swim:   { count: monthSwims.length,   target: TARGET,        status: statusOf(monthSwims.length,   TARGET)        },
+    weight: { count: monthWeights.length, target: TARGET_WEIGHT, status: statusOf(monthWeights.length, TARGET_WEIGHT) },
   }
 
   const weekActs = activities.filter(inThisWeek)
