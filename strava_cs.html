@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>STEVE · COUNTER SPORT HQ</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:#0a0a0a;color:#ccc;font-family:'Rajdhani',sans-serif;overflow-x:hidden}
+
+/* ── layout ── */
+.cs-layout{display:flex;min-height:100vh}
+
+/* ── sidebar ── */
+.sidebar{
+  width:190px;flex-shrink:0;
+  background:#0d0d0d;
+  border-right:1px solid rgba(200,168,0,0.2);
+  display:flex;flex-direction:column;
+  position:sticky;top:0;height:100vh;overflow-y:auto;
+}
+/* scrollbar hide */
+.sidebar::-webkit-scrollbar{width:0}
+
+/* CS logo */
+.cs-logo{
+  padding:14px 16px 12px;
+  border-bottom:2px solid rgba(200,168,0,0.25);
+  background:linear-gradient(180deg,rgba(200,168,0,0.06) 0%,transparent 100%);
+}
+.cs-logo-inner{display:flex;align-items:center;gap:8px}
+.cs-crosshair{
+  width:28px;height:28px;flex-shrink:0;
+  position:relative;display:flex;align-items:center;justify-content:center;
+}
+.cs-crosshair svg{width:28px;height:28px;fill:#c8a800}
+.cs-title{line-height:1.1}
+.cs-t1{font-size:13px;font-weight:700;color:#c8a800;letter-spacing:2px;text-transform:uppercase}
+.cs-t2{font-size:8px;color:rgba(200,168,0,0.5);letter-spacing:3px;text-transform:uppercase}
+
+/* nav */
+.nav{padding:8px 0;flex:0 0 auto}
+.nav-item{
+  display:flex;align-items:center;gap:9px;
+  padding:9px 16px;
+  font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;
+  color:#555;cursor:pointer;transition:all .15s;
+  border-left:3px solid transparent;
+}
+.nav-item:hover{color:#c8a800;background:rgba(200,168,0,0.04);border-left-color:rgba(200,168,0,0.3)}
+.nav-item.active{color:#c8a800;border-left-color:#c8a800;background:rgba(200,168,0,0.07)}
+.nav-icon{font-size:14px;width:18px;text-align:center;flex-shrink:0}
+.nav-divider{height:1px;background:rgba(200,168,0,0.08);margin:6px 0}
+.nav-logout{margin-top:auto;color:#444}
+.nav-logout:hover{color:#c83232;border-left-color:#c83232;background:rgba(200,0,0,0.04)}
+
+/* player profile */
+.player-profile{
+  margin:10px;padding:12px;
+  background:rgba(200,168,0,0.04);
+  border:1px solid rgba(200,168,0,0.18);
+  border-radius:3px;
+  flex:0 0 auto;
+}
+.pp-label{font-size:8px;letter-spacing:2.5px;color:#555;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.pp-label::after{content:'';flex:1;height:1px;background:rgba(200,168,0,0.15)}
+.pp-avatar{
+  width:52px;height:52px;border-radius:3px;
+  background:#1a1a0a;border:2px solid rgba(200,168,0,0.35);
+  overflow:hidden;margin-bottom:8px;
+  display:flex;align-items:center;justify-content:center;font-size:28px;
+}
+.pp-avatar img{width:100%;height:100%;object-fit:cover}
+.pp-name{font-size:15px;font-weight:700;color:#fff;letter-spacing:1px;line-height:1}
+.pp-alias{font-size:10px;color:#c8a800;letter-spacing:2.5px;text-transform:uppercase;margin-top:3px}
+.pp-rank{font-size:9px;color:#777;letter-spacing:1.5px;text-transform:uppercase;margin-top:5px;
+  border:1px solid rgba(200,168,0,0.2);display:inline-block;padding:2px 6px;border-radius:1px}
+.xp-row{display:flex;justify-content:space-between;font-size:9px;color:#555;letter-spacing:1px;text-transform:uppercase;margin-top:10px;margin-bottom:4px}
+.xp-bar{height:5px;background:rgba(200,168,0,0.08);border-radius:1px;overflow:hidden}
+.xp-fill{height:100%;background:linear-gradient(90deg,#8a7000,#c8a800,#f0e060);transition:width 1s ease}
+.pp-badge-row{display:flex;align-items:center;gap:8px;margin-top:10px}
+.pp-badge{font-size:22px}
+.pp-badge-info{font-size:8px;color:#666;letter-spacing:1px;text-transform:uppercase;line-height:1.4}
+
+/* status */
+.status-box{
+  margin:0 10px 10px;padding:10px 12px;
+  background:rgba(0,0,0,0.3);border:1px solid rgba(200,168,0,0.1);border-radius:3px;
+  flex:0 0 auto;
+}
+.status-label{font-size:8px;letter-spacing:2.5px;color:#444;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.status-label::after{content:'';flex:1;height:1px;background:rgba(200,168,0,0.1)}
+.status-active{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;letter-spacing:2px;color:#4caf50;margin-bottom:8px;text-transform:uppercase}
+.status-dot{width:7px;height:7px;border-radius:50%;background:#4caf50;box-shadow:0 0 6px #4caf50;animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1;box-shadow:0 0 6px #4caf50}50%{opacity:.4;box-shadow:none}}
+.status-row{display:flex;justify-content:space-between;align-items:center;font-size:9px;letter-spacing:.8px;color:#444;margin-bottom:5px;text-transform:uppercase}
+.status-val{color:#888;font-weight:600}
+
+/* ── main ── */
+.main-content{flex:1;min-width:0;background:#0a0a0a;display:flex;flex-direction:column}
+
+/* header */
+.main-header{
+  background:linear-gradient(135deg,#0e0e06 0%,#141200 50%,#1a1600 100%);
+  border-bottom:2px solid rgba(200,168,0,0.3);
+  padding:22px 28px 20px;
+  display:flex;justify-content:space-between;align-items:flex-start;
+  position:relative;overflow:hidden;flex-shrink:0;
+}
+.tactical-grid{
+  position:absolute;inset:0;
+  background-image:linear-gradient(rgba(200,168,0,0.03) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(200,168,0,0.03) 1px,transparent 1px);
+  background-size:28px 28px;pointer-events:none;
+}
+.header-left{position:relative;z-index:1}
+.header-welcome{font-size:10px;letter-spacing:3px;color:#666;text-transform:uppercase;margin-bottom:4px}
+.header-name{font-size:34px;font-weight:700;color:#c8a800;letter-spacing:2px;line-height:1;font-family:'Share Tech Mono',monospace}
+.header-alias{font-size:13px;font-weight:600;letter-spacing:4px;color:#fff;text-transform:uppercase;margin-top:3px}
+.header-rank-badge{
+  display:inline-flex;align-items:center;gap:6px;margin-top:10px;
+  font-size:10px;letter-spacing:2px;color:#c8a800;text-transform:uppercase;
+  border:1px solid rgba(200,168,0,0.35);padding:4px 10px;
+  background:rgba(200,168,0,0.07);
+}
+.header-right{
+  position:relative;z-index:1;
+  display:flex;flex-direction:column;align-items:flex-end;gap:4px;
+}
+.header-strava-icon{font-size:40px;opacity:0.15;line-height:1}
+.header-updated{font-size:9px;color:#444;letter-spacing:2px;text-transform:uppercase}
+
+/* hazard stripe */
+.hazard{
+  height:4px;flex-shrink:0;
+  background:repeating-linear-gradient(90deg,#c8a800 0,#c8a800 10px,#0a0a0a 10px,#0a0a0a 20px);
+  opacity:.35;
+}
+
+/* stat row */
+.stat-row{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  border-bottom:1px solid rgba(200,168,0,0.15);
+  background:rgba(200,168,0,0.04);
+  flex-shrink:0;
+}
+.stat-box{
+  padding:16px 20px;border-right:1px solid rgba(200,168,0,0.1);
+}
+.stat-box:last-child{border-right:none}
+.stat-icon-row{font-size:14px;color:rgba(200,168,0,0.45);margin-bottom:4px;letter-spacing:1px}
+.stat-num{font-size:26px;font-weight:700;color:#c8a800;letter-spacing:1px;line-height:1;font-family:'Share Tech Mono',monospace}
+.stat-unit{font-size:9px;color:#555;letter-spacing:2px;text-transform:uppercase;margin-top:1px}
+.stat-desc{font-size:9px;color:#555;letter-spacing:2px;text-transform:uppercase;margin-top:5px}
+
+/* scrollable body */
+.main-body{flex:1;overflow-y:auto;padding-bottom:40px}
+
+/* sections */
+.section{padding:20px 28px;border-bottom:1px solid rgba(200,168,0,0.07)}
+.sec-title{
+  font-size:11px;font-weight:700;letter-spacing:3px;color:#c8a800;text-transform:uppercase;
+  margin-bottom:14px;padding-bottom:8px;
+  border-bottom:1px solid rgba(200,168,0,0.18);
+  display:flex;align-items:center;gap:10px;
+}
+.sec-title-bar{width:3px;height:14px;background:#c8a800;border-radius:1px;flex-shrink:0}
+.sec-title-extra{margin-left:auto;font-size:9px;color:#555;font-weight:400}
+
+/* chart */
+.chart-wrap{position:relative;width:100%;height:200px}
+#perf-chart{display:block;width:100%;height:100%}
+.chart-legend{display:flex;gap:18px;margin-top:10px;flex-wrap:wrap}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#666}
+.legend-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+
+/* two-col */
+.two-col{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid rgba(200,168,0,0.07)}
+.col-section{padding:20px 28px}
+.col-section:first-child{border-right:1px solid rgba(200,168,0,0.07)}
+
+/* breakdown */
+.bd-row{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.bd-sport{display:flex;align-items:center;gap:8px;width:120px;flex-shrink:0}
+.bd-icon{font-size:18px;flex-shrink:0}
+.bd-name{font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#999;line-height:1.2}
+.bd-sub{font-size:8px;letter-spacing:1.5px;color:#555;text-transform:uppercase}
+.bd-bar-wrap{flex:1;height:8px;background:rgba(200,168,0,0.07);border-radius:1px;overflow:hidden}
+.bd-bar{height:100%;border-radius:1px;transition:width .9s cubic-bezier(.25,.46,.45,.94)}
+.bd-bar.over   {background:linear-gradient(90deg,#922,#e84040)}
+.bd-bar.done   {background:linear-gradient(90deg,#1a5a1a,#4caf50)}
+.bd-bar.warning{background:linear-gradient(90deg,#7a6000,#c8a800)}
+.bd-bar.danger {background:linear-gradient(90deg,#333,#666)}
+.bd-right{display:flex;flex-direction:column;align-items:flex-end;flex-shrink:0;width:90px}
+.bd-count{font-size:12px;font-weight:700;letter-spacing:.5px;color:#bbb;white-space:nowrap}
+.bd-status{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;font-weight:600}
+.bd-status.over   {color:#e84040}
+.bd-status.done   {color:#4caf50}
+.bd-status.warning{color:#c8a800}
+.bd-status.danger {color:#666}
+
+/* target progress */
+.tgt-row{display:flex;align-items:center;gap:10px;margin-bottom:13px}
+.tgt-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#777;flex:1;min-width:0}
+.tgt-bar-wrap{width:80px;height:5px;background:rgba(200,168,0,0.1);border-radius:1px;overflow:hidden;flex-shrink:0}
+.tgt-bar{height:100%;border-radius:1px;transition:width .9s ease}
+.tgt-bar.norm{background:linear-gradient(90deg,#7a6000,#c8a800)}
+.tgt-bar.done{background:linear-gradient(90deg,#1a5a1a,#4caf50)}
+.tgt-bar.over{background:linear-gradient(90deg,#922,#e84040)}
+.tgt-count{font-size:12px;font-weight:700;color:#bbb;white-space:nowrap;width:50px;text-align:right;flex-shrink:0;font-family:'Share Tech Mono',monospace}
+.tgt-check{font-size:16px;width:22px;text-align:center;flex-shrink:0}
+
+/* activity log */
+.log-table{width:100%;border-collapse:collapse}
+.log-table thead th{
+  font-size:9px;letter-spacing:2px;color:#555;text-transform:uppercase;
+  padding:0 8px 10px;text-align:left;border-bottom:1px solid rgba(200,168,0,0.15);
+  font-weight:700;
+}
+.log-table tbody tr:hover{background:rgba(200,168,0,0.03)}
+.log-table tbody td{
+  font-size:12px;padding:9px 8px;border-bottom:1px solid rgba(200,168,0,0.05);
+  vertical-align:middle;
+}
+.log-date-marker{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:11px;font-weight:700;letter-spacing:2px;color:#c8a800;
+}
+.log-date-marker::before{content:'▶';font-size:8px}
+.log-sport-icon{margin-right:5px;font-size:15px}
+.log-name{color:#ccc;font-weight:600;letter-spacing:.5px}
+.log-detail{color:#666;font-size:11px;letter-spacing:.5px}
+.log-dist{color:#c8a800;font-weight:700;letter-spacing:1px;font-family:'Share Tech Mono',monospace}
+.log-speed{color:#777;font-size:11px}
+.log-elev{color:#555;font-size:11px}
+.log-more-btn{
+  width:100%;padding:10px;margin-top:10px;
+  background:transparent;border:1px solid rgba(200,168,0,0.2);
+  color:#c8a800;font-size:10px;letter-spacing:2.5px;text-transform:uppercase;
+  cursor:pointer;font-family:'Rajdhani',sans-serif;font-weight:700;
+  transition:all .2s;
+}
+.log-more-btn:hover{background:rgba(200,168,0,0.07);border-color:#c8a800}
+
+/* footer */
+.cs-footer{
+  padding:16px 28px;border-top:1px solid rgba(200,168,0,0.1);
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
+}
+.footer-updated{font-size:9px;color:#444;letter-spacing:2px;text-transform:uppercase}
+.strava-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:9px 18px;border:1px solid rgba(200,168,0,0.3);
+  background:rgba(200,168,0,0.06);color:#c8a800;
+  font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  text-decoration:none;font-family:'Rajdhani',sans-serif;
+  transition:all .2s;
+}
+.strava-btn:hover{background:rgba(200,168,0,0.12);border-color:#c8a800}
+
+/* mobile */
+@media(max-width:768px){
+  .sidebar{display:none}
+  .stat-row{grid-template-columns:repeat(2,1fr)}
+  .two-col{grid-template-columns:1fr}
+  .col-section:first-child{border-right:none;border-bottom:1px solid rgba(200,168,0,0.07)}
+  .main-header{padding:16px 16px 14px}
+  .section{padding:16px}
+  .col-section{padding:16px}
+  .header-name{font-size:26px}
+  .cs-footer{padding:14px 16px;flex-direction:column;gap:8px}
+}
+</style>
+</head>
+<body>
+<div class="cs-layout">
+
+  <!-- ── SIDEBAR ── -->
+  <aside class="sidebar">
+    <div class="cs-logo">
+      <div class="cs-logo-inner">
+        <div class="cs-crosshair">
+          <svg viewBox="0 0 24 24"><path d="M11 2v4h2V2h-2zm0 16v4h2v-4h-2zM2 11v2h4v-2H2zm16 0v2h4v-2h-4zm-5 1a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/></svg>
+        </div>
+        <div class="cs-title">
+          <div class="cs-t1">Counter·Sport</div>
+          <div class="cs-t2">Training HQ</div>
+        </div>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <div class="nav-item active"><span class="nav-icon">◈</span>Dashboard</div>
+      <div class="nav-item"><span class="nav-icon">📊</span>Activity</div>
+      <div class="nav-item"><span class="nav-icon">📈</span>Analytics</div>
+      <div class="nav-divider"></div>
+      <div class="nav-item"><span class="nav-icon">🚲</span>Weapons</div>
+      <div class="nav-item"><span class="nav-icon">🎯</span>Missions</div>
+      <div class="nav-item"><span class="nav-icon">🏆</span>Achievements</div>
+      <div class="nav-divider"></div>
+      <div class="nav-item"><span class="nav-icon">⚙️</span>Settings</div>
+      <div class="nav-item nav-logout"><span class="nav-icon">⬡</span>Logout</div>
+    </nav>
+
+    <div class="player-profile">
+      <div class="pp-label">Player Profile</div>
+      <div class="pp-avatar">
+        <img src="docs/avatar.jpg" alt="SC" id="pp-img" onerror="this.style.display='none';this.parentElement.textContent='🚴'">
+      </div>
+      <div class="pp-name">莊成翰</div>
+      <div class="pp-alias">STEVE</div>
+      <div class="pp-rank" id="pp-rank">LOADING...</div>
+      <div class="xp-row">
+        <span>XP</span><span id="xp-label">0 / 6,000</span>
+      </div>
+      <div class="xp-bar"><div class="xp-fill" id="xp-fill" style="width:0%"></div></div>
+      <div class="pp-badge-row">
+        <div class="pp-badge" id="pp-badge">🎖️</div>
+        <div class="pp-badge-info">TRIATHLETE<br>ELITE RANK</div>
+      </div>
+    </div>
+
+    <div class="status-box">
+      <div class="status-label">Status</div>
+      <div class="status-active"><span class="status-dot"></span>Active</div>
+      <div class="status-row"><span>Last Activity</span><span class="status-val" id="last-act">—</span></div>
+      <div class="status-row"><span>Location</span><span class="status-val">Taiwan</span></div>
+    </div>
+  </aside>
+
+  <!-- ── MAIN CONTENT ── -->
+  <main class="main-content">
+    <!-- header (static, no data needed) -->
+    <div class="main-header">
+      <div class="tactical-grid"></div>
+      <div class="header-left">
+        <div class="header-welcome">Welcome Back,</div>
+        <div class="header-name">莊成翰</div>
+        <div class="header-alias">Steve</div>
+        <div class="header-rank-badge">⊕ <span id="header-rank">ELITE CYCLIST</span></div>
+      </div>
+      <div class="header-right">
+        <div class="header-strava-icon">🚴</div>
+        <div class="header-updated" id="header-updated">—</div>
+      </div>
+    </div>
+    <div class="hazard"></div>
+
+    <!-- stat row -->
+    <div class="stat-row" id="stat-row">
+      <div class="stat-box">
+        <div class="stat-icon-row">◎ TOTAL DISTANCE</div>
+        <div class="stat-num" id="s-dist">—</div>
+        <div class="stat-unit">KM</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-icon-row">△ TOTAL ELEV GAIN</div>
+        <div class="stat-num" id="s-elev">—</div>
+        <div class="stat-unit">M</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-icon-row">◈ TOTAL RIDES</div>
+        <div class="stat-num" id="s-rides">—</div>
+        <div class="stat-unit">TIMES</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-icon-row">⌚ TOTAL HOURS</div>
+        <div class="stat-num" id="s-hours">—</div>
+        <div class="stat-unit">HRS</div>
+      </div>
+    </div>
+
+    <!-- main scrollable body -->
+    <div class="main-body">
+
+      <!-- monthly perf chart -->
+      <div class="section">
+        <div class="sec-title">
+          <span class="sec-title-bar"></span>
+          Monthly Performance Analysis
+          <span class="sec-title-extra">1 YEAR</span>
+        </div>
+        <div class="chart-wrap"><canvas id="perf-chart"></canvas></div>
+        <div class="chart-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:#e84040"></div>騎乘 (Rides)</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#c8a800"></div>跑步 (Running)</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#4090e8"></div>游泳 (Swimming)</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#40c840"></div>重訓 (Training)</div>
+        </div>
+      </div>
+
+      <!-- activity breakdown + target progress -->
+      <div class="two-col">
+        <div class="col-section">
+          <div class="sec-title"><span class="sec-title-bar"></span>Activity Breakdown</div>
+          <div id="breakdown-rows"></div>
+        </div>
+        <div class="col-section">
+          <div class="sec-title"><span class="sec-title-bar"></span>Target Progress</div>
+          <div id="target-rows"></div>
+        </div>
+      </div>
+
+      <!-- activity log -->
+      <div class="section">
+        <div class="sec-title"><span class="sec-title-bar"></span>Activity Log</div>
+        <table class="log-table">
+          <thead>
+            <tr>
+              <th style="width:64px">Date</th>
+              <th>Activity</th>
+              <th>Details</th>
+              <th>Distance</th>
+              <th>Speed</th>
+              <th>Elev Gain</th>
+            </tr>
+          </thead>
+          <tbody id="log-tbody"></tbody>
+        </table>
+      </div>
+
+      <!-- footer -->
+      <div class="cs-footer">
+        <div class="footer-updated" id="footer-updated">Data Updated —</div>
+        <a class="strava-btn" href="https://www.strava.com/athletes/161539959" target="_blank">
+          View on Strava →
+        </a>
+      </div>
+
+    </div><!-- /main-body -->
+  </main>
+</div>
+
+<script>
+// ── helpers ──
+function fmtMovingTime(hr) {
+  const m = Math.max(0, Math.round((hr || 0) * 60))
+  if (m < 60) return m + 'min'
+  const h = Math.floor(m / 60), r = m % 60
+  return r === 0 ? h + 'h' : h + 'h ' + r + 'm'
+}
+function fmtDate(d) {
+  const p = d.split('-')
+  return p[1] + ' / ' + p[2]
+}
+function groupByDate(list) {
+  const map = {}
+  ;(list || []).forEach(a => {
+    const d = (a.date || '').slice(0, 10)
+    if (!map[d]) map[d] = []
+    map[d].push(a)
+  })
+  return Object.entries(map)
+    .sort((a, b) => b[0].localeCompare(a[0]))
+    .map(([d, acts]) => [d, acts.slice().sort((a, b) => (a.time || '').localeCompare(b.time || ''))])
+}
+
+const SPORT = {
+  ride:   { icon: '🚴', label: '騎乘', sub: 'Cycling',  color: '#e84040' },
+  run:    { icon: '🏃', label: '跑步', sub: 'Running',  color: '#c8a800' },
+  swim:   { icon: '🏊', label: '游泳', sub: 'Swimming', color: '#4090e8' },
+  weight: { icon: '🏋️', label: '重訓', sub: 'Training', color: '#40c840' },
+}
+
+function rankOf(km) {
+  if (km >= 6000) return { rank: 'LEGEND', badge: '🥇', min: 6000, max: 10000 }
+  if (km >= 3000) return { rank: 'ELITE CYCLIST', badge: '🎖️', min: 3000, max: 6000 }
+  if (km >= 1500) return { rank: 'VETERAN', badge: '🥈', min: 1500, max: 3000 }
+  if (km >= 500)  return { rank: 'REGULAR', badge: '🥉', min: 500, max: 1500 }
+  return { rank: 'RECRUIT', badge: '🎽', min: 0, max: 500 }
+}
+
+// ── canvas chart ──
+function drawChart(canvas, history) {
+  const dpr = window.devicePixelRatio || 1
+  const W = canvas.offsetWidth, H = canvas.offsetHeight
+  canvas.width  = W * dpr
+  canvas.height = H * dpr
+  const ctx = canvas.getContext('2d')
+  ctx.scale(dpr, dpr)
+
+  const pad = { top: 12, right: 20, bottom: 28, left: 28 }
+  const cW = W - pad.left - pad.right
+  const cH = H - pad.top  - pad.bottom
+
+  // chronological order, last 12 months
+  const months = history.slice().sort((a, b) => a.month.localeCompare(b.month)).slice(-12)
+  if (months.length < 2) return
+
+  const series = [
+    { color: '#e84040', gv: h => h.ride?.count || 0 },
+    { color: '#c8a800', gv: h => h.run?.count  || 0 },
+    { color: '#4090e8', gv: h => h.swim?.count || 0 },
+    { color: '#40c840', gv: h => h.weight_training?.count || 0 },
+  ]
+  const allVals = series.flatMap(s => months.map(s.gv))
+  const maxVal  = Math.max(...allVals, 4)
+
+  const xP = i => pad.left + (i / (months.length - 1)) * cW
+  const yP = v => pad.top + cH - (v / maxVal) * cH
+
+  // grid
+  ctx.strokeStyle = 'rgba(200,168,0,0.07)'
+  ctx.lineWidth = 1
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.top + (i / 4) * cH
+    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(pad.left + cW, y); ctx.stroke()
+    ctx.fillStyle = 'rgba(160,130,0,0.5)'
+    ctx.font = `10px Rajdhani,sans-serif`
+    ctx.textAlign = 'right'
+    ctx.fillText(Math.round(maxVal * (1 - i / 4)), pad.left - 4, y + 3)
+  }
+
+  // x labels
+  const MON = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC']
+  ctx.fillStyle = 'rgba(160,130,0,0.5)'
+  ctx.font = '9px Rajdhani,sans-serif'
+  ctx.textAlign = 'center'
+  months.forEach((h, i) => {
+    const x = xP(i)
+    const mIdx = parseInt(h.month.slice(5)) - 1
+    ctx.fillText(MON[mIdx] || '', x, pad.top + cH + 17)
+  })
+
+  // lines + dots
+  series.forEach(s => {
+    const pts = months.map((h, i) => ({ x: xP(i), y: yP(s.gv(h)) }))
+    ctx.beginPath()
+    ctx.strokeStyle = s.color
+    ctx.lineWidth = 2
+    ctx.lineJoin = 'round'
+    pts.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y))
+    ctx.stroke()
+    pts.forEach(p => {
+      ctx.beginPath()
+      ctx.arc(p.x, p.y, 3, 0, Math.PI * 2)
+      ctx.fillStyle = s.color; ctx.fill()
+      ctx.strokeStyle = '#0a0a0a'; ctx.lineWidth = 1.5; ctx.stroke()
+    })
+  })
+}
+
+// ── render ──
+function render(data) {
+  const s  = data.summary || {}
+  const mg = data.monthly_goals  || {}
+  const wq = data.weekly_quest   || {}
+  const history = data.monthly_history || []
+
+  // fallback: derive monthly data if not present
+  if (!data.monthly_goals || !data.weekly_quest) {
+    const now = new Date(Date.now() + 8 * 3600 * 1000)
+    const tY = now.getUTCFullYear(), tM = now.getUTCMonth(), tD = now.getUTCDate()
+    const thisMonth = tY + '-' + String(tM + 1).padStart(2, '0')
+    const mh = history.find(h => h.month === thisMonth)
+    const T = 4, TW = 10
+    const sOf = (c, t) => { const r = c / t; return r >= 1.5 ? 'over' : r >= 1 ? 'done' : r >= 0.5 ? 'warning' : 'danger' }
+    if (!data.monthly_goals && mh) {
+      const rc = mh.ride?.count || 0, rnc = mh.run?.count || 0, sc = mh.swim?.count || 0, wc = mh.weight_training?.count || 0
+      data.monthly_goals = {
+        ride:   { count: rc,  target: T,  status: sOf(rc,  T)  },
+        run:    { count: rnc, target: T,  status: sOf(rnc, T)  },
+        swim:   { count: sc,  target: T,  status: sOf(sc,  T)  },
+        weight: { count: wc,  target: TW, status: sOf(wc,  TW) },
+      }
+    }
+    if (!data.weekly_quest) {
+      const dow = now.getUTCDay()
+      const ws = new Date(Date.UTC(tY, tM, tD - (dow + 6) % 7)).toISOString().slice(0, 10)
+      const inW = a => (a.date || '') >= ws
+      data.weekly_quest = {
+        ride:   (data.recent_rides   || []).some(inW),
+        run:    (data.recent_runs    || []).some(inW),
+        swim:   (data.recent_swims   || []).some(inW),
+        weight: (data.recent_weights || []).some(inW),
+      }
+    }
+  }
+
+  const mgFinal = data.monthly_goals || {}
+  const wqFinal = data.weekly_quest  || {}
+
+  // rank + XP
+  const distKm = s.all_time_distance_km || 0
+  const ri = rankOf(distKm)
+  const xpPct = Math.min(100, Math.round((distKm - ri.min) / (ri.max - ri.min) * 100))
+
+  // total hours from history
+  const totalHrs = Math.round(history.reduce((acc, h) => {
+    return acc +
+      (h.ride?.moving_time_hr            || 0) +
+      (h.run?.moving_time_hr             || 0) +
+      (h.swim?.moving_time_hr            || 0) +
+      (h.weight_training?.moving_time_hr || 0)
+  }, 0))
+
+  // last activity
+  const allRecent = [
+    ...(data.recent_rides   || []).map(a => ({ ...a, _type: 'ride' })),
+    ...(data.recent_runs    || []).map(a => ({ ...a, _type: 'run' })),
+    ...(data.recent_swims   || []).map(a => ({ ...a, _type: 'swim' })),
+    ...(data.recent_weights || []).map(a => ({ ...a, _type: 'weight' })),
+  ].sort((a, b) => (b.date || '').localeCompare(a.date || ''))
+  const lastDate = (allRecent[0]?.date || '').slice(5).replace('-', '/')
+
+  // ── sidebar updates ──
+  document.getElementById('pp-rank').textContent  = ri.rank
+  document.getElementById('header-rank').textContent = ri.rank
+  document.getElementById('pp-badge').textContent = ri.badge
+  document.getElementById('xp-label').textContent = Math.round(distKm).toLocaleString() + ' / ' + ri.max.toLocaleString()
+  document.getElementById('last-act').textContent = lastDate || '—'
+  const updStr = (data.updated_at || '').slice(0, 10)
+  document.getElementById('header-updated').textContent = 'Updated ' + updStr
+  document.getElementById('footer-updated').textContent = 'Data Updated ' + updStr
+
+  // animate XP fill
+  setTimeout(() => { document.getElementById('xp-fill').style.width = xpPct + '%' }, 200)
+
+  // ── stat numbers ──
+  document.getElementById('s-dist').textContent  = Math.round(distKm).toLocaleString()
+  document.getElementById('s-elev').textContent  = (s.all_time_elevation_m || 0).toLocaleString()
+  document.getElementById('s-rides').textContent = (s.all_time_rides || 0).toLocaleString()
+  document.getElementById('s-hours').textContent = totalHrs.toLocaleString()
+
+  // ── breakdown rows ──
+  const statusLabel = { over: 'MAX', done: 'GOOD', warning: 'AVG', danger: 'LOW' }
+  const bdHtml = ['ride', 'run', 'swim', 'weight'].map(k => {
+    const g = mgFinal[k]; if (!g) return ''
+    const sp = SPORT[k]
+    const pct = Math.min(100, g.target > 0 ? (g.count / g.target) * 100 : 0)
+    const sl = g.status === 'over' ? '+' + (g.count - g.target) : (statusLabel[g.status] || '')
+    return `
+      <div class="bd-row">
+        <div class="bd-sport">
+          <span class="bd-icon">${sp.icon}</span>
+          <div><div class="bd-name">${sp.label}</div><div class="bd-sub">${sp.sub}</div></div>
+        </div>
+        <div class="bd-bar-wrap"><div class="bd-bar ${g.status}" data-pct="${pct}" style="width:0%"></div></div>
+        <div class="bd-right">
+          <div class="bd-count">${g.count} / Month</div>
+          <div class="bd-status ${g.status}">${sl}</div>
+        </div>
+      </div>`
+  }).join('')
+  document.getElementById('breakdown-rows').innerHTML = bdHtml
+
+  // ── target rows ──
+  function tgtRow(label, count, target) {
+    const pct = Math.min(100, target > 0 ? count / target * 100 : 0)
+    const isOver = count > target, isDone = count >= target
+    const cls = isOver ? 'over' : (isDone ? 'done' : 'norm')
+    return `
+      <div class="tgt-row">
+        <div class="tgt-label">${label}</div>
+        <div class="tgt-bar-wrap"><div class="tgt-bar ${cls}" data-pct="${pct}" style="width:0%"></div></div>
+        <div class="tgt-count">${count} / ${target}</div>
+        <div class="tgt-check">${isDone ? '✅' : '⬜'}</div>
+      </div>`
+  }
+  document.getElementById('target-rows').innerHTML = [
+    tgtRow('Monthly Rides',   mgFinal.ride?.count   || 0, mgFinal.ride?.target   || 4),
+    tgtRow('Monthly Runs',    mgFinal.run?.count    || 0, mgFinal.run?.target    || 4),
+    tgtRow('Monthly Swim',    mgFinal.swim?.count   || 0, mgFinal.swim?.target   || 4),
+    tgtRow('Monthly Gym',     mgFinal.weight?.count || 0, mgFinal.weight?.target || 10),
+  ].join('')
+
+  // ── activity log ──
+  allRecent.sort((a, b) => {
+    const dc = (b.date || '').localeCompare(a.date || '')
+    return dc !== 0 ? dc : (b.time || '').localeCompare(a.time || '')
+  })
+
+  const logExpanded = { v: false }
+  function buildLogRows() {
+    const groups = groupByDate(allRecent)
+    const LIMIT = 8
+    const hasMore = !logExpanded.v && groups.length > LIMIT
+    const visible = hasMore ? groups.slice(0, LIMIT) : groups
+
+    const rows = visible.flatMap(([date, acts]) => {
+      const dr = `<tr><td colspan="6" style="padding-top:14px;padding-bottom:5px">
+        <div class="log-date-marker">${fmtDate(date)}</div></td></tr>`
+      const ar = acts.map(a => {
+        const sp = SPORT[a._type] || SPORT.ride
+        const isSw = a._type === 'swim', isWt = a._type === 'weight'
+        const detail = isWt
+          ? fmtMovingTime(a.moving_time_hr || 0)
+          : isSw
+            ? fmtMovingTime(a.moving_time_hr || 0) + (a.pace_per_100m ? ' · ' + a.pace_per_100m + '/100m' : '')
+            : fmtMovingTime(a.moving_time_hr || 0) + (a.avg_speed_kmh ? ' · ' + a.avg_speed_kmh + ' km/h' : '')
+        const dist = isWt ? '—' : isSw
+          ? Math.round((a.distance_km || 0) * 1000) + 'm'
+          : (a.distance_km || 0) + ' km'
+        const speed = a.avg_speed_kmh
+          ? a.avg_speed_kmh + ' km/h'
+          : (a.avg_pace_km ? a.avg_pace_km + '/km' : '—')
+        const elev = (!isSw && !isWt && a.elevation_m != null) ? a.elevation_m + 'm' : '—'
+        return `<tr>
+          <td></td>
+          <td><span class="log-sport-icon">${sp.icon}</span><span class="log-name">${a.name || '—'}</span></td>
+          <td class="log-detail">${detail}</td>
+          <td class="log-dist">${dist}</td>
+          <td class="log-speed">${speed}</td>
+          <td class="log-elev">${elev}</td>
+        </tr>`
+      }).join('')
+      return [dr, ar]
+    })
+    const more = hasMore
+      ? `<tr><td colspan="6"><button class="log-more-btn" id="log-more-btn">▼ Show All ${groups.length} Days</button></td></tr>`
+      : ''
+    return rows.join('') + more
+  }
+
+  const tbody = document.getElementById('log-tbody')
+  tbody.innerHTML = buildLogRows()
+  tbody.addEventListener('click', e => {
+    if (e.target.id === 'log-more-btn') {
+      logExpanded.v = true
+      tbody.innerHTML = buildLogRows()
+    }
+  })
+
+  // ── animate bars ──
+  requestAnimationFrame(() => {
+    document.querySelectorAll('.bd-bar, .tgt-bar').forEach(el => {
+      const p = el.dataset.pct
+      el.style.width = '0%'
+      setTimeout(() => { el.style.width = p + '%' }, 150)
+    })
+    // draw chart
+    const canvas = document.getElementById('perf-chart')
+    if (canvas && canvas.offsetWidth > 0) drawChart(canvas, history)
+  })
+}
+
+// ── fetch ──
+fetch('strava.json')
+  .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json() })
+  .then(render)
+  .catch(err => {
+    document.getElementById('log-tbody').innerHTML = `
+      <tr><td colspan="6" style="padding:40px 0;color:#c83232;font-size:12px;letter-spacing:2px;text-transform:uppercase">
+        FAILED TO LOAD: ${err.message}
+      </td></tr>`
+  })
+</script>
+</body>
+</html>
