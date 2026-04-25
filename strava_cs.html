@@ -242,6 +242,19 @@ html,body{height:100%;background:#0a0a0a;color:#ccc;font-family:'Rajdhani',sans-
   transition:all .2s;
 }
 .log-more-btn:hover{background:rgba(200,168,0,0.07);border-color:#c8a800}
+/* lap strip */
+.log-lap-row td{padding:2px 8px 2px 28px;border-bottom:none}
+.lap-strip-cs{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:4px 8px;
+  background:rgba(200,168,0,0.04);border-left:2px solid rgba(200,168,0,0.25);
+  font-size:11px;color:#666;border-radius:0 3px 3px 0;
+  font-family:'Share Tech Mono',monospace;
+}
+.lap-strip-cs .lap-n{color:#c8a800;font-weight:700;font-size:10px;letter-spacing:1px;min-width:40px}
+.lap-strip-cs .lap-t{color:#888}
+.lap-strip-cs .lap-hr{color:#e84040}
+.lap-strip-cs .lap-w{color:#c8a800}
 
 /* footer */
 .cs-footer{
@@ -732,6 +745,9 @@ function render(data) {
           ? a.avg_speed_kmh + ' km/h'
           : (a.avg_pace_km ? a.avg_pace_km + '/km' : '—')
         const elev = (!isSw && !isWt && a.elevation_m != null) ? a.elevation_m + 'm' : '—'
+        const lapRows = (a._type === 'ride' && a.top_laps && a.top_laps.length)
+          ? a.top_laps.map(lap => `<tr class="log-lap-row"><td colspan="6"><div class="lap-strip-cs"><span class="lap-n">&#x1F3C1; ${lap.name}</span><span class="lap-t">&#x23F1; ${lap.moving_time_str}</span>${lap.average_heartrate ? `<span class="lap-hr">&#x2665; ${lap.average_heartrate}</span>` : ''}${lap.average_watts ? `<span class="lap-w">&#x26A1; ${lap.average_watts}W</span>` : ''}</div></td></tr>`).join('')
+          : ''
         return `<tr>
           <td></td>
           <td><span class="log-sport-icon">${sp.icon}</span><span class="log-name">${a.name || '—'}</span></td>
@@ -739,7 +755,7 @@ function render(data) {
           <td class="log-dist">${dist}</td>
           <td class="log-speed">${speed}</td>
           <td class="log-elev">${elev}</td>
-        </tr>`
+        </tr>${lapRows}`
       }).join('')
       return [dr, ar]
     })
