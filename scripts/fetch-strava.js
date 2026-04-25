@@ -1,9 +1,23 @@
 // fetch-strava.js
 // 每天由 GitHub Actions 執行，抓 Strava 資料寫入 strava.json
+// 本機測試：在 scripts/.env 填入憑證後執行 node scripts/fetch-strava.js
 
 const fs = require('fs')
 const path = require('path')
 const https = require('https')
+
+// ── 本機：自動讀取 scripts/.env（不裝 dotenv，純 fs 解析）──
+const envFile = path.join(__dirname, '.env')
+if (fs.existsSync(envFile)) {
+  fs.readFileSync(envFile, 'utf8').split('\n').forEach(line => {
+    const m = line.match(/^\s*([^#][^=]+)=(.*)$/)
+    if (m) {
+      const k = m[1].trim(), v = m[2].trim()
+      if (v && !process.env[k]) process.env[k] = v
+    }
+  })
+  console.log('📁 已從 scripts/.env 讀取設定（本機模式）')
+}
 
 // ── 從環境變數讀 secrets（GitHub Actions 會注入）──
 const CLIENT_ID     = process.env.STRAVA_CLIENT_ID
