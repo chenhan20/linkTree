@@ -495,7 +495,7 @@ function renderTimeline(list, type, expanded) {
             <div class="activity-meta">${tags.join('')}</div>
             ${lapHtml}
           </div>
-          ${aIsWeight ? '' : `<div class="activity-dist">${a.distance_km} <small style="font-size:11px;font-weight:400">km</small></div>`}
+          ${(aIsWeight || !a.distance_km) ? '' : `<div class="activity-dist">${a.distance_km} <small style="font-size:11px;font-weight:400">km</small></div>`}
         </div>`
       }).join('')}
     </div>
@@ -520,7 +520,8 @@ function render(data) {
     const thisMonth = tY + '-' + String(tM + 1).padStart(2, '0')
     const mh = (data.monthly_history || []).find(h => h.month === thisMonth)
     const TARGET = 4
-    const sOf = c => { const r = c / TARGET; return r >= 1.5 ? 'over' : r >= 1 ? 'done' : r >= 0.5 ? 'warning' : 'danger' }
+    const TARGET_WEIGHT = 10
+    const sOf = (c, t) => { const r = c / t; return r >= 1.5 ? 'over' : r >= 1 ? 'done' : r >= 0.5 ? 'warning' : 'danger' }
     if (!data.monthly_summary && mh) {
       data.monthly_summary = {
         ride_km:      mh.ride?.distance_km ?? 0,
@@ -532,10 +533,10 @@ function render(data) {
     if (!data.monthly_goals && mh) {
       const rc = mh.ride?.count ?? 0, rnc = mh.run?.count ?? 0, sc = mh.swim?.count ?? 0, wc = mh.weight_training?.count ?? 0
       data.monthly_goals = {
-        ride:   { count: rc,  target: TARGET, status: sOf(rc)  },
-        run:    { count: rnc, target: TARGET, status: sOf(rnc) },
-        swim:   { count: sc,  target: TARGET, status: sOf(sc)  },
-        weight: { count: wc,  target: TARGET, status: sOf(wc)  },
+        ride:   { count: rc,  target: TARGET,        status: sOf(rc,  TARGET)        },
+        run:    { count: rnc, target: TARGET,        status: sOf(rnc, TARGET)        },
+        swim:   { count: sc,  target: TARGET,        status: sOf(sc,  TARGET)        },
+        weight: { count: wc,  target: TARGET_WEIGHT, status: sOf(wc,  TARGET_WEIGHT) },
       }
     }
     if (!data.weekly_quest) {
@@ -598,7 +599,7 @@ function render(data) {
           <svg viewBox="0 0 24 24" style="display:none">${ICONS.ride}</svg>
         </div>
         <div class="hero-info">
-          <h1>承翰 莊 ✦</h1>
+          <h1>STEVE ✦</h1>
           <div class="hero-sub">Strava · Cyclist · Athlete</div>
         </div>
       </div>
