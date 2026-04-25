@@ -316,7 +316,7 @@ body::before{
   z-index:1;
 }
 .act-card{
-  display:flex;align-items:center;gap:10px;
+  display:flex;align-items:flex-start;gap:10px;
   background:#fff5d8;border:2px solid var(--wood-3);border-radius:8px;
   padding:8px 12px;margin-bottom:6px;
   box-shadow:0 2px 0 var(--wood-3);
@@ -332,8 +332,8 @@ body::before{
 .act-meta{font-size:10px;color:var(--wood-2);margin-top:2px;letter-spacing:.5px}
 .act-meta .sep{margin:0 5px;color:#c0a070}
 .act-dist{
-  font-family:'Press Start 2P',inherit;font-size:14px;
-  color:#c54a0d;flex-shrink:0;white-space:nowrap;letter-spacing:1px;
+  font-family:'Press Start 2P',inherit;font-size:16px;
+  color:#c54a0d;flex-shrink:0;white-space:nowrap;letter-spacing:1px;padding-top:2px;line-height:1;
 }
 .act-dist small{font-size:9px;color:var(--wood-2);margin-left:2px}
 
@@ -570,6 +570,7 @@ function renderTimeline(list, type, expanded){
         const aIsRun    = aType === 'run'
         const aIsRide   = aType === 'ride'
         const metas = []
+        if (aIsSwim && a.distance_km) metas.push(`🏊 ${Math.round(a.distance_km * 1000)} m`)
         if (aIsRide && a.avg_speed_kmh)  metas.push(`${a.avg_speed_kmh} km/h`)
         if (aIsRun  && a.avg_pace_km)    metas.push(`${a.avg_pace_km}/km`)
         if (aIsSwim && a.pace_per_100m)  metas.push(`${a.pace_per_100m}/100m`)
@@ -582,8 +583,8 @@ function renderTimeline(list, type, expanded){
             ).join('')
           : ''
         const dist = aIsWeight ? '' :
-          aIsSwim ? `<div class="act-dist">${Math.round((a.distance_km||0)*1000)}<small>m</small></div>`
-                  : `<div class="act-dist">${a.distance_km}<small>km</small></div>`
+          aIsSwim ? '' :
+          a.distance_km ? `<div class="act-dist">${a.distance_km}<small>km</small></div>` : ''
         return `
           <div class="act-card">
             <div class="act-icon">${meta.icon}</div>

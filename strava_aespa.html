@@ -191,7 +191,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
   font-size:10px;color:#a855f7;
 }
 .activity-card{
-  display:flex;align-items:center;gap:12px;
+  display:flex;align-items:flex-start;gap:12px;
   padding:.85rem 1rem;border-radius:9px;
   background:rgba(168,85,247,.06);
   backdrop-filter:blur(8px);
@@ -219,7 +219,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 }
 .activity-meta .tag.hr{border-color:rgba(232,121,249,.25);background:rgba(232,121,249,.06);color:#d86ef5}
 .activity-dist{
-  font-size:15px;font-weight:600;color:#e879f9;flex-shrink:0;white-space:nowrap;
+  font-size:18px;font-weight:700;color:#e879f9;flex-shrink:0;white-space:nowrap;padding-top:2px;line-height:1;
 }
 .activity-dist::after{content:' ✦';font-size:10px;color:rgba(168,85,247,.5)}/* lap strip */
 .lap-strip{
@@ -475,12 +475,12 @@ function renderTimeline(list, type, expanded) {
         const aIsRide   = aType === 'ride'
         const aIcon = ICONS[aType] || ICONS.ride
         const tags = []
+        if (aIsSwim && a.distance_km)   tags.push(`<span class="tag">🏊 ${Math.round(a.distance_km * 1000)} m</span>`)
         tags.push(`<span class="tag">⏱ ${fmtMovingTime(a.moving_time_hr || 0)}</span>`)
         if (!aIsWeight && !aIsSwim && a.elevation_m != null) tags.push(`<span class="tag">↑${a.elevation_m}m</span>`)
         if (aIsRun && a.avg_pace_km)     tags.push(`<span class="tag">💨 ${a.avg_pace_km}/km</span>`)
         if (aIsRun && a.avg_cadence_spm) tags.push(`<span class="tag">🦵 ${a.avg_cadence_spm} spm</span>`)
         if (!aIsRun && !aIsSwim && !aIsWeight && a.avg_speed_kmh) tags.push(`<span class="tag">${a.avg_speed_kmh} km/h</span>`)
-        if (aIsSwim && a.distance_km)   tags.push(`<span class="tag">🏊 ${Math.round(a.distance_km * 1000)} m</span>`)
         if (aIsSwim && a.pace_per_100m)  tags.push(`<span class="tag">💧 ${a.pace_per_100m}/100m</span>`)
         if (a.avg_heartrate)             tags.push(`<span class="tag hr">♥️ ${a.avg_heartrate} bpm</span>`)
         const lapHtml = (aIsRide && a.top_laps && a.top_laps.length)
@@ -496,7 +496,7 @@ function renderTimeline(list, type, expanded) {
             <div class="activity-meta">${tags.join('')}</div>
             ${lapHtml}
           </div>
-          ${(aIsWeight || aIsSwim || !a.distance_km) ? '' : `<div class="activity-dist">${a.distance_km} <small style="font-size:11px;font-weight:400">km</small></div>`}
+          ${(!aIsWeight && !aIsSwim && a.distance_km) ? `<div class="activity-dist">${a.distance_km}<small style="font-size:11px;font-weight:400;margin-left:2px">km</small></div>` : ''}
         </div>`
       }).join('')}
     </div>
