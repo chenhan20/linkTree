@@ -119,12 +119,11 @@ async function fetchActivityDetail(token, activityId) {
 // ── 從 laps 陣列取所有合格分段：moving_time > 5 分 且 avg_watts ≥ 150W ──
 function extractTopLaps(laps) {
   if (!Array.isArray(laps) || laps.length === 0) return []
-  const candidates = laps.filter(l => (l.moving_time || 0) > 300 && (l.average_watts || 0) >= 150)
+  // 保留有功率且夠長的 lap，但維持原始 lap_index 順序
+  const candidates = laps
+    .filter(l => (l.average_watts || 0) >= 150)
+    .sort((a, b) => (a.lap_index ?? 0) - (b.lap_index ?? 0))
   if (candidates.length === 0) return []
-  candidates.sort((a, b) => {
-    if (a.average_heartrate && b.average_heartrate) return b.average_heartrate - a.average_heartrate
-    return b.moving_time - a.moving_time
-  })
   return candidates.map(lap => {
     const totalMin = Math.round((lap.moving_time || 0) / 60)
     const h = Math.floor(totalMin / 60), m = totalMin % 60

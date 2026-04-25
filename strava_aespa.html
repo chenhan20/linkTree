@@ -102,7 +102,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 .status-badge.danger {background:rgba(208,70,128,.12);color:#e07090;border:1px solid rgba(208,70,128,.3)}
 .status-badge.warning{background:rgba(224,160,32,.12);color:#e0b040;border:1px solid rgba(224,160,32,.3)}
 .status-badge.done   {background:rgba(168,85,247,.14);color:#c084fc;border:1px solid rgba(168,85,247,.4)}
-.status-badge.over   {background:rgba(232,121,249,.16);color:#f0a0ff;border:1px solid rgba(232,121,249,.45)}
+.status-badge.over   {background:rgba(232,121,249,.16);color:#f0a0ff;border:1px solid rgba(232,121,249,.45);font-size:13px;font-weight:700;letter-spacing:0}
 
 /* ── weekly quest ── */
 .quest-list{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:2.2rem}
@@ -408,7 +408,7 @@ function renderMonthlyGoals(mg) {
       <div class="consistency-row">
         <div class="consistency-name">${meta.icon} ${meta.label}<span class="count"><b>${g.count}</b> / ${g.target}</span></div>
         <div class="progress-bar"><div class="progress-fill ${g.status}" data-pct="${pct}"></div></div>
-        <div class="status-badge ${g.status}">${sm.emoji} ${sm.text}</div>
+        <div class="status-badge ${g.status}">${g.status === 'over' ? `+${g.count - g.target}` : `${sm.emoji} ${sm.text}`}</div>
       </div>`
   }).join('')
   return `
