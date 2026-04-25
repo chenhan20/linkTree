@@ -773,5 +773,66 @@ fetch('strava.json')
     `
   })
 </script>
+<!-- ── Theme Switcher ── -->
+<div id="theme-switcher">
+  <button id="ts-toggle" title="切換主題">◈</button>
+  <div id="ts-panel">
+    <div class="ts-label">THEME</div>
+    <a href="strava.html"      class="ts-item"><span class="ts-icon">🔥</span><span class="ts-name">Orange</span><span class="ts-sub">Classic</span></a>
+    <a href="strava_aespa.html" class="ts-item active"><span class="ts-icon">💜</span><span class="ts-name">Purple</span><span class="ts-sub">Aespa</span></a>
+    <a href="strava_maple.html" class="ts-item"><span class="ts-icon">🍁</span><span class="ts-name">Maple</span><span class="ts-sub">Pixel</span></a>
+    <a href="strava_cs.html"   class="ts-item"><span class="ts-icon">🎯</span><span class="ts-name">CS</span><span class="ts-sub">Tactical</span></a>
+  </div>
+</div>
+<style>
+#theme-switcher{position:fixed;bottom:24px;right:20px;z-index:9999;display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+#ts-toggle{
+  width:42px;height:42px;border-radius:50%;
+  background:rgba(168,85,247,.15);border:1.5px solid rgba(168,85,247,.5);
+  color:#a855f7;font-size:18px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .2s;backdrop-filter:blur(8px);
+  box-shadow:0 2px 12px rgba(168,85,247,.2);
+}
+#ts-toggle:hover,#ts-toggle.open{background:rgba(168,85,247,.28);border-color:#a855f7}
+#ts-panel{
+  display:none;flex-direction:column;gap:6px;
+  background:rgba(4,0,8,.92);border:1px solid rgba(168,85,247,.25);
+  border-radius:10px;padding:10px 10px 8px;
+  backdrop-filter:blur(12px);
+  box-shadow:0 4px 24px rgba(0,0,0,.6);
+  min-width:140px;
+}
+#ts-panel.open{display:flex}
+.ts-label{font-size:8px;letter-spacing:3px;color:rgba(168,85,247,.4);text-transform:uppercase;padding:0 4px 4px;border-bottom:1px solid rgba(168,85,247,.1);margin-bottom:2px}
+.ts-item{
+  display:flex;align-items:center;gap:8px;
+  padding:7px 10px;border-radius:7px;
+  text-decoration:none;transition:background .15s;
+  color:#aaa;
+}
+.ts-item:hover{background:rgba(255,255,255,.06)}
+.ts-item.active{background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.3)}
+.ts-icon{font-size:16px;width:22px;text-align:center;flex-shrink:0}
+.ts-name{font-size:13px;font-weight:600;color:#ddd;flex:1}
+.ts-sub{font-size:9px;color:#555;letter-spacing:1px}
+.ts-item.active .ts-name{color:#a855f7}
+</style>
+<script>
+;(function(){
+  const btn = document.getElementById('ts-toggle')
+  const panel = document.getElementById('ts-panel')
+  btn.addEventListener('click', () => {
+    const open = panel.classList.toggle('open')
+    btn.classList.toggle('open', open)
+  })
+  document.addEventListener('click', e => {
+    if (!document.getElementById('theme-switcher').contains(e.target)) {
+      panel.classList.remove('open')
+      btn.classList.remove('open')
+    }
+  })
+})()
+</script>
 </body>
 </html>
