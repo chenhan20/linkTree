@@ -9,12 +9,14 @@ const https = require('https')
 // ── 本機：自動讀取 scripts/.env（不裝 dotenv，純 fs 解析）──
 const envFile = path.join(__dirname, '.env')
 if (fs.existsSync(envFile)) {
-  fs.readFileSync(envFile, 'utf8').split('\n').forEach(line => {
-    const m = line.match(/^\s*([^#][^=]+)=(.*)$/)
-    if (m) {
-      const k = m[1].trim(), v = m[2].trim()
-      if (v && !process.env[k]) process.env[k] = v
-    }
+  fs.readFileSync(envFile, 'utf8').split(/\r?\n/).forEach(line => {
+    const trimmed = line.replace(/^\uFEFF/, '').trim()  // 去 BOM、去空白
+    if (!trimmed || trimmed.startsWith('#')) return      // 跳過空行與註解
+    const eqIdx = trimmed.indexOf('=')
+    if (eqIdx < 1) return
+    const k = trimmed.slice(0, eqIdx).trim()
+    const v = trimmed.slice(eqIdx + 1).trim()
+    if (k && v && !process.env[k]) process.env[k] = v
   })
   console.log('📁 已從 scripts/.env 讀取設定（本機模式）')
 }
@@ -266,7 +268,7 @@ function buildJSON(stats, activities) {
   function localDate(a) { return (a.start_date_local || a.start_date).slice(0, 10) }
   function localTime(a) { return (a.start_date_local || a.start_date).slice(11, 16) }
 
-  const recentRides = activities.filter(a => isType(a, RIDE_TYPES)).slice(0, 10).map(a => ({
+  const recentRides = activities.filter(a => isType(a, RIDE_TYPES)).slice(0, 20).map(a => ({
     id:             a.id,
     name:           a.name,
     date:           localDate(a),
@@ -279,7 +281,7 @@ function buildJSON(stats, activities) {
     avg_watts:      a.average_watts     ? Math.round(a.average_watts)     : null,
   }))
 
-  const recentRuns = activities.filter(a => isType(a, RUN_TYPES)).slice(0, 10).map(a => ({
+  const recentRuns = activities.filter(a => isType(a, RUN_TYPES)).slice(0, 20).map(a => ({
     name:           a.name,
     date:           localDate(a),
     time:           localTime(a),
@@ -291,7 +293,7 @@ function buildJSON(stats, activities) {
     avg_heartrate:  a.average_heartrate ? Math.round(a.average_heartrate) : null,
   }))
 
-  const recentSwims = activities.filter(a => isType(a, SWIM_TYPES)).slice(0, 10).map(a => ({
+  const recentSwims = activities.filter(a => isType(a, SWIM_TYPES)).slice(0, 20).map(a => ({
     name:             a.name,
     date:             localDate(a),
     time:             localTime(a),
@@ -301,7 +303,7 @@ function buildJSON(stats, activities) {
     avg_heartrate:    a.average_heartrate ? Math.round(a.average_heartrate) : null,
   }))
 
-  const recentWeights = activities.filter(a => isType(a, WEIGHT_TYPES)).slice(0, 10).map(a => ({
+  const recentWeights = activities.filter(a => isType(a, WEIGHT_TYPES)).slice(0, 20).map(a => ({
     name:          a.name,
     date:          localDate(a),
     time:          localTime(a),

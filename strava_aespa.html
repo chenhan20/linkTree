@@ -480,6 +480,7 @@ function renderTimeline(list, type, expanded) {
         if (aIsRun && a.avg_pace_km)     tags.push(`<span class="tag">💨 ${a.avg_pace_km}/km</span>`)
         if (aIsRun && a.avg_cadence_spm) tags.push(`<span class="tag">🦵 ${a.avg_cadence_spm} spm</span>`)
         if (!aIsRun && !aIsSwim && !aIsWeight && a.avg_speed_kmh) tags.push(`<span class="tag">${a.avg_speed_kmh} km/h</span>`)
+        if (aIsSwim && a.distance_km)   tags.push(`<span class="tag">🏊 ${Math.round(a.distance_km * 1000)} m</span>`)
         if (aIsSwim && a.pace_per_100m)  tags.push(`<span class="tag">💧 ${a.pace_per_100m}/100m</span>`)
         if (a.avg_heartrate)             tags.push(`<span class="tag hr">♥️ ${a.avg_heartrate} bpm</span>`)
         const lapHtml = (aIsRide && a.top_laps && a.top_laps.length)
@@ -495,7 +496,7 @@ function renderTimeline(list, type, expanded) {
             <div class="activity-meta">${tags.join('')}</div>
             ${lapHtml}
           </div>
-          ${(aIsWeight || !a.distance_km) ? '' : `<div class="activity-dist">${a.distance_km} <small style="font-size:11px;font-weight:400">km</small></div>`}
+          ${(aIsWeight || aIsSwim || !a.distance_km) ? '' : `<div class="activity-dist">${a.distance_km} <small style="font-size:11px;font-weight:400">km</small></div>`}
         </div>`
       }).join('')}
     </div>
