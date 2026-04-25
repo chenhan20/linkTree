@@ -1,0 +1,157 @@
+{
+  "profile_type": "running_performance_profile",
+  "updated_at": "2026-04-25",
+  "threshold": {
+    "heart_rate_bpm": 167,
+    "pace": {
+      "display": "5:03 /km",
+      "seconds_per_km": 303
+    },
+    "power_watts": 357,
+    "power_w_per_kg": 4.46,
+    "notes": "使用者提供之最新估算跑步乳酸閾值"
+  },
+  "estimated_heart_rate_zones": {
+    "method": "estimated_from_running_lthr",
+    "method_notes": "依跑步閾值心率 167 bpm 估算，屬於教練用近似值，不是 Garmin 官方分區。採 Joe Friel 式 LTHR 分區邏輯並做整數化。",
+    "lthr_bpm": 167,
+    "observed_run_max_hr_bpm": 181,
+    "zones_5": [
+      {
+        "zone": "Z1",
+        "name": "恢復",
+        "min_bpm": null,
+        "max_bpm": 142,
+        "rule": "<= 85% LTHR"
+      },
+      {
+        "zone": "Z2",
+        "name": "有氧耐力",
+        "min_bpm": 143,
+        "max_bpm": 149,
+        "rule": "86% - 89% LTHR"
+      },
+      {
+        "zone": "Z3",
+        "name": "節奏",
+        "min_bpm": 150,
+        "max_bpm": 157,
+        "rule": "90% - 94% LTHR"
+      },
+      {
+        "zone": "Z4",
+        "name": "閾值",
+        "min_bpm": 158,
+        "max_bpm": 165,
+        "rule": "95% - 99% LTHR"
+      },
+      {
+        "zone": "Z5",
+        "name": "VO2 / 無氧",
+        "min_bpm": 166,
+        "max_bpm": 181,
+        "rule": ">= 100% LTHR，以上限先參考目前觀察到的跑步最大心率 181 bpm"
+      }
+    ],
+    "zones_7": [
+      {
+        "zone": "Z1",
+        "name": "恢復",
+        "min_bpm": null,
+        "max_bpm": 142,
+        "rule": "<= 85% LTHR"
+      },
+      {
+        "zone": "Z2",
+        "name": "耐力",
+        "min_bpm": 143,
+        "max_bpm": 149,
+        "rule": "86% - 89% LTHR"
+      },
+      {
+        "zone": "Z3",
+        "name": "穩定節奏",
+        "min_bpm": 150,
+        "max_bpm": 157,
+        "rule": "90% - 94% LTHR"
+      },
+      {
+        "zone": "Z4",
+        "name": "次閾值",
+        "min_bpm": 158,
+        "max_bpm": 165,
+        "rule": "95% - 99% LTHR"
+      },
+      {
+        "zone": "Z5a",
+        "name": "閾值上緣",
+        "min_bpm": 166,
+        "max_bpm": 170,
+        "rule": "100% - 102% LTHR"
+      },
+      {
+        "zone": "Z5b",
+        "name": "VO2 Max",
+        "min_bpm": 171,
+        "max_bpm": 177,
+        "rule": "103% - 106% LTHR"
+      },
+      {
+        "zone": "Z5c",
+        "name": "無氧 / 神經肌",
+        "min_bpm": 178,
+        "max_bpm": 181,
+        "rule": "> 106% LTHR，以上限先參考目前觀察到的跑步最大心率 181 bpm"
+      }
+    ]
+  },
+  "personal_bests": [
+    {
+      "category": "1km",
+      "result": "5:23.9",
+      "pace": "5:24 /km",
+      "activity_name": "內湖區 跑步",
+      "date": "2025-12-24"
+    },
+    {
+      "category": "1mi",
+      "result": "8:44.4",
+      "pace": "5:26 /km",
+      "activity_name": "內湖區 跑步",
+      "date": "2025-12-24"
+    },
+    {
+      "category": "5k",
+      "result": "28:37",
+      "pace": "5:43 /km",
+      "activity_name": "內湖區 跑步",
+      "date": "2025-12-24"
+    },
+    {
+      "category": "10k",
+      "result": "1:08:15",
+      "pace": "6:50 /km",
+      "activity_name": "西屯區 跑步",
+      "date": "2025-11-30"
+    },
+    {
+      "category": "half_marathon",
+      "result": "3:09:26",
+      "pace": "8:59 /km",
+      "activity_name": "台東市 跑步",
+      "date": "2026-03-28"
+    },
+    {
+      "category": "marathon",
+      "result": null,
+      "pace": null,
+      "activity_name": null,
+      "date": null
+    }
+  ],
+  "longest_run": {
+    "distance_km": 21.41,
+    "activity_name": "台東市 跑步",
+    "date": "2026-03-28"
+  }
+}

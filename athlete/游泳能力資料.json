@@ -1,0 +1,32 @@
+{
+  "profile_type": "swimming_performance_profile",
+  "updated_at": "2026-04-25",
+  "critical_swim_speed": {
+    "status": "estimated",
+    "confidence": "low",
+    "notes": "400m 為使用者回憶之全力測驗，200m 為使用者主觀估計，僅適合作為暫定 CSS 基準。",
+    "test_inputs": {
+      "400m": {
+        "time_display": "7:30",
+        "seconds": 450,
+        "source": "user_provided_memory"
+      },
+      "200m": {
+        "time_display": "3:30",
+        "seconds": 210,
+        "source": "user_estimate"
+      }
+    },
+    "calculation": {
+      "formula": "CSS seconds per 100m = (T400 - T200) / 2",
+      "result_seconds_per_100m": 120,
+      "result_display": "2:00 /100m"
+    },
+    "training_reference": {
+      "easy_pace_display": "2:10-2:25 /100m",
+      "steady_pace_display": "2:03-2:10 /100m",
+      "threshold_pace_display": "1:58-2:02 /100m",
+      "vo2_pace_display": "1:50-1:57 /100m"
+    }
+  }
+}

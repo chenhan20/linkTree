@@ -1,0 +1,259 @@
+{
+  "context_type": "gpt_coach_primer",
+  "generated_at": "2026-04-25",
+  "source_folder": "athlete",
+  "basic_profile": {
+    "birth_date": "1994-07-28",
+    "age_as_of_2026_04_25": 31,
+    "height_cm": 173,
+    "latest_weight_kg": 80.0,
+    "latest_bmi": 26.7,
+    "weight_trend": {
+      "lowest_weight_kg": 76.0,
+      "lowest_period_start": "2025-08-24",
+      "highest_weight_kg": 81.0,
+      "highest_period_start": "2026-04-05"
+    }
+  },
+  "source_files": [
+    "基本資料.json",
+    "跑步能力資料.json",
+    "游泳能力資料.json",
+    "HRV狀態.csv",
+    "TSS®_IF-單車.csv",
+    "全時間平均心率.csv",
+    "公路車-功率區段最高紀錄.json",
+    "公路車-平均心率.csv",
+    "公路車-最大平均功率(20分鐘).csv",
+    "公路車持續時間.csv",
+    "功能閾值功率-FTP-單車.csv",
+    "平均SWOLF.csv",
+    "平均心率 -跑步.csv",
+    "平均心率-游泳.csv",
+    "平均步頻-跑步.csv",
+    "平均配速-游泳.csv",
+    "平均配速-跑步.csv",
+    "最大心率-游泳.csv",
+    "最大心率-跑步.csv",
+    "最大攝氧量(自行車).csv",
+    "最大攝氧量-跑步.csv",
+    "總距離 -游泳.csv",
+    "肌力訓練.csv"
+  ],
+  "time_range": {
+    "start": "2025-07",
+    "end": "2026-04"
+  },
+  "cycling": {
+    "ftp_watts": {
+      "latest": 238,
+      "latest_date": "2026-04-19",
+      "previous": 219,
+      "previous_date": "2026-04-05",
+      "peak": 244,
+      "peak_date": "2025-09-21"
+    },
+    "max_average_power_20min_watts": {
+      "latest": 240,
+      "latest_month": "2026-04",
+      "peak": 252,
+      "peak_months": [
+        "2025-09",
+        "2025-10"
+      ]
+    },
+    "average_heart_rate_bpm": {
+      "latest": 130,
+      "latest_month": "2026-04",
+      "previous": 122,
+      "previous_month": "2026-03"
+    },
+    "monthly_duration_minutes": {
+      "latest": 713.19,
+      "latest_month": "2026-04",
+      "peak": 1703.59,
+      "peak_month": "2025-09"
+    },
+    "training_load": {
+      "latest_tss": 95,
+      "latest_tss_month": "2026-04",
+      "latest_if": 0.793,
+      "latest_if_month": "2026-04",
+      "peak_tss": 109,
+      "peak_tss_month": "2025-12",
+      "peak_if": 0.895,
+      "peak_if_month": "2025-11"
+    },
+    "vo2max": {
+      "latest": 50.7,
+      "latest_month": "2026-04",
+      "peak": 54.4,
+      "peak_month": "2025-09"
+    },
+    "peak_power_watts": {
+      "1s": 982,
+      "2s": 947,
+      "5s": 913,
+      "10s": 892,
+      "20s": 750,
+      "30s": 629,
+      "1min": 454,
+      "2min": 384,
+      "5min": 321,
+      "10min": 277,
+      "20min": 252,
+      "30min": 247,
+      "1hr": 190,
+      "2hr": 169,
+      "5hr": 93
+    }
+  },
+  "running": {
+    "threshold": {
+      "heart_rate_bpm": 167,
+      "pace_seconds_per_km": 303,
+      "pace_display": "5:03 /km",
+      "power_watts": 357,
+      "power_w_per_kg": 4.46
+    },
+    "estimated_heart_rate_zones": {
+      "method": "estimated_from_running_lthr",
+      "zones_5": {
+        "z1_max": 142,
+        "z2_min": 143,
+        "z2_max": 149,
+        "z3_min": 150,
+        "z3_max": 157,
+        "z4_min": 158,
+        "z4_max": 165,
+        "z5_min": 166
+      }
+    },
+    "average_pace_min_per_km": {
+      "latest": 7.5,
+      "latest_month": "2026-04",
+      "best": 6.36,
+      "best_month": "2025-12"
+    },
+    "average_heart_rate_bpm": {
+      "latest": 143,
+      "latest_month": "2026-04"
+    },
+    "cadence_spm": {
+      "latest": 150,
+      "latest_month": "2026-04",
+      "peak": 156,
+      "peak_month": "2026-02"
+    },
+    "max_heart_rate_bpm": {
+      "latest": 166,
+      "latest_month": "2026-04",
+      "peak": 181,
+      "peak_month": "2026-03"
+    },
+    "vo2max": {
+      "latest": 49.5,
+      "latest_month": "2026-04",
+      "peak": 53.2,
+      "peak_month": "2025-10"
+    },
+    "personal_bests": {
+      "1km": {
+        "result": "5:23.9",
+        "pace": "5:24 /km",
+        "date": "2025-12-24"
+      },
+      "1mi": {
+        "result": "8:44.4",
+        "pace": "5:26 /km",
+        "date": "2025-12-24"
+      },
+      "5k": {
+        "result": "28:37",
+        "pace": "5:43 /km",
+        "date": "2025-12-24"
+      },
+      "10k": {
+        "result": "1:08:15",
+        "pace": "6:50 /km",
+        "date": "2025-11-30"
+      },
+      "half_marathon": {
+        "result": "3:09:26",
+        "pace": "8:59 /km",
+        "date": "2026-03-28"
+      },
+      "longest_run_km": 21.41
+    }
+  },
+  "swimming": {
+    "critical_swim_speed": {
+      "status": "estimated",
+      "confidence": "low",
+      "pace_seconds_per_100m": 120,
+      "pace_display": "2:00 /100m",
+      "test_inputs": {
+        "400m_seconds": 450,
+        "200m_seconds": 210
+      }
+    },
+    "monthly_distance_m": {
+      "latest": 6825,
+      "latest_month": "2026-04",
+      "peak": 6825,
+      "peak_month": "2026-04"
+    },
+    "average_pace_min_per_100m": {
+      "latest": 2.5613763019715465,
+      "latest_month": "2026-04",
+      "best": 2.398826090494792,
+      "best_month": "2025-11"
+    },
+    "average_heart_rate_bpm": {
+      "latest": 133,
+      "latest_month": "2026-04"
+    },
+    "max_heart_rate_bpm": {
+      "latest": 172,
+      "latest_month": "2026-04",
+      "peak": 205,
+      "peak_month": "2026-02"
+    },
+    "swolf": {
+      "latest": 72.75,
+      "latest_month": "2026-04",
+      "best": 48.333333333333336,
+      "best_month": "2025-07"
+    }
+  },
+  "strength": {
+    "monthly_reps": {
+      "latest": 835,
+      "latest_month": "2026-04",
+      "peak": 906,
+      "peak_month": "2026-03"
+    }
+  },
+  "recovery": {
+    "night_hrv_ms": {
+      "latest": 67,
+      "latest_date": "2026-04-25",
+      "rolling_7_day_average": 54,
+      "baseline_low": 52,
+      "baseline_high": 71,
+      "lowest_observed": 30,
+      "lowest_observed_date": "2026-04-22",
+      "highest_observed": 68
+    },
+    "all_activity_average_heart_rate_bpm": {
+      "latest": 119,
+      "latest_month": "2026-04"
+    }
+  },
+  "data_gaps": [
+    "missing_race_goal",
+    "missing_confirmed_swim_css",
+    "missing_resting_heart_rate",
+    "missing_sleep_metrics"
+  ]
+}
