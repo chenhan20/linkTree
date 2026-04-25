@@ -169,7 +169,7 @@ html,body{height:100%;background:#0a0a0a;color:#ccc;font-family:'Rajdhani',sans-
 .sec-title-extra{margin-left:auto;font-size:9px;color:#555;font-weight:400}
 
 /* chart */
-.chart-wrap{position:relative;width:100%;height:200px}
+.chart-wrap{position:relative;width:100%;height:250px}
 #perf-chart{display:block;width:100%;height:100%}
 .chart-legend{display:flex;gap:18px;margin-top:10px;flex-wrap:wrap}
 .legend-item{display:flex;align-items:center;gap:6px;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#666}
@@ -480,64 +480,100 @@ function drawChart(canvas, history) {
   const ctx = canvas.getContext('2d')
   ctx.scale(dpr, dpr)
 
-  const pad = { top: 12, right: 20, bottom: 28, left: 28 }
+  const pad = { top: 16, right: 16, bottom: 36, left: 32 }
   const cW = W - pad.left - pad.right
   const cH = H - pad.top  - pad.bottom
 
   // chronological order, last 12 months
   const months = history.slice().sort((a, b) => a.month.localeCompare(b.month)).slice(-12)
-  if (months.length < 2) return
+  if (!months.length) return
 
   const series = [
-    { color: '#e84040', gv: h => h.ride?.count || 0 },
-    { color: '#c8a800', gv: h => h.run?.count  || 0 },
-    { color: '#4090e8', gv: h => h.swim?.count || 0 },
-    { color: '#40c840', gv: h => h.weight_training?.count || 0 },
+    { color: '#e84040', alpha: 'rgba(232,64,64,',  gv: h => h.ride?.count || 0 },
+    { color: '#c8a800', alpha: 'rgba(200,168,0,',  gv: h => h.run?.count  || 0 },
+    { color: '#4090e8', alpha: 'rgba(64,144,232,', gv: h => h.swim?.count || 0 },
+    { color: '#40c840', alpha: 'rgba(64,200,64,',  gv: h => h.weight_training?.count || 0 },
   ]
   const allVals = series.flatMap(s => months.map(s.gv))
-  const maxVal  = Math.max(...allVals, 4)
+  const maxVal  = Math.max(...allVals, 5)
 
-  const xP = i => pad.left + (i / (months.length - 1)) * cW
-  const yP = v => pad.top + cH - (v / maxVal) * cH
+  const MON = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC']
+  const now  = new Date()
+  const thisMonth = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0')
 
-  // grid
-  ctx.strokeStyle = 'rgba(200,168,0,0.07)'
-  ctx.lineWidth = 1
-  for (let i = 0; i <= 4; i++) {
-    const y = pad.top + (i / 4) * cH
+  const nSeries = series.length
+  const groupW  = cW / months.length
+  const barGap  = 2
+  const barW    = Math.max(3, (groupW - barGap * (nSeries + 1)) / nSeries)
+
+  // y grid lines
+  const gridSteps = 5
+  for (let i = 0; i <= gridSteps; i++) {
+    const y = pad.top + (i / gridSteps) * cH
+    const val = Math.round(maxVal * (1 - i / gridSteps))
+    ctx.strokeStyle = 'rgba(200,168,0,0.07)'
+    ctx.lineWidth = 1
     ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(pad.left + cW, y); ctx.stroke()
-    ctx.fillStyle = 'rgba(160,130,0,0.5)'
-    ctx.font = `10px Rajdhani,sans-serif`
-    ctx.textAlign = 'right'
-    ctx.fillText(Math.round(maxVal * (1 - i / 4)), pad.left - 4, y + 3)
+    if (val > 0) {
+      ctx.fillStyle = 'rgba(160,130,0,0.5)'
+      ctx.font = '9px Rajdhani,sans-serif'
+      ctx.textAlign = 'right'
+      ctx.fillText(val, pad.left - 5, y + 3)
+    }
   }
 
-  // x labels
-  const MON = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC']
-  ctx.fillStyle = 'rgba(160,130,0,0.5)'
-  ctx.font = '9px Rajdhani,sans-serif'
-  ctx.textAlign = 'center'
-  months.forEach((h, i) => {
-    const x = xP(i)
-    const mIdx = parseInt(h.month.slice(5)) - 1
-    ctx.fillText(MON[mIdx] || '', x, pad.top + cH + 17)
-  })
+  // bars
+  months.forEach((h, mi) => {
+    const isCurrentMonth = h.month === thisMonth
+    const groupX = pad.left + mi * groupW + barGap
 
-  // lines + dots
-  series.forEach(s => {
-    const pts = months.map((h, i) => ({ x: xP(i), y: yP(s.gv(h)) }))
-    ctx.beginPath()
-    ctx.strokeStyle = s.color
-    ctx.lineWidth = 2
-    ctx.lineJoin = 'round'
-    pts.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y))
-    ctx.stroke()
-    pts.forEach(p => {
-      ctx.beginPath()
-      ctx.arc(p.x, p.y, 3, 0, Math.PI * 2)
-      ctx.fillStyle = s.color; ctx.fill()
-      ctx.strokeStyle = '#0a0a0a'; ctx.lineWidth = 1.5; ctx.stroke()
+    // highlight current month bg
+    if (isCurrentMonth) {
+      ctx.fillStyle = 'rgba(200,168,0,0.05)'
+      ctx.fillRect(pad.left + mi * groupW, pad.top, groupW, cH)
+    }
+
+    series.forEach((s, si) => {
+      const val = s.gv(h)
+      if (val === 0) return
+      const bH  = (val / maxVal) * cH
+      const bX  = groupX + si * (barW + barGap)
+      const bY  = pad.top + cH - bH
+
+      // gradient fill
+      const grad = ctx.createLinearGradient(0, bY, 0, bY + bH)
+      grad.addColorStop(0, s.alpha + '0.9)')
+      grad.addColorStop(1, s.alpha + '0.3)')
+      ctx.fillStyle = grad
+      ctx.fillRect(bX, bY, barW, bH)
+
+      // top accent line
+      ctx.fillStyle = s.color
+      ctx.fillRect(bX, bY, barW, 2)
+
+      // value label on top if bar is tall enough
+      if (bH > 16) {
+        ctx.fillStyle = s.color
+        ctx.font = 'bold 8px Rajdhani,sans-serif'
+        ctx.textAlign = 'center'
+        ctx.fillText(val, bX + barW / 2, bY - 3)
+      }
     })
+
+    // x label
+    const mIdx = parseInt(h.month.slice(5)) - 1
+    ctx.fillStyle = isCurrentMonth ? '#c8a800' : 'rgba(160,130,0,0.4)'
+    ctx.font = isCurrentMonth ? 'bold 9px Rajdhani,sans-serif' : '9px Rajdhani,sans-serif'
+    ctx.textAlign = 'center'
+    ctx.fillText(MON[mIdx] || '', pad.left + mi * groupW + groupW / 2, pad.top + cH + 18)
+
+    // current month indicator
+    if (isCurrentMonth) {
+      ctx.fillStyle = '#c8a800'
+      ctx.font = '7px Rajdhani,sans-serif'
+      ctx.textAlign = 'center'
+      ctx.fillText('▲', pad.left + mi * groupW + groupW / 2, pad.top + cH + 28)
+    }
   })
 }
 
