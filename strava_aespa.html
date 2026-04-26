@@ -454,7 +454,7 @@ function renderWeeklyQuest(wq) {
 function renderSegments(segs) {
   if (!segs || segs.length === 0) return ''
   const cards = segs.map(seg => {
-    const rows = seg.efforts.map(e => {
+    const rowArr = seg.efforts.map(e => {
       const crown = e.is_pr ? '<span class="seg-crown">👑</span>' : ''
       const timeClass = e.is_pr ? ' seg-time-pr' : ''
       const watts = e.avg_watts ? `${e.avg_watts}W` : '—'
@@ -465,7 +465,11 @@ function renderSegments(segs) {
         <td>${watts}</td>
         <td>${hr}</td>
       </tr>`
-    }).join('')
+    })
+    const visRows  = rowArr.slice(0, 2).join('')
+    const moreRows = rowArr.slice(2).join('')
+    const extraTbody = moreRows ? `<tbody class="seg-extra" style="display:none">${moreRows}</tbody>` : ''
+    const moreWrap   = moreRows ? `<div class="seg-more-wrap"><div class="seg-fade"></div><button class="seg-more-btn" onclick="var c=this.closest('.seg-card');c.querySelector('.seg-extra').style.display='';this.closest('.seg-more-wrap').remove()">▼ 全部 ${rowArr.length} 筆</button></div>` : ''
     return `<div class="seg-card">
       <div class="seg-header">
         <div>
@@ -477,12 +481,10 @@ function renderSegments(segs) {
           <div class="seg-pr-label">PR</div>
         </div>` : ''}
       </div>
-      <details class="seg-details"><summary><span class="arr">▶</span>歷史記錄 ${seg.efforts.length} 次</summary>
       <table class="seg-table">
         <thead><tr><th>日期</th><th>時間</th><th>功率</th><th>HR</th></tr></thead>
-        <tbody>${rows}</tbody>
-      </table>
-      </details>
+        <tbody>${visRows}</tbody>${extraTbody}
+      </table>${moreWrap}
     </div>`
   }).join('')
   return `

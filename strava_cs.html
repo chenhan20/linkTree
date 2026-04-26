@@ -227,12 +227,10 @@ html,body{height:100%;background:#0a0a0a;color:#ccc;font-family:'Rajdhani',sans-
 .seg-table td{padding:5px 0;color:#777;border-bottom:1px solid rgba(255,255,255,.03);vertical-align:middle;letter-spacing:.5px}
 .seg-table td:not(:first-child){text-align:right;font-family:'Share Tech Mono',monospace}
 .seg-row-pr td{color:#c8a800 !important;font-weight:700}
-.seg-details{margin-top:.5rem}
-.seg-details summary{cursor:pointer;font-size:11px;color:#555;letter-spacing:1px;list-style:none;padding:5px 0;user-select:none;outline:none;display:flex;align-items:center;gap:5px}
-.seg-details summary::-webkit-details-marker{display:none}
-.seg-details summary .arr{font-size:9px;transition:transform .2s;display:inline-block}
-.seg-details[open] summary .arr{transform:rotate(90deg)}
-.seg-details summary:hover{color:#c8a800}
+.seg-more-wrap{margin-top:0}
+.seg-fade{height:30px;margin-top:-30px;background:linear-gradient(transparent,#0a0a0a);pointer-events:none}
+.seg-more-btn{width:100%;padding:5px 0;background:transparent;border:none;border-top:1px solid rgba(200,168,0,.08);color:#444;font-size:11px;cursor:pointer;letter-spacing:1px;margin-top:2px;display:block;font-family:'Rajdhani',sans-serif}
+.seg-more-btn:hover{color:#c8a800}
 .seg-crown{font-size:12px;margin-right:3px}
 .seg-time-pr{color:#c8a800 !important}
 
@@ -814,7 +812,7 @@ function render(data) {
   const segGrid = document.getElementById('seg-grid')
   if (segGrid && Array.isArray(data.segments) && data.segments.length > 0) {
     segGrid.innerHTML = data.segments.map(seg => {
-      const rows = seg.efforts.map(e => {
+      const rowArr = seg.efforts.map(e => {
         const crown = e.is_pr ? '<span class="seg-crown">👑</span>' : ''
         const watts = e.avg_watts ? `${e.avg_watts}W` : '—'
         const hr    = e.avg_heartrate ? `${e.avg_heartrate}` : '—'
@@ -824,7 +822,11 @@ function render(data) {
           <td>${watts}</td>
           <td>${hr}</td>
         </tr>`
-      }).join('')
+      })
+      const visRows  = rowArr.slice(0, 2).join('')
+      const moreRows = rowArr.slice(2).join('')
+      const extraTbody = moreRows ? `<tbody class="seg-extra" style="display:none">${moreRows}</tbody>` : ''
+      const moreWrap   = moreRows ? `<div class="seg-more-wrap"><div class="seg-fade"></div><button class="seg-more-btn" onclick="var c=this.closest('.seg-card');c.querySelector('.seg-extra').style.display='';this.closest('.seg-more-wrap').remove()">▼ 全部 ${rowArr.length} 筆</button></div>` : ''
       return `<div class="seg-card">
         <div class="seg-header">
           <div>
@@ -836,12 +838,10 @@ function render(data) {
             <div class="seg-pr-label">PR</div>
           </div>` : ''}
         </div>
-        <details class="seg-details"><summary><span class="arr">▶</span>歷史記錄 ${seg.efforts.length} 次</summary>
         <table class="seg-table">
           <thead><tr><th>日期</th><th>時間</th><th>功率</th><th>HR</th></tr></thead>
-          <tbody>${rows}</tbody>
-        </table>
-        </details>
+          <tbody>${visRows}</tbody>${extraTbody}
+        </table>${moreWrap}
       </div>`
     }).join('')
   } else if (segGrid) {
