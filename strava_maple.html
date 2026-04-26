@@ -401,6 +401,17 @@ body::before{
 }
 .show-more-btn:hover{background:var(--gold-2)}
 
+/* ITT inline badge in activity log */
+.itt-badge{display:flex;align-items:center;gap:10px;padding:5px 10px 6px 10px;border-left:3px solid rgba(165,90,30,.25);margin:4px 0 0;background:rgba(165,90,30,.04);border-radius:0 5px 5px 0}
+.itt-badge.pr{background:rgba(197,74,13,.1);border-left-color:#c54a0d}
+.itt-crown{font-size:16px;line-height:1;flex-shrink:0}
+.itt-info{display:flex;flex-direction:column;gap:1px;flex:1;min-width:0}
+.itt-seg-name{font-size:9px;color:var(--wood-2);letter-spacing:1px;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.itt-badge.pr .itt-seg-name{color:rgba(197,74,13,.65)}
+.itt-time{font-size:12px;font-weight:700;color:#c54a0d;line-height:1}
+.itt-attempt{font-size:9px;color:var(--wood-2);letter-spacing:.5px}
+.itt-badge.pr .itt-attempt{color:rgba(197,74,13,.55)}
+
 /* sport tabs */
 .sport-tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
 .sport-tab{
@@ -647,7 +658,7 @@ function groupByDate(list){
     .map(([d,acts])=>[d, acts.slice().sort((a,b)=>(a.time||'').localeCompare(b.time||''))])
 }
 
-function renderTimeline(list, type, expanded){
+function renderTimeline(list, type, expanded, ittMap){
   if (!list || !list.length) return '<div class="empty">暫無資料</div>'
   const isAll = type === 'all'
   const groups = groupByDate(list)
@@ -682,6 +693,21 @@ function renderTimeline(list, type, expanded){
           aIsSwim ? '' :
           a.distance_km ? `<div class="act-dist">${a.distance_km}<small>km</small></div>` : ''
         const stravaLink = a.id ? `<a class="act-strava-link" href="https://www.strava.com/activities/${a.id}" target="_blank" rel="noopener" title="在 Strava 上查看">↗</a>` : ''
+        const ittBadges = (aIsRide && ittMap && ittMap[date])
+          ? ittMap[date].map(it => {
+              const isPr = it.is_pr
+              const crown = isPr ? '👑' : `<span style="font-size:11px;color:#888">#${it.attemptNum}</span>`
+              const attempt = isPr ? `第${it.attemptNum}次 · 🏆 PR 最佳成績！` : `第${it.attemptNum} / ${it.total} 次挑戰`
+              return `<div class="itt-badge${isPr ? ' pr' : ''}">
+                <div class="itt-crown">${crown}</div>
+                <div class="itt-info">
+                  <div class="itt-seg-name">${it.segName}</div>
+                  <div class="itt-time">${it.elapsed_str}</div>
+                </div>
+                <div class="itt-attempt">${attempt}</div>
+              </div>`
+            }).join('')
+          : ''
         return `
           <div class="act-card">
             <div class="act-icon">${meta.icon}</div>
@@ -689,6 +715,7 @@ function renderTimeline(list, type, expanded){
               <div class="act-name">${a.trainer ? INDOOR_TAG : (aIsRide ? BIKE_TAG : '')}${a.name || '—'}${stravaLink}</div>
               <div class="act-meta">${metas.join('<span class="sep">·</span>')}</div>
               ${lapHtml}
+              ${ittBadges}
             </div>
             ${dist}
           </div>`
@@ -753,12 +780,23 @@ function render(data){
   let activeTab = tabs[0]?.key || 'all'
   const showMore = {}
 
+  // ── ITT date → efforts map ──
+  const ittMap = {}
+  ;(data.segments || []).forEach(seg => {
+    const sorted = seg.efforts.slice().sort((a, b) => (a.date || '').localeCompare(b.date || ''))
+    sorted.forEach((e, idx) => {
+      const d = (e.date || '').slice(0, 10)
+      if (!ittMap[d]) ittMap[d] = []
+      ittMap[d].push({ segName: seg.name, elapsed_str: e.elapsed_str, is_pr: e.is_pr, attemptNum: idx + 1, total: sorted.length })
+    })
+  })
+
   function tabHTML(){
     return tabs.map(t => `<button class="sport-tab${t.key===activeTab?' active':''}" data-tab="${t.key}">${t.label}</button>`).join('')
   }
   function timelineHTML(){
     const t = tabs.find(t => t.key === activeTab)
-    return renderTimeline(t?.list, activeTab, showMore[activeTab] || false)
+    return renderTimeline(t?.list, activeTab, showMore[activeTab] || false, ittMap)
   }
 
   document.getElementById('content').innerHTML = `
@@ -818,7 +856,17 @@ function render(data){
       document.getElementById('timeline').innerHTML = timelineHTML()
       setTimeout(() => {
         const el = document.getElementById('act-' + date)
-        if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.classList.add('act-highlight'); setTimeout(() => el.classList.remove('act-highlight'), 1500) }
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+          el.classList.add('act-highlight')
+          setTimeout(() => el.classList.remove('act-highlight'), 1500)
+        } else {
+          const toast = document.createElement('div')
+          toast.textContent = `📅 ${date} 的活動不在最近記錄內`
+          toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#fff5d8;color:#8a5a2b;border:2px solid #8a5a2b;padding:8px 18px;border-radius:6px;font-size:12px;letter-spacing:1px;z-index:9999;pointer-events:none'
+          document.body.appendChild(toast)
+          setTimeout(() => toast.remove(), 2500)
+        }
       }, 80)
     }
   })

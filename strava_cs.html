@@ -1008,6 +1008,12 @@ function render(data) {
           el.scrollIntoView({ behavior: 'smooth', block: 'center' })
           const nextRow = el.nextElementSibling
           if (nextRow) { nextRow.classList.add('log-row-highlight'); setTimeout(() => nextRow.classList.remove('log-row-highlight'), 1500) }
+        } else {
+          const toast = document.createElement('div')
+          toast.textContent = `📅 ${date} 的活動不在最近記錄內`
+          toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(10,10,10,.95);color:#c8a800;border:1px solid rgba(200,168,0,.4);padding:8px 18px;border-radius:4px;font-size:11px;letter-spacing:2px;text-transform:uppercase;z-index:9999;pointer-events:none'
+          document.body.appendChild(toast)
+          setTimeout(() => toast.remove(), 2500)
         }
       }, 80)
     }
