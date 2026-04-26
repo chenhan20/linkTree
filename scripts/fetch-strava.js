@@ -27,7 +27,8 @@ const CLIENT_SECRET = process.env.STRAVA_CLIENT_SECRET
 const REFRESH_TOKEN = process.env.STRAVA_REFRESH_TOKEN
 const ATHLETE_ID    = process.env.STRAVA_ATHLETE_ID  // 你的 161539959
 
-const OUT_FILE = path.join(__dirname, '..', 'strava.json')
+const OUT_FILE  = path.join(__dirname, '..', 'strava.json')
+const ITT_FILE  = path.join(__dirname, '..', 'itt-segments.json')
 
 // ── 簡單的 HTTPS helper（不裝額外套件）──
 function request(options, body = null) {
@@ -120,6 +121,40 @@ async function fetchRecentActivities(token) {
   return all
 }
 
+// ── ITT 區間設定 ──
+const SEGMENT_IDS = new Set([641218, 1761462, 7032136])
+// 自訂顯示名稱（覆蓋 Strava API 回傳的原始名稱）
+const SEGMENT_CUSTOM_NAMES = {
+  641218:  '風櫃嘴ITT',
+  1761462: '中社路ITT',
+  7032136: '社子島ITT',
+}
+
+// 秒 → "M:SS" 或 "H:MM:SS"
+function fmtElapsed(seconds) {
+  const s = Math.round(seconds)
+  if (s < 3600) {
+    const m = Math.floor(s / 60)
+    const sec = s % 60
+    return `${m}:${String(sec).padStart(2, '0')}`
+  }
+  const h = Math.floor(s / 3600)
+  const m = Math.floor((s % 3600) / 60)
+  const sec = s % 60
+  return `${h}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
+}
+
+async function fetchSegmentInfo(token, segmentId) {
+  const data = await request({
+    hostname: 'www.strava.com',
+    path:     `/api/v3/segments/${segmentId}`,
+    method:   'GET',
+    headers:  { Authorization: `Bearer ${token}` },
+  })
+  if (data.errors) throw new Error(`segment info 錯誤：${JSON.stringify(data.errors)}`)
+  return data
+}
+
 // ── Step 4a：抓單一活動詳情（用於取得 laps）──
 async function fetchActivityDetail(token, activityId) {
   const data = await request({
@@ -154,10 +189,8 @@ function extractTopLaps(laps) {
 }
 
 // ── Step 4b：Lap enrichment（ID-based 快取，避免重複打 API）──
-async function enrichRideLaps(token, recentRides, existingRides) {
+async function enrichRideLaps(token, recentRides, existingRides, existingSegments) {
   // 從舊 JSON 建 id → top_laps 快取
-  // 只有明確存過 top_laps 陣列才快取；若欄位不存在（舊格式 main_lap）則強制重抓
-  // REFRESH_LAPS=1 時跳過快取（調整過濾條件後用）
   const cache = {}
   if (process.env.REFRESH_LAPS !== '1') {
     for (const r of (existingRides || [])) {
@@ -165,27 +198,171 @@ async function enrichRideLaps(token, recentRides, existingRides) {
     }
   }
 
+  // 已有紀錄的 activity_id（各 segment 的 efforts 合併）
+  const knownActivityIds = new Set()
+  for (const seg of (existingSegments || [])) {
+    for (const e of (seg.efforts || [])) {
+      if (e.activity_id) knownActivityIds.add(String(e.activity_id))
+    }
+  }
+
+  // 新收集的 segment efforts：{ [segId]: [...] }
+  const newSegEfforts = {}
+
   let fetchCount = 0
   for (const ride of recentRides) {
     if (ride.id == null) { ride.top_laps = []; continue }
     const key = String(ride.id)
-    if (key in cache) {
+    const needsLaps = !(key in cache)
+    const needsSegs = !knownActivityIds.has(key)
+
+    if (!needsLaps && !needsSegs) {
       ride.top_laps = cache[key] || []
       continue
     }
-    // 新活動：打 detail API
+    // 需要打 API
     try {
       await new Promise(r => setTimeout(r, 350))
       const detail = await fetchActivityDetail(token, ride.id)
-      ride.top_laps = extractTopLaps(detail.laps)
       fetchCount++
-      console.log(`  🔍 ${ride.name}：${ride.top_laps.length} 分段常合格`)
+
+      if (needsLaps) {
+        ride.top_laps = extractTopLaps(detail.laps)
+        cache[key] = ride.top_laps
+        console.log(`  🔍 ${ride.name}：${ride.top_laps.length} 分段合格`)
+      } else {
+        ride.top_laps = cache[key] || []
+      }
+
+      // 從 segment_efforts 提取目標分段
+      if (needsSegs && Array.isArray(detail.segment_efforts)) {
+        for (const se of detail.segment_efforts) {
+          if (se.segment && SEGMENT_IDS.has(se.segment.id)) {
+            const sid = se.segment.id
+            if (!newSegEfforts[sid]) newSegEfforts[sid] = []
+            newSegEfforts[sid].push({
+              activity_id:   ride.id,
+              date:          ride.date,
+              elapsed_sec:   se.elapsed_time,
+              elapsed_str:   fmtElapsed(se.elapsed_time),
+              avg_watts:     se.average_watts     ? Math.round(se.average_watts)     : null,
+              avg_heartrate: se.average_heartrate ? Math.round(se.average_heartrate) : null,
+            })
+          }
+        }
+      }
     } catch (e) {
-      console.warn(`  ⚠️  Lap 抓取失敗 (id=${ride.id})：${e.message}`)
-      ride.top_laps = []
+      console.warn(`  ⚠️  Detail 抓取失敗 (id=${ride.id})：${e.message}`)
+      ride.top_laps = cache[key] || []
     }
   }
-  console.log(`✅ Lap enrichment 完成，新打 API ${fetchCount} 次（快取命中 ${recentRides.length - fetchCount} 次）`)
+  console.log(`✅ Detail enrichment 完成，新打 API ${fetchCount} 次（快取命中 ${recentRides.length - fetchCount} 次）`)
+  return newSegEfforts
+}
+
+// ── Segment 資料合併＋PR 標記 ──
+async function buildSegmentsData(token, newSegEfforts, existingSegments) {
+  const result = []
+  for (const segId of SEGMENT_IDS) {
+    // 取舊有資料（或建空殼）
+    const existing = (existingSegments || []).find(s => s.id === segId)
+      || { id: segId, name: `Segment ${segId}`, distance_km: null, efforts: [] }
+
+    // 更新 segment info（距離）；名稱固定用自訂名稱
+    try {
+      await new Promise(r => setTimeout(r, 300))
+      const info = await fetchSegmentInfo(token, segId)
+      existing.distance_km  = info.distance ? Math.round(info.distance / 10) / 100 : existing.distance_km
+    } catch (e) {
+      console.warn(`⚠️  Segment info ${segId} 失敗：${e.message}`)
+    }
+    // 永遠套用自訂名稱
+    existing.name = SEGMENT_CUSTOM_NAMES[segId] || existing.name
+
+    // 合併新 efforts（去重）
+    const existingEfforts = existing.efforts || []
+    const knownIds = new Set(existingEfforts.map(e => String(e.activity_id)))
+    for (const e of (newSegEfforts[segId] || [])) {
+      if (!knownIds.has(String(e.activity_id))) {
+        existingEfforts.push(e)
+        knownIds.add(String(e.activity_id))
+      }
+    }
+
+    // 日期降冪排序
+    existingEfforts.sort((a, b) => b.date.localeCompare(a.date))
+
+    // PR 標記
+    const prTime = existingEfforts.length > 0
+      ? Math.min(...existingEfforts.map(e => e.elapsed_sec))
+      : null
+
+    const efforts = existingEfforts.map(e => ({ ...e, is_pr: e.elapsed_sec === prTime }))
+
+    result.push({
+      id:          segId,
+      name:        existing.name,
+      distance_km: existing.distance_km,
+      pr_time_str: prTime ? fmtElapsed(prTime) : null,
+      efforts,
+    })
+    console.log(`✅ Segment ${segId} (${existing.name})：共 ${efforts.length} 次`)
+  }
+  return result
+}
+
+// ── 全史 segment 掃描（SCAN_SEGMENTS=1 時使用）──
+// 走全部騎乘 activities，對每筆未掃描過的 ride 打 detail API，提取 segment efforts
+async function scanSegmentsHistory(token, activities, existingSegments) {
+  const RIDE_TYPES = ['Ride', 'VirtualRide', 'EBikeRide', 'MountainBikeRide']
+  const allRides   = activities.filter(a => RIDE_TYPES.includes(a.type))
+
+  // 已知的 activity_id（三個 segment 合計）
+  const knownActivityIds = new Set()
+  for (const seg of (existingSegments || [])) {
+    for (const e of (seg.efforts || [])) {
+      if (e.activity_id) knownActivityIds.add(String(e.activity_id))
+    }
+  }
+
+  const unknownRides = allRides.filter(a => !knownActivityIds.has(String(a.id)))
+  console.log(`🔍 SCAN_SEGMENTS：全史 ${allRides.length} 筆騎乘，待掃描 ${unknownRides.length} 筆`)
+
+  const newSegEfforts = {}
+  let done = 0
+  for (const a of unknownRides) {
+    try {
+      await new Promise(r => setTimeout(r, 400))
+      const detail = await fetchActivityDetail(token, a.id)
+      const date = (a.start_date_local || a.start_date).slice(0, 10)
+      if (Array.isArray(detail.segment_efforts)) {
+        for (const se of detail.segment_efforts) {
+          if (se.segment && SEGMENT_IDS.has(se.segment.id)) {
+            const sid = se.segment.id
+            if (!newSegEfforts[sid]) newSegEfforts[sid] = []
+            newSegEfforts[sid].push({
+              activity_id:   a.id,
+              date,
+              elapsed_sec:   se.elapsed_time,
+              elapsed_str:   fmtElapsed(se.elapsed_time),
+              avg_watts:     se.average_watts     ? Math.round(se.average_watts)     : null,
+              avg_heartrate: se.average_heartrate ? Math.round(se.average_heartrate) : null,
+            })
+          }
+        }
+      }
+      done++
+      if (done % 20 === 0) console.log(`  進度：${done}/${unknownRides.length}`)
+    } catch (e) {
+      console.warn(`  ⚠️  掃描失敗 (id=${a.id})：${e.message}`)
+    }
+  }
+
+  // 統計命中
+  let hits = 0
+  for (const sid of SEGMENT_IDS) hits += (newSegEfforts[sid] || []).length
+  console.log(`✅ 全史掃描完成：命中 ${hits} 次 segment efforts`)
+  return newSegEfforts
 }
 
 // ── Step 4：組合資料、處理 monthly_history ──
@@ -416,14 +593,44 @@ async function main() {
     try { existingData = JSON.parse(fs.readFileSync(OUT_FILE, 'utf8')) }
     catch (e) { /* 讀失敗就當空 */ }
   }
+  // ITT 歷史另存檔優先：若存在且 efforts 更多，以它為準
+  if (fs.existsSync(ITT_FILE)) {
+    try {
+      const ittData = JSON.parse(fs.readFileSync(ITT_FILE, 'utf8'))
+      const ittSegs = Array.isArray(ittData) ? ittData : ittData.segments
+      if (ittSegs && ittSegs.length > 0) {
+        const ittTotal   = ittSegs.reduce((n, s) => n + (s.efforts || []).length, 0)
+        const mainTotal  = (existingData.segments || []).reduce((n, s) => n + (s.efforts || []).length, 0)
+        if (ittTotal >= mainTotal) existingData.segments = ittSegs
+      }
+    } catch (e) { /* 讀失敗忽略 */ }
+  }
 
   const result     = buildJSON(stats, activities)
 
-  // ── Lap enrichment：只針對單車，ID-based 快取 ──
-  await enrichRideLaps(token, result.recent_rides, existingData.recent_rides)
+  // ── Detail enrichment：Laps + Segment efforts（共用 API call，只掃最近 20 筆）──
+  const scanAll = process.env.SCAN_SEGMENTS === '1' || process.env.FETCH_ALL === '1'
+  let newSegEfforts
+
+  if (scanAll) {
+    // 全史掃描：走所有 activities
+    console.log('🌐 全史 segment 掃描模式...')
+    newSegEfforts = await scanSegmentsHistory(token, activities, existingData.segments)
+    // 仍需為 recent_rides 補 laps
+    await enrichRideLaps(token, result.recent_rides, existingData.recent_rides, existingData.segments)
+  } else {
+    // 日常模式：只掃最近 20 筆騎乘
+    newSegEfforts = await enrichRideLaps(token, result.recent_rides, existingData.recent_rides, existingData.segments)
+  }
+
+  // ── ITT 區間：合併新 efforts + 取 segment meta ──
+  result.segments = await buildSegmentsData(token, newSegEfforts, existingData.segments)
 
   fs.writeFileSync(OUT_FILE, JSON.stringify(result, null, 2), 'utf8')
   console.log(`✅ strava.json 寫入完成 (${OUT_FILE})`)
+  // ITT 歷史另存（獨立備份，避免 strava.json 被清空時丟失）
+  fs.writeFileSync(ITT_FILE, JSON.stringify(result.segments, null, 2), 'utf8')
+  console.log(`✅ itt-segments.json 備份完成 (${ITT_FILE})`)
   console.log(`   單車 YTD：${result.summary.ytd_distance_km} km / ${result.summary.ytd_rides} rides`)
   console.log(`   跑步 YTD：${result.summary.ytd_run_distance_km} km / ${result.summary.ytd_runs} runs`)
   console.log(`   游泳 YTD：${result.summary.ytd_swim_distance_km} km / ${result.summary.ytd_swims} swims`)
