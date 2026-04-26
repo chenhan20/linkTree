@@ -743,15 +743,15 @@ function render(data) {
       actEl.classList.add('act-highlight')
       setTimeout(() => actEl.classList.remove('act-highlight'), 1500)
     } else {
-      // switch to 'all' tab and retry after render
+      // not visible: switch to all + expand, then scroll after layout
       activeTab = 'all'
       showMore['all'] = true
       document.querySelectorAll('.sport-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === 'all'))
       document.getElementById('timeline').innerHTML = timelineHTML()
-      requestAnimationFrame(() => {
+      setTimeout(() => {
         const el = document.getElementById('act-' + date)
         if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.classList.add('act-highlight'); setTimeout(() => el.classList.remove('act-highlight'), 1500) }
-      })
+      }, 80)
     }
   })
 

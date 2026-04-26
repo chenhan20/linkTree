@@ -999,17 +999,17 @@ function render(data) {
         if (nextRow) { nextRow.classList.add('log-row-highlight'); setTimeout(() => nextRow.classList.remove('log-row-highlight'), 1500) }
       }
     } else {
-      // expand log and retry
+      // expand log and retry after layout
       logExpanded.v = true
       tbody.innerHTML = buildLogRows()
-      requestAnimationFrame(() => {
+      setTimeout(() => {
         const el = document.getElementById('log-day-' + date)
         if (el) {
           el.scrollIntoView({ behavior: 'smooth', block: 'center' })
           const nextRow = el.nextElementSibling
           if (nextRow) { nextRow.classList.add('log-row-highlight'); setTimeout(() => nextRow.classList.remove('log-row-highlight'), 1500) }
         }
-      })
+      }, 80)
     }
   })
 

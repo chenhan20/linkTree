@@ -816,10 +816,10 @@ function render(data){
       showMore['all'] = true
       document.querySelectorAll('.sport-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === 'all'))
       document.getElementById('timeline').innerHTML = timelineHTML()
-      requestAnimationFrame(() => {
+      setTimeout(() => {
         const el = document.getElementById('act-' + date)
         if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.classList.add('act-highlight'); setTimeout(() => el.classList.remove('act-highlight'), 1500) }
-      })
+      }, 80)
     }
   })
 
