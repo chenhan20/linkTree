@@ -107,18 +107,23 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 .status-badge.done   {background:rgba(168,85,247,.14);color:#c084fc;border:1px solid rgba(168,85,247,.4)}
 .status-badge.over   {background:rgba(232,121,249,.16);color:#f0a0ff;border:1px solid rgba(232,121,249,.45);font-size:13px;font-weight:700;letter-spacing:0}
 
-/* ── weekly quest ── */
-.quest-list{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:2.2rem}
-.quest-pill{
-  display:inline-flex;align-items:center;gap:6px;
-  padding:7px 14px;border-radius:18px;font-size:13px;
-  background:rgba(168,85,247,.05);
-  backdrop-filter:blur(8px);
-  border:1px solid rgba(168,85,247,.18);color:#777;
-  transition:all .2s;
-}
-.quest-pill.on{border-color:rgba(168,85,247,.5);background:rgba(168,85,247,.14);color:#c084fc;box-shadow:0 0 10px rgba(168,85,247,.2)}
-.quest-pill .mark{font-size:14px}
+/* ── weekly quest tiles ── */
+.quest-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:2.2rem}
+@media(max-width:480px){.quest-grid{grid-template-columns:repeat(2,1fr)}}
+.quest-tile{padding:20px 10px 16px;border-radius:10px;text-align:center;background:rgba(168,85,247,.04);border:1px solid rgba(168,85,247,.1);user-select:none}
+.quest-tile.on{background:rgba(168,85,247,.1);border-color:rgba(168,85,247,.35);box-shadow:0 0 14px rgba(168,85,247,.12)}
+.quest-tile .qico{font-size:26px;display:block;margin-bottom:8px;filter:grayscale(1);opacity:.28}
+.quest-tile.on .qico{filter:none;opacity:1}
+.quest-tile .qlabel{font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:#333}
+.quest-tile.on .qlabel{color:rgba(168,85,247,.6)}
+.quest-tile .qcheck{font-size:15px;margin-top:7px;color:#252525}
+.quest-tile.on .qcheck{color:#a855f7}
+/* act highlight flash */
+.act-highlight{animation:actFlash .9s ease-out}
+@keyframes actFlash{0%,40%{background:rgba(168,85,247,.22);border-color:rgba(168,85,247,.6)}100%{background:inherit;border-color:inherit}}
+/* strava inline link */
+.act-strava-link{display:inline-block;margin-left:6px;font-size:10px;color:rgba(168,85,247,.45);text-decoration:none;vertical-align:middle;line-height:1}
+.act-strava-link:hover{color:#a855f7}
 
 /* ── section title ── */
 .section-title{
@@ -451,15 +456,23 @@ function renderMonthlyGoals(mg) {
 }
 function renderWeeklyQuest(wq) {
   if (!wq) return ''
-  const order = ['ride','run','swim','weight']
-  const pills = order.map(k => {
-    const meta = SPORT_META[k]
-    const on = !!wq[k]
-    return `<span class="quest-pill${on ? ' on' : ''}"><span class="mark">${on ? '✅' : '⬜'}</span>${meta.icon} ${meta.label}</span>`
+  const wqSports = [
+    { key:'ride',   icon:'🚴', label:'RIDE'  },
+    { key:'run',    icon:'🏃', label:'RUN'   },
+    { key:'swim',   icon:'🏊', label:'SWIM'  },
+    { key:'weight', icon:'🏋️', label:'TRAIN' },
+  ]
+  const tiles = wqSports.map(sp => {
+    const on = !!wq[sp.key]
+    return `<div class="quest-tile${on ? ' on' : ''}">
+      <span class="qico">${sp.icon}</span>
+      <div class="qlabel">${sp.label}</div>
+      <div class="qcheck">${on ? '✓' : '○'}</div>
+    </div>`
   }).join('')
   return `
     <div class="section-title"><span>✦</span> 本週任務 <span style="color:rgba(168,85,247,.4);font-size:10px">· WEEKLY QUEST</span></div>
-    <div class="quest-list">${pills}</div>`
+    <div class="quest-grid">${tiles}</div>`
 }
 function renderSegments(segs) {
   if (!segs || segs.length === 0) return ''
@@ -469,7 +482,8 @@ function renderSegments(segs) {
       const timeClass = e.is_pr ? ' seg-time-pr' : ''
       const watts = e.avg_watts ? `${e.avg_watts}W` : '—'
       const hr    = e.avg_heartrate ? `${e.avg_heartrate}` : '—'
-      return `<tr class="${e.is_pr ? 'seg-row-pr' : ''}">
+      const dateKey = (e.date || '').slice(0, 10)
+      return `<tr class="${e.is_pr ? 'seg-row-pr' : ''}" data-date="${dateKey}" style="cursor:pointer" title="跳至活動紀錄">
         <td>${fmtDate(e.date)}</td>
         <td class="${timeClass}">${crown}${e.elapsed_str}</td>
         <td>${watts}</td>
@@ -539,7 +553,7 @@ function renderTimeline(list, type, expanded) {
   const visible = hasMore ? groups.slice(0, LIMIT) : groups
 
   const html = visible.map(([date, acts]) => `
-    <div class="timeline-day">
+    <div class="timeline-day" id="act-${date}">
       <div class="timeline-date">${fmtDate(date)}</div>
       ${acts.map(a => {
         const aType    = isAll ? (a._type || 'ride') : type
@@ -562,11 +576,12 @@ function renderTimeline(list, type, expanded) {
               `<div class="lap-strip"><span class="lap-name">🏁 ${lap.name}</span><span class="lap-tag">⏱ ${lap.moving_time_str}</span>${lap.average_heartrate ? `<span class="lap-tag">♥️ ${lap.average_heartrate}</span>` : ''}${lap.average_watts ? `<span class="lap-tag">⚡ ${lap.average_watts}W</span>` : ''}</div>`
             ).join('')
           : ''
+        const stravaLink = a.id ? `<a class="act-strava-link" href="https://www.strava.com/activities/${a.id}" target="_blank" rel="noopener" title="在 Strava 上查看">↗</a>` : ''
         return `
         <div class="activity-card">
           <div class="activity-icon"><svg viewBox="0 0 24 24">${aIcon}</svg></div>
           <div class="activity-info">
-            <div class="activity-name">${a.trainer ? INDOOR_TAG : (aIsRide ? BIKE_TAG : '')}${a.name || '—'}</div>
+            <div class="activity-name">${a.trainer ? INDOOR_TAG : (aIsRide ? BIKE_TAG : '')}${a.name || '—'}${stravaLink}</div>
             <div class="activity-meta">${tags.join('')}</div>
             ${lapHtml}
           </div>
@@ -816,6 +831,28 @@ function render(data) {
       }
     })
   }
+
+  // seg row click → scroll to activity
+  document.addEventListener('click', e => {
+    const tr = e.target.closest('tr[data-date]')
+    if (!tr) return
+    const date = tr.dataset.date
+    const actEl = document.getElementById('act-' + date)
+    if (actEl) {
+      actEl.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      actEl.classList.add('act-highlight')
+      setTimeout(() => actEl.classList.remove('act-highlight'), 1500)
+    } else {
+      activeTab = 'all'
+      showMore['all'] = true
+      document.querySelectorAll('.sport-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === 'all'))
+      document.getElementById('timeline').innerHTML = timelineHTML()
+      requestAnimationFrame(() => {
+        const el = document.getElementById('act-' + date)
+        if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.classList.add('act-highlight'); setTimeout(() => el.classList.remove('act-highlight'), 1500) }
+      })
+    }
+  })
 
   // tab switching
   document.getElementById('sport-tabs').addEventListener('click', e => {

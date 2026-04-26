@@ -286,6 +286,11 @@ html,body{height:100%;background:#0a0a0a;color:#ccc;font-family:'Rajdhani',sans-
   font-size:11px;font-weight:700;letter-spacing:2px;color:#c8a800;
 }
 .log-date-marker::before{content:'▶';font-size:8px}
+/* log row highlight flash & strava link */
+.log-row-highlight td{animation:logFlash 1s ease-out}
+@keyframes logFlash{0%,40%{background:rgba(200,168,0,.14)}100%{background:transparent}}
+.act-strava-link{display:inline-block;margin-left:5px;font-size:10px;color:rgba(200,168,0,.35);text-decoration:none;vertical-align:middle}
+.act-strava-link:hover{color:#c8a800}
 .log-sport-icon{margin-right:5px;font-size:15px}
 .log-name{color:#ccc;font-weight:600;letter-spacing:.5px}
 .indoor-tag,.bike-tag{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:700;letter-spacing:.5px;line-height:1;border-radius:2px;padding:2px 5px 2px 4px;vertical-align:middle;margin-right:4px;flex-shrink:0;white-space:nowrap}
@@ -874,7 +879,7 @@ function render(data) {
     const visible = hasMore ? groups.slice(0, LIMIT) : groups
 
     const rows = visible.flatMap(([date, acts]) => {
-      const dr = `<tr><td colspan="6" style="padding-top:14px;padding-bottom:5px">
+      const dr = `<tr id="log-day-${date}"><td colspan="6" style="padding-top:14px;padding-bottom:5px">
         <div class="log-date-marker">${fmtDate(date)}</div></td></tr>`
       const ar = acts.map(a => {
         const sp = SPORT[a._type] || SPORT.ride
@@ -915,7 +920,7 @@ function render(data) {
           : ''
         return `<tr>
           <td></td>
-          <td><span class="log-sport-icon">${sp.icon}</span><span class="log-name">${a.trainer ? INDOOR_TAG : (a._type === 'ride' ? BIKE_TAG : '')}${a.name || '—'}</span></td>
+          <td><span class="log-sport-icon">${sp.icon}</span><span class="log-name">${a.trainer ? INDOOR_TAG : (a._type === 'ride' ? BIKE_TAG : '')}${a.name || '—'}${a.id ? `<a class="act-strava-link" href="https://www.strava.com/activities/${a.id}" target="_blank" rel="noopener" title="在 Strava 上查看">↗</a>` : ''}</span></td>
           <td class="log-detail">${detail}</td>
           <td class="log-dist">${dist}</td>
           <td class="log-speed">${speed}</td>
@@ -947,7 +952,7 @@ function render(data) {
         const crown = e.is_pr ? '<span class="seg-crown">👑</span>' : ''
         const watts = e.avg_watts ? `${e.avg_watts}W` : '—'
         const hr    = e.avg_heartrate ? `${e.avg_heartrate}` : '—'
-        return `<tr class="${e.is_pr ? 'seg-row-pr' : ''}">
+        return `<tr class="${e.is_pr ? 'seg-row-pr' : ''}" data-date="${(e.date||'').slice(0,10)}" style="cursor:pointer" title="跳至活動紀錄">
           <td>${e.date.slice(5).replace('-','/')}</td>
           <td class="${e.is_pr ? 'seg-time-pr' : ''}">${crown}${e.elapsed_str}</td>
           <td>${watts}</td>
@@ -978,6 +983,35 @@ function render(data) {
   } else if (segGrid) {
     segGrid.closest('.section').style.display = 'none'
   }
+
+  // seg row click → scroll to activity log entry
+  document.addEventListener('click', e => {
+    const tr = e.target.closest('tr[data-date]')
+    if (!tr) return
+    const date = tr.dataset.date
+    const dayEl = document.getElementById('log-day-' + date)
+    if (dayEl) {
+      if (!logExpanded.v) { logExpanded.v = true; tbody.innerHTML = buildLogRows() }
+      const el = document.getElementById('log-day-' + date)
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        const nextRow = el.nextElementSibling
+        if (nextRow) { nextRow.classList.add('log-row-highlight'); setTimeout(() => nextRow.classList.remove('log-row-highlight'), 1500) }
+      }
+    } else {
+      // expand log and retry
+      logExpanded.v = true
+      tbody.innerHTML = buildLogRows()
+      requestAnimationFrame(() => {
+        const el = document.getElementById('log-day-' + date)
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+          const nextRow = el.nextElementSibling
+          if (nextRow) { nextRow.classList.add('log-row-highlight'); setTimeout(() => nextRow.classList.remove('log-row-highlight'), 1500) }
+        }
+      })
+    }
+  })
 
   // ── animate bars ──
   requestAnimationFrame(() => {

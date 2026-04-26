@@ -375,6 +375,11 @@ body::before{
   color:#c54a0d;flex-shrink:0;white-space:nowrap;letter-spacing:1px;padding-top:2px;line-height:1;
 }
 .act-dist small{font-size:9px;color:var(--wood-2);margin-left:2px}
+/* act highlight flash & strava link */
+.act-highlight{animation:actFlash .9s ease-out}
+@keyframes actFlash{0%,40%{background:#ffe8b0;border-color:#e87a30}100%{background:#fff5d8;border-color:var(--wood-3)}}
+.act-strava-link{display:inline-block;margin-left:6px;font-size:10px;color:rgba(165,90,30,.45);text-decoration:none;vertical-align:middle}
+.act-strava-link:hover{color:#c54a0d}
 
 /* lap strip (cycling only) */
 .act-lap{
@@ -590,7 +595,7 @@ function renderSegments(segs) {
       const crown = e.is_pr ? '<span class="seg-crown">👑</span>' : ''
       const watts = e.avg_watts ? `${e.avg_watts}W` : '—'
       const hr    = e.avg_heartrate ? `${e.avg_heartrate}` : '—'
-      return `<tr class="${e.is_pr ? 'seg-row-pr' : ''}">
+      return `<tr class="${e.is_pr ? 'seg-row-pr' : ''}" data-date="${(e.date||'').slice(0,10)}" style="cursor:pointer" title="跳至活動紀錄">
         <td>${e.date.slice(5).replace('-','/')}</td>
         <td class="${e.is_pr ? 'seg-time-pr' : ''}">${crown}${e.elapsed_str}</td>
         <td>${watts}</td>
@@ -651,7 +656,7 @@ function renderTimeline(list, type, expanded){
   const visible = hasMore ? groups.slice(0, LIMIT) : groups
 
   const html = visible.map(([date, acts]) => `
-    <div class="timeline-day">
+    <div class="timeline-day" id="act-${date}">
       <div class="timeline-date">${fmtDate(date)}</div>
       ${acts.map(a => {
         const aType = isAll ? (a._type || 'ride') : type
@@ -676,11 +681,12 @@ function renderTimeline(list, type, expanded){
         const dist = aIsWeight ? '' :
           aIsSwim ? '' :
           a.distance_km ? `<div class="act-dist">${a.distance_km}<small>km</small></div>` : ''
+        const stravaLink = a.id ? `<a class="act-strava-link" href="https://www.strava.com/activities/${a.id}" target="_blank" rel="noopener" title="在 Strava 上查看">↗</a>` : ''
         return `
           <div class="act-card">
             <div class="act-icon">${meta.icon}</div>
             <div class="act-info">
-              <div class="act-name">${a.trainer ? INDOOR_TAG : (aIsRide ? BIKE_TAG : '')}${a.name || '—'}</div>
+              <div class="act-name">${a.trainer ? INDOOR_TAG : (aIsRide ? BIKE_TAG : '')}${a.name || '—'}${stravaLink}</div>
               <div class="act-meta">${metas.join('<span class="sep">·</span>')}</div>
               ${lapHtml}
             </div>
@@ -793,6 +799,28 @@ function render(data){
       const p = f.dataset.pct || 0
       setTimeout(() => { f.style.width = p + '%' }, 120)
     })
+  })
+
+  // seg row click → scroll to activity
+  document.addEventListener('click', e => {
+    const tr = e.target.closest('tr[data-date]')
+    if (!tr) return
+    const date = tr.dataset.date
+    const actEl = document.getElementById('act-' + date)
+    if (actEl) {
+      actEl.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      actEl.classList.add('act-highlight')
+      setTimeout(() => actEl.classList.remove('act-highlight'), 1500)
+    } else {
+      activeTab = 'all'
+      showMore['all'] = true
+      document.querySelectorAll('.sport-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === 'all'))
+      document.getElementById('timeline').innerHTML = timelineHTML()
+      requestAnimationFrame(() => {
+        const el = document.getElementById('act-' + date)
+        if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.classList.add('act-highlight'); setTimeout(() => el.classList.remove('act-highlight'), 1500) }
+      })
+    }
   })
 
   // tab switching
