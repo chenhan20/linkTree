@@ -315,16 +315,16 @@ const STATUS_META = {
 }
 function renderMonthlySummary(ms) {
   if (!ms) return ''
-  const rideHr = ms.ride_hr != null ? `<div class="stat-sub">${ms.ride_hr} hr</div>` : ''
-  const runHr  = ms.run_hr  != null ? `<div class="stat-sub">${ms.run_hr} hr</div>`  : ''
-  const swimHr = ms.swim_hr != null ? `<div class="stat-sub">${ms.swim_hr} hr</div>` : ''
+  const m = (v, u) => `<div class="stat-metric"><div class="stat-val">${v}</div><div class="stat-unit">${u}</div></div>`
+  const div = '<div class="stat-vdiv"></div>'
+  const hr = v => v != null ? v : '—'
   return `
     <div class="section-title">本月訓練量 <span class="muted">· MONTHLY SUMMARY</span></div>
     <div class="stats-grid">
-      <div class="stat-card"><div class="stat-val">${ms.ride_km ?? 0}</div><div class="stat-unit">km</div>${rideHr}<div class="stat-label">🚴 單車</div></div>
-      <div class="stat-card"><div class="stat-val">${ms.run_km ?? 0}</div><div class="stat-unit">km</div>${runHr}<div class="stat-label">🏃 跑步</div></div>
-      <div class="stat-card"><div class="stat-val">${ms.swim_m ?? 0}</div><div class="stat-unit">m</div>${swimHr}<div class="stat-label">🏔️ 游泳</div></div>
-      <div class="stat-card"><div class="stat-val">${ms.weight_count ?? 0}</div><div class="stat-unit">次</div><div class="stat-label">🏋️ 重訓</div></div>
+      <div class="stat-card"><div class="stat-metrics">${m(ms.ride_km??0,'km')}${div}${m(hr(ms.ride_hr),'hr')}</div><div class="stat-label">🚴 單車</div></div>
+      <div class="stat-card"><div class="stat-metrics">${m(ms.run_km??0,'km')}${div}${m(hr(ms.run_hr),'hr')}</div><div class="stat-label">🏃 跑步</div></div>
+      <div class="stat-card"><div class="stat-metrics">${m(ms.swim_m??0,'m')}${div}${m(hr(ms.swim_hr),'hr')}</div><div class="stat-label">🏔️ 游泳</div></div>
+      <div class="stat-card"><div class="stat-metrics">${m(ms.weight_count??0,'次')}${div}${m(hr(ms.weight_hr),'hr')}</div><div class="stat-label">🏋️ 重訓</div></div>
     </div>`
 }
 function renderMonthlyGoals(mg) {

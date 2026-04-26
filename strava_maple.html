@@ -165,6 +165,18 @@ body::before{
 .stat-card .stat-val{font-size:22px;color:var(--ink);line-height:1.1;margin-top:4px;font-weight:normal}
 .stat-card .stat-unit{font-size:10px;color:var(--wood-2);margin-top:2px}
 
+/* ── monthly summary 左右並排 ── */
+.ms-head{font-size:10px;color:var(--wood-2);letter-spacing:2px;margin-bottom:10px;text-align:center}
+.ms-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0;align-items:end}
+.ms-card{text-align:center;padding:4px 6px;border-right:2px dashed rgba(106,66,32,.25)}
+.ms-card:last-child{border-right:none}
+.ms-metrics{display:flex;align-items:flex-end;gap:0;justify-content:center}
+.ms-metric{flex:1;min-width:0;text-align:center}
+.ms-metric .stat-val{font-size:16px;color:var(--ink);line-height:1.1;font-weight:normal}
+.ms-metric .stat-unit{font-size:9px;color:var(--wood-2);margin-top:1px}
+.ms-vdiv{width:1px;background:rgba(106,66,32,.2);align-self:stretch;margin:2px 5px 4px;flex-shrink:0}
+.ms-card .ms-label{font-size:10px;color:var(--wood-2);letter-spacing:1px;margin-top:4px}
+
 /* ── two column row (chart + goals) ── */
 .two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
 @media(max-width:640px){.two-col{grid-template-columns:1fr}}
@@ -489,6 +501,23 @@ function renderStats(s){
 }
 
 /* monthly distance chart (current year only, last 4 months) */
+function renderMonthlySummary(ms) {
+  if (!ms) return ''
+  const m = (v, u) => `<div class="ms-metric"><div class="stat-val">${v}</div><div class="stat-unit">${u}</div></div>`
+  const div = '<div class="ms-vdiv"></div>'
+  const hr = v => v != null ? v : '—'
+  return `
+    <div class="frame">
+      <div class="ms-head">🍁 本月訓練量 · MONTHLY SUMMARY</div>
+      <div class="ms-grid">
+        <div class="ms-card"><div class="ms-metrics">${m(ms.ride_km??0,'km')}${div}${m(hr(ms.ride_hr),'hr')}</div><div class="ms-label">🚴 單車</div></div>
+        <div class="ms-card"><div class="ms-metrics">${m(ms.run_km??0,'km')}${div}${m(hr(ms.run_hr),'hr')}</div><div class="ms-label">🏃 跑步</div></div>
+        <div class="ms-card"><div class="ms-metrics">${m(ms.swim_m??0,'m')}${div}${m(hr(ms.swim_hr),'hr')}</div><div class="ms-label">🏔️ 游泳</div></div>
+        <div class="ms-card"><div class="ms-metrics">${m(ms.weight_count??0,'次')}${div}${m(hr(ms.weight_hr),'hr')}</div><div class="ms-label">🏋️ 重訓</div></div>
+      </div>
+    </div>`
+}
+
 function renderMonthChart(history){
   // take current year, last 4 months including current
   const now = new Date(Date.now() + 8*3600*1000)
@@ -729,6 +758,7 @@ function render(data){
   document.getElementById('content').innerHTML = `
     ${renderHero(data.updated_at)}
     ${renderStats(s)}
+    ${renderMonthlySummary(data.monthly_summary)}
     <div class="two-col">
       ${renderMonthChart(data.monthly_history)}
       ${renderGoals(data.monthly_goals)}

@@ -154,6 +154,17 @@ html,body{height:100%;background:#0a0a0a;color:#ccc;font-family:'Rajdhani',sans-
 .stat-unit{font-size:9px;color:#555;letter-spacing:2px;text-transform:uppercase;margin-top:1px}
 .stat-desc{font-size:9px;color:#555;letter-spacing:2px;text-transform:uppercase;margin-top:5px}
 
+/* monthly summary 左右並排 */
+.ms-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0}
+.ms-box{padding:16px 12px;border-right:1px solid rgba(200,168,0,0.1);text-align:center}
+.ms-box:last-child{border-right:none}
+.ms-metrics{display:flex;align-items:flex-end;gap:0;justify-content:center}
+.ms-metric{flex:1;min-width:0;text-align:center}
+.ms-metric .ms-val{font-size:20px;font-weight:700;color:#c8a800;letter-spacing:1px;line-height:1;font-family:'Share Tech Mono',monospace}
+.ms-metric .ms-unit{font-size:9px;color:#555;letter-spacing:2px;text-transform:uppercase;margin-top:1px}
+.ms-vdiv{width:1px;background:rgba(200,168,0,.15);align-self:stretch;margin:2px 8px 6px;flex-shrink:0}
+.ms-label{font-size:9px;color:#555;letter-spacing:2px;text-transform:uppercase;margin-top:6px}
+
 /* scrollable body */
 .main-body{flex:1;overflow-y:auto;padding-bottom:40px}
 
@@ -412,6 +423,15 @@ html,body{height:100%;background:#0a0a0a;color:#ccc;font-family:'Rajdhani',sans-
 
     <!-- main scrollable body -->
     <div class="main-body">
+
+    <!-- monthly summary -->
+      <div class="section" id="monthly-summary-section" style="padding-top:16px;padding-bottom:16px">
+        <div class="sec-title">
+          <span class="sec-title-bar"></span>
+          Monthly Summary
+        </div>
+        <div class="ms-grid" id="ms-cards"></div>
+      </div>
 
       <!-- monthly perf chart -->
       <div class="section">
@@ -746,6 +766,18 @@ function render(data) {
     tgtRow('Monthly Runs',    mgFinal.run?.count    || 0, mgFinal.run?.target    || 4),
     tgtRow('Monthly Swim',    mgFinal.swim?.count   || 0, mgFinal.swim?.target   || 4),
     tgtRow('Monthly Gym',     mgFinal.weight?.count || 0, mgFinal.weight?.target || 10),
+  ].join('')
+
+  // ── monthly summary cards ──
+  const ms = data.monthly_summary || {}
+  const msM = (v, u) => `<div class="ms-metric"><div class="ms-val">${v}</div><div class="ms-unit">${u}</div></div>`
+  const msDiv = '<div class="ms-vdiv"></div>'
+  const msHr = v => v != null ? v : '—'
+  document.getElementById('ms-cards').innerHTML = [
+    `<div class="ms-box">${msM(ms.ride_km??0,'KM')}${msDiv}${msM(msHr(ms.ride_hr),'HR')}<div class="ms-label">🚴 RIDE</div></div>`,
+    `<div class="ms-box">${msM(ms.run_km??0,'KM')}${msDiv}${msM(msHr(ms.run_hr),'HR')}<div class="ms-label">🏃 RUN</div></div>`,
+    `<div class="ms-box">${msM(ms.swim_m??0,'M')}${msDiv}${msM(msHr(ms.swim_hr),'HR')}<div class="ms-label">🏊 SWIM</div></div>`,
+    `<div class="ms-box">${msM(ms.weight_count??0,'TIMES')}${msDiv}${msM(msHr(ms.weight_hr),'HR')}<div class="ms-label">🏋️ GYM</div></div>`,
   ].join('')
 
   // ── activity log ──
