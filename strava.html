@@ -378,7 +378,7 @@ function renderTimeline(list, type, expanded) {
         const tags = []
         if (aIsSwim && a.distance_km)   tags.push(`<span class="tag">🏊 ${Math.round(a.distance_km * 1000)} m</span>`)
         tags.push(`<span class="tag">⏱ ${fmtMovingTime(a.moving_time_hr || 0)}</span>`)
-        if (!aIsWeight && !aIsSwim && a.elevation_m != null) tags.push(`<span class="tag">↑${a.elevation_m}m</span>`)
+        if (!aIsWeight && !aIsSwim && a.elevation_m >= 100) tags.push(`<span class="tag">↑${a.elevation_m}m</span>`)
         if (aIsRun && a.avg_pace_km)     tags.push(`<span class="tag">💨 ${a.avg_pace_km}/km</span>`)
         if (aIsRun && a.avg_cadence_spm) tags.push(`<span class="tag">🦵 ${a.avg_cadence_spm} spm</span>`)
         if (!aIsRun && !aIsSwim && !aIsWeight && a.avg_speed_kmh) tags.push(`<span class="tag">${a.avg_speed_kmh} km/h</span>`)
@@ -393,7 +393,7 @@ function renderTimeline(list, type, expanded) {
         <div class="activity-card">
           <div class="activity-icon"><svg viewBox="0 0 24 24">${aIcon}</svg></div>
           <div class="activity-info">
-            <div class="activity-name">${a.name || '—'}</div>
+            <div class="activity-name">${a.trainer ? '🏠 ' : ''}${a.name || '—'}</div>
             <div class="activity-meta">${tags.join('')}</div>
             ${lapHtml}
           </div>

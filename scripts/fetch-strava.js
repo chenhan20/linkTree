@@ -279,6 +279,7 @@ function buildJSON(stats, activities) {
     avg_speed_kmh:  Math.round(a.average_speed * 36) / 10,
     avg_heartrate:  a.average_heartrate ? Math.round(a.average_heartrate) : null,
     avg_watts:      a.average_watts     ? Math.round(a.average_watts)     : null,
+    trainer:        a.trainer || false,
   }))
 
   const recentRuns = activities.filter(a => isType(a, RUN_TYPES)).slice(0, 20).map(a => ({

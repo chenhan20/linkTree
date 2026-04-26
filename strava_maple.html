@@ -574,7 +574,7 @@ function renderTimeline(list, type, expanded){
         if (aIsRide && a.avg_speed_kmh)  metas.push(`${a.avg_speed_kmh} km/h`)
         if (aIsRun  && a.avg_pace_km)    metas.push(`${a.avg_pace_km}/km`)
         if (aIsSwim && a.pace_per_100m)  metas.push(`${a.pace_per_100m}/100m`)
-        if (!aIsWeight && !aIsSwim && a.elevation_m != null) metas.push(`${a.elevation_m} m`)
+        if (!aIsWeight && !aIsSwim && a.elevation_m >= 100) metas.push(`${a.elevation_m} m`)
         if (a.avg_heartrate)             metas.push(`♥ ${a.avg_heartrate}`)
         metas.push(fmtMovingTime(a.moving_time_hr || 0))
         const lapHtml = (aIsRide && a.top_laps && a.top_laps.length)
@@ -589,7 +589,7 @@ function renderTimeline(list, type, expanded){
           <div class="act-card">
             <div class="act-icon">${meta.icon}</div>
             <div class="act-info">
-              <div class="act-name">${a.name || '—'}</div>
+              <div class="act-name">${a.trainer ? '🏠 ' : ''}${a.name || '—'}</div>
               <div class="act-meta">${metas.join('<span class="sep">·</span>')}</div>
               ${lapHtml}
             </div>
