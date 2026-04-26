@@ -211,6 +211,31 @@ html,body{height:100%;background:#0a0a0a;color:#ccc;font-family:'Rajdhani',sans-
 .tgt-count{font-size:12px;font-weight:700;color:#bbb;white-space:nowrap;width:50px;text-align:right;flex-shrink:0;font-family:'Share Tech Mono',monospace}
 .tgt-check{font-size:16px;width:22px;text-align:center;flex-shrink:0}
 
+/* ITT segments */
+.seg-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:2rem}
+@media(max-width:600px){.seg-grid{grid-template-columns:1fr}}
+.seg-card{background:rgba(255,255,255,.02);border:1px solid rgba(200,168,0,.15);border-radius:4px;padding:1rem}
+.seg-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.6rem}
+.seg-name{font-size:12px;font-weight:700;color:#ddd;line-height:1.3;letter-spacing:.5px}
+.seg-dist{font-size:10px;color:#666;margin-top:2px;letter-spacing:1px}
+.seg-pr-badge{display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0;margin-left:.5rem}
+.seg-pr-time{font-size:16px;font-weight:700;color:#c8a800;font-family:'Share Tech Mono',monospace}
+.seg-pr-label{font-size:8px;color:#666;letter-spacing:2px;text-transform:uppercase}
+.seg-table{width:100%;border-collapse:collapse;font-size:11px}
+.seg-table th{color:#555;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:4px 0;border-bottom:1px solid rgba(200,168,0,.1);text-align:left}
+.seg-table th:not(:first-child){text-align:right}
+.seg-table td{padding:5px 0;color:#777;border-bottom:1px solid rgba(255,255,255,.03);vertical-align:middle;letter-spacing:.5px}
+.seg-table td:not(:first-child){text-align:right;font-family:'Share Tech Mono',monospace}
+.seg-row-pr td{color:#c8a800 !important;font-weight:700}
+.seg-details{margin-top:.5rem}
+.seg-details summary{cursor:pointer;font-size:11px;color:#555;letter-spacing:1px;list-style:none;padding:5px 0;user-select:none;outline:none;display:flex;align-items:center;gap:5px}
+.seg-details summary::-webkit-details-marker{display:none}
+.seg-details summary .arr{font-size:9px;transition:transform .2s;display:inline-block}
+.seg-details[open] summary .arr{transform:rotate(90deg)}
+.seg-details summary:hover{color:#c8a800}
+.seg-crown{font-size:12px;margin-right:3px}
+.seg-time-pr{color:#c8a800 !important}
+
 /* activity log */
 .log-table{width:100%;border-collapse:collapse}
 .log-table thead th{
@@ -230,6 +255,9 @@ html,body{height:100%;background:#0a0a0a;color:#ccc;font-family:'Rajdhani',sans-
 .log-date-marker::before{content:'▶';font-size:8px}
 .log-sport-icon{margin-right:5px;font-size:15px}
 .log-name{color:#ccc;font-weight:600;letter-spacing:.5px}
+.indoor-tag,.bike-tag{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:700;letter-spacing:.5px;line-height:1;border-radius:2px;padding:2px 5px 2px 4px;vertical-align:middle;margin-right:4px;flex-shrink:0;white-space:nowrap}
+.indoor-tag{background:rgba(200,168,0,.1);color:#c8a800;border:1px solid rgba(200,168,0,.3)}
+.bike-tag{background:rgba(80,220,180,.08);color:#40d8a8;border:1px solid rgba(80,220,180,.3)}
 .log-detail{color:#666;font-size:11px;letter-spacing:.5px}
 .log-dist{color:#c8a800;font-weight:700;letter-spacing:1px;font-family:'Share Tech Mono',monospace}
 .log-speed{color:#777;font-size:11px}
@@ -417,6 +445,12 @@ html,body{height:100%;background:#0a0a0a;color:#ccc;font-family:'Rajdhani',sans-
 
       <!-- activity log -->
       <div class="section">
+        <div class="sec-title"><span class="sec-title-bar"></span>ITT Segments</div>
+        <div class="seg-grid" id="seg-grid"></div>
+      </div>
+
+      <!-- activity log -->
+      <div class="section">
         <div class="sec-title"><span class="sec-title-bar"></span>Activity Log</div>
         <table class="log-table">
           <thead>
@@ -475,6 +509,8 @@ const SPORT = {
   swim:   { icon: '🏊', label: '游泳', sub: 'Swimming', color: '#4090e8' },
   weight: { icon: '🏋️', label: '重訓', sub: 'Training', color: '#40c840' },
 }
+const INDOOR_TAG = '<span class="indoor-tag"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.5" fill="currentColor" stroke="none"/><line x1="12" y1="9.5" x2="12" y2="3"/><line x1="12" y1="14.5" x2="12" y2="21"/><line x1="9.5" y1="12" x2="3" y2="12"/><line x1="14.5" y1="12" x2="21" y2="12"/></svg>飛輪機</span>'
+const BIKE_TAG   = '<span class="bike-tag"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12,2 15.5,8.5 22,9.5 17,14.5 18.5,22 12,18.5 5.5,22 7,14.5 2,9.5 8.5,8.5"/></svg>TCR Pro 0</span>'
 
 function rankOf(km) {
   if (km >= 6000) return { rank: 'LEGEND', badge: '🥇', min: 6000, max: 10000 }
@@ -750,7 +786,7 @@ function render(data) {
           : ''
         return `<tr>
           <td></td>
-          <td><span class="log-sport-icon">${sp.icon}</span><span class="log-name">${a.trainer ? '🏠 ' : ''}${a.name || '—'}</span></td>
+          <td><span class="log-sport-icon">${sp.icon}</span><span class="log-name">${a.trainer ? INDOOR_TAG : (a._type === 'ride' ? BIKE_TAG : '')}${a.name || '—'}</span></td>
           <td class="log-detail">${detail}</td>
           <td class="log-dist">${dist}</td>
           <td class="log-speed">${speed}</td>
@@ -773,6 +809,44 @@ function render(data) {
       tbody.innerHTML = buildLogRows()
     }
   })
+
+  // ── ITT segments ──
+  const segGrid = document.getElementById('seg-grid')
+  if (segGrid && Array.isArray(data.segments) && data.segments.length > 0) {
+    segGrid.innerHTML = data.segments.map(seg => {
+      const rows = seg.efforts.map(e => {
+        const crown = e.is_pr ? '<span class="seg-crown">👑</span>' : ''
+        const watts = e.avg_watts ? `${e.avg_watts}W` : '—'
+        const hr    = e.avg_heartrate ? `${e.avg_heartrate}` : '—'
+        return `<tr class="${e.is_pr ? 'seg-row-pr' : ''}">
+          <td>${e.date.slice(5).replace('-','/')}</td>
+          <td class="${e.is_pr ? 'seg-time-pr' : ''}">${crown}${e.elapsed_str}</td>
+          <td>${watts}</td>
+          <td>${hr}</td>
+        </tr>`
+      }).join('')
+      return `<div class="seg-card">
+        <div class="seg-header">
+          <div>
+            <div class="seg-name">${seg.name}</div>
+            <div class="seg-dist">${seg.distance_km} km</div>
+          </div>
+          ${seg.pr_time_str ? `<div class="seg-pr-badge">
+            <div class="seg-pr-time">${seg.pr_time_str}</div>
+            <div class="seg-pr-label">PR</div>
+          </div>` : ''}
+        </div>
+        <details class="seg-details"><summary><span class="arr">▶</span>歷史記錄 ${seg.efforts.length} 次</summary>
+        <table class="seg-table">
+          <thead><tr><th>日期</th><th>時間</th><th>功率</th><th>HR</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+        </details>
+      </div>`
+    }).join('')
+  } else if (segGrid) {
+    segGrid.closest('.section').style.display = 'none'
+  }
 
   // ── animate bars ──
   requestAnimationFrame(() => {
