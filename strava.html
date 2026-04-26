@@ -57,6 +57,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 }
 .stat-val{font-size:20px;font-weight:600;color:#FF6B35;line-height:1}
 .stat-unit{font-size:10px;color:rgba(252,76,2,.55);margin-top:2px}
+.stat-sub{font-size:11px;color:rgba(252,76,2,.5);margin-top:1px}
 .stat-label{font-size:11px;color:#777;margin-top:5px}
 
 /* ── monthly consistency ── */
@@ -312,12 +313,15 @@ const STATUS_META = {
 }
 function renderMonthlySummary(ms) {
   if (!ms) return ''
+  const rideHr = ms.ride_hr != null ? `<div class="stat-sub">${ms.ride_hr} hr</div>` : ''
+  const runHr  = ms.run_hr  != null ? `<div class="stat-sub">${ms.run_hr} hr</div>`  : ''
+  const swimHr = ms.swim_hr != null ? `<div class="stat-sub">${ms.swim_hr} hr</div>` : ''
   return `
     <div class="section-title">本月訓練量 <span class="muted">· MONTHLY SUMMARY</span></div>
     <div class="stats-grid">
-      <div class="stat-card"><div class="stat-val">${ms.ride_km ?? 0}</div><div class="stat-unit">km</div><div class="stat-label">🚴 單車</div></div>
-      <div class="stat-card"><div class="stat-val">${ms.run_km ?? 0}</div><div class="stat-unit">km</div><div class="stat-label">🏃 跑步</div></div>
-      <div class="stat-card"><div class="stat-val">${ms.swim_m ?? 0}</div><div class="stat-unit">m</div><div class="stat-label">🏊 游泳</div></div>
+      <div class="stat-card"><div class="stat-val">${ms.ride_km ?? 0}</div><div class="stat-unit">km</div>${rideHr}<div class="stat-label">🚴 單車</div></div>
+      <div class="stat-card"><div class="stat-val">${ms.run_km ?? 0}</div><div class="stat-unit">km</div>${runHr}<div class="stat-label">🏃 跑步</div></div>
+      <div class="stat-card"><div class="stat-val">${ms.swim_m ?? 0}</div><div class="stat-unit">m</div>${swimHr}<div class="stat-label">🏔️ 游泳</div></div>
       <div class="stat-card"><div class="stat-val">${ms.weight_count ?? 0}</div><div class="stat-unit">次</div><div class="stat-label">🏋️ 重訓</div></div>
     </div>`
 }

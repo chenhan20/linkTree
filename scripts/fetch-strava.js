@@ -127,7 +127,7 @@ const SEGMENT_IDS = new Set([641218, 1761462, 7032136])
 const SEGMENT_CUSTOM_NAMES = {
   641218:  '風櫃嘴ITT',
   1761462: '中社路ITT',
-  7032136: '社子島ITT',
+  7032136: '圓山-社子島砍鴨頭ITT',
 }
 
 // 秒 → "M:SS" 或 "H:MM:SS"
@@ -526,8 +526,11 @@ function buildJSON(stats, activities) {
 
   const monthly_summary = {
     ride_km:      Math.round(monthRides.reduce((s, a) => s + (a.distance || 0), 0) / 10) / 100,
+    ride_hr:      Math.round(monthRides.reduce((s, a) => s + (a.moving_time || 0), 0) / 360) / 10,
     run_km:       Math.round(monthRuns.reduce((s, a) => s + (a.distance || 0), 0) / 10) / 100,
+    run_hr:       Math.round(monthRuns.reduce((s, a) => s + (a.moving_time || 0), 0) / 360) / 10,
     swim_m:       Math.round(monthSwims.reduce((s, a) => s + (a.distance || 0), 0)),
+    swim_hr:      Math.round(monthSwims.reduce((s, a) => s + (a.moving_time || 0), 0) / 360) / 10,
     weight_count: monthWeights.length,
   }
 
