@@ -180,11 +180,11 @@ html,body{height:100%;background:#0a0a0a;color:#ccc;font-family:'Rajdhani',sans-
 .sec-title-extra{margin-left:auto;font-size:9px;color:#555;font-weight:400}
 
 /* chart */
-.chart-wrap{position:relative;width:100%;height:250px}
+.chart-wrap{position:relative;width:100%;height:260px}
 #perf-chart{display:block;width:100%;height:100%}
-.chart-legend{display:flex;gap:18px;margin-top:10px;flex-wrap:wrap}
-.legend-item{display:flex;align-items:center;gap:6px;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#666}
-.legend-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.chart-legend{display:flex;gap:16px;margin-top:14px;flex-wrap:wrap;align-items:center}
+.legend-item{display:flex;align-items:center;gap:7px;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#666;cursor:default}
+.legend-line{width:22px;height:2.5px;border-radius:2px;flex-shrink:0}
 
 /* two-col */
 .two-col{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid rgba(200,168,0,0.07)}
@@ -442,10 +442,10 @@ html,body{height:100%;background:#0a0a0a;color:#ccc;font-family:'Rajdhani',sans-
         </div>
         <div class="chart-wrap"><canvas id="perf-chart"></canvas></div>
         <div class="chart-legend">
-          <div class="legend-item"><div class="legend-dot" style="background:#e84040"></div>騎乘 (Rides)</div>
-          <div class="legend-item"><div class="legend-dot" style="background:#c8a800"></div>跑步 (Running)</div>
-          <div class="legend-item"><div class="legend-dot" style="background:#4090e8"></div>游泳 (Swimming)</div>
-          <div class="legend-item"><div class="legend-dot" style="background:#40c840"></div>重訓 (Training)</div>
+          <div class="legend-item"><div class="legend-line" style="background:#e84040"></div>🚴 RIDE (km)</div>
+          <div class="legend-item"><div class="legend-line" style="background:#c8a800"></div>🏃 RUN (km)</div>
+          <div class="legend-item"><div class="legend-line" style="background:#4090e8"></div>🏊 SWIM (m)</div>
+          <div class="legend-item"><div class="legend-line" style="background:#40c840"></div>🏋️ GYM (次)</div>
         </div>
       </div>
 
@@ -538,7 +538,7 @@ function rankOf(km) {
   return { rank: 'RECRUIT', badge: '🎽', min: 0, max: 500 }
 }
 
-// ── canvas chart ──
+// ── canvas line chart ──
 function drawChart(canvas, history) {
   const dpr = window.devicePixelRatio || 1
   const W = canvas.offsetWidth, H = canvas.offsetHeight
@@ -547,99 +547,116 @@ function drawChart(canvas, history) {
   const ctx = canvas.getContext('2d')
   ctx.scale(dpr, dpr)
 
-  const pad = { top: 16, right: 16, bottom: 36, left: 32 }
+  const pad = { top: 24, right: 20, bottom: 38, left: 36 }
   const cW = W - pad.left - pad.right
   const cH = H - pad.top  - pad.bottom
 
-  // chronological order, last 12 months
   const months = history.slice().sort((a, b) => a.month.localeCompare(b.month)).slice(-12)
-  if (!months.length) return
+  if (months.length < 2) return
 
   const series = [
-    { color: '#e84040', alpha: 'rgba(232,64,64,',  gv: h => h.ride?.count || 0 },
-    { color: '#c8a800', alpha: 'rgba(200,168,0,',  gv: h => h.run?.count  || 0 },
-    { color: '#4090e8', alpha: 'rgba(64,144,232,', gv: h => h.swim?.count || 0 },
-    { color: '#40c840', alpha: 'rgba(64,200,64,',  gv: h => h.weight_training?.count || 0 },
+    { color:'#e84040', rgb:'232,64,64',  gv: h => h.ride?.distance_km || 0 },
+    { color:'#c8a800', rgb:'200,168,0',  gv: h => h.run?.distance_km  || 0 },
+    { color:'#4090e8', rgb:'64,144,232', gv: h => (h.swim?.distance_km||0)*1000 },
+    { color:'#40c840', rgb:'64,200,64',  gv: h => h.weight_training?.count || 0 },
   ]
-  const allVals = series.flatMap(s => months.map(s.gv))
-  const maxVal  = Math.max(...allVals, 5)
 
   const MON = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC']
-  const now  = new Date()
-  const thisMonth = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0')
+  const now = new Date(Date.now() + 8*3600*1000)
+  const thisMonth = now.getUTCFullYear() + '-' + String(now.getUTCMonth()+1).padStart(2,'0')
+  const n = months.length
 
-  const nSeries = series.length
-  const groupW  = cW / months.length
-  const barGap  = 2
-  const barW    = Math.max(3, (groupW - barGap * (nSeries + 1)) / nSeries)
+  // normalize each series to its own max so all lines fill the chart
+  const normalized = series.map(s => {
+    const vals = months.map(s.gv)
+    const mx = Math.max(...vals, 1)
+    return { ...s, vals, mx }
+  })
 
-  // y grid lines
-  const gridSteps = 5
-  for (let i = 0; i <= gridSteps; i++) {
-    const y = pad.top + (i / gridSteps) * cH
-    const val = Math.round(maxVal * (1 - i / gridSteps))
-    ctx.strokeStyle = 'rgba(200,168,0,0.07)'
-    ctx.lineWidth = 1
+  const xOf = i => pad.left + (i / (n - 1)) * cW
+  const yOf = (val, mx) => pad.top + cH - (val / mx) * cH * 0.88
+
+  // current month highlight column
+  months.forEach((h, i) => {
+    if (h.month === thisMonth) {
+      ctx.fillStyle = 'rgba(200,168,0,0.04)'
+      const x0 = i === 0 ? xOf(0) : (xOf(i-1) + xOf(i)) / 2
+      const x1 = i === n-1 ? xOf(n-1) : (xOf(i) + xOf(i+1)) / 2
+      ctx.fillRect(x0, pad.top, x1 - x0, cH)
+    }
+  })
+
+  // horizontal dashed grid lines
+  ctx.setLineDash([4, 6])
+  ctx.lineWidth = 1
+  ;[0.25, 0.5, 0.75, 1.0].forEach(frac => {
+    const y = pad.top + cH - frac * cH * 0.88
+    ctx.strokeStyle = 'rgba(200,168,0,0.08)'
     ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(pad.left + cW, y); ctx.stroke()
-    if (val > 0) {
-      ctx.fillStyle = 'rgba(160,130,0,0.5)'
-      ctx.font = '9px Rajdhani,sans-serif'
-      ctx.textAlign = 'right'
-      ctx.fillText(val, pad.left - 5, y + 3)
+  })
+  ctx.setLineDash([])
+
+  // series: gradient fill + bezier line + dots
+  normalized.forEach(s => {
+    const pts = s.vals.map((v, i) => ({ x: xOf(i), y: yOf(v, s.mx) }))
+
+    // gradient fill
+    ctx.beginPath()
+    ctx.moveTo(pts[0].x, pad.top + cH)
+    ctx.lineTo(pts[0].x, pts[0].y)
+    for (let i = 1; i < pts.length; i++) {
+      const cpx = (pts[i-1].x + pts[i].x) / 2
+      ctx.bezierCurveTo(cpx, pts[i-1].y, cpx, pts[i].y, pts[i].x, pts[i].y)
     }
-  }
+    ctx.lineTo(pts[pts.length-1].x, pad.top + cH)
+    ctx.closePath()
+    const grad = ctx.createLinearGradient(0, pad.top, 0, pad.top + cH)
+    grad.addColorStop(0,   `rgba(${s.rgb},0.20)`)
+    grad.addColorStop(0.6, `rgba(${s.rgb},0.05)`)
+    grad.addColorStop(1,   `rgba(${s.rgb},0)`)
+    ctx.fillStyle = grad
+    ctx.fill()
 
-  // bars
-  months.forEach((h, mi) => {
-    const isCurrentMonth = h.month === thisMonth
-    const groupX = pad.left + mi * groupW + barGap
-
-    // highlight current month bg
-    if (isCurrentMonth) {
-      ctx.fillStyle = 'rgba(200,168,0,0.05)'
-      ctx.fillRect(pad.left + mi * groupW, pad.top, groupW, cH)
+    // bezier line
+    ctx.beginPath()
+    ctx.moveTo(pts[0].x, pts[0].y)
+    for (let i = 1; i < pts.length; i++) {
+      const cpx = (pts[i-1].x + pts[i].x) / 2
+      ctx.bezierCurveTo(cpx, pts[i-1].y, cpx, pts[i].y, pts[i].x, pts[i].y)
     }
+    ctx.strokeStyle = s.color
+    ctx.lineWidth = 2
+    ctx.lineJoin = 'round'
+    ctx.stroke()
 
-    series.forEach((s, si) => {
-      const val = s.gv(h)
-      if (val === 0) return
-      const bH  = (val / maxVal) * cH
-      const bX  = groupX + si * (barW + barGap)
-      const bY  = pad.top + cH - bH
-
-      // gradient fill
-      const grad = ctx.createLinearGradient(0, bY, 0, bY + bH)
-      grad.addColorStop(0, s.alpha + '0.9)')
-      grad.addColorStop(1, s.alpha + '0.3)')
-      ctx.fillStyle = grad
-      ctx.fillRect(bX, bY, barW, bH)
-
-      // top accent line
-      ctx.fillStyle = s.color
-      ctx.fillRect(bX, bY, barW, 2)
-
-      // value label on top if bar is tall enough
-      if (bH > 16) {
+    // dots
+    pts.forEach((p, i) => {
+      const v = s.vals[i]
+      ctx.beginPath(); ctx.arc(p.x, p.y, 3.5, 0, Math.PI*2)
+      ctx.fillStyle = s.color; ctx.fill()
+      ctx.beginPath(); ctx.arc(p.x, p.y, 1.8, 0, Math.PI*2)
+      ctx.fillStyle = '#0a0a0a'; ctx.fill()
+      // peak label
+      if (v === s.mx && v > 0) {
         ctx.fillStyle = s.color
-        ctx.font = 'bold 8px Rajdhani,sans-serif'
+        ctx.font = 'bold 9px Rajdhani,sans-serif'
         ctx.textAlign = 'center'
-        ctx.fillText(val, bX + barW / 2, bY - 3)
+        ctx.fillText(Math.round(v), p.x, p.y - 9)
       }
     })
+  })
 
-    // x label
+  // x month labels
+  months.forEach((h, i) => {
     const mIdx = parseInt(h.month.slice(5)) - 1
-    ctx.fillStyle = isCurrentMonth ? '#c8a800' : 'rgba(160,130,0,0.4)'
-    ctx.font = isCurrentMonth ? 'bold 9px Rajdhani,sans-serif' : '9px Rajdhani,sans-serif'
+    const isCur = h.month === thisMonth
+    ctx.fillStyle = isCur ? '#c8a800' : 'rgba(160,130,0,0.38)'
+    ctx.font = isCur ? 'bold 9px Rajdhani,sans-serif' : '9px Rajdhani,sans-serif'
     ctx.textAlign = 'center'
-    ctx.fillText(MON[mIdx] || '', pad.left + mi * groupW + groupW / 2, pad.top + cH + 18)
-
-    // current month indicator
-    if (isCurrentMonth) {
-      ctx.fillStyle = '#c8a800'
-      ctx.font = '7px Rajdhani,sans-serif'
-      ctx.textAlign = 'center'
-      ctx.fillText('▲', pad.left + mi * groupW + groupW / 2, pad.top + cH + 28)
+    ctx.fillText(MON[mIdx] || '', xOf(i), pad.top + cH + 16)
+    if (isCur) {
+      ctx.fillStyle = 'rgba(200,168,0,0.6)'
+      ctx.fillRect(xOf(i) - 12, pad.top + cH + 21, 24, 1.5)
     }
   })
 }
