@@ -606,7 +606,7 @@ function renderSegments(segs) {
       const crown = e.is_pr ? '<span class="seg-crown">👑</span>' : ''
       const watts = e.avg_watts ? `${e.avg_watts}W` : '—'
       const hr    = e.avg_heartrate ? `${e.avg_heartrate}` : '—'
-      return `<tr class="${e.is_pr ? 'seg-row-pr' : ''}" data-date="${(e.date||'').slice(0,10)}" style="cursor:pointer" title="跳至活動紀錄">
+      return `<tr class="${e.is_pr ? 'seg-row-pr' : ''}" data-date="${(e.date||'').slice(0,10)}" data-actid="${e.activity_id || ''}" style="cursor:pointer" title="跳至活動紀錄">
         <td>${e.date.slice(5).replace('-','/')}</td>
         <td class="${e.is_pr ? 'seg-time-pr' : ''}">${crown}${e.elapsed_str}</td>
         <td>${watts}</td>
@@ -697,7 +697,8 @@ function renderTimeline(list, type, expanded, ittMap){
           ? ittMap[date].map(it => {
               const isPr = it.is_pr
               const crown = isPr ? '👑' : `<span style="font-size:11px;color:#888">#${it.attemptNum}</span>`
-              const attempt = isPr ? `第${it.attemptNum}次 · 🏆 PR 最佳成績！` : `第${it.attemptNum} / ${it.total} 次挑戰`
+              const rankStr = it.rank ? (it.rank === 1 ? '🥇 第1名' : `第${it.rank}名`) : ''
+              const attempt = isPr ? `第${it.attemptNum}次 · 🏆 PR ${rankStr}` : `第${it.attemptNum} / ${it.total} 次 · ${rankStr}`
               return `<div class="itt-badge${isPr ? ' pr' : ''}">
                 <div class="itt-crown">${crown}</div>
                 <div class="itt-info">
@@ -784,10 +785,12 @@ function render(data){
   const ittMap = {}
   ;(data.segments || []).forEach(seg => {
     const sorted = seg.efforts.slice().sort((a, b) => (a.date || '').localeCompare(b.date || ''))
+    const byTime = seg.efforts.slice().sort((a, b) => (a.elapsed_sec || 0) - (b.elapsed_sec || 0))
+    const rankOf = {}; byTime.forEach((e, i) => { rankOf[e.activity_id] = i + 1 })
     sorted.forEach((e, idx) => {
       const d = (e.date || '').slice(0, 10)
       if (!ittMap[d]) ittMap[d] = []
-      ittMap[d].push({ segName: seg.name, elapsed_str: e.elapsed_str, is_pr: e.is_pr, attemptNum: idx + 1, total: sorted.length })
+      ittMap[d].push({ segName: seg.name, elapsed_str: e.elapsed_str, is_pr: e.is_pr, attemptNum: idx + 1, total: sorted.length, rank: rankOf[e.activity_id], activityId: e.activity_id })
     })
   })
 
@@ -844,6 +847,7 @@ function render(data){
     const tr = e.target.closest('tr[data-date]')
     if (!tr) return
     const date = tr.dataset.date
+    const actId = tr.dataset.actid || ''
     const actEl = document.getElementById('act-' + date)
     if (actEl) {
       actEl.scrollIntoView({ behavior: 'smooth', block: 'center' })
@@ -862,10 +866,12 @@ function render(data){
           setTimeout(() => el.classList.remove('act-highlight'), 1500)
         } else {
           const toast = document.createElement('div')
-          toast.textContent = `📅 ${date} 的活動不在最近記錄內`
-          toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#fff5d8;color:#8a5a2b;border:2px solid #8a5a2b;padding:8px 18px;border-radius:6px;font-size:12px;letter-spacing:1px;z-index:9999;pointer-events:none'
+          toast.innerHTML = actId
+            ? `📅 ${date} 不在最近記錄 &nbsp;<a href="https://www.strava.com/activities/${actId}" target="_blank" style="color:#c54a0d;font-weight:700;text-decoration:underline">前往 Strava ↗</a>`
+            : `📅 ${date} 的活動不在最近記錄內`
+          toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#fff5d8;color:#8a5a2b;border:2px solid #8a5a2b;padding:8px 18px;border-radius:6px;font-size:12px;letter-spacing:1px;z-index:9999'
           document.body.appendChild(toast)
-          setTimeout(() => toast.remove(), 2500)
+          setTimeout(() => toast.remove(), 3500)
         }
       }, 80)
     }
