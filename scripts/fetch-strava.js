@@ -532,6 +532,7 @@ function buildJSON(stats, activities) {
     swim_m:       Math.round(monthSwims.reduce((s, a) => s + (a.distance || 0), 0)),
     swim_hr:      Math.round(monthSwims.reduce((s, a) => s + (a.moving_time || 0), 0) / 360) / 10,
     weight_count: monthWeights.length,
+    weight_hr:    Math.round(monthWeights.reduce((s, a) => s + (a.moving_time || 0), 0) / 360) / 10,
   }
 
   const TARGET = 4
