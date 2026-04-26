@@ -1,6 +1,15 @@
 // fetch-strava.js
 // 每天由 GitHub Actions 執行，抓 Strava 資料寫入 strava.json
 // 本機測試：在 scripts/.env 填入憑證後執行 node scripts/fetch-strava.js
+//
+// 環境變數旗標：
+//   FETCH_ALL=1       —— 分頁抓全部歷史活動（首次需要；之後預設只抓最近 100 筆即可）
+//   SCAN_SEGMENTS=1   —— 對全史 ride 打 detail API，補抓 ITT segment efforts
+//   REFRESH_LAPS=1    —— 忽略 lap 快取重抓
+//   LAP_FETCH_MAX=N   —— 單次執行最多打多少次 detail API 補 lap（預設 30）避免撞 Strava 限流
+//
+// 首次全量範例 (PowerShell)：
+//   $env:FETCH_ALL="1"; $env:SCAN_SEGMENTS="1"; node scripts/fetch-strava.js
 
 const fs = require('fs')
 const path = require('path')
@@ -189,7 +198,11 @@ function extractTopLaps(laps) {
 }
 
 // ── Step 4b：Lap enrichment（ID-based 快取，避免重複打 API）──
+// LAP_FETCH_MAX：對沒有 cache 的 ride，最多打多少次 detail API（避免拉到全史時撞 Strava 限流）。
+//   設成 0 表示停用 lap detail；REFRESH_LAPS=1 會無視快取重新抓（仍受 LAP_FETCH_MAX 限制）。
 async function enrichRideLaps(token, recentRides, existingRides, existingSegments) {
+  const LAP_FETCH_MAX = parseInt(process.env.LAP_FETCH_MAX || '30', 10)
+
   // 從舊 JSON 建 id → top_laps 快取
   const cache = {}
   if (process.env.REFRESH_LAPS !== '1') {
@@ -209,6 +222,8 @@ async function enrichRideLaps(token, recentRides, existingRides, existingSegment
   // 新收集的 segment efforts：{ [segId]: [...] }
   const newSegEfforts = {}
 
+  // recentRides 已是日期降冪（map 自原始 activities），最新在前；只對前 LAP_FETCH_MAX 筆未 cache 的打 detail
+  let detailBudget = LAP_FETCH_MAX
   let fetchCount = 0
   for (const ride of recentRides) {
     if (ride.id == null) { ride.top_laps = []; continue }
@@ -220,6 +235,12 @@ async function enrichRideLaps(token, recentRides, existingRides, existingSegment
       ride.top_laps = cache[key] || []
       continue
     }
+    if (detailBudget <= 0) {
+      // 預算用完：給空 laps，segment 部分留給 SCAN_SEGMENTS 模式處理
+      ride.top_laps = cache[key] || []
+      continue
+    }
+    detailBudget--
     // 需要打 API
     try {
       await new Promise(r => setTimeout(r, 350))
@@ -386,7 +407,7 @@ function buildJSON(stats, activities) {
   const WEIGHT_TYPES = ['WeightTraining', 'Workout', 'CrossFit', 'Yoga', 'Pilates']
 
   function isType(a, types) { return types.includes(a.type) }
-  function sumDist(arr) { return Math.round(arr.reduce((s, a) => s + a.distance, 0) / 10) / 100 }
+  function sumDist(arr) { return Math.round(arr.reduce((s, a) => s + a.distance, 0) / 100) / 10 }
   function sumElev(arr) { return Math.round(arr.reduce((s, a) => s + a.total_elevation_gain, 0)) }
 
   // ── 計算 monthly_history（FETCH_ALL 時算全部月份，否則只算本月）──
@@ -445,7 +466,8 @@ function buildJSON(stats, activities) {
   function localDate(a) { return (a.start_date_local || a.start_date).slice(0, 10) }
   function localTime(a) { return (a.start_date_local || a.start_date).slice(11, 16) }
 
-  const recentRides = activities.filter(a => isType(a, RIDE_TYPES)).slice(0, 20).map(a => ({
+  // 保留所有活動（不再 slice），並都帶上 id 以便 UI 顯示「前往 Strava」連結
+  const recentRides = activities.filter(a => isType(a, RIDE_TYPES)).map(a => ({
     id:             a.id,
     name:           a.name,
     date:           localDate(a),
@@ -459,7 +481,8 @@ function buildJSON(stats, activities) {
     trainer:        a.trainer || false,
   }))
 
-  const recentRuns = activities.filter(a => isType(a, RUN_TYPES)).slice(0, 20).map(a => ({
+  const recentRuns = activities.filter(a => isType(a, RUN_TYPES)).map(a => ({
+    id:             a.id,
     name:           a.name,
     date:           localDate(a),
     time:           localTime(a),
@@ -471,7 +494,8 @@ function buildJSON(stats, activities) {
     avg_heartrate:  a.average_heartrate ? Math.round(a.average_heartrate) : null,
   }))
 
-  const recentSwims = activities.filter(a => isType(a, SWIM_TYPES)).slice(0, 20).map(a => ({
+  const recentSwims = activities.filter(a => isType(a, SWIM_TYPES)).map(a => ({
+    id:               a.id,
     name:             a.name,
     date:             localDate(a),
     time:             localTime(a),
@@ -481,7 +505,8 @@ function buildJSON(stats, activities) {
     avg_heartrate:    a.average_heartrate ? Math.round(a.average_heartrate) : null,
   }))
 
-  const recentWeights = activities.filter(a => isType(a, WEIGHT_TYPES)).slice(0, 20).map(a => ({
+  const recentWeights = activities.filter(a => isType(a, WEIGHT_TYPES)).map(a => ({
+    id:            a.id,
     name:          a.name,
     date:          localDate(a),
     time:          localTime(a),
@@ -525,9 +550,9 @@ function buildJSON(stats, activities) {
   const monthWeights = monthActs.filter(a => isType(a, WEIGHT_TYPES))
 
   const monthly_summary = {
-    ride_km:      Math.round(monthRides.reduce((s, a) => s + (a.distance || 0), 0) / 10) / 100,
+    ride_km:      Math.round(monthRides.reduce((s, a) => s + (a.distance || 0), 0) / 100) / 10,
     ride_hr:      Math.round(monthRides.reduce((s, a) => s + (a.moving_time || 0), 0) / 360) / 10,
-    run_km:       Math.round(monthRuns.reduce((s, a) => s + (a.distance || 0), 0) / 10) / 100,
+    run_km:       Math.round(monthRuns.reduce((s, a) => s + (a.distance || 0), 0) / 100) / 10,
     run_hr:       Math.round(monthRuns.reduce((s, a) => s + (a.moving_time || 0), 0) / 360) / 10,
     swim_m:       Math.round(monthSwims.reduce((s, a) => s + (a.distance || 0), 0)),
     swim_hr:      Math.round(monthSwims.reduce((s, a) => s + (a.moving_time || 0), 0) / 360) / 10,
@@ -555,15 +580,15 @@ function buildJSON(stats, activities) {
   return {
     updated_at: new Date().toISOString(),
     summary: {
-      ytd_distance_km:      Math.round(s.ytd_ride_totals.distance / 10) / 100,
+      ytd_distance_km:      Math.round(s.ytd_ride_totals.distance / 100) / 10,
       ytd_elevation_m:      Math.round(s.ytd_ride_totals.elevation_gain),
       ytd_rides:            s.ytd_ride_totals.count,
       ytd_moving_time_hr:   Math.round(s.ytd_ride_totals.moving_time / 360) / 10,
-      ytd_run_distance_km:  Math.round(s.ytd_run_totals.distance / 10) / 100,
+      ytd_run_distance_km:  Math.round(s.ytd_run_totals.distance / 100) / 10,
       ytd_runs:             s.ytd_run_totals.count,
-      ytd_swim_distance_km: Math.round((s.ytd_swim_totals?.distance || 0) / 10) / 100,
+      ytd_swim_distance_km: Math.round((s.ytd_swim_totals?.distance || 0) / 100) / 10,
       ytd_swims:            s.ytd_swim_totals?.count || 0,
-      all_time_distance_km: Math.round(s.all_ride_totals.distance / 10) / 100,
+      all_time_distance_km: Math.round(s.all_ride_totals.distance / 100) / 10,
       all_time_rides:       s.all_ride_totals.count,
       all_time_elevation_m: Math.round(s.all_ride_totals.elevation_gain),
     },

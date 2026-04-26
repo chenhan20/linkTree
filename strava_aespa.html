@@ -69,16 +69,16 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 /* ── stats grid ── */
 .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:1.5rem 0 2.2rem}
 .stat-card{
-  padding:.9rem 1rem;border-radius:10px;
+  padding:1rem 1rem 1.1rem;border-radius:10px;
   background:rgba(168,85,247,.06);
   backdrop-filter:blur(8px);
   border:1px solid rgba(168,85,247,.3);
   box-shadow:0 0 15px rgba(168,85,247,.1),inset 0 1px 0 rgba(255,255,255,.08);
 }
-.stat-val{font-size:20px;font-weight:600;color:#e879f9;line-height:1}
-.stat-unit{font-size:10px;color:rgba(168,85,247,.55);margin-top:2px}
-.stat-label{font-size:11px;color:#777;margin-top:8px}
-.stat-metrics{display:flex;align-items:flex-end;gap:0}
+.stat-val{font-size:26px;font-weight:700;color:#e879f9;line-height:1}
+.stat-unit{font-size:10px;color:rgba(168,85,247,.55);margin-top:3px}
+.stat-label{font-size:12px;color:#bbb;margin-bottom:9px;letter-spacing:.5px}
+.stat-metrics{display:flex;align-items:flex-start;gap:0}
 .stat-metric{flex:1;min-width:0}
 .stat-vdiv{width:1px;background:rgba(168,85,247,.2);align-self:stretch;margin:2px 10px 6px;flex-shrink:0}
 
@@ -96,7 +96,13 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 .consistency-name .count{font-size:12px;color:#aaa;margin-left:4px}
 .consistency-name .count b{color:#c084fc;font-weight:600}
 .progress-bar{position:relative;height:8px;border-radius:6px;background:rgba(168,85,247,.1);overflow:hidden;border:1px solid rgba(168,85,247,.15)}
-.progress-fill{height:100%;border-radius:6px;width:0;transition:width .8s cubic-bezier(.25,.46,.45,.94);box-shadow:0 0 8px rgba(168,85,247,.4)}
+.progress-fill{position:relative;height:100%;border-radius:6px;width:0;transition:width .8s cubic-bezier(.25,.46,.45,.94);box-shadow:0 0 8px rgba(168,85,247,.4);overflow:hidden}
+.progress-fill::after{
+  content:'';position:absolute;top:0;left:-60%;width:50%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);
+  animation:aespa-shimmer 2.4s ease-in-out infinite;border-radius:6px;
+}
+@keyframes aespa-shimmer{0%{left:-60%}60%,100%{left:110%}}
 .progress-fill.danger {background:linear-gradient(90deg,#5a0e6a,#d04680)}
 .progress-fill.warning{background:linear-gradient(90deg,#5a3a9a,#e0a020)}
 .progress-fill.done   {background:linear-gradient(90deg,#4a1a9e,#a855f7,#c084fc)}
@@ -121,9 +127,12 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 /* act highlight flash */
 .act-highlight{animation:actFlash .9s ease-out}
 @keyframes actFlash{0%,40%{background:rgba(168,85,247,.22);border-color:rgba(168,85,247,.6)}100%{background:inherit;border-color:inherit}}
-/* strava inline link */
-.act-strava-link{display:inline-block;margin-left:6px;font-size:10px;color:rgba(168,85,247,.45);text-decoration:none;vertical-align:middle;line-height:1}
-.act-strava-link:hover{color:#a855f7}
+/* strava link button */
+.act-strava-link{display:inline-flex;align-items:center;gap:2px;flex-shrink:0;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;color:rgba(168,85,247,.95);text-decoration:none;border:1px solid rgba(168,85,247,.45);background:rgba(168,85,247,.1);white-space:nowrap;line-height:1.4;transition:background .15s,border-color .15s}
+.act-strava-link:hover{background:rgba(168,85,247,.25);border-color:#a855f7}
+.activity-name-wrap{display:flex;align-items:center;gap:8px;min-width:0}
+.lap-toggle{background:transparent;border:none;color:rgba(168,85,247,.6);font-size:10px;cursor:pointer;padding:2px 4px;letter-spacing:.5px;display:inline-block}
+.lap-toggle:hover{color:#a855f7}
 
 /* ── section title ── */
 .section-title{
@@ -240,7 +249,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 }
 .activity-icon svg{width:24px;height:24px;fill:#a855f7}
 .activity-info{flex:1;min-width:0}
-.activity-name{font-size:16px;font-weight:500;color:#eeebe8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.activity-name{font-size:16px;font-weight:500;color:#eeebe8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0}
 .indoor-tag,.bike-tag{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;line-height:1;border-radius:3px;padding:2px 5px 2px 4px;vertical-align:middle;margin-right:5px;flex-shrink:0;white-space:nowrap}
 .indoor-tag{background:rgba(168,85,247,.12);color:#a855f7;border:1px solid rgba(168,85,247,.3)}
 .bike-tag{background:rgba(100,200,255,.08);color:#60c8f0;border:1px solid rgba(100,200,255,.3)}
@@ -357,46 +366,223 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 </div>
 
 <script>
-/* ── purple star canvas ── */
+/* ── aespa animated background (extra flashy) ── */
 ;(function(){
   const c=document.getElementById('star-canvas'),ctx=c.getContext('2d')
-  let W,H,stars=[],nebs=[]
+  let W,H,stars=[],orbs=[],grid=[],glyphs=[],comets=[],rings=[],bolts=[],t=0,flash=0
+  const SYMS=['æ','Æ','⬡','◆','✦','✧','⬟','◇','★','✴','♢','✺','❉']
   function resize(){
-    W=c.width=innerWidth;H=c.height=innerHeight
-    nebs=[
-      {x:W*.2,y:H*.15,r:260,cr:'rgba(100,20,180,'},
-      {x:W*.8,y:H*.75,r:200,cr:'rgba(140,30,200,'},
-      {x:W*.5,y:H*.5,r:150,cr:'rgba(60,10,120,'}
+    W=c.width=innerWidth; H=c.height=innerHeight
+    orbs=[
+      {x:W*.15,y:H*.2, r:W*.28, a:0, da:.004, hueBase:280, hueAmp:30, phase:0},
+      {x:W*.85,y:H*.8, r:W*.24, a:0, da:.0028,hueBase:310, hueAmp:35, phase:1.2},
+      {x:W*.5, y:H*.5, r:W*.34, a:0, da:.002, hueBase:260, hueAmp:25, phase:2.3},
+      {x:W*.3, y:H*.85,r:W*.18, a:0, da:.0035,hueBase:325, hueAmp:30, phase:.7},
+      {x:W*.75,y:H*.15,r:W*.16, a:0, da:.0042,hueBase:200, hueAmp:40, phase:1.8},
     ]
+  }
+  function spawnComet(){
+    const fromLeft=Math.random()>.5
+    const y=Math.random()*H*.7
+    comets.push({
+      x: fromLeft?-50:W+50, y,
+      vx:(fromLeft?1:-1)*(8+Math.random()*6),
+      vy:1.5+Math.random()*2,
+      life:1, len:90+Math.random()*70,
+      hue:270+Math.random()*70
+    })
+  }
+  function spawnRing(){
+    rings.push({
+      x:Math.random()*W, y:Math.random()*H,
+      r:5, maxR:120+Math.random()*80,
+      a:.7, hue:260+Math.random()*80
+    })
+  }
+  function spawnBolt(){
+    const x=Math.random()*W
+    const segs=[]
+    let cx=x, cy=0
+    while(cy<H){
+      const nx=cx+(Math.random()-.5)*60
+      const ny=cy+25+Math.random()*35
+      segs.push([nx,ny])
+      cx=nx; cy=ny
+    }
+    bolts.push({x,segs,life:1,hue:280+Math.random()*40})
+    flash=Math.min(1,flash+.25)
   }
   function init(){
     stars=[]
-    const n=Math.floor(W*H/1800)
+    const n=Math.floor(W*H/1100)
     for(let i=0;i<n;i++) stars.push({
-      x:Math.random()*W,y:Math.random()*H,
-      r:Math.random()*1.5+.15,
-      a:Math.random(),da:(Math.random()-.5)*.006,
-      speed:Math.random()*.08+.01
+      x:Math.random()*W, y:Math.random()*H,
+      r:Math.random()*1.6+.25,
+      a:Math.random()*.9, da:(Math.random()-.5)*.012,
+      speed:Math.random()*.12+.01,
+      pink:Math.random()>.5,
+      twinkle:Math.random()>.85
     })
+    grid=[]
+    const spacing=64
+    for(let x=0;x<=W;x+=spacing) grid.push({type:'v',pos:x,phase:Math.random()*6})
+    for(let y=0;y<=H;y+=spacing) grid.push({type:'h',pos:y,phase:Math.random()*6})
+    glyphs=[]
+    for(let i=0;i<22;i++) glyphs.push({
+      x:Math.random()*W, y:Math.random()*H,
+      ch:SYMS[Math.floor(Math.random()*SYMS.length)],
+      a:0, da:(Math.random()>.5?.002:-.002),
+      maxA:Math.random()*.14+.05,
+      sz:Math.floor(Math.random()*24+12),
+      speed:Math.random()*.5+.15,
+      dx:(Math.random()-.5)*.4,
+      rot:Math.random()*Math.PI*2,
+      drot:(Math.random()-.5)*.01,
+      hueBase:260+Math.random()*80
+    })
+    comets=[]; rings=[]; bolts=[]
+  }
+  function drawGrid(){
+    ctx.save()
+    grid.forEach(g=>{
+      const alpha=.04+.04*Math.sin(t*.6+g.phase)
+      const hue=270+30*Math.sin(t*.3+g.phase)
+      ctx.strokeStyle=`hsla(${hue},80%,65%,${alpha})`
+      ctx.lineWidth=.6; ctx.beginPath()
+      if(g.type==='v'){ctx.moveTo(g.pos,0);ctx.lineTo(g.pos,H)}
+      else{ctx.moveTo(0,g.pos);ctx.lineTo(W,g.pos)}
+      ctx.stroke()
+    })
+    ctx.restore()
   }
   function draw(){
     ctx.clearRect(0,0,W,H)
-    nebs.forEach(n=>{
-      const g=ctx.createRadialGradient(n.x,n.y,0,n.x,n.y,n.r)
-      g.addColorStop(0,n.cr+'.2)')
-      g.addColorStop(1,'transparent')
-      ctx.fillStyle=g;ctx.beginPath();ctx.arc(n.x,n.y,n.r,0,Math.PI*2);ctx.fill()
-    })
-    stars.forEach(s=>{
-      s.a+=s.da;if(s.a<0||s.a>1)s.da*=-1
-      s.y-=s.speed;if(s.y<0)s.y=H
-      ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2)
-      ctx.fillStyle='rgba(200,150,255,'+s.a+')'
+    t+=.016
+    // ===== aurora waves (more layers, more color) =====
+    for(let k=0;k<5;k++){
+      ctx.save()
+      const baseY=H*(.2+k*.13)
+      const hue=260+k*18+20*Math.sin(t*.4+k)
+      const grd=ctx.createLinearGradient(0,baseY,W,baseY+H*.2)
+      grd.addColorStop(0,'transparent')
+      grd.addColorStop(.3,`hsla(${hue},85%,60%,${.06+.025*Math.sin(t*.7+k)})`)
+      grd.addColorStop(.7,`hsla(${hue+30},90%,70%,${.05+.02*Math.cos(t*.5+k)})`)
+      grd.addColorStop(1,'transparent')
+      ctx.fillStyle=grd
+      ctx.beginPath()
+      ctx.moveTo(0,baseY)
+      for(let i=1;i<=14;i++){
+        const px=i/14*W, py=baseY+Math.sin(t*.6+i*.5+k*1.7)*H*.07
+        ctx.lineTo(px,py)
+      }
+      ctx.lineTo(W,H); ctx.lineTo(0,H); ctx.closePath()
       ctx.fill()
+      ctx.restore()
+    }
+    // ===== nebula orbs (hue cycling) =====
+    orbs.forEach(o=>{
+      o.a+=o.da; if(o.a<-.4||o.a>.4)o.da*=-1
+      const hue=o.hueBase+Math.sin(t*.3+o.phase)*o.hueAmp
+      const grd=ctx.createRadialGradient(o.x,o.y,0,o.x,o.y,o.r)
+      grd.addColorStop(0,`hsla(${hue},90%,60%,${.22+o.a*.1})`)
+      grd.addColorStop(.5,`hsla(${hue+20},85%,50%,${.08+o.a*.05})`)
+      grd.addColorStop(1,'transparent')
+      ctx.fillStyle=grd; ctx.beginPath(); ctx.arc(o.x,o.y,o.r,0,Math.PI*2); ctx.fill()
     })
+    // ===== cyber grid =====
+    drawGrid()
+    // ===== pulse rings =====
+    if(Math.random()<.018) spawnRing()
+    rings=rings.filter(r=>{
+      r.r+=2.4; r.a*=.972
+      ctx.save()
+      ctx.strokeStyle=`hsla(${r.hue},90%,68%,${r.a})`
+      ctx.lineWidth=2
+      ctx.shadowColor=`hsla(${r.hue},90%,70%,${r.a})`; ctx.shadowBlur=14
+      ctx.beginPath(); ctx.arc(r.x,r.y,r.r,0,Math.PI*2); ctx.stroke()
+      ctx.restore()
+      return r.r<r.maxR && r.a>.04
+    })
+    // ===== stars (twinkle + glow) =====
+    stars.forEach(s=>{
+      s.a+=s.da; if(s.a<0||s.a>1)s.da*=-1
+      s.y-=s.speed; if(s.y<-2)s.y=H
+      const aa=s.twinkle?s.a*(.5+.5*Math.sin(t*8+s.x*.05)):s.a
+      ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2)
+      ctx.fillStyle=s.pink?`rgba(244,114,255,${aa*.85})`:`rgba(170,120,255,${aa*.7})`
+      if(s.twinkle){ctx.shadowColor='rgba(232,121,249,.9)'; ctx.shadowBlur=8}
+      ctx.fill()
+      ctx.shadowBlur=0
+    })
+    // ===== shooting stars / comets =====
+    if(Math.random()<.025) spawnComet()
+    comets=comets.filter(co=>{
+      co.x+=co.vx; co.y+=co.vy; co.life*=.985
+      const tx=co.x-co.vx*co.len/10, ty=co.y-co.vy*co.len/10
+      const grd=ctx.createLinearGradient(co.x,co.y,tx,ty)
+      grd.addColorStop(0,`hsla(${co.hue},95%,75%,${co.life})`)
+      grd.addColorStop(1,`hsla(${co.hue},95%,75%,0)`)
+      ctx.strokeStyle=grd; ctx.lineWidth=2.2
+      ctx.shadowColor=`hsla(${co.hue},95%,80%,${co.life})`; ctx.shadowBlur=12
+      ctx.beginPath(); ctx.moveTo(co.x,co.y); ctx.lineTo(tx,ty); ctx.stroke()
+      ctx.shadowBlur=0
+      // head
+      ctx.fillStyle=`hsla(${co.hue},100%,90%,${co.life})`
+      ctx.beginPath(); ctx.arc(co.x,co.y,2.2,0,Math.PI*2); ctx.fill()
+      return co.life>.05 && co.x>-100 && co.x<W+100 && co.y<H+50
+    })
+    // ===== lightning bolts (rare flash) =====
+    if(Math.random()<.004) spawnBolt()
+    bolts=bolts.filter(b=>{
+      b.life*=.82
+      ctx.save()
+      ctx.strokeStyle=`hsla(${b.hue},100%,85%,${b.life})`
+      ctx.lineWidth=1.6
+      ctx.shadowColor=`hsla(${b.hue},100%,75%,${b.life})`; ctx.shadowBlur=18
+      ctx.beginPath(); ctx.moveTo(b.x,0)
+      b.segs.forEach(([x,y])=>ctx.lineTo(x,y))
+      ctx.stroke()
+      ctx.restore()
+      return b.life>.05
+    })
+    // global flash overlay (when bolt strikes)
+    if(flash>.01){
+      ctx.fillStyle=`rgba(220,180,255,${flash*.08})`
+      ctx.fillRect(0,0,W,H)
+      flash*=.88
+    }
+    // ===== floating rotating glyphs =====
+    glyphs.forEach(g=>{
+      g.a+=g.da; if(g.a<0||g.a>g.maxA)g.da*=-1
+      g.y-=g.speed; g.x+=g.dx; g.rot+=g.drot
+      if(g.y<-30)g.y=H+20
+      if(g.x<-30)g.x=W+20
+      if(g.x>W+30)g.x=-20
+      const hue=g.hueBase+Math.sin(t*.5+g.x*.01)*30
+      ctx.save()
+      ctx.translate(g.x,g.y); ctx.rotate(g.rot)
+      ctx.font=`${g.sz}px serif`
+      ctx.shadowColor=`hsla(${hue},90%,70%,${g.a*2})`; ctx.shadowBlur=10
+      ctx.fillStyle=`hsla(${hue},90%,75%,${g.a*1.4})`
+      ctx.fillText(g.ch,0,0)
+      ctx.restore()
+    })
+    // ===== animated scan line (brighter, double) =====
+    const scanY=((t*80)%H)
+    const scanGrd=ctx.createLinearGradient(0,scanY-10,0,scanY+10)
+    scanGrd.addColorStop(0,'transparent')
+    scanGrd.addColorStop(.5,`hsla(${280+30*Math.sin(t)},90%,70%,.08)`)
+    scanGrd.addColorStop(1,'transparent')
+    ctx.fillStyle=scanGrd; ctx.fillRect(0,scanY-10,W,20)
+    const scan2=((t*40+H*.5)%H)
+    const sg2=ctx.createLinearGradient(0,scan2-6,0,scan2+6)
+    sg2.addColorStop(0,'transparent')
+    sg2.addColorStop(.5,`hsla(320,90%,75%,.05)`)
+    sg2.addColorStop(1,'transparent')
+    ctx.fillStyle=sg2; ctx.fillRect(0,scan2-6,W,12)
     requestAnimationFrame(draw)
   }
-  resize();init();draw()
+  resize(); init(); draw()
   addEventListener('resize',()=>{resize();init()})
 })()
 
@@ -411,6 +597,13 @@ const INDOOR_TAG = '<span class="indoor-tag"><svg width="10" height="10" viewBox
 const BIKE_TAG   = '<span class="bike-tag"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12,2 15.5,8.5 22,9.5 17,14.5 18.5,22 12,18.5 5.5,22 7,14.5 2,9.5 8.5,8.5"/></svg>TCR Pro 0</span>'
 
 /* ── helpers ── */
+function toggleLaps(btn, gid) {
+  const els = [...document.querySelectorAll('[data-lapgrp="' + gid + '"]')]
+  if (!els.length) return
+  const show = els[0].style.display === 'none'
+  els.forEach(e => { e.style.display = show ? '' : 'none' })
+  btn.textContent = show ? '▲ 收起' : '▼ +' + els.length + ' 分段'
+}
 function fmtMovingTime(hr) {
   // PRD FR-4: 避免 "1:00" 歧義，改為 "45 分" / "1 小時" / "1 小時 30 分"
   const totalMin = Math.max(0, Math.round((hr || 0) * 60))
@@ -440,10 +633,10 @@ function renderMonthlySummary(ms) {
   return `
     <div class="section-title"><span>✦</span> 本月訓練量 <span style="color:rgba(168,85,247,.4);font-size:10px">· MONTHLY SUMMARY</span></div>
     <div class="stats-grid">
-      <div class="stat-card"><div class="stat-metrics">${m(ms.ride_km??0,'km')}${div}${m(hr(ms.ride_hr),'hr')}</div><div class="stat-label">🚴 單車</div></div>
-      <div class="stat-card"><div class="stat-metrics">${m(ms.run_km??0,'km')}${div}${m(hr(ms.run_hr),'hr')}</div><div class="stat-label">🏃 跑步</div></div>
-      <div class="stat-card"><div class="stat-metrics">${m(ms.swim_m??0,'m')}${div}${m(hr(ms.swim_hr),'hr')}</div><div class="stat-label">🏔️ 游泳</div></div>
-      <div class="stat-card"><div class="stat-metrics">${m(ms.weight_count??0,'次')}${div}${m(hr(ms.weight_hr),'hr')}</div><div class="stat-label">🏋️ 重訓</div></div>
+      <div class="stat-card"><div class="stat-label">🚴 單車</div><div class="stat-metrics">${m((+(ms.ride_km??0)).toFixed(1),'km')}${div}${m(hr(ms.ride_hr),'hr')}</div></div>
+      <div class="stat-card"><div class="stat-label">🏃 跑步</div><div class="stat-metrics">${m((+(ms.run_km??0)).toFixed(1),'km')}${div}${m(hr(ms.run_hr),'hr')}</div></div>
+      <div class="stat-card"><div class="stat-label">🏔️ 游泳</div><div class="stat-metrics">${m(ms.swim_m??0,'m')}${div}${m(hr(ms.swim_hr),'hr')}</div></div>
+      <div class="stat-card"><div class="stat-label">🏋️ 重訓</div><div class="stat-metrics">${m(ms.weight_count??0,'次')}${div}${m(hr(ms.weight_hr),'hr')}</div></div>
     </div>`
 }
 function renderMonthlyGoals(mg) {
@@ -487,6 +680,14 @@ function renderWeeklyQuest(wq) {
 }
 function renderSegments(segs) {
   if (!segs || segs.length === 0) return ''
+  const _today = new Date(Date.now() + 8*3600*1000).toISOString().slice(0,10)
+  const _sincePRLine = (efforts) => {
+    const pr = efforts.find(e => e.is_pr)
+    if (!pr || !pr.date) return ''
+    const d = Math.max(0, Math.round((Date.parse(_today) - Date.parse(pr.date.slice(0,10))) / 86400000))
+    if (d === 0) return `<div class="seg-since-pr" style="margin:6px 0 10px;padding:7px 11px;font-size:11.5px;background:linear-gradient(90deg,rgba(232,121,249,.2),rgba(168,85,247,.04));border-left:3px solid #e879f9;border-radius:4px;letter-spacing:.5px;color:#f3d4ff">✨ 今天創下最快紀錄！</div>`
+    return `<div class="seg-since-pr" style="margin:6px 0 10px;padding:7px 11px;font-size:11.5px;background:rgba(168,85,247,.06);border-left:3px solid rgba(168,85,247,.55);border-radius:4px;letter-spacing:.5px;color:rgba(243,212,255,.88)">⏱ 距PR紀錄已 <b style="font-weight:700;color:#e879f9">${d}</b> 天</div>`
+  }
   const cards = segs.map(seg => {
     const rowArr = seg.efforts.map(e => {
       const crown = e.is_pr ? '<span class="seg-crown">👑</span>' : ''
@@ -516,6 +717,7 @@ function renderSegments(segs) {
           <div class="seg-pr-label">PR</div>
         </div>` : ''}
       </div>
+      ${_sincePRLine(seg.efforts)}
       <table class="seg-table">
         <thead><tr><th>日期</th><th>時間</th><th>功率</th><th>HR</th></tr></thead>
         <tbody>${visRows}</tbody>${extraTbody}
@@ -582,12 +784,17 @@ function renderTimeline(list, type, expanded, ittMap) {
         if (!aIsRun && !aIsSwim && !aIsWeight && a.avg_speed_kmh) tags.push(`<span class="tag">${a.avg_speed_kmh} km/h</span>`)
         if (aIsSwim && a.pace_per_100m)  tags.push(`<span class="tag">💧 ${a.pace_per_100m}/100m</span>`)
         if (a.avg_heartrate)             tags.push(`<span class="tag hr">♥️ ${a.avg_heartrate} bpm</span>`)
-        const lapHtml = (aIsRide && a.top_laps && a.top_laps.length)
-          ? a.top_laps.map(lap =>
-              `<div class="lap-strip"><span class="lap-name">🏁 ${lap.name}</span><span class="lap-tag">⏱ ${lap.moving_time_str}</span>${lap.average_heartrate ? `<span class="lap-tag">♥️ ${lap.average_heartrate}</span>` : ''}${lap.average_watts ? `<span class="lap-tag">⚡ ${lap.average_watts}W</span>` : ''}</div>`
-            ).join('')
-          : ''
-        const stravaLink = a.id ? `<a class="act-strava-link" href="https://www.strava.com/activities/${a.id}" target="_blank" rel="noopener" title="在 Strava 上查看">↗</a>` : ''
+        const lapArr = (aIsRide && a.top_laps) ? a.top_laps.slice(0, 10) : []
+        const lapHtml = lapArr.length ? (() => {
+          const lid = a.id || Math.floor(Date.now()*Math.random())
+          const mkLap = l => `<div class="lap-strip"><span class="lap-name">🏁 ${l.name}</span><span class="lap-tag">⏱ ${l.moving_time_str}</span>${l.average_heartrate?`<span class="lap-tag">♥️ ${l.average_heartrate}</span>`:''}${l.average_watts?`<span class="lap-tag">⚡ ${l.average_watts}W</span>`:''}</div>`
+          const vis = lapArr.slice(0,3).map(mkLap).join('')
+          const hidLaps = lapArr.slice(3)
+          if (!hidLaps.length) return vis
+          return vis + hidLaps.map(l=>mkLap(l).replace('<div class="lap-strip">',`<div class="lap-strip" data-lapgrp="${lid}" style="display:none">`)).join('') +
+            `<button class="lap-toggle" onclick="toggleLaps(this,'${lid}')">▼ +${hidLaps.length} 分段</button>`
+        })() : ''
+        const stravaLink = a.id ? `<a class="act-strava-link" href="https://www.strava.com/activities/${a.id}" target="_blank" rel="noopener">Strava ↗</a>` : ''
         const ittBadges = (aIsRide && ittMap && ittMap[date])
           ? ittMap[date].map(it => {
               const isPr = it.is_pr
@@ -608,12 +815,12 @@ function renderTimeline(list, type, expanded, ittMap) {
         <div class="activity-card">
           <div class="activity-icon"><svg viewBox="0 0 24 24">${aIcon}</svg></div>
           <div class="activity-info">
-            <div class="activity-name">${a.trainer ? INDOOR_TAG : (aIsRide ? BIKE_TAG : '')}${a.name || '—'}${stravaLink}</div>
+            <div class="activity-name-wrap"><div class="activity-name">${a.trainer ? INDOOR_TAG : (aIsRide ? BIKE_TAG : '')}${a.name || '—'}</div>${stravaLink}</div>
             <div class="activity-meta">${tags.join('')}</div>
             ${lapHtml}
             ${ittBadges}
           </div>
-          ${(!aIsWeight && !aIsSwim && a.distance_km) ? `<div class="activity-dist">${a.distance_km}<small style="font-size:11px;font-weight:400;margin-left:2px">km</small></div>` : ''}
+          ${(!aIsWeight && !aIsSwim && a.distance_km) ? `<div class="activity-dist">${a.distance_km}<small style="font-size:11px;font-weight:400;margin-left:2px">km</small></div>` : (!aIsWeight && aIsSwim && a.distance_km) ? `<div class="activity-dist">${Math.round(a.distance_km*1000)}<small style="font-size:11px;font-weight:400;margin-left:2px">m</small></div>` : ''}
         </div>`
       }).join('')}
     </div>
@@ -796,15 +1003,15 @@ function render(data) {
 
     <div class="totals-grid">
       <div class="total-card">
-        <div class="total-val">${s.all_time_distance_km ?? '—'}</div>
+        <div class="total-val">${typeof s.all_time_distance_km==='number'?s.all_time_distance_km.toLocaleString():s.all_time_distance_km??'—'}</div>
         <div class="total-label">Total KM</div>
       </div>
       <div class="total-card">
-        <div class="total-val">${s.all_time_elevation_m ?? '—'}</div>
+        <div class="total-val">${typeof s.all_time_elevation_m==='number'?s.all_time_elevation_m.toLocaleString():s.all_time_elevation_m??'—'}</div>
         <div class="total-label">Total Elev</div>
       </div>
       <div class="total-card">
-        <div class="total-val">${s.all_time_rides ?? '—'}</div>
+        <div class="total-val">${typeof s.all_time_rides==='number'?s.all_time_rides.toLocaleString():s.all_time_rides??'—'}</div>
         <div class="total-label">Total Rides</div>
       </div>
     </div>
@@ -948,6 +1155,7 @@ fetch('strava.json')
     <a href="strava_aespa.html" class="ts-item active"><span class="ts-icon">💜</span><span class="ts-name">Purple</span><span class="ts-sub">Aespa</span></a>
     <a href="strava_maple.html" class="ts-item"><span class="ts-icon">🍁</span><span class="ts-name">Maple</span><span class="ts-sub">Pixel</span></a>
     <a href="strava_cs.html"   class="ts-item"><span class="ts-icon">🎯</span><span class="ts-name">CS</span><span class="ts-sub">Tactical</span></a>
+    <a href="strava_lol.html"  class="ts-item"><span class="ts-icon">⚔️</span><span class="ts-name">LoL</span><span class="ts-sub">Summoner</span></a>
   </div>
 </div>
 <style>
@@ -998,6 +1206,20 @@ fetch('strava.json')
       btn.classList.remove('open')
     }
   })
+})();
+
+/* ── To Top ── */
+;(function(){
+  const b = document.createElement('button')
+  b.id = 'to-top-btn'
+  b.textContent = '▲'
+  b.title = '回到頂部'
+  b.style.cssText = 'position:fixed;bottom:90px;right:22px;z-index:9998;width:38px;height:38px;border-radius:50%;border:1px solid rgba(168,85,247,.5);background:rgba(8,6,20,.8);color:#a855f7;font-size:14px;cursor:pointer;display:none;align-items:center;justify-content:center;backdrop-filter:blur(6px);transition:opacity .2s,background .2s;box-shadow:0 0 10px rgba(168,85,247,.2)'
+  document.body.appendChild(b)
+  window.addEventListener('scroll', () => { b.style.display = window.scrollY > 300 ? 'flex' : 'none' })
+  b.addEventListener('click', () => window.scrollTo({top:0,behavior:'smooth'}))
+  b.addEventListener('mouseenter', () => b.style.background='rgba(168,85,247,.25)')
+  b.addEventListener('mouseleave', () => b.style.background='rgba(8,6,20,.8)')
 })()
 </script>
 </body>

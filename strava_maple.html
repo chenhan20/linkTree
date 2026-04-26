@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>莊成翰 · Strava Cyclist (Maple)</title>
+<title>STEVE · Strava Cyclist (Maple)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Press+Start+2P&display=swap" rel="stylesheet">
@@ -29,10 +29,14 @@ html,body{
   min-height:100%;
   font-family:'DotGothic16','Press Start 2P','Microsoft JhengHei',sans-serif;
   color:var(--ink);
-  background:
-    linear-gradient(#7ec8ee 0%, #a8dff5 45%, #c8ecf8 80%, #d6dca8 100%);
-  background-attachment:fixed;
+  background: url('docs/maple_bg.png') center bottom/cover fixed no-repeat;
   letter-spacing:.5px;
+}
+
+/* dark overlay so text stays readable */
+body::after{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:rgba(0,0,0,.38);
 }
 
 /* pixel cloud field (CSS-only) */
@@ -44,10 +48,13 @@ body::before{
     radial-gradient(circle at 80% 10%, #fff 0 24px, transparent 25px),
     radial-gradient(circle at 86% 16%, #fff 0 18px, transparent 19px),
     radial-gradient(circle at 50% 6%,  #fff 0 16px, transparent 17px);
-  opacity:.85;
+  opacity:.55;
 }
 
-#app{position:relative;z-index:1;max-width:780px;margin:0 auto;padding:14px 14px 60px}
+/* floating items canvas */
+#maple-canvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+
+#app{position:relative;z-index:2;max-width:780px;margin:0 auto;padding:14px 14px 60px}
 
 /* ── pixel-frame mixin via box-shadow staircase ── */
 .frame{
@@ -167,15 +174,15 @@ body::before{
 
 /* ── monthly summary 左右並排 ── */
 .ms-head{font-size:10px;color:var(--wood-2);letter-spacing:2px;margin-bottom:10px;text-align:center}
-.ms-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0;align-items:end}
-.ms-card{text-align:center;padding:4px 6px;border-right:2px dashed rgba(106,66,32,.25)}
+.ms-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0;align-items:start}
+.ms-card{text-align:center;padding:6px 6px 8px;border-right:2px dashed rgba(106,66,32,.25)}
 .ms-card:last-child{border-right:none}
-.ms-metrics{display:flex;align-items:flex-end;gap:0;justify-content:center}
+.ms-metrics{display:flex;align-items:flex-start;gap:0;justify-content:center}
 .ms-metric{flex:1;min-width:0;text-align:center}
-.ms-metric .stat-val{font-size:16px;color:var(--ink);line-height:1.1;font-weight:normal}
+.ms-metric .stat-val{font-size:22px;color:var(--ink);line-height:1.1;font-weight:bold}
 .ms-metric .stat-unit{font-size:9px;color:var(--wood-2);margin-top:1px}
-.ms-vdiv{width:1px;background:rgba(106,66,32,.2);align-self:stretch;margin:2px 5px 4px;flex-shrink:0}
-.ms-card .ms-label{font-size:10px;color:var(--wood-2);letter-spacing:1px;margin-top:4px}
+.ms-vdiv{width:1px;background:rgba(106,66,32,.2);align-self:stretch;margin:2px 4px 4px;flex-shrink:0}
+.ms-card .ms-label{font-size:11px;color:var(--wood-3);letter-spacing:1px;font-weight:bold;margin-bottom:6px}
 
 /* ── two column row (chart + goals) ── */
 .two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
@@ -290,11 +297,11 @@ body::before{
 .seg-pr-badge{display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0;margin-left:.5rem}
 .seg-pr-time{font-family:'Press Start 2P',inherit;font-size:13px;font-weight:700;color:#c54a0d}
 .seg-pr-label{font-size:7px;color:var(--wood-1);letter-spacing:2px;text-transform:uppercase}
-.seg-table{width:100%;border-collapse:collapse;font-size:10px}
-.seg-table th{color:var(--wood-2);font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 0;border-bottom:2px solid var(--wood-2);text-align:left}
-.seg-table th:not(:first-child){text-align:right}
-.seg-table td{padding:4px 0;color:var(--ink);border-bottom:1px solid var(--paper-2);vertical-align:middle}
-.seg-table td:not(:first-child){text-align:right}
+.seg-table{width:100%;border-collapse:collapse;font-size:11px}
+.seg-table th{color:var(--wood-2);font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:5px 8px 5px 0;border-bottom:2px solid var(--wood-2);text-align:left}
+.seg-table th:not(:first-child){text-align:right;padding-left:8px}
+.seg-table td{padding:6px 8px 6px 0;color:var(--ink);border-bottom:1px solid var(--paper-2);vertical-align:middle}
+.seg-table td:not(:first-child){text-align:right;padding-left:8px}
 .seg-row-pr td{color:#c54a0d !important;font-weight:700}
 .seg-more-wrap{margin-top:0}
 .seg-fade{height:30px;margin-top:-30px;background:linear-gradient(transparent,#fff5d8);pointer-events:none}
@@ -340,13 +347,13 @@ body::before{
   display:inline-block;font-family:'Press Start 2P',inherit;
   font-size:10px;background:var(--gold-1);color:var(--wood-3);
   border:2px solid var(--wood-3);border-radius:4px;
-  padding:3px 8px;margin-bottom:6px;margin-left:-22px;
+  padding:3px 8px;margin-bottom:6px;margin-left:4px;
   position:relative;
   box-shadow:0 2px 0 var(--wood-3);
   letter-spacing:1px;
 }
 .timeline-day::before{
-  content:'';position:absolute;left:-22px;top:8px;
+  content:'';position:absolute;left:-12px;top:8px;
   width:11px;height:11px;border-radius:50%;
   background:var(--gold-1);border:2px solid var(--wood-3);
   z-index:1;
@@ -364,7 +371,7 @@ body::before{
   font-size:20px;
 }
 .act-info{flex:1;min-width:0}
-.act-name{font-size:13px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.act-name{font-size:13px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0}
 .indoor-tag,.bike-tag{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:700;line-height:1;border-radius:2px;padding:2px 5px 2px 4px;vertical-align:middle;margin-right:4px;flex-shrink:0;white-space:nowrap}
 .indoor-tag{background:rgba(138,90,43,.12);color:var(--wood-1);border:1px solid rgba(138,90,43,.3)}
 .bike-tag{background:rgba(125,210,74,.1);color:var(--grass-2);border:1px solid rgba(125,210,74,.35)}
@@ -378,8 +385,11 @@ body::before{
 /* act highlight flash & strava link */
 .act-highlight{animation:actFlash .9s ease-out}
 @keyframes actFlash{0%,40%{background:#ffe8b0;border-color:#e87a30}100%{background:#fff5d8;border-color:var(--wood-3)}}
-.act-strava-link{display:inline-block;margin-left:6px;font-size:10px;color:rgba(165,90,30,.45);text-decoration:none;vertical-align:middle}
-.act-strava-link:hover{color:#c54a0d}
+.act-strava-link{display:inline-flex;align-items:center;gap:2px;flex-shrink:0;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;color:rgba(165,90,30,.95);text-decoration:none;border:1px solid rgba(165,90,30,.45);background:rgba(165,90,30,.1);white-space:nowrap;line-height:1.4;transition:background .15s,border-color .15s}
+.act-strava-link:hover{background:rgba(165,90,30,.22);border-color:#c54a0d}
+.act-name-wrap{display:flex;align-items:center;gap:8px;min-width:0}
+.lap-toggle{background:transparent;border:none;color:rgba(165,90,30,.6);font-size:10px;cursor:pointer;padding:2px 4px;letter-spacing:.5px;display:inline-block}
+.lap-toggle:hover{color:#c54a0d}
 
 /* lap strip (cycling only) */
 .act-lap{
@@ -454,6 +464,8 @@ body::before{
 </head>
 <body>
 
+<canvas id="maple-canvas"></canvas>
+
 <div id="app">
   <div class="topbar">
     <a class="back-btn" href="javascript:history.length>1?history.back():location.href='linkTreeIndex.html'">← BACK</a>
@@ -466,7 +478,77 @@ body::before{
 </div>
 
 <script>
+/* ── maple floating canvas ── */
+;(function(){
+  const c=document.getElementById('maple-canvas'),ctx=c.getContext('2d')
+  let W,H,items=[],t=0
+  // sprite emojis & pixel chars to fly around
+  const SPRITES=['🍁','🍂','🍀','🌿','⭐','💛','🌸','🍄','✨','🌟']
+  const PIXEL=['♦','◆','▲','◇','✦']
+  function resize(){ W=c.width=innerWidth; H=c.height=innerHeight }
+  function initItems(){
+    items=[]
+    const n=Math.min(28, Math.floor(W*H/18000)+8)
+    for(let i=0;i<n;i++){
+      const isSprite=Math.random()>.4
+      items.push({
+        x:Math.random()*W,
+        y:Math.random()*H,
+        ch: isSprite ? SPRITES[Math.floor(Math.random()*SPRITES.length)]
+                     : PIXEL[Math.floor(Math.random()*PIXEL.length)],
+        sz: isSprite ? Math.floor(Math.random()*14+10) : Math.floor(Math.random()*12+8),
+        a: Math.random()*.7+.15,
+        da:(Math.random()-.5)*.008,
+        speed:Math.random()*.55+.2,
+        dx:(Math.random()-.5)*.35,
+        rot:Math.random()*Math.PI*2,
+        drot:(Math.random()-.5)*.025,
+        swing:Math.random()*Math.PI*2,
+        swingAmp:Math.random()*1.5+.5,
+        swingFreq:Math.random()*.03+.01,
+        isSprite
+      })
+    }
+  }
+  function draw(){
+    ctx.clearRect(0,0,W,H)
+    t+=.016
+    items.forEach(it=>{
+      it.a+=it.da; if(it.a<.06||it.a>.9)it.da*=-1
+      it.y+=it.speed
+      it.x+=it.dx+Math.sin(t*it.swingFreq+it.swing)*it.swingAmp
+      it.rot+=it.drot
+      if(it.y>H+40){ it.y=-30; it.x=Math.random()*W }
+      if(it.x<-50) it.x=W+30
+      if(it.x>W+50) it.x=-30
+      ctx.save()
+      ctx.globalAlpha=it.a
+      ctx.translate(it.x,it.y)
+      if(!it.isSprite) ctx.rotate(it.rot)
+      if(it.isSprite){
+        ctx.font=`${it.sz}px serif`
+        ctx.fillText(it.ch,0,0)
+      } else {
+        ctx.font=`bold ${it.sz}px monospace`
+        ctx.fillStyle='rgba(255,220,80,.9)'
+        ctx.fillText(it.ch,0,0)
+      }
+      ctx.restore()
+    })
+    requestAnimationFrame(draw)
+  }
+  resize(); initItems(); draw()
+  addEventListener('resize',()=>{ resize(); initItems() })
+})()
+
 /* ── helpers ── */
+function toggleLaps(btn, gid) {
+  const els = [...document.querySelectorAll('[data-lapgrp="' + gid + '"]')]
+  if (!els.length) return
+  const show = els[0].style.display === 'none'
+  els.forEach(e => { e.style.display = show ? '' : 'none' })
+  btn.textContent = show ? '▲ 收起' : '▼ +' + els.length + ' 分段'
+}
 function fmtMovingTime(hr) {
   const totalMin = Math.max(0, Math.round((hr || 0) * 60))
   if (totalMin < 60) return `${totalMin} 分`
@@ -484,7 +566,7 @@ const INDOOR_TAG = '<span class="indoor-tag"><svg width="10" height="10" viewBox
 const BIKE_TAG   = '<span class="bike-tag"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12,2 15.5,8.5 22,9.5 17,14.5 18.5,22 12,18.5 5.5,22 7,14.5 2,9.5 8.5,8.5"/></svg>TCR Pro 0</span>'
 const STATUS_TEXT = { danger:'TRAIN!', warning:'KEEP!', done:'CLEAR!', over:'BONUS!' }
 
-function fmtDate(d){ const [,mm,dd]=d.split('-'); return `${mm} / ${dd}` }
+function fmtDate(d){ const [,mm,dd]=d.split('-'); return `${+mm} / ${+dd}` }
 
 /* ── renderers ── */
 function renderHero(updatedAt){
@@ -495,7 +577,7 @@ function renderHero(updatedAt){
              onerror="this.style.display='none';this.parentElement.innerHTML='🚴'">
       </div>
       <div class="hero-name">
-        <h1>莊成翰</h1>
+        <h1>STEVE</h1>
         <div class="sub">STRAVA CYCLIST</div>
       </div>
       <div class="hero-portal">🌀</div>
@@ -526,10 +608,10 @@ function renderMonthlySummary(ms) {
     <div class="frame">
       <div class="ms-head">🍁 本月訓練量 · MONTHLY SUMMARY</div>
       <div class="ms-grid">
-        <div class="ms-card"><div class="ms-metrics">${m(ms.ride_km??0,'km')}${div}${m(hr(ms.ride_hr),'hr')}</div><div class="ms-label">🚴 單車</div></div>
-        <div class="ms-card"><div class="ms-metrics">${m(ms.run_km??0,'km')}${div}${m(hr(ms.run_hr),'hr')}</div><div class="ms-label">🏃 跑步</div></div>
-        <div class="ms-card"><div class="ms-metrics">${m(ms.swim_m??0,'m')}${div}${m(hr(ms.swim_hr),'hr')}</div><div class="ms-label">🏔️ 游泳</div></div>
-        <div class="ms-card"><div class="ms-metrics">${m(ms.weight_count??0,'次')}${div}${m(hr(ms.weight_hr),'hr')}</div><div class="ms-label">🏋️ 重訓</div></div>
+        <div class="ms-card"><div class="ms-label">🚴 單車</div><div class="ms-metrics">${m((+(ms.ride_km??0)).toFixed(1),'km')}${div}${m(hr(ms.ride_hr),'hr')}</div></div>
+        <div class="ms-card"><div class="ms-label">🏃 跑步</div><div class="ms-metrics">${m((+(ms.run_km??0)).toFixed(1),'km')}${div}${m(hr(ms.run_hr),'hr')}</div></div>
+        <div class="ms-card"><div class="ms-label">🏔️ 游泳</div><div class="ms-metrics">${m(ms.swim_m??0,'m')}${div}${m(hr(ms.swim_hr),'hr')}</div></div>
+        <div class="ms-card"><div class="ms-label">🏋️ 重訓</div><div class="ms-metrics">${m(ms.weight_count??0,'次')}${div}${m(hr(ms.weight_hr),'hr')}</div></div>
       </div>
     </div>`
 }
@@ -601,13 +683,21 @@ function renderGoals(mg){
 
 function renderSegments(segs) {
   if (!segs || segs.length === 0) return ''
+  const _today = new Date(Date.now() + 8*3600*1000).toISOString().slice(0,10)
+  const _sincePRLine = (efforts) => {
+    const pr = efforts.find(e => e.is_pr)
+    if (!pr || !pr.date) return ''
+    const d = Math.max(0, Math.round((Date.parse(_today) - Date.parse(pr.date.slice(0,10))) / 86400000))
+    if (d === 0) return `<div class="seg-since-pr" style="margin:6px 0 10px;padding:7px 11px;font-size:11.5px;background:linear-gradient(90deg,rgba(255,193,7,.22),rgba(255,193,7,.04));border-left:3px solid #ffc107;border-radius:4px;letter-spacing:.5px;color:#fff3c4">⭐ 今天爆击最快紀錄！</div>`
+    return `<div class="seg-since-pr" style="margin:6px 0 10px;padding:7px 11px;font-size:11.5px;background:rgba(0,0,0,.45);border-left:3px solid #ffc107;border-radius:4px;letter-spacing:.5px;color:#ffffff;text-shadow:0 1px 5px rgba(0,0,0,.9)">⏱ 距BOSS記錄已 <b style="font-weight:700;color:#ffd740">${d}</b> 天</div>`
+  }
   const cards = segs.map(seg => {
     const rowArr = seg.efforts.map(e => {
       const crown = e.is_pr ? '<span class="seg-crown">👑</span>' : ''
       const watts = e.avg_watts ? `${e.avg_watts}W` : '—'
       const hr    = e.avg_heartrate ? `${e.avg_heartrate}` : '—'
       return `<tr class="${e.is_pr ? 'seg-row-pr' : ''}" data-date="${(e.date||'').slice(0,10)}" data-actid="${e.activity_id || ''}" style="cursor:pointer" title="跳至活動紀錄">
-        <td>${e.date.slice(5).replace('-','/')}</td>
+        <td>${e.date.slice(5).split('-').map(Number).join('/')}</td>
         <td class="${e.is_pr ? 'seg-time-pr' : ''}">${crown}${e.elapsed_str}</td>
         <td>${watts}</td>
         <td>${hr}</td>
@@ -622,6 +712,7 @@ function renderSegments(segs) {
         <div><div class="seg-name">${seg.name}</div><div class="seg-dist">${seg.distance_km} km</div></div>
         ${seg.pr_time_str ? `<div class="seg-pr-badge"><div class="seg-pr-time">${seg.pr_time_str}</div><div class="seg-pr-label">PR</div></div>` : ''}
       </div>
+      ${_sincePRLine(seg.efforts)}
       <table class="seg-table"><thead><tr><th>日期</th><th>時間</th><th>功率</th><th>HR</th></tr></thead><tbody>${visRows}</tbody>${extraTbody}</table>${moreWrap}
     </div>`
   }).join('')
@@ -684,15 +775,20 @@ function renderTimeline(list, type, expanded, ittMap){
         if (!aIsWeight && !aIsSwim && a.elevation_m >= 100) metas.push(`${a.elevation_m} m`)
         if (a.avg_heartrate)             metas.push(`♥ ${a.avg_heartrate}`)
         metas.push(fmtMovingTime(a.moving_time_hr || 0))
-        const lapHtml = (aIsRide && a.top_laps && a.top_laps.length)
-          ? a.top_laps.map(lap =>
-              `<div class="act-lap"><span class="lap-name">🏁 ${lap.name}</span><span>⏱ ${lap.moving_time_str}</span>${lap.average_heartrate?`<span>♥ ${lap.average_heartrate}</span>`:''}${lap.average_watts?`<span>⚡ ${lap.average_watts}W</span>`:''}</div>`
-            ).join('')
-          : ''
+        const lapArr = (aIsRide && a.top_laps) ? a.top_laps.slice(0, 10) : []
+        const lapHtml = lapArr.length ? (() => {
+          const lid = a.id || Math.floor(Date.now()*Math.random())
+          const mkLap = l => `<div class="act-lap"><span class="lap-name">🏁 ${l.name}</span><span>⏱ ${l.moving_time_str}</span>${l.average_heartrate?`<span>♥ ${l.average_heartrate}</span>`:''}${l.average_watts?`<span>⚡ ${l.average_watts}W</span>`:''}</div>`
+          const vis = lapArr.slice(0,3).map(mkLap).join('')
+          const hidLaps = lapArr.slice(3)
+          if (!hidLaps.length) return vis
+          return vis + hidLaps.map(l=>mkLap(l).replace('<div class="act-lap">',`<div class="act-lap" data-lapgrp="${lid}" style="display:none">`)).join('') +
+            `<button class="lap-toggle" onclick="toggleLaps(this,'${lid}')">▼ +${hidLaps.length} 分段</button>`
+        })() : ''
         const dist = aIsWeight ? '' :
-          aIsSwim ? '' :
+          aIsSwim && a.distance_km ? `<div class="act-dist">${Math.round(a.distance_km*1000)}<small>m</small></div>` :
           a.distance_km ? `<div class="act-dist">${a.distance_km}<small>km</small></div>` : ''
-        const stravaLink = a.id ? `<a class="act-strava-link" href="https://www.strava.com/activities/${a.id}" target="_blank" rel="noopener" title="在 Strava 上查看">↗</a>` : ''
+        const stravaLink = a.id ? `<a class="act-strava-link" href="https://www.strava.com/activities/${a.id}" target="_blank" rel="noopener">Strava ↗</a>` : ''
         const ittBadges = (aIsRide && ittMap && ittMap[date])
           ? ittMap[date].map(it => {
               const isPr = it.is_pr
@@ -713,7 +809,7 @@ function renderTimeline(list, type, expanded, ittMap){
           <div class="act-card">
             <div class="act-icon">${meta.icon}</div>
             <div class="act-info">
-              <div class="act-name">${a.trainer ? INDOOR_TAG : (aIsRide ? BIKE_TAG : '')}${a.name || '—'}${stravaLink}</div>
+              <div class="act-name-wrap"><div class="act-name">${a.trainer ? INDOOR_TAG : (aIsRide ? BIKE_TAG : '')}${a.name || '—'}</div>${stravaLink}</div>
               <div class="act-meta">${metas.join('<span class="sep">·</span>')}</div>
               ${lapHtml}
               ${ittBadges}
@@ -913,6 +1009,7 @@ fetch('strava.json')
     <a href="strava_aespa.html" class="ts-item"><span class="ts-icon">💜</span><span class="ts-name">Purple</span><span class="ts-sub">Aespa</span></a>
     <a href="strava_maple.html" class="ts-item active"><span class="ts-icon">🍁</span><span class="ts-name">Maple</span><span class="ts-sub">Pixel</span></a>
     <a href="strava_cs.html"   class="ts-item"><span class="ts-icon">🎯</span><span class="ts-name">CS</span><span class="ts-sub">Tactical</span></a>
+    <a href="strava_lol.html"  class="ts-item"><span class="ts-icon">⚔️</span><span class="ts-name">LoL</span><span class="ts-sub">Summoner</span></a>
   </div>
 </div>
 <style>
@@ -962,6 +1059,20 @@ fetch('strava.json')
       btn.classList.remove('open')
     }
   })
+})();
+
+/* ── To Top ── */
+;(function(){
+  const b = document.createElement('button')
+  b.id = 'to-top-btn'
+  b.textContent = '▲'
+  b.title = '回到頂部'
+  b.style.cssText = 'position:fixed;bottom:90px;right:22px;z-index:9998;width:38px;height:38px;border-radius:3px;border:2px solid rgba(165,90,30,.55);background:rgba(40,22,8,.85);color:#c54a0d;font-size:13px;cursor:pointer;display:none;align-items:center;justify-content:center;image-rendering:pixelated;font-family:"Press Start 2P",monospace;transition:opacity .2s,background .2s'
+  document.body.appendChild(b)
+  window.addEventListener('scroll', () => { b.style.display = window.scrollY > 300 ? 'flex' : 'none' })
+  b.addEventListener('click', () => window.scrollTo({top:0,behavior:'smooth'}))
+  b.addEventListener('mouseenter', () => b.style.background='rgba(165,90,30,.3)')
+  b.addEventListener('mouseleave', () => b.style.background='rgba(40,22,8,.85)')
 })()
 </script>
 </body>

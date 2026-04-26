@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Athletics · League of Legends · SteveChuang</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#010a13;color:#f0e6d2}
+
+#bg-canvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+#app{position:relative;z-index:1;min-height:100vh;max-width:820px;margin:0 auto;padding:0 1.2rem 5rem}
+
+/* ── topbar ── */
+.topbar{
+  position:sticky;top:0;z-index:10;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 1.2rem;margin:0 -1.2rem;
+  border-bottom:1px solid rgba(200,155,60,.25);
+  background:rgba(1,10,19,.97);
+  backdrop-filter:blur(10px);
+}
+.topbar-left{display:flex;align-items:center;gap:12px}
+.back-btn{
+  display:flex;align-items:center;gap:6px;
+  background:rgba(200,155,60,.08);border:1px solid rgba(200,155,60,.35);
+  border-radius:2px;padding:6px 14px;
+  color:#c89b3c;font-size:12px;font-weight:600;
+  cursor:pointer;text-decoration:none;transition:background .2s;
+  -webkit-tap-highlight-color:transparent;letter-spacing:1.5px;text-transform:uppercase;
+}
+.back-btn:hover{background:rgba(200,155,60,.18)}
+.topbar-title{font-size:10px;color:rgba(200,155,60,.5);letter-spacing:3px;text-transform:uppercase}
+.topbar-updated{font-size:10px;color:rgba(200,155,60,.3);letter-spacing:1.5px;text-transform:uppercase}
+
+/* ── hero ── */
+.hero{
+  padding:2rem 0 1.5rem;
+  border-bottom:1px solid rgba(200,155,60,.15);
+  position:relative;
+}
+.hero::before,.hero::after{
+  content:'';position:absolute;
+  width:50px;height:50px;
+  border-color:rgba(200,155,60,.3);border-style:solid;
+}
+.hero::before{top:1.8rem;left:0;border-width:2px 0 0 2px}
+.hero::after{bottom:.5rem;right:0;border-width:0 2px 2px 0}
+.hero-inner{display:flex;align-items:center;justify-content:space-between;gap:1.5rem;flex-wrap:wrap}
+.hero-left{display:flex;align-items:center;gap:1.4rem}
+.avatar-wrap{position:relative;flex-shrink:0}
+.avatar{
+  width:112px;height:112px;border-radius:50%;
+  background:#0a1428;
+  border:3px solid #c89b3c;
+  overflow:hidden;
+  box-shadow:0 0 24px rgba(200,155,60,.45),0 0 50px rgba(200,155,60,.1),inset 0 0 12px rgba(0,0,0,.6);
+  display:flex;align-items:center;justify-content:center;
+}
+.avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.avatar svg{width:52px;height:52px;fill:#c89b3c}
+.rank-badge{
+  position:absolute;bottom:-10px;left:50%;transform:translateX(-50%);
+  background:linear-gradient(135deg,#1a1200,#3d2b00);
+  border:1px solid rgba(200,155,60,.6);border-radius:2px;
+  padding:2px 10px;white-space:nowrap;
+  font-size:8px;font-weight:700;color:#c89b3c;letter-spacing:2px;text-transform:uppercase;
+  box-shadow:0 0 8px rgba(200,155,60,.25);
+}
+.hero-info{padding-top:6px}
+.hero-name{font-size:24px;font-weight:700;color:#f0e6d2;letter-spacing:.5px}
+.hero-alias{font-size:11px;color:rgba(200,155,60,.55);letter-spacing:3px;text-transform:uppercase;margin-top:3px}
+.hero-rank{
+  display:inline-flex;align-items:center;gap:8px;margin-top:10px;
+  background:rgba(10,20,40,.8);border:1px solid rgba(200,155,60,.3);
+  border-radius:2px;padding:5px 12px;
+}
+.hero-rank-icon{width:22px;height:22px;flex-shrink:0}
+.hero-rank-text{font-size:12px;font-weight:700;color:#a9c4e4;letter-spacing:1.5px}
+.hero-rank-lp{font-size:10px;color:rgba(200,155,60,.5);margin-left:4px}
+.hero-right{text-align:right;flex-shrink:0}
+.lol-logo{
+  font-family:'Cinzel',serif;
+  font-size:13px;font-weight:900;letter-spacing:6px;text-transform:uppercase;
+  background:linear-gradient(180deg,#f0d878 0%,#c89b3c 45%,#7a5c10 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  line-height:1.5;
+  filter:drop-shadow(0 0 8px rgba(200,155,60,.55));
+}
+.lol-sub{font-size:8px;letter-spacing:3.5px;color:rgba(200,155,60,.35);text-transform:uppercase;margin-top:5px}
+
+/* ── stat cards ── */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:1.5rem 0 2rem}
+.stat-card{
+  padding:1rem .9rem 1.1rem;border-radius:2px;
+  background:rgba(200,155,60,.06);
+  border:1px solid rgba(200,155,60,.25);
+  border-top:2px solid rgba(200,155,60,.7);
+}
+.stat-val{font-size:26px;font-weight:700;color:#c89b3c;line-height:1}
+.stat-unit{font-size:8px;color:rgba(200,155,60,.45);margin-top:3px;letter-spacing:2px;text-transform:uppercase}
+.stat-label{font-size:10px;color:#aaa;margin-bottom:9px;letter-spacing:2px;text-transform:uppercase}
+.stat-metrics{display:flex;align-items:flex-start}
+.stat-metric{flex:1;min-width:0}
+.stat-vdiv{width:1px;background:rgba(200,155,60,.2);align-self:stretch;margin:2px 8px 6px;flex-shrink:0}
+
+/* ── section title ── */
+.section-title{
+  font-size:10px;font-weight:700;color:#c89b3c;letter-spacing:4px;text-transform:uppercase;
+  margin-bottom:1rem;padding-bottom:.55rem;
+  border-bottom:1px solid rgba(200,155,60,.18);
+  display:flex;align-items:center;gap:8px;
+}
+.section-title::before{content:'';display:block;width:3px;height:11px;background:#c89b3c;border-radius:1px;flex-shrink:0}
+
+/* ── 三項能力分布 ── */
+.ability-row{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:10px;margin-bottom:2rem;align-items:start;
+}
+@media(max-width:620px){.ability-row{grid-template-columns:1fr}}
+.ability-panel{
+  background:rgba(200,155,60,.04);border:1px solid rgba(200,155,60,.18);
+  border-radius:2px;padding:1rem;
+}
+.ability-panel-title{
+  font-size:8px;font-weight:700;color:rgba(200,155,60,.45);letter-spacing:3px;
+  text-transform:uppercase;margin-bottom:.85rem;text-align:center;
+}
+.radar-wrap{display:flex;flex-direction:column;align-items:center}
+.radar-wrap svg{overflow:visible}
+/* role bars — removed */
+/* win rate */
+.winrate-wrap{display:flex;flex-direction:column;align-items:center;gap:10px}
+.winrate-chart-wrap{position:relative;display:inline-flex;align-items:center;justify-content:center}
+.winrate-center{position:absolute;text-align:center;line-height:1}
+.winrate-pct{font-size:22px;font-weight:700;color:#c89b3c}
+.winrate-label{font-size:7px;color:rgba(200,155,60,.45);letter-spacing:2px;text-transform:uppercase;margin-top:4px}
+.winrate-detail{display:flex;gap:14px;font-size:11px;font-weight:700}
+.wr-wins{color:#2ea043}.wr-loss{color:#c84040}
+
+/* ── monthly consistency ── */
+.consistency-list{display:flex;flex-direction:column;gap:7px;margin-bottom:2rem}
+.consistency-row{
+  display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;
+  padding:.95rem .9rem;border-radius:2px;
+  background:rgba(200,155,60,.03);border:1px solid rgba(200,155,60,.14);
+}
+.consistency-name{font-size:12px;color:#d4c4a0;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.consistency-name .count{font-size:11px;color:#777;margin-left:4px}
+.consistency-name .count b{color:#c89b3c;font-weight:700}
+.progress-bar{position:relative;height:6px;border-radius:2px;background:rgba(200,155,60,.07);overflow:hidden;border:1px solid rgba(200,155,60,.1)}
+.progress-fill{height:100%;border-radius:2px;width:0;transition:width .9s cubic-bezier(.25,.46,.45,.94)}
+.progress-fill.danger {background:linear-gradient(90deg,#5a0e0e,#c84040)}
+.progress-fill.warning{background:linear-gradient(90deg,#4a3a00,#c8a000)}
+.progress-fill.done   {background:linear-gradient(90deg,#1a3a00,#4a9400,#78b428)}
+.progress-fill.over   {background:linear-gradient(90deg,#785a28,#c89b3c,#f0d070)}
+.status-badge{font-size:9px;padding:2px 8px;border-radius:2px;white-space:nowrap;letter-spacing:1px;font-weight:700}
+.status-badge.danger {background:rgba(200,40,40,.1); color:#c06060;border:1px solid rgba(200,40,40,.2)}
+.status-badge.warning{background:rgba(200,160,0,.1); color:#c8a000;border:1px solid rgba(200,160,0,.2)}
+.status-badge.done   {background:rgba(74,148,0,.1);  color:#78b428;border:1px solid rgba(74,148,0,.25)}
+.status-badge.over   {background:rgba(200,155,60,.1);color:#c89b3c;border:1px solid rgba(200,155,60,.3);font-size:12px}
+
+/* ── weekly quest ── */
+.quest-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:2rem}
+@media(max-width:480px){.quest-grid{grid-template-columns:repeat(2,1fr)}}
+.quest-tile{padding:18px 10px 13px;border-radius:2px;text-align:center;background:rgba(200,155,60,.03);border:1px solid rgba(200,155,60,.08);user-select:none}
+.quest-tile.on{background:rgba(200,155,60,.08);border-color:rgba(200,155,60,.3);box-shadow:0 0 10px rgba(200,155,60,.08)}
+.quest-tile .qico{font-size:24px;display:block;margin-bottom:7px;filter:grayscale(1) brightness(.35)}
+.quest-tile.on .qico{filter:none}
+.quest-tile .qlabel{font-size:8px;letter-spacing:2.5px;text-transform:uppercase;color:#3a3020}
+.quest-tile.on .qlabel{color:rgba(200,155,60,.5)}
+.quest-tile .qcheck{font-size:14px;margin-top:6px;color:#1a1510}
+.quest-tile.on .qcheck{color:#c89b3c}
+.act-highlight{animation:actFlash .9s ease-out}
+@keyframes actFlash{0%,40%{background:rgba(200,155,60,.14);border-left-color:#c89b3c}100%{background:rgba(10,20,40,.6);border-left-color:rgba(200,155,60,.25)}}
+.act-strava-link{display:inline-flex;align-items:center;gap:2px;flex-shrink:0;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;color:rgba(200,155,60,.95);text-decoration:none;border:1px solid rgba(200,155,60,.45);background:rgba(200,155,60,.08);white-space:nowrap;line-height:1.4;transition:background .15s,border-color .15s}
+.act-strava-link:hover{background:rgba(200,155,60,.22);border-color:#c89b3c}
+.activity-name-wrap{display:flex;align-items:center;gap:8px;min-width:0}
+.lap-toggle{background:transparent;border:none;color:rgba(200,155,60,.6);font-size:10px;cursor:pointer;padding:2px 4px;letter-spacing:.5px;display:inline-block}
+.lap-toggle:hover{color:#c89b3c}
+
+/* ── ITT segments ── */
+.seg-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:2rem}
+@media(max-width:600px){.seg-grid{grid-template-columns:1fr}}
+.seg-card{
+  background:rgba(10,20,40,.5);border:1px solid rgba(200,155,60,.15);
+  border-top:2px solid rgba(200,155,60,.5);border-radius:2px;padding:1rem;
+}
+.seg-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.6rem}
+.seg-name{font-size:13px;font-weight:700;color:#f0e6d2;line-height:1.3}
+.seg-dist{font-size:9px;color:#555;margin-top:2px;letter-spacing:2px;text-transform:uppercase}
+.seg-pr-badge{display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0;margin-left:.5rem}
+.seg-pr-time{font-size:16px;font-weight:700;color:#c89b3c;font-variant-numeric:tabular-nums}
+.seg-pr-label{font-size:8px;color:#666;letter-spacing:2px;text-transform:uppercase}
+.seg-table{width:100%;border-collapse:collapse;font-size:11px}
+.seg-table th{color:#555;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:4px 0;border-bottom:1px solid rgba(200,155,60,.08);text-align:left}
+.seg-table th:not(:first-child){text-align:right}
+.seg-table td{padding:5px 0;color:#888;border-bottom:1px solid rgba(255,255,255,.03);vertical-align:middle}
+.seg-table td:not(:first-child){text-align:right;font-variant-numeric:tabular-nums}
+.seg-row-pr td{color:#c89b3c !important;font-weight:700}
+.seg-crown{font-size:12px;margin-right:3px}
+.seg-time-pr{color:#c89b3c !important}
+.seg-more-wrap{margin-top:0}
+.seg-fade{height:26px;margin-top:-26px;background:linear-gradient(transparent,#010a13);pointer-events:none}
+.seg-more-btn{width:100%;padding:5px 0;background:transparent;border:none;border-top:1px solid rgba(200,155,60,.1);color:rgba(200,155,60,.3);font-size:9px;cursor:pointer;letter-spacing:2px;margin-top:2px;display:block;text-transform:uppercase}
+.seg-more-btn:hover{color:#c89b3c}
+
+/* ── monthly chart ── */
+.monthly-chart{margin-bottom:2rem}
+.chart-rows{display:flex;flex-direction:column;gap:8px}
+.chart-row{display:flex;align-items:center;gap:10px;padding:3px 0}
+.chart-label{font-size:11px;color:#777;width:24px;text-align:right;flex-shrink:0}
+.chart-bar-wrap{flex:1;height:40px;background:rgba(200,155,60,.05);border-radius:2px;overflow:hidden;border:1px solid rgba(200,155,60,.1)}
+.chart-bar{
+  height:100%;border-radius:2px;
+  background:linear-gradient(90deg,#1a0a00,#785a28,#c89b3c);
+  position:relative;overflow:hidden;
+  display:flex;align-items:center;justify-content:flex-end;
+  padding-right:10px;min-width:40px;
+  width:0;transition:width 1s cubic-bezier(.25,.46,.45,.94);
+}
+.chart-bar::before{
+  content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(45deg,rgba(255,255,255,.04) 0,rgba(255,255,255,.04) 1px,transparent 1px,transparent 10px);
+  pointer-events:none;
+}
+.chart-bar-val{font-size:12px;font-weight:700;color:#fff;white-space:nowrap;position:relative;z-index:1}
+.chart-unit-label{font-size:10px;color:#444;width:24px;flex-shrink:0}
+.chart-year-header{
+  display:flex;align-items:center;gap:8px;
+  font-size:9px;font-weight:700;color:#c89b3c;letter-spacing:4px;
+  text-transform:uppercase;padding:10px 0 4px;
+  cursor:pointer;user-select:none;opacity:.65;
+}
+.chart-year-header:hover{opacity:1}
+.chart-year-arrow{transition:transform .25s;font-style:normal;font-size:10px}
+.chart-year-rows{overflow:hidden;transition:max-height .35s ease}
+
+/* ── sport tabs ── */
+.sport-tabs{display:flex;gap:6px;margin-bottom:1.2rem;flex-wrap:wrap}
+.sport-tab{
+  font-size:11px;padding:5px 14px;border-radius:2px;letter-spacing:.5px;
+  border:1px solid rgba(200,155,60,.18);color:#666;background:transparent;
+  cursor:pointer;transition:all .2s;-webkit-tap-highlight-color:transparent;
+}
+.sport-tab.active{background:rgba(200,155,60,.1);border-color:#c89b3c;color:#c89b3c}
+.sport-tab:hover:not(.active){border-color:rgba(200,155,60,.4);color:#d4b060}
+
+/* ── timeline ── */
+.timeline{margin-bottom:2rem}
+.timeline-day{margin-bottom:1.4rem}
+.timeline-date{
+  font-size:13px;font-weight:700;color:#c89b3c;
+  margin-bottom:.7rem;padding-left:20px;position:relative;letter-spacing:1.5px;
+}
+.timeline-date::before{content:'◆';position:absolute;left:0;top:50%;transform:translateY(-50%);font-size:8px;color:#c89b3c}
+.activity-card{
+  display:flex;align-items:flex-start;gap:12px;
+  padding:.8rem 1rem;border-radius:2px;
+  background:rgba(10,20,40,.65);
+  border:1px solid rgba(200,155,60,.12);
+  border-left:3px solid rgba(200,155,60,.25);
+  box-shadow:0 0 10px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.02);
+  margin-bottom:7px;margin-left:20px;
+  transition:border-color .2s,background .2s;
+  position:relative;
+}
+.activity-card:hover{border-left-color:#c89b3c;background:rgba(10,20,40,.85)}
+.activity-icon{
+  width:42px;height:42px;border-radius:2px;flex-shrink:0;
+  background:rgba(200,155,60,.08);border:1px solid rgba(200,155,60,.22);
+  display:flex;align-items:center;justify-content:center;
+}
+.activity-icon svg{width:22px;height:22px;fill:#c89b3c}
+.activity-info{flex:1;min-width:0;padding-right:52px}
+.activity-name{font-size:14px;font-weight:600;color:#f0e6d2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0}
+.indoor-tag,.bike-tag{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:700;line-height:1;border-radius:2px;padding:2px 5px 2px 4px;vertical-align:middle;margin-right:5px;flex-shrink:0;white-space:nowrap}
+.indoor-tag{background:rgba(200,155,60,.1);color:#c89b3c;border:1px solid rgba(200,155,60,.3)}
+.bike-tag{background:rgba(11,196,227,.07);color:#0bc4e3;border:1px solid rgba(11,196,227,.2)}
+.activity-meta{font-size:11px;color:#555;margin-top:3px}
+.activity-meta .tag{
+  display:inline-flex;align-items:center;gap:3px;
+  background:rgba(200,155,60,.05);border:1px solid rgba(200,155,60,.12);
+  border-radius:2px;padding:2px 7px;margin-right:4px;margin-top:3px;
+  color:#987848;font-size:11px;white-space:nowrap;
+}
+.activity-meta .tag.hr{border-color:rgba(200,100,100,.18);background:rgba(200,100,100,.05);color:#b07060}
+.activity-dist{font-size:17px;font-weight:700;color:#c89b3c;flex-shrink:0;white-space:nowrap;padding-top:2px;line-height:1}
+/* Grade badge */
+.grade-badge{
+  position:absolute;bottom:.65rem;right:.65rem;
+  width:34px;height:34px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:900;letter-spacing:-1px;border:2px solid;
+}
+.grade-badge.sp{background:linear-gradient(135deg,#2a1800,#5a3800);border-color:#c89b3c;color:#f0d060;box-shadow:0 0 10px rgba(200,155,60,.35)}
+.grade-badge.s {background:linear-gradient(135deg,#0a1a2a,#1a3048);border-color:#8ab4d4;color:#c4d8ee;box-shadow:0 0 7px rgba(140,180,220,.15)}
+.grade-badge.ap{background:linear-gradient(135deg,#001a1a,#003040);border-color:#0bc4e3;color:#80e8f8;box-shadow:0 0 7px rgba(11,196,227,.15)}
+.grade-badge.a {background:linear-gradient(135deg,#0a1a00,#1c3400);border-color:#4a9400;color:#78c428}
+.grade-badge.bp{background:rgba(25,25,25,.7);border-color:#444;color:#777}
+/* lap strip */
+.lap-strip{
+  margin-top:4px;padding:3px 8px;border-radius:2px;
+  background:rgba(200,155,60,.04);border:1px solid rgba(200,155,60,.1);
+  font-size:11px;color:#666;display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+}
+.lap-strip .lap-name{color:#987848;font-weight:500;font-size:11px}
+.lap-strip .lap-tag{color:#777;white-space:nowrap}
+.empty{font-size:13px;color:#444;padding:2rem 0;text-align:center}
+/* show more */
+.show-more-btn{
+  width:100%;padding:10px;border-radius:2px;margin-top:6px;
+  border:1px solid rgba(200,155,60,.18);background:transparent;
+  color:#c89b3c;font-size:10px;cursor:pointer;letter-spacing:2.5px;
+  transition:background .2s;text-transform:uppercase;
+}
+.show-more-btn:hover{background:rgba(200,155,60,.07)}
+/* ITT inline badge */
+.itt-badge{display:flex;align-items:center;gap:8px;padding:5px 10px 6px;border-left:2px solid rgba(200,155,60,.18);margin:4px 0 0;background:rgba(200,155,60,.025);border-radius:0 2px 2px 0}
+.itt-badge.pr{background:rgba(200,155,60,.07);border-left-color:#c89b3c}
+.itt-crown{font-size:15px;line-height:1;flex-shrink:0}
+.itt-info{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
+.itt-seg-name{font-size:8px;color:#444;letter-spacing:2px;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.itt-badge.pr .itt-seg-name{color:rgba(200,155,60,.45)}
+.itt-time{font-size:12px;font-weight:700;color:#c89b3c;line-height:1}
+.itt-attempt{font-size:9px;color:#3a3020;letter-spacing:1px}
+.itt-badge.pr .itt-attempt{color:rgba(200,155,60,.4)}
+/* ── totals ── */
+.totals-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:2rem}
+.total-card{
+  padding:1rem;border-radius:2px;text-align:center;
+  background:rgba(200,155,60,.06);
+  border:1px solid rgba(200,155,60,.22);
+  border-bottom:2px solid rgba(120,90,40,.6);
+}
+.total-val{font-size:20px;font-weight:700;color:#c89b3c}
+.total-label{font-size:9px;color:#555;letter-spacing:2.5px;text-transform:uppercase;margin-top:5px}
+/* ── CTA ── */
+.strava-cta{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  width:100%;padding:14px;border-radius:2px;
+  background:rgba(200,155,60,.07);border:1px solid rgba(200,155,60,.35);
+  color:#c89b3c;font-size:12px;font-weight:700;
+  text-decoration:none;transition:background .2s;
+  letter-spacing:2px;text-transform:uppercase;
+}
+.strava-cta:hover{background:rgba(200,155,60,.14)}
+.strava-cta svg{width:16px;height:16px;fill:#c89b3c;flex-shrink:0}
+/* ── footer ── */
+.page-footer{text-align:center;padding:3rem 0 1rem}
+.footer-sub{font-size:8px;letter-spacing:4px;text-transform:uppercase;color:rgba(200,155,60,.2);margin-bottom:.8rem}
+.footer-lol{font-size:10px;font-weight:700;letter-spacing:8px;text-transform:uppercase;color:rgba(200,155,60,.12)}
+/* ── loading ── */
+.loading{text-align:center;padding:4rem 0;color:#555;font-size:14px}
+
+@media(max-width:520px){
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .hero-inner{flex-direction:column;align-items:flex-start}
+  .hero-right{align-self:flex-end}
+  .stat-val{font-size:18px}
+  .totals-grid{grid-template-columns:repeat(3,1fr)}
+  .total-val{font-size:16px}
+  .consistency-row{grid-template-columns:auto 1fr;row-gap:6px}
+  .consistency-row .status-badge{grid-column:1/-1;justify-self:start}
+}
+</style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-left">
+      <a class="back-btn" href="linkTreeIndex.html">← BACK</a>
+      <span class="topbar-title">Athletics · League of Legends</span>
+    </div>
+    <span class="topbar-updated" id="topbar-date">UPDATED —</span>
+  </div>
+  <div id="content"><div class="loading">Loading Summoner data…</div></div>
+</div>
+
+<script>
+/* ── LoL particle canvas ── */
+;(function(){
+  const c=document.getElementById('bg-canvas'),ctx=c.getContext('2d')
+  let W,H,pts=[],runes=[]
+  const RUNE=['◆','◇','⬡','△','▽','⬟','✦','⬠']
+  function resize(){ W=c.width=innerWidth; H=c.height=innerHeight }
+  function init(){
+    pts=[]
+    const n=Math.floor(W*H/3500)
+    for(let i=0;i<n;i++) pts.push({
+      x:Math.random()*W, y:Math.random()*H,
+      r:Math.random()*1.1+.2,
+      a:Math.random()*.5, da:(Math.random()-.5)*.004,
+      speed:Math.random()*.05+.006,
+      gold:Math.random()>.65
+    })
+    runes=[]
+    for(let i=0;i<10;i++) runes.push({
+      x:Math.random()*W, y:Math.random()*H,
+      ch:RUNE[Math.floor(Math.random()*RUNE.length)],
+      a:Math.random()*.1, da:(Math.random()-.5)*.001,
+      sz:Math.floor(Math.random()*18+8)
+    })
+  }
+  function draw(){
+    ctx.clearRect(0,0,W,H)
+    runes.forEach(r=>{
+      r.a+=r.da; if(r.a<0||r.a>.12)r.da*=-1
+      ctx.font=`${r.sz}px serif`; ctx.fillStyle=`rgba(200,155,60,${r.a})`
+      ctx.fillText(r.ch,r.x,r.y)
+    })
+    pts.forEach(s=>{
+      s.a+=s.da; if(s.a<0||s.a>.7)s.da*=-1
+      s.y-=s.speed; if(s.y<0){s.y=H;s.x=Math.random()*W}
+      ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2)
+      ctx.fillStyle=s.gold?`rgba(200,155,60,${s.a*.35})`:`rgba(11,196,227,${s.a*.15})`
+      ctx.fill()
+    })
+    requestAnimationFrame(draw)
+  }
+  resize(); init(); draw()
+  addEventListener('resize',()=>{resize();init()})
+})()
+
+/* ── SVG icons ── */
+const ICONS = {
+  ride:   '<path d="M5 20.5A3.5 3.5 0 0 1 1.5 17 3.5 3.5 0 0 1 5 13.5 3.5 3.5 0 0 1 8.5 17 3.5 3.5 0 0 1 5 20.5M5 12A5 5 0 0 0 0 17a5 5 0 0 0 5 5 5 5 0 0 0 5-5 5 5 0 0 0-5-5m8.8-5.4L11 9.5l1.5 1.5H16v2h-4.5l-2.5-2.5L11.5 8H9.8l-1.5 4.5 2.2 2.2A5 5 0 0 0 14 17a5 5 0 0 0 5 5 5 5 0 0 0 5-5 5 5 0 0 0-5-5l-1.1.1-2.7-2.6.8-2H18V6h-3.2l-.9 2.6M14.5 5a1.5 1.5 0 0 0 1.5-1.5A1.5 1.5 0 0 0 14.5 2 1.5 1.5 0 0 0 13 3.5 1.5 1.5 0 0 0 14.5 5m4.5 7a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5A3.5 3.5 0 0 1 15.5 17 3.5 3.5 0 0 1 19 13.5z"/>',
+  run:    '<path d="M13.49 5.48c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm-3.6 13.9l1-4.4 2.1 2v6h2v-7.5l-2.1-2 .6-3c1.3 1.5 3.3 2.5 5.5 2.5v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1l-5.2 2.2v4.7h2v-3.4l1.8-.7-1.6 8.1-4.9-1-.4 2 7 1.4z"/>',
+  swim:   '<path d="M2 12c.7 0 1.3.3 2 1 1 1 2.2 1.5 3.5 1.5S10 14 11 13c.7-.7 1.3-1 2-1s1.3.3 2 1c1 1 2.2 1.5 3.5 1.5s2.5-.5 3.5-1.5c.7-.7 1.3-1 2-1v-2c-1.3 0-2.5.5-3.5 1.5-.7.7-1.3 1-2 1s-1.3-.3-2-1C15.5 10.5 14.3 10 13 10s-2.5.5-3.5 1.5C8.8 12.2 8.2 12.5 7.5 12.5s-1.3-.3-2-1C4.5 10.5 3.3 10 2 10v2m0 5c.7 0 1.3.3 2 1 1 1 2.2 1.5 3.5 1.5S10 19 11 18c.7-.7 1.3-1 2-1s1.3.3 2 1c1 1 2.2 1.5 3.5 1.5s2.5-.5 3.5-1.5c.7-.7 1.3-1 2-1v-2c-1.3 0-2.5.5-3.5 1.5-.7.7-1.3 1-2 1s-1.3-.3-2-1C15.5 15.5 14.3 15 13 15s-2.5.5-3.5 1.5c-.7.7-1.3 1-2 1s-1.3-.3-2-1C4.5 15.5 3.3 15 2 15v2M17.5 7.3c-.7.7-1.2 1.7-3 1.7-1.5 0-2.2-.7-3-1.5C10.7 6.7 9.8 6 8.5 6 7 6 5.8 6.7 5 7.5L6.5 9c.5-.5 1-.9 2-.9 1.5 0 2.2.7 3 1.5.8.8 1.7 1.5 3 1.5 1.5 0 2.5-.7 3.3-1.5L19 8c-.2-.3-.5-.5-.8-.8l-.7.1z"/>',
+  weight: '<path d="M20.57 14.86L22 13.43 20.57 12 17 15.57 8.43 7 12 3.43 10.57 2 9.14 3.43 7.71 2 5.57 4.14 4.14 2.71 2.71 4.14l1.43 1.43L2 7.71l1.43 1.43L2 10.57 3.43 12 7 8.43 15.57 17 12 20.57 13.43 22l1.43-1.43L16.29 22l2.14-2.14 1.43 1.43 1.43-1.43-1.43-1.43L22 16.29l-1.43-1.43z"/>'
+}
+const INDOOR_TAG = '<span class="indoor-tag"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.5" fill="currentColor" stroke="none"/><line x1="12" y1="9.5" x2="12" y2="3"/><line x1="12" y1="14.5" x2="12" y2="21"/><line x1="9.5" y1="12" x2="3" y2="12"/><line x1="14.5" y1="12" x2="21" y2="12"/></svg>飛輪機</span>'
+const BIKE_TAG   = '<span class="bike-tag"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12,2 15.5,8.5 22,9.5 17,14.5 18.5,22 12,18.5 5.5,22 7,14.5 2,9.5 8.5,8.5"/></svg>TCR Pro 0</span>'
+
+/* ── helpers ── */
+function toggleLaps(btn, gid) {
+  const els = [...document.querySelectorAll('[data-lapgrp="' + gid + '"]')]
+  if (!els.length) return
+  const show = els[0].style.display === 'none'
+  els.forEach(e => { e.style.display = show ? '' : 'none' })
+  btn.textContent = show ? '▲ 收起' : '▼ +' + els.length + ' 分段'
+}
+function fmtMovingTime(hr) {
+  const totalMin = Math.max(0, Math.round((hr || 0) * 60))
+  if (totalMin < 60) return `${totalMin} 分`
+  const h = Math.floor(totalMin / 60), m = totalMin % 60
+  if (m === 0) return `${h} 小時`
+  return `${h} 小時 ${m} 分`
+}
+
+/* ── Activity Grade ── */
+function gradeActivity(a, type) {
+  const d = a.distance_km || 0, w = a.avg_watts || 0
+  if (type === 'ride') {
+    if (w >= 265 || d >= 100) return {grade:'S+', cls:'sp'}
+    if (w >= 235 || d >= 70)  return {grade:'S',  cls:'s'}
+    if (w >= 205 || d >= 50)  return {grade:'A+', cls:'ap'}
+    if (w >= 170 || d >= 30)  return {grade:'A',  cls:'a'}
+    return {grade:'B+', cls:'bp'}
+  }
+  if (type === 'run') {
+    if (d >= 20) return {grade:'S+', cls:'sp'}
+    if (d >= 12) return {grade:'S',  cls:'s'}
+    if (d >= 7)  return {grade:'A+', cls:'ap'}
+    if (d >= 4)  return {grade:'A',  cls:'a'}
+    return {grade:'B+', cls:'bp'}
+  }
+  if (type === 'swim') {
+    const m = d * 1000
+    if (m >= 3000) return {grade:'S+', cls:'sp'}
+    if (m >= 2000) return {grade:'S',  cls:'s'}
+    if (m >= 1500) return {grade:'A+', cls:'ap'}
+    return {grade:'A', cls:'a'}
+  }
+  const mins = (a.moving_time_hr || 0) * 60
+  if (mins >= 90) return {grade:'S+', cls:'sp'}
+  if (mins >= 60) return {grade:'S',  cls:'s'}
+  if (mins >= 45) return {grade:'A+', cls:'ap'}
+  return {grade:'A', cls:'a'}
+}
+
+const SPORT_META = {
+  ride:   { icon: '🚴', label: '單車' },
+  run:    { icon: '🏃', label: '跑步' },
+  swim:   { icon: '🏊', label: '游泳' },
+  weight: { icon: '🏋️', label: '重訓' },
+}
+const STATUS_META = {
+  danger:  { emoji: '🔴', text: '嚴重落後' },
+  warning: { emoji: '🟡', text: '需補課' },
+  done:    { emoji: '🟢', text: '達標' },
+  over:    { emoji: '🔥', text: '超標' },
+}
+
+/* ── 三項能力分布 ── */
+function renderAbilitySection(ms, mg) {
+  if (!ms || !mg) return ''
+  // 以本月實際時數計算，上限各自定義：騎乘20hr、跑步12hr、游泳8hr、重訓10hr
+  const rideScore   = Math.min(100, Math.round((ms.ride_hr   || 0) / 20  * 100))
+  const runScore    = Math.min(100, Math.round((ms.run_hr    || 0) / 12  * 100))
+  const swimScore   = Math.min(100, Math.round((ms.swim_hr   || 0) / 8   * 100))
+  const weightScore = Math.min(100, Math.round((ms.weight_hr || 0) / 10  * 100))
+
+  /* ── SVG radar ── */
+  const CX=80, CY=82, R=56
+  function vertex(angleDeg, pct) {
+    const rad = (angleDeg - 90) * Math.PI / 180, r = R * pct / 100
+    return [CX + r * Math.cos(rad), CY + r * Math.sin(rad)]
+  }
+  // grid rings
+  const rings = [.25,.5,.75,1]
+  const gridHTML = rings.map(f => {
+    const pts = [0,120,240].map(a => {
+      const rad = (a - 90) * Math.PI / 180
+      return `${(CX + R*f * Math.cos(rad)).toFixed(1)},${(CY + R*f * Math.sin(rad)).toFixed(1)}`
+    }).join(' ')
+    return `<polygon points="${pts}" fill="none" stroke="rgba(200,155,60,.1)" stroke-width="1"/>`
+  }).join('')
+  // axis lines
+  const axisHTML = [0,120,240].map(a => {
+    const [x,y] = vertex(a, 100)
+    return `<line x1="${CX}" y1="${CY}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="rgba(200,155,60,.18)" stroke-width="1"/>`
+  }).join('')
+  // data shape
+  const [rx,ry] = vertex(0,   rideScore)
+  const [ux,uy] = vertex(120, runScore)
+  const [sx,sy] = vertex(240, swimScore)
+  const shapePts = `${rx.toFixed(1)},${ry.toFixed(1)} ${ux.toFixed(1)},${uy.toFixed(1)} ${sx.toFixed(1)},${sy.toFixed(1)}`
+  // labels (placed outside radius)
+  const [lrx,lry] = vertex(0,   118)
+  const [lux,luy] = vertex(120, 122)
+  const [lsx,lsy] = vertex(240, 122)
+  const labelsHTML = `
+    <text x="${lrx.toFixed(1)}" y="${(lry-6).toFixed(1)}" text-anchor="middle" font-size="9" fill="rgba(240,230,210,.6)" letter-spacing="1">騎乘</text>
+    <text x="${lrx.toFixed(1)}" y="${(lry+6).toFixed(1)}" text-anchor="middle" font-size="11" font-weight="700" fill="#c89b3c">${(ms.ride_hr||0).toFixed(1)}hr</text>
+    <text x="${lux.toFixed(1)}" y="${(luy-5).toFixed(1)}" text-anchor="middle" font-size="9" fill="rgba(240,230,210,.6)" letter-spacing="1">跑步</text>
+    <text x="${lux.toFixed(1)}" y="${(luy+5).toFixed(1)}" text-anchor="middle" font-size="11" font-weight="700" fill="#c89b3c">${(ms.run_hr||0).toFixed(1)}hr</text>
+    <text x="${lsx.toFixed(1)}" y="${(lsy-5).toFixed(1)}" text-anchor="middle" font-size="9" fill="rgba(240,230,210,.6)" letter-spacing="1">游泳</text>
+    <text x="${lsx.toFixed(1)}" y="${(lsy+5).toFixed(1)}" text-anchor="middle" font-size="11" font-weight="700" fill="#c89b3c">${(ms.swim_hr||0).toFixed(1)}hr</text>
+  `
+  const radarSVG = `<svg width="170" height="190" viewBox="0 0 170 190">
+    ${gridHTML}${axisHTML}
+    <polygon points="${shapePts}" fill="rgba(200,155,60,.15)" stroke="#c89b3c" stroke-width="1.5"/>
+    <circle cx="${rx.toFixed(1)}" cy="${ry.toFixed(1)}" r="3.5" fill="#c89b3c"/>
+    <circle cx="${ux.toFixed(1)}" cy="${uy.toFixed(1)}" r="3.5" fill="#c89b3c"/>
+    <circle cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" r="3.5" fill="#c89b3c"/>
+    ${labelsHTML}
+  </svg>`
+
+  /* ── Win-rate donut ── */
+  const tgt = k => mg[k]?.target || 4
+  const cnt = k => mg[k]?.count  || 0
+  const totalActs   = cnt('ride') + cnt('run') + cnt('swim') + cnt('weight')
+  const totalTarget = tgt('ride') + tgt('run') + tgt('swim') + tgt('weight')
+  const winRate     = totalTarget > 0 ? Math.min(100, Math.round(totalActs / totalTarget * 100)) : 0
+  const metCount    = ['ride','run','swim','weight'].filter(k => mg[k]?.status === 'done' || mg[k]?.status === 'over').length
+  const DR = 44, DW = 9, DCI = 2 * Math.PI * DR
+  const winArc = DCI * winRate / 100
+  const donutSVG = `<svg width="110" height="110" viewBox="0 0 110 110">
+    <circle cx="55" cy="55" r="${DR}" fill="none" stroke="rgba(200,155,60,.07)" stroke-width="${DW}"/>
+    <circle cx="55" cy="55" r="${DR}" fill="none" stroke="#2ea043" stroke-width="${DW}"
+      stroke-dasharray="${winArc.toFixed(1)} ${(DCI - winArc).toFixed(1)}"
+      stroke-dashoffset="${(DCI / 4).toFixed(1)}" stroke-linecap="round"/>
+  </svg>`
+
+  return `
+    <div class="section-title">三項能力分布 <span style="color:rgba(200,155,60,.35);font-size:8px">· ABILITY DISTRIBUTION · THIS MONTH</span></div>
+    <div class="ability-row">
+      <div class="ability-panel">
+        <div class="ability-panel-title">能力雷達</div>
+        <div class="radar-wrap">${radarSVG}</div>
+      </div>
+      <div class="ability-panel">
+        <div class="ability-panel-title">近期表現（本月）</div>
+        <div class="winrate-wrap">
+          <div class="winrate-chart-wrap">
+            ${donutSVG}
+            <div class="winrate-center">
+              <div class="winrate-pct">${winRate}%</div>
+              <div class="winrate-label">完成率</div>
+            </div>
+          </div>
+          <div class="winrate-detail">
+            <span class="wr-wins">✓ ${metCount} 達標</span>
+            <span class="wr-loss">✗ ${4 - metCount} 落後</span>
+          </div>
+          <div style="font-size:9px;color:#555;letter-spacing:1px;text-align:center;margin-top:4px">${totalActs} / ${totalTarget} 次</div>
+        </div>
+      </div>
+    </div>`
+}
+
+function renderMonthlySummary(ms) {
+  if (!ms) return ''
+  const m = (v, u) => `<div class="stat-metric"><div class="stat-val">${v}</div><div class="stat-unit">${u}</div></div>`
+  const div = '<div class="stat-vdiv"></div>'
+  const hr = v => v != null ? v : '—'
+  return `
+    <div class="section-title">本月訓練量 <span style="color:rgba(200,155,60,.35);font-size:8px">· MONTHLY SUMMARY</span></div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-label">🚴 單車</div><div class="stat-metrics">${m((+(ms.ride_km??0)).toFixed(1),'km')}${div}${m(hr(ms.ride_hr),'hr')}</div></div>
+      <div class="stat-card"><div class="stat-label">🏃 跑步</div><div class="stat-metrics">${m((+(ms.run_km??0)).toFixed(1),'km')}${div}${m(hr(ms.run_hr),'hr')}</div></div>
+      <div class="stat-card"><div class="stat-label">🏊 游泳</div><div class="stat-metrics">${m(ms.swim_m??0,'m')}${div}${m(hr(ms.swim_hr),'hr')}</div></div>
+      <div class="stat-card"><div class="stat-label">🏋️ 重訓</div><div class="stat-metrics">${m(ms.weight_count??0,'次')}${div}${m(hr(ms.weight_hr),'hr')}</div></div>
+    </div>`
+}
+
+function renderMonthlyGoals(mg) {
+  if (!mg) return ''
+  const rows = ['ride','run','swim','weight'].map(k => {
+    const g = mg[k]; if (!g) return ''
+    const meta = SPORT_META[k], sm = STATUS_META[g.status] || STATUS_META.danger
+    const pct = Math.min(100, g.target > 0 ? g.count / g.target * 100 : 0)
+    return `
+      <div class="consistency-row">
+        <div class="consistency-name">${meta.icon} ${meta.label}<span class="count"><b>${g.count}</b> / ${g.target}</span></div>
+        <div class="progress-bar"><div class="progress-fill ${g.status}" data-pct="${pct}"></div></div>
+        <div class="status-badge ${g.status}">${g.status === 'over' ? `+${g.count - g.target}` : `${sm.emoji} ${sm.text}`}</div>
+      </div>`
+  }).join('')
+  return `
+    <div class="section-title">月度紀律 <span style="color:rgba(200,155,60,.35);font-size:8px">· MONTHLY CONSISTENCY</span></div>
+    <div class="consistency-list">${rows}</div>`
+}
+
+function renderWeeklyQuest(wq) {
+  if (!wq) return ''
+  const tiles = [
+    {key:'ride',icon:'🚴',label:'RIDE'},{key:'run',icon:'🏃',label:'RUN'},
+    {key:'swim',icon:'🏊',label:'SWIM'},{key:'weight',icon:'🏋️',label:'TRAIN'},
+  ].map(sp => `
+    <div class="quest-tile${wq[sp.key] ? ' on' : ''}">
+      <span class="qico">${sp.icon}</span>
+      <div class="qlabel">${sp.label}</div>
+      <div class="qcheck">${wq[sp.key] ? '✓' : '○'}</div>
+    </div>`).join('')
+  return `
+    <div class="section-title">本週任務 <span style="color:rgba(200,155,60,.35);font-size:8px">· WEEKLY QUEST</span></div>
+    <div class="quest-grid">${tiles}</div>`
+}
+
+function renderSegments(segs) {
+  if (!segs || segs.length === 0) return ''
+  const _today = new Date(Date.now() + 8*3600*1000).toISOString().slice(0,10)
+  const _sincePRLine = (efforts) => {
+    const pr = efforts.find(e => e.is_pr)
+    if (!pr || !pr.date) return ''
+    const d = Math.max(0, Math.round((Date.parse(_today) - Date.parse(pr.date.slice(0,10))) / 86400000))
+    if (d === 0) return `<div class="seg-since-pr" style="margin:6px 0 10px;padding:7px 11px;font-size:10.5px;background:linear-gradient(90deg,rgba(200,155,60,.22),rgba(200,155,60,.04));border-left:3px solid #c89b3c;border-radius:2px;letter-spacing:1px;color:#f0e6d2;text-transform:uppercase">⚔ NEW BEST TODAY!</div>`
+    return `<div class="seg-since-pr" style="margin:6px 0 10px;padding:7px 11px;font-size:10.5px;background:rgba(200,155,60,.05);border-left:3px solid rgba(200,155,60,.5);border-radius:2px;letter-spacing:1px;color:rgba(240,230,210,.78);text-transform:uppercase">DAYS SINCE BEST · <b style="font-weight:700;color:#c89b3c">${d}</b> 天</div>`
+  }
+  const cards = segs.map(seg => {
+    const rowArr = seg.efforts.map(e => {
+      const crown = e.is_pr ? '<span class="seg-crown">👑</span>' : ''
+      const dateKey = (e.date || '').slice(0, 10)
+      return `<tr class="${e.is_pr ? 'seg-row-pr' : ''}" data-date="${dateKey}" data-actid="${e.activity_id || ''}" style="cursor:pointer" title="跳至活動紀錄">
+        <td>${fmtDate(e.date)}</td>
+        <td class="${e.is_pr ? 'seg-time-pr' : ''}">${crown}${e.elapsed_str}</td>
+        <td>${e.avg_watts ? e.avg_watts+'W' : '—'}</td>
+        <td>${e.avg_heartrate || '—'}</td>
+      </tr>`
+    })
+    const visRows  = rowArr.slice(0, 2).join('')
+    const moreRows = rowArr.slice(2).join('')
+    const extraTbody = moreRows ? `<tbody class="seg-extra" style="display:none">${moreRows}</tbody>` : ''
+    const moreWrap   = moreRows ? `<div class="seg-more-wrap"><div class="seg-fade"></div><button class="seg-more-btn" onclick="var c=this.closest('.seg-card');c.querySelector('.seg-extra').style.display='';this.closest('.seg-more-wrap').remove()">▼ ALL ${rowArr.length} RECORDS</button></div>` : ''
+    return `<div class="seg-card">
+      <div class="seg-header">
+        <div>
+          <div class="seg-name">${seg.name}</div>
+          <div class="seg-dist">${seg.distance_km} KM · SEGMENT</div>
+        </div>
+        ${seg.pr_time_str ? `<div class="seg-pr-badge"><div class="seg-pr-time">${seg.pr_time_str}</div><div class="seg-pr-label">BEST</div></div>` : ''}
+      </div>
+      ${_sincePRLine(seg.efforts)}
+      <table class="seg-table">
+        <thead><tr><th>日期</th><th>時間</th><th>功率</th><th>HR</th></tr></thead>
+        <tbody>${visRows}</tbody>${extraTbody}
+      </table>${moreWrap}
+    </div>`
+  }).join('')
+  return `
+    <div class="section-title">ITT 區間 <span style="color:rgba(200,155,60,.35);font-size:8px">· BOSS KILLS · SEGMENT EFFORTS</span></div>
+    <div class="seg-grid">${cards}</div>`
+}
+
+function fmtDate(d) {
+  if (!d) return '—'; const [,mm,dd] = d.split('-'); return `${mm} / ${dd}`
+}
+function fmtMonthLabel(m) { return m.replace(/^\d{4}-/, '') }
+function monthDist(h) {
+  if (h.ride && typeof h.ride === 'object') return h.ride.distance_km || 0
+  return h.distance_km || 0
+}
+
+function groupByDate(list) {
+  const map = {}
+  ;(list || []).forEach(a => { const d = (a.date||'').slice(0,10); if(!map[d])map[d]=[]; map[d].push(a) })
+  return Object.entries(map)
+    .sort((a,b) => b[0].localeCompare(a[0]))
+    .map(([d,acts]) => [d, acts.slice().sort((a,b) => (a.time||'').localeCompare(b.time||''))])
+}
+
+function renderTimeline(list, type, expanded, ittMap) {
+  if (!list || !list.length) return '<div class="empty">暫無資料</div>'
+  const isAll = type === 'all'
+  const groups = groupByDate(list)
+  const LIMIT = 10
+  const hasMore = !expanded && groups.length > LIMIT
+  const visible = hasMore ? groups.slice(0, LIMIT) : groups
+
+  const html = visible.map(([date, acts]) => `
+    <div class="timeline-day" id="act-${date}">
+      <div class="timeline-date">${fmtDate(date)}</div>
+      ${acts.map(a => {
+        const aType   = isAll ? (a._type || 'ride') : type
+        const aIsRide = aType === 'ride', aIsRun = aType === 'run'
+        const aIsSwim = aType === 'swim', aIsWeight = aType === 'weight'
+        const aIcon   = ICONS[aType] || ICONS.ride
+        const tags = []
+        if (aIsSwim && a.distance_km)    tags.push(`<span class="tag">🏊 ${Math.round(a.distance_km*1000)} m</span>`)
+        tags.push(`<span class="tag">⏱ ${fmtMovingTime(a.moving_time_hr||0)}</span>`)
+        if (!aIsWeight && !aIsSwim && a.elevation_m >= 100) tags.push(`<span class="tag">↑${a.elevation_m}m</span>`)
+        if (aIsRun  && a.avg_pace_km)    tags.push(`<span class="tag">💨 ${a.avg_pace_km}/km</span>`)
+        if (aIsRun  && a.avg_cadence_spm)tags.push(`<span class="tag">🦵 ${a.avg_cadence_spm} spm</span>`)
+        if (!aIsRun && !aIsSwim && !aIsWeight && a.avg_speed_kmh) tags.push(`<span class="tag">${a.avg_speed_kmh} km/h</span>`)
+        if (aIsSwim && a.pace_per_100m)  tags.push(`<span class="tag">💧 ${a.pace_per_100m}/100m</span>`)
+        if (a.avg_heartrate)             tags.push(`<span class="tag hr">♥ ${a.avg_heartrate} bpm</span>`)
+        const lapArr = (aIsRide && a.top_laps) ? a.top_laps.slice(0, 10) : []
+        const lapHtml = lapArr.length ? (() => {
+          const lid = a.id || Math.floor(Date.now()*Math.random())
+          const mkLap = l => `<div class="lap-strip"><span class="lap-name">🏁 ${l.name}</span><span class="lap-tag">⏱ ${l.moving_time_str}</span>${l.average_heartrate?`<span class="lap-tag">♥ ${l.average_heartrate}</span>`:''}${l.average_watts?`<span class="lap-tag">⚡ ${l.average_watts}W</span>`:''}</div>`
+          const vis = lapArr.slice(0,3).map(mkLap).join('')
+          const hidLaps = lapArr.slice(3)
+          if (!hidLaps.length) return vis
+          return vis + hidLaps.map(l=>mkLap(l).replace('<div class="lap-strip">',`<div class="lap-strip" data-lapgrp="${lid}" style="display:none">`)).join('') +
+            `<button class="lap-toggle" onclick="toggleLaps(this,'${lid}')">▼ +${hidLaps.length} 分段</button>`
+        })() : ''
+        const stravaLink = a.id ? `<a class="act-strava-link" href="https://www.strava.com/activities/${a.id}" target="_blank" rel="noopener">Strava ↗</a>` : ''
+        const ittBadges = (aIsRide && ittMap && ittMap[date])
+          ? ittMap[date].map(it => {
+              const crown = it.is_pr ? '👑' : `<span style="font-size:10px;color:#555">#${it.attemptNum}</span>`
+              const rankStr = it.rank ? (it.rank===1?'🥇 第1名':`第${it.rank}名`) : ''
+              const attempt = it.is_pr ? `第${it.attemptNum}次 · 🏆 PR ${rankStr}` : `第${it.attemptNum} / ${it.total} 次 · ${rankStr}`
+              return `<div class="itt-badge${it.is_pr?' pr':''}">
+                <div class="itt-crown">${crown}</div>
+                <div class="itt-info"><div class="itt-seg-name">${it.segName}</div><div class="itt-time">${it.elapsed_str}</div></div>
+                <div class="itt-attempt">${attempt}</div>
+              </div>`
+            }).join('')
+          : ''
+        const {grade, cls} = gradeActivity(a, aType)
+        return `
+        <div class="activity-card">
+          <div class="activity-icon"><svg viewBox="0 0 24 24">${aIcon}</svg></div>
+          <div class="activity-info">
+            <div class="activity-name-wrap"><div class="activity-name">${a.trainer ? INDOOR_TAG : (aIsRide ? BIKE_TAG : '')}${a.name || '—'}</div>${stravaLink}</div>
+            <div class="activity-meta">${tags.join('')}</div>
+            ${lapHtml}${ittBadges}
+          </div>
+          ${(!aIsWeight && !aIsSwim && a.distance_km) ? `<div class="activity-dist">${a.distance_km}<small style="font-size:10px;font-weight:400;margin-left:2px">km</small></div>` : (!aIsWeight && aIsSwim && a.distance_km) ? `<div class="activity-dist">${Math.round(a.distance_km*1000)}<small style="font-size:10px;font-weight:400;margin-left:2px">m</small></div>` : ''}
+          <div class="grade-badge ${cls}">${grade}</div>
+        </div>`
+      }).join('')}
+    </div>
+  `).join('')
+  const moreBtn = hasMore ? `<button class="show-more-btn" id="show-more-btn">▼ SHOW ALL ${groups.length} DAYS</button>` : ''
+  return html + moreBtn
+}
+
+/* ── main render ── */
+function render(data) {
+  const s = data.summary || {}
+  const history = (data.monthly_history || []).slice().reverse()
+  const maxDist = Math.max(...history.map(monthDist), 1)
+
+  // Fallback: derive monthly data if action hasn't run yet
+  if (!data.monthly_summary || !data.monthly_goals || !data.weekly_quest) {
+    const tpeNow = new Date(Date.now() + 8*3600*1000)
+    const tY=tpeNow.getUTCFullYear(), tM=tpeNow.getUTCMonth(), tD=tpeNow.getUTCDate()
+    const thisMonth = tY+'-'+String(tM+1).padStart(2,'0')
+    const mh = (data.monthly_history||[]).find(h=>h.month===thisMonth)
+    const TARGET=4, TW=10
+    const sOf=(c,t)=>{ const r=c/t; return r>=1.5?'over':r>=1?'done':r>=.5?'warning':'danger' }
+    if (!data.monthly_summary && mh) {
+      data.monthly_summary = {
+        ride_km: mh.ride?.distance_km??0, run_km: mh.run?.distance_km??0,
+        swim_m: Math.round((mh.swim?.distance_km??0)*1000), weight_count: mh.weight_training?.count??0,
+      }
+    }
+    if (!data.monthly_goals && mh) {
+      const rc=mh.ride?.count??0, rnc=mh.run?.count??0, sc=mh.swim?.count??0, wc=mh.weight_training?.count??0
+      data.monthly_goals = {
+        ride:{count:rc,target:TARGET,status:sOf(rc,TARGET)}, run:{count:rnc,target:TARGET,status:sOf(rnc,TARGET)},
+        swim:{count:sc,target:TARGET,status:sOf(sc,TARGET)}, weight:{count:wc,target:TW,status:sOf(wc,TW)},
+      }
+    }
+    if (!data.weekly_quest) {
+      const dow=tpeNow.getUTCDay(), dfm=(dow+6)%7
+      const ws=new Date(Date.UTC(tY,tM,tD-dfm)).toISOString().slice(0,10)
+      const inW=a=>(a.date||'')>=ws
+      data.weekly_quest = {
+        ride:(data.recent_rides||[]).some(inW), run:(data.recent_runs||[]).some(inW),
+        swim:(data.recent_swims||[]).some(inW), weight:(data.recent_weights||[]).some(inW),
+      }
+    }
+  }
+
+  const updatedAt = (data.updated_at||'').slice(0,10)
+  const topbarDate = document.getElementById('topbar-date')
+  if (topbarDate) topbarDate.textContent = 'UPDATED ' + (updatedAt || '—')
+
+  const allList = []
+  ;(data.recent_rides   ||[]).forEach(a=>allList.push({...a,_type:'ride'}))
+  ;(data.recent_runs    ||[]).forEach(a=>allList.push({...a,_type:'run'}))
+  ;(data.recent_swims   ||[]).forEach(a=>allList.push({...a,_type:'swim'}))
+  ;(data.recent_weights ||[]).forEach(a=>allList.push({...a,_type:'weight'}))
+  allList.sort((a,b)=>{ const dc=(b.date||'').localeCompare(a.date||''); return dc!==0?dc:(b.time||'').localeCompare(a.time||'') })
+
+  const tabs = [
+    {key:'all',   label:'📋 全部',  list:allList},
+    {key:'ride',  label:'🚴 單車',  list:data.recent_rides},
+    {key:'run',   label:'🏃 跑步',  list:data.recent_runs},
+    {key:'swim',  label:'🏊 游泳',  list:data.recent_swims},
+    {key:'weight',label:'🏋️ 重訓',list:data.recent_weights},
+  ]
+  const activeTabs = tabs.filter(t=>t.list&&t.list.length>0)
+  let activeTab = activeTabs[0]?.key || 'all'
+  const showMore = {}
+
+  // ITT map
+  const ittMap = {}
+  ;(data.segments||[]).forEach(seg => {
+    const sorted = seg.efforts.slice().sort((a,b)=>(a.date||'').localeCompare(b.date||''))
+    const byTime = seg.efforts.slice().sort((a,b)=>(a.elapsed_sec||0)-(b.elapsed_sec||0))
+    const rankOf = {}; byTime.forEach((e,i)=>{rankOf[e.activity_id]=i+1})
+    sorted.forEach((e,idx)=>{
+      const d=(e.date||'').slice(0,10)
+      if(!ittMap[d]) ittMap[d]=[]
+      ittMap[d].push({segName:seg.name,elapsed_str:e.elapsed_str,is_pr:e.is_pr,attemptNum:idx+1,total:sorted.length,rank:rankOf[e.activity_id]})
+    })
+  })
+
+  const tabHTML   = () => activeTabs.map(t=>`<button class="sport-tab${t.key===activeTab?' active':''}" data-tab="${t.key}">${t.label}</button>`).join('')
+  const tlHTML    = () => { const t=activeTabs.find(t=>t.key===activeTab); return renderTimeline(t?.list,activeTab,showMore[activeTab]||false,ittMap) }
+
+  document.getElementById('content').innerHTML = `
+    <div class="hero">
+      <div class="hero-inner">
+        <div class="hero-left">
+          <div class="avatar-wrap">
+            <div class="avatar">
+              <img src="docs/lol_01.png" alt="STEVE"
+                onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+              <svg viewBox="0 0 24 24" style="display:none;width:52px;height:52px;fill:#c89b3c">${ICONS.ride}</svg>
+            </div>
+            <div class="rank-badge">DIAMOND IV · 25 LP</div>
+          </div>
+          <div class="hero-info">
+            <div class="hero-name">STEVE</div>
+            <div class="hero-alias">#JAVAMASTER</div>
+            <div class="hero-rank">
+              <svg class="hero-rank-icon" viewBox="0 0 36 36" fill="none">
+                <polygon points="18,2 34,18 18,34 2,18" fill="none" stroke="#8ab4d4" stroke-width="2"/>
+                <polygon points="18,6 30,18 18,30 6,18" fill="rgba(140,180,220,.07)" stroke="#6090b4" stroke-width="1"/>
+                <circle cx="18" cy="18" r="4" fill="#8ab4d4"/>
+              </svg>
+              <span class="hero-rank-text">DIAMOND IV</span>
+              <span class="hero-rank-lp">S2026</span>
+            </div>
+          </div>
+        </div>
+        <div class="hero-right">
+          <div class="lol-logo">LEAGUE<br>OF LEGENDS</div>
+          <div class="lol-sub">ATHLETE RECORD</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats-grid" style="margin-top:1.5rem">
+      <div class="stat-card"><div class="stat-val">${typeof s.all_time_distance_km==='number'?s.all_time_distance_km.toLocaleString():s.all_time_distance_km??'—'}</div><div class="stat-unit">KM</div><div class="stat-label">總里程</div></div>
+      <div class="stat-card"><div class="stat-val">${typeof s.all_time_elevation_m==='number'?s.all_time_elevation_m.toLocaleString():s.all_time_elevation_m??'—'}</div><div class="stat-unit">M</div><div class="stat-label">總爬升</div></div>
+      <div class="stat-card"><div class="stat-val">${typeof s.all_time_rides==='number'?s.all_time_rides.toLocaleString():s.all_time_rides??'—'}</div><div class="stat-unit">TIMES</div><div class="stat-label">總活動次數</div></div>
+      <div class="stat-card"><div class="stat-val">${typeof s.ytd_moving_time_hr==='number'?s.ytd_moving_time_hr.toLocaleString():s.ytd_moving_time_hr??'—'}</div><div class="stat-unit">HRS</div><div class="stat-label">年度時數</div></div>
+    </div>
+
+    ${renderAbilitySection(data.monthly_summary, data.monthly_goals)}
+    ${renderMonthlySummary(data.monthly_summary)}
+    ${renderMonthlyGoals(data.monthly_goals)}
+    ${renderWeeklyQuest(data.weekly_quest)}
+    ${renderSegments(data.segments)}
+
+    ${history.length ? `
+    <div class="monthly-chart">
+      <div class="section-title">月度里程分佈 <span style="color:rgba(200,155,60,.35);font-size:8px">· MONTHLY DISTANCE (KM)</span></div>
+      <div class="chart-rows" id="chart-rows">
+        ${(()=>{
+          const byYear={}; history.forEach(h=>{ const y=h.month.slice(0,4); if(!byYear[y])byYear[y]=[]; byYear[y].push(h) })
+          const years=Object.keys(byYear).sort((a,b)=>b.localeCompare(a))
+          const cy=new Date().getFullYear().toString()
+          return years.map(year=>{
+            const coll=year!==cy
+            const rows=byYear[year].map(h=>{
+              const dist=monthDist(h), pct=dist>0?Math.max(dist/maxDist*100,4):0
+              return `<div class="chart-row"><div class="chart-label">${fmtMonthLabel(h.month)}</div><div class="chart-bar-wrap"><div class="chart-bar" data-pct="${pct}"><span class="chart-bar-val">${dist}</span></div></div><div class="chart-unit-label">km</div></div>`
+            }).join('')
+            return `<div class="chart-year-header" data-year="${year}"><span class="chart-year-arrow" id="arrow-${year}">${coll?'▶':'▼'}</span>${year}</div><div class="chart-year-rows" id="year-rows-${year}" style="max-height:${coll?'0':'9999px'}" data-collapsed="${coll?'1':''}">${rows}</div>`
+          }).join('')
+        })()}
+      </div>
+    </div>
+    ` : ''}
+
+    <div class="section-title">活動紀錄 <span style="color:rgba(200,155,60,.35);font-size:8px">· MATCH HISTORY · ACTIVITY LOG</span></div>
+    <div class="sport-tabs" id="sport-tabs">${tabHTML()}</div>
+    <div class="timeline" id="timeline">${tlHTML()}</div>
+
+    <div class="totals-grid">
+      <div class="total-card"><div class="total-val">${typeof s.all_time_distance_km==='number'?s.all_time_distance_km.toLocaleString():s.all_time_distance_km??'—'}</div><div class="total-label">Total KM</div></div>
+      <div class="total-card"><div class="total-val">${typeof s.all_time_elevation_m==='number'?s.all_time_elevation_m.toLocaleString():s.all_time_elevation_m??'—'}</div><div class="total-label">Total Elev</div></div>
+      <div class="total-card"><div class="total-val">${typeof s.all_time_rides==='number'?s.all_time_rides.toLocaleString():s.all_time_rides??'—'}</div><div class="total-label">Total Rides</div></div>
+    </div>
+
+    <a class="strava-cta" href="https://www.strava.com/athletes/161539959" target="_blank">
+      <svg viewBox="0 0 24 24"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/></svg>
+      VIEW FULL PROFILE ON STRAVA
+    </a>
+
+    <div class="page-footer">
+      <div class="footer-sub">SEASON 2026 · RANKED SOLO · #JAVAMASTER</div>
+      <div class="footer-lol">LEAGUE OF LEGENDS</div>
+    </div>
+  `
+
+  // animate bars
+  requestAnimationFrame(() => {
+    document.querySelectorAll('.chart-bar').forEach(bar => {
+      bar.style.width='0'; requestAnimationFrame(()=>{ setTimeout(()=>{bar.style.width=bar.dataset.pct+'%'},80) })
+    })
+    document.querySelectorAll('.progress-fill').forEach(fill => {
+      fill.style.width='0'; requestAnimationFrame(()=>{ setTimeout(()=>{fill.style.width=fill.dataset.pct+'%'},120) })
+    })
+  })
+
+  // year chart collapse
+  const chartRows = document.getElementById('chart-rows')
+  if (chartRows) {
+    chartRows.addEventListener('click', e => {
+      const hdr = e.target.closest('.chart-year-header'); if(!hdr) return
+      const year=hdr.dataset.year, rows=document.getElementById('year-rows-'+year), arrow=document.getElementById('arrow-'+year)
+      const isC = rows.dataset.collapsed==='1'
+      if (isC) {
+        rows.dataset.collapsed=''; rows.style.maxHeight=rows.scrollHeight+'px'; arrow.textContent='▼'
+        rows.querySelectorAll('.chart-bar').forEach(b=>{ b.style.width='0'; requestAnimationFrame(()=>{ setTimeout(()=>{b.style.width=b.dataset.pct+'%'},60) }) })
+        setTimeout(()=>{ if(rows.dataset.collapsed!=='1')rows.style.maxHeight='9999px' },400)
+      } else {
+        rows.style.maxHeight=rows.scrollHeight+'px'
+        requestAnimationFrame(()=>{ requestAnimationFrame(()=>{ rows.style.maxHeight='0'; rows.dataset.collapsed='1'; arrow.textContent='▶' }) })
+      }
+    })
+  }
+
+  // seg row click → scroll to activity
+  document.addEventListener('click', e => {
+    const tr = e.target.closest('tr[data-date]'); if (!tr) return
+    const date = tr.dataset.date, actId = tr.dataset.actid || ''
+    const actEl = document.getElementById('act-'+date)
+    if (actEl) {
+      actEl.scrollIntoView({behavior:'smooth',block:'center'})
+      actEl.classList.add('act-highlight'); setTimeout(()=>actEl.classList.remove('act-highlight'),1500)
+    } else {
+      activeTab='all'; showMore['all']=true
+      document.querySelectorAll('.sport-tab').forEach(b=>b.classList.toggle('active',b.dataset.tab==='all'))
+      document.getElementById('timeline').innerHTML=tlHTML()
+      setTimeout(()=>{
+        const el=document.getElementById('act-'+date)
+        if (el) {
+          el.scrollIntoView({behavior:'smooth',block:'center'})
+          el.classList.add('act-highlight'); setTimeout(()=>el.classList.remove('act-highlight'),1500)
+        } else {
+          const toast=document.createElement('div')
+          toast.innerHTML=actId
+            ? `⚔️ ${date} 的對戰紀錄 &nbsp;<a href="https://www.strava.com/activities/${actId}" target="_blank" style="color:#c89b3c;font-weight:700;text-decoration:underline">前往 Strava ↗</a>`
+            : `⚔️ ${date} 的活動不在記錄內`
+          toast.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(1,10,19,.96);color:#c89b3c;border:1px solid rgba(200,155,60,.4);padding:8px 18px;border-radius:2px;font-size:12px;letter-spacing:1px;z-index:9999'
+          document.body.appendChild(toast); setTimeout(()=>toast.remove(),3500)
+        }
+      },80)
+    }
+  })
+
+  // tab switch
+  document.getElementById('sport-tabs').addEventListener('click', e => {
+    const btn=e.target.closest('.sport-tab'); if(!btn) return
+    activeTab=btn.dataset.tab
+    document.querySelectorAll('.sport-tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===activeTab))
+    document.getElementById('timeline').innerHTML=tlHTML()
+  })
+
+  // show more
+  document.getElementById('timeline').addEventListener('click', e => {
+    if (e.target.id==='show-more-btn') { showMore[activeTab]=true; document.getElementById('timeline').innerHTML=tlHTML() }
+  })
+}
+
+/* ── fetch ── */
+fetch('strava.json')
+  .then(r=>{ if(!r.ok) throw new Error(`HTTP ${r.status}`); return r.json() })
+  .then(render)
+  .catch(err => {
+    document.getElementById('content').innerHTML = `<div class="loading" style="color:#c89b3c">載入失敗：${err.message}<br><br><span style="color:#444;font-size:12px">請先執行 GitHub Actions 產生 strava.json</span></div>`
+  })
+</script>
+
+<!-- ── Theme Switcher ── -->
+<div id="theme-switcher">
+  <button id="ts-toggle" title="切換主題">◈</button>
+  <div id="ts-panel">
+    <div class="ts-label">THEME</div>
+    <a href="strava.html"       class="ts-item"><span class="ts-icon">🔥</span><span class="ts-name">Orange</span><span class="ts-sub">Classic</span></a>
+    <a href="strava_aespa.html" class="ts-item"><span class="ts-icon">💜</span><span class="ts-name">Purple</span><span class="ts-sub">Aespa</span></a>
+    <a href="strava_maple.html" class="ts-item"><span class="ts-icon">🍁</span><span class="ts-name">Maple</span><span class="ts-sub">Pixel</span></a>
+    <a href="strava_cs.html"    class="ts-item"><span class="ts-icon">🎯</span><span class="ts-name">CS</span><span class="ts-sub">Tactical</span></a>
+    <a href="strava_lol.html"   class="ts-item active"><span class="ts-icon">⚔️</span><span class="ts-name">LoL</span><span class="ts-sub">Summoner</span></a>
+  </div>
+</div>
+<style>
+#theme-switcher{position:fixed;bottom:24px;right:20px;z-index:9999;display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+#ts-toggle{
+  width:42px;height:42px;border-radius:50%;
+  background:rgba(200,155,60,.1);border:1.5px solid rgba(200,155,60,.45);
+  color:#c89b3c;font-size:18px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .2s;backdrop-filter:blur(8px);
+  box-shadow:0 2px 12px rgba(200,155,60,.12);
+}
+#ts-toggle:hover,#ts-toggle.open{background:rgba(200,155,60,.22);border-color:#c89b3c}
+#ts-panel{
+  display:none;flex-direction:column;gap:5px;
+  background:rgba(1,10,19,.96);border:1px solid rgba(200,155,60,.2);
+  border-radius:2px;padding:10px 10px 8px;
+  backdrop-filter:blur(12px);
+  box-shadow:0 4px 24px rgba(0,0,0,.7);min-width:150px;
+}
+#ts-panel.open{display:flex}
+.ts-label{font-size:8px;letter-spacing:3px;color:rgba(200,155,60,.3);text-transform:uppercase;padding:0 4px 4px;border-bottom:1px solid rgba(200,155,60,.08);margin-bottom:2px}
+.ts-item{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:2px;text-decoration:none;transition:background .15s;color:#777;}
+.ts-item:hover{background:rgba(255,255,255,.04)}
+.ts-item.active{background:rgba(200,155,60,.08);border:1px solid rgba(200,155,60,.22)}
+.ts-icon{font-size:15px;width:22px;text-align:center;flex-shrink:0}
+.ts-name{font-size:12px;font-weight:700;color:#bbb;flex:1}
+.ts-sub{font-size:9px;color:#444;letter-spacing:1px}
+.ts-item.active .ts-name{color:#c89b3c}
+</style>
+<script>
+;(function(){
+  const btn=document.getElementById('ts-toggle'), panel=document.getElementById('ts-panel')
+  btn.addEventListener('click',()=>{ const open=panel.classList.toggle('open'); btn.classList.toggle('open',open) })
+  document.addEventListener('click',e=>{ if(!document.getElementById('theme-switcher').contains(e.target)){panel.classList.remove('open');btn.classList.remove('open')} })
+})();
+
+/* ── To Top ── */
+;(function(){
+  const b = document.createElement('button')
+  b.id = 'to-top-btn'
+  b.textContent = '⚔'
+  b.title = '回到頂部'
+  b.style.cssText = 'position:fixed;bottom:90px;right:22px;z-index:9998;width:40px;height:40px;border-radius:2px;border:1px solid rgba(200,155,60,.55);background:rgba(1,10,19,.9);color:#c89b3c;font-size:16px;cursor:pointer;display:none;align-items:center;justify-content:center;backdrop-filter:blur(6px);transition:opacity .2s,background .2s;box-shadow:0 0 12px rgba(200,155,60,.15),inset 0 1px 0 rgba(255,255,255,.05)'
+  document.body.appendChild(b)
+  window.addEventListener('scroll', () => { b.style.display = window.scrollY > 300 ? 'flex' : 'none' })
+  b.addEventListener('click', () => window.scrollTo({top:0,behavior:'smooth'}))
+  b.addEventListener('mouseenter', () => b.style.background='rgba(200,155,60,.18)')
+  b.addEventListener('mouseleave', () => b.style.background='rgba(1,10,19,.9)')
+})()
+</script>
+</body>
+</html>

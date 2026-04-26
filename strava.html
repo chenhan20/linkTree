@@ -6,11 +6,30 @@
 <title>Athletics · SteveChuang</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#060810;color:#ddd}
+html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0a0408;color:#ddd}
 
-#star-canvas{position:fixed;inset:0;width:100%;height:100%;background:#060810;z-index:0;pointer-events:none}
+/* space photo backdrop — push hue toward warm/orange to fit Strava theme */
+#space-bg{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:url('docs/space_bg.png') center/cover no-repeat fixed;
+  filter:hue-rotate(-35deg) saturate(.85) brightness(.55) contrast(1.05);
+  animation:spaceDrift 60s ease-in-out infinite alternate;
+}
+#space-bg::after{
+  content:'';position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse at 25% 80%, rgba(252,76,2,.18), transparent 55%),
+    radial-gradient(ellipse at 75% 20%, rgba(255,120,40,.10), transparent 60%),
+    linear-gradient(180deg, rgba(10,4,8,.45), rgba(10,4,8,.65));
+}
+@keyframes spaceDrift{
+  0%  {transform:scale(1.04) translate(0,0)}
+  100%{transform:scale(1.08) translate(-1.2%, -.8%)}
+}
 
-#app{position:relative;z-index:1;min-height:100vh;max-width:800px;margin:0 auto;padding:0 1.2rem 5rem}
+#star-canvas{position:fixed;inset:0;width:100%;height:100%;background:transparent;z-index:1;pointer-events:none;mix-blend-mode:screen;opacity:.85}
+
+#app{position:relative;z-index:2;min-height:100vh;max-width:800px;margin:0 auto;padding:0 1.2rem 5rem}
 
 /* ── topbar ── */
 .topbar{
@@ -52,13 +71,13 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 /* ── stats grid ── */
 .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:2.2rem}
 .stat-card{
-  padding:.9rem 1rem;border-radius:10px;
+  padding:1rem 1rem 1.1rem;border-radius:10px;
   border:1px solid rgba(252,76,2,.2);background:rgba(252,76,2,.05);
 }
-.stat-val{font-size:20px;font-weight:600;color:#FF6B35;line-height:1}
-.stat-unit{font-size:10px;color:rgba(252,76,2,.55);margin-top:2px}
-.stat-label{font-size:11px;color:#777;margin-top:8px}
-.stat-metrics{display:flex;align-items:flex-end;gap:0}
+.stat-val{font-size:26px;font-weight:700;color:#FF6B35;line-height:1}
+.stat-unit{font-size:10px;color:rgba(252,76,2,.55);margin-top:3px}
+.stat-label{font-size:12px;color:#bbb;margin-bottom:9px;letter-spacing:.5px}
+.stat-metrics{display:flex;align-items:flex-start;gap:0}
 .stat-metric{flex:1;min-width:0}
 .stat-vdiv{width:1px;background:rgba(252,76,2,.15);align-self:stretch;margin:2px 10px 6px;flex-shrink:0}
 
@@ -98,9 +117,12 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 /* act highlight flash */
 .act-highlight{animation:actFlash .9s ease-out}
 @keyframes actFlash{0%,40%{background:rgba(252,76,2,.18);border-color:rgba(252,76,2,.5)}100%{background:inherit;border-color:inherit}}
-/* strava inline link */
-.act-strava-link{display:inline-block;margin-left:6px;font-size:10px;color:rgba(252,76,2,.5);text-decoration:none;vertical-align:middle;line-height:1}
-.act-strava-link:hover{color:#FC4C02}
+/* strava link button */
+.act-strava-link{display:inline-flex;align-items:center;gap:2px;flex-shrink:0;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;color:rgba(252,76,2,.95);text-decoration:none;border:1px solid rgba(252,76,2,.45);background:rgba(252,76,2,.1);white-space:nowrap;line-height:1.4;transition:background .15s,border-color .15s}
+.act-strava-link:hover{background:rgba(252,76,2,.25);border-color:#FC4C02}
+.activity-name-wrap{display:flex;align-items:center;gap:8px;min-width:0;margin-bottom:0}
+.lap-toggle{background:transparent;border:none;color:rgba(252,76,2,.6);font-size:10px;cursor:pointer;padding:2px 4px;letter-spacing:.5px;display:inline-block}
+.lap-toggle:hover{color:#FC4C02}
 
 /* ── section title ── */
 .section-title{
@@ -198,7 +220,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 }
 .activity-icon svg{width:24px;height:24px;fill:#FC4C02}
 .activity-info{flex:1;min-width:0}
-.activity-name{font-size:16px;font-weight:500;color:#eeebe8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.activity-name{font-size:16px;font-weight:500;color:#eeebe8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0}
 .indoor-tag,.bike-tag{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;line-height:1;border-radius:3px;padding:2px 5px 2px 4px;vertical-align:middle;margin-right:5px;flex-shrink:0;white-space:nowrap}
 .indoor-tag{background:rgba(252,76,2,.12);color:#FC4C02;border:1px solid rgba(252,76,2,.3)}
 .bike-tag{background:rgba(255,210,60,.1);color:#f0c030;border:1px solid rgba(255,210,60,.35)}
@@ -277,6 +299,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 </head>
 <body>
 
+<div id="space-bg"></div>
 <canvas id="star-canvas"></canvas>
 
 <div id="app">
@@ -310,6 +333,13 @@ const INDOOR_TAG = '<span class="indoor-tag"><svg width="10" height="10" viewBox
 const BIKE_TAG   = '<span class="bike-tag"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12,2 15.5,8.5 22,9.5 17,14.5 18.5,22 12,18.5 5.5,22 7,14.5 2,9.5 8.5,8.5"/></svg>TCR Pro 0</span>'
 
 /* ── helpers ── */
+function toggleLaps(btn, gid) {
+  const els = [...document.querySelectorAll('[data-lapgrp="' + gid + '"]')]
+  if (!els.length) return
+  const show = els[0].style.display === 'none'
+  els.forEach(e => { e.style.display = show ? '' : 'none' })
+  btn.textContent = show ? '▲ 收起' : '▼ +' + els.length + ' 分段'
+}
 function fmtMovingTime(hr) {
   // PRD FR-4: 避免 "1:00" 歧義，改為 "45 分" / "1 小時" / "1 小時 30 分"
   const totalMin = Math.max(0, Math.round((hr || 0) * 60))
@@ -339,10 +369,10 @@ function renderMonthlySummary(ms) {
   return `
     <div class="section-title">本月訓練量 <span class="muted">· MONTHLY SUMMARY</span></div>
     <div class="stats-grid">
-      <div class="stat-card"><div class="stat-metrics">${m(ms.ride_km??0,'km')}${div}${m(hr(ms.ride_hr),'hr')}</div><div class="stat-label">🚴 單車</div></div>
-      <div class="stat-card"><div class="stat-metrics">${m(ms.run_km??0,'km')}${div}${m(hr(ms.run_hr),'hr')}</div><div class="stat-label">🏃 跑步</div></div>
-      <div class="stat-card"><div class="stat-metrics">${m(ms.swim_m??0,'m')}${div}${m(hr(ms.swim_hr),'hr')}</div><div class="stat-label">🏔️ 游泳</div></div>
-      <div class="stat-card"><div class="stat-metrics">${m(ms.weight_count??0,'次')}${div}${m(hr(ms.weight_hr),'hr')}</div><div class="stat-label">🏋️ 重訓</div></div>
+      <div class="stat-card"><div class="stat-label">🚴 單車</div><div class="stat-metrics">${m((+(ms.ride_km??0)).toFixed(1),'km')}${div}${m(hr(ms.ride_hr),'hr')}</div></div>
+      <div class="stat-card"><div class="stat-label">🏃 跑步</div><div class="stat-metrics">${m((+(ms.run_km??0)).toFixed(1),'km')}${div}${m(hr(ms.run_hr),'hr')}</div></div>
+      <div class="stat-card"><div class="stat-label">🏔️ 游泳</div><div class="stat-metrics">${m(ms.swim_m??0,'m')}${div}${m(hr(ms.swim_hr),'hr')}</div></div>
+      <div class="stat-card"><div class="stat-label">🏋️ 重訓</div><div class="stat-metrics">${m(ms.weight_count??0,'次')}${div}${m(hr(ms.weight_hr),'hr')}</div></div>
     </div>`
 }
 function renderMonthlyGoals(mg) {
@@ -387,6 +417,14 @@ function renderWeeklyQuest(wq) {
 }
 function renderSegments(segs) {
   if (!segs || segs.length === 0) return ''
+  const _today = new Date(Date.now() + 8*3600*1000).toISOString().slice(0,10)
+  const _sincePRLine = (efforts) => {
+    const pr = efforts.find(e => e.is_pr)
+    if (!pr || !pr.date) return ''
+    const d = Math.max(0, Math.round((Date.parse(_today) - Date.parse(pr.date.slice(0,10))) / 86400000))
+    if (d === 0) return `<div class="seg-since-pr" style="margin:6px 0 10px;padding:7px 11px;font-size:11.5px;background:linear-gradient(90deg,rgba(255,76,2,.18),rgba(255,76,2,.04));border-left:3px solid #FC4C02;border-radius:4px;letter-spacing:.5px">🔥 今天創下最快紀錄！</div>`
+    return `<div class="seg-since-pr" style="margin:6px 0 10px;padding:7px 11px;font-size:11.5px;background:rgba(255,255,255,.04);border-left:3px solid rgba(255,76,2,.55);border-radius:4px;opacity:.85;letter-spacing:.5px">⏱ 距PR紀錄已 <b style="font-weight:700;color:#FC4C02">${d}</b> 天</div>`
+  }
   const cards = segs.map(seg => {
     const sorted = seg.efforts.slice().sort((a,b) => (a.date||'').localeCompare(b.date||''))
     const rowArr = seg.efforts.map(e => {
@@ -417,6 +455,7 @@ function renderSegments(segs) {
           <div class="seg-pr-label">PR</div>
         </div>` : ''}
       </div>
+      ${_sincePRLine(seg.efforts)}
       <table class="seg-table">
         <thead><tr><th>日期</th><th>時間</th><th>功率</th><th>HR</th></tr></thead>
         <tbody>${visRows}</tbody>${extraTbody}
@@ -486,12 +525,17 @@ function renderTimeline(list, type, expanded, ittMap) {
         if (!aIsRun && !aIsSwim && !aIsWeight && a.avg_speed_kmh) tags.push(`<span class="tag">${a.avg_speed_kmh} km/h</span>`)
         if (aIsSwim && a.pace_per_100m)  tags.push(`<span class="tag">💧 ${a.pace_per_100m}/100m</span>`)
         if (a.avg_heartrate)             tags.push(`<span class="tag hr">♥️ ${a.avg_heartrate} bpm</span>`)
-        const lapHtml = (aIsRide && a.top_laps && a.top_laps.length)
-          ? a.top_laps.map(lap =>
-              `<div class="lap-strip"><span class="lap-name">🏁 ${lap.name}</span><span class="lap-tag">⏱ ${lap.moving_time_str}</span>${lap.average_heartrate ? `<span class="lap-tag">♥️ ${lap.average_heartrate}</span>` : ''}${lap.average_watts ? `<span class="lap-tag">⚡ ${lap.average_watts}W</span>` : ''}</div>`
-            ).join('')
-          : ''
-        const stravaLink = a.id ? `<a class="act-strava-link" href="https://www.strava.com/activities/${a.id}" target="_blank" rel="noopener" title="在 Strava 上查看">↗</a>` : ''
+        const lapArr = (aIsRide && a.top_laps) ? a.top_laps.slice(0, 10) : []
+        const lapHtml = lapArr.length ? (() => {
+          const lid = a.id || Math.floor(Date.now()*Math.random())
+          const mkLap = l => `<div class="lap-strip"><span class="lap-name">🏁 ${l.name}</span><span class="lap-tag">⏱ ${l.moving_time_str}</span>${l.average_heartrate?`<span class="lap-tag">♥️ ${l.average_heartrate}</span>`:''}${l.average_watts?`<span class="lap-tag">⚡ ${l.average_watts}W</span>`:''}</div>`
+          const vis = lapArr.slice(0,3).map(mkLap).join('')
+          const hidLaps = lapArr.slice(3)
+          if (!hidLaps.length) return vis
+          return vis + hidLaps.map(l=>mkLap(l).replace('<div class="lap-strip">',`<div class="lap-strip" data-lapgrp="${lid}" style="display:none">`)).join('') +
+            `<button class="lap-toggle" onclick="toggleLaps(this,'${lid}')">▼ +${hidLaps.length} 分段</button>`
+        })() : ''
+        const stravaLink = a.id ? `<a class="act-strava-link" href="https://www.strava.com/activities/${a.id}" target="_blank" rel="noopener">Strava ↗</a>` : ''
         const ittBadges = (aIsRide && ittMap && ittMap[date])
           ? ittMap[date].map(it => {
               const isPr = it.is_pr
@@ -512,12 +556,12 @@ function renderTimeline(list, type, expanded, ittMap) {
         <div class="activity-card">
           <div class="activity-icon"><svg viewBox="0 0 24 24">${aIcon}</svg></div>
           <div class="activity-info">
-            <div class="activity-name">${a.trainer ? INDOOR_TAG : (aIsRide ? BIKE_TAG : '')}${a.name || '—'}${stravaLink}</div>
+            <div class="activity-name-wrap"><div class="activity-name">${a.trainer ? INDOOR_TAG : (aIsRide ? BIKE_TAG : '')}${a.name || '—'}</div>${stravaLink}</div>
             <div class="activity-meta">${tags.join('')}</div>
             ${lapHtml}
             ${ittBadges}
           </div>
-          ${(!aIsWeight && !aIsSwim && a.distance_km) ? `<div class="activity-dist">${a.distance_km}<small style="font-size:11px;font-weight:400;margin-left:2px">km</small></div>` : ''}
+          ${(!aIsWeight && !aIsSwim && a.distance_km) ? `<div class="activity-dist">${a.distance_km}<small style="font-size:11px;font-weight:400;margin-left:2px">km</small></div>` : (!aIsWeight && aIsSwim && a.distance_km) ? `<div class="activity-dist">${Math.round(a.distance_km*1000)}<small style="font-size:11px;font-weight:400;margin-left:2px">m</small></div>` : ''}
         </div>`
       }).join('')}
     </div>
@@ -697,15 +741,15 @@ function render(data) {
 
     <div class="totals-grid">
       <div class="total-card">
-        <div class="total-val">${s.all_time_distance_km ?? '—'}</div>
+        <div class="total-val">${typeof s.all_time_distance_km==='number'?s.all_time_distance_km.toLocaleString():s.all_time_distance_km??'—'}</div>
         <div class="total-label">Total KM</div>
       </div>
       <div class="total-card">
-        <div class="total-val">${s.all_time_elevation_m ?? '—'}</div>
+        <div class="total-val">${typeof s.all_time_elevation_m==='number'?s.all_time_elevation_m.toLocaleString():s.all_time_elevation_m??'—'}</div>
         <div class="total-label">Total Elev</div>
       </div>
       <div class="total-card">
-        <div class="total-val">${s.all_time_rides ?? '—'}</div>
+        <div class="total-val">${typeof s.all_time_rides==='number'?s.all_time_rides.toLocaleString():s.all_time_rides??'—'}</div>
         <div class="total-label">Total Rides</div>
       </div>
     </div>
@@ -850,6 +894,7 @@ fetch('strava.json')
     <a href="strava_aespa.html" class="ts-item"><span class="ts-icon">💜</span><span class="ts-name">Purple</span><span class="ts-sub">Aespa</span></a>
     <a href="strava_maple.html" class="ts-item"><span class="ts-icon">🍁</span><span class="ts-name">Maple</span><span class="ts-sub">Pixel</span></a>
     <a href="strava_cs.html"   class="ts-item"><span class="ts-icon">🎯</span><span class="ts-name">CS</span><span class="ts-sub">Tactical</span></a>
+    <a href="strava_lol.html"  class="ts-item"><span class="ts-icon">⚔️</span><span class="ts-name">LoL</span><span class="ts-sub">Summoner</span></a>
   </div>
 </div>
 <style>
@@ -900,6 +945,20 @@ fetch('strava.json')
       btn.classList.remove('open')
     }
   })
+})();
+
+/* ── To Top ── */
+;(function(){
+  const b = document.createElement('button')
+  b.id = 'to-top-btn'
+  b.textContent = '▲'
+  b.title = '回到頂部'
+  b.style.cssText = 'position:fixed;bottom:90px;right:22px;z-index:9998;width:38px;height:38px;border-radius:50%;border:1px solid rgba(252,76,2,.5);background:rgba(10,4,0,.8);color:#FC4C02;font-size:14px;cursor:pointer;display:none;align-items:center;justify-content:center;backdrop-filter:blur(6px);transition:opacity .2s,background .2s;box-shadow:0 0 10px rgba(252,76,2,.2)'
+  document.body.appendChild(b)
+  window.addEventListener('scroll', () => { b.style.display = window.scrollY > 300 ? 'flex' : 'none' })
+  b.addEventListener('click', () => window.scrollTo({top:0,behavior:'smooth'}))
+  b.addEventListener('mouseenter', () => b.style.background='rgba(252,76,2,.25)')
+  b.addEventListener('mouseleave', () => b.style.background='rgba(10,4,0,.8)')
 })()
 </script>
 </body>

@@ -156,14 +156,14 @@ html,body{height:100%;background:#0a0a0a;color:#ccc;font-family:'Rajdhani',sans-
 
 /* monthly summary 左右並排 */
 .ms-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0}
-.ms-box{padding:16px 12px;border-right:1px solid rgba(200,168,0,0.1);text-align:center}
+.ms-box{padding:16px 12px 18px;border-right:1px solid rgba(200,168,0,0.1);text-align:center}
 .ms-box:last-child{border-right:none}
-.ms-metrics{display:flex;align-items:flex-end;gap:0;justify-content:center}
+.ms-metrics{display:flex;align-items:flex-start;gap:0;justify-content:center}
 .ms-metric{flex:1;min-width:0;text-align:center}
-.ms-metric .ms-val{font-size:20px;font-weight:700;color:#c8a800;letter-spacing:1px;line-height:1;font-family:'Share Tech Mono',monospace}
+.ms-metric .ms-val{font-size:24px;font-weight:700;color:#c8a800;letter-spacing:1px;line-height:1;font-family:'Share Tech Mono',monospace}
 .ms-metric .ms-unit{font-size:9px;color:#555;letter-spacing:2px;text-transform:uppercase;margin-top:1px}
 .ms-vdiv{width:1px;background:rgba(200,168,0,.15);align-self:stretch;margin:2px 8px 6px;flex-shrink:0}
-.ms-label{font-size:9px;color:#555;letter-spacing:2px;text-transform:uppercase;margin-top:6px}
+.ms-label{font-size:10px;color:#888;letter-spacing:2px;text-transform:uppercase;margin-bottom:7px;font-weight:600}
 
 /* scrollable body */
 .main-body{flex:1;overflow-y:auto;padding-bottom:40px}
@@ -289,8 +289,10 @@ html,body{height:100%;background:#0a0a0a;color:#ccc;font-family:'Rajdhani',sans-
 /* log row highlight flash & strava link */
 .log-row-highlight td{animation:logFlash 1s ease-out}
 @keyframes logFlash{0%,40%{background:rgba(200,168,0,.14)}100%{background:transparent}}
-.act-strava-link{display:inline-block;margin-left:5px;font-size:10px;color:rgba(200,168,0,.35);text-decoration:none;vertical-align:middle}
-.act-strava-link:hover{color:#c8a800}
+.act-strava-link{display:inline-flex;align-items:center;gap:2px;margin-left:6px;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;color:#c8a800;text-decoration:none;vertical-align:middle;border:1px solid rgba(200,168,0,.45);background:rgba(200,168,0,.08);white-space:nowrap;line-height:1.4;transition:background .15s}
+.act-strava-link:hover{background:rgba(200,168,0,.2);border-color:#c8a800}
+.lap-toggle-cs{background:transparent;border:none;color:rgba(200,168,0,.6);font-size:10px;cursor:pointer;padding:2px 4px;letter-spacing:.5px}
+.lap-toggle-cs:hover{color:#c8a800}
 .log-sport-icon{margin-right:5px;font-size:15px}
 .log-name{color:#ccc;font-weight:600;letter-spacing:.5px}
 .indoor-tag,.bike-tag{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:700;letter-spacing:.5px;line-height:1;border-radius:2px;padding:2px 5px 2px 4px;vertical-align:middle;margin-right:4px;flex-shrink:0;white-space:nowrap}
@@ -349,7 +351,27 @@ html,body{height:100%;background:#0a0a0a;color:#ccc;font-family:'Rajdhani',sans-
   .col-section{padding:16px}
   .header-name{font-size:26px}
   .cs-footer{padding:14px 16px;flex-direction:column;gap:8px}
+  .mobile-profile{display:flex}
 }
+.mobile-profile{
+  display:none;
+  align-items:center;gap:18px;
+  padding:18px 16px 14px;
+  border-bottom:1px solid rgba(200,168,0,.1);
+  background:rgba(200,168,0,.03);
+}
+.mobile-avatar{
+  width:80px;height:80px;border-radius:4px;
+  border:2px solid rgba(200,168,0,.5);
+  overflow:hidden;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:36px;background:#1a1a0a;
+}
+.mobile-avatar img{width:100%;height:100%;object-fit:cover}
+.mobile-profile-info{display:flex;flex-direction:column;gap:4px}
+.mobile-profile-name{font-size:20px;font-weight:700;color:#fff;letter-spacing:1px}
+.mobile-profile-alias{font-size:10px;color:#c8a800;letter-spacing:2.5px;text-transform:uppercase}
+.mobile-profile-rank{font-size:10px;color:#555;letter-spacing:1.5px;text-transform:uppercase;margin-top:2px}
 </style>
 </head>
 <body>
@@ -387,7 +409,7 @@ html,body{height:100%;background:#0a0a0a;color:#ccc;font-family:'Rajdhani',sans-
       <div class="pp-avatar">
         <img src="docs/avatar.jpg" alt="SC" id="pp-img" onerror="this.style.display='none';this.parentElement.textContent='🚴'">
       </div>
-      <div class="pp-name">莊成翰</div>
+      <div class="pp-name">STEVE</div>
       <div class="pp-alias">STEVE</div>
       <div class="pp-rank" id="pp-rank">LOADING...</div>
       <div class="xp-row">
@@ -410,12 +432,23 @@ html,body{height:100%;background:#0a0a0a;color:#ccc;font-family:'Rajdhani',sans-
 
   <!-- ── MAIN CONTENT ── -->
   <main class="main-content">
+    <!-- mobile profile strip (hidden on desktop, shown on mobile) -->
+    <div class="mobile-profile">
+      <div class="mobile-avatar">
+        <img src="docs/avatar.jpg" alt="STEVE" onerror="this.style.display='none';this.parentElement.textContent='🚴'">
+      </div>
+      <div class="mobile-profile-info">
+        <div class="mobile-profile-name">STEVE</div>
+        <div class="mobile-profile-alias">Counter·Sport</div>
+        <div class="mobile-profile-rank" id="mobile-rank">ELITE CYCLIST</div>
+      </div>
+    </div>
     <!-- header (static, no data needed) -->
     <div class="main-header">
       <div class="tactical-grid"></div>
       <div class="header-left">
         <div class="header-welcome">Welcome Back,</div>
-        <div class="header-name">莊成翰</div>
+        <div class="header-name">STEVE</div>
         <div class="header-alias">Steve</div>
         <div class="header-rank-badge">⊕ <span id="header-rank">ELITE CYCLIST</span></div>
       </div>
@@ -534,6 +567,13 @@ html,body{height:100%;background:#0a0a0a;color:#ccc;font-family:'Rajdhani',sans-
 
 <script>
 // ── helpers ──
+function toggleLaps(btn, gid) {
+  const els = [...document.querySelectorAll('[data-lapgrp="' + gid + '"]')]
+  if (!els.length) return
+  const show = els[0].style.display === 'none'
+  els.forEach(e => { e.style.display = show ? '' : 'none' })
+  btn.textContent = show ? '▲ 收起' : '▼ +' + els.length + ' 分段'
+}
 function fmtMovingTime(hr) {
   const m = Math.max(0, Math.round((hr || 0) * 60))
   if (m < 60) return m + 'min'
@@ -863,10 +903,10 @@ function render(data) {
   const msDiv = '<div class="ms-vdiv"></div>'
   const msHr = v => v != null ? v : '—'
   document.getElementById('ms-cards').innerHTML = [
-    `<div class="ms-box">${msM(ms.ride_km??0,'KM')}${msDiv}${msM(msHr(ms.ride_hr),'HR')}<div class="ms-label">🚴 RIDE</div></div>`,
-    `<div class="ms-box">${msM(ms.run_km??0,'KM')}${msDiv}${msM(msHr(ms.run_hr),'HR')}<div class="ms-label">🏃 RUN</div></div>`,
-    `<div class="ms-box">${msM(ms.swim_m??0,'M')}${msDiv}${msM(msHr(ms.swim_hr),'HR')}<div class="ms-label">🏊 SWIM</div></div>`,
-    `<div class="ms-box">${msM(ms.weight_count??0,'TIMES')}${msDiv}${msM(msHr(ms.weight_hr),'HR')}<div class="ms-label">🏋️ GYM</div></div>`,
+    `<div class="ms-box"><div class="ms-label">🚴 RIDE</div><div class="ms-metrics">${msM((+(ms.ride_km??0)).toFixed(1),'KM')}${msDiv}${msM(msHr(ms.ride_hr),'HR')}</div></div>`,
+    `<div class="ms-box"><div class="ms-label">🏃 RUN</div><div class="ms-metrics">${msM((+(ms.run_km??0)).toFixed(1),'KM')}${msDiv}${msM(msHr(ms.run_hr),'HR')}</div></div>`,
+    `<div class="ms-box"><div class="ms-label">🏊 SWIM</div><div class="ms-metrics">${msM(ms.swim_m??0,'M')}${msDiv}${msM(msHr(ms.swim_hr),'HR')}</div></div>`,
+    `<div class="ms-box"><div class="ms-label">🏋️ GYM</div><div class="ms-metrics">${msM(ms.weight_count??0,'TIMES')}${msDiv}${msM(msHr(ms.weight_hr),'HR')}</div></div>`,
   ].join('')
 
   // ── activity log ──
@@ -900,9 +940,16 @@ function render(data) {
           ? a.avg_speed_kmh + ' km/h'
           : (a.avg_pace_km ? a.avg_pace_km + '/km' : '—')
         const elev = (!isSw && !isWt && a.elevation_m >= 100) ? a.elevation_m + 'm' : '—'
-        const lapRows = (a._type === 'ride' && a.top_laps && a.top_laps.length)
-          ? a.top_laps.map(lap => `<tr class="log-lap-row"><td colspan="6"><div class="lap-strip-cs"><span class="lap-n">&#x1F3C1; ${lap.name}</span><span class="lap-t">&#x23F1; ${lap.moving_time_str}</span>${lap.average_heartrate ? `<span class="lap-hr">&#x2665; ${lap.average_heartrate}</span>` : ''}${lap.average_watts ? `<span class="lap-w">&#x26A1; ${lap.average_watts}W</span>` : ''}</div></td></tr>`).join('')
-          : ''
+        const lapArr2 = (a._type === 'ride' && a.top_laps) ? a.top_laps.slice(0, 10) : []
+        const lapRows = lapArr2.length ? (() => {
+          const lid = a.id || Math.floor(Date.now()*Math.random())
+          const mkRow = (lap, hidden) => `<tr class="log-lap-row"${hidden ? ` data-lapgrp="${lid}" style="display:none"` : ''}><td colspan="6"><div class="lap-strip-cs"><span class="lap-n">&#x1F3C1; ${lap.name}</span><span class="lap-t">&#x23F1; ${lap.moving_time_str}</span>${lap.average_heartrate ? `<span class="lap-hr">&#x2665; ${lap.average_heartrate}</span>` : ''}${lap.average_watts ? `<span class="lap-w">&#x26A1; ${lap.average_watts}W</span>` : ''}</div></td></tr>`
+          const vis = lapArr2.slice(0,3).map(l=>mkRow(l,false)).join('')
+          const hidLaps = lapArr2.slice(3)
+          if (!hidLaps.length) return vis
+          const hidRows = hidLaps.map(l=>mkRow(l,true)).join('')
+          return vis + hidRows + `<tr class="log-lap-row"><td colspan="6"><button class="lap-toggle-cs" onclick="toggleLaps(this,'${lid}')">▼ +${hidLaps.length} 分段</button></td></tr>`
+        })() : ''
         // ITT badges for this date (only for rides)
         const dateKey = (a.date || '').slice(0, 10)
         const ittBadges = (a._type === 'ride' && ittMap[dateKey])
@@ -925,7 +972,7 @@ function render(data) {
           : ''
         return `<tr>
           <td></td>
-          <td><span class="log-sport-icon">${sp.icon}</span><span class="log-name">${a.trainer ? INDOOR_TAG : (a._type === 'ride' ? BIKE_TAG : '')}${a.name || '—'}${a.id ? `<a class="act-strava-link" href="https://www.strava.com/activities/${a.id}" target="_blank" rel="noopener" title="在 Strava 上查看">↗</a>` : ''}</span></td>
+          <td><span class="log-sport-icon">${sp.icon}</span><span class="log-name">${a.trainer ? INDOOR_TAG : (a._type === 'ride' ? BIKE_TAG : '')}${a.name || '—'}${a.id ? `<a class="act-strava-link" href="https://www.strava.com/activities/${a.id}" target="_blank" rel="noopener">Strava ↗</a>` : ''}</span></td>
           <td class="log-detail">${detail}</td>
           <td class="log-dist">${dist}</td>
           <td class="log-speed">${speed}</td>
@@ -952,6 +999,14 @@ function render(data) {
   // ── ITT segments ──
   const segGrid = document.getElementById('seg-grid')
   if (segGrid && Array.isArray(data.segments) && data.segments.length > 0) {
+    const _today = new Date(Date.now() + 8*3600*1000).toISOString().slice(0,10)
+    const _sincePRLine = (efforts) => {
+      const pr = efforts.find(e => e.is_pr)
+      if (!pr || !pr.date) return ''
+      const d = Math.max(0, Math.round((Date.parse(_today) - Date.parse(pr.date.slice(0,10))) / 86400000))
+      if (d === 0) return `<div class="seg-since-pr" style="margin:6px 0 10px;padding:7px 11px;font-size:10.5px;background:linear-gradient(90deg,rgba(232,64,64,.22),rgba(232,64,64,.04));border-left:3px solid #e84040;border-radius:2px;letter-spacing:1.5px;color:#ffe0e0;text-transform:uppercase;font-family:'Courier New',monospace">[!] NEW BEST TODAY</div>`
+      return `<div class="seg-since-pr" style="margin:6px 0 10px;padding:7px 11px;font-size:10.5px;background:rgba(232,64,64,.06);border-left:3px solid rgba(232,64,64,.5);border-radius:2px;letter-spacing:1.5px;color:rgba(255,224,224,.78);text-transform:uppercase;font-family:'Courier New',monospace">DAYS_SINCE_PR :: <b style="font-weight:700;color:#ff6464">${d}</b></div>`
+    }
     segGrid.innerHTML = data.segments.map(seg => {
       const rowArr = seg.efforts.map(e => {
         const crown = e.is_pr ? '<span class="seg-crown">👑</span>' : ''
@@ -979,6 +1034,7 @@ function render(data) {
             <div class="seg-pr-label">PR</div>
           </div>` : ''}
         </div>
+        ${_sincePRLine(seg.efforts)}
         <table class="seg-table">
           <thead><tr><th>日期</th><th>時間</th><th>功率</th><th>HR</th></tr></thead>
           <tbody>${visRows}</tbody>${extraTbody}
@@ -1060,6 +1116,7 @@ fetch('strava.json')
     <a href="strava_aespa.html" class="ts-item"><span class="ts-icon">💜</span><span class="ts-name">Purple</span><span class="ts-sub">Aespa</span></a>
     <a href="strava_maple.html" class="ts-item"><span class="ts-icon">🍁</span><span class="ts-name">Maple</span><span class="ts-sub">Pixel</span></a>
     <a href="strava_cs.html"   class="ts-item active"><span class="ts-icon">🎯</span><span class="ts-name">CS</span><span class="ts-sub">Tactical</span></a>
+    <a href="strava_lol.html"  class="ts-item"><span class="ts-icon">⚔️</span><span class="ts-name">LoL</span><span class="ts-sub">Summoner</span></a>
   </div>
 </div>
 <style>
@@ -1110,6 +1167,22 @@ fetch('strava.json')
       btn.classList.remove('open')
     }
   })
+})();
+
+/* ── To Top (scrolls .main-body) ── */
+;(function(){
+  const mb = document.querySelector('.main-body')
+  if (!mb) return
+  const b = document.createElement('button')
+  b.id = 'to-top-btn'
+  b.textContent = '▲'
+  b.title = '回到頂部'
+  b.style.cssText = 'position:fixed;bottom:90px;right:22px;z-index:9998;width:38px;height:38px;border-radius:2px;border:1px solid rgba(200,168,0,.5);background:rgba(12,12,8,.9);color:#c8a800;font-size:14px;cursor:pointer;display:none;align-items:center;justify-content:center;font-family:"Share Tech Mono",monospace;transition:opacity .2s,background .2s;letter-spacing:0'
+  document.body.appendChild(b)
+  mb.addEventListener('scroll', () => { b.style.display = mb.scrollTop > 200 ? 'flex' : 'none' })
+  b.addEventListener('click', () => mb.scrollTo({top:0,behavior:'smooth'}))
+  b.addEventListener('mouseenter', () => b.style.background='rgba(200,168,0,.18)')
+  b.addEventListener('mouseleave', () => b.style.background='rgba(12,12,8,.9)')
 })()
 </script>
 </body>

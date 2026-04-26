@@ -204,11 +204,59 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 .sv-open-btn:hover{background:rgba(252,76,2,.14);border-color:rgba(252,76,2,.5)}
 .sv-open-btn svg{width:13px;height:13px;fill:#FC4C02}
 
+/* VIP badge button */
+.btn-badge{
+  display:inline-block;margin-left:7px;padding:1px 6px;
+  border-radius:10px;font-size:8.5px;font-weight:700;letter-spacing:1.5px;
+  background:linear-gradient(90deg,#ff8c28,#ffb347);
+  color:#1a0800;vertical-align:middle;line-height:1.6;
+  box-shadow:0 0 6px rgba(255,140,50,.5);
+  animation:badgePulse 2s ease-in-out infinite;
+}
+@keyframes badgePulse{
+  0%,100%{box-shadow:0 0 6px rgba(255,140,50,.5)}
+  50%{box-shadow:0 0 14px rgba(255,180,70,.9),0 0 28px rgba(255,140,50,.35)}
+}
+.sp-btn-vip{
+  border-color:rgba(255,140,50,.35) !important;
+  background:linear-gradient(135deg,rgba(255,120,30,.08),rgba(255,80,0,.04)) !important;
+  box-shadow:0 0 16px rgba(255,140,50,.12),inset 0 1px 0 rgba(255,180,80,.08) !important;
+  position:relative;overflow:hidden;
+}
+.sp-btn-vip::after{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(105deg,transparent 40%,rgba(255,180,80,.07) 60%,transparent 70%);
+  animation:vipSheen 3s ease-in-out infinite;
+}
+@keyframes vipSheen{
+  0%{transform:translateX(-100%)} 60%,100%{transform:translateX(150%)}
+}
+
 @media(max-width:480px){
   .cv-hero{gap:1rem}.cv-projects{grid-template-columns:1fr}.cv-hero-info h1{font-size:20px}
   .sv-stats-grid{grid-template-columns:repeat(2,1fr)}
   .sv-alltime{flex-wrap:wrap}.sv-at-item{flex:calc(33% - 1px);min-width:80px}
 }
+
+/* version switcher */
+.ver-switch{
+  position:fixed;right:18px;bottom:18px;z-index:9999;
+  display:flex;align-items:center;gap:8px;
+  padding:9px 14px;border-radius:24px;
+  background:rgba(8,12,28,.8);backdrop-filter:blur(8px);
+  border:1px solid rgba(127,119,221,.3);
+  color:#cfc8ff;font-family:monospace;font-size:11px;letter-spacing:1.5px;
+  text-decoration:none;cursor:pointer;
+  box-shadow:0 4px 18px rgba(0,0,0,.4),0 0 24px rgba(127,119,221,.15);
+  transition:transform .2s,box-shadow .2s,border-color .2s;
+}
+.ver-switch:hover{
+  transform:translateY(-2px);
+  border-color:rgba(255,140,50,.6);color:#ffb98a;
+  box-shadow:0 6px 24px rgba(0,0,0,.5),0 0 36px rgba(255,140,50,.4);
+}
+.ver-switch .dot{width:7px;height:7px;border-radius:50%;background:#ff8c32;animation:verPulse 1.5s ease-in-out infinite;box-shadow:0 0 10px #ff8c32}
+@keyframes verPulse{50%{opacity:.3;transform:scale(.7)}}
 </style>
 </head>
 <body>
@@ -251,13 +299,14 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
       </div>
       <div class="links">
         <button v-for="(link,i) in links" :key="link.label" class="sp-btn"
+          :class="{' sp-btn-vip':link.badge}"
           :style="{'--bc':'rgb('+link.rgb+')','--br':link.rgb,animationDelay:(0.28+i*0.07)+'s'}"
           @click="handleLink(link,$event)">
           <span class="btn-seq">{{ String(i+1).padStart(2,'0') }}</span>
           <span class="btn-icon" :style="{borderColor:'rgba('+link.rgb+',.22)',background:'rgba('+link.rgb+',.07)'}">
             <svg viewBox="0 0 24 24" :style="{fill:'rgb('+link.rgb+')'}"><path :d="link.icon"/></svg>
           </span>
-          <span class="btn-label">{{ link.label }}</span>
+          <span class="btn-label">{{ link.label }}<span v-if="link.badge" class="btn-badge">{{ link.badge }}</span></span>
           <span class="btn-arrow">→</span>
         </button>
       </div>
@@ -357,7 +406,9 @@ createApp({
         icon:'M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z' },
       { label:'Youtube', url:'https://www.youtube.com/user/chenhan20', rgb:'255,69,69',
         icon:'M23.495 6.205a3.007 3.007 0 0 0-2.088-2.088c-1.87-.501-9.396-.501-9.396-.501s-7.507-.01-9.396.501A3.007 3.007 0 0 0 .527 6.205a31.247 31.247 0 0 0-.522 5.805 31.247 31.247 0 0 0 .522 5.783 3.007 3.007 0 0 0 2.088 2.088c1.868.502 9.396.502 9.396.502s7.506 0 9.396-.502a3.007 3.007 0 0 0 2.088-2.088 31.247 31.247 0 0 0 .5-5.783 31.247 31.247 0 0 0-.5-5.805zM9.609 15.601V8.408l6.264 3.602z' },
-      { label:'Strava · 太空版', url:'strava.html', rgb:'252,76,2',
+      { label:'Strava', url:'https://www.strava.com/athletes/161539959', rgb:'252,76,2',
+        icon:'M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169' },
+      { label:'Strava · STEVE專用版', url:'strava.html', rgb:'255,140,50', badge:'STEVE',
         icon:'M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169' },
       { label:'Resume', page:'cv', rgb:'46,207,160',
         icon:'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM6 20V4h5v7h7v9H6z' },
@@ -466,5 +517,7 @@ createApp({
   setInterval(spawnEmber,55)
 })()
 </script>
+
+<a class="ver-switch" href="linkTreeIndex_lab.html" title="切換到實驗版"><span class="dot"></span>LAB ▸ 實驗版</a>
 </body>
 </html>

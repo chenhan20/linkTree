@@ -36,7 +36,7 @@
 - 月度里程長條圖
 - 活動紀錄：單車 / 跑步 / 游泳 / 重訓分頁
 - All Time 累計數據
-- 每天 08:00（台灣時間）自動更新
+- 每天 09:30（台灣時間）自動更新
 
 ---
 
@@ -53,21 +53,111 @@
 
 ## Strava 自動同步流程
 
+### 🍼 笨蛋版（30 秒看懂）
+
+> 想像 Strava 是「便利商店」、`strava.json` 是「冰箱裡的便當」、網頁是「飯桌」。
+
 ```
-每天 08:00 (UTC+8)
-    ↓
-GitHub Actions 執行 scripts/fetch-strava.js
-    ↓
-用 refresh_token 換 access_token
-    ↓
-呼叫 Strava API 抓統計 + 活動（單車/跑步/游泳/重訓）
-    ↓
-寫入 strava.json → commit → push 回 repo
-    ↓
-GitHub Pages 前端直接 fetch 靜態 JSON
+每天早上 9:30
+   ↓
+機器人（GitHub Actions）拿著鑰匙去 Strava 便利商店
+   ↓
+把所有運動紀錄打包成一個便當盒（strava.json）
+   ↓
+放回家裡冰箱（commit + push 回 repo）
+   ↓
+你打開網頁 → 網頁從冰箱拿便當出來顯示
 ```
 
-手動觸發：**GitHub repo → Actions → Strava Daily Sync → Run workflow**
+**重點**：網頁本身**不會**直接打 Strava，它只看「冰箱裡那個便當」。
+所以如果剛運動完、便當還沒更新，網頁就還是舊的 → 這時候去手動催一下機器人就好。
+
+**手動催機器人的 3 個情境**：
+
+| 情境 | 怎麼做 |
+|------|-------|
+| 平常剛運動完想立刻看到 | GitHub repo → Actions → **Strava Daily Sync** → Run workflow |
+| 想拉「以前全部」歷史活動（首次或重灌） | 本機跑 `$env:FETCH_ALL="1"; $env:SCAN_SEGMENTS="1"; node scripts/fetch-strava.js` |
+| 想補抓特定 ITT 區段最新成績 | 同上，或直接讓每天的 cron 自動跑 |
+
+**便當盒裡有什麼**（`strava.json` 結構）：
+- 🏆 年度/全時間統計（YTD、All Time）
+- 📅 每月里程歷史
+- 🚴 / 🏃 / 🏊 / 🏋️ 全部活動清單（含 Strava activity_id）
+- ⛰️ ITT 區段成績（風櫃嘴 / 中社路 / 圓山-社子島）
+
+---
+
+### 🛠️ 工程師版（可實作細節）
+
+> 完整流程圖（含分支、API 細節、快取邏輯）見 [docs/data-flow.md](docs/data-flow.md)
+
+```mermaid
+flowchart TD
+  Cron(["⏰ cron '30 1 * * *' UTC<br/>= 09:30 Asia/Taipei"]) --> Token
+  Token["① POST /oauth/token<br/>refresh_token → access_token"] --> Stats
+  Stats["② GET /athletes/{id}/stats<br/>YTD / All-time"] --> Acts
+  Acts{"③ GET /athlete/activities<br/>FETCH_ALL=1?"}
+  Acts -- 否 --> ActsR["page=1, per_page=100"]
+  Acts -- 是 --> ActsA["分頁直到空<br/>per_page=200"]
+  ActsR --> Build
+  ActsA --> Build
+  Build["④ buildJSON 純運算<br/>monthly_summary / goals / quest<br/>recent_rides/runs/swims/weights"] --> Mode
+  Mode{"⑤ Detail enrichment<br/>SCAN_SEGMENTS / FETCH_ALL?"}
+  Mode -- 否（日常） --> Daily["enrichRideLaps<br/>LAP_FETCH_MAX=30<br/>cache by ride.id"]
+  Mode -- 是 --> Scan["scanSegmentsHistory<br/>全史 ride 補打 detail"]
+  Daily --> Detail
+  Scan --> Detail
+  Detail["GET /activities/{id}<br/>• laps → 篩 avg_watts ≥ 150W<br/>• segment_efforts → ITT 三個 ID"]
+  Detail --> Segs["⑥ buildSegmentsData<br/>合併去重 by activity_id<br/>PR = min(elapsed_sec)"]
+  Segs --> Write["⑦ 寫檔<br/>strava.json + itt-segments.json"]
+  Write --> Push["git commit/push<br/>(GITHUB_TOKEN)"]
+  Push --> Pages["GitHub Pages CDN<br/>5 個前端 fetch 渲染"]
+
+  style Cron fill:#FC4C02,color:#fff
+  style Push fill:#2ea043,color:#fff
+  style Pages fill:#a855f7,color:#fff
+```
+
+#### 環境變數（`scripts/.env` 或 GitHub Secrets）
+
+| 變數 | 必填 | 用途 |
+|------|------|------|
+| `STRAVA_CLIENT_ID` | ✅ | Strava App ID |
+| `STRAVA_CLIENT_SECRET` | ✅ | Strava App Secret |
+| `STRAVA_REFRESH_TOKEN` | ✅ | OAuth refresh token（需 `activity:read_all` scope） |
+| `STRAVA_ATHLETE_ID` | ✅ | 自己的 athlete ID |
+| `FETCH_ALL` | ⬜ | `=1` 拉全史；省略則只拉最近 100 筆 |
+| `SCAN_SEGMENTS` | ⬜ | `=1` 對全史 ride 掃 ITT segment efforts |
+| `REFRESH_LAPS` | ⬜ | `=1` 忽略 lap 快取重新抓 |
+| `LAP_FETCH_MAX` | ⬜ | 單次最多打多少 detail call（預設 30，避 rate limit） |
+
+#### Strava API rate limit
+- **100 requests / 15 min**, **1000 / day**（讀取類）
+- 全史掃描 263 筆活動 ≈ 263 detail calls → 必須分批 + `setTimeout(400ms)` 節流
+- 全量首跑建議分兩次：先 `FETCH_ALL=1` 拉清單，等 15 分後再 `SCAN_SEGMENTS=1` 掃 segment
+
+#### 前端讀取
+- 4 個主題（[strava.html](strava.html) / [strava_aespa.html](strava_aespa.html) / [strava_cs.html](strava_cs.html) / [strava_maple.html](strava_maple.html)）共用同一份 `strava.json`
+- 純 `fetch()` + 字串模板渲染，無框架、無 build step
+- 每張活動卡右上角 `↗` 直連 `https://www.strava.com/activities/{id}`
+- ITT 區段表格點任一列 → 自動切到「全部」tab + 展開 Show More + 捲動高亮對應活動
+
+#### 本機快速測試
+
+```powershell
+# 1. 建 scripts/.env（複製 4 個 secret）
+# 2. 連線測試
+.\scripts\test-strava-api.ps1                       # 看 token + 最近 10 筆
+.\scripts\test-strava-api.ps1 -ActivityId 12345678  # 看單筆 lap
+
+# 3. 跑同步（本機寫 strava.json）
+node scripts/fetch-strava.js                                    # 增量
+$env:FETCH_ALL="1"; $env:SCAN_SEGMENTS="1"; node scripts/fetch-strava.js  # 全量
+```
+
+#### 手動觸發 GitHub Actions
+**GitHub repo → Actions → Strava Daily Sync → Run workflow**
 
 ---
 
