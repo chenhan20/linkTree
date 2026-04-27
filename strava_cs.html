@@ -10,7 +10,7 @@
 html,body{height:100%;background:#050505;color:#ccc;font-family:'Rajdhani',sans-serif;overflow-x:hidden}
 
 /* ── layout ── */
-.cs-layout{display:flex;min-height:100vh;width:100%;max-width:1360px;margin:0 auto;background:#0a0a0a}
+.cs-layout{display:flex;min-height:100vh;width:100%;max-width:1200px;margin:0 auto;background:#0a0a0a}
 
 /* ── sidebar ── */
 .sidebar{
@@ -104,7 +104,7 @@ html,body{height:100%;background:#050505;color:#ccc;font-family:'Rajdhani',sans-
 .main-header{
   background:linear-gradient(135deg,#0e0e06 0%,#141200 50%,#1a1600 100%);
   border-bottom:2px solid rgba(200,168,0,0.3);
-   padding:20px 26px 18px;
+  padding:18px 24px 16px;
   display:flex;justify-content:space-between;align-items:flex-start;
   position:relative;overflow:hidden;flex-shrink:0;
 }
@@ -146,21 +146,21 @@ html,body{height:100%;background:#050505;color:#ccc;font-family:'Rajdhani',sans-
   flex-shrink:0;
 }
 .stat-box{
-   padding:14px 18px;border-right:1px solid rgba(200,168,0,0.1);
+  padding:12px 16px;border-right:1px solid rgba(200,168,0,0.1);
 }
 .stat-box:last-child{border-right:none}
 .stat-icon-row{font-size:14px;color:rgba(200,168,0,0.45);margin-bottom:4px;letter-spacing:1px}
-.stat-num{font-size:26px;font-weight:700;color:#c8a800;letter-spacing:1px;line-height:1;font-family:'Share Tech Mono',monospace}
+.stat-num{font-size:24px;font-weight:700;color:#c8a800;letter-spacing:1px;line-height:1;font-family:'Share Tech Mono',monospace}
 .stat-unit{font-size:9px;color:#555;letter-spacing:2px;text-transform:uppercase;margin-top:1px}
 .stat-desc{font-size:9px;color:#555;letter-spacing:2px;text-transform:uppercase;margin-top:5px}
 
 /* monthly summary 左右並排 */
 .ms-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0}
-.ms-box{padding:16px 12px 18px;border-right:1px solid rgba(200,168,0,0.1);text-align:center}
+.ms-box{padding:14px 10px 16px;border-right:1px solid rgba(200,168,0,0.1);text-align:center}
 .ms-box:last-child{border-right:none}
 .ms-metrics{display:flex;align-items:flex-start;gap:0;justify-content:center}
 .ms-metric{flex:1;min-width:0;text-align:center}
-.ms-metric .ms-val{font-size:24px;font-weight:700;color:#c8a800;letter-spacing:1px;line-height:1;font-family:'Share Tech Mono',monospace}
+.ms-metric .ms-val{font-size:22px;font-weight:700;color:#c8a800;letter-spacing:1px;line-height:1;font-family:'Share Tech Mono',monospace}
 .ms-metric .ms-unit{font-size:9px;color:#555;letter-spacing:2px;text-transform:uppercase;margin-top:1px}
 .ms-vdiv{width:1px;background:rgba(200,168,0,.15);align-self:stretch;margin:2px 8px 6px;flex-shrink:0}
 .ms-label{font-size:10px;color:#888;letter-spacing:2px;text-transform:uppercase;margin-bottom:7px;font-weight:600}
@@ -169,7 +169,7 @@ html,body{height:100%;background:#050505;color:#ccc;font-family:'Rajdhani',sans-
 .main-body{flex:1;overflow-y:auto;padding-bottom:40px}
 
 /* sections */
-.section{padding:18px 26px;border-bottom:1px solid rgba(200,168,0,0.07)}
+.section{padding:16px 24px;border-bottom:1px solid rgba(200,168,0,0.07)}
 .sec-title{
   font-size:11px;font-weight:700;letter-spacing:3px;color:#c8a800;text-transform:uppercase;
   margin-bottom:14px;padding-bottom:8px;
@@ -180,7 +180,7 @@ html,body{height:100%;background:#050505;color:#ccc;font-family:'Rajdhani',sans-
 .sec-title-extra{margin-left:auto;font-size:9px;color:#555;font-weight:400}
 
 /* chart */
-.chart-wrap{position:relative;width:100%;height:260px}
+.chart-wrap{position:relative;width:100%;height:220px}
 #perf-chart{display:block;width:100%;height:100%}
 .chart-legend{display:flex;gap:16px;margin-top:14px;flex-wrap:wrap;align-items:center}
 .legend-item{display:flex;align-items:center;gap:7px;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#666;cursor:default}
@@ -188,7 +188,7 @@ html,body{height:100%;background:#050505;color:#ccc;font-family:'Rajdhani',sans-
 
 /* two-col */
 .two-col{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid rgba(200,168,0,0.07)}
-.col-section{padding:18px 26px}
+.col-section{padding:16px 24px}
 .col-section:first-child{border-right:1px solid rgba(200,168,0,0.07)}
 
 /* breakdown */
@@ -342,8 +342,10 @@ html,body{height:100%;background:#050505;color:#ccc;font-family:'Rajdhani',sans-
 
 @media(min-width:1100px){
   .cs-layout{box-shadow:0 0 40px rgba(0,0,0,.45)}
+  body{padding:0 24px}
 }
 @media(max-width:1180px){
+  body{padding:0}
   .sidebar{width:166px}
   .cs-logo{padding:12px 12px 10px}
   .cs-t1{font-size:12px;letter-spacing:1.5px}
@@ -376,8 +378,8 @@ html,body{height:100%;background:#050505;color:#ccc;font-family:'Rajdhani',sans-
 @media(max-width:860px){
   .main-header{align-items:flex-start;gap:16px}
   .chart-wrap{height:230px}
-  .log-table{display:block;min-width:640px;overflow-x:auto}
-  .log-table tbody,.log-table thead{display:table;width:100%}
+  .log-table{display:block;width:100%;min-width:0;overflow-x:auto}
+  .log-table tbody,.log-table thead{display:table;width:100%;min-width:640px}
 }
 /* mobile */
 @media(max-width:768px){
@@ -435,7 +437,7 @@ html,body{height:100%;background:#050505;color:#ccc;font-family:'Rajdhani',sans-
   .stat-row{grid-template-columns:1fr}
   .stat-box{border-right:none}
   .wq-grid{grid-template-columns:1fr}
-  .log-table{min-width:580px}
+  .log-table tbody,.log-table thead{min-width:580px}
 }
 </style>
 </head>
