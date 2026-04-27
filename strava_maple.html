@@ -448,6 +448,40 @@ body::before{
   text-align:center;padding:60px 0;color:var(--wood-3);
   font-size:14px;letter-spacing:2px;
 }
+@media(max-width:640px){
+  #app{padding:12px 12px 60px}
+  .frame{padding:12px;margin-bottom:16px}
+  .hero{grid-template-columns:1fr;text-align:center;padding:16px 12px}
+  .hero-char,.hero-portal{margin:0 auto}
+  .hero-name h1{font-size:24px;letter-spacing:4px}
+  .stats-grid,.ms-grid{grid-template-columns:repeat(2,1fr)}
+  .stat-card:nth-child(2),.ms-card:nth-child(2){border-right:none}
+  .stat-card:nth-child(-n+2),.ms-card:nth-child(-n+2){border-bottom:2px dashed rgba(106,66,32,.25)}
+  .quest-row{grid-template-columns:repeat(2,1fr)}
+  .act-card{gap:8px;padding:8px 10px}
+  .act-name-wrap{flex-wrap:wrap}
+  .itt-badge{align-items:flex-start}
+}
+@media(max-width:420px){
+  .topbar{flex-wrap:wrap;padding:8px 10px}
+  .topbar-title{flex:1;min-width:0}
+  .topbar-portal{display:none}
+  .hero-name h1{font-size:20px;letter-spacing:3px}
+  .stats-grid,.ms-grid,.quest-row{grid-template-columns:1fr}
+  .stat-card,.ms-card{border-right:none;border-bottom:2px dashed rgba(106,66,32,.25)}
+  .stat-card:last-child,.ms-card:last-child{border-bottom:none}
+  .timeline{padding-left:14px}
+  .timeline::before{left:4px}
+  .timeline-day::before{left:-9px}
+  .act-card{align-items:flex-start}
+  .act-icon{width:30px;height:30px;font-size:18px}
+  .act-dist{font-size:13px;margin-left:auto}
+  .itt-attempt{text-align:right;max-width:38%}
+  #theme-switcher{right:12px;bottom:18px}
+  #ts-toggle{width:38px;height:38px}
+  #ts-panel{max-width:calc(100vw - 24px)}
+  #to-top-btn{right:14px!important;bottom:74px!important}
+}
 
 /* CTA button */
 .strava-cta{
