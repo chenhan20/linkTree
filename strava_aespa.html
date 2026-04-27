@@ -1427,7 +1427,8 @@ function openDiscModal() {
   const outer = document.getElementById('disc-outer')
   if (!modal) return
   outer.classList.remove('closing')
-  void outer.offsetWidth  // trigger reflow so CSS animation restarts when modal reopens
+  // Read offsetWidth to flush pending style changes and restart the CSS animation
+  const _reflow = outer.offsetWidth // eslint-disable-line no-unused-expressions
   modal.style.display = 'flex'
   modal.setAttribute('aria-hidden', 'false')
   document.body.classList.add('disc-open')
@@ -1438,7 +1439,7 @@ function closeDiscModal() {
   const modal = document.getElementById('disc-modal')
   const outer = document.getElementById('disc-outer')
   if (!modal || modal.getAttribute('aria-hidden') === 'true') return
-  var CLOSE_MS = 280  // must match discOut animation duration (0.28s)
+  const CLOSE_MS = 280  // must match discOut animation duration (0.28s)
   outer.classList.add('closing')
   document.body.classList.remove('disc-open')
   modal.setAttribute('aria-hidden', 'true')
