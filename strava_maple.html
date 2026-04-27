@@ -334,6 +334,9 @@ body::before{
 .quest-tile.todo .qstamp{
   background:#e0e0e0;color:#666;border-color:#666;
 }
+.quest-tile .qprog-wrap{margin:7px auto 0;width:80%;height:3px;border-radius:3px;background:rgba(100,80,40,.15)}
+.quest-tile .qprog-fill{height:100%;border-radius:3px;background:rgba(100,80,40,.5);transition:width .6s ease}
+.quest-tile .qpct{font-size:8px;margin-top:3px;color:rgba(100,80,40,.55);letter-spacing:.5px;font-family:inherit}
 
 /* ── activity log timeline ── */
 .timeline{position:relative;padding-left:22px;margin-top:6px}
@@ -726,13 +729,34 @@ function renderSegments(segs) {
 function renderQuest(wq){
   if (!wq) return ''
   const order = ['ride','run','swim','weight']
+  const targetLabels = {ride:'30km / 1hr', run:'10km / 1hr', swim:'1000m', weight:'1 次'}
+  function isDone(val) { return typeof val === 'object' ? val.done : !!val }
+  function getPct(key, val) {
+    if (typeof val !== 'object') return val ? 100 : 0
+    if (key==='ride'||key==='run') { const bd=val.target_km>0?(val.distance_km||0)/val.target_km:0; const bt=val.target_hr>0?(val.moving_time_hr||0)/val.target_hr:0; return Math.min(100,Math.round(Math.max(bd,bt)*100)) }
+    if (key==='swim') return Math.min(100,Math.round((val.distance_m||0)/val.target_m*100))
+    if (key==='weight') return val.count>=val.target?100:0
+    return 0
+  }
+  function getDetail(key, val) {
+    if (typeof val !== 'object') return ''
+    if (key==='ride'||key==='run') { const bd=val.target_km>0?(val.distance_km||0)/val.target_km:0; const bt=val.target_hr>0?(val.moving_time_hr||0)/val.target_hr:0; return bd>=bt?`${val.distance_km||0}km`:`${val.moving_time_hr||0}hr` }
+    if (key==='swim') return `${val.distance_m||0}m`
+    if (key==='weight') return `${val.count||0} 次`
+    return ''
+  }
   const tiles = order.map(k => {
-    const meta = SPORT_META[k], on = !!wq[k]
+    const meta = SPORT_META[k], val = wq[k], on = isDone(val)
+    const pct = getPct(k, val), detail = getDetail(k, val)
+    const progHtml = !on ? `
+      <div class="qprog-wrap"><div class="qprog-fill" style="width:${pct}%"></div></div>
+      <div class="qpct">${detail ? `${detail} · ` : ''}${pct}%</div>` : ''
     return `
       <div class="quest-tile ${on?'done':'todo'}">
         <span class="qico">${meta.icon}</span>
         <div class="qlabel">${meta.label}</div>
-        <span class="qstamp">${on ? '✅COMPLETE!' : '⬜ TODO'}</span>
+        <span class="qstamp">${on ? '✅COMPLETE!' : `⬜ ${targetLabels[k]}`}</span>
+        ${progHtml}
       </div>`
   }).join('')
   return `
@@ -847,11 +871,21 @@ function render(data){
       const dow = tpeNow.getUTCDay(), daysFromMon = (dow+6)%7
       const weekStart = new Date(Date.UTC(tY, tM, tD - daysFromMon)).toISOString().slice(0,10)
       const inWeek = a => (a.date || '') >= weekStart
+      const wRides   = (data.recent_rides   || []).filter(inWeek)
+      const wRuns    = (data.recent_runs    || []).filter(inWeek)
+      const wSwims   = (data.recent_swims   || []).filter(inWeek)
+      const wWeights = (data.recent_weights || []).filter(inWeek)
+      const wRideDist = Math.round(wRides.reduce((s,a)=>s+(a.distance_km||0),0)*10)/10
+      const wRideHr   = Math.round(wRides.reduce((s,a)=>s+(a.moving_time_hr||0),0)*10)/10
+      const wRunDist  = Math.round(wRuns.reduce((s,a)=>s+(a.distance_km||0),0)*10)/10
+      const wRunHr    = Math.round(wRuns.reduce((s,a)=>s+(a.moving_time_hr||0),0)*10)/10
+      const wSwimM    = Math.round(wSwims.reduce((s,a)=>s+(a.distance_km||0)*1000,0))
+      const wWeightCt = wWeights.length
       data.weekly_quest = {
-        ride:   (data.recent_rides   || []).some(inWeek),
-        run:    (data.recent_runs    || []).some(inWeek),
-        swim:   (data.recent_swims   || []).some(inWeek),
-        weight: (data.recent_weights || []).some(inWeek),
+        ride:   { done: wRideDist>=30||wRideHr>=1, distance_km:wRideDist, moving_time_hr:wRideHr, target_km:30, target_hr:1 },
+        run:    { done: wRunDist>=10 ||wRunHr>=1,  distance_km:wRunDist,  moving_time_hr:wRunHr,  target_km:10, target_hr:1 },
+        swim:   { done: wSwimM>=1000,               distance_m:wSwimM,    target_m:1000 },
+        weight: { done: wWeightCt>=1,               count:wWeightCt,      target:1 },
       }
     }
   }
