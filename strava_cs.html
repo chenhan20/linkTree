@@ -254,6 +254,9 @@ html,body{height:100%;background:#050505;color:#ccc;font-family:'Rajdhani',sans-
 .wq-tile.done .wq-label{color:rgba(64,200,64,0.65)}
 .wq-check{font-size:16px;margin-top:8px;color:#2a2a2a}
 .wq-tile.done .wq-check{color:#40c840}
+.wq-tile .wq-prog-wrap{margin:8px auto 0;width:80%;height:3px;border-radius:3px;background:rgba(64,200,64,.1)}
+.wq-tile .wq-prog-fill{height:100%;border-radius:3px;background:rgba(64,200,64,.45);transition:width .6s ease}
+.wq-tile .wq-pct{font-size:9px;margin-top:4px;color:rgba(64,200,64,.4);letter-spacing:.5px}
 
 /* ITT inline badge in activity log */
 .log-itt-row td{padding:0 !important;border:none !important;background:transparent}
@@ -831,11 +834,21 @@ function render(data) {
       const dow = now.getUTCDay()
       const ws = new Date(Date.UTC(tY, tM, tD - (dow + 6) % 7)).toISOString().slice(0, 10)
       const inW = a => (a.date || '') >= ws
+      const wRides   = (data.recent_rides   || []).filter(inW)
+      const wRuns    = (data.recent_runs    || []).filter(inW)
+      const wSwims   = (data.recent_swims   || []).filter(inW)
+      const wWeights = (data.recent_weights || []).filter(inW)
+      const wRideDist = Math.round(wRides.reduce((s, a) => s + (a.distance_km || 0), 0) * 10) / 10
+      const wRideHr   = Math.round(wRides.reduce((s, a) => s + (a.moving_time_hr || 0), 0) * 10) / 10
+      const wRunDist  = Math.round(wRuns.reduce((s, a)  => s + (a.distance_km || 0), 0) * 10) / 10
+      const wRunHr    = Math.round(wRuns.reduce((s, a)  => s + (a.moving_time_hr || 0), 0) * 10) / 10
+      const wSwimM    = Math.round(wSwims.reduce((s, a) => s + (a.distance_km || 0) * 1000, 0))
+      const wWeightCt = wWeights.length
       data.weekly_quest = {
-        ride:   (data.recent_rides   || []).some(inW),
-        run:    (data.recent_runs    || []).some(inW),
-        swim:   (data.recent_swims   || []).some(inW),
-        weight: (data.recent_weights || []).some(inW),
+        ride:   { done: wRideDist >= 30 || wRideHr >= 1, distance_km: wRideDist, moving_time_hr: wRideHr, target_km: 30, target_hr: 1 },
+        run:    { done: wRunDist >= 10  || wRunHr >= 1,  distance_km: wRunDist,  moving_time_hr: wRunHr,  target_km: 10, target_hr: 1 },
+        swim:   { done: wSwimM >= 1000,                   distance_m: wSwimM,    target_m: 1000 },
+        weight: { done: wWeightCt >= 1,                   count: wWeightCt,      target: 1 },
       }
     }
   }
@@ -935,11 +948,33 @@ function render(data) {
     { key: 'weight', icon: '🏋️', label: 'GYM'  },
   ]
   document.getElementById('wq-grid').innerHTML = wqSports.map(sp => {
-    const done = !!wqFinal[sp.key]
+    const val = wqFinal[sp.key]
+    const done = typeof val === 'object' ? val.done : !!val
+    const pct = (() => {
+      if (typeof val !== 'object') return val ? 100 : 0
+      if (sp.key === 'ride') { const bd = val.target_km > 0 ? (val.distance_km||0)/val.target_km : 0; const bt = val.target_hr > 0 ? (val.moving_time_hr||0)/val.target_hr : 0; return Math.min(100, Math.round(Math.max(bd, bt)*100)) }
+      if (sp.key === 'run')  { const bd = val.target_km > 0 ? (val.distance_km||0)/val.target_km : 0; const bt = val.target_hr > 0 ? (val.moving_time_hr||0)/val.target_hr : 0; return Math.min(100, Math.round(Math.max(bd, bt)*100)) }
+      if (sp.key === 'swim') return Math.min(100, Math.round((val.distance_m||0)/val.target_m*100))
+      if (sp.key === 'weight') return val.count >= val.target ? 100 : 0
+      return 0
+    })()
+    const targetLabel = sp.key==='ride'?'30km / 1hr':sp.key==='run'?'10km / 1hr':sp.key==='swim'?'1000m':'1 次'
+    const detail = (() => {
+      if (typeof val !== 'object') return ''
+      if (sp.key === 'ride') { const bd = val.target_km>0?(val.distance_km||0)/val.target_km:0; const bt = val.target_hr>0?(val.moving_time_hr||0)/val.target_hr:0; return bd>=bt?`${val.distance_km||0}km`:`${val.moving_time_hr||0}hr` }
+      if (sp.key === 'run')  { const bd = val.target_km>0?(val.distance_km||0)/val.target_km:0; const bt = val.target_hr>0?(val.moving_time_hr||0)/val.target_hr:0; return bd>=bt?`${val.distance_km||0}km`:`${val.moving_time_hr||0}hr` }
+      if (sp.key === 'swim') return `${val.distance_m||0}m`
+      if (sp.key === 'weight') return `${val.count||0} 次`
+      return ''
+    })()
+    const progHtml = !done ? `
+      <div class="wq-prog-wrap"><div class="wq-prog-fill" style="width:${pct}%"></div></div>
+      <div class="wq-pct">${detail ? `${detail} · ` : ''}${pct}%</div>` : ''
     return `<div class="wq-tile${done ? ' done' : ''}">
       <span class="wq-icon">${sp.icon}</span>
       <div class="wq-label">${sp.label}</div>
-      <div class="wq-check">${done ? '✓' : '○'}</div>
+      <div class="wq-check">${done ? '✓' : `<span style="font-size:9px;color:rgba(64,200,64,.25)">${targetLabel}</span>`}</div>
+      ${progHtml}
     </div>`
   }).join('')
 

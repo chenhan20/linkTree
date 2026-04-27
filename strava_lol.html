@@ -174,6 +174,9 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 .quest-tile.on .qlabel{color:rgba(200,155,60,.5)}
 .quest-tile .qcheck{font-size:14px;margin-top:6px;color:#1a1510}
 .quest-tile.on .qcheck{color:#c89b3c}
+.quest-tile .qprog-wrap{margin:8px auto 0;width:80%;height:3px;border-radius:3px;background:rgba(200,155,60,.1)}
+.quest-tile .qprog-fill{height:100%;border-radius:3px;background:rgba(200,155,60,.5);transition:width .6s ease}
+.quest-tile .qpct{font-size:9px;margin-top:4px;color:rgba(200,155,60,.4);letter-spacing:.5px}
 .act-highlight{animation:actFlash .9s ease-out}
 @keyframes actFlash{0%,40%{background:rgba(200,155,60,.14);border-left-color:#c89b3c}100%{background:rgba(10,20,40,.6);border-left-color:rgba(200,155,60,.25)}}
 .act-strava-link{display:inline-flex;align-items:center;gap:2px;flex-shrink:0;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;color:rgba(200,155,60,.95);text-decoration:none;border:1px solid rgba(200,155,60,.45);background:rgba(200,155,60,.08);white-space:nowrap;line-height:1.4;transition:background .15s,border-color .15s}
@@ -630,15 +633,40 @@ function renderMonthlyGoals(mg) {
 
 function renderWeeklyQuest(wq) {
   if (!wq) return ''
-  const tiles = [
-    {key:'ride',icon:'🚴',label:'RIDE'},{key:'run',icon:'🏃',label:'RUN'},
-    {key:'swim',icon:'🏊',label:'SWIM'},{key:'weight',icon:'🏋️',label:'TRAIN'},
-  ].map(sp => `
-    <div class="quest-tile${wq[sp.key] ? ' on' : ''}">
+  const wqSports = [
+    {key:'ride',icon:'🚴',label:'RIDE',targetLabel:'30km / 1hr'},
+    {key:'run', icon:'🏃',label:'RUN', targetLabel:'10km / 1hr'},
+    {key:'swim',icon:'🏊',label:'SWIM',targetLabel:'1000m'},
+    {key:'weight',icon:'🏋️',label:'TRAIN',targetLabel:'1 次'},
+  ]
+  function isDone(val) { return typeof val === 'object' ? val.done : !!val }
+  function getPct(key, val) {
+    if (typeof val !== 'object') return val ? 100 : 0
+    if (key==='ride'||key==='run') { const bd=val.target_km>0?(val.distance_km||0)/val.target_km:0; const bt=val.target_hr>0?(val.moving_time_hr||0)/val.target_hr:0; return Math.min(100,Math.round(Math.max(bd,bt)*100)) }
+    if (key==='swim') return Math.min(100,Math.round((val.distance_m||0)/val.target_m*100))
+    if (key==='weight') return val.count>=val.target?100:0
+    return 0
+  }
+  function getDetail(key, val) {
+    if (typeof val !== 'object') return ''
+    if (key==='ride'||key==='run') { const bd=val.target_km>0?(val.distance_km||0)/val.target_km:0; const bt=val.target_hr>0?(val.moving_time_hr||0)/val.target_hr:0; return bd>=bt?`${val.distance_km||0}km`:`${val.moving_time_hr||0}hr` }
+    if (key==='swim') return `${val.distance_m||0}m`
+    if (key==='weight') return `${val.count||0} 次`
+    return ''
+  }
+  const tiles = wqSports.map(sp => {
+    const val = wq[sp.key], on = isDone(val)
+    const pct = getPct(sp.key, val), detail = getDetail(sp.key, val)
+    const progHtml = !on ? `
+      <div class="qprog-wrap"><div class="qprog-fill" style="width:${pct}%"></div></div>
+      <div class="qpct">${detail ? `${detail} · ` : ''}${pct}%</div>` : ''
+    return `
+    <div class="quest-tile${on ? ' on' : ''}">
       <span class="qico">${sp.icon}</span>
       <div class="qlabel">${sp.label}</div>
-      <div class="qcheck">${wq[sp.key] ? '✓' : '○'}</div>
-    </div>`).join('')
+      <div class="qcheck">${on ? '✓' : `<span style="font-size:9px;color:rgba(200,155,60,.3)">${sp.targetLabel}</span>`}</div>
+      ${progHtml}
+    </div>`}).join('')
   return `
     <div class="section-title">本週任務 <span style="color:rgba(200,155,60,.35);font-size:8px">· WEEKLY QUEST</span></div>
     <div class="quest-grid">${tiles}</div>`
@@ -804,9 +832,21 @@ function render(data) {
       const dow=tpeNow.getUTCDay(), dfm=(dow+6)%7
       const ws=new Date(Date.UTC(tY,tM,tD-dfm)).toISOString().slice(0,10)
       const inW=a=>(a.date||'')>=ws
+      const wRides   = (data.recent_rides   || []).filter(inW)
+      const wRuns    = (data.recent_runs    || []).filter(inW)
+      const wSwims   = (data.recent_swims   || []).filter(inW)
+      const wWeights = (data.recent_weights || []).filter(inW)
+      const wRideDist = Math.round(wRides.reduce((s,a)=>s+(a.distance_km||0),0)*10)/10
+      const wRideHr   = Math.round(wRides.reduce((s,a)=>s+(a.moving_time_hr||0),0)*10)/10
+      const wRunDist  = Math.round(wRuns.reduce((s,a)=>s+(a.distance_km||0),0)*10)/10
+      const wRunHr    = Math.round(wRuns.reduce((s,a)=>s+(a.moving_time_hr||0),0)*10)/10
+      const wSwimM    = Math.round(wSwims.reduce((s,a)=>s+(a.distance_km||0)*1000,0))
+      const wWeightCt = wWeights.length
       data.weekly_quest = {
-        ride:(data.recent_rides||[]).some(inW), run:(data.recent_runs||[]).some(inW),
-        swim:(data.recent_swims||[]).some(inW), weight:(data.recent_weights||[]).some(inW),
+        ride:   { done: wRideDist>=30||wRideHr>=1, distance_km:wRideDist, moving_time_hr:wRideHr, target_km:30, target_hr:1 },
+        run:    { done: wRunDist>=10 ||wRunHr>=1,  distance_km:wRunDist,  moving_time_hr:wRunHr,  target_km:10, target_hr:1 },
+        swim:   { done: wSwimM>=1000,               distance_m:wSwimM,    target_m:1000 },
+        weight: { done: wWeightCt>=1,               count:wWeightCt,      target:1 },
       }
     }
   }
