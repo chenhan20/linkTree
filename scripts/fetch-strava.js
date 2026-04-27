@@ -397,6 +397,13 @@ function buildJSON(stats, activities) {
     catch (e) { console.warn('⚠️  現有 JSON 讀取失敗，重新建立') }
   }
 
+  // ── 讀取 FTP（用於 IF / TSS 計算）──
+  let FTP = 238  // 預設值
+  try {
+    const athleteFile = path.join(__dirname, '../athlete/gpt_教練前提資訊.json')
+    FTP = JSON.parse(fs.readFileSync(athleteFile, 'utf8')).cycling.ftp_watts.latest || 238
+  } catch (e) { console.warn('⚠️  無法讀取 FTP，使用預設 238W') }
+
   const now = new Date()
   const thisMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
 
@@ -467,19 +474,28 @@ function buildJSON(stats, activities) {
   function localTime(a) { return (a.start_date_local || a.start_date).slice(11, 16) }
 
   // 保留所有活動（不再 slice），並都帶上 id 以便 UI 顯示「前往 Strava」連結
-  const recentRides = activities.filter(a => isType(a, RIDE_TYPES)).map(a => ({
-    id:             a.id,
-    name:           a.name,
-    date:           localDate(a),
-    time:           localTime(a),
-    distance_km:    Math.round(a.distance / 10) / 100,
-    moving_time_hr: Math.round(a.moving_time / 360) / 10,
-    elevation_m:    Math.round(a.total_elevation_gain),
-    avg_speed_kmh:  Math.round(a.average_speed * 36) / 10,
-    avg_heartrate:  a.average_heartrate ? Math.round(a.average_heartrate) : null,
-    avg_watts:      a.average_watts     ? Math.round(a.average_watts)     : null,
-    trainer:        a.trainer || false,
-  }))
+  const recentRides = activities.filter(a => isType(a, RIDE_TYPES)).map(a => {
+    const w = a.average_watts || 0
+    const t = a.moving_time   || 0
+    const ifScore = (w > 0 && FTP > 0) ? +(w / FTP).toFixed(3) : null
+    const tss     = (w > 0 && t > 0 && FTP > 0) ? Math.round((t * w * (w / FTP)) / (FTP * 3600) * 100) : null
+    return {
+      id:             a.id,
+      name:           a.name,
+      date:           localDate(a),
+      time:           localTime(a),
+      distance_km:    Math.round(a.distance / 10) / 100,
+      moving_time_hr: Math.round(a.moving_time / 360) / 10,
+      elevation_m:    Math.round(a.total_elevation_gain),
+      avg_speed_kmh:  Math.round(a.average_speed * 36) / 10,
+      avg_heartrate:  a.average_heartrate ? Math.round(a.average_heartrate) : null,
+      avg_watts:      w > 0 ? Math.round(w) : null,
+      trainer:        a.trainer || false,
+      sport_type:     a.type,
+      if_score:       ifScore,
+      tss:            tss,
+    }
+  })
 
   const recentRuns = activities.filter(a => isType(a, RUN_TYPES)).map(a => ({
     id:             a.id,
@@ -569,12 +585,24 @@ function buildJSON(stats, activities) {
     weight: { count: monthWeights.length, target: TARGET_WEIGHT, status: statusOf(monthWeights.length, TARGET_WEIGHT) },
   }
 
-  const weekActs = activities.filter(inThisWeek)
+  const weekActs    = activities.filter(inThisWeek)
+  const weekRides   = weekActs.filter(a => isType(a, RIDE_TYPES))
+  const weekRuns    = weekActs.filter(a => isType(a, RUN_TYPES))
+  const weekSwims   = weekActs.filter(a => isType(a, SWIM_TYPES))
+  const weekWeights = weekActs.filter(a => isType(a, WEIGHT_TYPES))
+
+  const wRideDist = Math.round(weekRides.reduce((s, a) => s + (a.distance || 0), 0) / 100) / 10
+  const wRideHr   = Math.round(weekRides.reduce((s, a) => s + (a.moving_time || 0), 0) / 360) / 10
+  const wRunDist  = Math.round(weekRuns.reduce((s, a)  => s + (a.distance || 0), 0) / 100) / 10
+  const wRunHr    = Math.round(weekRuns.reduce((s, a)  => s + (a.moving_time || 0), 0) / 360) / 10
+  const wSwimM    = Math.round(weekSwims.reduce((s, a) => s + (a.distance || 0), 0))
+  const wWeightCt = weekWeights.length
+
   const weekly_quest = {
-    ride:   weekActs.some(a => isType(a, RIDE_TYPES)),
-    run:    weekActs.some(a => isType(a, RUN_TYPES)),
-    swim:   weekActs.some(a => isType(a, SWIM_TYPES)),
-    weight: weekActs.some(a => isType(a, WEIGHT_TYPES)),
+    ride:   { done: wRideDist >= 30 || wRideHr >= 1, distance_km: wRideDist, moving_time_hr: wRideHr, target_km: 30, target_hr: 1 },
+    run:    { done: wRunDist >= 10  || wRunHr >= 1,  distance_km: wRunDist,  moving_time_hr: wRunHr,  target_km: 10, target_hr: 1 },
+    swim:   { done: wSwimM >= 1000,                   distance_m: wSwimM,    target_m: 1000 },
+    weight: { done: wWeightCt >= 1,                   count: wWeightCt,      target: 1 },
   }
 
   return {
