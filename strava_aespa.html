@@ -400,131 +400,54 @@ body.disc-open{overflow:hidden}
   to{opacity:0;transform:scale(.62)}
 }
 .disc-outer.closing{animation:discOut .28s ease-in both}
-/* Rotating groove layer */
-.disc-groove{
-  position:absolute;inset:0;border-radius:50%;
-  background:
-    repeating-radial-gradient(
-      circle at 50% 50%,
-      transparent 0,transparent 3px,
-      rgba(168,85,247,.07) 3px,rgba(168,85,247,.07) 3.6px
-    ),
-    conic-gradient(
-      from 0deg,
-      rgba(168,85,247,.24) 0%,rgba(10,3,28,.82) 10%,
-      rgba(200,100,255,.18) 20%,rgba(10,3,28,.82) 30%,
-      rgba(168,85,247,.22) 40%,rgba(10,3,28,.82) 50%,
-      rgba(180,80,240,.2) 60%,rgba(10,3,28,.82) 70%,
-      rgba(168,85,247,.24) 80%,rgba(10,3,28,.82) 90%,
-      rgba(168,85,247,.24) 100%
-    ),
-    radial-gradient(circle,rgba(28,8,62,.94) 0%,rgba(5,1,12,.98) 65%);
-  animation:discSpin 22s linear infinite;
+/* Full-circle background image */
+.disc-bg-img{
+  position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;border-radius:50%;display:block;
+  z-index:1;pointer-events:none;
+  user-select:none;-webkit-user-drag:none;
 }
-.disc-groove::after{
-  content:'';position:absolute;inset:0;border-radius:50%;
-  background:linear-gradient(
-    145deg,
-    rgba(255,255,255,.06) 0%,transparent 35%,
-    rgba(255,255,255,.025) 65%,transparent 100%
-  );
-  pointer-events:none;
+/* Generic overlay element */
+.disc-ov{
+  position:absolute;z-index:3;pointer-events:none;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 }
-@keyframes discSpin{
-  from{transform:rotate(0deg)}
-  to{transform:rotate(360deg)}
+/* Updated date – overwrites the static date baked into the image */
+#disc-upd{
+  left:8.5%;top:31.5%;
+  font-size:clamp(5.5px,1.3vmin,8px);
+  letter-spacing:2px;text-transform:uppercase;
+  color:#c4b5fd;font-weight:500;
+  text-shadow:0 0 6px rgba(168,85,247,.7);
 }
-/* Static inner label */
-.disc-label{
-  position:absolute;
-  width:63%;height:63%;
-  top:50%;left:50%;
-  transform:translate(-50%,-50%);
-  border-radius:50%;
-  background:
-    radial-gradient(circle at 38% 32%,rgba(130,55,210,.45) 0%,transparent 50%),
-    radial-gradient(circle at 65% 72%,rgba(90,20,160,.28) 0%,transparent 40%),
-    linear-gradient(148deg,rgba(28,8,62,.97) 0%,rgba(7,2,18,.98) 100%);
-  border:1.5px solid rgba(168,85,247,.32);
-  box-shadow:0 0 18px rgba(168,85,247,.22),inset 0 1px 0 rgba(255,255,255,.07);
-  display:flex;flex-direction:column;
-  align-items:center;justify-content:center;
-  overflow:hidden;padding:8%;text-align:center;gap:0;
-  z-index:2;
+/* Individual stat value overlays */
+.disc-stat-ov{
+  text-align:center;
+  font-size:clamp(12px,2.8vmin,17px);
+  font-weight:700;color:#f0abff;line-height:1;
+  width:18%;
+  text-shadow:0 0 8px rgba(232,121,249,.65),0 1px 3px rgba(0,0,0,.6);
 }
-/* Center hole */
-.disc-hole{
-  position:absolute;top:50%;left:50%;
-  width:4.5%;aspect-ratio:1;
-  transform:translate(-50%,-50%);
-  border-radius:50%;
-  background:rgba(2,0,8,.98);
-  border:1px solid rgba(168,85,247,.42);
-  box-shadow:0 0 7px rgba(168,85,247,.5);
-  z-index:10;
-}
-/* ── disc label inner content ── */
-.disc-meta{
-  font-size:8px;letter-spacing:2.5px;color:rgba(168,85,247,.52);
-  text-transform:uppercase;margin-bottom:5px;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;
-}
-.disc-avatar-sm{
-  width:40px;height:40px;border-radius:50%;
-  border:1.5px solid rgba(168,85,247,.5);
-  object-fit:cover;
-  box-shadow:0 0 12px rgba(168,85,247,.4);
-  margin-bottom:5px;flex-shrink:0;
-}
-.disc-avatar-fb{
-  width:40px;height:40px;border-radius:50%;
-  background:linear-gradient(135deg,#1a0a2e,#3d1080);
-  border:1.5px solid rgba(168,85,247,.5);
-  display:flex;align-items:center;justify-content:center;
-  margin-bottom:5px;flex-shrink:0;font-size:16px;
-}
-.disc-title{
-  font-family:Georgia,'Times New Roman',serif;
-  font-size:clamp(20px,5.5vmin,32px);
-  font-weight:700;font-style:italic;
-  background:linear-gradient(135deg,#a855f7,#e879f9,#c084fc);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-  line-height:1;letter-spacing:-1px;margin-bottom:3px;
-}
-.disc-upd{font-size:8px;color:rgba(168,85,247,.4);letter-spacing:2px;text-transform:uppercase;margin-bottom:9px}
-/* stats 2×2 */
-.disc-stats{
-  display:grid;grid-template-columns:1fr 1fr;
-  gap:5px 7px;width:100%;margin-bottom:9px;
-}
-.disc-stat{
-  background:rgba(168,85,247,.09);
-  border:1px solid rgba(168,85,247,.22);
-  border-radius:7px;padding:5px 4px;text-align:center;
-}
-.disc-stat-l{font-size:7.5px;color:#888;margin-bottom:2px;letter-spacing:.4px}
-.disc-stat-v{font-size:clamp(12px,3.2vmin,17px);font-weight:700;color:#e879f9;line-height:1}
-.disc-stat-u{font-size:7.5px;color:rgba(168,85,247,.48);margin-top:1px}
-/* mini chart */
-.disc-chart{
-  width:100%;display:flex;align-items:flex-end;
-  gap:3px;margin-bottom:8px;height:34px;
+#disc-ov-km    {left:56.5%;top:62%;}
+#disc-ov-m     {left:75.5%;top:62%;}
+#disc-ov-rides {left:56.5%;top:75%;}
+#disc-ov-hrs   {left:75.5%;top:75%;}
+/* Monthly chart overlay */
+#disc-chart{
+  position:absolute;z-index:3;pointer-events:none;
+  left:57%;top:87%;width:36%;height:32px;
+  display:flex;align-items:flex-end;gap:3%;
 }
 .disc-bar-wrap{
   display:flex;flex-direction:column;align-items:center;
   flex:1;gap:2px;justify-content:flex-end;
 }
 .disc-bar{
-  width:100%;min-height:2px;border-radius:2px 2px 0 0;
+  width:80%;min-height:2px;border-radius:2px 2px 0 0;
   background:linear-gradient(180deg,#e879f9,#a855f7);
-  opacity:.78;transition:height .6s ease;
+  opacity:.85;transition:height .6s ease;
 }
-.disc-bar-lbl{font-size:6.5px;color:rgba(168,85,247,.38);white-space:nowrap}
-/* slogan */
-.disc-slogan{
-  font-size:7.5px;color:rgba(168,85,247,.38);
-  letter-spacing:2px;font-style:italic;
-}
+.disc-bar-lbl{font-size:clamp(5px,1.2vmin,6.5px);color:rgba(200,160,255,.6);white-space:nowrap}
 /* open button (hero) */
 .disc-open-btn{
   display:inline-flex;align-items:center;gap:6px;
@@ -546,7 +469,6 @@ body.disc-open{overflow:hidden}
 .disc-open-btn .dico{font-size:13px}
 @media(max-width:520px){
   .disc-close{top:-44px}
-  .disc-stats{gap:4px 5px}
 }
 </style>
 </head>
@@ -560,19 +482,17 @@ body.disc-open{overflow:hidden}
   <div class="disc-scene">
     <button class="disc-close" id="disc-close" aria-label="關閉">✕</button>
     <div class="disc-outer" id="disc-outer">
-      <div class="disc-groove"></div>
-      <div class="disc-label">
-        <div class="disc-meta">ATHLETE · 承翰 莊 · STRAVA CYCLIST</div>
-        <img class="disc-avatar-sm" src="docs/avatar_aespa.jpg" alt=""
-          onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-        <div class="disc-avatar-fb" style="display:none">🚴</div>
-        <div class="disc-title">aespa</div>
-        <div class="disc-upd" id="disc-upd">UPDATED —</div>
-        <div class="disc-stats" id="disc-stats"></div>
-        <div class="disc-chart" id="disc-chart"></div>
-        <div class="disc-slogan">Don't stop, just keep riding ✦</div>
-      </div>
-      <div class="disc-hole"></div>
+      <!-- Background image -->
+      <img class="disc-bg-img" src="https://github.com/user-attachments/assets/af7a97cf-e4ee-4aa4-98e9-23e1500e7657" alt="" draggable="false">
+      <!-- Updated date overlay -->
+      <div class="disc-ov" id="disc-upd"></div>
+      <!-- Stat value overlays -->
+      <div class="disc-ov disc-stat-ov" id="disc-ov-km"></div>
+      <div class="disc-ov disc-stat-ov" id="disc-ov-m"></div>
+      <div class="disc-ov disc-stat-ov" id="disc-ov-rides"></div>
+      <div class="disc-ov disc-stat-ov" id="disc-ov-hrs"></div>
+      <!-- Monthly chart overlay -->
+      <div id="disc-chart"></div>
     </div>
   </div>
 </div>
@@ -1377,12 +1297,12 @@ function _discPopulate(data) {
   const s = data.summary || {}
   const history = (data.monthly_history || []).slice().reverse()
 
-  // updated_at
+  // updated_at – overwrites the static date in the image
   const upd = (data.updated_at || '').slice(0, 10)
   const updEl = document.getElementById('disc-upd')
-  if (updEl) updEl.textContent = upd ? 'UPDATED ' + upd : 'UPDATED —'
+  if (updEl) updEl.textContent = upd || '—'
 
-  // ytd stats
+  // format helpers
   const fmtHr = v => {
     if (v == null || isNaN(+v)) return '—'
     const h = Math.floor(+v), m = Math.round((+v - h) * 60)
@@ -1390,23 +1310,19 @@ function _discPopulate(data) {
   }
   const fmtNum = v => (typeof v === 'number') ? v.toLocaleString() : (v ?? '—')
   const totalActs = (+(s.ytd_rides||0)) + (+(s.ytd_runs||0)) + (+(s.ytd_swims||0))
-  const stats = [
-    { l:'今年里程', v: fmtNum(s.ytd_distance_km), u:'km' },
-    { l:'今年爬升', v: fmtNum(s.ytd_elevation_m), u:'m' },
-    { l:'今年活動', v: totalActs || '—', u:'次' },
-    { l:'今年時數', v: fmtHr(s.ytd_moving_time_hr), u:'' },
-  ]
-  const statsEl = document.getElementById('disc-stats')
-  if (statsEl) statsEl.innerHTML = stats.map(st =>
-    `<div class="disc-stat">
-      <div class="disc-stat-l">${st.l}</div>
-      <div class="disc-stat-v">${st.v}</div>
-      ${st.u ? `<div class="disc-stat-u">${st.u}</div>` : ''}
-    </div>`
-  ).join('')
 
-  // mini chart: last 5 months ride distance
-  const chartData = history.slice(-5)
+  // fill stat value overlays
+  const kmEl    = document.getElementById('disc-ov-km')
+  const mEl     = document.getElementById('disc-ov-m')
+  const ridesEl = document.getElementById('disc-ov-rides')
+  const hrsEl   = document.getElementById('disc-ov-hrs')
+  if (kmEl)    kmEl.textContent    = fmtNum(s.ytd_distance_km)
+  if (mEl)     mEl.textContent     = fmtNum(s.ytd_elevation_m)
+  if (ridesEl) ridesEl.textContent = totalActs || '—'
+  if (hrsEl)   hrsEl.textContent   = fmtHr(s.ytd_moving_time_hr)
+
+  // mini chart: last 4 months ride distance (matches 01–04 bars in the image)
+  const chartData = history.slice(-4)
   const maxD = Math.max(...chartData.map(h => (typeof h.ride === 'object' ? (h.ride.distance_km||0) : (h.distance_km||0))), 1)
   const chartEl = document.getElementById('disc-chart')
   if (chartEl) {
@@ -1416,8 +1332,7 @@ function _discPopulate(data) {
       const label = (h.month || '').slice(5)
       return `<div class="disc-bar-wrap">
         <div class="disc-bar" style="height:${barH}px"></div>
-        <div class="disc-bar-lbl">${label}</div>
-      </div>`
+        <div class="disc-bar-lbl">${label}</div></div>`
     }).join('')
   }
 }
