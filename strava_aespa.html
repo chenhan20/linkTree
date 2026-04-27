@@ -1427,7 +1427,7 @@ function openDiscModal() {
   const outer = document.getElementById('disc-outer')
   if (!modal) return
   outer.classList.remove('closing')
-  void outer.offsetWidth  // force reflow to restart animation
+  void outer.offsetWidth  // trigger reflow so CSS animation restarts when modal reopens
   modal.style.display = 'flex'
   modal.setAttribute('aria-hidden', 'false')
   document.body.classList.add('disc-open')
@@ -1437,14 +1437,15 @@ function openDiscModal() {
 function closeDiscModal() {
   const modal = document.getElementById('disc-modal')
   const outer = document.getElementById('disc-outer')
-  if (!modal || modal.style.display === 'none') return
+  if (!modal || modal.getAttribute('aria-hidden') === 'true') return
+  var CLOSE_MS = 280  // must match discOut animation duration (0.28s)
   outer.classList.add('closing')
   document.body.classList.remove('disc-open')
   modal.setAttribute('aria-hidden', 'true')
   setTimeout(() => {
     modal.style.display = 'none'
     outer.classList.remove('closing')
-  }, 280)
+  }, CLOSE_MS)
 }
 
 ;(function(){
