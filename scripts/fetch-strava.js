@@ -569,12 +569,24 @@ function buildJSON(stats, activities) {
     weight: { count: monthWeights.length, target: TARGET_WEIGHT, status: statusOf(monthWeights.length, TARGET_WEIGHT) },
   }
 
-  const weekActs = activities.filter(inThisWeek)
+  const weekActs    = activities.filter(inThisWeek)
+  const weekRides   = weekActs.filter(a => isType(a, RIDE_TYPES))
+  const weekRuns    = weekActs.filter(a => isType(a, RUN_TYPES))
+  const weekSwims   = weekActs.filter(a => isType(a, SWIM_TYPES))
+  const weekWeights = weekActs.filter(a => isType(a, WEIGHT_TYPES))
+
+  const wRideDist = Math.round(weekRides.reduce((s, a) => s + (a.distance || 0), 0) / 100) / 10
+  const wRideHr   = Math.round(weekRides.reduce((s, a) => s + (a.moving_time || 0), 0) / 360) / 10
+  const wRunDist  = Math.round(weekRuns.reduce((s, a)  => s + (a.distance || 0), 0) / 100) / 10
+  const wRunHr    = Math.round(weekRuns.reduce((s, a)  => s + (a.moving_time || 0), 0) / 360) / 10
+  const wSwimM    = Math.round(weekSwims.reduce((s, a) => s + (a.distance || 0), 0))
+  const wWeightCt = weekWeights.length
+
   const weekly_quest = {
-    ride:   weekActs.some(a => isType(a, RIDE_TYPES)),
-    run:    weekActs.some(a => isType(a, RUN_TYPES)),
-    swim:   weekActs.some(a => isType(a, SWIM_TYPES)),
-    weight: weekActs.some(a => isType(a, WEIGHT_TYPES)),
+    ride:   { done: wRideDist >= 30 || wRideHr >= 1, distance_km: wRideDist, moving_time_hr: wRideHr, target_km: 30, target_hr: 1 },
+    run:    { done: wRunDist >= 10  || wRunHr >= 1,  distance_km: wRunDist,  moving_time_hr: wRunHr,  target_km: 10, target_hr: 1 },
+    swim:   { done: wSwimM >= 1000,                   distance_m: wSwimM,    target_m: 1000 },
+    weight: { done: wWeightCt >= 1,                   count: wWeightCt,      target: 1 },
   }
 
   return {
