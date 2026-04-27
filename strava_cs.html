@@ -7,14 +7,14 @@
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;background:#0a0a0a;color:#ccc;font-family:'Rajdhani',sans-serif;overflow-x:hidden}
+html,body{height:100%;background:#050505;color:#ccc;font-family:'Rajdhani',sans-serif;overflow-x:hidden}
 
 /* ── layout ── */
-.cs-layout{display:flex;min-height:100vh}
+.cs-layout{display:flex;min-height:100vh;width:100%;max-width:1360px;margin:0 auto;background:#0a0a0a}
 
 /* ── sidebar ── */
 .sidebar{
-  width:190px;flex-shrink:0;
+  width:180px;flex-shrink:0;
   background:#0d0d0d;
   border-right:1px solid rgba(200,168,0,0.2);
   display:flex;flex-direction:column;
@@ -104,7 +104,7 @@ html,body{height:100%;background:#0a0a0a;color:#ccc;font-family:'Rajdhani',sans-
 .main-header{
   background:linear-gradient(135deg,#0e0e06 0%,#141200 50%,#1a1600 100%);
   border-bottom:2px solid rgba(200,168,0,0.3);
-  padding:22px 28px 20px;
+   padding:20px 26px 18px;
   display:flex;justify-content:space-between;align-items:flex-start;
   position:relative;overflow:hidden;flex-shrink:0;
 }
@@ -146,7 +146,7 @@ html,body{height:100%;background:#0a0a0a;color:#ccc;font-family:'Rajdhani',sans-
   flex-shrink:0;
 }
 .stat-box{
-  padding:16px 20px;border-right:1px solid rgba(200,168,0,0.1);
+   padding:14px 18px;border-right:1px solid rgba(200,168,0,0.1);
 }
 .stat-box:last-child{border-right:none}
 .stat-icon-row{font-size:14px;color:rgba(200,168,0,0.45);margin-bottom:4px;letter-spacing:1px}
@@ -169,7 +169,7 @@ html,body{height:100%;background:#0a0a0a;color:#ccc;font-family:'Rajdhani',sans-
 .main-body{flex:1;overflow-y:auto;padding-bottom:40px}
 
 /* sections */
-.section{padding:20px 28px;border-bottom:1px solid rgba(200,168,0,0.07)}
+.section{padding:18px 26px;border-bottom:1px solid rgba(200,168,0,0.07)}
 .sec-title{
   font-size:11px;font-weight:700;letter-spacing:3px;color:#c8a800;text-transform:uppercase;
   margin-bottom:14px;padding-bottom:8px;
@@ -188,7 +188,7 @@ html,body{height:100%;background:#0a0a0a;color:#ccc;font-family:'Rajdhani',sans-
 
 /* two-col */
 .two-col{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid rgba(200,168,0,0.07)}
-.col-section{padding:20px 28px}
+.col-section{padding:18px 26px}
 .col-section:first-child{border-right:1px solid rgba(200,168,0,0.07)}
 
 /* breakdown */
@@ -340,18 +340,53 @@ html,body{height:100%;background:#0a0a0a;color:#ccc;font-family:'Rajdhani',sans-
 }
 .strava-btn:hover{background:rgba(200,168,0,0.12);border-color:#c8a800}
 
-/* mobile */
-@media(max-width:768px){
+@media(min-width:1100px){
+  .cs-layout{box-shadow:0 0 40px rgba(0,0,0,.45)}
+}
+@media(max-width:1180px){
+  .sidebar{width:166px}
+  .cs-logo{padding:12px 12px 10px}
+  .cs-t1{font-size:12px;letter-spacing:1.5px}
+  .nav-item{padding:8px 12px;font-size:11px;letter-spacing:1.2px}
+  .player-profile{margin:8px;padding:10px}
+  .status-box{margin:0 8px 8px;padding:9px 10px}
+  .main-header{padding:18px 22px 16px}
+  .header-name{font-size:30px}
+  .stat-box{padding:13px 14px}
+  .stat-num{font-size:23px}
+  .section{padding:17px 22px}
+  .col-section{padding:17px 22px}
+  .ms-box{padding:14px 8px 16px}
+  .ms-metric .ms-val{font-size:21px}
+}
+@media(max-width:980px){
   .sidebar{display:none}
-  .stat-row{grid-template-columns:repeat(2,1fr)}
+  .mobile-profile{display:flex}
+  .stat-row{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .stat-box{padding:12px 10px}
+  .stat-icon-row{font-size:12px;letter-spacing:.8px}
+  .stat-num{font-size:21px}
+  .ms-grid{grid-template-columns:repeat(2,1fr)}
+  .ms-box:nth-child(2){border-right:none}
+  .ms-box:nth-child(-n+2){border-bottom:1px solid rgba(200,168,0,0.1)}
   .two-col{grid-template-columns:1fr}
   .col-section:first-child{border-right:none;border-bottom:1px solid rgba(200,168,0,0.07)}
+  .seg-grid{grid-template-columns:1fr}
+}
+@media(max-width:860px){
+  .main-header{align-items:flex-start;gap:16px}
+  .chart-wrap{height:230px}
+  .log-table{display:block;min-width:640px;overflow-x:auto}
+  .log-table tbody,.log-table thead{display:table;width:100%}
+}
+/* mobile */
+@media(max-width:768px){
+  .stat-row{grid-template-columns:repeat(2,1fr)}
   .main-header{padding:16px 16px 14px}
   .section{padding:16px}
   .col-section{padding:16px}
   .header-name{font-size:26px}
   .cs-footer{padding:14px 16px;flex-direction:column;gap:8px}
-  .mobile-profile{display:flex}
 }
 .mobile-profile{
   display:none;
@@ -372,6 +407,36 @@ html,body{height:100%;background:#0a0a0a;color:#ccc;font-family:'Rajdhani',sans-
 .mobile-profile-name{font-size:20px;font-weight:700;color:#fff;letter-spacing:1px}
 .mobile-profile-alias{font-size:10px;color:#c8a800;letter-spacing:2.5px;text-transform:uppercase}
 .mobile-profile-rank{font-size:10px;color:#555;letter-spacing:1.5px;text-transform:uppercase;margin-top:2px}
+@media(max-width:980px){.mobile-profile{display:flex}}
+@media(max-width:520px){
+  .main-header{flex-direction:column}
+  .header-right{align-items:flex-start}
+  .header-strava-icon{display:none}
+  .stat-box{padding:12px}
+  .stat-box:nth-child(2n){border-right:none}
+  .stat-num{font-size:22px}
+  .stat-desc,.stat-unit{letter-spacing:1.3px}
+  .ms-grid{grid-template-columns:1fr}
+  .ms-box{border-right:none;border-bottom:1px solid rgba(200,168,0,0.1)}
+  .ms-box:last-child{border-bottom:none}
+  .bd-row{display:grid;grid-template-columns:1fr auto;gap:8px}
+  .bd-sport{width:auto}
+  .bd-bar-wrap{grid-column:1 / -1;order:3}
+  .tgt-row{display:grid;grid-template-columns:1fr auto auto;gap:8px}
+  .tgt-bar-wrap{grid-column:1 / -1;width:100%;order:4}
+  .chart-wrap{height:210px}
+  .chart-legend{gap:9px}
+  .mobile-profile{gap:12px;padding:14px 12px}
+  .mobile-avatar{width:62px;height:62px}
+  .mobile-profile-name{font-size:18px}
+  #to-top-btn{right:14px!important;bottom:74px!important}
+}
+@media(max-width:380px){
+  .stat-row{grid-template-columns:1fr}
+  .stat-box{border-right:none}
+  .wq-grid{grid-template-columns:1fr}
+  .log-table{min-width:580px}
+}
 </style>
 </head>
 <body>
@@ -1152,6 +1217,11 @@ fetch('strava.json')
 .ts-name{font-size:13px;font-weight:600;color:#ccc;flex:1;font-family:'Rajdhani',sans-serif}
 .ts-sub{font-size:9px;color:#555;letter-spacing:1px}
 .ts-item.active .ts-name{color:#c8a800}
+@media(max-width:520px){
+  #theme-switcher{right:12px;bottom:18px}
+  #ts-toggle{width:38px;height:38px}
+  #ts-panel{max-width:calc(100vw - 24px)}
+}
 </style>
 <script>
 ;(function(){
