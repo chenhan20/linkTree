@@ -483,7 +483,7 @@ body.disc-open{overflow:hidden}
     <button class="disc-close" id="disc-close" aria-label="關閉">✕</button>
     <div class="disc-outer" id="disc-outer">
       <!-- Background image -->
-      <img class="disc-bg-img" src="https://github.com/user-attachments/assets/af7a97cf-e4ee-4aa4-98e9-23e1500e7657" alt="" draggable="false">
+      <img class="disc-bg-img" src="https://github.com/user-attachments/assets/af7a97cf-e4ee-4aa4-98e9-23e1500e7657" alt="aespa Strava stats disc artwork" draggable="false">
       <!-- Updated date overlay -->
       <div class="disc-ov" id="disc-upd"></div>
       <!-- Stat value overlays -->
@@ -1321,7 +1321,8 @@ function _discPopulate(data) {
   if (ridesEl) ridesEl.textContent = totalActs || '—'
   if (hrsEl)   hrsEl.textContent   = fmtHr(s.ytd_moving_time_hr)
 
-  // mini chart: last 4 months ride distance (matches 01–04 bars in the image)
+  // mini chart: last 4 months ride distance
+  // The background artwork shows 4 bar slots labelled 01–04; use exactly 4 months to match
   const chartData = history.slice(-4)
   const maxD = Math.max(...chartData.map(h => (typeof h.ride === 'object' ? (h.ride.distance_km||0) : (h.distance_km||0))), 1)
   const chartEl = document.getElementById('disc-chart')
