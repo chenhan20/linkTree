@@ -245,6 +245,16 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 }
 .lap-strip .lap-name{color:#b05030;font-weight:500;font-size:11px}
 .lap-strip .lap-tag{color:#999;white-space:nowrap}
+/* power metrics (IF / TSS) */
+.power-metrics{
+  display:inline-flex;gap:8px;margin-top:5px;
+}
+.power-metrics .pm-pill{
+  font-size:10px;font-weight:600;letter-spacing:.4px;
+  padding:2px 7px;border-radius:10px;
+  background:rgba(252,76,2,.08);border:1px solid rgba(252,76,2,.2);
+  color:#c04010;white-space:nowrap;
+}
 .empty{font-size:13px;color:#555;padding:2rem 0;text-align:center}
 
 /* ── show more ── */
@@ -588,6 +598,10 @@ function renderTimeline(list, type, expanded, ittMap) {
           return vis + hidLaps.map(l=>mkLap(l).replace('<div class="lap-strip">',`<div class="lap-strip" data-lapgrp="${lid}" style="display:none">`)).join('') +
             `<button class="lap-toggle" onclick="toggleLaps(this,'${lid}')">▼ +${hidLaps.length} 分段</button>`
         })() : ''
+        const showPower = aIsRide && (lapArr.length > 0 || a.sport_type === 'Ride') && (a.if_score != null || a.tss != null)
+        const powerHtml = showPower
+          ? `<div class="power-metrics">${a.if_score != null ? `<span class="pm-pill">IF ${a.if_score}</span>` : ''}${a.tss != null ? `<span class="pm-pill">TSS ${a.tss}</span>` : ''}</div>`
+          : ''
         const stravaLink = a.id ? `<a class="act-strava-link" href="https://www.strava.com/activities/${a.id}" target="_blank" rel="noopener">Strava ↗</a>` : ''
         const ittBadges = (aIsRide && ittMap && ittMap[date])
           ? ittMap[date].map(it => {
@@ -611,6 +625,7 @@ function renderTimeline(list, type, expanded, ittMap) {
           <div class="activity-info">
             <div class="activity-name-wrap"><div class="activity-name">${a.trainer ? INDOOR_TAG : (aIsRide ? BIKE_TAG : '')}${a.name || '—'}</div>${stravaLink}</div>
             <div class="activity-meta">${tags.join('')}</div>
+            ${powerHtml}
             ${lapHtml}
             ${ittBadges}
           </div>

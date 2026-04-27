@@ -397,6 +397,13 @@ function buildJSON(stats, activities) {
     catch (e) { console.warn('⚠️  現有 JSON 讀取失敗，重新建立') }
   }
 
+  // ── 讀取 FTP（用於 IF / TSS 計算）──
+  let FTP = 238  // 預設值
+  try {
+    const athleteFile = path.join(__dirname, '../athlete/gpt_教練前提資訊.json')
+    FTP = JSON.parse(fs.readFileSync(athleteFile, 'utf8')).cycling.ftp_watts.latest || 238
+  } catch (e) { console.warn('⚠️  無法讀取 FTP，使用預設 238W') }
+
   const now = new Date()
   const thisMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
 
@@ -467,19 +474,28 @@ function buildJSON(stats, activities) {
   function localTime(a) { return (a.start_date_local || a.start_date).slice(11, 16) }
 
   // 保留所有活動（不再 slice），並都帶上 id 以便 UI 顯示「前往 Strava」連結
-  const recentRides = activities.filter(a => isType(a, RIDE_TYPES)).map(a => ({
-    id:             a.id,
-    name:           a.name,
-    date:           localDate(a),
-    time:           localTime(a),
-    distance_km:    Math.round(a.distance / 10) / 100,
-    moving_time_hr: Math.round(a.moving_time / 360) / 10,
-    elevation_m:    Math.round(a.total_elevation_gain),
-    avg_speed_kmh:  Math.round(a.average_speed * 36) / 10,
-    avg_heartrate:  a.average_heartrate ? Math.round(a.average_heartrate) : null,
-    avg_watts:      a.average_watts     ? Math.round(a.average_watts)     : null,
-    trainer:        a.trainer || false,
-  }))
+  const recentRides = activities.filter(a => isType(a, RIDE_TYPES)).map(a => {
+    const w = a.average_watts || 0
+    const t = a.moving_time   || 0
+    const ifScore = (w > 0 && FTP > 0) ? +(w / FTP).toFixed(3) : null
+    const tss     = (w > 0 && t > 0 && FTP > 0) ? Math.round((t * w * (w / FTP)) / (FTP * 3600) * 100) : null
+    return {
+      id:             a.id,
+      name:           a.name,
+      date:           localDate(a),
+      time:           localTime(a),
+      distance_km:    Math.round(a.distance / 10) / 100,
+      moving_time_hr: Math.round(a.moving_time / 360) / 10,
+      elevation_m:    Math.round(a.total_elevation_gain),
+      avg_speed_kmh:  Math.round(a.average_speed * 36) / 10,
+      avg_heartrate:  a.average_heartrate ? Math.round(a.average_heartrate) : null,
+      avg_watts:      w > 0 ? Math.round(w) : null,
+      trainer:        a.trainer || false,
+      sport_type:     a.type,
+      if_score:       ifScore,
+      tss:            tss,
+    }
+  })
 
   const recentRuns = activities.filter(a => isType(a, RUN_TYPES)).map(a => ({
     id:             a.id,
