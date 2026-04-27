@@ -244,19 +244,45 @@ html,body{height:100%;background:#050505;color:#ccc;font-family:'Rajdhani',sans-
 .seg-more-btn:hover{color:#c8a800}
 
 /* weekly quest tiles */
-.wq-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-@media(max-width:600px){.wq-grid{grid-template-columns:repeat(2,1fr)}}
-.wq-tile{padding:20px 10px 16px;border-radius:3px;text-align:center;background:#111;border:1px solid rgba(200,168,0,0.06);user-select:none}
-.wq-tile.done{background:rgba(64,200,64,0.09);border-color:rgba(64,200,64,0.22)}
-.wq-icon{font-size:28px;display:block;margin-bottom:8px;filter:grayscale(1);opacity:.3}
+.wq-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:2rem}
+@media(max-width:360px){.wq-grid{grid-template-columns:1fr}}
+.wq-tile{padding:30px 20px 26px;border-radius:3px;text-align:center;background:rgba(10,10,10,.85);border:1px solid rgba(200,168,0,0.15);user-select:none}
+.wq-tile.done{background:rgba(64,200,64,0.1);border-color:rgba(64,200,64,0.3)}
+.wq-icon{font-size:40px;display:block;margin-bottom:14px;filter:grayscale(1);opacity:.4}
 .wq-tile.done .wq-icon{filter:none;opacity:1}
-.wq-label{font-size:8px;letter-spacing:3px;text-transform:uppercase;color:#3a3a3a;font-family:'Share Tech Mono',monospace}
-.wq-tile.done .wq-label{color:rgba(64,200,64,0.65)}
-.wq-check{font-size:16px;margin-top:8px;color:#2a2a2a}
+.wq-label{font-size:12px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.35);font-family:'Share Tech Mono',monospace}
+.wq-tile.done .wq-label{color:rgba(64,200,64,0.8)}
+.wq-check{font-size:20px;margin-top:12px;color:rgba(255,255,255,.2)}
 .wq-tile.done .wq-check{color:#40c840}
-.wq-tile .wq-prog-wrap{margin:8px auto 0;width:80%;height:3px;border-radius:3px;background:rgba(64,200,64,.1)}
-.wq-tile .wq-prog-fill{height:100%;border-radius:3px;background:rgba(64,200,64,.45);transition:width .6s ease}
-.wq-tile .wq-pct{font-size:9px;margin-top:4px;color:rgba(64,200,64,.4);letter-spacing:.5px}
+.wq-tile .wq-prog-wrap{margin:12px auto 0;width:75%;height:5px;border-radius:5px;background:rgba(64,200,64,.12)}
+.wq-tile .wq-prog-fill{height:100%;border-radius:5px;background:rgba(64,200,64,.6);transition:width .6s ease}
+.wq-tile .wq-pct{font-size:11px;margin-top:6px;color:rgba(64,200,64,.6);letter-spacing:.5px}
+@media(max-width:600px){
+  .wq-tile{padding:18px 12px 16px}
+  .wq-icon{font-size:28px;margin-bottom:8px}
+  .wq-label{font-size:10px;letter-spacing:2.5px}
+  .wq-check{font-size:16px;margin-top:8px}
+  .wq-tile .wq-prog-wrap{height:3px;border-radius:3px;margin-top:8px}
+  .wq-tile .wq-prog-fill{border-radius:3px}
+  .wq-tile .wq-pct{font-size:9px;margin-top:4px}
+}
+/* OR dual-progress for ride/run tiles */
+.qprog-or{display:flex;gap:10px;margin:12px auto 0;width:86%}
+.qprog-or-slot{flex:1;min-width:0}
+.qprog-or-lbl{font-size:9px;letter-spacing:1.5px;color:rgba(255,255,255,.28);margin-bottom:4px;text-align:center}
+.qprog-or-lbl.met{color:rgba(64,200,64,.85)}
+.qprog-or-bar{height:5px;border-radius:5px;background:rgba(64,200,64,.12)}
+.qprog-or-fill{height:100%;border-radius:5px;background:rgba(64,200,64,.5);transition:width .6s ease}
+.qprog-or-slot.met .qprog-or-bar{background:rgba(64,200,64,.25)}
+.qprog-or-slot.met .qprog-or-fill{background:rgba(64,200,64,.85)}
+.qprog-or-val{font-size:10px;margin-top:5px;text-align:center;color:rgba(255,255,255,.28);letter-spacing:.3px}
+.qprog-or-slot.met .qprog-or-val{color:rgba(64,200,64,.75)}
+@media(max-width:600px){.qprog-or{gap:6px;margin-top:8px;width:90%}.qprog-or-lbl{font-size:7px;margin-bottom:2px}.qprog-or-bar{height:3px;border-radius:3px}.qprog-or-fill{border-radius:3px}.qprog-or-val{font-size:8px;margin-top:3px}}
+/* SUPER: both OR conditions met → gold */
+.wq-tile.super{background:rgba(255,196,0,.1)!important;border-color:rgba(255,196,0,.5)!important;box-shadow:0 0 18px rgba(255,196,0,.15)!important}
+.wq-tile.super .wq-label{color:rgba(255,210,0,.9)!important}
+.wq-tile.super .wq-icon{filter:none!important;opacity:1!important}
+.wq-tile.super .wq-check{color:#ffd700!important;font-size:20px!important}
 
 /* ITT inline badge in activity log */
 .log-itt-row td{padding:0 !important;border:none !important;background:transparent}
@@ -445,6 +471,135 @@ html,body{height:100%;background:#050505;color:#ccc;font-family:'Rajdhani',sans-
   .sec-title{letter-spacing:2px}
   .log-table tbody,.log-table thead{min-width:580px}
 }
+
+/* ── CS terminal power PR card ── */
+.cs-power-card{
+  margin:14px 18px 0;padding:10px 12px;
+  background:rgba(0,0,0,.45);
+  border:1px solid rgba(200,168,0,.35);
+  border-left:3px solid #c8a800;
+  font-family:'Share Tech Mono',ui-monospace,'SF Mono',Menlo,monospace;
+  cursor:pointer;user-select:none;position:relative;overflow:hidden;
+  transition:background .15s,border-color .15s;
+}
+.cs-power-card::before{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent 0 2px,rgba(200,168,0,.025) 2px 3px);
+}
+.cs-power-card:hover{background:rgba(200,168,0,.06);border-color:#c8a800}
+.cpc-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:8px;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#c8a800;position:relative}
+.cpc-head::before{content:'> ';color:rgba(200,168,0,.6)}
+.cpc-title{display:inline-flex;align-items:center;gap:6px}
+.cpc-title b{color:#fff;font-weight:700}
+.cpc-status{font-size:9px;color:rgba(200,168,0,.6);letter-spacing:1.5px}
+.cpc-status .blink{display:inline-block;width:6px;height:6px;background:#c8a800;margin-right:4px;animation:csBlink 1.2s steps(2) infinite}
+@keyframes csBlink{50%{opacity:0}}
+.cpc-tag-row{font-size:10px;color:rgba(255,255,255,.6);letter-spacing:1px;margin-bottom:8px;text-transform:uppercase;position:relative}
+.cpc-tag-row::before{content:'$ ';color:rgba(200,168,0,.6)}
+.cpc-tag-row b{color:#c8a800;font-size:13px;font-weight:700;margin:0 2px;letter-spacing:.5px}
+.cpc-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:3px;position:relative}
+.cpc-mini{padding:5px 2px;text-align:center;background:rgba(200,168,0,.04);border:1px solid rgba(200,168,0,.2)}
+.cpc-mini-lbl{font-size:9px;color:#666;letter-spacing:.5px;text-transform:uppercase}
+.cpc-mini-val{font-size:13px;color:#c8a800;font-weight:700;margin-top:1px;line-height:1.1;font-variant-numeric:tabular-nums}
+.cpc-mini-val small{font-size:7px;color:rgba(200,168,0,.6);margin-left:1px;font-weight:400}
+.cpc-mini.empty .cpc-mini-val{color:#444}
+.cs-power-card.opening{animation:cpcOpen .4s steps(8) forwards}
+@keyframes cpcOpen{
+  0%{transform:scale(1);background:rgba(0,0,0,.45)}
+  50%{transform:scale(.96);background:rgba(200,168,0,.4);border-color:#c8a800}
+  100%{transform:scale(1.04);opacity:0;background:rgba(200,168,0,.7)}
+}
+
+/* CS terminal modal */
+.cpm-overlay{
+  position:fixed;inset:0;z-index:9999;
+  background:radial-gradient(ellipse at center,rgba(20,18,0,.92) 0%,rgba(0,0,0,.97) 70%);
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .25s;padding:12px;
+}
+.cpm-overlay.open{opacity:1;pointer-events:auto}
+.cpm-modal{
+  position:relative;width:100%;max-width:780px;max-height:88vh;
+  background:rgba(8,8,4,.98);
+  border:1px solid #c8a800;
+  font-family:'Share Tech Mono',ui-monospace,monospace;
+  padding:18px 20px 14px;
+  box-shadow:0 0 50px rgba(200,168,0,.4),inset 0 0 30px rgba(0,0,0,.6);
+  transform:scale(.5);opacity:0;
+  transition:transform .35s steps(6),opacity .25s;
+  display:flex;flex-direction:column;overflow:hidden;
+}
+.cpm-overlay.open .cpm-modal{transform:scale(1);opacity:1}
+.cpm-modal::before{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent 0 2px,rgba(200,168,0,.03) 2px 3px);
+}
+.cpm-modal::after{content:'';position:absolute;top:0;left:0;right:0;height:22px;background:linear-gradient(180deg,rgba(200,168,0,.15),transparent);pointer-events:none}
+.cpm-body{flex:1;overflow-y:auto;padding-right:6px;position:relative;z-index:1}
+.cpm-body::-webkit-scrollbar{width:4px}
+.cpm-body::-webkit-scrollbar-thumb{background:rgba(200,168,0,.5)}
+.cpm-close{
+  position:absolute;top:8px;right:8px;width:26px;height:26px;
+  background:transparent;border:1px solid #c8a800;color:#c8a800;
+  font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-family:inherit;transition:background .15s;z-index:3;
+}
+.cpm-close:hover{background:rgba(200,168,0,.25)}
+.cpm-head{display:flex;align-items:baseline;gap:10px;margin-bottom:10px;padding-right:34px;border-bottom:1px solid rgba(200,168,0,.25);padding-bottom:8px;position:relative;z-index:1}
+.cpm-head h2{font-size:14px;color:#c8a800;font-weight:700;letter-spacing:3px;text-transform:uppercase;margin:0}
+.cpm-head h2::before{content:'[ '}
+.cpm-head h2::after{content:' ]'}
+.cpm-head .en{font-size:9px;color:rgba(200,168,0,.55);letter-spacing:2.5px;text-transform:uppercase}
+.cpm-tabs{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:12px;position:relative;z-index:1}
+.cpm-tab{padding:4px 10px;font-family:inherit;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;background:rgba(200,168,0,.04);border:1px solid rgba(200,168,0,.25);color:#888;cursor:pointer;transition:all .12s}
+.cpm-tab:hover{border-color:#c8a800;color:#c8a800}
+.cpm-tab.active{background:rgba(200,168,0,.18);border-color:#c8a800;color:#fff;box-shadow:inset 0 -2px 0 #c8a800}
+.cpm-tab:disabled{opacity:.3;cursor:not-allowed}
+.cpm-hero{display:grid;grid-template-columns:170px 1fr;gap:18px;align-items:center;margin-bottom:14px;position:relative;z-index:1}
+.cpm-dial{position:relative;width:170px;height:170px;margin:0 auto}
+.cpm-dial svg{width:100%;height:100%;transform:rotate(-90deg)}
+.cpm-dial .dial-bg{fill:none;stroke:rgba(200,168,0,.1);stroke-width:5}
+.cpm-dial .dial-fg{fill:none;stroke:#c8a800;stroke-width:5;stroke-linecap:butt;filter:drop-shadow(0 0 6px rgba(200,168,0,.7));transition:stroke-dashoffset .5s steps(20)}
+.cpm-dial-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;pointer-events:none}
+.cpm-dial-lbl{font-size:9px;color:rgba(200,168,0,.7);letter-spacing:2px;margin-bottom:1px;text-transform:uppercase}
+.cpm-dial-lbl::before{content:'> '}
+.cpm-dial-val{font-size:42px;line-height:1;font-weight:700;color:#c8a800;text-shadow:0 0 12px rgba(200,168,0,.6);font-variant-numeric:tabular-nums}
+.cpm-dial-unit{font-size:10px;color:rgba(200,168,0,.7);margin-top:3px;letter-spacing:2.5px}
+.cpm-act{padding:12px;border:1px solid rgba(200,168,0,.3);background:rgba(0,0,0,.4);font-size:11px;color:#aaa;font-family:inherit}
+.cpm-act .pmc-tag{display:inline-flex;gap:5px;font-size:9px;color:#c8a800;letter-spacing:1.5px;margin-bottom:8px;padding:1px 6px;border:1px solid rgba(200,168,0,.4);text-transform:uppercase}
+.cpm-act .pmc-row{display:flex;align-items:center;gap:7px;margin:3px 0;font-size:11px;letter-spacing:.5px}
+.cpm-act .pmc-row .pmc-ico{width:14px;color:rgba(200,168,0,.7);flex-shrink:0;text-align:center}
+.cpm-act .pmc-row a{color:#fff;text-decoration:none;border-bottom:1px dashed rgba(200,168,0,.4)}
+.cpm-act .pmc-row a:hover{color:#c8a800}
+.cpm-act .pmc-watt{color:#c8a800;font-weight:700}
+.cpm-section{display:flex;align-items:baseline;gap:8px;margin:14px 0 6px;padding-bottom:6px;border-bottom:1px solid rgba(200,168,0,.2)}
+.cpm-section .ico{color:#c8a800;font-size:11px}
+.cpm-section h3{font-size:11px;color:#fff;font-weight:700;letter-spacing:2px;margin:0;text-transform:uppercase}
+.cpm-section .en{font-size:8px;color:rgba(200,168,0,.55);letter-spacing:2.5px}
+.cpm-curve{width:100%;height:auto;background:rgba(200,168,0,.025);border:1px solid rgba(200,168,0,.15);padding:6px;display:block}
+.cpm-table{width:100%;border-collapse:collapse;font-size:11px;font-family:inherit}
+.cpm-table th{font-size:9px;letter-spacing:1.5px;color:rgba(200,168,0,.7);text-transform:uppercase;text-align:left;padding:5px 8px;border-bottom:1px solid rgba(200,168,0,.3);font-weight:700}
+.cpm-table td{padding:5px 8px;border-bottom:1px solid rgba(200,168,0,.07);color:#bbb;vertical-align:middle}
+.cpm-table td.dur{color:#c8a800;font-weight:700;letter-spacing:1px;white-space:nowrap;text-transform:uppercase}
+.cpm-table td.watt{color:#c8a800;font-weight:700;font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.cpm-table td.act a{color:#ddd;text-decoration:none;border-bottom:1px dashed rgba(200,168,0,.3)}
+.cpm-table td.act a:hover{color:#c8a800}
+.cpm-table td.date{color:#666;font-size:10px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.cpm-table tr.empty td{color:#333}
+.cpm-table tr.active{background:rgba(200,168,0,.1);box-shadow:inset 3px 0 0 #c8a800}
+.cpm-source{margin-top:10px;font-size:9px;color:rgba(200,168,0,.45);letter-spacing:2.5px;text-align:left;text-transform:uppercase}
+.cpm-source::before{content:'// '}
+@media(max-width:700px){
+  .cs-power-card{margin:12px 12px 0}
+  .cpm-hero{grid-template-columns:1fr;gap:10px}
+  .cpm-dial{width:140px;height:140px}
+  .cpm-dial-val{font-size:36px}
+}
+@media(max-width:480px){
+  .cpc-grid{grid-template-columns:repeat(3,1fr)}
+  .cpm-table .h-act,.cpm-table td.act{display:none}
+}
 </style>
 </head>
 <body>
@@ -531,6 +686,7 @@ html,body{height:100%;background:#050505;color:#ccc;font-family:'Rajdhani',sans-
       </div>
     </div>
     <div class="hazard"></div>
+    <div id="cs-power-slot"></div>
 
     <!-- stat row -->
     <div class="stat-row" id="stat-row">
@@ -816,6 +972,10 @@ function render(data) {
   const wq = data.weekly_quest   || {}
   const history = data.monthly_history || []
 
+  // power PR card injection
+  const powerSlot = document.getElementById('cs-power-slot')
+  if (powerSlot) powerSlot.innerHTML = renderCsPower(data.power_prs)
+
   // fallback: derive monthly data if not present
   if (!data.monthly_goals || !data.weekly_quest) {
     const now = new Date(Date.now() + 8 * 3600 * 1000)
@@ -848,8 +1008,8 @@ function render(data) {
       const wSwimM    = Math.round(wSwims.reduce((s, a) => s + (a.distance_km || 0) * 1000, 0))
       const wWeightCt = wWeights.length
       data.weekly_quest = {
-        ride:   { done: wRideDist >= 30 || wRideHr >= 1, distance_km: wRideDist, moving_time_hr: wRideHr, target_km: 30, target_hr: 1 },
-        run:    { done: wRunDist >= 10  || wRunHr >= 1,  distance_km: wRunDist,  moving_time_hr: wRunHr,  target_km: 10, target_hr: 1 },
+        ride:   { done: wRideDist >= 30 || wRideHr >= 1, super: wRideDist >= 30 && wRideHr >= 1, distance_km: wRideDist, moving_time_hr: wRideHr, target_km: 30, target_hr: 1 },
+        run:    { done: wRunDist >= 10  || wRunHr >= 1,  super: wRunDist >= 10  && wRunHr >= 1,  distance_km: wRunDist,  moving_time_hr: wRunHr,  target_km: 10, target_hr: 1 },
         swim:   { done: wSwimM >= 1000,                   distance_m: wSwimM,    target_m: 1000 },
         weight: { done: wWeightCt >= 1,                   count: wWeightCt,      target: 1 },
       }
@@ -945,38 +1105,52 @@ function render(data) {
 
   // ── weekly quest tiles ──
   const wqSports = [
-    { key: 'ride',   icon: '🚴', label: 'RIDE' },
-    { key: 'run',    icon: '🏃', label: 'RUN'  },
-    { key: 'swim',   icon: '🏊', label: 'SWIM' },
-    { key: 'weight', icon: '🏋️', label: 'GYM'  },
+    { key: 'ride',   icon: '🚴', label: 'RIDE',  isOr: true,  tKm: '30KM', tHr: '1HR' },
+    { key: 'run',    icon: '🏃', label: 'RUN',   isOr: true,  tKm: '10KM', tHr: '1HR' },
+    { key: 'swim',   icon: '🏊', label: 'SWIM',  isOr: false, targetLabel: '1000m' },
+    { key: 'weight', icon: '🏋️', label: 'GYM',   isOr: false, targetLabel: '1 次'  },
   ]
   document.getElementById('wq-grid').innerHTML = wqSports.map(sp => {
     const val = wqFinal[sp.key]
     const done = typeof val === 'object' ? val.done : !!val
+    const sup  = typeof val === 'object' && !!val.super
+    const cls  = `wq-tile${sup ? ' done super' : done ? ' done' : ''}`
+    if (sp.isOr && typeof val === 'object') {
+      const d = val.distance_km || 0, h = val.moving_time_hr || 0
+      const dPct = Math.min(100, Math.round(d / val.target_km * 100))
+      const hPct = Math.min(100, Math.round(h / val.target_hr * 100))
+      const dMet = dPct >= 100, hMet = hPct >= 100
+      const body = (done || sup)
+        ? `<div class="wq-check">${sup ? '⚡' : '✓'}</div>
+          <div class="wq-pct" style="margin-top:5px;color:${sup ? 'rgba(255,210,0,.85)' : 'rgba(64,200,64,.75)'}">${d}km · ${h}hr</div>`
+        : `<div class="wq-check"><span style="font-size:7px;letter-spacing:2px;color:rgba(64,200,64,.25)">OR</span></div>
+          <div class="qprog-or">
+            <div class="qprog-or-slot${dMet ? ' met' : ''}">
+              <div class="qprog-or-lbl${dMet ? ' met' : ''}">${sp.tKm}</div>
+              <div class="qprog-or-bar"><div class="qprog-or-fill" style="width:${dPct}%"></div></div>
+              <div class="qprog-or-val">${d}km</div>
+            </div>
+            <div class="qprog-or-slot${hMet ? ' met' : ''}">
+              <div class="qprog-or-lbl${hMet ? ' met' : ''}">${sp.tHr}</div>
+              <div class="qprog-or-bar"><div class="qprog-or-fill" style="width:${hPct}%"></div></div>
+              <div class="qprog-or-val">${h}hr</div>
+            </div>
+          </div>`
+      return `<div class="${cls}"><span class="wq-icon">${sp.icon}</span><div class="wq-label">${sp.label}</div>${body}</div>`
+    }
     const pct = (() => {
       if (typeof val !== 'object') return val ? 100 : 0
-      if (sp.key === 'ride') { const bd = val.target_km > 0 ? (val.distance_km||0)/val.target_km : 0; const bt = val.target_hr > 0 ? (val.moving_time_hr||0)/val.target_hr : 0; return Math.min(100, Math.round(Math.max(bd, bt)*100)) }
-      if (sp.key === 'run')  { const bd = val.target_km > 0 ? (val.distance_km||0)/val.target_km : 0; const bt = val.target_hr > 0 ? (val.moving_time_hr||0)/val.target_hr : 0; return Math.min(100, Math.round(Math.max(bd, bt)*100)) }
       if (sp.key === 'swim') return Math.min(100, Math.round((val.distance_m||0)/val.target_m*100))
-      if (sp.key === 'weight') return val.count >= val.target ? 100 : 0
-      return 0
+      return val.count >= val.target ? 100 : 0
     })()
-    const targetLabel = sp.key==='ride'?'30km / 1hr':sp.key==='run'?'10km / 1hr':sp.key==='swim'?'1000m':'1 次'
-    const detail = (() => {
-      if (typeof val !== 'object') return ''
-      if (sp.key === 'ride') { const bd = val.target_km>0?(val.distance_km||0)/val.target_km:0; const bt = val.target_hr>0?(val.moving_time_hr||0)/val.target_hr:0; return bd>=bt?`${val.distance_km||0}km`:`${val.moving_time_hr||0}hr` }
-      if (sp.key === 'run')  { const bd = val.target_km>0?(val.distance_km||0)/val.target_km:0; const bt = val.target_hr>0?(val.moving_time_hr||0)/val.target_hr:0; return bd>=bt?`${val.distance_km||0}km`:`${val.moving_time_hr||0}hr` }
-      if (sp.key === 'swim') return `${val.distance_m||0}m`
-      if (sp.key === 'weight') return `${val.count||0} 次`
-      return ''
-    })()
+    const detail = typeof val === 'object' ? (sp.key==='swim' ? `${val.distance_m||0}m` : `${val.count||0} 次`) : ''
     const progHtml = !done ? `
       <div class="wq-prog-wrap"><div class="wq-prog-fill" style="width:${pct}%"></div></div>
       <div class="wq-pct">${detail ? `${detail} · ` : ''}${pct}%</div>` : ''
-    return `<div class="wq-tile${done ? ' done' : ''}">
+    return `<div class="${cls}">
       <span class="wq-icon">${sp.icon}</span>
       <div class="wq-label">${sp.label}</div>
-      <div class="wq-check">${done ? '✓' : `<span style="font-size:9px;color:rgba(64,200,64,.25)">${targetLabel}</span>`}</div>
+      <div class="wq-check">${done ? '✓' : `<span style="font-size:9px;color:rgba(64,200,64,.25)">${sp.targetLabel}</span>`}</div>
       ${progHtml}
     </div>`
   }).join('')
@@ -1201,10 +1375,153 @@ function render(data) {
   })
 }
 
+// ── CS terminal power PR card + modal ──
+const CPWR_DURATIONS = [
+  { sec:5, label:'5s' }, { sec:10, label:'10s' }, { sec:30, label:'30s' },
+  { sec:60, label:'1m' }, { sec:120, label:'2m' }, { sec:300, label:'5m' },
+  { sec:600, label:'10m' }, { sec:1200, label:'20m' }, { sec:3600, label:'60m' },
+]
+function cPwrMap(prs){ const m=new Map(); (prs||[]).forEach(p=>m.set(p.duration_sec,p)); return m }
+function renderCsPower(prs){
+  if(!prs||!prs.length) return ''
+  const map = cPwrMap(prs)
+  const hero = map.get(5) || prs[0]
+  const heroLbl = (CPWR_DURATIONS.find(d=>d.sec===hero.duration_sec)||{}).label || `${hero.duration_sec}s`
+  const miniDurs=[5,10,30,60,120,300]
+  const cells = miniDurs.map(s=>{
+    const p=map.get(s); const lbl=CPWR_DURATIONS.find(d=>d.sec===s).label
+    if(!p) return `<div class="cpc-mini empty"><div class="cpc-mini-lbl">${lbl}</div><div class="cpc-mini-val">—</div></div>`
+    return `<div class="cpc-mini"><div class="cpc-mini-lbl">${lbl}</div><div class="cpc-mini-val">${p.watts}<small>W</small></div></div>`
+  }).join('')
+  return `
+    <div class="cs-power-card" id="cs-power-card">
+      <div class="cpc-head">
+        <span class="cpc-title">POWER_PR <b>${prs.length}</b> RECORDS</span>
+        <span class="cpc-status"><span class="blink"></span>READY ▸ click to expand</span>
+      </div>
+      <div class="cpc-tag-row">BEST ${heroLbl}: <b>${hero.watts}</b>W // ${hero.activity_name||''}</div>
+      <div class="cpc-grid">${cells}</div>
+    </div>`
+}
+function renderCsModal(prs){
+  const map = cPwrMap(prs)
+  const sorted = CPWR_DURATIONS.filter(d=>map.has(d.sec))
+  const maxW = Math.max(...prs.map(p=>p.watts))
+  const tabs = CPWR_DURATIONS.map(d=>{
+    const has = map.has(d.sec)
+    return `<button class="cpm-tab${d.sec===5&&has?' active':''}" data-dur="${d.sec}"${!has?' disabled':''}>${d.label}</button>`
+  }).join('')
+  const rows = CPWR_DURATIONS.map(d=>{
+    const p=map.get(d.sec)
+    if(!p) return `<tr class="empty" data-dur="${d.sec}"><td class="dur">${d.label}</td><td>—</td><td class="act">—</td><td class="date">—</td></tr>`
+    return `<tr data-dur="${d.sec}"${d.sec===5?' class="active"':''}>
+      <td class="dur">${d.label}</td><td class="watt">${p.watts}</td>
+      <td class="act"><a href="https://www.strava.com/activities/${p.activity_id}" target="_blank" rel="noopener">${p.activity_name||'—'}</a></td>
+      <td class="date">${p.date||'—'}</td></tr>`
+  }).join('')
+  const W=700,H=170,padL=42,padR=14,padT=14,padB=26,innerW=W-padL-padR,innerH=H-padT-padB
+  const yMax=Math.ceil(maxW/100)*100+100
+  const pts = sorted.map((d,i)=>{ const p=map.get(d.sec); return { x:padL+(i/(sorted.length-1))*innerW, y:padT+innerH-(p.watts/yMax)*innerH, w:p.watts, label:d.label } })
+  const linePath = pts.map((p,i)=>`${i?'L':'M'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')
+  const yGrid = [0,yMax/2,yMax].map(v=>{ const y=padT+innerH-(v/yMax)*innerH; return `<line x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="rgba(200,168,0,.1)" stroke-width="1"/><text x="${padL-5}" y="${y+3}" fill="rgba(200,168,0,.6)" font-size="8" text-anchor="end" font-family="Share Tech Mono,monospace">${Math.round(v)}</text>` }).join('')
+  const xLabels = pts.map(p=>`<text x="${p.x}" y="${H-8}" fill="rgba(200,168,0,.7)" font-size="8" text-anchor="middle" font-family="Share Tech Mono,monospace">${p.label}</text>`).join('')
+  const dots = pts.map(p=>`<rect x="${p.x-3}" y="${p.y-3}" width="6" height="6" fill="#c8a800" stroke="#0a0a0a" stroke-width="1"/><text x="${p.x}" y="${p.y-7}" fill="#c8a800" font-size="9" font-weight="700" text-anchor="middle" font-family="Share Tech Mono,monospace">${p.w}</text>`).join('')
+  return `
+    <div class="cpm-overlay" id="cpm-overlay">
+      <div class="cpm-modal">
+        <button class="cpm-close" id="cpm-close" aria-label="close">✕</button>
+        <div class="cpm-head"><h2>POWER_PR.LOG</h2><span class="en">CYCLING POWER ARCHIVE</span></div>
+        <div class="cpm-body">
+        <div class="cpm-tabs" id="cpm-tabs">${tabs}</div>
+        <div class="cpm-hero">
+          <div class="cpm-dial">
+            <svg viewBox="0 0 200 200">
+              <circle class="dial-bg" cx="100" cy="100" r="86"/>
+              <circle class="dial-fg" cx="100" cy="100" r="86" stroke-dasharray="540" stroke-dashoffset="0" id="cpm-dial-fg"/>
+            </svg>
+            <div class="cpm-dial-center">
+              <div class="cpm-dial-lbl" id="cpm-dial-lbl">BEST 5s</div>
+              <div class="cpm-dial-val" id="cpm-dial-val">—</div>
+              <div class="cpm-dial-unit">WATT</div>
+            </div>
+          </div>
+          <div class="cpm-act">
+            <div class="pmc-tag">[ ALL-TIME BEST ]</div>
+            <div class="pmc-row"><span class="pmc-ico">◷</span><a id="cpmc-name" href="#" target="_blank" rel="noopener">—</a></div>
+            <div class="pmc-row"><span class="pmc-ico">◇</span><span id="cpmc-date">—</span></div>
+            <div class="pmc-row"><span class="pmc-ico">◈</span><span class="pmc-watt" id="cpmc-watt">—</span></div>
+            <div class="pmc-row"><span class="pmc-ico">◉</span><span id="cpmc-dur">—</span></div>
+          </div>
+        </div>
+        <div class="cpm-section"><span class="ico">▶</span><h3>Power Curve</h3><span class="en">DURATION_CURVE.SVG</span></div>
+        <svg class="cpm-curve" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">
+          ${yGrid}
+          <path d="${linePath}" fill="none" stroke="#c8a800" stroke-width="2" stroke-linecap="butt" stroke-linejoin="miter"/>
+          ${dots}${xLabels}
+        </svg>
+        <div class="cpm-section"><span class="ico">▶</span><h3>Best by Duration</h3><span class="en">FULL_RANKING.TBL</span></div>
+        <table class="cpm-table">
+          <thead><tr><th>DUR</th><th>WATT</th><th class="h-act">ACTIVITY</th><th>DATE</th></tr></thead>
+          <tbody id="cpm-tbody">${rows}</tbody>
+        </table>
+        <div class="cpm-source">SRC: STRAVA POWER BESTS // EOF</div>
+        </div>
+      </div>
+    </div>`
+}
+function updateCsTab(prs, durSec){
+  const map=cPwrMap(prs); const p=map.get(durSec)
+  const lbl=(CPWR_DURATIONS.find(d=>d.sec===durSec)||{}).label||`${durSec}s`
+  document.getElementById('cpm-dial-lbl').textContent=`BEST ${lbl}`
+  document.getElementById('cpm-dial-val').textContent=p?p.watts:'—'
+  const maxW=Math.max(...prs.map(x=>x.watts)); const ratio=p?p.watts/maxW:0
+  const circ=2*Math.PI*86
+  const fg=document.getElementById('cpm-dial-fg')
+  fg.setAttribute('stroke-dasharray',circ.toFixed(1))
+  fg.setAttribute('stroke-dashoffset',(circ*(1-ratio)).toFixed(1))
+  if(p){
+    const a=document.getElementById('cpmc-name'); a.textContent=p.activity_name||'—'; a.href=`https://www.strava.com/activities/${p.activity_id}`
+    document.getElementById('cpmc-date').textContent=p.date||'—'
+    document.getElementById('cpmc-watt').textContent=`${p.watts} W`
+    document.getElementById('cpmc-dur').textContent=lbl
+  } else {
+    document.getElementById('cpmc-name').textContent='[no record]'; document.getElementById('cpmc-name').removeAttribute('href')
+    document.getElementById('cpmc-date').textContent='—'
+    document.getElementById('cpmc-watt').textContent='—'
+    document.getElementById('cpmc-dur').textContent=lbl
+  }
+  document.querySelectorAll('.cpm-tab').forEach(t=>t.classList.toggle('active',+t.dataset.dur===durSec))
+  document.querySelectorAll('#cpm-tbody tr').forEach(tr=>tr.classList.toggle('active',+tr.dataset.dur===durSec))
+}
+function openCsModal(prs){
+  document.getElementById('cpm-overlay')?.remove()
+  document.body.insertAdjacentHTML('beforeend', renderCsModal(prs))
+  const overlay=document.getElementById('cpm-overlay'); void overlay.offsetWidth; overlay.classList.add('open')
+  document.body.style.overflow='hidden'
+  const initial = prs.find(p=>p.duration_sec===5)?5:prs[0].duration_sec
+  updateCsTab(prs, initial)
+  const close=()=>{ overlay.classList.remove('open'); document.body.style.overflow=''; setTimeout(()=>overlay.remove(),300); document.removeEventListener('keydown',onKey) }
+  const onKey=e=>{ if(e.key==='Escape') close() }
+  document.addEventListener('keydown',onKey)
+  document.getElementById('cpm-close').addEventListener('click',close)
+  overlay.addEventListener('click',e=>{ if(e.target===overlay) close() })
+  document.getElementById('cpm-tabs').addEventListener('click',e=>{ const t=e.target.closest('.cpm-tab'); if(!t||t.disabled) return; updateCsTab(prs,+t.dataset.dur) })
+  document.getElementById('cpm-tbody').addEventListener('click',e=>{ const tr=e.target.closest('tr[data-dur]'); if(!tr||tr.classList.contains('empty')) return; if(e.target.closest('a')) return; updateCsTab(prs,+tr.dataset.dur) })
+}
+function bindCsPower(prs){
+  const card=document.getElementById('cs-power-card')
+  if(!card||!prs||!prs.length) return
+  card.addEventListener('click',()=>{
+    if(card.classList.contains('opening')) return
+    card.classList.add('opening')
+    setTimeout(()=>{ card.classList.remove('opening'); openCsModal(prs) },280)
+  })
+}
+
 // ── fetch ──
 fetch('strava.json')
   .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json() })
-  .then(render)
+  .then(d => { render(d); bindCsPower(d.power_prs) })
   .catch(err => {
     document.getElementById('log-tbody').innerHTML = `
       <tr><td colspan="6" style="padding:40px 0;color:#c83232;font-size:12px;letter-spacing:2px;text-transform:uppercase">

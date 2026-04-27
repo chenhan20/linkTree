@@ -36,8 +36,9 @@ const CLIENT_SECRET = process.env.STRAVA_CLIENT_SECRET
 const REFRESH_TOKEN = process.env.STRAVA_REFRESH_TOKEN
 const ATHLETE_ID    = process.env.STRAVA_ATHLETE_ID  // 你的 161539959
 
-const OUT_FILE  = path.join(__dirname, '..', 'strava.json')
-const ITT_FILE  = path.join(__dirname, '..', 'itt-segments.json')
+const OUT_FILE   = path.join(__dirname, '..', 'strava.json')
+const ITT_FILE   = path.join(__dirname, '..', 'itt-segments.json')
+const POWER_FILE = path.join(__dirname, '..', 'power-prs.json')
 
 // ── 簡單的 HTTPS helper（不裝額外套件）──
 function request(options, body = null) {
@@ -197,21 +198,160 @@ function extractTopLaps(laps) {
   })
 }
 
+// ────────────────────────────────────────────────────────────────
+// ── Power PR：時段定義 ──
+// ────────────────────────────────────────────────────────────────
+const POWER_DURATIONS = [5, 10, 30, 60, 120, 300, 600, 1200, 3600]
+const POWER_DURATION_LABELS = {
+  5:    '5秒',
+  10:   '10秒',
+  30:   '30秒',
+  60:   '1分',
+  120:  '2分',
+  300:  '5分',
+  600:  '10分',
+  1200: '20分',
+  3600: '60分',
+}
+
+// 抓單筆活動的 watts stream
+async function fetchWattsStream(token, activityId) {
+  const data = await request({
+    hostname: 'www.strava.com',
+    path:     `/api/v3/activities/${activityId}/streams?keys=watts,time&key_by_type=true`,
+    method:   'GET',
+    headers:  { Authorization: `Bearer ${token}` },
+  })
+  return data
+}
+
+// 滑動視窗計算指定秒數的最高平均功率
+function calcPeakPower(wattsArr, durationSec) {
+  const n = wattsArr.length
+  if (n < durationSec) return null
+  let windowSum = 0
+  for (let i = 0; i < durationSec; i++) windowSum += (wattsArr[i] ?? 0)
+  let maxAvg = windowSum / durationSec
+  for (let i = durationSec; i < n; i++) {
+    windowSum += (wattsArr[i] ?? 0)
+    windowSum -= (wattsArr[i - durationSec] ?? 0)
+    const avg = windowSum / durationSec
+    if (avg > maxAvg) maxAvg = avg
+  }
+  return Math.round(maxAvg)
+}
+
+// ── Power PR 更新：對新的有功率外騎打 streams，比對並更新 PR ──
+// 開關：SCAN_POWER=1 才執行（預設跳過，日常 fetch 不多打 streams）
+// SCAN_POWER=1 → 只掃未掃描過的；SCAN_POWER=1 + FETCH_ALL=1 → 忽略快取全掃
+// POWER_FETCH_MAX=N → 單次上限（預設無限，SCAN_POWER 時不限）
+async function updatePowerPRs(token, activities) {
+  const RIDE_TYPES = ['Ride', 'VirtualRide', 'EBikeRide', 'MountainBikeRide']
+  const forceRescan = process.env.SCAN_POWER === '1'  // 只有明確設 SCAN_POWER=1 才完整重掃
+  const maxFetch    = parseInt(process.env.POWER_FETCH_MAX || '99999', 10)
+
+  // 讀獨立的 power-prs.json
+  let powerFile = { prs: [], scanned_ids: [] }
+  if (fs.existsSync(POWER_FILE) && !forceRescan) {
+    try { powerFile = JSON.parse(fs.readFileSync(POWER_FILE, 'utf8')) } catch (e) {}
+  }
+
+  // 篩：外騎 + 有功率計
+  const powerRides = activities.filter(a =>
+    RIDE_TYPES.includes(a.type) &&
+    a.device_watts === true &&
+    !a.trainer
+  )
+
+  const scannedIds = new Set((powerFile.scanned_ids || []).map(String))
+  const toScan     = powerRides.filter(a => !scannedIds.has(String(a.id)))
+  console.log(`⚡ Power PR：有功率外騎 ${powerRides.length} 筆，待掃描 ${toScan.length} 筆`)
+
+  if (toScan.length === 0) {
+    console.log('   ✅ Power PR 快取完整，跳過掃描')
+    return powerFile.prs || []
+  }
+
+  // 現有 PR 表（以 duration_sec 為 key）
+  const prs = {}
+  for (const dur of POWER_DURATIONS) {
+    const existing = (powerFile.prs || []).find(p => p.duration_sec === dur)
+    prs[dur] = existing
+      ? { watts: existing.watts || 0, activity_id: existing.activity_id, date: existing.date, activity_name: existing.activity_name }
+      : { watts: 0, activity_id: null, date: null, activity_name: null }
+  }
+
+  let fetchCount = 0
+  for (const act of toScan) {
+    if (fetchCount >= maxFetch) break
+    try {
+      await new Promise(r => setTimeout(r, 350))
+      const streams = await fetchWattsStream(token, act.id)
+      fetchCount++
+
+      const wattsArr = streams?.watts?.data
+      if (!wattsArr) { scannedIds.add(String(act.id)); continue }
+
+      const date = (act.start_date_local || act.start_date).slice(0, 10)
+      let hasPR  = false
+      for (const dur of POWER_DURATIONS) {
+        const peak = calcPeakPower(wattsArr, dur)
+        if (peak && peak > (prs[dur].watts || 0)) {
+          prs[dur] = { watts: peak, activity_id: act.id, date, activity_name: act.name }
+          hasPR = true
+        }
+      }
+      scannedIds.add(String(act.id))
+      if (hasPR) console.log(`  🏅 新 PR！${act.name} (${date})`)
+      else       process.stdout.write('.')
+    } catch (e) {
+      console.warn(`\n  ⚠️  Streams 失敗 (id=${act.id})：${e.message}`)
+      scannedIds.add(String(act.id))
+    }
+  }
+  if (fetchCount > 0) console.log(`\n✅ Power PR 掃描完成，打 API ${fetchCount} 次`)
+
+  // 組成輸出格式
+  const prsResult = POWER_DURATIONS.map(dur => ({
+    duration_sec:   dur,
+    duration_label: POWER_DURATION_LABELS[dur],
+    watts:          prs[dur].watts || null,
+    activity_id:    prs[dur].activity_id,
+    date:           prs[dur].date,
+    activity_name:  prs[dur].activity_name,
+  }))
+
+  // 寫回獨立的 power-prs.json
+  fs.writeFileSync(POWER_FILE, JSON.stringify({
+    updated_at:  new Date().toISOString(),
+    prs:         prsResult,
+    scanned_ids: [...scannedIds],
+  }, null, 2), 'utf8')
+  console.log(`✅ power-prs.json 寫入完成`)
+
+  return prsResult
+}
+
 // ── Step 4b：Lap enrichment（ID-based 快取，避免重複打 API）──
 // LAP_FETCH_MAX：對沒有 cache 的 ride，最多打多少次 detail API（避免拉到全史時撞 Strava 限流）。
-//   設成 0 表示停用 lap detail；REFRESH_LAPS=1 會無視快取重新抓（仍受 LAP_FETCH_MAX 限制）。
-async function enrichRideLaps(token, recentRides, existingRides, existingSegments) {
+//   REFRESH_LAPS=1 會無視快取重新抓（仍受 LAP_FETCH_MAX 限制）
+//   SCAN_SEGMENTS=1 會無視 seg_scan_ids 快取，重新抓 segment efforts
+// 回傳 { newSegEfforts, segScanIds }：segScanIds 存回 strava.json 避免重複打 segment
+async function enrichRideLaps(token, recentRides, existingRides, existingSegments, existingSegScanIds) {
   const LAP_FETCH_MAX = parseInt(process.env.LAP_FETCH_MAX || '30', 10)
 
   // 從舊 JSON 建 id → top_laps 快取
   const cache = {}
+  // 從舊 JSON 建 id → description 快取
+  const descCache = {}
   if (process.env.REFRESH_LAPS !== '1') {
     for (const r of (existingRides || [])) {
       if (r.id != null && Array.isArray(r.top_laps)) cache[String(r.id)] = r.top_laps
+      if (r.id != null && r.description !== undefined) descCache[String(r.id)] = r.description
     }
   }
 
-  // 已有紀錄的 activity_id（各 segment 的 efforts 合併）
+  // 已有 ITT effort 紀錄的 activity_id
   const knownActivityIds = new Set()
   for (const seg of (existingSegments || [])) {
     for (const e of (seg.efforts || [])) {
@@ -219,29 +359,37 @@ async function enrichRideLaps(token, recentRides, existingRides, existingSegment
     }
   }
 
+  // 已掃描過 segment 的 activity_id（即使結果是 0 effort 也記錄，避免重複打）
+  const segScanIds = new Set(
+    process.env.SCAN_SEGMENTS === '1'
+      ? []  // SCAN_SEGMENTS=1 → 清除快取，重新掃
+      : (existingSegScanIds || []).map(String)
+  )
+
   // 新收集的 segment efforts：{ [segId]: [...] }
   const newSegEfforts = {}
 
-  // recentRides 已是日期降冪（map 自原始 activities），最新在前；只對前 LAP_FETCH_MAX 筆未 cache 的打 detail
   let detailBudget = LAP_FETCH_MAX
   let fetchCount = 0
   for (const ride of recentRides) {
     if (ride.id == null) { ride.top_laps = []; continue }
     const key = String(ride.id)
     const needsLaps = !(key in cache)
-    const needsSegs = !knownActivityIds.has(key)
+    const needsDesc = !(key in descCache)
+    // needsSegs：沒有 ITT effort 且沒被掃描過
+    const needsSegs = !knownActivityIds.has(key) && !segScanIds.has(key)
 
-    if (!needsLaps && !needsSegs) {
-      ride.top_laps = cache[key] || []
+    if (!needsLaps && !needsSegs && !needsDesc) {
+      ride.top_laps    = cache[key] || []
+      ride.description = descCache[key] || null
       continue
     }
     if (detailBudget <= 0) {
-      // 預算用完：給空 laps，segment 部分留給 SCAN_SEGMENTS 模式處理
-      ride.top_laps = cache[key] || []
+      ride.top_laps    = cache[key] || []
+      ride.description = descCache[key] || null
       continue
     }
     detailBudget--
-    // 需要打 API
     try {
       await new Promise(r => setTimeout(r, 350))
       const detail = await fetchActivityDetail(token, ride.id)
@@ -254,31 +402,37 @@ async function enrichRideLaps(token, recentRides, existingRides, existingSegment
       } else {
         ride.top_laps = cache[key] || []
       }
+      ride.description = detail.description || null
+      descCache[key]   = ride.description
 
       // 從 segment_efforts 提取目標分段
-      if (needsSegs && Array.isArray(detail.segment_efforts)) {
-        for (const se of detail.segment_efforts) {
-          if (se.segment && SEGMENT_IDS.has(se.segment.id)) {
-            const sid = se.segment.id
-            if (!newSegEfforts[sid]) newSegEfforts[sid] = []
-            newSegEfforts[sid].push({
-              activity_id:   ride.id,
-              date:          ride.date,
-              elapsed_sec:   se.elapsed_time,
-              elapsed_str:   fmtElapsed(se.elapsed_time),
-              avg_watts:     se.average_watts     ? Math.round(se.average_watts)     : null,
-              avg_heartrate: se.average_heartrate ? Math.round(se.average_heartrate) : null,
-            })
+      if (needsSegs) {
+        segScanIds.add(key)  // 無論有無 ITT 都記錄「已掃描」
+        if (Array.isArray(detail.segment_efforts)) {
+          for (const se of detail.segment_efforts) {
+            if (se.segment && SEGMENT_IDS.has(se.segment.id)) {
+              const sid = se.segment.id
+              if (!newSegEfforts[sid]) newSegEfforts[sid] = []
+              newSegEfforts[sid].push({
+                activity_id:   ride.id,
+                date:          ride.date,
+                elapsed_sec:   se.elapsed_time,
+                elapsed_str:   fmtElapsed(se.elapsed_time),
+                avg_watts:     se.average_watts     ? Math.round(se.average_watts)     : null,
+                avg_heartrate: se.average_heartrate ? Math.round(se.average_heartrate) : null,
+              })
+            }
           }
         }
       }
     } catch (e) {
       console.warn(`  ⚠️  Detail 抓取失敗 (id=${ride.id})：${e.message}`)
-      ride.top_laps = cache[key] || []
+      ride.top_laps    = cache[key] || []
+      ride.description = descCache[key] || null
     }
   }
   console.log(`✅ Detail enrichment 完成，新打 API ${fetchCount} 次（快取命中 ${recentRides.length - fetchCount} 次）`)
-  return newSegEfforts
+  return { newSegEfforts, segScanIds: [...segScanIds] }
 }
 
 // ── Segment 資料合併＋PR 標記 ──
@@ -494,6 +648,7 @@ function buildJSON(stats, activities) {
       sport_type:     a.type,
       if_score:       ifScore,
       tss:            tss,
+      description:    null,  // 由 enrichRideLaps 補入
     }
   })
 
@@ -665,23 +820,19 @@ async function main() {
 
   const result     = buildJSON(stats, activities)
 
-  // ── Detail enrichment：Laps + Segment efforts（共用 API call，只掃最近 20 筆）──
-  const scanAll = process.env.SCAN_SEGMENTS === '1' || process.env.FETCH_ALL === '1'
-  let newSegEfforts
-
-  if (scanAll) {
-    // 全史掃描：走所有 activities
-    console.log('🌐 全史 segment 掃描模式...')
-    newSegEfforts = await scanSegmentsHistory(token, activities, existingData.segments)
-    // 仍需為 recent_rides 補 laps
-    await enrichRideLaps(token, result.recent_rides, existingData.recent_rides, existingData.segments)
-  } else {
-    // 日常模式：只掃最近 20 筆騎乘
-    newSegEfforts = await enrichRideLaps(token, result.recent_rides, existingData.recent_rides, existingData.segments)
-  }
+  // ── Detail enrichment：Laps + Description + Segment efforts（一次 API call 搞定）──
+  // enrichRideLaps 現在同時處理 segment 掃描（用 seg_scan_ids 快取避免重複打）
+  // SCAN_SEGMENTS=1 → 清除 seg_scan_ids 快取，重新掃；REFRESH_LAPS=1 → 清除 laps 快取
+  const { newSegEfforts, segScanIds } = await enrichRideLaps(
+    token, result.recent_rides, existingData.recent_rides, existingData.segments, existingData.seg_scan_ids
+  )
+  result.seg_scan_ids = segScanIds  // 存回 JSON 供下次跳過已掃描的 segment
 
   // ── ITT 區間：合併新 efforts + 取 segment meta ──
   result.segments = await buildSegmentsData(token, newSegEfforts, existingData.segments)
+
+  // ── Power PR：自動補新活動；SCAN_POWER=1 才全史重掃 ──
+  result.power_prs = await updatePowerPRs(token, activities)
 
   fs.writeFileSync(OUT_FILE, JSON.stringify(result, null, 2), 'utf8')
   console.log(`✅ strava.json 寫入完成 (${OUT_FILE})`)

@@ -1,7 +1,7 @@
 # SteveChuang · Personal Hub
 
 > 太空主題個人入口網站，整合線上履歷與 Strava 運動儀表板。
-> 部署於 GitHub Pages，每天自動透過 GitHub Actions 同步 Strava 資料。
+> 部署於 GitHub Pages，每天透過 GitHub Actions 自動同步 Strava 資料（台灣時間 10:00 / 18:00 / 22:00）。
 
 🔗 **Live：** https://chenhan20.github.io/linkTree/linkTreeIndex.html
 
@@ -33,10 +33,11 @@
 
 ### 🚴 Strava 儀表板（strava.html）
 - 年度總覽：里程、爬升、次數、時數
+- 功率 PR 紀錄（最佳 5s / 10s / 30s / 1m / 2m / 5m / 10m / 20m / 60m）
 - 月度里程長條圖
 - 活動紀錄：單車 / 跑步 / 游泳 / 重訓分頁
 - All Time 累計數據
-- 每天 09:30（台灣時間）自動更新
+- 每天 10:00 / 18:00 / 22:00（台灣時間）自動更新
 
 ---
 
@@ -58,7 +59,7 @@
 > 想像 Strava 是「便利商店」、`strava.json` 是「冰箱裡的便當」、網頁是「飯桌」。
 
 ```
-每天早上 9:30
+台灣時間每天三次（10:00 / 18:00 / 22:00）
    ↓
 機器人（GitHub Actions）拿著鑰匙去 Strava 便利商店
    ↓
@@ -82,6 +83,7 @@
 
 **便當盒裡有什麼**（`strava.json` 結構）：
 - 🏆 年度/全時間統計（YTD、All Time）
+- ⚡ 功率 PR 紀錄（best watts by duration: 5s–60m）
 - 📅 每月里程歷史
 - 🚴 / 🏃 / 🏊 / 🏋️ 全部活動清單（含 Strava activity_id）
 - ⛰️ ITT 區段成績（風櫃嘴 / 中社路 / 圓山-社子島）
@@ -94,7 +96,7 @@
 
 ```mermaid
 flowchart TD
-  Cron(["⏰ cron '30 1 * * *' UTC<br/>= 09:30 Asia/Taipei"]) --> Token
+  Cron(["⏰ 台灣 10:00 / 18:00 / 22:00<br/>UTC 02:00 / 10:00 / 14:00"]) --> Token
   Token["① POST /oauth/token<br/>refresh_token → access_token"] --> Stats
   Stats["② GET /athletes/{id}/stats<br/>YTD / All-time"] --> Acts
   Acts{"③ GET /athlete/activities<br/>FETCH_ALL=1?"}
@@ -103,14 +105,17 @@ flowchart TD
   ActsR --> Build
   ActsA --> Build
   Build["④ buildJSON 純運算<br/>monthly_summary / goals / quest<br/>recent_rides/runs/swims/weights"] --> Mode
-  Mode{"⑤ Detail enrichment<br/>SCAN_SEGMENTS / FETCH_ALL?"}
+  Mode{"⑤ Detail enrichment<br/>SCAN_SEGMENTS / SCAN_POWER?"}
   Mode -- 否（日常） --> Daily["enrichRideLaps<br/>LAP_FETCH_MAX=30<br/>cache by ride.id"]
   Mode -- 是 --> Scan["scanSegmentsHistory<br/>全史 ride 補打 detail"]
   Daily --> Detail
   Scan --> Detail
-  Detail["GET /activities/{id}<br/>• laps → 篩 avg_watts ≥ 150W<br/>• segment_efforts → ITT 三個 ID"]
-  Detail --> Segs["⑥ buildSegmentsData<br/>合併去重 by activity_id<br/>PR = min(elapsed_sec)"]
-  Segs --> Write["⑦ 寫檔<br/>strava.json + itt-segments.json"]
+  Detail["GET /activities/{id}<br/>• laps → 篩 avg_watts ≥ 150W<br/>  SCAN_POWER: 掃全史找最佳功率 PR<br/>• segment_efforts → ITT 三個 ID"]
+  Detail --> Power["⑥a buildPowerPRs<br/>best watts per duration<br/>5s/10s/30s/1m/2m/5m/10m/20m/60m<br/>→ power_prs in strava.json"]
+  Detail --> Segs["⑥b buildSegmentsData<br/>合併去重 by activity_id<br/>PR = min(elapsed_sec)"]
+  Power --> Write
+  Segs --> Write
+  Write["⑦ 寫檔<br/>strava.json + itt-segments.json"]
   Write --> Push["git commit/push<br/>(GITHUB_TOKEN)"]
   Push --> Pages["GitHub Pages CDN<br/>5 個前端 fetch 渲染"]
 
@@ -129,6 +134,7 @@ flowchart TD
 | `STRAVA_ATHLETE_ID` | ✅ | 自己的 athlete ID |
 | `FETCH_ALL` | ⬜ | `=1` 拉全史；省略則只拉最近 100 筆 |
 | `SCAN_SEGMENTS` | ⬜ | `=1` 對全史 ride 掃 ITT segment efforts |
+| `SCAN_POWER` | ⬜ | `=1` 對全史 ride 掃功率 PR（best watts by duration） |
 | `REFRESH_LAPS` | ⬜ | `=1` 忽略 lap 快取重新抓 |
 | `LAP_FETCH_MAX` | ⬜ | 單次最多打多少 detail call（預設 30，避 rate limit） |
 
@@ -138,7 +144,7 @@ flowchart TD
 - 全量首跑建議分兩次：先 `FETCH_ALL=1` 拉清單，等 15 分後再 `SCAN_SEGMENTS=1` 掃 segment
 
 #### 前端讀取
-- 4 個主題（[strava.html](strava.html) / [strava_aespa.html](strava_aespa.html) / [strava_cs.html](strava_cs.html) / [strava_maple.html](strava_maple.html)）共用同一份 `strava.json`
+- 5 個主題（[strava.html](strava.html) / [strava_aespa.html](strava_aespa.html) / [strava_cs.html](strava_cs.html) / [strava_maple.html](strava_maple.html) / [strava_lol.html](strava_lol.html)）共用同一份 `strava.json`
 - 純 `fetch()` + 字串模板渲染，無框架、無 build step
 - 每張活動卡右上角 `↗` 直連 `https://www.strava.com/activities/{id}`
 - ITT 區段表格點任一列 → 自動切到「全部」tab + 展開 Show More + 捲動高亮對應活動
@@ -154,6 +160,10 @@ flowchart TD
 # 3. 跑同步（本機寫 strava.json）
 node scripts/fetch-strava.js                                    # 增量
 $env:FETCH_ALL="1"; $env:SCAN_SEGMENTS="1"; node scripts/fetch-strava.js  # 全量
+$env:FETCH_ALL="1"; $env:SCAN_SEGMENTS="1"; $env:SCAN_POWER="1"; node scripts/fetch-strava.js  # 全量含功率 PR
+
+# 4. 單獨重掃功率 PR（快取清乾淨）
+rm -f power-prs.json power-prs-cache.json && $env:SCAN_POWER="1"; node scripts/fetch-strava.js
 ```
 
 #### 手動觸發 GitHub Actions

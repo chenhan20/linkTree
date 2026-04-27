@@ -164,19 +164,44 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 .status-badge.over   {background:rgba(200,155,60,.1);color:#c89b3c;border:1px solid rgba(200,155,60,.3);font-size:12px}
 
 /* ── weekly quest ── */
-.quest-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:2rem}
-@media(max-width:480px){.quest-grid{grid-template-columns:repeat(2,1fr)}}
-.quest-tile{padding:18px 10px 13px;border-radius:2px;text-align:center;background:rgba(200,155,60,.03);border:1px solid rgba(200,155,60,.08);user-select:none}
-.quest-tile.on{background:rgba(200,155,60,.08);border-color:rgba(200,155,60,.3);box-shadow:0 0 10px rgba(200,155,60,.08)}
-.quest-tile .qico{font-size:24px;display:block;margin-bottom:7px;filter:grayscale(1) brightness(.35)}
+.quest-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:2.2rem}
+@media(max-width:360px){.quest-grid{grid-template-columns:1fr}}
+.quest-tile{padding:30px 20px 26px;border-radius:2px;text-align:center;background:rgba(15,12,5,.7);border:1px solid rgba(200,155,60,.18);user-select:none}
+.quest-tile.on{background:rgba(200,155,60,.1);border-color:rgba(200,155,60,.4);box-shadow:0 0 10px rgba(200,155,60,.1)}
+.quest-tile .qico{font-size:40px;display:block;margin-bottom:14px;filter:grayscale(1) brightness(.5)}
 .quest-tile.on .qico{filter:none}
-.quest-tile .qlabel{font-size:8px;letter-spacing:2.5px;text-transform:uppercase;color:#3a3020}
-.quest-tile.on .qlabel{color:rgba(200,155,60,.5)}
-.quest-tile .qcheck{font-size:14px;margin-top:6px;color:#1a1510}
+.quest-tile .qlabel{font-size:12px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.35)}
+.quest-tile.on .qlabel{color:rgba(200,155,60,.8)}
+.quest-tile .qcheck{font-size:20px;margin-top:12px;color:rgba(255,255,255,.2)}
 .quest-tile.on .qcheck{color:#c89b3c}
-.quest-tile .qprog-wrap{margin:8px auto 0;width:80%;height:3px;border-radius:3px;background:rgba(200,155,60,.1)}
-.quest-tile .qprog-fill{height:100%;border-radius:3px;background:rgba(200,155,60,.5);transition:width .6s ease}
-.quest-tile .qpct{font-size:9px;margin-top:4px;color:rgba(200,155,60,.4);letter-spacing:.5px}
+.quest-tile .qprog-wrap{margin:12px auto 0;width:75%;height:5px;border-radius:3px;background:rgba(200,155,60,.12)}
+.quest-tile .qprog-fill{height:100%;border-radius:3px;background:rgba(200,155,60,.65);transition:width .6s ease}
+.quest-tile .qpct{font-size:11px;margin-top:6px;color:rgba(200,155,60,.6);letter-spacing:.5px}
+@media(max-width:600px){
+  .quest-tile{padding:18px 12px 16px}
+  .quest-tile .qico{font-size:28px;margin-bottom:8px}
+  .quest-tile .qlabel{font-size:10px;letter-spacing:2.5px}
+  .quest-tile .qcheck{font-size:16px;margin-top:8px}
+  .quest-tile .qprog-wrap{height:3px;margin-top:8px}
+  .quest-tile .qpct{font-size:9px;margin-top:4px}
+}
+/* OR dual-progress for ride/run tiles */
+.qprog-or{display:flex;gap:10px;margin:12px auto 0;width:86%}
+.qprog-or-slot{flex:1;min-width:0}
+.qprog-or-lbl{font-size:9px;letter-spacing:1.5px;color:rgba(255,255,255,.28);margin-bottom:4px;text-align:center}
+.qprog-or-lbl.met{color:rgba(63,204,74,.85)}
+.qprog-or-bar{height:5px;border-radius:3px;background:rgba(200,155,60,.18)}
+.qprog-or-fill{height:100%;border-radius:3px;background:rgba(200,155,60,.65);transition:width .6s ease}
+.qprog-or-slot.met .qprog-or-bar{background:rgba(63,204,74,.2)}
+.qprog-or-slot.met .qprog-or-fill{background:rgba(63,204,74,.75)}
+.qprog-or-val{font-size:10px;margin-top:5px;text-align:center;color:rgba(255,255,255,.28);letter-spacing:.3px}
+.qprog-or-slot.met .qprog-or-val{color:rgba(63,204,74,.7)}
+@media(max-width:600px){.qprog-or{gap:6px;margin-top:8px;width:90%}.qprog-or-lbl{font-size:7px;margin-bottom:2px}.qprog-or-bar{height:3px}.qprog-or-val{font-size:8px;margin-top:3px}}
+/* SUPER: both OR conditions met → gold */
+.quest-tile.super{background:rgba(255,196,0,.12)!important;border-color:rgba(255,196,0,.55)!important;box-shadow:0 0 20px rgba(255,196,0,.18)!important}
+.quest-tile.super .qlabel{color:rgba(255,210,0,.95)!important}
+.quest-tile.super .qico{filter:none!important;opacity:1!important}
+.quest-tile.super .qcheck{color:#ffd700!important;font-size:20px!important}
 .act-highlight{animation:actFlash .9s ease-out}
 @keyframes actFlash{0%,40%{background:rgba(200,155,60,.14);border-left-color:#c89b3c}100%{background:rgba(10,20,40,.6);border-left-color:rgba(200,155,60,.25)}}
 .act-strava-link{display:inline-flex;align-items:center;gap:2px;flex-shrink:0;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;color:rgba(200,155,60,.95);text-decoration:none;border:1px solid rgba(200,155,60,.45);background:rgba(200,155,60,.08);white-space:nowrap;line-height:1.4;transition:background .15s,border-color .15s}
@@ -380,6 +405,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
   .activity-card{align-items:flex-start;gap:9px;padding:.75rem .85rem;margin-left:0}
   .activity-icon{width:38px;height:38px}
   .activity-name-wrap{flex-wrap:wrap}
+  .activity-name{white-space:normal;overflow:visible;text-overflow:clip}
   .activity-dist{font-size:16px;margin-left:auto}
   .itt-badge{align-items:flex-start;gap:8px}
   .itt-attempt{text-align:right;max-width:38%}
@@ -389,6 +415,150 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
   #ts-panel{max-width:calc(100vw - 24px)}
   #to-top-btn{right:14px!important;bottom:74px!important}
 }
+
+/* ── LoL power PR card (parchment / champion select) ── */
+.lol-power-card{
+  flex:1;min-width:280px;max-width:540px;align-self:center;
+  position:relative;padding:10px 14px;
+  background:linear-gradient(135deg,rgba(200,155,60,.14),rgba(122,92,16,.06) 60%,rgba(10,20,40,.6));
+  border:1px solid rgba(200,155,60,.55);
+  clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px);
+  cursor:pointer;overflow:hidden;user-select:none;
+  transition:transform .2s,box-shadow .2s,background .2s;
+}
+.lol-power-card::before,.lol-power-card::after{
+  content:'';position:absolute;width:14px;height:14px;border:2px solid #c89b3c;pointer-events:none;
+}
+.lol-power-card::before{top:0;left:0;border-right:none;border-bottom:none}
+.lol-power-card::after{bottom:0;right:0;border-left:none;border-top:none}
+.lol-power-card:hover{transform:translateY(-1px);background:linear-gradient(135deg,rgba(200,155,60,.20),rgba(122,92,16,.10) 60%,rgba(10,20,40,.7));box-shadow:0 0 22px rgba(200,155,60,.35)}
+.lpc-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:8px;border-bottom:1px solid rgba(200,155,60,.18);padding-bottom:6px}
+.lpc-title{font-family:'Cinzel',Georgia,serif;font-size:13px;font-weight:900;letter-spacing:3px;text-transform:uppercase;background:linear-gradient(180deg,#f0d878 0%,#c89b3c 50%,#7a5c10 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 4px rgba(200,155,60,.4))}
+.lpc-title-en{font-size:8px;color:rgba(200,155,60,.6);letter-spacing:2.5px;margin-left:4px}
+.lpc-tag{font-family:'Cinzel',Georgia,serif;font-size:10px;color:#a9c4e4;letter-spacing:1.2px;text-transform:uppercase;font-variant-numeric:tabular-nums}
+.lpc-tag b{color:#f0d878;font-size:14px;font-weight:900;margin:0 3px;text-shadow:0 0 6px rgba(240,216,120,.5)}
+.lpc-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:5px}
+.lpc-mini{padding:6px 2px;text-align:center;background:linear-gradient(180deg,rgba(10,20,40,.7),rgba(10,20,40,.4));border:1px solid rgba(200,155,60,.3);position:relative;clip-path:polygon(4px 0,100% 0,100% calc(100% - 4px),calc(100% - 4px) 100%,0 100%,0 4px)}
+.lpc-mini-lbl{font-family:'Cinzel',serif;font-size:9px;color:rgba(169,196,228,.7);letter-spacing:.8px;text-transform:uppercase}
+.lpc-mini-val{font-family:'Cinzel',serif;font-size:13px;color:#f0d878;font-weight:900;margin-top:1px;line-height:1.1;font-variant-numeric:tabular-nums}
+.lpc-mini-val small{font-size:7px;color:rgba(200,155,60,.7);margin-left:1px;font-weight:600}
+.lpc-mini.empty .lpc-mini-val{color:rgba(200,155,60,.3)}
+.lol-power-card.opening{animation:lpcOpen .45s cubic-bezier(.5,0,.4,1.4) forwards}
+@keyframes lpcOpen{
+  0%{transform:scale(1) rotateZ(0)}
+  35%{transform:scale(.95) rotateZ(.5deg);box-shadow:0 0 60px rgba(240,216,120,.7),inset 0 0 40px rgba(240,216,120,.3)}
+  100%{transform:scale(1.06) rotateZ(0);opacity:0}
+}
+
+/* LoL modal (champion-select frame) */
+.lpm-overlay{
+  position:fixed;inset:0;z-index:9999;
+  background:radial-gradient(ellipse at center,rgba(20,15,5,.88) 0%,rgba(0,0,0,.96) 70%);
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .3s;padding:12px;
+}
+.lpm-overlay.open{opacity:1;pointer-events:auto}
+.lpm-modal{
+  position:relative;width:100%;max-width:780px;max-height:88vh;
+  background:linear-gradient(160deg,rgba(15,12,5,.97),rgba(0,0,0,.99));
+  border:2px solid #c89b3c;
+  padding:20px 22px 14px;
+  box-shadow:0 0 50px rgba(200,155,60,.45),inset 0 0 60px rgba(200,155,60,.04);
+  clip-path:polygon(20px 0,100% 0,100% calc(100% - 20px),calc(100% - 20px) 100%,0 100%,0 20px);
+  transform:translateY(50px) scale(.92);opacity:0;
+  transition:transform .55s cubic-bezier(.2,1.1,.3,1.05),opacity .3s;
+  display:flex;flex-direction:column;overflow:hidden;
+}
+.lpm-overlay.open .lpm-modal{transform:translateY(0) scale(1);opacity:1}
+.lpm-modal::before,.lpm-modal::after{content:'';position:absolute;width:24px;height:24px;border:2px solid #f0d878;pointer-events:none}
+.lpm-modal::before{top:8px;left:8px;border-right:none;border-bottom:none}
+.lpm-modal::after{bottom:8px;right:8px;border-left:none;border-top:none}
+.lpm-body{flex:1;overflow-y:auto;padding-right:6px}
+.lpm-body::-webkit-scrollbar{width:4px}
+.lpm-body::-webkit-scrollbar-thumb{background:rgba(200,155,60,.5)}
+.lpm-close{
+  position:absolute;top:12px;right:12px;width:30px;height:30px;
+  background:transparent;border:1px solid #c89b3c;color:#f0d878;
+  font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:background .15s;z-index:2;clip-path:polygon(4px 0,100% 0,100% calc(100% - 4px),calc(100% - 4px) 100%,0 100%,0 4px);
+}
+.lpm-close:hover{background:rgba(200,155,60,.25)}
+.lpm-head{display:flex;align-items:baseline;gap:10px;margin-bottom:12px;padding-right:36px;border-bottom:1px solid rgba(200,155,60,.3);padding-bottom:8px}
+.lpm-head h2{font-family:'Cinzel',Georgia,serif;font-size:20px;font-weight:900;letter-spacing:3px;text-transform:uppercase;background:linear-gradient(180deg,#f0d878,#c89b3c 50%,#7a5c10);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin:0;filter:drop-shadow(0 0 6px rgba(200,155,60,.4))}
+.lpm-head .en{font-family:'Cinzel',serif;font-size:9px;color:rgba(200,155,60,.6);letter-spacing:3px;text-transform:uppercase}
+.lpm-tabs{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:14px}
+.lpm-tab{padding:5px 12px;font-family:'Cinzel',serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;background:rgba(10,20,40,.6);border:1px solid rgba(200,155,60,.3);color:rgba(169,196,228,.8);cursor:pointer;transition:all .15s;clip-path:polygon(4px 0,100% 0,100% calc(100% - 4px),calc(100% - 4px) 100%,0 100%,0 4px)}
+.lpm-tab:hover{border-color:#c89b3c;color:#f0d878}
+.lpm-tab.active{background:linear-gradient(180deg,rgba(200,155,60,.25),rgba(122,92,16,.15));border-color:#f0d878;color:#f0d878;box-shadow:0 0 10px rgba(240,216,120,.3)}
+.lpm-tab:disabled{opacity:.3;cursor:not-allowed}
+.lpm-hero{display:grid;grid-template-columns:170px 1fr;gap:18px;align-items:center;margin-bottom:14px}
+.lpm-dial{position:relative;width:170px;height:170px;margin:0 auto}
+.lpm-dial svg{width:100%;height:100%;transform:rotate(-90deg)}
+.lpm-dial .dial-bg{fill:none;stroke:rgba(200,155,60,.12);stroke-width:5}
+.lpm-dial .dial-fg{fill:none;stroke:#f0d878;stroke-width:5;stroke-linecap:round;filter:drop-shadow(0 0 7px rgba(240,216,120,.7));transition:stroke-dashoffset .8s cubic-bezier(.3,.8,.4,1)}
+.lpm-dial .dial-tick{stroke:rgba(200,155,60,.4);stroke-width:1.2}
+.lpm-dial-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;pointer-events:none}
+.lpm-dial-lbl{font-family:'Cinzel',serif;font-size:10px;color:rgba(169,196,228,.7);letter-spacing:1.8px;margin-bottom:1px;text-transform:uppercase}
+.lpm-dial-val{font-family:'Cinzel',serif;font-size:42px;line-height:1;font-weight:900;background:linear-gradient(180deg,#f0d878,#c89b3c);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-variant-numeric:tabular-nums}
+.lpm-dial-unit{font-family:'Cinzel',serif;font-size:11px;color:rgba(200,155,60,.7);margin-top:3px;letter-spacing:2px}
+.lpm-act{padding:12px 14px;border:1px solid rgba(200,155,60,.4);background:linear-gradient(135deg,rgba(200,155,60,.10),rgba(10,20,40,.4));font-size:12px;color:rgba(240,230,210,.9);clip-path:polygon(6px 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%,0 6px)}
+.lpm-act .pmc-tag{display:inline-flex;gap:5px;font-family:'Cinzel',serif;font-size:9px;color:#f0d878;letter-spacing:1.8px;margin-bottom:8px;padding:2px 8px;border:1px solid rgba(200,155,60,.5);text-transform:uppercase;clip-path:polygon(3px 0,100% 0,100% calc(100% - 3px),calc(100% - 3px) 100%,0 100%,0 3px)}
+.lpm-act .pmc-row{display:flex;align-items:center;gap:7px;margin:3px 0}
+.lpm-act .pmc-row .pmc-ico{width:14px;color:#c89b3c;flex-shrink:0;text-align:center}
+.lpm-act .pmc-row a{color:#f0e6d2;text-decoration:none;border-bottom:1px dashed rgba(200,155,60,.4)}
+.lpm-act .pmc-row a:hover{color:#f0d878;border-color:#f0d878}
+.lpm-act .pmc-watt{color:#f0d878;font-weight:700;font-family:'Cinzel',serif}
+.lpm-section{display:flex;align-items:baseline;gap:8px;margin:14px 0 6px;padding-bottom:6px;border-bottom:1px solid rgba(200,155,60,.2)}
+.lpm-section .ico{color:#c89b3c;font-size:13px}
+.lpm-section h3{font-family:'Cinzel',serif;font-size:12px;color:#f0e6d2;font-weight:700;letter-spacing:2px;margin:0;text-transform:uppercase}
+.lpm-section .en{font-size:8px;color:rgba(200,155,60,.6);letter-spacing:2.5px}
+.lpm-curve{width:100%;height:auto;background:rgba(200,155,60,.03);border:1px solid rgba(200,155,60,.15);padding:6px;display:block}
+.lpm-table{width:100%;border-collapse:collapse;font-size:12px}
+.lpm-table th{font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;color:rgba(169,196,228,.7);text-transform:uppercase;text-align:left;padding:6px 8px;border-bottom:1px solid rgba(200,155,60,.3);font-weight:700}
+.lpm-table td{padding:6px 8px;border-bottom:1px solid rgba(200,155,60,.08);color:rgba(240,230,210,.85);vertical-align:middle}
+.lpm-table td.dur{font-family:'Cinzel',serif;color:#c89b3c;font-weight:700;letter-spacing:.5px;white-space:nowrap;text-transform:uppercase}
+.lpm-table td.watt{font-family:'Cinzel',serif;color:#f0d878;font-weight:900;font-size:14px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.lpm-table td.act a{color:rgba(240,230,210,.85);text-decoration:none;border-bottom:1px dashed rgba(200,155,60,.3)}
+.lpm-table td.act a:hover{color:#f0d878}
+.lpm-table td.date{color:rgba(169,196,228,.5);font-size:10px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.lpm-table tr.empty td{color:rgba(200,155,60,.2)}
+.lpm-table tr.active{background:linear-gradient(90deg,rgba(200,155,60,.15),transparent);box-shadow:inset 3px 0 0 #f0d878}
+.lpm-source{margin-top:10px;font-family:'Cinzel',serif;font-size:8px;color:rgba(200,155,60,.5);letter-spacing:3px;text-align:left;text-transform:uppercase}
+@media(max-width:760px){
+  .lol-power-card{flex:1 1 100%;max-width:none;margin-top:8px}
+  .lpm-hero{grid-template-columns:1fr;gap:10px}
+  .lpm-dial{width:140px;height:140px}
+  .lpm-dial-val{font-size:36px}
+}
+@media(max-width:480px){
+  .lpc-grid{grid-template-columns:repeat(3,1fr)}
+  .lpc-title-en{display:none}
+  .lpm-table .h-act,.lpm-table td.act{display:none}
+}
+/* ── main page tabs ── */
+.main-tabs-bar{
+  position:sticky;top:52px;z-index:8;
+  display:flex;gap:0;overflow-x:auto;
+  background:rgba(1,10,19,.97);
+  border-bottom:1px solid rgba(200,155,60,.2);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  margin:0 -1.2rem;padding:0 1.2rem;
+  scrollbar-width:none;
+}
+.main-tabs-bar::-webkit-scrollbar{display:none}
+.main-tab{
+  flex-shrink:0;padding:12px 14px;
+  font-family:'Cinzel',Georgia,serif;
+  font-size:9.5px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  background:transparent;border:none;border-bottom:2px solid transparent;
+  color:rgba(200,155,60,.4);cursor:pointer;transition:all .2s;white-space:nowrap;
+  -webkit-tap-highlight-color:transparent;
+}
+.main-tab:hover{color:rgba(200,155,60,.75);background:rgba(200,155,60,.04)}
+.main-tab.active{color:#f0d878;border-bottom-color:#c89b3c;background:rgba(200,155,60,.05)}
+.main-panel{display:none;padding-top:1.6rem}.main-panel.active{display:block}
+@media(max-width:520px){.main-tab{padding:10px 11px;font-size:8.5px;letter-spacing:1.5px}}
 </style>
 </head>
 <body>
@@ -654,34 +824,51 @@ function renderMonthlyGoals(mg) {
 function renderWeeklyQuest(wq) {
   if (!wq) return ''
   const wqSports = [
-    {key:'ride',icon:'🚴',label:'RIDE',targetLabel:'30km / 1hr'},
-    {key:'run', icon:'🏃',label:'RUN', targetLabel:'10km / 1hr'},
-    {key:'swim',icon:'🏊',label:'SWIM',targetLabel:'1000m'},
-    {key:'weight',icon:'🏋️',label:'TRAIN',targetLabel:'1 次'},
+    {key:'ride',  icon:'🚴',label:'RIDE',  isOr:true,  tKm:'30KM',tHr:'1HR'},
+    {key:'run',   icon:'🏃',label:'RUN',   isOr:true,  tKm:'10KM',tHr:'1HR'},
+    {key:'swim',  icon:'🏊',label:'SWIM',  isOr:false, targetLabel:'1000m'},
+    {key:'weight',icon:'🏋️',label:'TRAIN', isOr:false, targetLabel:'1 次'},
   ]
-  function isDone(val) { return typeof val === 'object' ? val.done : !!val }
-  function getPct(key, val) {
-    if (typeof val !== 'object') return val ? 100 : 0
-    if (key==='ride'||key==='run') { const bd=val.target_km>0?(val.distance_km||0)/val.target_km:0; const bt=val.target_hr>0?(val.moving_time_hr||0)/val.target_hr:0; return Math.min(100,Math.round(Math.max(bd,bt)*100)) }
-    if (key==='swim') return Math.min(100,Math.round((val.distance_m||0)/val.target_m*100))
-    if (key==='weight') return val.count>=val.target?100:0
-    return 0
-  }
-  function getDetail(key, val) {
-    if (typeof val !== 'object') return ''
-    if (key==='ride'||key==='run') { const bd=val.target_km>0?(val.distance_km||0)/val.target_km:0; const bt=val.target_hr>0?(val.moving_time_hr||0)/val.target_hr:0; return bd>=bt?`${val.distance_km||0}km`:`${val.moving_time_hr||0}hr` }
-    if (key==='swim') return `${val.distance_m||0}m`
-    if (key==='weight') return `${val.count||0} 次`
-    return ''
-  }
+  function isDone(v)  { return typeof v === 'object' ? v.done  : !!v }
+  function isSuper(v) { return typeof v === 'object' && !!v.super }
   const tiles = wqSports.map(sp => {
-    const val = wq[sp.key], on = isDone(val)
-    const pct = getPct(sp.key, val), detail = getDetail(sp.key, val)
+    const val = wq[sp.key]
+    const on = isDone(val), sup = isSuper(val)
+    const cls = `quest-tile${sup ? ' on super' : on ? ' on' : ''}`
+    if (sp.isOr && typeof val === 'object') {
+      const d = val.distance_km || 0, h = val.moving_time_hr || 0
+      const dPct = Math.min(100, Math.round(d / val.target_km * 100))
+      const hPct = Math.min(100, Math.round(h / val.target_hr * 100))
+      const dMet = dPct >= 100, hMet = hPct >= 100
+      const body = (on || sup)
+        ? `<div class="qcheck">${sup ? '⚡' : '✓'}</div>
+          <div class="qpct" style="margin-top:5px;color:${sup ? 'rgba(255,210,0,.9)' : 'rgba(63,204,74,.7)'}">${d}km · ${h}hr</div>`
+        : `<div class="qcheck"><span style="font-size:7px;letter-spacing:2px;color:rgba(200,155,60,.3)">OR</span></div>
+          <div class="qprog-or">
+            <div class="qprog-or-slot${dMet ? ' met' : ''}">
+              <div class="qprog-or-lbl${dMet ? ' met' : ''}">${sp.tKm}</div>
+              <div class="qprog-or-bar"><div class="qprog-or-fill" style="width:${dPct}%"></div></div>
+              <div class="qprog-or-val">${d}km</div>
+            </div>
+            <div class="qprog-or-slot${hMet ? ' met' : ''}">
+              <div class="qprog-or-lbl${hMet ? ' met' : ''}">${sp.tHr}</div>
+              <div class="qprog-or-bar"><div class="qprog-or-fill" style="width:${hPct}%"></div></div>
+              <div class="qprog-or-val">${h}hr</div>
+            </div>
+          </div>`
+      return `<div class="${cls}"><span class="qico">${sp.icon}</span><div class="qlabel">${sp.label}</div>${body}</div>`
+    }
+    const pct = (() => {
+      if (typeof val !== 'object') return val ? 100 : 0
+      if (sp.key === 'swim') return Math.min(100, Math.round((val.distance_m||0)/val.target_m*100))
+      return val.count >= val.target ? 100 : 0
+    })()
+    const detail = typeof val === 'object' ? (sp.key==='swim' ? `${val.distance_m||0}m` : `${val.count||0} 次`) : ''
     const progHtml = !on ? `
       <div class="qprog-wrap"><div class="qprog-fill" style="width:${pct}%"></div></div>
       <div class="qpct">${detail ? `${detail} · ` : ''}${pct}%</div>` : ''
     return `
-    <div class="quest-tile${on ? ' on' : ''}">
+    <div class="${cls}">
       <span class="qico">${sp.icon}</span>
       <div class="qlabel">${sp.label}</div>
       <div class="qcheck">${on ? '✓' : `<span style="font-size:9px;color:rgba(200,155,60,.3)">${sp.targetLabel}</span>`}</div>
@@ -863,8 +1050,8 @@ function render(data) {
       const wSwimM    = Math.round(wSwims.reduce((s,a)=>s+(a.distance_km||0)*1000,0))
       const wWeightCt = wWeights.length
       data.weekly_quest = {
-        ride:   { done: wRideDist>=30||wRideHr>=1, distance_km:wRideDist, moving_time_hr:wRideHr, target_km:30, target_hr:1 },
-        run:    { done: wRunDist>=10 ||wRunHr>=1,  distance_km:wRunDist,  moving_time_hr:wRunHr,  target_km:10, target_hr:1 },
+        ride:   { done: wRideDist>=30||wRideHr>=1, super: wRideDist>=30&&wRideHr>=1, distance_km:wRideDist, moving_time_hr:wRideHr, target_km:30, target_hr:1 },
+        run:    { done: wRunDist>=10 ||wRunHr>=1,  super: wRunDist>=10 &&wRunHr>=1,  distance_km:wRunDist,  moving_time_hr:wRunHr,  target_km:10, target_hr:1 },
         swim:   { done: wSwimM>=1000,               distance_m:wSwimM,    target_m:1000 },
         weight: { done: wWeightCt>=1,               count:wWeightCt,      target:1 },
       }
@@ -939,57 +1126,79 @@ function render(data) {
           <div class="lol-logo">LEAGUE<br>OF LEGENDS</div>
           <div class="lol-sub">ATHLETE RECORD</div>
         </div>
+        ${renderLolPower(data.power_prs)}
       </div>
     </div>
 
-    <div class="stats-grid" style="margin-top:1.5rem">
-      <div class="stat-card"><div class="stat-val">${typeof s.all_time_distance_km==='number'?s.all_time_distance_km.toLocaleString():s.all_time_distance_km??'—'}</div><div class="stat-unit">KM</div><div class="stat-label">總里程</div></div>
-      <div class="stat-card"><div class="stat-val">${typeof s.all_time_elevation_m==='number'?s.all_time_elevation_m.toLocaleString():s.all_time_elevation_m??'—'}</div><div class="stat-unit">M</div><div class="stat-label">總爬升</div></div>
-      <div class="stat-card"><div class="stat-val">${typeof s.all_time_rides==='number'?s.all_time_rides.toLocaleString():s.all_time_rides??'—'}</div><div class="stat-unit">TIMES</div><div class="stat-label">總活動次數</div></div>
-      <div class="stat-card"><div class="stat-val">${typeof s.ytd_moving_time_hr==='number'?s.ytd_moving_time_hr.toLocaleString():s.ytd_moving_time_hr??'—'}</div><div class="stat-unit">HRS</div><div class="stat-label">年度時數</div></div>
+    <div class="main-tabs-bar" id="main-tabs-bar">
+      <button class="main-tab active" data-panel="overview">⚔ 總覽</button>
+      <button class="main-tab" data-panel="monthly">📅 本月</button>
+      <button class="main-tab" data-panel="quests">⚡ 任務</button>
+      <button class="main-tab" data-panel="segments">🗺 段落</button>
+      <button class="main-tab" data-panel="trend">📊 趨勢</button>
+      <button class="main-tab" data-panel="history">📋 紀錄</button>
     </div>
 
-    ${renderAbilitySection(data.monthly_summary, data.monthly_goals)}
-    ${renderMonthlySummary(data.monthly_summary)}
-    ${renderMonthlyGoals(data.monthly_goals)}
-    ${renderWeeklyQuest(data.weekly_quest)}
-    ${renderSegments(data.segments)}
+    <div class="main-panel active" id="panel-overview">
+      <div class="stats-grid" style="margin-top:0">
+        <div class="stat-card"><div class="stat-val">${typeof s.all_time_distance_km==='number'?s.all_time_distance_km.toLocaleString():s.all_time_distance_km??'—'}</div><div class="stat-unit">KM</div><div class="stat-label">總里程</div></div>
+        <div class="stat-card"><div class="stat-val">${typeof s.all_time_elevation_m==='number'?s.all_time_elevation_m.toLocaleString():s.all_time_elevation_m??'—'}</div><div class="stat-unit">M</div><div class="stat-label">總爬升</div></div>
+        <div class="stat-card"><div class="stat-val">${typeof s.all_time_rides==='number'?s.all_time_rides.toLocaleString():s.all_time_rides??'—'}</div><div class="stat-unit">TIMES</div><div class="stat-label">總活動次數</div></div>
+        <div class="stat-card"><div class="stat-val">${typeof s.ytd_moving_time_hr==='number'?s.ytd_moving_time_hr.toLocaleString():s.ytd_moving_time_hr??'—'}</div><div class="stat-unit">HRS</div><div class="stat-label">年度時數</div></div>
+      </div>
+      ${renderAbilitySection(data.monthly_summary, data.monthly_goals)}
+      <div class="totals-grid">
+        <div class="total-card"><div class="total-val">${typeof s.all_time_distance_km==='number'?s.all_time_distance_km.toLocaleString():s.all_time_distance_km??'—'}</div><div class="total-label">Total KM</div></div>
+        <div class="total-card"><div class="total-val">${typeof s.all_time_elevation_m==='number'?s.all_time_elevation_m.toLocaleString():s.all_time_elevation_m??'—'}</div><div class="total-label">Total Elev</div></div>
+        <div class="total-card"><div class="total-val">${typeof s.all_time_rides==='number'?s.all_time_rides.toLocaleString():s.all_time_rides??'—'}</div><div class="total-label">Total Rides</div></div>
+      </div>
+      <a class="strava-cta" href="https://www.strava.com/athletes/161539959" target="_blank">
+        <svg viewBox="0 0 24 24"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/></svg>
+        VIEW FULL PROFILE ON STRAVA
+      </a>
+    </div>
 
-    ${history.length ? `
-    <div class="monthly-chart">
-      <div class="section-title">月度里程分佈 <span style="color:rgba(200,155,60,.35);font-size:8px">· MONTHLY DISTANCE (KM)</span></div>
-      <div class="chart-rows" id="chart-rows">
-        ${(()=>{
-          const byYear={}; history.forEach(h=>{ const y=h.month.slice(0,4); if(!byYear[y])byYear[y]=[]; byYear[y].push(h) })
-          const years=Object.keys(byYear).sort((a,b)=>b.localeCompare(a))
-          const cy=new Date().getFullYear().toString()
-          return years.map(year=>{
-            const coll=year!==cy
-            const rows=byYear[year].map(h=>{
-              const dist=monthDist(h), pct=dist>0?Math.max(dist/maxDist*100,4):0
-              return `<div class="chart-row"><div class="chart-label">${fmtMonthLabel(h.month)}</div><div class="chart-bar-wrap"><div class="chart-bar" data-pct="${pct}"><span class="chart-bar-val">${dist}</span></div></div><div class="chart-unit-label">km</div></div>`
+    <div class="main-panel" id="panel-monthly">
+      ${renderMonthlySummary(data.monthly_summary)}
+      ${renderMonthlyGoals(data.monthly_goals)}
+    </div>
+
+    <div class="main-panel" id="panel-quests">
+      ${renderWeeklyQuest(data.weekly_quest)}
+    </div>
+
+    <div class="main-panel" id="panel-segments">
+      ${renderSegments(data.segments)}
+    </div>
+
+    <div class="main-panel" id="panel-trend">
+      ${history.length ? `
+      <div class="monthly-chart">
+        <div class="section-title">月度里程分佈 <span style="color:rgba(200,155,60,.35);font-size:8px">· MONTHLY DISTANCE (KM)</span></div>
+        <div class="chart-rows" id="chart-rows">
+          ${(()=>{
+            const byYear={}; history.forEach(h=>{ const y=h.month.slice(0,4); if(!byYear[y])byYear[y]=[]; byYear[y].push(h) })
+            const years=Object.keys(byYear).sort((a,b)=>b.localeCompare(a))
+            const cy=new Date().getFullYear().toString()
+            return years.map(year=>{
+              const coll=year!==cy
+              const rows=byYear[year].map(h=>{
+                const dist=monthDist(h), pct=dist>0?Math.max(dist/maxDist*100,4):0
+                return `<div class="chart-row"><div class="chart-label">${fmtMonthLabel(h.month)}</div><div class="chart-bar-wrap"><div class="chart-bar" data-pct="${pct}"><span class="chart-bar-val">${dist}</span></div></div><div class="chart-unit-label">km</div></div>`
+              }).join('')
+              return `<div class="chart-year-header" data-year="${year}"><span class="chart-year-arrow" id="arrow-${year}">${coll?'▶':'▼'}</span>${year}</div><div class="chart-year-rows" id="year-rows-${year}" style="max-height:${coll?'0':'9999px'}" data-collapsed="${coll?'1':''}">${rows}</div>`
             }).join('')
-            return `<div class="chart-year-header" data-year="${year}"><span class="chart-year-arrow" id="arrow-${year}">${coll?'▶':'▼'}</span>${year}</div><div class="chart-year-rows" id="year-rows-${year}" style="max-height:${coll?'0':'9999px'}" data-collapsed="${coll?'1':''}">${rows}</div>`
-          }).join('')
-        })()}
+          })()}
+        </div>
       </div>
-    </div>
-    ` : ''}
-
-    <div class="section-title">活動紀錄 <span style="color:rgba(200,155,60,.35);font-size:8px">· MATCH HISTORY · ACTIVITY LOG</span></div>
-    <div class="sport-tabs" id="sport-tabs">${tabHTML()}</div>
-    <div class="timeline" id="timeline">${tlHTML()}</div>
-
-    <div class="totals-grid">
-      <div class="total-card"><div class="total-val">${typeof s.all_time_distance_km==='number'?s.all_time_distance_km.toLocaleString():s.all_time_distance_km??'—'}</div><div class="total-label">Total KM</div></div>
-      <div class="total-card"><div class="total-val">${typeof s.all_time_elevation_m==='number'?s.all_time_elevation_m.toLocaleString():s.all_time_elevation_m??'—'}</div><div class="total-label">Total Elev</div></div>
-      <div class="total-card"><div class="total-val">${typeof s.all_time_rides==='number'?s.all_time_rides.toLocaleString():s.all_time_rides??'—'}</div><div class="total-label">Total Rides</div></div>
+      ` : '<div style="padding:2rem;text-align:center;color:rgba(200,155,60,.3);letter-spacing:2px;font-size:12px">NO HISTORY DATA</div>'}
     </div>
 
-    <a class="strava-cta" href="https://www.strava.com/athletes/161539959" target="_blank">
-      <svg viewBox="0 0 24 24"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/></svg>
-      VIEW FULL PROFILE ON STRAVA
-    </a>
+    <div class="main-panel" id="panel-history">
+      <div class="section-title">活動紀錄 <span style="color:rgba(200,155,60,.35);font-size:8px">· MATCH HISTORY · ACTIVITY LOG</span></div>
+      <div class="sport-tabs" id="sport-tabs">${tabHTML()}</div>
+      <div class="timeline" id="timeline">${tlHTML()}</div>
+    </div>
 
     <div class="page-footer">
       <div class="footer-sub">SEASON 2026 · RANKED SOLO · #JAVAMASTER</div>
@@ -997,38 +1206,55 @@ function render(data) {
     </div>
   `
 
-  // animate bars
-  requestAnimationFrame(() => {
-    document.querySelectorAll('.chart-bar').forEach(bar => {
+  // animate bars helper
+  function animateBarsInPanel(panelId) {
+    const panel = document.getElementById(panelId)
+    if (!panel) return
+    panel.querySelectorAll('.chart-bar').forEach(bar => {
       bar.style.width='0'; requestAnimationFrame(()=>{ setTimeout(()=>{bar.style.width=bar.dataset.pct+'%'},80) })
     })
-    document.querySelectorAll('.progress-fill').forEach(fill => {
+    panel.querySelectorAll('.progress-fill').forEach(fill => {
       fill.style.width='0'; requestAnimationFrame(()=>{ setTimeout(()=>{fill.style.width=fill.dataset.pct+'%'},120) })
     })
+  }
+  animateBarsInPanel('panel-overview')
+
+  // main tab switching
+  let activeMainPanel = 'overview'
+  document.getElementById('main-tabs-bar').addEventListener('click', e => {
+    const btn = e.target.closest('.main-tab'); if (!btn) return
+    const panel = btn.dataset.panel; if (panel === activeMainPanel) return
+    document.querySelectorAll('.main-tab').forEach(b => b.classList.toggle('active', b.dataset.panel === panel))
+    document.querySelectorAll('.main-panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + panel))
+    activeMainPanel = panel
+    if (panel === 'trend' || panel === 'monthly') setTimeout(() => animateBarsInPanel('panel-' + panel), 50)
   })
 
-  // year chart collapse
-  const chartRows = document.getElementById('chart-rows')
-  if (chartRows) {
-    chartRows.addEventListener('click', e => {
-      const hdr = e.target.closest('.chart-year-header'); if(!hdr) return
-      const year=hdr.dataset.year, rows=document.getElementById('year-rows-'+year), arrow=document.getElementById('arrow-'+year)
-      const isC = rows.dataset.collapsed==='1'
-      if (isC) {
-        rows.dataset.collapsed=''; rows.style.maxHeight=rows.scrollHeight+'px'; arrow.textContent='▼'
-        rows.querySelectorAll('.chart-bar').forEach(b=>{ b.style.width='0'; requestAnimationFrame(()=>{ setTimeout(()=>{b.style.width=b.dataset.pct+'%'},60) }) })
-        setTimeout(()=>{ if(rows.dataset.collapsed!=='1')rows.style.maxHeight='9999px' },400)
-      } else {
-        rows.style.maxHeight=rows.scrollHeight+'px'
-        requestAnimationFrame(()=>{ requestAnimationFrame(()=>{ rows.style.maxHeight='0'; rows.dataset.collapsed='1'; arrow.textContent='▶' }) })
-      }
-    })
-  }
+  // year chart collapse (document-level delegation)
+  document.addEventListener('click', e => {
+    const hdr = e.target.closest('.chart-year-header'); if (!hdr) return
+    const year=hdr.dataset.year, rows=document.getElementById('year-rows-'+year), arrow=document.getElementById('arrow-'+year)
+    if (!rows) return
+    const isC = rows.dataset.collapsed==='1'
+    if (isC) {
+      rows.dataset.collapsed=''; rows.style.maxHeight=rows.scrollHeight+'px'; arrow.textContent='▼'
+      rows.querySelectorAll('.chart-bar').forEach(b=>{ b.style.width='0'; requestAnimationFrame(()=>{ setTimeout(()=>{b.style.width=b.dataset.pct+'%'},60) }) })
+      setTimeout(()=>{ if(rows.dataset.collapsed!=='1')rows.style.maxHeight='9999px' },400)
+    } else {
+      rows.style.maxHeight=rows.scrollHeight+'px'
+      requestAnimationFrame(()=>{ requestAnimationFrame(()=>{ rows.style.maxHeight='0'; rows.dataset.collapsed='1'; arrow.textContent='▶' }) })
+    }
+  })
 
-  // seg row click → scroll to activity
+  // seg row click → switch to history panel + scroll to activity
   document.addEventListener('click', e => {
     const tr = e.target.closest('tr[data-date]'); if (!tr) return
     const date = tr.dataset.date, actId = tr.dataset.actid || ''
+    if (activeMainPanel !== 'history') {
+      document.querySelectorAll('.main-tab').forEach(b => b.classList.toggle('active', b.dataset.panel === 'history'))
+      document.querySelectorAll('.main-panel').forEach(p => p.classList.toggle('active', p.id === 'panel-history'))
+      activeMainPanel = 'history'
+    }
     const actEl = document.getElementById('act-'+date)
     if (actEl) {
       actEl.scrollIntoView({behavior:'smooth',block:'center'})
@@ -1054,7 +1280,7 @@ function render(data) {
     }
   })
 
-  // tab switch
+  // sport tab switch
   document.getElementById('sport-tabs').addEventListener('click', e => {
     const btn=e.target.closest('.sport-tab'); if(!btn) return
     activeTab=btn.dataset.tab
@@ -1068,10 +1294,154 @@ function render(data) {
   })
 }
 
+/* ── LoL power PR card + modal ── */
+const LPWR_DURATIONS = [
+  { sec:5, label:'5秒' }, { sec:10, label:'10秒' }, { sec:30, label:'30秒' },
+  { sec:60, label:'1分' }, { sec:120, label:'2分' }, { sec:300, label:'5分' },
+  { sec:600, label:'10分' }, { sec:1200, label:'20分' }, { sec:3600, label:'60分' },
+]
+function lPwrMap(prs){ const m=new Map(); (prs||[]).forEach(p=>m.set(p.duration_sec,p)); return m }
+function renderLolPower(prs){
+  if(!prs||!prs.length) return ''
+  const map = lPwrMap(prs)
+  const hero = map.get(5) || prs[0]
+  const heroLbl = (LPWR_DURATIONS.find(d=>d.sec===hero.duration_sec)||{}).label || `${hero.duration_sec}秒`
+  const miniDurs=[5,10,30,60,120,300]
+  const cells = miniDurs.map(s=>{
+    const p=map.get(s); const lbl=LPWR_DURATIONS.find(d=>d.sec===s).label
+    if(!p) return `<div class="lpc-mini empty"><div class="lpc-mini-lbl">${lbl}</div><div class="lpc-mini-val">—</div></div>`
+    return `<div class="lpc-mini"><div class="lpc-mini-lbl">${lbl}</div><div class="lpc-mini-val">${p.watts}<small>W</small></div></div>`
+  }).join('')
+  return `
+    <div class="lol-power-card" id="lol-power-card">
+      <div class="lpc-head">
+        <div><span class="lpc-title">⚔ POWER</span><span class="lpc-title-en">PR RANKING</span></div>
+        <div class="lpc-tag">BEST ${heroLbl}<b>${hero.watts}</b>W ▸</div>
+      </div>
+      <div class="lpc-grid">${cells}</div>
+    </div>`
+}
+function renderLolModal(prs){
+  const map = lPwrMap(prs)
+  const sorted = LPWR_DURATIONS.filter(d=>map.has(d.sec))
+  const maxW = Math.max(...prs.map(p=>p.watts))
+  const tabs = LPWR_DURATIONS.map(d=>{
+    const has = map.has(d.sec)
+    return `<button class="lpm-tab${d.sec===5&&has?' active':''}" data-dur="${d.sec}"${!has?' disabled':''}>${d.label}</button>`
+  }).join('')
+  const rows = LPWR_DURATIONS.map(d=>{
+    const p=map.get(d.sec)
+    if(!p) return `<tr class="empty" data-dur="${d.sec}"><td class="dur">⚔ ${d.label}</td><td>—</td><td class="act">—</td><td class="date">—</td></tr>`
+    return `<tr data-dur="${d.sec}"${d.sec===5?' class="active"':''}>
+      <td class="dur">⚔ ${d.label}</td><td class="watt">${p.watts}</td>
+      <td class="act"><a href="https://www.strava.com/activities/${p.activity_id}" target="_blank" rel="noopener">${p.activity_name||'—'}</a></td>
+      <td class="date">${p.date||'—'}</td></tr>`
+  }).join('')
+  const W=700,H=170,padL=42,padR=14,padT=14,padB=26,innerW=W-padL-padR,innerH=H-padT-padB
+  const yMax=Math.ceil(maxW/100)*100+100
+  const pts = sorted.map((d,i)=>{ const p=map.get(d.sec); return { x:padL+(i/(sorted.length-1))*innerW, y:padT+innerH-(p.watts/yMax)*innerH, w:p.watts, label:d.label } })
+  const linePath = pts.map((p,i)=>`${i?'L':'M'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')
+  const yGrid = [0,yMax/2,yMax].map(v=>{ const y=padT+innerH-(v/yMax)*innerH; return `<line x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="rgba(200,155,60,.1)" stroke-width="1"/><text x="${padL-5}" y="${y+3}" fill="rgba(169,196,228,.5)" font-size="8" text-anchor="end" font-family="Cinzel,serif">${Math.round(v)}</text>` }).join('')
+  const xLabels = pts.map(p=>`<text x="${p.x}" y="${H-8}" fill="rgba(169,196,228,.6)" font-size="8" text-anchor="middle" font-family="Cinzel,serif">${p.label}</text>`).join('')
+  const dots = pts.map(p=>`<polygon points="${p.x-4},${p.y} ${p.x},${p.y-4} ${p.x+4},${p.y} ${p.x},${p.y+4}" fill="#f0d878" stroke="#1a1408" stroke-width="1.5"/><text x="${p.x}" y="${p.y-7}" fill="#f0d878" font-size="9" font-weight="700" text-anchor="middle" font-family="Cinzel,serif">${p.w}</text>`).join('')
+  return `
+    <div class="lpm-overlay" id="lpm-overlay">
+      <div class="lpm-modal">
+        <button class="lpm-close" id="lpm-close" aria-label="close">✕</button>
+        <div class="lpm-head"><h2>⚔ Power Archive</h2><span class="en">Champion's Best</span></div>
+        <div class="lpm-body">
+        <div class="lpm-tabs" id="lpm-tabs">${tabs}</div>
+        <div class="lpm-hero">
+          <div class="lpm-dial">
+            <svg viewBox="0 0 200 200">
+              <circle class="dial-bg" cx="100" cy="100" r="86"/>
+              <circle class="dial-fg" cx="100" cy="100" r="86" stroke-dasharray="540" stroke-dashoffset="0" id="lpm-dial-fg"/>
+              ${Array.from({length:60}).map((_,i)=>{ const a=(i/60)*360*Math.PI/180,r1=96,r2=i%5===0?102:99; const x1=100+Math.cos(a-Math.PI/2)*r1,y1=100+Math.sin(a-Math.PI/2)*r1,x2=100+Math.cos(a-Math.PI/2)*r2,y2=100+Math.sin(a-Math.PI/2)*r2; return `<line class="dial-tick" x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}"/>` }).join('')}
+            </svg>
+            <div class="lpm-dial-center">
+              <div class="lpm-dial-lbl" id="lpm-dial-lbl">Best 5s</div>
+              <div class="lpm-dial-val" id="lpm-dial-val">—</div>
+              <div class="lpm-dial-unit">WATT</div>
+            </div>
+          </div>
+          <div class="lpm-act">
+            <div class="pmc-tag">⚜ All-Time Best ⚜</div>
+            <div class="pmc-row"><span class="pmc-ico">⌂</span><a id="lpmc-name" href="#" target="_blank" rel="noopener">—</a></div>
+            <div class="pmc-row"><span class="pmc-ico">◷</span><span id="lpmc-date">—</span></div>
+            <div class="pmc-row"><span class="pmc-ico">⚡</span><span class="pmc-watt" id="lpmc-watt">—</span></div>
+            <div class="pmc-row"><span class="pmc-ico">▷</span><span id="lpmc-dur">—</span></div>
+          </div>
+        </div>
+        <div class="lpm-section"><span class="ico">◆</span><h3>Power Curve</h3><span class="en">DURATION CURVE</span></div>
+        <svg class="lpm-curve" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">
+          ${yGrid}
+          <path d="${linePath}" fill="none" stroke="#c89b3c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" filter="url(#lpmGlow)"/>
+          ${dots}${xLabels}
+          <defs><filter id="lpmGlow"><feGaussianBlur stdDeviation="1.6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+        </svg>
+        <div class="lpm-section"><span class="ico">◆</span><h3>Best by Duration</h3><span class="en">FULL RANKING</span></div>
+        <table class="lpm-table">
+          <thead><tr><th>Duration</th><th>Power</th><th class="h-act">Activity</th><th>Date</th></tr></thead>
+          <tbody id="lpm-tbody">${rows}</tbody>
+        </table>
+        <div class="lpm-source">⚜ Strava Power Bests ⚜</div>
+        </div>
+      </div>
+    </div>`
+}
+function updateLolTab(prs, durSec){
+  const map=lPwrMap(prs); const p=map.get(durSec)
+  const lbl=(LPWR_DURATIONS.find(d=>d.sec===durSec)||{}).label||`${durSec}秒`
+  document.getElementById('lpm-dial-lbl').textContent=`Best ${lbl}`
+  document.getElementById('lpm-dial-val').textContent=p?p.watts:'—'
+  const maxW=Math.max(...prs.map(x=>x.watts)); const ratio=p?p.watts/maxW:0
+  const circ=2*Math.PI*86
+  const fg=document.getElementById('lpm-dial-fg')
+  fg.setAttribute('stroke-dasharray',circ.toFixed(1))
+  fg.setAttribute('stroke-dashoffset',(circ*(1-ratio)).toFixed(1))
+  if(p){
+    const a=document.getElementById('lpmc-name'); a.textContent=p.activity_name||'—'; a.href=`https://www.strava.com/activities/${p.activity_id}`
+    document.getElementById('lpmc-date').textContent=p.date||'—'
+    document.getElementById('lpmc-watt').textContent=`${p.watts} W`
+    document.getElementById('lpmc-dur').textContent=lbl
+  } else {
+    document.getElementById('lpmc-name').textContent='No record'; document.getElementById('lpmc-name').removeAttribute('href')
+    document.getElementById('lpmc-date').textContent='—'
+    document.getElementById('lpmc-watt').textContent='—'
+    document.getElementById('lpmc-dur').textContent=lbl
+  }
+  document.querySelectorAll('.lpm-tab').forEach(t=>t.classList.toggle('active',+t.dataset.dur===durSec))
+  document.querySelectorAll('#lpm-tbody tr').forEach(tr=>tr.classList.toggle('active',+tr.dataset.dur===durSec))
+}
+function openLolModal(prs){
+  document.getElementById('lpm-overlay')?.remove()
+  document.body.insertAdjacentHTML('beforeend', renderLolModal(prs))
+  const overlay=document.getElementById('lpm-overlay'); void overlay.offsetWidth; overlay.classList.add('open')
+  document.body.style.overflow='hidden'
+  const initial = prs.find(p=>p.duration_sec===5)?5:prs[0].duration_sec
+  updateLolTab(prs, initial)
+  const close=()=>{ overlay.classList.remove('open'); document.body.style.overflow=''; setTimeout(()=>overlay.remove(),350); document.removeEventListener('keydown',onKey) }
+  const onKey=e=>{ if(e.key==='Escape') close() }
+  document.addEventListener('keydown',onKey)
+  document.getElementById('lpm-close').addEventListener('click',close)
+  overlay.addEventListener('click',e=>{ if(e.target===overlay) close() })
+  document.getElementById('lpm-tabs').addEventListener('click',e=>{ const t=e.target.closest('.lpm-tab'); if(!t||t.disabled) return; updateLolTab(prs,+t.dataset.dur) })
+  document.getElementById('lpm-tbody').addEventListener('click',e=>{ const tr=e.target.closest('tr[data-dur]'); if(!tr||tr.classList.contains('empty')) return; if(e.target.closest('a')) return; updateLolTab(prs,+tr.dataset.dur) })
+}
+function bindLolPower(prs){
+  const card=document.getElementById('lol-power-card')
+  if(!card||!prs||!prs.length) return
+  card.addEventListener('click',()=>{
+    if(card.classList.contains('opening')) return
+    card.classList.add('opening')
+    setTimeout(()=>{ card.classList.remove('opening'); openLolModal(prs) },320)
+  })
+}
+
 /* ── fetch ── */
 fetch('strava.json')
   .then(r=>{ if(!r.ok) throw new Error(`HTTP ${r.status}`); return r.json() })
-  .then(render)
+  .then(d => { render(d); bindLolPower(d.power_prs) })
   .catch(err => {
     document.getElementById('content').innerHTML = `<div class="loading" style="color:#c89b3c">載入失敗：${err.message}<br><br><span style="color:#444;font-size:12px">請先執行 GitHub Actions 產生 strava.json</span></div>`
   })

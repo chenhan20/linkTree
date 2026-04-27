@@ -1,13 +1,17 @@
 # .github/workflows/strava-sync.yml
 #
-# 每天早上 9:30 (台灣時間) 自動執行
-# 台灣 UTC+8，所以 cron 設 01:30 UTC = 09:30 台灣時間
+# 台灣時間 (UTC+8) 每天三次自動執行：
+#   早上 10:00 (台灣) = 02:00 UTC
+#   下午 18:00 (台灣) = 10:00 UTC
+#   晚上 22:00 (台灣) = 14:00 UTC
 
 name: Strava Daily Sync
 
 on:
   schedule:
-    - cron: '30 1 * * *'   # 每天 01:30 UTC = 台灣早上 9:30
+    - cron: '0 2 * * *'    # 台灣早上 10:00
+    - cron: '0 10 * * *'   # 台灣下午 18:00
+    - cron: '0 14 * * *'   # 台灣晚上 22:00
 
   workflow_dispatch:        # 讓你可以在 GitHub 網頁手動觸發（測試用）
     inputs:

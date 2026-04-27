@@ -311,32 +311,58 @@ body::before{
 .seg-time-pr{color:#c54a0d !important}
 
 /* ── weekly quest ── */
-.quest-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.quest-row{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
 .quest-tile{
   background:#e6d2a0;
-  border:3px solid var(--wood-3);border-radius:8px;
-  padding:10px 6px;
+  border:3px solid var(--wood-3);border-radius:10px;
+  padding:28px 20px 24px;
   text-align:center;
   box-shadow:0 3px 0 var(--wood-3);
 }
-.quest-tile .qico{font-size:26px;display:block;line-height:1}
-.quest-tile .qlabel{font-size:13px;color:var(--ink);margin-top:4px;letter-spacing:2px}
+.quest-tile .qico{font-size:40px;display:block;line-height:1}
+.quest-tile .qlabel{font-size:14px;color:var(--ink);margin-top:8px;letter-spacing:2px}
 .quest-tile .qstamp{
-  display:inline-block;margin-top:6px;
+  display:inline-block;margin-top:10px;
   font-family:'Press Start 2P',inherit;font-size:8px;
-  padding:3px 6px;border-radius:3px;border:2px solid;
+  padding:4px 8px;border-radius:3px;border:2px solid;
   letter-spacing:1px;
 }
 .quest-tile.done .qstamp{
   background:#c8f0b8;color:#1d6420;border-color:#1d6420;
 }
-.quest-tile.todo{opacity:.55;filter:saturate(.5)}
-.quest-tile.todo .qstamp{
-  background:#e0e0e0;color:#666;border-color:#666;
+.quest-tile.super .qstamp{
+  background:#fff3b0;color:#7a5800;border-color:#c89500;
 }
-.quest-tile .qprog-wrap{margin:7px auto 0;width:80%;height:3px;border-radius:3px;background:rgba(100,80,40,.15)}
-.quest-tile .qprog-fill{height:100%;border-radius:3px;background:rgba(100,80,40,.5);transition:width .6s ease}
-.quest-tile .qpct{font-size:8px;margin-top:3px;color:rgba(100,80,40,.55);letter-spacing:.5px;font-family:inherit}
+.quest-tile.todo{opacity:.75;filter:saturate(.6)}
+.quest-tile.todo .qstamp{
+  background:#d8cbb0;color:#3a2608;border-color:#5a3d18;
+}
+.quest-tile .qprog-wrap{margin:10px auto 0;width:75%;height:5px;border-radius:5px;background:rgba(70,40,5,.18)}
+.quest-tile .qprog-fill{height:100%;border-radius:5px;background:rgba(70,40,5,.6);transition:width .6s ease}
+.quest-tile .qpct{font-size:9px;margin-top:4px;color:rgba(60,35,5,.75);letter-spacing:.5px;font-family:inherit}
+/* OR dual-progress */
+.qprog-or{display:flex;gap:10px;margin:10px auto 0;width:86%}
+.qprog-or-slot{flex:1;min-width:0}
+.qprog-or-lbl{font-size:9px;letter-spacing:1.5px;color:rgba(60,35,5,.8);margin-bottom:4px;text-align:center}
+.qprog-or-lbl.met{color:#1d6420}
+.qprog-or-bar{height:5px;border-radius:5px;background:rgba(70,40,5,.18)}
+.qprog-or-fill{height:100%;border-radius:5px;background:rgba(70,40,5,.6);transition:width .6s ease}
+.qprog-or-slot.met .qprog-or-bar{background:rgba(29,100,32,.2)}
+.qprog-or-slot.met .qprog-or-fill{background:rgba(29,100,32,.6)}
+.qprog-or-val{font-size:9px;margin-top:4px;text-align:center;color:rgba(60,35,5,.8);letter-spacing:.3px}
+.qprog-or-slot.met .qprog-or-val{color:#1d6420}
+@media(max-width:600px){
+  .quest-tile{padding:18px 12px 16px;border-radius:8px}
+  .quest-tile .qico{font-size:28px}
+  .quest-tile .qlabel{font-size:12px;margin-top:6px}
+  .quest-tile .qprog-wrap{height:3px;border-radius:3px;margin-top:8px}
+  .quest-tile .qprog-fill{border-radius:3px}
+  .qprog-or{gap:6px;margin-top:8px;width:90%}
+  .qprog-or-lbl{font-size:7px;margin-bottom:2px}
+  .qprog-or-bar{height:3px;border-radius:3px}
+  .qprog-or-fill{border-radius:3px}
+  .qprog-or-val{font-size:8px;margin-top:3px}
+}
 
 /* ── activity log timeline ── */
 .timeline{position:relative;padding-left:22px;margin-top:6px}
@@ -457,7 +483,7 @@ body::before{
   .stats-grid,.ms-grid{grid-template-columns:repeat(2,1fr)}
   .stat-card:nth-child(2),.ms-card:nth-child(2){border-right:none}
   .stat-card:nth-child(-n+2),.ms-card:nth-child(-n+2){border-bottom:2px dashed rgba(106,66,32,.25)}
-  .quest-row{grid-template-columns:repeat(2,1fr)}
+  .quest-row{grid-template-columns:1fr}
   .act-card{gap:8px;padding:8px 10px}
   .act-name-wrap{flex-wrap:wrap}
   .itt-badge{align-items:flex-start}
@@ -497,6 +523,133 @@ body::before{
 
 /* placeholder image fallback (if user adds <img> later) */
 .pixel-img{image-rendering:pixelated;image-rendering:crisp-edges}
+
+/* ── maple power PR card (paper + wood pixel plaque) ── */
+.maple-power-card{
+  margin:0 0 14px;padding:10px 14px 12px;
+  background:var(--paper);
+  border:3px solid var(--wood-3);
+  border-radius:6px;
+  box-shadow:
+    0 0 0 3px var(--paper-2),
+    0 0 0 6px var(--wood-3),
+    6px 6px 0 6px var(--shadow);
+  cursor:pointer;user-select:none;position:relative;overflow:hidden;
+  transition:transform .15s,box-shadow .15s;
+  font-family:inherit;
+}
+.maple-power-card:hover{transform:translate(-2px,-2px);box-shadow:0 0 0 3px var(--paper-2),0 0 0 6px var(--wood-3),8px 8px 0 6px var(--shadow)}
+.maple-power-card:active{transform:translate(2px,2px);box-shadow:0 0 0 3px var(--paper-2),0 0 0 6px var(--wood-3),3px 3px 0 6px var(--shadow)}
+.mpc-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px;border-bottom:2px dashed var(--wood-2);padding-bottom:7px}
+.mpc-title{display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:700;color:var(--wood-3);letter-spacing:.5px}
+.mpc-title .ico{font-size:18px;filter:drop-shadow(1px 1px 0 var(--gold-2))}
+.mpc-title-en{font-size:8px;color:var(--wood-1);letter-spacing:2px;margin-left:4px;text-transform:uppercase}
+.mpc-tag{font-size:11px;color:var(--wood-2);letter-spacing:.5px;font-variant-numeric:tabular-nums}
+.mpc-tag b{display:inline-block;background:var(--gold-1);color:var(--ink);font-size:13px;font-weight:700;margin:0 3px;padding:0 5px;border:1.5px solid var(--wood-3);border-radius:3px;box-shadow:1px 1px 0 var(--wood-3)}
+.mpc-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:5px}
+.mpc-mini{padding:6px 2px;text-align:center;background:var(--paper-2);border:2px solid var(--wood-2);border-radius:4px;box-shadow:1.5px 1.5px 0 var(--wood-3)}
+.mpc-mini-lbl{font-size:9px;color:var(--wood-2);letter-spacing:.3px;font-weight:700}
+.mpc-mini-val{font-size:13px;color:var(--wood-3);font-weight:700;margin-top:1px;line-height:1.1;font-variant-numeric:tabular-nums}
+.mpc-mini-val small{font-size:7px;color:var(--wood-1);margin-left:1px;font-weight:500}
+.mpc-mini.empty{background:#eed9a0}
+.mpc-mini.empty .mpc-mini-val{color:var(--wood-1);opacity:.4}
+.maple-power-card.opening{animation:mpcOpen .35s steps(6) forwards}
+@keyframes mpcOpen{
+  0%{transform:scale(1) rotate(0)}
+  40%{transform:scale(.93) rotate(-2deg);box-shadow:0 0 0 3px var(--gold-1),0 0 0 8px var(--wood-3),0 0 30px rgba(255,216,74,.8)}
+  100%{transform:scale(1.08) rotate(0);opacity:0}
+}
+
+/* maple modal (parchment scroll) */
+.mpm-overlay{
+  position:fixed;inset:0;z-index:9999;
+  background:rgba(38,22,8,.6);
+  backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .25s;padding:12px;
+}
+.mpm-overlay.open{opacity:1;pointer-events:auto}
+.mpm-modal{
+  position:relative;width:100%;max-width:760px;max-height:88vh;
+  background:var(--paper);
+  border:4px solid var(--wood-3);
+  border-radius:8px;
+  padding:18px 22px 14px;
+  box-shadow:
+    0 0 0 4px var(--paper-2),
+    0 0 0 8px var(--wood-3),
+    8px 8px 0 8px var(--shadow);
+  transform:translateY(40px) scale(.92);opacity:0;
+  transition:transform .35s steps(6),opacity .25s;
+  display:flex;flex-direction:column;overflow:hidden;
+  font-family:inherit;color:var(--ink);
+}
+.mpm-overlay.open .mpm-modal{transform:translateY(0) scale(1);opacity:1}
+.mpm-body{flex:1;overflow-y:auto;padding-right:6px}
+.mpm-body::-webkit-scrollbar{width:8px}
+.mpm-body::-webkit-scrollbar-track{background:var(--paper-2);border-radius:4px}
+.mpm-body::-webkit-scrollbar-thumb{background:var(--wood-2);border-radius:4px;border:1px solid var(--wood-3)}
+.mpm-close{
+  position:absolute;top:10px;right:10px;width:32px;height:32px;
+  background:var(--gold-1);border:2px solid var(--wood-3);border-radius:50%;
+  color:var(--ink);font-size:14px;font-weight:700;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:2px 2px 0 var(--wood-3);transition:transform .15s;z-index:2;font-family:inherit;
+}
+.mpm-close:hover{transform:translate(-1px,-1px);box-shadow:3px 3px 0 var(--wood-3);background:var(--gold-2)}
+.mpm-close:active{transform:translate(1px,1px);box-shadow:1px 1px 0 var(--wood-3)}
+.mpm-head{display:flex;align-items:center;gap:10px;margin-bottom:12px;padding-right:42px;border-bottom:3px double var(--wood-3);padding-bottom:10px}
+.mpm-head h2{font-size:18px;color:var(--wood-3);font-weight:700;letter-spacing:1px;margin:0;display:inline-flex;align-items:center;gap:8px}
+.mpm-head .en{font-size:9px;color:var(--wood-1);letter-spacing:2.5px;text-transform:uppercase}
+.mpm-tabs{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:14px}
+.mpm-tab{padding:5px 12px;font-family:inherit;font-size:11px;color:var(--wood-2);background:var(--paper-2);border:2px solid var(--wood-2);border-radius:4px;cursor:pointer;transition:all .12s;box-shadow:1.5px 1.5px 0 var(--wood-3)}
+.mpm-tab:hover{background:var(--gold-1);color:var(--ink)}
+.mpm-tab.active{background:var(--gold-1);color:var(--ink);border-color:var(--wood-3);font-weight:700;box-shadow:inset 2px 2px 0 var(--gold-2)}
+.mpm-tab:disabled{opacity:.4;cursor:not-allowed;background:#e8d199}
+.mpm-hero{display:grid;grid-template-columns:170px 1fr;gap:18px;align-items:center;margin-bottom:14px}
+.mpm-dial{position:relative;width:170px;height:170px;margin:0 auto;background:var(--paper-2);border-radius:50%;border:3px solid var(--wood-3);box-shadow:3px 3px 0 var(--wood-3),inset 0 0 12px rgba(101,66,32,.15)}
+.mpm-dial svg{width:100%;height:100%;transform:rotate(-90deg)}
+.mpm-dial .dial-bg{fill:none;stroke:rgba(110,70,30,.15);stroke-width:6}
+.mpm-dial .dial-fg{fill:none;stroke:var(--gold-2);stroke-width:6;stroke-linecap:round;filter:drop-shadow(1px 1px 0 var(--wood-3));transition:stroke-dashoffset .8s cubic-bezier(.3,.8,.4,1)}
+.mpm-dial-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;pointer-events:none}
+.mpm-dial-lbl{font-size:10px;color:var(--wood-2);letter-spacing:1px;margin-bottom:1px;font-weight:700}
+.mpm-dial-val{font-size:42px;line-height:1;font-weight:800;color:var(--wood-3);text-shadow:2px 2px 0 var(--gold-1);font-variant-numeric:tabular-nums}
+.mpm-dial-unit{font-size:11px;color:var(--wood-2);margin-top:3px;letter-spacing:1.5px;font-weight:700}
+.mpm-act{padding:12px 14px;background:var(--paper-2);border:2.5px solid var(--wood-3);border-radius:6px;box-shadow:3px 3px 0 var(--wood-3);font-size:12px;color:var(--ink)}
+.mpm-act .pmc-tag{display:inline-flex;gap:5px;font-size:10px;color:var(--ink);font-weight:700;letter-spacing:.5px;margin-bottom:8px;padding:2px 8px;background:var(--gold-1);border:1.5px solid var(--wood-3);border-radius:3px;box-shadow:1.5px 1.5px 0 var(--wood-3)}
+.mpm-act .pmc-row{display:flex;align-items:center;gap:7px;margin:4px 0}
+.mpm-act .pmc-row .pmc-ico{width:14px;color:var(--wood-2);flex-shrink:0;text-align:center;font-size:13px}
+.mpm-act .pmc-row a{color:var(--wood-3);text-decoration:none;border-bottom:1.5px dashed var(--wood-2);font-weight:600}
+.mpm-act .pmc-row a:hover{color:var(--gold-2);border-color:var(--gold-2)}
+.mpm-act .pmc-watt{color:var(--wood-3);font-weight:700;background:var(--gold-1);padding:0 6px;border-radius:3px;border:1px solid var(--wood-3)}
+.mpm-section{display:flex;align-items:center;gap:8px;margin:14px 0 6px;padding-bottom:6px;border-bottom:2px dashed var(--wood-2)}
+.mpm-section .ico{color:var(--gold-2);font-size:14px}
+.mpm-section h3{font-size:13px;color:var(--wood-3);font-weight:700;letter-spacing:1px;margin:0}
+.mpm-section .en{font-size:8px;color:var(--wood-1);letter-spacing:2px;text-transform:uppercase}
+.mpm-curve{width:100%;height:auto;background:var(--paper-2);border:2px solid var(--wood-3);border-radius:5px;padding:6px;display:block;box-shadow:2px 2px 0 var(--wood-3)}
+.mpm-table-wrap{background:var(--paper-2);border:2px solid var(--wood-3);border-radius:5px;padding:0;box-shadow:2px 2px 0 var(--wood-3);overflow:hidden}
+.mpm-table{width:100%;border-collapse:collapse;font-size:12px;font-family:inherit}
+.mpm-table th{font-size:10px;letter-spacing:1.2px;color:var(--paper);background:var(--wood-3);text-transform:uppercase;text-align:left;padding:7px 10px;font-weight:700}
+.mpm-table td{padding:7px 10px;border-bottom:1px dashed var(--wood-1);color:var(--ink);vertical-align:middle;background:var(--paper-2)}
+.mpm-table tr:nth-child(even) td{background:var(--paper)}
+.mpm-table td.dur{color:var(--wood-3);font-weight:700;letter-spacing:.5px;white-space:nowrap}
+.mpm-table td.watt{color:var(--wood-3);font-weight:700;font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.mpm-table td.act a{color:var(--wood-3);text-decoration:none;border-bottom:1.5px dashed var(--wood-1);font-weight:600}
+.mpm-table td.act a:hover{color:var(--gold-2);border-color:var(--gold-2)}
+.mpm-table td.date{color:var(--wood-1);font-size:11px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.mpm-table tr.empty td{color:var(--wood-1);opacity:.4}
+.mpm-table tr.active td{background:var(--gold-1);box-shadow:inset 3px 0 0 var(--wood-3)}
+.mpm-source{margin-top:10px;font-size:9px;color:var(--wood-1);letter-spacing:1.5px;text-align:left;font-weight:600}
+@media(max-width:700px){
+  .mpm-hero{grid-template-columns:1fr;gap:10px}
+  .mpm-dial{width:140px;height:140px}
+  .mpm-dial-val{font-size:34px}
+}
+@media(max-width:480px){
+  .mpc-grid{grid-template-columns:repeat(3,1fr)}
+  .mpc-title-en{display:none}
+  .mpm-table .h-act,.mpm-table td.act{display:none}
+}
 </style>
 </head>
 <body>
@@ -763,30 +916,50 @@ function renderSegments(segs) {
 function renderQuest(wq){
   if (!wq) return ''
   const order = ['ride','run','swim','weight']
-  const targetLabels = {ride:'30km / 1hr', run:'10km / 1hr', swim:'1000m', weight:'1 次'}
-  function isDone(val) { return typeof val === 'object' ? val.done : !!val }
-  function getPct(key, val) {
-    if (typeof val !== 'object') return val ? 100 : 0
-    if (key==='ride'||key==='run') { const bd=val.target_km>0?(val.distance_km||0)/val.target_km:0; const bt=val.target_hr>0?(val.moving_time_hr||0)/val.target_hr:0; return Math.min(100,Math.round(Math.max(bd,bt)*100)) }
-    if (key==='swim') return Math.min(100,Math.round((val.distance_m||0)/val.target_m*100))
-    if (key==='weight') return val.count>=val.target?100:0
-    return 0
-  }
-  function getDetail(key, val) {
-    if (typeof val !== 'object') return ''
-    if (key==='ride'||key==='run') { const bd=val.target_km>0?(val.distance_km||0)/val.target_km:0; const bt=val.target_hr>0?(val.moving_time_hr||0)/val.target_hr:0; return bd>=bt?`${val.distance_km||0}km`:`${val.moving_time_hr||0}hr` }
-    if (key==='swim') return `${val.distance_m||0}m`
-    if (key==='weight') return `${val.count||0} 次`
-    return ''
-  }
+  function isDone(val)  { return typeof val === 'object' ? val.done  : !!val }
+  function isSuper(val) { return typeof val === 'object' && !!val.super }
   const tiles = order.map(k => {
-    const meta = SPORT_META[k], val = wq[k], on = isDone(val)
-    const pct = getPct(k, val), detail = getDetail(k, val)
+    const meta = SPORT_META[k], val = wq[k]
+    const on = isDone(val), sup = isSuper(val)
+    const cls = `quest-tile ${sup ? 'done super' : on ? 'done' : 'todo'}`
+    // OR tile for ride / run
+    if ((k==='ride'||k==='run') && typeof val === 'object') {
+      const d = val.distance_km || 0, h = val.moving_time_hr || 0
+      const dPct = Math.min(100, Math.round(d / val.target_km * 100))
+      const hPct = Math.min(100, Math.round(h / val.target_hr * 100))
+      const dMet = dPct >= 100, hMet = hPct >= 100
+      const stamp = sup
+        ? `<span class="qstamp">⚡SUPER!</span><div class="qpct" style="margin-top:6px;color:#7a5800">${d}km · ${h}hr</div>`
+        : on
+        ? `<span class="qstamp">✅COMPLETE!</span><div class="qpct" style="margin-top:6px;color:#1d6420">${d}km · ${h}hr</div>`
+        : `<span class="qstamp">⬜ OR</span>
+          <div class="qprog-or">
+            <div class="qprog-or-slot${dMet?' met':''}">
+              <div class="qprog-or-lbl${dMet?' met':''}">${k==='ride'?'30KM':'10KM'}</div>
+              <div class="qprog-or-bar"><div class="qprog-or-fill" style="width:${dPct}%"></div></div>
+              <div class="qprog-or-val">${d}km</div>
+            </div>
+            <div class="qprog-or-slot${hMet?' met':''}">
+              <div class="qprog-or-lbl${hMet?' met':''}">1HR</div>
+              <div class="qprog-or-bar"><div class="qprog-or-fill" style="width:${hPct}%"></div></div>
+              <div class="qprog-or-val">${h}hr</div>
+            </div>
+          </div>`
+      return `<div class="${cls}"><span class="qico">${meta.icon}</span><div class="qlabel">${meta.label}</div>${stamp}</div>`
+    }
+    // normal tile
+    const pct = (() => {
+      if (typeof val !== 'object') return val ? 100 : 0
+      if (k==='swim') return Math.min(100,Math.round((val.distance_m||0)/val.target_m*100))
+      return val.count >= val.target ? 100 : 0
+    })()
+    const targetLabels = {swim:'1000m', weight:'1 次'}
+    const detail = typeof val === 'object' ? (k==='swim' ? `${val.distance_m||0}m` : `${val.count||0} 次`) : ''
     const progHtml = !on ? `
       <div class="qprog-wrap"><div class="qprog-fill" style="width:${pct}%"></div></div>
       <div class="qpct">${detail ? `${detail} · ` : ''}${pct}%</div>` : ''
     return `
-      <div class="quest-tile ${on?'done':'todo'}">
+      <div class="${cls}">
         <span class="qico">${meta.icon}</span>
         <div class="qlabel">${meta.label}</div>
         <span class="qstamp">${on ? '✅COMPLETE!' : `⬜ ${targetLabels[k]}`}</span>
@@ -916,8 +1089,8 @@ function render(data){
       const wSwimM    = Math.round(wSwims.reduce((s,a)=>s+(a.distance_km||0)*1000,0))
       const wWeightCt = wWeights.length
       data.weekly_quest = {
-        ride:   { done: wRideDist>=30||wRideHr>=1, distance_km:wRideDist, moving_time_hr:wRideHr, target_km:30, target_hr:1 },
-        run:    { done: wRunDist>=10 ||wRunHr>=1,  distance_km:wRunDist,  moving_time_hr:wRunHr,  target_km:10, target_hr:1 },
+        ride:   { done: wRideDist>=30||wRideHr>=1, super: wRideDist>=30&&wRideHr>=1, distance_km:wRideDist, moving_time_hr:wRideHr, target_km:30, target_hr:1 },
+        run:    { done: wRunDist>=10 ||wRunHr>=1,  super: wRunDist>=10 &&wRunHr>=1,  distance_km:wRunDist,  moving_time_hr:wRunHr,  target_km:10, target_hr:1 },
         swim:   { done: wSwimM>=1000,               distance_m:wSwimM,    target_m:1000 },
         weight: { done: wWeightCt>=1,               count:wWeightCt,      target:1 },
       }
@@ -968,6 +1141,7 @@ function render(data){
 
   document.getElementById('content').innerHTML = `
     ${renderHero(data.updated_at)}
+    ${renderMaplePower(data.power_prs)}
     ${renderStats(s)}
     ${renderMonthlySummary(data.monthly_summary)}
     <div class="two-col">
@@ -1058,9 +1232,153 @@ function render(data){
   })
 }
 
+// ── maple paper power PR card + modal ──
+const MPWR_DURATIONS = [
+  { sec:5, label:'5秒' }, { sec:10, label:'10秒' }, { sec:30, label:'30秒' },
+  { sec:60, label:'1分' }, { sec:120, label:'2分' }, { sec:300, label:'5分' },
+  { sec:600, label:'10分' }, { sec:1200, label:'20分' }, { sec:3600, label:'60分' },
+]
+function mPwrMap(prs){ const m=new Map(); (prs||[]).forEach(p=>m.set(p.duration_sec,p)); return m }
+function renderMaplePower(prs){
+  if(!prs||!prs.length) return ''
+  const map = mPwrMap(prs)
+  const hero = map.get(5) || prs[0]
+  const heroLbl = (MPWR_DURATIONS.find(d=>d.sec===hero.duration_sec)||{}).label || `${hero.duration_sec}秒`
+  const miniDurs=[5,10,30,60,120,300]
+  const cells = miniDurs.map(s=>{
+    const p=map.get(s); const lbl=MPWR_DURATIONS.find(d=>d.sec===s).label
+    if(!p) return `<div class="mpc-mini empty"><div class="mpc-mini-lbl">${lbl}</div><div class="mpc-mini-val">—</div></div>`
+    return `<div class="mpc-mini"><div class="mpc-mini-lbl">${lbl}</div><div class="mpc-mini-val">${p.watts}<small>W</small></div></div>`
+  }).join('')
+  return `
+    <div class="maple-power-card" id="maple-power-card">
+      <div class="mpc-head">
+        <span class="mpc-title"><span class="ico">🪵</span>功率紀錄碑<span class="mpc-title-en">POWER PRs</span></span>
+        <span class="mpc-tag">最佳 ${heroLbl} <b>${hero.watts}</b> W</span>
+      </div>
+      <div class="mpc-grid">${cells}</div>
+    </div>`
+}
+function renderMapleModal(prs){
+  const map = mPwrMap(prs)
+  const sorted = MPWR_DURATIONS.filter(d=>map.has(d.sec))
+  const maxW = Math.max(...prs.map(p=>p.watts))
+  const tabs = MPWR_DURATIONS.map(d=>{
+    const has = map.has(d.sec)
+    return `<button class="mpm-tab${d.sec===5&&has?' active':''}" data-dur="${d.sec}"${!has?' disabled':''}>${d.label}</button>`
+  }).join('')
+  const rows = MPWR_DURATIONS.map(d=>{
+    const p=map.get(d.sec)
+    if(!p) return `<tr class="empty" data-dur="${d.sec}"><td class="dur">${d.label}</td><td>—</td><td class="act">—</td><td class="date">—</td></tr>`
+    return `<tr data-dur="${d.sec}"${d.sec===5?' class="active"':''}>
+      <td class="dur">${d.label}</td><td class="watt">${p.watts}</td>
+      <td class="act"><a href="https://www.strava.com/activities/${p.activity_id}" target="_blank" rel="noopener">${p.activity_name||'—'}</a></td>
+      <td class="date">${p.date||'—'}</td></tr>`
+  }).join('')
+  const W=700,H=180,padL=44,padR=14,padT=18,padB=28,innerW=W-padL-padR,innerH=H-padT-padB
+  const yMax=Math.ceil(maxW/100)*100+100
+  const pts = sorted.map((d,i)=>{ const p=map.get(d.sec); return { x:padL+(i/(sorted.length-1))*innerW, y:padT+innerH-(p.watts/yMax)*innerH, w:p.watts, label:d.label } })
+  const linePath = pts.map((p,i)=>`${i?'L':'M'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')
+  const yGrid = [0,yMax/2,yMax].map(v=>{ const y=padT+innerH-(v/yMax)*innerH; return `<line x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="#a87a3a" stroke-width="1" stroke-dasharray="3,3" opacity=".4"/><text x="${padL-5}" y="${y+3}" fill="#6b4220" font-size="9" text-anchor="end" font-weight="700">${Math.round(v)}</text>` }).join('')
+  const xLabels = pts.map(p=>`<text x="${p.x}" y="${H-10}" fill="#6b4220" font-size="9" text-anchor="middle" font-weight="700">${p.label}</text>`).join('')
+  const dots = pts.map(p=>`<rect x="${p.x-4}" y="${p.y-4}" width="8" height="8" fill="#ffd84a" stroke="#3e2410" stroke-width="2"/><text x="${p.x}" y="${p.y-9}" fill="#3e2410" font-size="10" font-weight="700" text-anchor="middle">${p.w}</text>`).join('')
+  return `
+    <div class="mpm-overlay" id="mpm-overlay">
+      <div class="mpm-modal">
+        <button class="mpm-close" id="mpm-close" aria-label="close">✕</button>
+        <div class="mpm-head"><h2>🏆 功率紀錄碑</h2><span class="en">POWER ARCHIVE</span></div>
+        <div class="mpm-body">
+        <div class="mpm-tabs" id="mpm-tabs">${tabs}</div>
+        <div class="mpm-hero">
+          <div class="mpm-dial">
+            <svg viewBox="0 0 200 200">
+              <circle class="dial-bg" cx="100" cy="100" r="84"/>
+              <circle class="dial-fg" cx="100" cy="100" r="84" stroke-dasharray="528" stroke-dashoffset="0" id="mpm-dial-fg"/>
+            </svg>
+            <div class="mpm-dial-center">
+              <div class="mpm-dial-lbl" id="mpm-dial-lbl">最佳 5秒</div>
+              <div class="mpm-dial-val" id="mpm-dial-val">—</div>
+              <div class="mpm-dial-unit">WATT</div>
+            </div>
+          </div>
+          <div class="mpm-act">
+            <div class="pmc-tag">★ 史上最佳</div>
+            <div class="pmc-row"><span class="pmc-ico">🚴</span><a id="mpmc-name" href="#" target="_blank" rel="noopener">—</a></div>
+            <div class="pmc-row"><span class="pmc-ico">📅</span><span id="mpmc-date">—</span></div>
+            <div class="pmc-row"><span class="pmc-ico">⚡</span><span class="pmc-watt" id="mpmc-watt">—</span></div>
+            <div class="pmc-row"><span class="pmc-ico">⏱</span><span id="mpmc-dur">—</span></div>
+          </div>
+        </div>
+        <div class="mpm-section"><span class="ico">📈</span><h3>功率曲線</h3><span class="en">POWER CURVE</span></div>
+        <svg class="mpm-curve" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">
+          ${yGrid}
+          <path d="${linePath}" fill="none" stroke="#e5a418" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          ${dots}${xLabels}
+        </svg>
+        <div class="mpm-section"><span class="ico">📜</span><h3>各區段最佳</h3><span class="en">FULL RANKING</span></div>
+        <div class="mpm-table-wrap">
+        <table class="mpm-table">
+          <thead><tr><th>區段</th><th>瓦數</th><th class="h-act">活動</th><th>日期</th></tr></thead>
+          <tbody id="mpm-tbody">${rows}</tbody>
+        </table>
+        </div>
+        <div class="mpm-source">※ 資料來源：Strava 功率最佳紀錄</div>
+        </div>
+      </div>
+    </div>`
+}
+function updateMapleTab(prs, durSec){
+  const map=mPwrMap(prs); const p=map.get(durSec)
+  const lbl=(MPWR_DURATIONS.find(d=>d.sec===durSec)||{}).label||`${durSec}秒`
+  document.getElementById('mpm-dial-lbl').textContent=`最佳 ${lbl}`
+  document.getElementById('mpm-dial-val').textContent=p?p.watts:'—'
+  const maxW=Math.max(...prs.map(x=>x.watts)); const ratio=p?p.watts/maxW:0
+  const circ=2*Math.PI*84
+  const fg=document.getElementById('mpm-dial-fg')
+  fg.setAttribute('stroke-dasharray',circ.toFixed(1))
+  fg.setAttribute('stroke-dashoffset',(circ*(1-ratio)).toFixed(1))
+  if(p){
+    const a=document.getElementById('mpmc-name'); a.textContent=p.activity_name||'—'; a.href=`https://www.strava.com/activities/${p.activity_id}`
+    document.getElementById('mpmc-date').textContent=p.date||'—'
+    document.getElementById('mpmc-watt').textContent=`${p.watts} W`
+    document.getElementById('mpmc-dur').textContent=lbl
+  } else {
+    const n=document.getElementById('mpmc-name'); n.textContent='（無紀錄）'; n.removeAttribute('href')
+    document.getElementById('mpmc-date').textContent='—'
+    document.getElementById('mpmc-watt').textContent='—'
+    document.getElementById('mpmc-dur').textContent=lbl
+  }
+  document.querySelectorAll('.mpm-tab').forEach(t=>t.classList.toggle('active',+t.dataset.dur===durSec))
+  document.querySelectorAll('#mpm-tbody tr').forEach(tr=>tr.classList.toggle('active',+tr.dataset.dur===durSec))
+}
+function openMapleModal(prs){
+  document.getElementById('mpm-overlay')?.remove()
+  document.body.insertAdjacentHTML('beforeend', renderMapleModal(prs))
+  const overlay=document.getElementById('mpm-overlay'); void overlay.offsetWidth; overlay.classList.add('open')
+  document.body.style.overflow='hidden'
+  const initial = prs.find(p=>p.duration_sec===5)?5:prs[0].duration_sec
+  updateMapleTab(prs, initial)
+  const close=()=>{ overlay.classList.remove('open'); document.body.style.overflow=''; setTimeout(()=>overlay.remove(),300); document.removeEventListener('keydown',onKey) }
+  const onKey=e=>{ if(e.key==='Escape') close() }
+  document.addEventListener('keydown',onKey)
+  document.getElementById('mpm-close').addEventListener('click',close)
+  overlay.addEventListener('click',e=>{ if(e.target===overlay) close() })
+  document.getElementById('mpm-tabs').addEventListener('click',e=>{ const t=e.target.closest('.mpm-tab'); if(!t||t.disabled) return; updateMapleTab(prs,+t.dataset.dur) })
+  document.getElementById('mpm-tbody').addEventListener('click',e=>{ const tr=e.target.closest('tr[data-dur]'); if(!tr||tr.classList.contains('empty')) return; if(e.target.closest('a')) return; updateMapleTab(prs,+tr.dataset.dur) })
+}
+function bindMaplePower(prs){
+  const card=document.getElementById('maple-power-card')
+  if(!card||!prs||!prs.length) return
+  card.addEventListener('click',()=>{
+    if(card.classList.contains('opening')) return
+    card.classList.add('opening')
+    setTimeout(()=>{ card.classList.remove('opening'); openMapleModal(prs) },240)
+  })
+}
+
 fetch('strava.json')
   .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json() })
-  .then(render)
+  .then(d => { render(d); bindMaplePower(d.power_prs) })
   .catch(err => {
     document.getElementById('content').innerHTML = `
       <div class="loading">

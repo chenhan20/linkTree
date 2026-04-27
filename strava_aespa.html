@@ -114,19 +114,45 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 .status-badge.over   {background:rgba(232,121,249,.16);color:#f0a0ff;border:1px solid rgba(232,121,249,.45);font-size:13px;font-weight:700;letter-spacing:0}
 
 /* ── weekly quest tiles ── */
-.quest-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:2.2rem}
-@media(max-width:480px){.quest-grid{grid-template-columns:repeat(2,1fr)}}
-.quest-tile{padding:20px 10px 16px;border-radius:10px;text-align:center;background:rgba(168,85,247,.04);border:1px solid rgba(168,85,247,.1);user-select:none}
-.quest-tile.on{background:rgba(168,85,247,.1);border-color:rgba(168,85,247,.35);box-shadow:0 0 14px rgba(168,85,247,.12)}
-.quest-tile .qico{font-size:26px;display:block;margin-bottom:8px;filter:grayscale(1);opacity:.28}
+.quest-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:2.4rem}
+@media(max-width:360px){.quest-grid{grid-template-columns:1fr}}
+.quest-tile{padding:30px 20px 26px;border-radius:14px;text-align:center;background:rgba(30,10,50,.65);border:1px solid rgba(168,85,247,.2);user-select:none}
+.quest-tile.on{background:rgba(168,85,247,.14);border-color:rgba(168,85,247,.45);box-shadow:0 0 14px rgba(168,85,247,.15)}
+.quest-tile .qico{font-size:40px;display:block;margin-bottom:14px;filter:grayscale(1);opacity:.4}
 .quest-tile.on .qico{filter:none;opacity:1}
-.quest-tile .qlabel{font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:#333}
-.quest-tile.on .qlabel{color:rgba(168,85,247,.6)}
-.quest-tile .qcheck{font-size:15px;margin-top:7px;color:#252525}
+.quest-tile .qlabel{font-size:12px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.35)}
+.quest-tile.on .qlabel{color:rgba(168,85,247,.85)}
+.quest-tile .qcheck{font-size:20px;margin-top:12px;color:rgba(255,255,255,.2)}
 .quest-tile.on .qcheck{color:#a855f7}
-.quest-tile .qprog-wrap{margin:8px auto 0;width:80%;height:3px;border-radius:3px;background:rgba(168,85,247,.1)}
-.quest-tile .qprog-fill{height:100%;border-radius:3px;background:rgba(168,85,247,.5);transition:width .6s ease}
-.quest-tile .qpct{font-size:9px;margin-top:4px;color:rgba(168,85,247,.4);letter-spacing:.5px}
+.quest-tile .qprog-wrap{margin:12px auto 0;width:75%;height:5px;border-radius:5px;background:rgba(168,85,247,.15)}
+.quest-tile .qprog-fill{height:100%;border-radius:5px;background:rgba(168,85,247,.65);transition:width .6s ease}
+.quest-tile .qpct{font-size:11px;margin-top:6px;color:rgba(168,85,247,.6);letter-spacing:.5px}
+@media(max-width:600px){
+  .quest-tile{padding:18px 12px 16px;border-radius:10px}
+  .quest-tile .qico{font-size:28px;margin-bottom:8px}
+  .quest-tile .qlabel{font-size:10px;letter-spacing:2.5px}
+  .quest-tile .qcheck{font-size:16px;margin-top:8px}
+  .quest-tile .qprog-wrap{height:3px;border-radius:3px;margin-top:8px}
+  .quest-tile .qprog-fill{border-radius:3px}
+  .quest-tile .qpct{font-size:9px;margin-top:4px}
+}
+/* OR dual-progress for ride/run tiles */
+.qprog-or{display:flex;gap:10px;margin:12px auto 0;width:86%}
+.qprog-or-slot{flex:1;min-width:0}
+.qprog-or-lbl{font-size:9px;letter-spacing:1.5px;color:rgba(255,255,255,.28);margin-bottom:4px;text-align:center}
+.qprog-or-lbl.met{color:rgba(63,204,74,.85)}
+.qprog-or-bar{height:5px;border-radius:5px;background:rgba(168,85,247,.18)}
+.qprog-or-fill{height:100%;border-radius:5px;background:rgba(168,85,247,.65);transition:width .6s ease}
+.qprog-or-slot.met .qprog-or-bar{background:rgba(63,204,74,.2)}
+.qprog-or-slot.met .qprog-or-fill{background:rgba(63,204,74,.75)}
+.qprog-or-val{font-size:10px;margin-top:5px;text-align:center;color:rgba(255,255,255,.28);letter-spacing:.3px}
+.qprog-or-slot.met .qprog-or-val{color:rgba(63,204,74,.7)}
+@media(max-width:600px){.qprog-or{gap:6px;margin-top:8px;width:90%}.qprog-or-lbl{font-size:7px;margin-bottom:2px}.qprog-or-bar{height:3px;border-radius:3px}.qprog-or-fill{border-radius:3px}.qprog-or-val{font-size:8px;margin-top:3px}}
+/* SUPER: both OR conditions met → gold */
+.quest-tile.super{background:rgba(255,196,0,.13)!important;border-color:rgba(255,196,0,.55)!important;box-shadow:0 0 20px rgba(255,196,0,.2)!important}
+.quest-tile.super .qlabel{color:rgba(255,210,0,.95)!important}
+.quest-tile.super .qico{filter:none!important;opacity:1!important}
+.quest-tile.super .qcheck{color:#ffd700!important;font-size:20px!important}
 /* act highlight flash */
 .act-highlight{animation:actFlash .9s ease-out}
 @keyframes actFlash{0%,40%{background:rgba(168,85,247,.22);border-color:rgba(168,85,247,.6)}100%{background:inherit;border-color:inherit}}
@@ -361,6 +387,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
   .activity-card{align-items:flex-start;gap:9px;padding:.75rem .85rem;margin-left:0}
   .activity-icon{width:38px;height:38px}
   .activity-name-wrap{flex-wrap:wrap}
+  .activity-name{white-space:normal;overflow:visible;text-overflow:clip}
   .activity-dist{font-size:16px;margin-left:auto}
   .itt-badge{align-items:flex-start;gap:8px}
   .itt-attempt{text-align:right;max-width:38%}
@@ -490,10 +517,165 @@ body.disc-open{overflow:hidden}
   box-shadow:0 0 22px rgba(168,85,247,.4);
 }
 .disc-open-btn .dico{font-size:13px}
+/* ── disc vinyl floating button ── */
+.disc-float-btn{
+  position:fixed;bottom:24px;left:20px;z-index:9998;
+  width:50px;height:50px;border-radius:50%;
+  background:radial-gradient(circle at 35% 35%,rgba(232,121,249,.2),rgba(4,0,14,.9));
+  border:1.5px solid rgba(168,85,247,.6);
+  color:#e879f9;font-size:24px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 20px rgba(168,85,247,.3);
+  transition:all .25s;
+  animation:discBtnPulse 3s ease-in-out infinite;
+}
+.disc-float-btn:hover{
+  background:radial-gradient(circle at 35% 35%,rgba(232,121,249,.38),rgba(10,0,25,.9));
+  border-color:#e879f9;
+  box-shadow:0 0 45px rgba(168,85,247,.7);
+  transform:scale(1.08);
+}
+@keyframes discBtnPulse{
+  0%,100%{box-shadow:0 0 15px rgba(168,85,247,.3)}
+  50%{box-shadow:0 0 32px rgba(232,121,249,.65),0 0 55px rgba(168,85,247,.3)}
+}
+/* disc continuous spin */
+@keyframes discSpin{to{transform:rotate(360deg)}}
+.disc-bg-img.spinning{
+  animation:discSpin 7s linear infinite;
+  transform-origin:center center;
+}
 @media(max-width:520px){
   .disc-close{top:-44px}
   /* hide text overlays on mobile – alignment cannot be guaranteed on small screens */
   .disc-stat-ov,#disc-upd,#disc-chart{display:none}
+}
+
+/* ── aespa power PR card (holographic glass) ── */
+.aespa-power-card{
+  flex:1;min-width:280px;max-width:520px;align-self:center;
+  position:relative;padding:11px 14px;
+  background:
+    linear-gradient(135deg,rgba(168,85,247,.15),rgba(232,121,249,.08) 50%,rgba(168,85,247,.04)),
+    radial-gradient(ellipse at top right,rgba(232,121,249,.12),transparent 60%);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border:1px solid rgba(168,85,247,.4);border-radius:14px;
+  box-shadow:0 0 18px rgba(168,85,247,.18),inset 0 1px 0 rgba(255,255,255,.1),inset 0 0 24px rgba(168,85,247,.06);
+  cursor:pointer;overflow:hidden;user-select:none;
+  transition:transform .25s,border-color .2s,box-shadow .25s;
+}
+.aespa-power-card::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.18) 48%,rgba(232,121,249,.25) 52%,transparent 70%);
+  background-size:240% 100%;background-position:100% 0;
+  pointer-events:none;transition:background-position 1.5s cubic-bezier(.3,.7,.3,1);
+  mix-blend-mode:overlay;opacity:.6;
+}
+.aespa-power-card:hover::before{background-position:0 0}
+.aespa-power-card:hover{transform:translateY(-2px);border-color:#e879f9;box-shadow:0 0 30px rgba(232,121,249,.45),inset 0 1px 0 rgba(255,255,255,.15)}
+.apc-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:9px;position:relative;z-index:1}
+.apc-title{font-family:Georgia,serif;font-style:italic;font-size:15px;font-weight:700;background:linear-gradient(135deg,#a855f7,#e879f9,#c084fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:.5px}
+.apc-title-en{font-size:8px;color:rgba(232,121,249,.7);letter-spacing:3px;margin-left:4px}
+.apc-tag{font-size:10px;color:rgba(255,255,255,.55);letter-spacing:1px;font-variant-numeric:tabular-nums}
+.apc-tag b{color:#e879f9;font-size:14px;font-weight:700;margin:0 3px;text-shadow:0 0 8px rgba(232,121,249,.5)}
+.apc-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:5px;position:relative;z-index:1}
+.apc-mini{padding:6px 2px;text-align:center;border:1px solid rgba(168,85,247,.25);border-radius:8px;background:rgba(168,85,247,.06);transition:background .2s}
+.aespa-power-card:hover .apc-mini{background:rgba(168,85,247,.10)}
+.apc-mini-lbl{font-size:9px;color:rgba(255,255,255,.5);letter-spacing:.3px}
+.apc-mini-val{font-size:13px;color:#e879f9;font-weight:700;margin-top:1px;line-height:1.1;font-variant-numeric:tabular-nums;text-shadow:0 0 6px rgba(232,121,249,.4)}
+.apc-mini-val small{font-size:7px;color:rgba(232,121,249,.7);margin-left:1px;font-weight:500}
+.apc-mini.empty .apc-mini-val{color:rgba(168,85,247,.3)}
+.aespa-power-card.opening{animation:apcOpen .5s cubic-bezier(.4,0,.3,1.4) forwards}
+@keyframes apcOpen{
+  0%{transform:scale(1);box-shadow:0 0 18px rgba(168,85,247,.2)}
+  40%{transform:scale(.94) rotate(-1deg);box-shadow:0 0 70px rgba(232,121,249,.7),inset 0 0 50px rgba(232,121,249,.3)}
+  100%{transform:scale(1.08);opacity:0;filter:blur(4px)}
+}
+
+/* aespa modal */
+.apm-overlay{
+  position:fixed;inset:0;z-index:9999;
+  background:radial-gradient(ellipse at center,rgba(45,16,96,.85) 0%,rgba(0,0,0,.94) 70%);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .3s;padding:12px;
+}
+.apm-overlay.open{opacity:1;pointer-events:auto}
+.apm-modal{
+  position:relative;width:100%;max-width:780px;max-height:88vh;
+  background:linear-gradient(160deg,rgba(26,8,48,.97),rgba(0,0,0,.99));
+  border:1.5px solid rgba(168,85,247,.55);border-radius:18px;
+  padding:18px 20px 14px;
+  box-shadow:0 0 60px rgba(168,85,247,.45),inset 0 0 40px rgba(232,121,249,.05);
+  transform:scale(.5) rotate(8deg);opacity:0;
+  transition:transform .55s cubic-bezier(.2,1.2,.3,1.05),opacity .3s;
+  display:flex;flex-direction:column;overflow:hidden;
+}
+.apm-overlay.open .apm-modal{transform:scale(1) rotate(0);opacity:1}
+.apm-modal::before{
+  content:'';position:absolute;inset:0;border-radius:18px;pointer-events:none;
+  background:linear-gradient(135deg,rgba(232,121,249,.15),transparent 40%,transparent 60%,rgba(168,85,247,.1));
+}
+.apm-body{flex:1;overflow-y:auto;padding-right:6px;position:relative;z-index:1}
+.apm-body::-webkit-scrollbar{width:4px}
+.apm-body::-webkit-scrollbar-thumb{background:rgba(168,85,247,.4);border-radius:2px}
+.apm-close{
+  position:absolute;top:10px;right:10px;width:30px;height:30px;border-radius:50%;
+  background:transparent;border:1px solid rgba(168,85,247,.4);color:#e879f9;
+  font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:background .15s,transform .25s;z-index:2;
+}
+.apm-close:hover{background:rgba(168,85,247,.2);transform:rotate(90deg)}
+.apm-head{display:flex;align-items:baseline;gap:10px;margin-bottom:10px;padding-right:36px;position:relative;z-index:1}
+.apm-head h2{font-family:Georgia,serif;font-style:italic;font-size:22px;font-weight:700;background:linear-gradient(135deg,#a855f7,#e879f9);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin:0;letter-spacing:.5px}
+.apm-head .en{font-size:9px;color:rgba(232,121,249,.6);letter-spacing:3px}
+.apm-tabs{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid rgba(168,85,247,.18);position:relative;z-index:1}
+.apm-tab{padding:4px 12px;font-size:11px;letter-spacing:.8px;background:transparent;border:1px solid rgba(168,85,247,.3);border-radius:14px;color:rgba(255,255,255,.6);cursor:pointer;transition:all .15s;font-family:inherit}
+.apm-tab:hover{border-color:rgba(232,121,249,.7);color:#fff}
+.apm-tab.active{background:linear-gradient(135deg,rgba(168,85,247,.3),rgba(232,121,249,.2));border-color:#e879f9;color:#fff;box-shadow:0 0 12px rgba(232,121,249,.4)}
+.apm-tab:disabled{opacity:.3;cursor:not-allowed}
+.apm-hero{display:grid;grid-template-columns:170px 1fr;gap:18px;align-items:center;margin-bottom:14px}
+.apm-dial{position:relative;width:170px;height:170px;margin:0 auto}
+.apm-dial svg{width:100%;height:100%;transform:rotate(-90deg)}
+.apm-dial .dial-bg{fill:none;stroke:rgba(168,85,247,.12);stroke-width:5}
+.apm-dial .dial-fg{fill:none;stroke:url(#apmGrad);stroke-width:5;stroke-linecap:round;filter:drop-shadow(0 0 8px rgba(232,121,249,.7));transition:stroke-dashoffset .8s cubic-bezier(.3,.8,.4,1)}
+.apm-dial-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;pointer-events:none}
+.apm-dial-lbl{font-size:10px;color:rgba(255,255,255,.55);letter-spacing:1.5px;margin-bottom:1px}
+.apm-dial-val{font-size:42px;line-height:1;font-weight:800;background:linear-gradient(135deg,#e879f9,#c084fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-variant-numeric:tabular-nums}
+.apm-dial-unit{font-size:11px;color:rgba(232,121,249,.7);margin-top:3px;letter-spacing:1.5px}
+.apm-act{padding:12px 14px;border:1px solid rgba(168,85,247,.3);border-radius:12px;background:linear-gradient(135deg,rgba(168,85,247,.10),rgba(0,0,0,.4));font-size:12px;color:rgba(255,255,255,.85)}
+.apm-act .pmc-tag{display:inline-flex;gap:5px;font-size:9px;color:#e879f9;letter-spacing:1.5px;margin-bottom:8px;padding:2px 8px;border:1px solid rgba(232,121,249,.4);border-radius:10px}
+.apm-act .pmc-row{display:flex;align-items:center;gap:7px;margin:3px 0}
+.apm-act .pmc-row .pmc-ico{width:14px;color:#e879f9;flex-shrink:0;text-align:center}
+.apm-act .pmc-row a{color:#fff;text-decoration:none;border-bottom:1px dashed rgba(232,121,249,.4)}
+.apm-act .pmc-row a:hover{color:#e879f9;border-color:#e879f9}
+.apm-act .pmc-watt{color:#e879f9;font-weight:700}
+.apm-section{display:flex;align-items:baseline;gap:8px;margin:14px 0 6px;padding-bottom:6px;border-bottom:1px solid rgba(168,85,247,.18)}
+.apm-section .ico{color:#e879f9;font-size:13px}
+.apm-section h3{font-size:12px;color:#fff;font-weight:600;letter-spacing:1px;margin:0}
+.apm-section .en{font-size:8px;color:rgba(232,121,249,.6);letter-spacing:2px}
+.apm-curve{width:100%;height:auto;background:rgba(168,85,247,.04);border:1px solid rgba(168,85,247,.15);border-radius:8px;padding:6px;display:block}
+.apm-table{width:100%;border-collapse:collapse;font-size:12px}
+.apm-table th{font-size:9px;letter-spacing:1.2px;color:rgba(255,255,255,.5);text-transform:uppercase;text-align:left;padding:5px 8px;border-bottom:1px solid rgba(168,85,247,.25);font-weight:600}
+.apm-table td{padding:6px 8px;border-bottom:1px solid rgba(168,85,247,.08);color:rgba(255,255,255,.82);vertical-align:middle}
+.apm-table td.dur{color:#e879f9;font-weight:600;letter-spacing:.5px;white-space:nowrap}
+.apm-table td.watt{color:#e879f9;font-weight:700;font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap;text-shadow:0 0 6px rgba(232,121,249,.4)}
+.apm-table td.act a{color:rgba(255,255,255,.85);text-decoration:none;border-bottom:1px dashed rgba(168,85,247,.3)}
+.apm-table td.act a:hover{color:#e879f9}
+.apm-table td.date{color:rgba(255,255,255,.45);font-size:10px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.apm-table tr.empty td{color:rgba(255,255,255,.2)}
+.apm-table tr.active{background:linear-gradient(90deg,rgba(168,85,247,.15),rgba(232,121,249,.06));box-shadow:inset 3px 0 0 #e879f9}
+.apm-source{margin-top:10px;font-size:8px;color:rgba(232,121,249,.5);letter-spacing:2.5px;text-align:left}
+@media(max-width:760px){
+  .aespa-power-card{flex:1 1 100%;max-width:none;margin-top:8px}
+  .apm-hero{grid-template-columns:1fr;gap:10px}
+  .apm-dial{width:140px;height:140px}
+  .apm-dial-val{font-size:36px}
+}
+@media(max-width:480px){
+  .apc-grid{grid-template-columns:repeat(3,1fr)}
+  .apc-title-en{display:none}
+  .apm-table .h-act,.apm-table td.act{display:none}
 }
 </style>
 </head>
@@ -521,6 +703,8 @@ body.disc-open{overflow:hidden}
     </div>
   </div>
 </div>
+
+<button class="disc-float-btn" id="disc-float-btn" onclick="openDiscModal()" title="AESPACORE VIEW" aria-label="Open disc view">◉</button>
 
 <div id="app">
   <div class="topbar">
@@ -830,33 +1014,50 @@ function renderMonthlyGoals(mg) {
 function renderWeeklyQuest(wq) {
   if (!wq) return ''
   const wqSports = [
-    { key:'ride',   icon:'🚴', label:'RIDE',  targetLabel:'30km / 1hr' },
-    { key:'run',    icon:'🏃', label:'RUN',   targetLabel:'10km / 1hr' },
-    { key:'swim',   icon:'🏊', label:'SWIM',  targetLabel:'1000m'      },
-    { key:'weight', icon:'🏋️', label:'TRAIN', targetLabel:'1 次'       },
+    { key:'ride',   icon:'🚴', label:'RIDE',  isOr:true,  tKm:'30KM', tHr:'1HR' },
+    { key:'run',    icon:'🏃', label:'RUN',   isOr:true,  tKm:'10KM', tHr:'1HR' },
+    { key:'swim',   icon:'🏊', label:'SWIM',  isOr:false, targetLabel:'1000m'   },
+    { key:'weight', icon:'🏋️', label:'TRAIN', isOr:false, targetLabel:'1 次'   },
   ]
-  function isDone(val) { return typeof val === 'object' ? val.done : !!val }
-  function getPct(key, val) {
-    if (typeof val !== 'object') return val ? 100 : 0
-    if (key==='ride'||key==='run') { const bd=val.target_km>0?(val.distance_km||0)/val.target_km:0; const bt=val.target_hr>0?(val.moving_time_hr||0)/val.target_hr:0; return Math.min(100,Math.round(Math.max(bd,bt)*100)) }
-    if (key==='swim') return Math.min(100,Math.round((val.distance_m||0)/val.target_m*100))
-    if (key==='weight') return val.count>=val.target?100:0
-    return 0
-  }
-  function getDetail(key, val) {
-    if (typeof val !== 'object') return ''
-    if (key==='ride'||key==='run') { const bd=val.target_km>0?(val.distance_km||0)/val.target_km:0; const bt=val.target_hr>0?(val.moving_time_hr||0)/val.target_hr:0; return bd>=bt?`${val.distance_km||0}km`:`${val.moving_time_hr||0}hr` }
-    if (key==='swim') return `${val.distance_m||0}m`
-    if (key==='weight') return `${val.count||0} 次`
-    return ''
-  }
+  function isDone(v)  { return typeof v === 'object' ? v.done  : !!v }
+  function isSuper(v) { return typeof v === 'object' && !!v.super }
   const tiles = wqSports.map(sp => {
-    const val = wq[sp.key], on = isDone(val)
-    const pct = getPct(sp.key, val), detail = getDetail(sp.key, val)
+    const val = wq[sp.key]
+    const on = isDone(val), sup = isSuper(val)
+    const cls = `quest-tile${sup ? ' on super' : on ? ' on' : ''}`
+    if (sp.isOr && typeof val === 'object') {
+      const d = val.distance_km || 0, h = val.moving_time_hr || 0
+      const dPct = Math.min(100, Math.round(d / val.target_km * 100))
+      const hPct = Math.min(100, Math.round(h / val.target_hr * 100))
+      const dMet = dPct >= 100, hMet = hPct >= 100
+      const body = (on || sup)
+        ? `<div class="qcheck">${sup ? '⚡' : '✓'}</div>
+          <div class="qpct" style="margin-top:5px;color:${sup ? 'rgba(255,210,0,.85)' : 'rgba(63,204,74,.65)'}">${d}km · ${h}hr</div>`
+        : `<div class="qcheck"><span style="font-size:7px;letter-spacing:2px;color:rgba(168,85,247,.28)">OR</span></div>
+          <div class="qprog-or">
+            <div class="qprog-or-slot${dMet ? ' met' : ''}">
+              <div class="qprog-or-lbl${dMet ? ' met' : ''}">${sp.tKm}</div>
+              <div class="qprog-or-bar"><div class="qprog-or-fill" style="width:${dPct}%"></div></div>
+              <div class="qprog-or-val">${d}km</div>
+            </div>
+            <div class="qprog-or-slot${hMet ? ' met' : ''}">
+              <div class="qprog-or-lbl${hMet ? ' met' : ''}">${sp.tHr}</div>
+              <div class="qprog-or-bar"><div class="qprog-or-fill" style="width:${hPct}%"></div></div>
+              <div class="qprog-or-val">${h}hr</div>
+            </div>
+          </div>`
+      return `<div class="${cls}"><span class="qico">${sp.icon}</span><div class="qlabel">${sp.label}</div>${body}</div>`
+    }
+    const pct = (() => {
+      if (typeof val !== 'object') return val ? 100 : 0
+      if (sp.key === 'swim') return Math.min(100, Math.round((val.distance_m||0)/val.target_m*100))
+      return val.count >= val.target ? 100 : 0
+    })()
+    const detail = typeof val === 'object' ? (sp.key==='swim' ? `${val.distance_m||0}m` : `${val.count||0} 次`) : ''
     const progHtml = !on ? `
       <div class="qprog-wrap"><div class="qprog-fill" style="width:${pct}%"></div></div>
       <div class="qpct">${detail ? `${detail} · ` : ''}${pct}%</div>` : ''
-    return `<div class="quest-tile${on ? ' on' : ''}">
+    return `<div class="${cls}">
       <span class="qico">${sp.icon}</span>
       <div class="qlabel">${sp.label}</div>
       <div class="qcheck">${on ? '✓' : `<span style="font-size:9px;color:rgba(168,85,247,.3)">${sp.targetLabel}</span>`}</div>
@@ -1070,8 +1271,8 @@ function render(data) {
       const wSwimM    = Math.round(wSwims.reduce((s, a) => s + (a.distance_km || 0) * 1000, 0))
       const wWeightCt = wWeights.length
       data.weekly_quest = {
-        ride:   { done: wRideDist >= 30 || wRideHr >= 1, distance_km: wRideDist, moving_time_hr: wRideHr, target_km: 30, target_hr: 1 },
-        run:    { done: wRunDist >= 10  || wRunHr >= 1,  distance_km: wRunDist,  moving_time_hr: wRunHr,  target_km: 10, target_hr: 1 },
+        ride:   { done: wRideDist >= 30 || wRideHr >= 1, super: wRideDist >= 30 && wRideHr >= 1, distance_km: wRideDist, moving_time_hr: wRideHr, target_km: 30, target_hr: 1 },
+        run:    { done: wRunDist >= 10  || wRunHr >= 1,  super: wRunDist >= 10  && wRunHr >= 1,  distance_km: wRunDist,  moving_time_hr: wRunHr,  target_km: 10, target_hr: 1 },
         swim:   { done: wSwimM >= 1000,                   distance_m: wSwimM,    target_m: 1000 },
         weight: { done: wWeightCt >= 1,                   count: wWeightCt,      target: 1 },
       }
@@ -1144,8 +1345,8 @@ function render(data) {
       <div class="hero-right">
         <div class="aespa-brand">aespa</div>
         <div class="aespa-tagline">WELCOME TO MY WORLD</div>
-        <button class="disc-open-btn" onclick="openDiscModal()"><span class="dico">◉</span> AESPACORE VIEW</button>
       </div>
+      ${renderAespaPower(data.power_prs)}
     </div>
 
     ${renderMonthlySummary(data.monthly_summary)}
@@ -1334,10 +1535,154 @@ function render(data) {
   })
 }
 
+/* ── aespa power PR card + modal ── */
+const APWR_DURATIONS = [
+  { sec:5, label:'5秒' }, { sec:10, label:'10秒' }, { sec:30, label:'30秒' },
+  { sec:60, label:'1分' }, { sec:120, label:'2分' }, { sec:300, label:'5分' },
+  { sec:600, label:'10分' }, { sec:1200, label:'20分' }, { sec:3600, label:'60分' },
+]
+function aPwrMap(prs){ const m=new Map(); (prs||[]).forEach(p=>m.set(p.duration_sec,p)); return m }
+function renderAespaPower(prs){
+  if(!prs||!prs.length) return ''
+  const map = aPwrMap(prs)
+  const hero = map.get(5) || prs[0]
+  const heroLbl = (APWR_DURATIONS.find(d=>d.sec===hero.duration_sec)||{}).label || `${hero.duration_sec}秒`
+  const miniDurs=[5,10,30,60,120,300]
+  const cells = miniDurs.map(s=>{
+    const p=map.get(s); const lbl=APWR_DURATIONS.find(d=>d.sec===s).label
+    if(!p) return `<div class="apc-mini empty"><div class="apc-mini-lbl">${lbl}</div><div class="apc-mini-val">—</div></div>`
+    return `<div class="apc-mini"><div class="apc-mini-lbl">${lbl}</div><div class="apc-mini-val">${p.watts}<small>W</small></div></div>`
+  }).join('')
+  return `
+    <div class="aespa-power-card" id="aespa-power-card">
+      <div class="apc-head">
+        <div><span class="apc-title">æ POWER</span><span class="apc-title-en">PR RANKING</span></div>
+        <div class="apc-tag">最佳 ${heroLbl}<b>${hero.watts}</b>W · 點擊 ▸</div>
+      </div>
+      <div class="apc-grid">${cells}</div>
+    </div>`
+}
+function renderAespaModal(prs){
+  const map = aPwrMap(prs)
+  const sorted = APWR_DURATIONS.filter(d=>map.has(d.sec))
+  const maxW = Math.max(...prs.map(p=>p.watts))
+  const tabs = APWR_DURATIONS.map(d=>{
+    const has = map.has(d.sec)
+    return `<button class="apm-tab${d.sec===5&&has?' active':''}" data-dur="${d.sec}"${!has?' disabled':''}>${d.label}</button>`
+  }).join('')
+  const rows = APWR_DURATIONS.map(d=>{
+    const p=map.get(d.sec)
+    if(!p) return `<tr class="empty" data-dur="${d.sec}"><td class="dur">æ ${d.label}</td><td>—</td><td class="act">—</td><td class="date">—</td></tr>`
+    return `<tr data-dur="${d.sec}"${d.sec===5?' class="active"':''}>
+      <td class="dur">æ ${d.label}</td><td class="watt">${p.watts}</td>
+      <td class="act"><a href="https://www.strava.com/activities/${p.activity_id}" target="_blank" rel="noopener">${p.activity_name||'—'}</a></td>
+      <td class="date">${p.date||'—'}</td></tr>`
+  }).join('')
+  const W=700,H=170,padL=42,padR=14,padT=14,padB=26,innerW=W-padL-padR,innerH=H-padT-padB
+  const yMax=Math.ceil(maxW/100)*100+100
+  const pts = sorted.map((d,i)=>{ const p=map.get(d.sec); return { x:padL+(i/(sorted.length-1))*innerW, y:padT+innerH-(p.watts/yMax)*innerH, w:p.watts, label:d.label } })
+  const linePath = pts.map((p,i)=>`${i?'L':'M'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')
+  const yGrid = [0,yMax/2,yMax].map(v=>{ const y=padT+innerH-(v/yMax)*innerH; return `<line x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="rgba(168,85,247,.1)" stroke-width="1"/><text x="${padL-5}" y="${y+3}" fill="rgba(255,255,255,.4)" font-size="8" text-anchor="end">${Math.round(v)}</text>` }).join('')
+  const xLabels = pts.map(p=>`<text x="${p.x}" y="${H-8}" fill="rgba(255,255,255,.5)" font-size="8" text-anchor="middle">${p.label}</text>`).join('')
+  const dots = pts.map(p=>`<circle cx="${p.x}" cy="${p.y}" r="3.5" fill="#e879f9" stroke="#1a0830" stroke-width="2"/><text x="${p.x}" y="${p.y-7}" fill="#e879f9" font-size="9" font-weight="700" text-anchor="middle">${p.w}</text>`).join('')
+  return `
+    <div class="apm-overlay" id="apm-overlay">
+      <div class="apm-modal">
+        <button class="apm-close" id="apm-close" aria-label="close">✕</button>
+        <div class="apm-head"><h2>æ POWER</h2><span class="en">RANKING ARCHIVE</span></div>
+        <div class="apm-body">
+        <div class="apm-tabs" id="apm-tabs">${tabs}</div>
+        <div class="apm-hero">
+          <div class="apm-dial">
+            <svg viewBox="0 0 200 200">
+              <defs><linearGradient id="apmGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#a855f7"/><stop offset="100%" stop-color="#e879f9"/></linearGradient></defs>
+              <circle class="dial-bg" cx="100" cy="100" r="86"/>
+              <circle class="dial-fg" cx="100" cy="100" r="86" stroke-dasharray="540" stroke-dashoffset="0" id="apm-dial-fg"/>
+            </svg>
+            <div class="apm-dial-center">
+              <div class="apm-dial-lbl" id="apm-dial-lbl">最佳 5 秒</div>
+              <div class="apm-dial-val" id="apm-dial-val">—</div>
+              <div class="apm-dial-unit">WATT</div>
+            </div>
+          </div>
+          <div class="apm-act">
+            <div class="pmc-tag">✦ ALL-TIME BEST ✦</div>
+            <div class="pmc-row"><span class="pmc-ico">📍</span><a id="apmc-name" href="#" target="_blank" rel="noopener">—</a></div>
+            <div class="pmc-row"><span class="pmc-ico">📅</span><span id="apmc-date">—</span></div>
+            <div class="pmc-row"><span class="pmc-ico">⚡</span><span class="pmc-watt" id="apmc-watt">—</span></div>
+            <div class="pmc-row"><span class="pmc-ico">⏱</span><span id="apmc-dur">—</span></div>
+          </div>
+        </div>
+        <div class="apm-section"><span class="ico">✦</span><h3>功率曲線</h3><span class="en">POWER DURATION CURVE</span></div>
+        <svg class="apm-curve" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">
+          ${yGrid}
+          <path d="${linePath}" fill="none" stroke="#e879f9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" filter="url(#apmGlow)"/>
+          ${dots}${xLabels}
+          <defs><filter id="apmGlow"><feGaussianBlur stdDeviation="1.8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+        </svg>
+        <div class="apm-section"><span class="ico">✦</span><h3>各時長最佳紀錄</h3><span class="en">BEST POWER BY DURATION</span></div>
+        <table class="apm-table">
+          <thead><tr><th>時長</th><th>WATT</th><th class="h-act">ACTIVITY</th><th>DATE</th></tr></thead>
+          <tbody id="apm-tbody">${rows}</tbody>
+        </table>
+        <div class="apm-source">✦ DATA SOURCE: STRAVA POWER BESTS ✦</div>
+        </div>
+      </div>
+    </div>`
+}
+function updateAespaTab(prs, durSec){
+  const map=aPwrMap(prs); const p=map.get(durSec)
+  const lbl=(APWR_DURATIONS.find(d=>d.sec===durSec)||{}).label||`${durSec}秒`
+  document.getElementById('apm-dial-lbl').textContent=`最佳 ${lbl}`
+  document.getElementById('apm-dial-val').textContent=p?p.watts:'—'
+  const maxW=Math.max(...prs.map(x=>x.watts)); const ratio=p?p.watts/maxW:0
+  const circ=2*Math.PI*86
+  const fg=document.getElementById('apm-dial-fg')
+  fg.setAttribute('stroke-dasharray',circ.toFixed(1))
+  fg.setAttribute('stroke-dashoffset',(circ*(1-ratio)).toFixed(1))
+  if(p){
+    const a=document.getElementById('apmc-name'); a.textContent=p.activity_name||'—'; a.href=`https://www.strava.com/activities/${p.activity_id}`
+    document.getElementById('apmc-date').textContent=p.date||'—'
+    document.getElementById('apmc-watt').textContent=`${p.watts} W`
+    document.getElementById('apmc-dur').textContent=lbl
+  } else {
+    document.getElementById('apmc-name').textContent='無紀錄'; document.getElementById('apmc-name').removeAttribute('href')
+    document.getElementById('apmc-date').textContent='—'
+    document.getElementById('apmc-watt').textContent='—'
+    document.getElementById('apmc-dur').textContent=lbl
+  }
+  document.querySelectorAll('.apm-tab').forEach(t=>t.classList.toggle('active',+t.dataset.dur===durSec))
+  document.querySelectorAll('#apm-tbody tr').forEach(tr=>tr.classList.toggle('active',+tr.dataset.dur===durSec))
+}
+function openAespaModal(prs){
+  document.getElementById('apm-overlay')?.remove()
+  document.body.insertAdjacentHTML('beforeend', renderAespaModal(prs))
+  const overlay=document.getElementById('apm-overlay'); void overlay.offsetWidth; overlay.classList.add('open')
+  document.body.style.overflow='hidden'
+  const initial = prs.find(p=>p.duration_sec===5)?5:prs[0].duration_sec
+  updateAespaTab(prs, initial)
+  const close=()=>{ overlay.classList.remove('open'); document.body.style.overflow=''; setTimeout(()=>overlay.remove(),350); document.removeEventListener('keydown',onKey) }
+  const onKey=e=>{ if(e.key==='Escape') close() }
+  document.addEventListener('keydown',onKey)
+  document.getElementById('apm-close').addEventListener('click',close)
+  overlay.addEventListener('click',e=>{ if(e.target===overlay) close() })
+  document.getElementById('apm-tabs').addEventListener('click',e=>{ const t=e.target.closest('.apm-tab'); if(!t||t.disabled) return; updateAespaTab(prs,+t.dataset.dur) })
+  document.getElementById('apm-tbody').addEventListener('click',e=>{ const tr=e.target.closest('tr[data-dur]'); if(!tr||tr.classList.contains('empty')) return; if(e.target.closest('a')) return; updateAespaTab(prs,+tr.dataset.dur) })
+}
+function bindAespaPower(prs){
+  const card=document.getElementById('aespa-power-card')
+  if(!card||!prs||!prs.length) return
+  card.addEventListener('click',()=>{
+    if(card.classList.contains('opening')) return
+    card.classList.add('opening')
+    setTimeout(()=>{ card.classList.remove('opening'); openAespaModal(prs) },330)
+  })
+}
+
 /* ── fetch strava.json ── */
 fetch('strava.json')
   .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json() })
-  .then(render)
+  .then(d => { render(d); bindAespaPower(d.power_prs) })
   .catch(err => {
     document.getElementById('content').innerHTML = `
       <div class="loading" style="color:#a855f7">
@@ -1404,12 +1749,22 @@ function openDiscModal() {
   modal.setAttribute('aria-hidden', 'false')
   document.body.classList.add('disc-open')
   if (_discData) _discPopulate(_discData)
+  // start continuous spin after discIn animation completes (~0.55s)
+  const bgImg = outer.querySelector('.disc-bg-img')
+  if (bgImg) {
+    bgImg.classList.remove('spinning')
+    void bgImg.offsetWidth
+    setTimeout(() => bgImg.classList.add('spinning'), 560)
+  }
 }
 
 function closeDiscModal() {
   const modal = document.getElementById('disc-modal')
   const outer = document.getElementById('disc-outer')
   if (!modal || modal.getAttribute('aria-hidden') === 'true') return
+  // stop continuous spin
+  const bgImg = outer.querySelector('.disc-bg-img')
+  if (bgImg) bgImg.classList.remove('spinning')
   const CLOSE_MS = 280  // must match discOut animation duration (0.28s)
   outer.classList.add('closing')
   document.body.classList.remove('disc-open')
