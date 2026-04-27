@@ -426,12 +426,13 @@ body.disc-open{overflow:hidden}
   font-size:clamp(12px,2.8vmin,17px);
   font-weight:700;color:#f0abff;line-height:1;
   width:18%;
+  transform:translateY(-50%);
   text-shadow:0 0 8px rgba(232,121,249,.65),0 1px 3px rgba(0,0,0,.6);
 }
-#disc-ov-km    {left:56.5%;top:62%;}
-#disc-ov-m     {left:75.5%;top:62%;}
-#disc-ov-rides {left:56.5%;top:75%;}
-#disc-ov-hrs   {left:75.5%;top:75%;}
+#disc-ov-km    {left:56.5%;top:66%;}
+#disc-ov-m     {left:75.5%;top:66%;}
+#disc-ov-rides {left:56.5%;top:78%;}
+#disc-ov-hrs   {left:75.5%;top:78%;}
 /* Monthly chart overlay */
 #disc-chart{
   position:absolute;z-index:3;pointer-events:none;
@@ -469,6 +470,8 @@ body.disc-open{overflow:hidden}
 .disc-open-btn .dico{font-size:13px}
 @media(max-width:520px){
   .disc-close{top:-44px}
+  /* hide text overlays on mobile – alignment cannot be guaranteed on small screens */
+  .disc-stat-ov,#disc-upd,#disc-chart{display:none}
 }
 </style>
 </head>
