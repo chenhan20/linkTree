@@ -19,6 +19,10 @@ on:
         description: '全量抓取所有歷史活動並重建 monthly_history（第一次設定用）'
         type: boolean
         default: false
+      scan_power:
+        description: '重新掃描 Power PR（忽略 power-prs.json 的 scanned_ids 快取，全掃所有有功率計的外騎）'
+        type: boolean
+        default: false
 
 jobs:
   sync:
@@ -45,14 +49,15 @@ jobs:
           STRAVA_REFRESH_TOKEN: ${{ secrets.STRAVA_REFRESH_TOKEN }}
           STRAVA_ATHLETE_ID:    ${{ secrets.STRAVA_ATHLETE_ID }}
           FETCH_ALL:            ${{ inputs.fetch_all == true && '1' || '0' }}
+          SCAN_POWER:           ${{ inputs.scan_power == true && '1' || '0' }}
         run: node scripts/fetch-strava.js
 
-      # 4. 如果 strava.json 有變動，commit 並 push 回 repo
-      - name: Commit and push strava.json
+      # 4. 如果 strava.json / power-prs.json 有變動，commit 並 push 回 repo
+      - name: Commit and push data files
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add strava.json
+          git add strava.json power-prs.json
           # 如果沒有變動就不 commit（避免空 commit）
           git diff --staged --quiet || git commit -m "chore: update strava data $(date -u '+%Y-%m-%d')"
           git push

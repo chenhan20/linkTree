@@ -272,13 +272,17 @@ async function updatePowerPRs(token, activities) {
     return powerFile.prs || []
   }
 
-  // 現有 PR 表（以 duration_sec 為 key）
+  // 現有 PR 表（以 duration_sec 為 key，維護前三名列表）
   const prs = {}
   for (const dur of POWER_DURATIONS) {
     const existing = (powerFile.prs || []).find(p => p.duration_sec === dur)
-    prs[dur] = existing
-      ? { watts: existing.watts || 0, activity_id: existing.activity_id, date: existing.date, activity_name: existing.activity_name }
-      : { watts: 0, activity_id: null, date: null, activity_name: null }
+    if (existing && existing.top3 && existing.top3.length) {
+      prs[dur] = { top3: existing.top3.map(t => ({ ...t })) }
+    } else if (existing && existing.watts) {
+      prs[dur] = { top3: [{ rank: 1, watts: existing.watts, activity_id: existing.activity_id, date: existing.date, activity_name: existing.activity_name }] }
+    } else {
+      prs[dur] = { top3: [] }
+    }
   }
 
   let fetchCount = 0
@@ -296,13 +300,22 @@ async function updatePowerPRs(token, activities) {
       let hasPR  = false
       for (const dur of POWER_DURATIONS) {
         const peak = calcPeakPower(wattsArr, dur)
-        if (peak && peak > (prs[dur].watts || 0)) {
-          prs[dur] = { watts: peak, activity_id: act.id, date, activity_name: act.name }
+        if (!peak) continue
+        const list = prs[dur].top3
+        const worst = list.length >= 3 ? list[list.length - 1].watts : 0
+        if (list.length < 3 || peak > worst) {
+          // 移除同一活動的舊紀錄（去重）
+          const idx = list.findIndex(t => t.activity_id === act.id)
+          if (idx !== -1) list.splice(idx, 1)
+          list.push({ rank: 0, watts: peak, activity_id: act.id, date, activity_name: act.name })
+          list.sort((a, b) => b.watts - a.watts)
+          if (list.length > 3) list.pop()
+          list.forEach((t, i) => { t.rank = i + 1 })
           hasPR = true
         }
       }
       scannedIds.add(String(act.id))
-      if (hasPR) console.log(`  🏅 新 PR！${act.name} (${date})`)
+      if (hasPR) console.log(`  🏅 新前三！${act.name} (${date})`)
       else       process.stdout.write('.')
     } catch (e) {
       console.warn(`\n  ⚠️  Streams 失敗 (id=${act.id})：${e.message}`)
@@ -311,15 +324,20 @@ async function updatePowerPRs(token, activities) {
   }
   if (fetchCount > 0) console.log(`\n✅ Power PR 掃描完成，打 API ${fetchCount} 次`)
 
-  // 組成輸出格式
-  const prsResult = POWER_DURATIONS.map(dur => ({
-    duration_sec:   dur,
-    duration_label: POWER_DURATION_LABELS[dur],
-    watts:          prs[dur].watts || null,
-    activity_id:    prs[dur].activity_id,
-    date:           prs[dur].date,
-    activity_name:  prs[dur].activity_name,
-  }))
+  // 組成輸出格式（保留 #1 的扁平欄位供向後相容，同時加入 top3 陣列）
+  const prsResult = POWER_DURATIONS.map(dur => {
+    const list = prs[dur].top3
+    const best = list[0] || {}
+    return {
+      duration_sec:   dur,
+      duration_label: POWER_DURATION_LABELS[dur],
+      watts:          best.watts || null,
+      activity_id:    best.activity_id || null,
+      date:           best.date || null,
+      activity_name:  best.activity_name || null,
+      top3:           list,
+    }
+  })
 
   // 寫回獨立的 power-prs.json
   fs.writeFileSync(POWER_FILE, JSON.stringify({
