@@ -1267,13 +1267,15 @@ function renderMapleModal(prs){
     const has = map.has(d.sec)
     return `<button class="mpm-tab${d.sec===5&&has?' active':''}" data-dur="${d.sec}"${!has?' disabled':''}>${d.label}</button>`
   }).join('')
+  const MEDALS = ['🥇','🥈','🥉']
   const rows = MPWR_DURATIONS.map(d=>{
     const p=map.get(d.sec)
     if(!p) return `<tr class="empty" data-dur="${d.sec}"><td class="dur">${d.label}</td><td>—</td><td class="act">—</td><td class="date">—</td></tr>`
-    return `<tr data-dur="${d.sec}"${d.sec===5?' class="active"':''}>
-      <td class="dur">${d.label}</td><td class="watt">${p.watts}</td>
-      <td class="act"><a href="https://www.strava.com/activities/${p.activity_id}" target="_blank" rel="noopener">${p.activity_name||'—'}</a></td>
-      <td class="date">${p.date||'—'}</td></tr>`
+    const top3 = p.top3 && p.top3.length ? p.top3 : [{ rank:1, watts:p.watts, activity_id:p.activity_id, date:p.date, activity_name:p.activity_name }]
+    return top3.map((t,i)=>`<tr data-dur="${d.sec}"${d.sec===5&&i===0?' class="active"':''}>
+      <td class="dur">${i===0?d.label:''}</td><td class="watt">${MEDALS[t.rank-1]||''} ${t.watts}</td>
+      <td class="act"><a href="https://www.strava.com/activities/${t.activity_id}" target="_blank" rel="noopener">${t.activity_name||'—'}</a></td>
+      <td class="date">${t.date||'—'}</td></tr>`).join('')
   }).join('')
   const W=700,H=180,padL=44,padR=14,padT=18,padB=28,innerW=W-padL-padR,innerH=H-padT-padB
   const yMax=Math.ceil(maxW/100)*100+100

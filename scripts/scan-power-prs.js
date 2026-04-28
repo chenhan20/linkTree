@@ -229,50 +229,59 @@ async function main() {
     console.log(`\n💾 快取已儲存 → power-prs-cache.json`)
   }
 
-  // ── 計算全史 PR（各時段最高值）──
-  console.log('\n📊 計算全史 Power PR...\n')
+  // ── 計算全史 PR（各時段前三）──
+  console.log('\n📊 計算全史 Power PR（前三）...\n')
 
-  const prs = {}  // { dur: { watts, activity_id, date, name } }
-  for (const dur of DURATIONS) prs[dur] = { watts: 0, activity_id: null, date: null, name: null }
+  const top3 = {}  // { dur: [ { watts, activity_id, date, activity_name }, ... ] }
+  for (const dur of DURATIONS) top3[dur] = []
 
   for (const [actId, entry] of Object.entries(cache)) {
     if (!entry.peaks) continue
     for (const dur of DURATIONS) {
       const w = entry.peaks[dur]
-      if (w && w > prs[dur].watts) {
-        prs[dur] = { watts: w, activity_id: Number(actId), date: entry.date, name: entry.name }
-      }
+      if (!w) continue
+      top3[dur].push({ watts: w, activity_id: Number(actId), date: entry.date, activity_name: entry.name })
     }
   }
 
-  // ── 輸出結果 ──
-  console.log('🏅 全史 Peak Power PR 紀錄：')
-  console.log('─'.repeat(60))
-  console.log('  時段    | Peak W | 活動日期   | 活動名稱')
-  console.log('─'.repeat(60))
+  // 每個時段按 watts 降冪排序，取前三
   for (const dur of DURATIONS) {
-    const pr = prs[dur]
-    if (pr.watts > 0) {
-      const label   = DURATION_LABELS[dur].padEnd(6)
-      const watts   = String(pr.watts + ' W').padEnd(7)
-      const date    = (pr.date || '---').padEnd(11)
-      const name    = pr.name || '---'
-      console.log(`  ${label}  | ${watts}| ${date}| ${name}`)
+    top3[dur].sort((a, b) => b.watts - a.watts)
+    top3[dur] = top3[dur].slice(0, 3)
+  }
+
+  // ── 輸出結果 ──
+  const MEDALS = ['🥇', '🥈', '🥉']
+  console.log('🏅 全史 Peak Power 前三：')
+  console.log('─'.repeat(70))
+  console.log('  時段    | Rank | Peak W  | 活動日期   | 活動名稱')
+  console.log('─'.repeat(70))
+  for (const dur of DURATIONS) {
+    for (const [i, t] of top3[dur].entries()) {
+      const label = i === 0 ? DURATION_LABELS[dur].padEnd(6) : '      '
+      const watts = String(t.watts + ' W').padEnd(8)
+      const date  = (t.date || '---').padEnd(11)
+      console.log(`  ${label}  | ${MEDALS[i]}   | ${watts}| ${date}| ${t.activity_name || '---'}`)
     }
   }
-  console.log('─'.repeat(60))
+  console.log('─'.repeat(70))
 
   // ── 寫入 strava.json ──
   const stravaData = JSON.parse(fs.readFileSync(STRAVA_JSON, 'utf8'))
 
-  stravaData.power_prs = DURATIONS.map(dur => ({
-    duration_sec:   dur,
-    duration_label: DURATION_LABELS[dur],
-    watts:          prs[dur].watts || null,
-    activity_id:    prs[dur].activity_id,
-    date:           prs[dur].date,
-    activity_name:  prs[dur].name,
-  }))
+  stravaData.power_prs = DURATIONS.map(dur => {
+    const list = top3[dur]
+    const best = list[0] || {}
+    return {
+      duration_sec:   dur,
+      duration_label: DURATION_LABELS[dur],
+      watts:          best.watts || null,
+      activity_id:    best.activity_id || null,
+      date:           best.date || null,
+      activity_name:  best.activity_name || null,
+      top3:           list.map((t, i) => ({ rank: i + 1, ...t })),
+    }
+  })
   stravaData.power_prs_updated_at = new Date().toISOString()
 
   fs.writeFileSync(STRAVA_JSON, JSON.stringify(stravaData, null, 2))
