@@ -1107,7 +1107,7 @@ function render(data) {
   const wqSports = [
     { key: 'ride',   icon: '🚴', label: 'RIDE',  isOr: true,  tKm: '30KM', tHr: '1HR' },
     { key: 'run',    icon: '🏃', label: 'RUN',   isOr: true,  tKm: '10KM', tHr: '1HR' },
-    { key: 'swim',   icon: '🏊', label: 'SWIM',  isOr: false, targetLabel: '1000m' },
+    { key: 'swim',   icon: '🏊', label: 'SWIM',  isOr: true,  tKm: '1000M', tHr: '1HR', unit: 'm' },
     { key: 'weight', icon: '🏋️', label: 'GYM',   isOr: false, targetLabel: '1 次'  },
   ]
   document.getElementById('wq-grid').innerHTML = wqSports.map(sp => {
@@ -1116,19 +1116,23 @@ function render(data) {
     const sup  = typeof val === 'object' && !!val.super
     const cls  = `wq-tile${sup ? ' done super' : done ? ' done' : ''}`
     if (sp.isOr && typeof val === 'object') {
-      const d = val.distance_km || 0, h = val.moving_time_hr || 0
-      const dPct = Math.min(100, Math.round(d / val.target_km * 100))
+      const isM = sp.unit === 'm'
+      const d = isM ? (val.distance_m || 0) : (val.distance_km || 0)
+      const tD = isM ? val.target_m : val.target_km
+      const dStr = isM ? `${d}m` : `${d}km`
+      const h = val.moving_time_hr || 0
+      const dPct = Math.min(100, Math.round(d / tD * 100))
       const hPct = Math.min(100, Math.round(h / val.target_hr * 100))
       const dMet = dPct >= 100, hMet = hPct >= 100
       const body = (done || sup)
         ? `<div class="wq-check">${sup ? '⚡' : '✓'}</div>
-          <div class="wq-pct" style="margin-top:5px;color:${sup ? 'rgba(255,210,0,.85)' : 'rgba(64,200,64,.75)'}">${d}km · ${h}hr</div>`
+          <div class="wq-pct" style="margin-top:5px;color:${sup ? 'rgba(255,210,0,.85)' : 'rgba(64,200,64,.75)'}">${dStr} · ${h}hr</div>`
         : `<div class="wq-check"><span style="font-size:7px;letter-spacing:2px;color:rgba(64,200,64,.25)">OR</span></div>
           <div class="qprog-or">
             <div class="qprog-or-slot${dMet ? ' met' : ''}">
               <div class="qprog-or-lbl${dMet ? ' met' : ''}">${sp.tKm}</div>
               <div class="qprog-or-bar"><div class="qprog-or-fill" style="width:${dPct}%"></div></div>
-              <div class="qprog-or-val">${d}km</div>
+              <div class="qprog-or-val">${dStr}</div>
             </div>
             <div class="qprog-or-slot${hMet ? ' met' : ''}">
               <div class="qprog-or-lbl${hMet ? ' met' : ''}">${sp.tHr}</div>
@@ -1212,6 +1216,10 @@ function render(data) {
           : isSw
             ? fmtMovingTime(a.moving_time_hr || 0) + (a.pace_per_100m ? ' · ' + a.pace_per_100m + '/100m' : '')
             : fmtMovingTime(a.moving_time_hr || 0) + (a.avg_speed_kmh ? ' · ' + a.avg_speed_kmh + ' km/h' : '')
+        const hrTag = a.avg_heartrate
+          ? ` · <span style="color:#ff7080">♥ ${a.avg_heartrate}${a.max_heartrate ? '/' + a.max_heartrate : ''}</span>`
+          : ''
+        const detailWithHr = detail + hrTag
         const dist = isWt ? '—' : isSw
           ? Math.round((a.distance_km || 0) * 1000) + 'm'
           : (a.distance_km || 0) + ' km'
@@ -1252,7 +1260,7 @@ function render(data) {
         return `<tr>
           <td></td>
           <td><span class="log-sport-icon">${sp.icon}</span><span class="log-name">${a.trainer ? INDOOR_TAG : (a._type === 'ride' ? BIKE_TAG : '')}${a.name || '—'}${a.id ? `<a class="act-strava-link" href="https://www.strava.com/activities/${a.id}" target="_blank" rel="noopener">Strava ↗</a>` : ''}</span></td>
-          <td class="log-detail">${detail}</td>
+          <td class="log-detail">${detailWithHr}</td>
           <td class="log-dist">${dist}</td>
           <td class="log-speed">${speed}</td>
           <td class="log-elev">${elev}</td>
@@ -1615,5 +1623,14 @@ fetch('strava.json')
   b.addEventListener('mouseleave', () => b.style.background='rgba(12,12,8,.9)')
 })()
 </script>
+
+<!-- 跨主題共用：單車活動詳情彈窗 -->
+<link rel="stylesheet" href="activity-modal.css">
+<link rel="stylesheet" href="weight-bodymap.css">
+<link rel="stylesheet" href="theme-cs.css">
+<style>:root{--am-accent:#c8a800;--am-accent-soft:rgba(200,168,0,.18);--am-panel:#15140d;--am-panel-2:#1d1c14;--am-text:#f5efd8}</style>
+<script src="activity-modal.js" defer></script>
+<script src="power-card-glow.js" defer></script>
+<script src="weight-bodymap.js" defer></script>
 </body>
 </html>

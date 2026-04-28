@@ -134,7 +134,8 @@ flowchart TD
 | `STRAVA_ATHLETE_ID` | ✅ | 自己的 athlete ID |
 | `FETCH_ALL` | ⬜ | `=1` 拉全史；省略則只拉最近 100 筆 |
 | `SCAN_SEGMENTS` | ⬜ | `=1` 對全史 ride 掃 ITT segment efforts |
-| `SCAN_POWER` | ⬜ | `=1` 對全史 ride 掃功率 PR（best watts by duration） |
+| `SCAN_POWER` | ⬜ | `=1` 重掃功率 PR（會搭配全量活動，避免只掃最近 100 筆） |
+| `POWER_ONLY` | ⬜ | `=1` 只更新功率 PR，跳過 laps/segments enrichment |
 | `REFRESH_LAPS` | ⬜ | `=1` 忽略 lap 快取重新抓 |
 | `LAP_FETCH_MAX` | ⬜ | 單次最多打多少 detail call（預設 30，避 rate limit） |
 
@@ -161,6 +162,7 @@ flowchart TD
 node scripts/fetch-strava.js                                    # 增量
 $env:FETCH_ALL="1"; $env:SCAN_SEGMENTS="1"; node scripts/fetch-strava.js  # 全量
 $env:FETCH_ALL="1"; $env:SCAN_SEGMENTS="1"; $env:SCAN_POWER="1"; node scripts/fetch-strava.js  # 全量含功率 PR
+$env:SCAN_POWER="1"; $env:POWER_ONLY="1"; node scripts/fetch-strava.js  # 只補功率 PR（建議日常補全）
 
 # 4. 單獨重掃功率 PR（快取清乾淨）
 rm -f power-prs.json power-prs-cache.json && $env:SCAN_POWER="1"; node scripts/fetch-strava.js

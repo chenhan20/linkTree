@@ -922,22 +922,27 @@ function renderQuest(wq){
     const meta = SPORT_META[k], val = wq[k]
     const on = isDone(val), sup = isSuper(val)
     const cls = `quest-tile ${sup ? 'done super' : on ? 'done' : 'todo'}`
-    // OR tile for ride / run
-    if ((k==='ride'||k==='run') && typeof val === 'object') {
-      const d = val.distance_km || 0, h = val.moving_time_hr || 0
-      const dPct = Math.min(100, Math.round(d / val.target_km * 100))
+    // OR tile for ride / run / swim
+    if ((k==='ride'||k==='run'||k==='swim') && typeof val === 'object') {
+      const isM = k==='swim'
+      const d = isM ? (val.distance_m || 0) : (val.distance_km || 0)
+      const tD = isM ? val.target_m : val.target_km
+      const dStr = isM ? `${d}m` : `${d}km`
+      const tDLbl = isM ? '1000M' : (k==='ride'?'30KM':'10KM')
+      const h = val.moving_time_hr || 0
+      const dPct = Math.min(100, Math.round(d / tD * 100))
       const hPct = Math.min(100, Math.round(h / val.target_hr * 100))
       const dMet = dPct >= 100, hMet = hPct >= 100
       const stamp = sup
-        ? `<span class="qstamp">⚡SUPER!</span><div class="qpct" style="margin-top:6px;color:#7a5800">${d}km · ${h}hr</div>`
+        ? `<span class="qstamp">⚡SUPER!</span><div class="qpct" style="margin-top:6px;color:#7a5800">${dStr} · ${h}hr</div>`
         : on
-        ? `<span class="qstamp">✅COMPLETE!</span><div class="qpct" style="margin-top:6px;color:#1d6420">${d}km · ${h}hr</div>`
+        ? `<span class="qstamp">✅COMPLETE!</span><div class="qpct" style="margin-top:6px;color:#1d6420">${dStr} · ${h}hr</div>`
         : `<span class="qstamp">⬜ OR</span>
           <div class="qprog-or">
             <div class="qprog-or-slot${dMet?' met':''}">
-              <div class="qprog-or-lbl${dMet?' met':''}">${k==='ride'?'30KM':'10KM'}</div>
+              <div class="qprog-or-lbl${dMet?' met':''}">${tDLbl}</div>
               <div class="qprog-or-bar"><div class="qprog-or-fill" style="width:${dPct}%"></div></div>
-              <div class="qprog-or-val">${d}km</div>
+              <div class="qprog-or-val">${dStr}</div>
             </div>
             <div class="qprog-or-slot${hMet?' met':''}">
               <div class="qprog-or-lbl${hMet?' met':''}">1HR</div>
@@ -1004,7 +1009,7 @@ function renderTimeline(list, type, expanded, ittMap){
         if (aIsRun  && a.avg_pace_km)    metas.push(`${a.avg_pace_km}/km`)
         if (aIsSwim && a.pace_per_100m)  metas.push(`${a.pace_per_100m}/100m`)
         if (!aIsWeight && !aIsSwim && a.elevation_m >= 100) metas.push(`${a.elevation_m} m`)
-        if (a.avg_heartrate)             metas.push(`♥ ${a.avg_heartrate}`)
+        if (a.avg_heartrate)             metas.push(`♥ ${a.avg_heartrate}${a.max_heartrate ? '/' + a.max_heartrate : ''}`)
         metas.push(fmtMovingTime(a.moving_time_hr || 0))
         const lapArr = (aIsRide && a.top_laps) ? a.top_laps.slice(0, 10) : []
         const lapHtml = lapArr.length ? (() => {
@@ -1464,5 +1469,14 @@ fetch('strava.json')
   b.addEventListener('mouseleave', () => b.style.background='rgba(40,22,8,.85)')
 })()
 </script>
+
+<!-- 跨主題共用：單車活動詳情彈窗 -->
+<link rel="stylesheet" href="activity-modal.css">
+<link rel="stylesheet" href="weight-bodymap.css">
+<link rel="stylesheet" href="theme-maple.css">
+<style>:root{--am-accent:#c54a0d;--am-accent-soft:rgba(197,74,13,.2);--am-panel:#1c140c;--am-panel-2:#241a10;--am-text:#f5e3cf}</style>
+<script src="activity-modal.js" defer></script>
+<script src="power-card-glow.js" defer></script>
+<script src="weight-bodymap.js" defer></script>
 </body>
 </html>

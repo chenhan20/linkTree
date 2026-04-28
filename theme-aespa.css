@@ -1,0 +1,142 @@
+/* theme-aespa.css — aespa 專屬視覺 fx（不與其他主題共用，避免色彩污染）
+ * 生成自 scripts/gen-theme-fx.js（請勿手動修改；改完請重跑）
+ */
+:root{
+  --bp-on-color: #a855f7;
+  --bp-on-glow:  rgba(168,85,247,.6);
+}
+
+/* ── Power Card Glow：榮譽榜呼吸＋掃光＋角點＋獎盃＋CTA ── */
+@keyframes aespa-pcg-glow{
+  0%,100%{box-shadow:0 0 18px rgba(168,85,247,.2),0 0 0 1px rgba(168,85,247,.2) inset}
+  50%   {box-shadow:0 0 36px #a855f7,0 0 0 1.5px #a855f7 inset, 0 0 60px rgba(168,85,247,.2)}
+}
+@keyframes aespa-pcg-sweep{
+  0%{transform:translateX(-150%) skewX(-25deg)}
+  100%{transform:translateX(250%) skewX(-25deg)}
+}
+@keyframes aespa-pcg-cta-pulse{
+  0%,100%{transform:translateY(0);text-shadow:0 0 6px rgba(168,85,247,.2)}
+  50%   {transform:translateY(-2px);text-shadow:0 0 14px #a855f7,0 0 30px rgba(168,85,247,.2)}
+}
+@keyframes aespa-pcg-arrow-bounce{
+  0%,100%{transform:translateY(0)}
+  50%   {transform:translateY(3px)}
+}
+@keyframes aespa-pcg-corner-blink{
+  0%,100%{opacity:.85}
+  50%   {opacity:.25}
+}
+@keyframes aespa-pcg-trophy-spin{
+  0%,100%{transform:rotate(-8deg) scale(1)}
+  50%   {transform:rotate(8deg) scale(1.15)}
+}
+
+#aespa-power-card{
+  position:relative;
+  padding:22px 22px 20px !important;
+  border-radius:14px !important;
+  animation:aespa-pcg-glow 2.6s ease-in-out infinite;
+  overflow:hidden;
+  isolation:isolate;
+}
+#aespa-power-card::before{
+  content:"";position:absolute;top:0;left:0;height:100%;width:35%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.18),transparent);
+  pointer-events:none;
+  animation:aespa-pcg-sweep 3.8s ease-in-out infinite;
+  z-index:0;
+}
+#aespa-power-card .apc-title{
+  font-size:18px !important;letter-spacing:2.5px !important;
+  font-weight:800 !important;text-shadow:0 0 10px rgba(168,85,247,.2);
+}
+#aespa-power-card .apc-title-en{
+  font-size:11px !important;letter-spacing:3.5px !important;
+}
+#aespa-power-card .apc-mini{padding:9px 4px !important}
+#aespa-power-card .apc-mini-lbl{font-size:11px !important;letter-spacing:.5px !important}
+#aespa-power-card .apc-mini-val{
+  font-size:20px !important;font-weight:800 !important;
+  text-shadow:0 0 8px rgba(168,85,247,.2);
+}
+#aespa-power-card .apc-mini-val small{font-size:10px !important}
+
+/* 角點＋獎盃 — 由 power-card-glow.js 注入的 .pcg-corner / .pcg-trophy */
+#aespa-power-card .pcg-corner{
+  position:absolute;width:14px;height:14px;
+  border:2px solid #a855f7;
+  pointer-events:none;z-index:1;
+  animation:aespa-pcg-corner-blink 2.6s ease-in-out infinite;
+}
+#aespa-power-card .pcg-corner.tl{top:6px;left:6px;border-right:none;border-bottom:none}
+#aespa-power-card .pcg-corner.tr{top:6px;right:6px;border-left:none;border-bottom:none;animation-delay:.65s}
+#aespa-power-card .pcg-corner.bl{bottom:6px;left:6px;border-right:none;border-top:none;animation-delay:1.3s}
+#aespa-power-card .pcg-corner.br{bottom:6px;right:6px;border-left:none;border-top:none;animation-delay:1.95s}
+#aespa-power-card .pcg-trophy{
+  position:absolute;top:-8px;right:14px;font-size:24px;line-height:1;
+  filter:drop-shadow(0 0 8px #a855f7);
+  animation:aespa-pcg-trophy-spin 1.6s ease-in-out infinite;
+  pointer-events:none;z-index:2;
+}
+#aespa-power-card .pcg-cta{
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  margin-top:14px;padding:10px 16px;
+  font-size:14px;font-weight:800;letter-spacing:2px;
+  color:#a855f7;
+  background:linear-gradient(90deg,transparent,rgba(168,85,247,.2),transparent);
+  border-top:1px solid rgba(168,85,247,.2);border-bottom:1px solid rgba(168,85,247,.2);
+  border-radius:6px;text-transform:uppercase;
+  animation:aespa-pcg-cta-pulse 1.6s ease-in-out infinite;
+  cursor:pointer;user-select:none;position:relative;z-index:1;
+}
+#aespa-power-card .pcg-cta .arrow{
+  display:inline-block;font-size:18px;
+  animation:aespa-pcg-arrow-bounce 1.1s ease-in-out infinite;
+}
+#aespa-power-card .pcg-cta .star{
+  display:inline-block;
+  animation:aespa-pcg-trophy-spin 1.6s ease-in-out infinite reverse;
+}
+#aespa-power-card > *:not(.pcg-corner):not(.pcg-trophy){position:relative;z-index:1}
+
+/* ── Card hover：使用 aespa 主題色，不再 fallback 到橘色 ── */
+.stat-card,.consistency-row,.quest-tile,.wq-tile,.seg-card,.activity-card,.act-card,
+.am-cell,.am-lap,.am-itt-item{
+  transition:transform .22s cubic-bezier(.2,1,.4,1), border-color .2s ease,
+             box-shadow .25s ease, background-color .2s ease;
+}
+.stat-card:hover,.consistency-row:hover,.quest-tile:hover,.wq-tile:hover,
+.seg-card:hover,.activity-card:hover,.act-card:hover,
+.am-cell:hover,.am-lap:hover,.am-itt-item:hover{
+  transform:translateY(-2px);
+  border-color:#a855f7 !important;
+  box-shadow:0 6px 18px -4px rgba(0,0,0,.45),0 0 18px rgba(168,85,247,.2);
+}
+.section-title{position:relative;transition:color .2s ease,text-shadow .2s ease}
+.section-title::after{
+  content:"";position:absolute;left:0;right:0;bottom:0;height:1px;
+  background:linear-gradient(90deg,transparent,#a855f7,transparent);
+  transform:scaleX(0);transform-origin:center;
+  transition:transform .35s cubic-bezier(.2,1,.4,1);
+}
+.section-title:hover{text-shadow:0 0 8px rgba(168,85,247,.2)}
+.section-title:hover::after{transform:scaleX(1)}
+.lap-strip:hover{
+  border-color:#a855f7 !important;transform:translateX(2px);
+  transition:all .2s ease;
+}
+
+@media (prefers-reduced-motion:reduce){
+  #aespa-power-card,#aespa-power-card::before,
+  #aespa-power-card .pcg-corner,#aespa-power-card .pcg-trophy,
+  #aespa-power-card .pcg-cta,#aespa-power-card .pcg-cta .arrow,#aespa-power-card .pcg-cta .star,
+  .stat-card,.consistency-row,.quest-tile,.wq-tile,.seg-card,.activity-card,.act-card,
+  .section-title,.section-title::after,.lap-strip{animation:none;transition:none}
+}
+@media (max-width:560px){
+  #aespa-power-card{padding:16px 14px 14px !important}
+  #aespa-power-card .apc-title{font-size:15px !important}
+  #aespa-power-card .pcg-cta{font-size:12px;padding:8px 10px;letter-spacing:1.5px}
+  #aespa-power-card .pcg-trophy{font-size:18px}
+}

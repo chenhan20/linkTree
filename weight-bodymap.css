@@ -1,0 +1,44 @@
+/* weight-bodymap.css — 重訓任務的身體部位視覺化（共用，跨主題） */
+.bodymap-wrap{
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  margin-top:8px;
+}
+.bodymap{
+  width:100%;max-width:120px;height:auto;
+  display:block;
+  filter:drop-shadow(0 2px 4px rgba(0,0,0,.3));
+}
+.bodymap path,.bodymap circle,.bodymap rect{
+  fill:rgba(255,255,255,.08);
+  stroke:rgba(255,255,255,.18);
+  stroke-width:1.2;
+  transition:fill .5s ease, stroke .5s ease, filter .5s ease;
+}
+.bodymap path.bp-on,
+.bodymap circle.bp-on,
+.bodymap rect.bp-on{
+  fill:var(--bp-on-color,#888);
+  stroke:var(--bp-on-color,#888);
+  filter:drop-shadow(0 0 6px var(--bp-on-glow,rgba(136,136,136,.5)));
+  animation:bp-pop .6s ease-out;
+}
+@keyframes bp-pop{
+  0%{transform:scale(.7);opacity:.4}
+  60%{transform:scale(1.15);opacity:1}
+  100%{transform:scale(1);opacity:1}
+}
+.bodymap-legend{
+  display:flex;flex-wrap:wrap;justify-content:center;gap:4px 8px;
+  margin-top:4px;font-size:9px;letter-spacing:1px;
+  color:rgba(255,255,255,.45);
+}
+.bodymap-legend span{display:inline-flex;align-items:center;gap:3px}
+.bodymap-legend span.on{color:var(--bp-on-color,#888);font-weight:700}
+.bodymap-legend span::before{
+  content:"";display:inline-block;width:6px;height:6px;border-radius:50%;
+  background:rgba(255,255,255,.2);
+}
+.bodymap-legend span.on::before{
+  background:var(--bp-on-color,#888);
+  box-shadow:0 0 5px var(--bp-on-glow,rgba(136,136,136,.5));
+}

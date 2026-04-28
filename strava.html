@@ -585,7 +585,7 @@ function renderWeeklyQuest(wq) {
   const wqSports = [
     { key:'ride',   icon:'🚴', label:'RIDE',  isOr:true,  tKm:'30KM', tHr:'1HR' },
     { key:'run',    icon:'🏃', label:'RUN',   isOr:true,  tKm:'10KM', tHr:'1HR' },
-    { key:'swim',   icon:'🏊', label:'SWIM',  isOr:false, targetLabel:'1000m'   },
+    { key:'swim',   icon:'🏊', label:'SWIM',  isOr:true,  tKm:'1000M', tHr:'1HR', unit:'m' },
     { key:'weight', icon:'🏋️', label:'TRAIN', isOr:false, targetLabel:'1 次'   },
   ]
   function isDone(v)  { return typeof v === 'object' ? v.done  : !!v }
@@ -595,19 +595,23 @@ function renderWeeklyQuest(wq) {
     const on = isDone(val), sup = isSuper(val)
     const cls = `quest-tile${sup ? ' on super' : on ? ' on' : ''}`
     if (sp.isOr && typeof val === 'object') {
-      const d = val.distance_km || 0, h = val.moving_time_hr || 0
-      const dPct = Math.min(100, Math.round(d / val.target_km * 100))
+      const isM = sp.unit === 'm'
+      const d = isM ? (val.distance_m || 0) : (val.distance_km || 0)
+      const tD = isM ? val.target_m : val.target_km
+      const dStr = isM ? `${d}m` : `${d}km`
+      const h = val.moving_time_hr || 0
+      const dPct = Math.min(100, Math.round(d / tD * 100))
       const hPct = Math.min(100, Math.round(h / val.target_hr * 100))
       const dMet = dPct >= 100, hMet = hPct >= 100
       const body = (on || sup)
         ? `<div class="qcheck">${sup ? '⚡' : '✓'}</div>
-          <div class="qpct" style="margin-top:5px;color:${sup ? 'rgba(255,210,0,.85)' : 'rgba(63,204,74,.65)'}">${d}km · ${h}hr</div>`
+          <div class="qpct" style="margin-top:5px;color:${sup ? 'rgba(255,210,0,.85)' : 'rgba(63,204,74,.65)'}">${dStr} · ${h}hr</div>`
         : `<div class="qcheck"><span style="font-size:7px;letter-spacing:2px;color:rgba(252,76,2,.28)">OR</span></div>
           <div class="qprog-or">
             <div class="qprog-or-slot${dMet ? ' met' : ''}">
               <div class="qprog-or-lbl${dMet ? ' met' : ''}">${sp.tKm}</div>
               <div class="qprog-or-bar"><div class="qprog-or-fill" style="width:${dPct}%"></div></div>
-              <div class="qprog-or-val">${d}km</div>
+              <div class="qprog-or-val">${dStr}</div>
             </div>
             <div class="qprog-or-slot${hMet ? ' met' : ''}">
               <div class="qprog-or-lbl${hMet ? ' met' : ''}">${sp.tHr}</div>
@@ -746,7 +750,7 @@ function renderTimeline(list, type, expanded, ittMap) {
         if (aIsRun && a.avg_cadence_spm) tags.push(`<span class="tag">🦵 ${a.avg_cadence_spm} spm</span>`)
         if (!aIsRun && !aIsSwim && !aIsWeight && a.avg_speed_kmh) tags.push(`<span class="tag">${a.avg_speed_kmh} km/h</span>`)
         if (aIsSwim && a.pace_per_100m)  tags.push(`<span class="tag">💧 ${a.pace_per_100m}/100m</span>`)
-        if (a.avg_heartrate)             tags.push(`<span class="tag hr">♥️ ${a.avg_heartrate} bpm</span>`)
+        if (a.avg_heartrate)             tags.push(`<span class="tag hr">♥️ ${a.avg_heartrate}${a.max_heartrate ? ` / <b style="color:#ff7080">${a.max_heartrate}</b>` : ''} bpm</span>`)
         const lapArr = (aIsRide && a.top_laps) ? a.top_laps.slice(0, 10) : []
         const lapHtml = lapArr.length ? (() => {
           const lid = a.id || Math.floor(Date.now()*Math.random())
@@ -1418,5 +1422,14 @@ fetch('strava.json')
   b.addEventListener('mouseleave', () => b.style.background='rgba(10,4,0,.8)')
 })()
 </script>
+
+<!-- 跨主題共用：單車活動詳情彈窗 -->
+<link rel="stylesheet" href="activity-modal.css">
+<link rel="stylesheet" href="weight-bodymap.css">
+<link rel="stylesheet" href="theme-strava.css">
+<style>:root{--am-accent:#FC4C02;--am-accent-soft:rgba(252,76,2,.18);--am-panel:#14100c;--am-panel-2:#1c160f}</style>
+<script src="activity-modal.js" defer></script>
+<script src="power-card-glow.js" defer></script>
+<script src="weight-bodymap.js" defer></script>
 </body>
 </html>

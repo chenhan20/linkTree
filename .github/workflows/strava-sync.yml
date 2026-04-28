@@ -20,9 +20,13 @@ on:
         type: boolean
         default: false
       scan_power:
-        description: '重新掃描 Power PR（忽略 power-prs.json 的 scanned_ids 快取，全掃所有有功率計的外騎）'
+        description: '重掃 Power PR（會自動改用全量活動，避免只掃最近 100 筆）'
         type: boolean
         default: false
+      power_only:
+        description: '只做功率 PR 更新，跳過 laps/segments enrichment（建議重掃功率時開啟）'
+        type: boolean
+        default: true
 
 jobs:
   sync:
@@ -48,8 +52,9 @@ jobs:
           STRAVA_CLIENT_SECRET: ${{ secrets.STRAVA_CLIENT_SECRET }}
           STRAVA_REFRESH_TOKEN: ${{ secrets.STRAVA_REFRESH_TOKEN }}
           STRAVA_ATHLETE_ID:    ${{ secrets.STRAVA_ATHLETE_ID }}
-          FETCH_ALL:            ${{ inputs.fetch_all == true && '1' || '0' }}
+          FETCH_ALL:            ${{ (inputs.fetch_all == true || inputs.scan_power == true) && '1' || '0' }}
           SCAN_POWER:           ${{ inputs.scan_power == true && '1' || '0' }}
+          POWER_ONLY:           ${{ inputs.power_only == true && '1' || '0' }}
         run: node scripts/fetch-strava.js
 
       # 4. 如果 strava.json / power-prs.json 有變動，commit 並 push 回 repo

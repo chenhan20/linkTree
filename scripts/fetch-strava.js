@@ -5,8 +5,10 @@
 // 環境變數旗標：
 //   FETCH_ALL=1       —— 分頁抓全部歷史活動（首次需要；之後預設只抓最近 100 筆即可）
 //   SCAN_SEGMENTS=1   —— 對全史 ride 打 detail API，補抓 ITT segment efforts
+//   SCAN_POWER=1      —— 以全史騎乘重建功率 PR（會自動走全量活動）
 //   REFRESH_LAPS=1    —— 忽略 lap 快取重抓
 //   LAP_FETCH_MAX=N   —— 單次執行最多打多少次 detail API 補 lap（預設 30）避免撞 Strava 限流
+//   POWER_ONLY=1      —— 只做功率 PR 更新，跳過 laps/segments enrichment（省 read quota）
 //
 // 首次全量範例 (PowerShell)：
 //   $env:FETCH_ALL="1"; $env:SCAN_SEGMENTS="1"; node scripts/fetch-strava.js
@@ -95,7 +97,8 @@ async function fetchStats(token) {
 
 // ── Step 3：抓活動（FETCH_ALL=1 時分頁抓全部，否則只抓最近 100 筆）──
 async function fetchRecentActivities(token) {
-  const fetchAll = process.env.FETCH_ALL === '1'
+  // SCAN_POWER 需要全史活動，避免只掃到最近 100 筆導致 top3 不完整。
+  const fetchAll = process.env.FETCH_ALL === '1' || process.env.SCAN_POWER === '1'
 
   if (!fetchAll) {
     const data = await request({
@@ -241,6 +244,33 @@ function calcPeakPower(wattsArr, durationSec) {
   return Math.round(maxAvg)
 }
 
+// 以 30 秒滑動均值計算 Normalized Power（NP）。
+function calcNormalizedPower(wattsArr) {
+  const n = wattsArr.length
+  if (n < 30) return null
+
+  let sum30 = 0
+  for (let i = 0; i < 30; i++) sum30 += (wattsArr[i] ?? 0)
+
+  let sumFourth = 0
+  let count = 0
+
+  let avg30 = sum30 / 30
+  sumFourth += Math.pow(avg30, 4)
+  count++
+
+  for (let i = 30; i < n; i++) {
+    sum30 += (wattsArr[i] ?? 0)
+    sum30 -= (wattsArr[i - 30] ?? 0)
+    avg30 = sum30 / 30
+    sumFourth += Math.pow(avg30, 4)
+    count++
+  }
+
+  if (count === 0) return null
+  return Math.round(Math.pow(sumFourth / count, 0.25))
+}
+
 // ── Power PR 更新：對新的有功率外騎打 streams，比對並更新 PR ──
 // 開關：SCAN_POWER=1 才執行（預設跳過，日常 fetch 不多打 streams）
 // SCAN_POWER=1 → 只掃未掃描過的；SCAN_POWER=1 + FETCH_ALL=1 → 忽略快取全掃
@@ -251,10 +281,12 @@ async function updatePowerPRs(token, activities) {
   const maxFetch    = parseInt(process.env.POWER_FETCH_MAX || '99999', 10)
 
   // 讀獨立的 power-prs.json
-  let powerFile = { prs: [], scanned_ids: [] }
+  let powerFile = { prs: [], scanned_ids: [], activity_metrics: {} }
   if (fs.existsSync(POWER_FILE) && !forceRescan) {
     try { powerFile = JSON.parse(fs.readFileSync(POWER_FILE, 'utf8')) } catch (e) {}
   }
+
+  const activityMetrics = { ...(powerFile.activity_metrics || {}) }
 
   // 篩：外騎 + 有功率計
   const powerRides = activities.filter(a =>
@@ -269,7 +301,10 @@ async function updatePowerPRs(token, activities) {
 
   if (toScan.length === 0) {
     console.log('   ✅ Power PR 快取完整，跳過掃描')
-    return powerFile.prs || []
+    return {
+      prs: powerFile.prs || [],
+      activityMetrics,
+    }
   }
 
   // 現有 PR 表（以 duration_sec 為 key，維護前三名列表）
@@ -294,7 +329,21 @@ async function updatePowerPRs(token, activities) {
       fetchCount++
 
       const wattsArr = streams?.watts?.data
-      if (!wattsArr) { scannedIds.add(String(act.id)); continue }
+      if (!wattsArr) {
+        activityMetrics[String(act.id)] = {
+          np_watts: null,
+          max_watts_stream: null,
+        }
+        scannedIds.add(String(act.id))
+        continue
+      }
+
+      const npWatts = calcNormalizedPower(wattsArr)
+      const maxWattsStream = wattsArr.length > 0 ? Math.round(Math.max(...wattsArr)) : null
+      activityMetrics[String(act.id)] = {
+        np_watts: npWatts,
+        max_watts_stream: maxWattsStream,
+      }
 
       const date = (act.start_date_local || act.start_date).slice(0, 10)
       let hasPR  = false
@@ -344,10 +393,14 @@ async function updatePowerPRs(token, activities) {
     updated_at:  new Date().toISOString(),
     prs:         prsResult,
     scanned_ids: [...scannedIds],
+    activity_metrics: activityMetrics,
   }, null, 2), 'utf8')
   console.log(`✅ power-prs.json 寫入完成`)
 
-  return prsResult
+  return {
+    prs: prsResult,
+    activityMetrics,
+  }
 }
 
 // ── Step 4b：Lap enrichment（ID-based 快取，避免重複打 API）──
@@ -647,25 +700,34 @@ function buildJSON(stats, activities) {
 
   // 保留所有活動（不再 slice），並都帶上 id 以便 UI 顯示「前往 Strava」連結
   const recentRides = activities.filter(a => isType(a, RIDE_TYPES)).map(a => {
-    const w = a.average_watts || 0
-    const t = a.moving_time   || 0
-    const ifScore = (w > 0 && FTP > 0) ? +(w / FTP).toFixed(3) : null
-    const tss     = (w > 0 && t > 0 && FTP > 0) ? Math.round((t * w * (w / FTP)) / (FTP * 3600) * 100) : null
+    const w  = a.average_watts || 0
+    // NP proxy：優先使用 weighted_average_watts（Garmin/Strava 已做加權平均，比 avg_watts 接近真實 NP）
+    // 注意：weighted_average_watts 仍略低於真實 NP（本例 201 vs Garmin 211），是可接受的近似。
+    const np = (a.device_watts && a.weighted_average_watts) ? a.weighted_average_watts : w
+    const t  = a.moving_time   || 0
+    const ifScore = (np > 0 && FTP > 0) ? +(np / FTP).toFixed(3) : null
+    const tss     = (np > 0 && t > 0 && FTP > 0) ? Math.round((t * np * (np / FTP)) / (FTP * 3600) * 100) : null
     return {
       id:             a.id,
       name:           a.name,
       date:           localDate(a),
       time:           localTime(a),
       distance_km:    Math.round(a.distance / 10) / 100,
+      moving_time_sec: a.moving_time || 0,
       moving_time_hr: Math.round(a.moving_time / 360) / 10,
       elevation_m:    Math.round(a.total_elevation_gain),
       avg_speed_kmh:  Math.round(a.average_speed * 36) / 10,
+      avg_cadence_rpm: a.average_cadence ? Math.round(a.average_cadence) : null,
       avg_heartrate:  a.average_heartrate ? Math.round(a.average_heartrate) : null,
+      max_heartrate:  a.max_heartrate ? Math.round(a.max_heartrate) : null,
       avg_watts:      w > 0 ? Math.round(w) : null,
+      max_watts:      a.max_watts ? Math.round(a.max_watts) : null,
+      np_watts:       np > 0 ? Math.round(np) : null,
       trainer:        a.trainer || false,
       sport_type:     a.type,
       if_score:       ifScore,
       tss:            tss,
+      calories_kcal:  a.calories ? Math.round(a.calories) : null,
       description:    null,  // 由 enrichRideLaps 補入
     }
   })
@@ -676,11 +738,16 @@ function buildJSON(stats, activities) {
     date:           localDate(a),
     time:           localTime(a),
     distance_km:    Math.round(a.distance / 10) / 100,
+    moving_time_sec: a.moving_time || 0,
     moving_time_hr: Math.round(a.moving_time / 360) / 10,
     elevation_m:    Math.round(a.total_elevation_gain),
+    avg_speed_kmh:  Math.round(a.average_speed * 36) / 10,
+    max_speed_kmh:  a.max_speed ? Math.round(a.max_speed * 36) / 10 : null,
     avg_pace_km:    fmtPaceKm(a.average_speed),
     avg_cadence_spm: a.average_cadence ? Math.round(a.average_cadence * 2) : null,
     avg_heartrate:  a.average_heartrate ? Math.round(a.average_heartrate) : null,
+    max_heartrate:  a.max_heartrate ? Math.round(a.max_heartrate) : null,
+    calories_kcal:  a.calories ? Math.round(a.calories) : null,
   }))
 
   const recentSwims = activities.filter(a => isType(a, SWIM_TYPES)).map(a => ({
@@ -689,9 +756,13 @@ function buildJSON(stats, activities) {
     date:             localDate(a),
     time:             localTime(a),
     distance_km:      Math.round(a.distance / 10) / 100,
+    moving_time_sec:   a.moving_time || 0,
     moving_time_hr:   Math.round(a.moving_time / 360) / 10,
+    avg_speed_kmh:    Math.round(a.average_speed * 36) / 10,
     pace_per_100m:    fmtPace100m(a.distance, a.moving_time),
     avg_heartrate:    a.average_heartrate ? Math.round(a.average_heartrate) : null,
+    max_heartrate:    a.max_heartrate ? Math.round(a.max_heartrate) : null,
+    calories_kcal:    a.calories ? Math.round(a.calories) : null,
   }))
 
   const recentWeights = activities.filter(a => isType(a, WEIGHT_TYPES)).map(a => ({
@@ -701,6 +772,7 @@ function buildJSON(stats, activities) {
     time:          localTime(a),
     moving_time_hr: Math.round(a.moving_time / 360) / 10,
     avg_heartrate: a.average_heartrate ? Math.round(a.average_heartrate) : null,
+    max_heartrate: a.max_heartrate ? Math.round(a.max_heartrate) : null,
   }))
 
   // ── Monthly Summary / Goals & Weekly Quest（PRD v1：FR-1 / FR-2 / FR-3）──
@@ -769,12 +841,13 @@ function buildJSON(stats, activities) {
   const wRunDist  = Math.round(weekRuns.reduce((s, a)  => s + (a.distance || 0), 0) / 100) / 10
   const wRunHr    = Math.round(weekRuns.reduce((s, a)  => s + (a.moving_time || 0), 0) / 360) / 10
   const wSwimM    = Math.round(weekSwims.reduce((s, a) => s + (a.distance || 0), 0))
+  const wSwimHr   = Math.round(weekSwims.reduce((s, a) => s + (a.moving_time || 0), 0) / 360) / 10
   const wWeightCt = weekWeights.length
 
   const weekly_quest = {
     ride:   { done: wRideDist >= 30 || wRideHr >= 1, distance_km: wRideDist, moving_time_hr: wRideHr, target_km: 30, target_hr: 1 },
     run:    { done: wRunDist >= 10  || wRunHr >= 1,  distance_km: wRunDist,  moving_time_hr: wRunHr,  target_km: 10, target_hr: 1 },
-    swim:   { done: wSwimM >= 1000,                   distance_m: wSwimM,    target_m: 1000 },
+    swim:   { done: wSwimM >= 1000 || wSwimHr >= 1,  distance_m: wSwimM,     moving_time_hr: wSwimHr, target_m: 1000, target_hr: 1 },
     weight: { done: wWeightCt >= 1,                   count: wWeightCt,      target: 1 },
   }
 
@@ -838,19 +911,71 @@ async function main() {
 
   const result     = buildJSON(stats, activities)
 
-  // ── Detail enrichment：Laps + Description + Segment efforts（一次 API call 搞定）──
-  // enrichRideLaps 現在同時處理 segment 掃描（用 seg_scan_ids 快取避免重複打）
-  // SCAN_SEGMENTS=1 → 清除 seg_scan_ids 快取，重新掃；REFRESH_LAPS=1 → 清除 laps 快取
-  const { newSegEfforts, segScanIds } = await enrichRideLaps(
-    token, result.recent_rides, existingData.recent_rides, existingData.segments, existingData.seg_scan_ids
-  )
-  result.seg_scan_ids = segScanIds  // 存回 JSON 供下次跳過已掃描的 segment
+  const powerOnly = process.env.POWER_ONLY === '1'
+  if (powerOnly) {
+    console.log('⏭️  POWER_ONLY=1：跳過 laps/segments enrichment，專注更新功率 PR')
+    result.seg_scan_ids = existingData.seg_scan_ids || []
+    result.segments = existingData.segments || []
+    // 即使跳過 enrichment，也要把舊有的 description / top_laps 從 existingData 合併回來，
+    // 否則 strava.json 會被清空這兩個欄位（過去曾發生）。
+    const oldRideMap = new Map(
+      (existingData.recent_rides || []).map(r => [String(r.id), r])
+    )
+    let mergedDesc = 0, mergedLaps = 0
+    for (const ride of result.recent_rides) {
+      const old = oldRideMap.get(String(ride.id))
+      if (!old) continue
+      if (old.description != null && ride.description == null) {
+        ride.description = old.description
+        mergedDesc++
+      }
+      if (Array.isArray(old.top_laps) && !Array.isArray(ride.top_laps)) {
+        ride.top_laps = old.top_laps
+        if (old.top_laps.length) mergedLaps++
+      }
+    }
+    console.log(`   🔁 從舊 JSON 合併 description ${mergedDesc} 筆、top_laps ${mergedLaps} 筆`)
+  } else {
+    // ── Detail enrichment：Laps + Description + Segment efforts（一次 API call 搞定）──
+    // enrichRideLaps 現在同時處理 segment 掃描（用 seg_scan_ids 快取避免重複打）
+    // SCAN_SEGMENTS=1 → 清除 seg_scan_ids 快取，重新掃；REFRESH_LAPS=1 → 清除 laps 快取
+    const { newSegEfforts, segScanIds } = await enrichRideLaps(
+      token, result.recent_rides, existingData.recent_rides, existingData.segments, existingData.seg_scan_ids
+    )
+    result.seg_scan_ids = segScanIds  // 存回 JSON 供下次跳過已掃描的 segment
 
-  // ── ITT 區間：合併新 efforts + 取 segment meta ──
-  result.segments = await buildSegmentsData(token, newSegEfforts, existingData.segments)
+    // ── ITT 區間：合併新 efforts + 取 segment meta ──
+    result.segments = await buildSegmentsData(token, newSegEfforts, existingData.segments)
+  }
 
   // ── Power PR：自動補新活動；SCAN_POWER=1 才全史重掃 ──
-  result.power_prs = await updatePowerPRs(token, activities)
+  const powerUpdate = await updatePowerPRs(token, activities)
+  result.power_prs = powerUpdate.prs
+
+  // 以 streams 精算值覆寫單車活動關鍵指標（NP 與最大功率），提高和 Garmin 對齊度。
+  let ftpForRideScores = 238
+  try {
+    const athleteFile = path.join(__dirname, '../athlete/gpt_教練前提資訊.json')
+    ftpForRideScores = JSON.parse(fs.readFileSync(athleteFile, 'utf8')).cycling.ftp_watts.latest || 238
+  } catch (e) { /* 保持預設 238 */ }
+
+  const streamMetrics = powerUpdate.activityMetrics || {}
+  for (const ride of result.recent_rides) {
+    const m = streamMetrics[String(ride.id)]
+    if (!m) continue
+    if (m.np_watts) {
+      ride.np_watts = m.np_watts
+      if (ftpForRideScores > 0) {
+        ride.if_score = +(m.np_watts / ftpForRideScores).toFixed(3)
+        ride.tss = ride.moving_time_sec > 0
+          ? Math.round((ride.moving_time_sec * m.np_watts * (m.np_watts / ftpForRideScores)) / (ftpForRideScores * 3600) * 100)
+          : ride.tss
+      }
+    }
+    if (m.max_watts_stream) {
+      ride.max_watts = Math.max(ride.max_watts || 0, m.max_watts_stream)
+    }
+  }
 
   fs.writeFileSync(OUT_FILE, JSON.stringify(result, null, 2), 'utf8')
   console.log(`✅ strava.json 寫入完成 (${OUT_FILE})`)
