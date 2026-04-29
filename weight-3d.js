@@ -18,6 +18,17 @@
   const THREE_CDN = 'https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js'
   const SCENE_H = 160  // px
 
+  // GLB 載入等待逾時設定（總時長 = LOAD_POLL_INTERVAL × LOAD_MAX_TRIES）
+  const LOAD_POLL_INTERVAL = 250   // ms
+  const LOAD_MAX_TRIES     = 120   // 30 秒逾時
+
+  // 重訓 tile 辨識關鍵字（支援 emoji、英文及中文）
+  const WEIGHT_TILE_MATCHERS = [
+    function (txt) { return txt.indexOf('🏋') !== -1 },
+    function (txt) { return /\bTRAIN\b|\bGYM\b/.test(txt) },
+    function (txt) { return txt.indexOf('重訓') !== -1 },
+  ]
+
   // ── 樂高戰士色調（Strava orange 系） ──────────────────────────────
   const C_HEAD   = 0xFFCC80
   const C_BODY   = 0xFC4C02
@@ -132,16 +143,16 @@
       if (window.__w3d_gltf) {
         clearInterval(timer)
         const gltf = window.__w3d_gltf
-        const THREE_mod = window.__w3d_three
+        const threeInstance = window.__w3d_three
         delete window.__w3d_gltf
-        onLoad(gltf, THREE_mod)
-      } else if (window.__w3d_gltf_err || ++tries > 120) {
+        onLoad(gltf, threeInstance)
+      } else if (window.__w3d_gltf_err || ++tries > LOAD_MAX_TRIES) {
         clearInterval(timer)
         const err = window.__w3d_gltf_err || 'timeout'
         delete window.__w3d_gltf_err
         onError(new Error(err))
       }
-    }, 250)
+    }, LOAD_POLL_INTERVAL)
   }
 
   // ── 初始化 Three.js 場景 ──────────────────────────────────────────
@@ -258,8 +269,9 @@
 
     if (MODEL_PATH) {
       // 載入 .glb 模型（目前 MODEL_PATH=null，保留此路徑供未來換模型）
-      loadGLBModel(MODEL_PATH, function (gltf, THREE_mod) {
-        var TT = THREE_mod || T
+      loadGLBModel(MODEL_PATH, function (gltf, threeInstance) {
+        // 使用載入模型的 THREE instance（確保與 GLTFLoader 同版本）
+        var activeThree = threeInstance || T
         var model = gltf.scene
         // GLB rig 動畫骨架需自行對接；先清空 userData 讓動畫降級為整體旋轉
         model.userData.lArm = null
@@ -267,8 +279,8 @@
         model.userData.lLeg = null
         model.userData.rLeg = null
         model.userData.head = null
-        // 注意：若使用 THREE_mod instance，需用 TT 而非 T 初始化場景
-        setup(model)
+        const { scene, cam, renderer, ring } = initScene(activeThree, wrap, model)
+        startAnimation(scene, cam, renderer, model, ring)
       }, function (err) {
         console.warn('[weight-3d] GLB 載入失敗，改用樂高戰士', err)
         setup(buildLegoWarrior(T))
@@ -283,7 +295,7 @@
     var tiles = document.querySelectorAll('.quest-tile, .wq-tile')
     for (var i = 0; i < tiles.length; i++) {
       var txt = tiles[i].textContent || ''
-      if (txt.indexOf('🏋') !== -1 || /\bTRAIN\b|\bGYM\b|重訓/.test(txt)) return tiles[i]
+      if (WEIGHT_TILE_MATCHERS.some(function (fn) { return fn(txt) })) return tiles[i]
     }
     return null
   }
