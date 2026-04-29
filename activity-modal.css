@@ -16,12 +16,15 @@
 /* 卡片詳情按鈕 — 大且會動 */
 @keyframes am-btn-pulse{
   0%,100%{
-    box-shadow:0 0 0 0 var(--am-accent-soft), 0 0 12px 0 var(--am-accent-soft);
+    box-shadow:0 0 8px 0 var(--am-accent-soft), 0 0 0 1px var(--am-accent-soft) inset;
     transform:translateY(0);
+    filter:brightness(1);
   }
   50%{
-    box-shadow:0 0 0 6px transparent, 0 0 22px 4px var(--am-accent-soft);
+    box-shadow:0 0 28px 4px var(--am-accent-soft), 0 0 0 1.5px var(--am-accent, #FC4C02) inset,
+               0 0 60px rgba(252,76,2,.18);
     transform:translateY(-1px);
+    filter:brightness(1.12);
   }
 }
 @keyframes am-btn-shine{
@@ -93,6 +96,8 @@
 @media (prefers-reduced-motion:reduce){
   .act-detail-btn,.act-detail-btn::before,.act-detail-btn .am-arrow,
   .act-detail-btn .am-eye .am-eye-iris,.act-detail-btn .am-eye .am-eye-pupil{animation:none}
+  .act-strava-link{transition:none}
+  .act-strava-link:hover{transform:none}
 }
 
 /* 遮罩 */
@@ -242,6 +247,41 @@
 
 /* 載入/錯誤 */
 .am-empty{padding:40px 0;text-align:center;color:var(--am-text-dim);font-size:13px}
+
+/* ── 活動卡片：Strava 連結按鈕（與 act-detail-btn 同規格；無呼吸光效） ──────────── */
+/* 注意：各主題 HTML 頂部的 :root 已設 --am-accent，色彩自動隨主題切換             */
+.act-strava-link {
+  position: relative; overflow: hidden;
+  display: inline-flex; align-items: center; gap: 5px;
+  flex-shrink: 0;
+  padding: 6px 14px;           /* 與 act-detail-btn 相同 */
+  border-radius: 6px;          /* 與 act-detail-btn 相同 */
+  font-size: 13px; font-weight: 700; letter-spacing: .5px;
+  color: var(--am-accent, #FC4C02);
+  text-decoration: none;
+  border: 1.5px solid var(--am-accent, #FC4C02);  /* 與 act-detail-btn 相同粗細 */
+  background: transparent;     /* 鏤空/ghost 樣式，detail btn 才填色 */
+  white-space: nowrap; line-height: 1.4;
+  transition: background .15s, transform .15s, box-shadow .15s;
+  vertical-align: middle;
+  font-family: inherit;
+}
+.act-strava-link::before {
+  content: "";
+  position: absolute; top: 0; left: 0;
+  width: 40%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.18), transparent);
+  opacity: 0;
+  transition: opacity .25s;
+  pointer-events: none;
+}
+.act-strava-link:hover {
+  background: var(--am-accent-soft, rgba(252,76,2,.12));
+  transform: translateY(-1px);
+  box-shadow: 0 0 12px var(--am-accent-soft, rgba(252,76,2,.18));
+}
+.act-strava-link:hover::before { opacity: 1; }
+.act-strava-link:active { transform: translateY(0) scale(.98); }
 
 /* 響應式 */
 @media (max-width:560px){
