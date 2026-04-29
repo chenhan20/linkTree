@@ -147,9 +147,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 /* act highlight flash */
 .act-highlight{animation:actFlash .9s ease-out}
 @keyframes actFlash{0%,40%{background:rgba(252,76,2,.18);border-color:rgba(252,76,2,.5)}100%{background:inherit;border-color:inherit}}
-/* strava link button */
-.act-strava-link{display:inline-flex;align-items:center;gap:2px;flex-shrink:0;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;color:rgba(252,76,2,.95);text-decoration:none;border:1px solid rgba(252,76,2,.45);background:rgba(252,76,2,.1);white-space:nowrap;line-height:1.4;transition:background .15s,border-color .15s}
-.act-strava-link:hover{background:rgba(252,76,2,.25);border-color:#FC4C02}
+/* act-strava-link 基礎樣式已移至 activity-modal.css（與 act-detail-btn 同規格）*/
 .activity-name-wrap{display:flex;align-items:center;gap:8px;min-width:0;margin-bottom:0}
 .lap-toggle{background:transparent;border:none;color:rgba(252,76,2,.6);font-size:10px;cursor:pointer;padding:2px 4px;letter-spacing:.5px;display:inline-block}
 .lap-toggle:hover{color:#FC4C02}
@@ -1425,11 +1423,11 @@ fetch('strava.json')
 
 <!-- 跨主題共用：單車活動詳情彈窗 -->
 <link rel="stylesheet" href="activity-modal.css">
-<link rel="stylesheet" href="weight-bodymap.css">
+<link rel="stylesheet" href="weight-3d.css">
 <link rel="stylesheet" href="theme-strava.css">
 <style>:root{--am-accent:#FC4C02;--am-accent-soft:rgba(252,76,2,.18);--am-panel:#14100c;--am-panel-2:#1c160f}</style>
 <script src="activity-modal.js" defer></script>
 <script src="power-card-glow.js" defer></script>
-<script src="weight-bodymap.js" defer></script>
+<script src="weight-3d.js" defer></script>
 </body>
 </html>

@@ -318,8 +318,7 @@ html,body{height:100%;background:#050505;color:#ccc;font-family:'Rajdhani',sans-
 /* log row highlight flash & strava link */
 .log-row-highlight td{animation:logFlash 1s ease-out}
 @keyframes logFlash{0%,40%{background:rgba(200,168,0,.14)}100%{background:transparent}}
-.act-strava-link{display:inline-flex;align-items:center;gap:2px;margin-left:6px;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;color:#c8a800;text-decoration:none;vertical-align:middle;border:1px solid rgba(200,168,0,.45);background:rgba(200,168,0,.08);white-space:nowrap;line-height:1.4;transition:background .15s}
-.act-strava-link:hover{background:rgba(200,168,0,.2);border-color:#c8a800}
+/* act-strava-link 基礎樣式已移至 activity-modal.css（與 act-detail-btn 同規格）*/
 .lap-toggle-cs{background:transparent;border:none;color:rgba(200,168,0,.6);font-size:10px;cursor:pointer;padding:2px 4px;letter-spacing:.5px}
 .lap-toggle-cs:hover{color:#c8a800}
 .log-sport-icon{margin-right:5px;font-size:15px}
@@ -1626,11 +1625,11 @@ fetch('strava.json')
 
 <!-- 跨主題共用：單車活動詳情彈窗 -->
 <link rel="stylesheet" href="activity-modal.css">
-<link rel="stylesheet" href="weight-bodymap.css">
+<link rel="stylesheet" href="weight-3d.css">
 <link rel="stylesheet" href="theme-cs.css">
 <style>:root{--am-accent:#c8a800;--am-accent-soft:rgba(200,168,0,.18);--am-panel:#15140d;--am-panel-2:#1d1c14;--am-text:#f5efd8}</style>
 <script src="activity-modal.js" defer></script>
 <script src="power-card-glow.js" defer></script>
-<script src="weight-bodymap.js" defer></script>
+<script src="weight-3d.js" defer></script>
 </body>
 </html>

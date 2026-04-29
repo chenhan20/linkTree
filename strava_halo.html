@@ -324,9 +324,7 @@ html,body{
 /* act highlight flash */
 .act-highlight{animation:actFlash 1s ease-out}
 @keyframes actFlash{0%,40%{background:rgba(255,199,36,.18);border-color:var(--gold-2)}100%{background:inherit;border-color:inherit}}
-/* strava link button */
-.act-strava-link{display:inline-flex;align-items:center;gap:2px;flex-shrink:0;padding:3px 9px;font-size:11px;font-weight:700;color:var(--gold-2);text-decoration:none;border:1px solid var(--plate-edge);background:rgba(255,199,36,.08);white-space:nowrap;line-height:1.4;transition:all .15s;clip-path:polygon(4px 0,100% 0,100% calc(100% - 4px),calc(100% - 4px) 100%,0 100%,0 4px)}
-.act-strava-link:hover{background:rgba(255,199,36,.25);border-color:var(--gold-2);box-shadow:0 0 12px rgba(255,199,36,.4)}
+/* act-strava-link 基礎樣式已移至 activity-modal.css（與 act-detail-btn 同規格）*/
 .activity-name-wrap{display:flex;align-items:center;gap:8px;min-width:0;margin-bottom:0}
 .lap-toggle{background:transparent;border:none;color:var(--gold-3);font-size:10px;cursor:pointer;padding:2px 4px;letter-spacing:.5px;display:inline-block}
 .lap-toggle:hover{color:var(--gold-2)}
@@ -1656,11 +1654,11 @@ fetch('strava.json')
 
 <!-- 跨主題共用：單車活動詳情彈窗 -->
 <link rel="stylesheet" href="activity-modal.css">
-<link rel="stylesheet" href="weight-bodymap.css">
+<link rel="stylesheet" href="weight-3d.css">
 <link rel="stylesheet" href="theme-halo.css">
 <style>:root{--am-accent:#d4a72c;--am-accent-soft:rgba(212,167,44,.18);--am-panel:#0e1320;--am-panel-2:#141b2c;--am-text:#e8efff}</style>
 <script src="activity-modal.js" defer></script>
 <script src="power-card-glow.js" defer></script>
-<script src="weight-bodymap.js" defer></script>
+<script src="weight-3d.js" defer></script>
 </body>
 </html>

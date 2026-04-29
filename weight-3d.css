@@ -1,0 +1,23 @@
+/* weight-3d.css — 重訓任務 Three.js 3D 場景容器樣式 */
+
+.w3d-wrap {
+  width: 100%;
+  height: 160px;
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+  margin-top: 10px;
+  background: transparent;
+}
+
+.w3d-wrap canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* 完成狀態時加一點背景光 */
+.quest-tile.on .w3d-wrap,
+.quest-tile.super .w3d-wrap {
+  box-shadow: inset 0 0 18px rgba(63, 204, 74, .08);
+}
