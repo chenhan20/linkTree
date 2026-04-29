@@ -38,9 +38,9 @@ const CLIENT_SECRET = process.env.STRAVA_CLIENT_SECRET
 const REFRESH_TOKEN = process.env.STRAVA_REFRESH_TOKEN
 const ATHLETE_ID    = process.env.STRAVA_ATHLETE_ID  // 你的 161539959
 
-const OUT_FILE   = path.join(__dirname, '..', 'strava.json')
-const ITT_FILE   = path.join(__dirname, '..', 'itt-segments.json')
-const POWER_FILE = path.join(__dirname, '..', 'power-prs.json')
+const OUT_FILE   = path.join(__dirname, '..', 'data', 'strava.json')
+const ITT_FILE   = path.join(__dirname, '..', 'data', 'itt-segments.json')
+const POWER_FILE = path.join(__dirname, '..', 'data', 'power-prs.json')
 
 // ── 簡單的 HTTPS helper（不裝額外套件）──
 function request(options, body = null) {

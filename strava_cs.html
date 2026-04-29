@@ -1528,7 +1528,7 @@ function bindCsPower(prs){
 }
 
 // ── fetch ──
-fetch('strava.json')
+fetch('data/strava.json')
   .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json() })
   .then(d => { render(d); bindCsPower(d.power_prs) })
   .catch(err => {
@@ -1625,11 +1625,9 @@ fetch('strava.json')
 
 <!-- 跨主題共用：單車活動詳情彈窗 -->
 <link rel="stylesheet" href="activity-modal.css">
-<link rel="stylesheet" href="weight-3d.css">
 <link rel="stylesheet" href="theme-cs.css">
 <style>:root{--am-accent:#c8a800;--am-accent-soft:rgba(200,168,0,.18);--am-panel:#15140d;--am-panel-2:#1d1c14;--am-text:#f5efd8}</style>
 <script src="activity-modal.js" defer></script>
 <script src="power-card-glow.js" defer></script>
-<script src="weight-3d.js" defer></script>
 </body>
 </html>

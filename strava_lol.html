@@ -1444,7 +1444,7 @@ function bindLolPower(prs){
 }
 
 /* ── fetch ── */
-fetch('strava.json')
+fetch('data/strava.json')
   .then(r=>{ if(!r.ok) throw new Error(`HTTP ${r.status}`); return r.json() })
   .then(d => { render(d); bindLolPower(d.power_prs) })
   .catch(err => {
@@ -1517,11 +1517,9 @@ fetch('strava.json')
 
 <!-- 跨主題共用：單車活動詳情彈窗 -->
 <link rel="stylesheet" href="activity-modal.css">
-<link rel="stylesheet" href="weight-3d.css">
 <link rel="stylesheet" href="theme-lol.css">
 <style>:root{--am-accent:#c89b3c;--am-accent-soft:rgba(200,155,60,.2);--am-panel:#0a131c;--am-panel-2:#0f1c2a;--am-text:#f0e6d2}</style>
 <script src="activity-modal.js" defer></script>
 <script src="power-card-glow.js" defer></script>
-<script src="weight-3d.js" defer></script>
 </body>
 </html>

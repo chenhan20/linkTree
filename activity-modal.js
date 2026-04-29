@@ -8,7 +8,7 @@
 (function () {
   'use strict'
 
-  const STRAVA_JSON = 'strava.json'
+  const STRAVA_JSON = 'data/strava.json'
   const ICON_RIDE = '🚴'
   let dataPromise = null
   let rideMap = null

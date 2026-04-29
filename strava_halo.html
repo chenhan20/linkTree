@@ -605,11 +605,11 @@ html,body{
 .hpc-title-en{font-size:8px;color:var(--gold-3);letter-spacing:2.5px}
 .hpc-hero-tag{font-size:9px;color:var(--ink-2);letter-spacing:1.2px;font-variant-numeric:tabular-nums}
 .hpc-hero-tag b{color:var(--gold-1);font-size:13px;font-weight:800;margin:0 2px;font-family:'Orbitron',sans-serif}
-.hpc-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:5px}
-.hpc-mini{padding:6px 2px;text-align:center;border:1px solid var(--plate-edge-soft);background:rgba(255,199,36,.05);clip-path:polygon(4px 0,100% 0,100% calc(100% - 4px),calc(100% - 4px) 100%,0 100%,0 4px);transition:all .15s}
+.hpc-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px}
+.hpc-mini{padding:6px 1px;text-align:center;border:1px solid var(--plate-edge-soft);background:rgba(255,199,36,.05);clip-path:polygon(4px 0,100% 0,100% calc(100% - 4px),calc(100% - 4px) 100%,0 100%,0 4px);transition:all .15s;min-width:0;overflow:hidden}
 .hpc-mini:hover{border-color:var(--gold-2);background:rgba(255,199,36,.14);box-shadow:0 0 12px rgba(255,199,36,.25)}
-.hpc-mini-lbl{font-size:9px;color:var(--ink-2);letter-spacing:.4px}
-.hpc-mini-val{font-size:13px;color:var(--gold-2);font-weight:800;margin-top:2px;line-height:1.1;font-variant-numeric:tabular-nums;font-family:'Orbitron',sans-serif}
+.hpc-mini-lbl{font-size:8px;color:var(--ink-2);letter-spacing:.2px;white-space:nowrap}
+.hpc-mini-val{font-size:clamp(10px,2.2vw,13px);color:var(--gold-2);font-weight:800;margin-top:2px;line-height:1.1;font-variant-numeric:tabular-nums;font-family:'Orbitron',sans-serif;white-space:nowrap}
 .hpc-mini-val small{font-size:7px;color:var(--gold-3);margin-left:1px;font-weight:600}
 .hpc-mini.empty .hpc-mini-val{color:var(--gold-4);font-size:13px}
 .hpc-mini.more{background:rgba(255,199,36,.14);border-color:var(--gold-2)}
@@ -674,7 +674,8 @@ html,body{
 .pm-dial-lbl{font-size:10px;color:var(--ink-2);letter-spacing:1.5px;margin-bottom:1px;text-transform:uppercase}
 .pm-dial-val{font-size:44px;line-height:1;font-weight:800;color:var(--gold-1);text-shadow:0 0 16px rgba(255,199,36,.7);font-variant-numeric:tabular-nums;font-family:'Orbitron',sans-serif}
 .pm-dial-unit{font-size:11px;color:var(--gold-3);margin-top:3px;letter-spacing:2px;font-weight:600}
-.pm-act-card{padding:12px 14px;border:1px solid var(--plate-edge);background:linear-gradient(135deg,rgba(255,199,36,.08),rgba(0,0,0,.4));font-size:12px;color:var(--ink);clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px)}
+.pm-act-card{position:relative;padding:12px 14px;border:1px solid var(--plate-edge);background:linear-gradient(135deg,rgba(255,199,36,.08),rgba(0,0,0,.4));font-size:12px;color:var(--ink);clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px);overflow:hidden}
+.pm-act-avatar{position:absolute;right:0;bottom:0;width:110px;height:110px;object-fit:cover;opacity:.22;filter:grayscale(20%) contrast(1.2) brightness(1.1);pointer-events:none;border-radius:50%;transform:rotate(-6deg) translateX(20%) translateY(18%);mask-image:radial-gradient(circle at 40% 40%,#000 40%,transparent 72%);-webkit-mask-image:radial-gradient(circle at 40% 40%,#000 40%,transparent 72%)}
 .pm-act-card .pmc-tag{display:inline-flex;align-items:center;gap:5px;font-size:9px;color:var(--gold-1);letter-spacing:2px;margin-bottom:8px;padding:2px 7px;border:1px solid var(--gold-2);clip-path:polygon(3px 0,100% 0,100% calc(100% - 3px),calc(100% - 3px) 100%,0 100%,0 3px)}
 .pm-act-card .pmc-row{display:flex;align-items:center;gap:7px;margin:3px 0;font-size:12px}
 .pm-act-card .pmc-row .pmc-ico{width:14px;color:var(--gold-3);flex-shrink:0;text-align:center}
@@ -1465,6 +1466,7 @@ function renderPowerModal(prs) {
             </div>
           </div>
           <div class="pm-act-card" id="pm-act-card">
+            <img class="pm-act-avatar" src="docs/avatar.jpg" alt="" aria-hidden="true" onerror="this.style.display='none'">
             <div class="pmc-tag">👑 全時段最佳紀錄</div>
             <div class="pmc-row"><span class="pmc-ico">📍</span><a id="pmc-name" href="#" target="_blank" rel="noopener">—</a></div>
             <div class="pmc-row"><span class="pmc-ico">📅</span><span id="pmc-date">—</span></div>
@@ -1562,7 +1564,7 @@ function bindPowerCard(prs) {
 }
 
 /* ── fetch strava.json ── */
-fetch('strava.json')
+fetch('data/strava.json')
   .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json() })
   .then(data => { render(data); bindPowerCard(data.power_prs) })
   .catch(err => {
@@ -1654,11 +1656,9 @@ fetch('strava.json')
 
 <!-- 跨主題共用：單車活動詳情彈窗 -->
 <link rel="stylesheet" href="activity-modal.css">
-<link rel="stylesheet" href="weight-3d.css">
 <link rel="stylesheet" href="theme-halo.css">
 <style>:root{--am-accent:#d4a72c;--am-accent-soft:rgba(212,167,44,.18);--am-panel:#0e1320;--am-panel-2:#141b2c;--am-text:#e8efff}</style>
 <script src="activity-modal.js" defer></script>
 <script src="power-card-glow.js" defer></script>
-<script src="weight-3d.js" defer></script>
 </body>
 </html>

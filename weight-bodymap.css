@@ -1,96 +1,100 @@
 /* weight-bodymap.css — 重訓任務的身體部位視覺化（共用，跨主題） */
-.bodymap-wrap{
-  display:flex;flex-direction:column;align-items:center;gap:6px;
-  margin-top:8px;
+/* weight-bodymap.css — 重訓任務的身體部位視覺化（共用，跨主題）
+ * 強度等級：lv1=amber / lv2=orange / lv3=red+glow
+ */
+
+/* ── Layout ── */
+.bodymap-wrap{display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:10px}
+.bodymap-views{display:flex;justify-content:center;align-items:flex-start;gap:16px;width:100%}
+.bodymap-view{display:flex;flex-direction:column;align-items:center;gap:4px;flex:0 1 auto}
+.bodymap-view-label{font-size:8px;letter-spacing:3px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase}
+
+/* ── SVG base ── */
+.bodymap{width:100%;max-width:108px;height:auto;display:block;overflow:visible;
+  filter:drop-shadow(0 3px 8px rgba(0,0,0,.5))}
+.bodymap [data-bp],.bodymap circle,.bodymap .neutral{
+  fill:rgba(255,255,255,.07);stroke:rgba(255,255,255,.14);stroke-width:1;
+  transition:fill .55s ease,stroke .55s ease,filter .55s ease;
 }
-.bodymap-views{
-  display:flex;justify-content:center;align-items:flex-start;gap:12px;
-  width:100%;
+
+/* ── Intensity levels ── */
+/* lv1 — 1 session：amber glow */
+.bodymap [data-bp].bp-lv1{
+  fill:rgba(255,200,50,.55);stroke:#ffc732;
+  filter:drop-shadow(0 0 4px rgba(255,199,36,.55));
+  animation:bp-pop .55s ease-out;
 }
-.bodymap-view{
-  display:flex;flex-direction:column;align-items:center;gap:2px;
-  flex:0 1 auto;
+/* lv2 — 2 sessions：orange */
+.bodymap [data-bp].bp-lv2{
+  fill:rgba(255,120,20,.65);stroke:#ff7814;
+  filter:drop-shadow(0 0 7px rgba(255,120,20,.7));
+  animation:bp-pop .55s ease-out;
 }
-.bodymap-view-label{
-  font-size:9px;letter-spacing:2px;font-weight:700;
-  color:rgba(255,255,255,.55);
-}
-.bodymap{
-  width:100%;max-width:100px;height:auto;
-  display:block;overflow:visible;
-  filter:drop-shadow(0 2px 4px rgba(0,0,0,.3));
-}
-.bodymap path,.bodymap circle,.bodymap rect{
-  fill:rgba(255,255,255,.08);
-  stroke:rgba(255,255,255,.18);
-  stroke-width:1.2;
-  transition:fill .5s ease, stroke .5s ease, filter .5s ease;
-}
-.bodymap path.bp-on,
-.bodymap circle.bp-on,
-.bodymap rect.bp-on{
-  fill:var(--bp-on-color,#888);
-  stroke:var(--bp-on-color,#888);
-  filter:drop-shadow(0 0 6px var(--bp-on-glow,rgba(136,136,136,.5)));
-  animation:bp-pop .6s ease-out;
+/* lv3 — 3+ sessions：red + strong glow (巨人模式) */
+.bodymap [data-bp].bp-lv3{
+  fill:rgba(255,40,20,.72);stroke:#ff3014;
+  filter:drop-shadow(0 0 11px rgba(255,30,10,.85)) drop-shadow(0 0 3px rgba(255,180,100,.5));
+  animation:bp-pop .55s ease-out, bp-pulse 2s 1s ease-in-out infinite;
 }
 @keyframes bp-pop{
-  0%{transform:scale(.7);opacity:.4}
-  60%{transform:scale(1.15);opacity:1}
+  0%{transform:scale(.75);opacity:.3}
+  55%{transform:scale(1.12);opacity:1}
   100%{transform:scale(1);opacity:1}
 }
+@keyframes bp-pulse{
+  0%,100%{filter:drop-shadow(0 0 11px rgba(255,30,10,.85)) drop-shadow(0 0 3px rgba(255,180,100,.5))}
+  50%{filter:drop-shadow(0 0 18px rgba(255,60,10,1)) drop-shadow(0 0 6px rgba(255,200,120,.8))}
+}
 
-/* scan line：由上往下掃過一次（純視覺） */
-.bodymap .scan-line{
-  fill:var(--bp-on-color,#fff);
-  stroke:none;
-  opacity:0;
-  pointer-events:none;
-  filter:drop-shadow(0 0 4px var(--bp-on-glow,rgba(255,255,255,.6)));
-}
-.bodymap.scanning .scan-line{
-  animation:bp-scan 1.1s ease-out 1 forwards;
-}
+/* ── Scan line ── */
+.bodymap .scan-line{fill:var(--bp-scan-col,#ffc732);stroke:none;opacity:0;pointer-events:none}
+.bodymap.scanning .scan-line{animation:bp-scan 1.2s ease-out 1 forwards}
 @keyframes bp-scan{
-  0%   {opacity:0; transform:translateY(0)}
-  10%  {opacity:.9}
-  90%  {opacity:.9}
-  100% {opacity:0; transform:translateY(198px)}
+  0%  {opacity:0;transform:translateY(0)}
+  8%  {opacity:.85}
+  88% {opacity:.85}
+  100%{opacity:0;transform:translateY(200px)}
 }
 
-/* 部位文字 label：先掃出 → 再淡入 */
+/* ── In-SVG text label ── */
 .bodymap .bp-label{
-  font-size:11px;font-weight:700;
+  font-size:10px;font-weight:800;
   font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC",sans-serif;
-  fill:#fff;
-  paint-order:stroke;
-  stroke:rgba(0,0,0,.7);
-  stroke-width:2.5;
-  stroke-linejoin:round;
-  opacity:0;
-  transform-box:fill-box;
-  transform-origin:center;
-  transform:scale(.6);
-  transition:opacity .35s ease, transform .35s ease;
-  pointer-events:none;
+  fill:#fff;paint-order:stroke;stroke:rgba(0,0,0,.75);stroke-width:2.2;stroke-linejoin:round;
+  opacity:0;transform-box:fill-box;transform-origin:center;transform:scale(.5);
+  transition:opacity .4s ease,transform .4s cubic-bezier(.2,1.4,.4,1);pointer-events:none;
 }
-.bodymap .bp-label.bp-label-show{
-  opacity:1;
-  transform:scale(1);
+.bodymap .bp-label.bp-label-show{opacity:1;transform:scale(1)}
+
+/* ── Legend row ── */
+.bodymap-legend{
+  display:flex;flex-wrap:wrap;justify-content:center;gap:4px 10px;
+  margin-top:2px;
+}
+.bodymap-legend .bl-item{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:9px;letter-spacing:1px;color:rgba(255,255,255,.35);
+}
+.bodymap-legend .bl-item.lv1{color:#ffc732}
+.bodymap-legend .bl-item.lv2{color:#ff7814}
+.bodymap-legend .bl-item.lv3{color:#ff3014}
+.bodymap-legend .bl-dot{
+  display:inline-block;width:7px;height:7px;border-radius:50%;
+  background:rgba(255,255,255,.15);flex-shrink:0;
+}
+.bodymap-legend .bl-item.lv1 .bl-dot{background:#ffc732;box-shadow:0 0 4px rgba(255,199,36,.7)}
+.bodymap-legend .bl-item.lv2 .bl-dot{background:#ff7814;box-shadow:0 0 5px rgba(255,120,20,.8)}
+.bodymap-legend .bl-item.lv3 .bl-dot{background:#ff3014;box-shadow:0 0 7px rgba(255,30,10,1)}
+.bodymap-legend .bl-count{
+  font-size:8px;opacity:.6;
 }
 
-.bodymap-legend{
-  display:flex;flex-wrap:wrap;justify-content:center;gap:4px 8px;
-  margin-top:4px;font-size:9px;letter-spacing:1px;
-  color:rgba(255,255,255,.45);
+/* ── Intensity guide (底部) ── */
+.bodymap-guide{
+  display:flex;align-items:center;gap:6px;
+  font-size:8px;letter-spacing:1.5px;color:rgba(255,255,255,.3);
+  margin-top:2px;
 }
-.bodymap-legend span{display:inline-flex;align-items:center;gap:3px}
-.bodymap-legend span.on{color:var(--bp-on-color,#888);font-weight:700}
-.bodymap-legend span::before{
-  content:"";display:inline-block;width:6px;height:6px;border-radius:50%;
-  background:rgba(255,255,255,.2);
-}
-.bodymap-legend span.on::before{
-  background:var(--bp-on-color,#888);
-  box-shadow:0 0 5px var(--bp-on-glow,rgba(136,136,136,.5));
+.bodymap-guide .bg-swatch{
+  width:8px;height:8px;border-radius:2px;flex-shrink:0;
 }

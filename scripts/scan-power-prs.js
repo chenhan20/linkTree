@@ -32,8 +32,8 @@ const CLIENT_ID     = process.env.STRAVA_CLIENT_ID
 const CLIENT_SECRET = process.env.STRAVA_CLIENT_SECRET
 const REFRESH_TOKEN = process.env.STRAVA_REFRESH_TOKEN
 
-const STRAVA_JSON  = path.join(__dirname, '..', 'strava.json')
-const CACHE_FILE   = path.join(__dirname, '..', 'power-prs-cache.json')
+const STRAVA_JSON  = path.join(__dirname, '..', 'data', 'strava.json')
+const CACHE_FILE   = path.join(__dirname, '..', 'data', 'power-prs-cache.json')
 
 // ── 標準功率時段（秒）──
 const DURATIONS = [5, 10, 30, 60, 120, 300, 600, 1200, 3600]

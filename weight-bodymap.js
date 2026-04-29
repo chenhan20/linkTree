@@ -1,11 +1,10 @@
 /* weight-bodymap.js — 自動：偵測本週重訓活動標題，將練到的部位 (胸/背/腿/肩/手) 染色
- * 1. fetch strava.json，取本週 recent_weights，名稱掃描關鍵字
- * 2. 在所有顯示「重訓」的 quest tile 內注入 SVG 身體部位圖（正面 + 背面）
- * 3. 先呈現空白人形，依序「文字標記 → 填色」，命中部位 path 變成主題 accent 色
+/* weight-bodymap.js — 重訓任務肌群熱度圖
+ * 強度等級：1次=lv1(amber) / 2次=lv2(orange) / 3+次=lv3(red+pulse)
  */
 (function () {
   'use strict'
-  const STRAVA_JSON = 'strava.json'
+  const STRAVA_JSON = 'data/strava.json'
   const KEYWORDS = {
     chest:    ['胸', 'chest', 'bench', 'push'],
     back:     ['背', 'back',  'pull',  'row',  'lat'],
@@ -18,64 +17,61 @@
   }
 
   /* SVG 人像（正視圖）—— 預設空白，命中才染色 */
+  /* ── SVG 正面（Anterior view）── */
   const SVG_FRONT = `
-<svg class="bodymap" data-view="front" viewBox="0 0 120 200" xmlns="http://www.w3.org/2000/svg" aria-label="正面">
-  <!-- head -->
-  <circle cx="60" cy="22" r="14" />
-  <!-- neck -->
-  <rect x="54" y="34" width="12" height="8" />
-  <!-- shoulders (前束三角肌) -->
-  <path data-bp="shoulder" d="M30 50 Q40 42 54 44 L54 60 Q42 60 32 64 Z" />
-  <path data-bp="shoulder" d="M90 50 Q80 42 66 44 L66 60 Q78 60 88 64 Z" />
-  <!-- chest (左右胸) -->
-  <path data-bp="chest" d="M40 56 Q50 52 58 56 L58 82 Q48 84 38 80 Z" />
-  <path data-bp="chest" d="M80 56 Q70 52 62 56 L62 82 Q72 84 82 80 Z" />
-  <!-- abs / torso filler (灰色，不染) -->
-  <path d="M44 84 L76 84 L74 116 L46 116 Z" />
-  <!-- arms：左右上臂 (二頭) + 前臂 -->
-  <path data-bp="arm" d="M22 64 Q18 80 22 100 L32 100 Q30 80 32 66 Z" />
-  <path data-bp="arm" d="M98 64 Q102 80 98 100 L88 100 Q90 80 88 66 Z" />
-  <path data-bp="arm" d="M22 102 Q20 122 24 138 L32 138 Q32 120 32 102 Z" />
-  <path data-bp="arm" d="M98 102 Q100 122 96 138 L88 138 Q88 120 88 102 Z" />
-  <!-- legs：左右大腿 (股四頭) + 小腿 (脛) -->
-  <path data-bp="legs" d="M44 118 L58 118 L58 158 L46 158 Z" />
-  <path data-bp="legs" d="M62 118 L76 118 L74 158 L62 158 Z" />
-  <path data-bp="legs" d="M46 160 L58 160 L58 192 L48 192 Z" />
-  <path data-bp="legs" d="M62 160 L74 160 L72 192 L62 192 Z" />
-  <!-- scan line (overlay) -->
-  <rect class="scan-line" x="0" y="0" width="120" height="2" />
+<svg class="bodymap" data-view="front" viewBox="0 0 120 210" xmlns="http://www.w3.org/2000/svg" aria-label="正面">
+  <circle class="neutral" cx="60" cy="15" r="12"/>
+  <path class="neutral" d="M55 26 Q55 34 57 35 L63 35 Q65 34 65 26 Z"/>
+  <path class="neutral" d="M37 37 Q49 30 57 35 L63 35 Q71 30 83 37 L79 44 Q60 40 41 44 Z"/>
+  <path data-bp="shoulder" d="M19 49 Q17 38 37 37 L41 44 Q34 47 30 58 Q23 57 19 49 Z"/>
+  <path data-bp="shoulder" d="M101 49 Q103 38 83 37 L79 44 Q86 47 90 58 Q97 57 101 49 Z"/>
+  <path data-bp="chest" d="M41 44 Q53 36 60 43 L60 76 Q50 81 39 73 Q36 59 41 44 Z"/>
+  <path data-bp="chest" d="M79 44 Q67 36 60 43 L60 76 Q70 81 81 73 Q84 59 79 44 Z"/>
+  <rect data-bp="chest" x="45" y="79" width="13" height="10" rx="3"/>
+  <rect data-bp="chest" x="62" y="79" width="13" height="10" rx="3"/>
+  <rect data-bp="chest" x="45" y="91" width="13" height="10" rx="3"/>
+  <rect data-bp="chest" x="62" y="91" width="13" height="10" rx="3"/>
+  <rect data-bp="chest" x="45" y="103" width="13" height="10" rx="3"/>
+  <rect data-bp="chest" x="62" y="103" width="13" height="10" rx="3"/>
+  <path class="neutral" d="M37 74 Q39 78 41 116 L45 116 Q43 78 41 74 Z"/>
+  <path class="neutral" d="M83 74 Q81 78 79 116 L75 116 Q77 78 79 74 Z"/>
+  <path class="neutral" d="M37 118 Q60 126 83 118 L81 130 Q60 136 39 130 Z"/>
+  <path data-bp="arm" d="M17 50 Q13 68 17 97 L28 97 Q26 68 25 52 Q21 46 17 50 Z"/>
+  <path data-bp="arm" d="M17 99 Q15 118 19 135 L28 133 Q27 114 28 99 Z"/>
+  <path data-bp="arm" d="M103 50 Q107 68 103 97 L92 97 Q94 68 95 52 Q99 46 103 50 Z"/>
+  <path data-bp="arm" d="M103 99 Q105 118 101 135 L92 133 Q93 114 92 99 Z"/>
+  <path data-bp="legs" d="M39 132 Q46 128 55 130 L54 175 Q46 178 40 175 Z"/>
+  <path data-bp="legs" d="M81 132 Q74 128 65 130 L66 175 Q74 178 80 175 Z"/>
+  <ellipse class="neutral" cx="47" cy="179" rx="8" ry="5"/>
+  <ellipse class="neutral" cx="73" cy="179" rx="8" ry="5"/>
+  <path data-bp="legs" d="M41 185 Q47 183 55 184 L53 206 Q47 208 43 206 Z"/>
+  <path data-bp="legs" d="M79 185 Q73 183 65 184 L67 206 Q73 208 77 206 Z"/>
+  <rect class="scan-line" x="0" y="0" width="120" height="2"/>
 </svg>`
 
-  /* SVG 人像（背視圖） */
+  /* ── SVG 背面（Posterior view）── */
   const SVG_BACK = `
-<svg class="bodymap" data-view="back" viewBox="0 0 120 200" xmlns="http://www.w3.org/2000/svg" aria-label="背面">
-  <!-- head (back of head) -->
-  <circle cx="60" cy="22" r="14" />
-  <!-- neck -->
-  <rect x="54" y="34" width="12" height="8" />
-  <!-- traps / shoulders (後三角) -->
-  <path data-bp="shoulder" d="M30 50 Q40 42 54 44 L54 60 Q42 60 32 64 Z" />
-  <path data-bp="shoulder" d="M90 50 Q80 42 66 44 L66 60 Q78 60 88 64 Z" />
-  <!-- upper back (斜方 / 闊背上段) -->
-  <path data-bp="back" d="M40 50 Q60 46 80 50 L78 78 Q60 80 42 78 Z" />
-  <!-- lower back (下背) -->
-  <path data-bp="back" d="M44 80 L76 80 L74 116 L46 116 Z" />
-  <!-- arms：上臂 (三頭) + 前臂 -->
-  <path data-bp="arm" d="M22 64 Q18 80 22 100 L32 100 Q30 80 32 66 Z" />
-  <path data-bp="arm" d="M98 64 Q102 80 98 100 L88 100 Q90 80 88 66 Z" />
-  <path data-bp="arm" d="M22 102 Q20 122 24 138 L32 138 Q32 120 32 102 Z" />
-  <path data-bp="arm" d="M98 102 Q100 122 96 138 L88 138 Q88 120 88 102 Z" />
-  <!-- glutes (臀) -->
-  <path data-bp="legs" d="M44 118 L58 118 L58 134 Q50 138 44 134 Z" />
-  <path data-bp="legs" d="M62 118 L76 118 L76 134 Q70 138 62 134 Z" />
-  <!-- hamstrings (腿後) -->
-  <path data-bp="legs" d="M44 136 L58 136 L58 158 L46 158 Z" />
-  <path data-bp="legs" d="M62 136 L76 136 L74 158 L62 158 Z" />
-  <!-- calves (小腿) -->
-  <path data-bp="legs" d="M46 160 L58 160 L58 192 L48 192 Z" />
-  <path data-bp="legs" d="M62 160 L74 160 L72 192 L62 192 Z" />
-  <!-- scan line (overlay) -->
-  <rect class="scan-line" x="0" y="0" width="120" height="2" />
+<svg class="bodymap" data-view="back" viewBox="0 0 120 210" xmlns="http://www.w3.org/2000/svg" aria-label="背面">
+  <circle class="neutral" cx="60" cy="15" r="12"/>
+  <path class="neutral" d="M55 26 Q55 34 57 35 L63 35 Q65 34 65 26 Z"/>
+  <path data-bp="shoulder" d="M37 37 Q49 28 60 30 Q71 28 83 37 L79 48 Q60 42 41 48 Z"/>
+  <path data-bp="shoulder" d="M19 49 Q17 38 37 37 L41 48 Q34 51 30 62 Q23 60 19 49 Z"/>
+  <path data-bp="shoulder" d="M101 49 Q103 38 83 37 L79 48 Q86 51 90 62 Q97 60 101 49 Z"/>
+  <path data-bp="back" d="M41 48 Q60 42 79 48 L76 78 Q60 82 44 78 Z"/>
+  <path data-bp="back" d="M42 80 L78 80 L76 122 L44 122 Z"/>
+  <path data-bp="arm" d="M17 50 Q13 68 17 97 L28 97 Q26 68 25 52 Q21 46 17 50 Z"/>
+  <path data-bp="arm" d="M17 99 Q15 118 19 135 L28 133 Q27 114 28 99 Z"/>
+  <path data-bp="arm" d="M103 50 Q107 68 103 97 L92 97 Q94 68 95 52 Q99 46 103 50 Z"/>
+  <path data-bp="arm" d="M103 99 Q105 118 101 135 L92 133 Q93 114 92 99 Z"/>
+  <path data-bp="legs" d="M39 124 L57 124 L57 144 Q47 150 39 144 Z"/>
+  <path data-bp="legs" d="M63 124 L81 124 L81 144 Q73 150 63 144 Z"/>
+  <path data-bp="legs" d="M39 146 Q46 143 57 144 L55 176 Q46 179 40 176 Z"/>
+  <path data-bp="legs" d="M81 146 Q74 143 63 144 L65 176 Q74 179 80 176 Z"/>
+  <ellipse class="neutral" cx="47" cy="180" rx="8" ry="5"/>
+  <ellipse class="neutral" cx="73" cy="180" rx="8" ry="5"/>
+  <path data-bp="legs" d="M40 186 Q47 182 56 184 L54 205 Q47 210 42 206 Z"/>
+  <path data-bp="legs" d="M80 186 Q73 182 64 184 L66 205 Q73 210 78 206 Z"/>
+  <rect class="scan-line" x="0" y="0" width="120" height="2"/>
 </svg>`
 
   const LEGEND_ORDER = [
@@ -87,14 +83,22 @@
   ]
 
   function detectParts(weights) {
-    const hits = new Set()
+    const counts = new Map()
     weights.forEach(w => {
       const name = (w.name || '').toLowerCase()
       Object.entries(KEYWORDS).forEach(([part, words]) => {
-        if (words.some(kw => name.includes(kw.toLowerCase()))) hits.add(part)
+        if (words.some(kw => name.includes(kw.toLowerCase())))
+          counts.set(part, (counts.get(part) || 0) + 1)
       })
     })
-    return hits
+    return counts
+  }
+
+  function lvClass(count) {
+    if (count >= 3) return 'bp-lv3'
+    if (count >= 2) return 'bp-lv2'
+    if (count >= 1) return 'bp-lv1'
+    return ''
   }
 
   function thisWeekWeights(data) {
@@ -109,12 +113,12 @@
   }
 
   /* 在指定 SVG 內，對命中部位的第一個 path 上方加文字 label */
-  function addLabels(svg, hits) {
+  function addLabels(svg, counts) {
     const SVG_NS = 'http://www.w3.org/2000/svg'
     const seen = new Set()
     svg.querySelectorAll('[data-bp]').forEach(el => {
       const bp = el.getAttribute('data-bp')
-      if (!hits.has(bp) || seen.has(bp)) return
+      if (!counts.has(bp) || seen.has(bp)) return
       seen.add(bp)
       let bbox
       try { bbox = el.getBBox() } catch (_) { bbox = { x: 0, y: 0, width: 0, height: 0 } }
@@ -132,6 +136,7 @@
   }
 
   function buildBodymap(hits) {
+      function buildBodymap(counts) {
     const wrap = document.createElement('div')
     wrap.className = 'bodymap-wrap'
 
@@ -150,10 +155,17 @@
 
     const legend = document.createElement('div')
     legend.className = 'bodymap-legend'
-    legend.innerHTML = LEGEND_ORDER.map(p =>
-      `<span class="${hits.has(p.key) ? 'on' : ''}">${p.label}</span>`
-    ).join('')
+    legend.innerHTML = LEGEND_ORDER.map(p => {
+      const c = counts.get(p.key) || 0
+      const lv = c ? lvClass(c) : ''
+      return `<span class="bl-item${lv ? ' ' + lv : ''}"><span class="bl-dot"></span>${p.label}${c ? `<span class="bl-count">×${c}</span>` : ''}</span>`
+    }).join('')
     wrap.appendChild(legend)
+
+    const guide = document.createElement('div')
+    guide.className = 'bodymap-guide'
+    guide.innerHTML = `<span class="bg-swatch" style="background:#ffc732"></span>×1<span class="bg-swatch" style="background:#ff7814;margin-left:5px"></span>×2<span class="bg-swatch" style="background:#ff3014;margin-left:5px"></span>×3+`
+    wrap.appendChild(guide)
 
     const svgs = wrap.querySelectorAll('svg.bodymap')
 
@@ -165,19 +177,20 @@
       // Phase 1: 文字標記
       setTimeout(() => {
         svgs.forEach(svg => {
-          addLabels(svg, hits)
-          // 下一幀加 show class，觸發 transition
+          addLabels(svg, counts)
           requestAnimationFrame(() => {
             svg.querySelectorAll('.bp-label').forEach(t => t.classList.add('bp-label-show'))
           })
         })
       }, 300)
 
-      // Phase 2: 填色
+      // Phase 2: 填色（強度等級）
       setTimeout(() => {
         svgs.forEach(svg => {
           svg.querySelectorAll('[data-bp]').forEach(el => {
-            if (hits.has(el.getAttribute('data-bp'))) el.classList.add('bp-on')
+            const bp = el.getAttribute('data-bp')
+            const c = counts.get(bp) || 0
+            if (c > 0) el.classList.add(lvClass(c))
           })
         })
       }, 900)
@@ -204,12 +217,11 @@
     const oldMap = tile.querySelector('.bodymap-wrap')
     if (oldMap) return // 已注入
     const hits = detectParts(thisWeekWeights(data))
-    const map = buildBodymap(hits)
-    // 保留 icon、label、check；其餘進度條移除
+    const counts = detectParts(thisWeekWeights(data))
+    const map = buildBodymap(counts)
     tile.querySelectorAll('.qprog-wrap, .qpct, .qprog-or').forEach(n => n.remove())
     tile.appendChild(map)
-    // 若至少命中一個部位，補一個 done 樣式
-    if (hits.size > 0 && !tile.classList.contains('on') && !tile.classList.contains('done')) {
+    if (counts.size > 0 && !tile.classList.contains('on') && !tile.classList.contains('done')) {
       tile.classList.add('on')
       tile.classList.add('done')
     }

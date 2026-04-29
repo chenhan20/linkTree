@@ -1331,7 +1331,7 @@ function bindPowerCard(prs) {
 }
 
 /* ── fetch strava.json ── */
-fetch('strava.json')
+fetch('data/strava.json')
   .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json() })
   .then(data => { render(data); bindPowerCard(data.power_prs) })
   .catch(err => {
@@ -1423,11 +1423,9 @@ fetch('strava.json')
 
 <!-- 跨主題共用：單車活動詳情彈窗 -->
 <link rel="stylesheet" href="activity-modal.css">
-<link rel="stylesheet" href="weight-3d.css">
 <link rel="stylesheet" href="theme-strava.css">
 <style>:root{--am-accent:#FC4C02;--am-accent-soft:rgba(252,76,2,.18);--am-panel:#14100c;--am-panel-2:#1c160f}</style>
 <script src="activity-modal.js" defer></script>
 <script src="power-card-glow.js" defer></script>
-<script src="weight-3d.js" defer></script>
 </body>
 </html>

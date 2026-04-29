@@ -762,8 +762,95 @@ function renderHero(updatedAt){
   return `
     <div class="hero">
       <div class="hero-char">
-        <img class="pixel-img" src="docs/maple-char.png" alt=""
-             onerror="this.style.display='none';this.parentElement.innerHTML='🚴'">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 30"
+             shape-rendering="crispEdges" style="width:100%;height:100%">
+          <!-- ── HAIR ── -->
+          <!-- top spikes -->
+          <rect x="6" y="0" width="2" height="2" fill="#ccd8e0"/>
+          <rect x="12" y="0" width="2" height="2" fill="#ccd8e0"/>
+          <!-- hair main top block -->
+          <rect x="4" y="1" width="12" height="3" fill="#ccd8e0"/>
+          <!-- hair left side hang -->
+          <rect x="3" y="3" width="3" height="8" fill="#ccd8e0"/>
+          <!-- hair right side hang -->
+          <rect x="14" y="3" width="3" height="8" fill="#ccd8e0"/>
+          <!-- hair shadow -->
+          <rect x="3" y="5" width="1" height="5" fill="#90a8bc"/>
+          <rect x="16" y="5" width="1" height="5" fill="#90a8bc"/>
+          <!-- dark outline around hair -->
+          <rect x="6" y="0" width="8" height="1" fill="#20203c"/>
+          <rect x="4" y="1" width="1" height="1" fill="#20203c"/>
+          <rect x="15" y="1" width="1" height="1" fill="#20203c"/>
+          <rect x="2" y="3" width="1" height="9" fill="#20203c"/>
+          <rect x="17" y="3" width="1" height="9" fill="#20203c"/>
+          <!-- ── FACE / SKIN ── -->
+          <rect x="4" y="4" width="1" height="7" fill="#fce0c0"/>
+          <rect x="15" y="4" width="1" height="7" fill="#fce0c0"/>
+          <rect x="5" y="3" width="10" height="9" fill="#fce0c0"/>
+          <!-- face bottom border -->
+          <rect x="5" y="12" width="10" height="1" fill="#20203c"/>
+          <!-- ── EYES ── -->
+          <!-- left eye white -->
+          <rect x="5" y="6" width="3" height="3" fill="#fff"/>
+          <!-- left iris -->
+          <rect x="6" y="6" width="2" height="3" fill="#88b0e0"/>
+          <!-- left pupil -->
+          <rect x="6" y="7" width="2" height="2" fill="#303060"/>
+          <!-- left highlight -->
+          <rect x="5" y="6" width="1" height="1" fill="#fff"/>
+          <!-- right eye white -->
+          <rect x="12" y="6" width="3" height="3" fill="#fff"/>
+          <!-- right iris -->
+          <rect x="12" y="6" width="2" height="3" fill="#88b0e0"/>
+          <!-- right pupil -->
+          <rect x="12" y="7" width="2" height="2" fill="#303060"/>
+          <!-- right highlight -->
+          <rect x="14" y="6" width="1" height="1" fill="#fff"/>
+          <!-- eye outlines -->
+          <rect x="5" y="6" width="3" height="1" fill="#20203c"/>
+          <rect x="12" y="6" width="3" height="1" fill="#20203c"/>
+          <rect x="5" y="9" width="3" height="1" fill="#20203c"/>
+          <rect x="12" y="9" width="3" height="1" fill="#20203c"/>
+          <!-- ── BLUSH ── -->
+          <rect x="5" y="9" width="2" height="1" fill="#f8a0b0"/>
+          <rect x="13" y="9" width="2" height="1" fill="#f8a0b0"/>
+          <!-- ── MOUTH ── -->
+          <rect x="9" y="11" width="2" height="1" fill="#e89090"/>
+          <!-- ── NECK ── -->
+          <rect x="8" y="12" width="4" height="2" fill="#fce0c0"/>
+          <!-- ── COLLAR ── -->
+          <rect x="9" y="13" width="2" height="1" fill="#ffffff"/>
+          <!-- ── SHIRT ── -->
+          <rect x="6" y="14" width="8" height="3" fill="#e0ecf8"/>
+          <rect x="6" y="14" width="8" height="1" fill="#b8cce0"/>
+          <rect x="5" y="14" width="1" height="3" fill="#20203c"/>
+          <rect x="14" y="14" width="1" height="3" fill="#20203c"/>
+          <!-- ── SKIRT ── -->
+          <rect x="5" y="17" width="10" height="4" fill="#6888c8"/>
+          <rect x="5" y="20" width="10" height="1" fill="#4868a8"/>
+          <rect x="4" y="17" width="1" height="4" fill="#20203c"/>
+          <rect x="15" y="17" width="1" height="4" fill="#20203c"/>
+          <rect x="5" y="21" width="10" height="1" fill="#20203c"/>
+          <!-- ── LEGS ── -->
+          <rect x="6" y="22" width="3" height="5" fill="#fce0c0"/>
+          <rect x="11" y="22" width="3" height="5" fill="#fce0c0"/>
+          <rect x="5" y="22" width="1" height="5" fill="#20203c"/>
+          <rect x="9" y="22" width="2" height="5" fill="#20203c"/>
+          <rect x="14" y="22" width="1" height="5" fill="#20203c"/>
+          <!-- ── SOCKS ── -->
+          <rect x="6" y="26" width="3" height="2" fill="#e8e8f0"/>
+          <rect x="11" y="26" width="3" height="2" fill="#e8e8f0"/>
+          <!-- ── SHOES ── -->
+          <rect x="5" y="28" width="5" height="2" fill="#283060"/>
+          <rect x="10" y="28" width="5" height="2" fill="#283060"/>
+          <rect x="5" y="28" width="2" height="1" fill="#3848a0"/>
+          <rect x="10" y="28" width="2" height="1" fill="#3848a0"/>
+          <rect x="4" y="28" width="1" height="2" fill="#20203c"/>
+          <rect x="10" y="28" width="1" height="2" fill="#20203c"/>
+          <rect x="15" y="28" width="1" height="2" fill="#20203c"/>
+          <rect x="5" y="30" width="5" height="1" fill="#20203c"/>
+          <rect x="10" y="30" width="5" height="1" fill="#20203c"/>
+        </svg>
       </div>
       <div class="hero-name">
         <h1>STEVE</h1>
@@ -1382,7 +1469,7 @@ function bindMaplePower(prs){
   })
 }
 
-fetch('strava.json')
+fetch('data/strava.json')
   .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json() })
   .then(d => { render(d); bindMaplePower(d.power_prs) })
   .catch(err => {
@@ -1471,11 +1558,9 @@ fetch('strava.json')
 
 <!-- 跨主題共用：單車活動詳情彈窗 -->
 <link rel="stylesheet" href="activity-modal.css">
-<link rel="stylesheet" href="weight-3d.css">
 <link rel="stylesheet" href="theme-maple.css">
 <style>:root{--am-accent:#c54a0d;--am-accent-soft:rgba(197,74,13,.2);--am-panel:#1c140c;--am-panel-2:#241a10;--am-text:#f5e3cf}</style>
 <script src="activity-modal.js" defer></script>
 <script src="power-card-glow.js" defer></script>
-<script src="weight-3d.js" defer></script>
 </body>
 </html>
