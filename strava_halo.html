@@ -1038,18 +1038,33 @@ function renderTimeline(list, type, expanded, ittMap) {
 /* ── main render ── */
 function render(data) {
   const s = data.summary || {}
-  const history = (data.monthly_history || []).slice().reverse()
+  const tpeNow = new Date(Date.now() + 8 * 3600 * 1000)
+  const tY = tpeNow.getUTCFullYear(), tM = tpeNow.getUTCMonth(), tD = tpeNow.getUTCDate()
+  const thisMonth = tY + '-' + String(tM + 1).padStart(2, '0')
+  const updatedMonth = (data.updated_at || '').slice(0, 7)
+  const isStaleMonth = updatedMonth !== thisMonth
+
+  if (!Array.isArray(data.monthly_history)) data.monthly_history = []
+  let mh = data.monthly_history.find(h => h.month === thisMonth)
+  if (!mh) {
+    mh = {
+      month: thisMonth,
+      ride: { distance_km: 0, elevation_m: 0, count: 0 },
+      run: { distance_km: 0, count: 0 },
+      swim: { distance_km: 0, count: 0 },
+      weight_training: { count: 0 },
+    }
+    data.monthly_history.push(mh)
+    data.monthly_history.sort((a, b) => (a.month || '').localeCompare(b.month || ''))
+  }
+  const history = data.monthly_history.slice().reverse()
 
   // ── Fallback: derive monthly data from existing JSON if Action hasn't run yet ──
-  if (!data.monthly_summary || !data.monthly_goals || !data.weekly_quest) {
-    const tpeNow = new Date(Date.now() + 8 * 3600 * 1000)
-    const tY = tpeNow.getUTCFullYear(), tM = tpeNow.getUTCMonth(), tD = tpeNow.getUTCDate()
-    const thisMonth = tY + '-' + String(tM + 1).padStart(2, '0')
-    const mh = (data.monthly_history || []).find(h => h.month === thisMonth)
+  if (!data.monthly_summary || !data.monthly_goals || !data.weekly_quest || isStaleMonth) {
     const TARGET = 4
     const TARGET_WEIGHT = 10
     const sOf = (c, t) => { const r = c / t; return r >= 1.5 ? 'over' : r >= 1 ? 'done' : r >= 0.5 ? 'warning' : 'danger' }
-    if (!data.monthly_summary && mh) {
+    if ((!data.monthly_summary || isStaleMonth) && mh) {
       data.monthly_summary = {
         ride_km:      mh.ride?.distance_km ?? 0,
         run_km:       mh.run?.distance_km ?? 0,
@@ -1057,7 +1072,7 @@ function render(data) {
         weight_count: mh.weight_training?.count ?? 0,
       }
     }
-    if (!data.monthly_goals && mh) {
+    if ((!data.monthly_goals || isStaleMonth) && mh) {
       const rc = mh.ride?.count ?? 0, rnc = mh.run?.count ?? 0, sc = mh.swim?.count ?? 0, wc = mh.weight_training?.count ?? 0
       data.monthly_goals = {
         ride:   { count: rc,  target: TARGET,        status: sOf(rc,  TARGET)        },

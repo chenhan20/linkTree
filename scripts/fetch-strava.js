@@ -629,8 +629,9 @@ function buildJSON(stats, activities) {
     FTP = JSON.parse(fs.readFileSync(athleteFile, 'utf8')).cycling.ftp_watts.latest || 238
   } catch (e) { console.warn('⚠️  無法讀取 FTP，使用預設 238W') }
 
-  const now = new Date()
-  const thisMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+  // Use Asia/Taipei month boundary so month rollover is correct for local usage.
+  const tpeNowForMonth = new Date(Date.now() + 8 * 3600 * 1000)
+  const thisMonth = `${tpeNowForMonth.getUTCFullYear()}-${String(tpeNowForMonth.getUTCMonth() + 1).padStart(2, '0')}`
 
   // ── 判斷運動類型 ──
   const RIDE_TYPES   = ['Ride', 'VirtualRide', 'EBikeRide', 'MountainBikeRide']
