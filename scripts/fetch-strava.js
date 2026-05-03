@@ -837,6 +837,20 @@ function buildJSON(stats, activities) {
   const weekSwims   = weekActs.filter(a => isType(a, SWIM_TYPES))
   const weekWeights = weekActs.filter(a => isType(a, WEIGHT_TYPES))
 
+  function detectTrainPartsFromActivities(weightActs) {
+    const text = (weightActs || [])
+      .map(a => (a && a.name ? String(a.name) : ''))
+      .join(' ')
+      .toLowerCase()
+    return {
+      chest: text.includes('胸') || text.includes('chest'),
+      back: text.includes('背') || text.includes('back'),
+      legs: text.includes('腿') || text.includes('leg') || text.includes('legs'),
+      shoulders: text.includes('肩') || text.includes('shoulder') || text.includes('shoulders'),
+      arms: text.includes('手') || text.includes('arm') || text.includes('arms') || text.includes('三頭') || text.includes('二頭'),
+    }
+  }
+
   const wRideDist = Math.round(weekRides.reduce((s, a) => s + (a.distance || 0), 0) / 100) / 10
   const wRideHr   = Math.round(weekRides.reduce((s, a) => s + (a.moving_time || 0), 0) / 360) / 10
   const wRunDist  = Math.round(weekRuns.reduce((s, a)  => s + (a.distance || 0), 0) / 100) / 10
@@ -844,12 +858,13 @@ function buildJSON(stats, activities) {
   const wSwimM    = Math.round(weekSwims.reduce((s, a) => s + (a.distance || 0), 0))
   const wSwimHr   = Math.round(weekSwims.reduce((s, a) => s + (a.moving_time || 0), 0) / 360) / 10
   const wWeightCt = weekWeights.length
+  const wWeightParts = detectTrainPartsFromActivities(weekWeights)
 
   const weekly_quest = {
     ride:   { done: wRideDist >= 30 || wRideHr >= 1, distance_km: wRideDist, moving_time_hr: wRideHr, target_km: 30, target_hr: 1 },
     run:    { done: wRunDist >= 10  || wRunHr >= 1,  distance_km: wRunDist,  moving_time_hr: wRunHr,  target_km: 10, target_hr: 1 },
     swim:   { done: wSwimM >= 1000 || wSwimHr >= 1,  distance_m: wSwimM,     moving_time_hr: wSwimHr, target_m: 1000, target_hr: 1 },
-    weight: { done: wWeightCt >= 1,                   count: wWeightCt,      target: 1 },
+    weight: { done: wWeightCt >= 1,                   count: wWeightCt,      target: 1, parts: wWeightParts },
   }
 
   return {
