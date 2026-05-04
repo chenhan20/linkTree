@@ -62,7 +62,7 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add strava.json power-prs.json
+          git add data/strava.json data/power-prs.json
           # 如果沒有變動就不 commit（避免空 commit）
           git diff --staged --quiet || git commit -m "chore: update strava data $(date -u '+%Y-%m-%d')"
           git push
