@@ -843,6 +843,17 @@ function render(data) {
   const thisMonth = tY + '-' + String(tM + 1).padStart(2, '0')
   const updatedMonth = (data.updated_at || '').slice(0, 7)
   const isStaleMonth = updatedMonth !== thisMonth
+  const daysFromMon = (tpeNow.getUTCDay() + 6) % 7
+  const thisWeekStart = new Date(Date.UTC(tY, tM, tD - daysFromMon)).toISOString().slice(0, 10)
+  const updatedAtTpe = data.updated_at ? new Date(new Date(data.updated_at).getTime() + 8 * 3600 * 1000) : null
+  const updatedWeekStart = updatedAtTpe
+    ? new Date(Date.UTC(
+        updatedAtTpe.getUTCFullYear(),
+        updatedAtTpe.getUTCMonth(),
+        updatedAtTpe.getUTCDate() - ((updatedAtTpe.getUTCDay() + 6) % 7),
+      )).toISOString().slice(0, 10)
+    : ''
+  const isStaleWeek = !!data.weekly_quest && !!updatedWeekStart && updatedWeekStart !== thisWeekStart
 
   if (!Array.isArray(data.monthly_history)) data.monthly_history = []
   let mh = data.monthly_history.find(h => h.month === thisMonth)
@@ -860,7 +871,7 @@ function render(data) {
   const history = data.monthly_history.slice().reverse()
 
   // ── Fallback: derive monthly data from existing JSON if Action hasn't run yet ──
-  if (!data.monthly_summary || !data.monthly_goals || !data.weekly_quest || isStaleMonth) {
+  if (!data.monthly_summary || !data.monthly_goals || !data.weekly_quest || isStaleMonth || isStaleWeek) {
     const TARGET = 4
     const TARGET_WEIGHT = 10
     const sOf = (c, t) => { const r = c / t; return r >= 1.5 ? 'over' : r >= 1 ? 'done' : r >= 0.5 ? 'warning' : 'danger' }
@@ -881,11 +892,8 @@ function render(data) {
         weight: { count: wc,  target: TARGET_WEIGHT, status: sOf(wc,  TARGET_WEIGHT) },
       }
     }
-    if (!data.weekly_quest) {
-      const dow = tpeNow.getUTCDay()
-      const daysFromMon = (dow + 6) % 7
-      const weekStart = new Date(Date.UTC(tY, tM, tD - daysFromMon)).toISOString().slice(0, 10)
-      const inWeek = a => (a.date || '') >= weekStart
+    if (!data.weekly_quest || isStaleWeek) {
+      const inWeek = a => (a.date || '') >= thisWeekStart
       const wRides   = (data.recent_rides   || []).filter(inWeek)
       const wRuns    = (data.recent_runs    || []).filter(inWeek)
       const wSwims   = (data.recent_swims   || []).filter(inWeek)
@@ -906,10 +914,7 @@ function render(data) {
     }
   }
   if (data.weekly_quest?.weight && !data.weekly_quest.weight.parts) {
-    const dow = tpeNow.getUTCDay()
-    const daysFromMon = (dow + 6) % 7
-    const weekStart = new Date(Date.UTC(tY, tM, tD - daysFromMon)).toISOString().slice(0, 10)
-    const inWeek = a => (a.date || '') >= weekStart
+    const inWeek = a => (a.date || '') >= thisWeekStart
     const wWeights = (data.recent_weights || []).filter(inWeek)
     data.weekly_quest.weight.parts = detectTrainPartsFromActivities(wWeights)
   }
