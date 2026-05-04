@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>MotionWorld</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --g1: #22c55e; --g2: #4ade80; --g-bg: #f0fdf4;
+      --b1: #3b82f6; --b2: #60a5fa;
+      --p1: #7c3aed; --p2: #a855f7;
+      --y1: #f59e0b; --y2: #fbbf24;
+      --white: #fff;
+      --gray-100: #f3f4f6; --gray-200: #e5e7eb;
+      --gray-400: #9ca3af; --gray-500: #6b7280; --gray-800: #1f2937;
+      --sh-sm: 0 1px 3px rgba(0,0,0,.1),0 1px 2px rgba(0,0,0,.06);
+      --sh-md: 0 4px 6px rgba(0,0,0,.07),0 2px 4px rgba(0,0,0,.06);
+      --sh-lg: 0 10px 20px rgba(0,0,0,.12),0 4px 8px rgba(0,0,0,.08);
+      --r-sm: 8px; --r-md: 12px; --r-lg: 16px; --r-xl: 20px;
+      --topbar: 60px; --nav: 64px;
+    }
+    html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; background: var(--g-bg); color: var(--gray-800); overflow: hidden; }
+
+    /* ── App Shell ── */
+    #app { display: flex; flex-direction: column; height: 100%; max-width: 430px; margin: 0 auto; background: var(--white); box-shadow: 0 0 60px rgba(0,0,0,.18); position: relative; }
+
+    /* ── Loading ── */
+    #loading { position: fixed; inset: 0; background: linear-gradient(160deg,#ecfdf5,#d1fae5); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; gap: 14px; }
+    .ld-logo { font-size: 72px; animation: ld-bounce 1s ease-in-out infinite alternate; }
+    @keyframes ld-bounce { from{transform:scale(.9) translateY(4px)} to{transform:scale(1.08) translateY(-4px)} }
+    .ld-name { font-size: 22px; font-weight: 800; color: var(--g1); letter-spacing: 1px; }
+    .ld-sub  { font-size: 13px; color: var(--gray-400); }
+    .ld-bar  { width: 160px; height: 4px; background: #a7f3d0; border-radius: 2px; overflow: hidden; }
+    .ld-bar-fill { height: 100%; background: var(--g1); border-radius: 2px; animation: ld-prog 1.6s ease-in-out infinite; }
+    @keyframes ld-prog { 0%{width:0%} 60%{width:85%} 100%{width:100%} }
+
+    /* ── Top Bar ── */
+    #topbar { height: var(--topbar); background: var(--white); display: flex; align-items: center; padding: 0 14px; gap: 10px; border-bottom: 1px solid var(--gray-200); box-shadow: var(--sh-sm); position: relative; z-index: 200; flex-shrink: 0; }
+    .t-avatar { width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg,var(--g1),#16a34a); color: #fff; font-weight: 800; font-size: 15px; display: flex; align-items: center; justify-content: center; border: 2px solid var(--g2); flex-shrink: 0; }
+    .t-meta { flex: 1; min-width: 0; }
+    .t-name { font-weight: 700; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .t-lv-row { display: flex; align-items: center; gap: 6px; margin-top: 3px; }
+    .t-lv-badge { font-size: 9px; font-weight: 800; background: linear-gradient(135deg,var(--y2),var(--y1)); color: #78350f; padding: 1px 7px; border-radius: 5px; white-space: nowrap; }
+    .t-lv-track { flex: 1; max-width: 70px; height: 5px; background: var(--gray-200); border-radius: 3px; overflow: hidden; }
+    .t-lv-fill  { height: 100%; background: linear-gradient(90deg,var(--y2),var(--y1)); border-radius: 3px; transition: width .5s ease; }
+    .t-actions { display: flex; gap: 8px; }
+    .t-btn { width: 34px; height: 34px; border-radius: 50%; background: var(--gray-100); border: none; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; position: relative; transition: background .15s; }
+    .t-btn:hover { background: var(--gray-200); }
+    .t-badge { position: absolute; top: 1px; right: 1px; width: 14px; height: 14px; border-radius: 50%; background: #ef4444; color: #fff; font-size: 8px; font-weight: 700; display: flex; align-items: center; justify-content: center; border: 1.5px solid #fff; }
+
+    /* ── Pages ── */
+    .page { display: none; flex: 1; overflow-y: auto; overflow-x: hidden; position: relative; min-height: 0; }
+    .page.active { display: flex; flex-direction: column; }
+    #page-explore.active { overflow: hidden; }
+
+    /* ── 探索 ── */
+    #map-wrap { flex: 1; position: relative; min-height: 0; }
+    #map { width: 100%; height: 100%; }
+
+    /* Floating map tools */
+    #map-tools { position: absolute; top: 10px; right: 10px; z-index: 400; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+    #map-compass, #map-legend-btn { width: 38px; height: 38px; border-radius: 50%; background: var(--white); border: none; cursor: pointer; box-shadow: var(--sh-md); font-size: 17px; display: flex; align-items: center; justify-content: center; }
+    #map-legend-btn { font-size: 16px; }
+    #map-legend-panel { width: min(250px, calc(100vw - 36px)); max-height: min(56vh, 420px); overflow: auto; background: rgba(255,255,255,.98); border-radius: 16px; box-shadow: var(--sh-lg); padding: 10px; border: 1px solid rgba(229,231,235,.95); transform: translateX(14px); opacity: 0; pointer-events: none; transition: transform .2s ease, opacity .2s ease; }
+    #map-legend-panel.open { transform: translateX(0); opacity: 1; pointer-events: auto; }
+    .legend-title { font-size: 12px; font-weight: 800; color: var(--gray-800); }
+    .legend-sub { font-size: 10px; color: var(--gray-500); margin-top: 2px; margin-bottom: 8px; }
+    .legend-image { display: block; width: 100%; height: auto; border-radius: 12px; box-shadow: var(--sh-sm); }
+
+    /* Tile counter chip */
+    #tile-chip { position: absolute; top: 10px; left: 10px; z-index: 400; background: rgba(255,255,255,.92); border-radius: 20px; padding: 4px 12px; display: flex; align-items: center; gap: 6px; box-shadow: var(--sh-sm); font-size: 12px; font-weight: 700; color: var(--gray-800); backdrop-filter: blur(4px); }
+    .tile-chip-icon { font-size: 15px; }
+
+    /* Toast */
+    #toast { position: absolute; top: 10px; left: 50%; transform: translateX(-50%) translateY(-90px); background: var(--white); border-radius: 24px; padding: 8px 14px 8px 10px; display: flex; align-items: center; gap: 8px; box-shadow: var(--sh-lg); border: 1.5px solid var(--g2); z-index: 500; transition: transform .45s cubic-bezier(.34,1.56,.64,1); white-space: nowrap; pointer-events: none; }
+    #toast.show { transform: translateX(-50%) translateY(0); }
+    .toast-ico { font-size: 20px; }
+    .toast-lbl { font-size: 9px; font-weight: 600; color: var(--gray-400); letter-spacing: .5px; text-transform: uppercase; }
+    .toast-val { font-size: 13px; font-weight: 700; color: var(--gray-800); }
+
+    /* Stats Bar */
+    #stats-bar { background: var(--white); padding: 10px 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; border-top: 1px solid var(--gray-200); flex-shrink: 0; box-shadow: 0 -3px 10px rgba(0,0,0,.05); }
+    .stat-card { background: var(--gray-100); border-radius: var(--r-md); padding: 10px 12px; display: flex; align-items: center; gap: 10px; }
+    .stat-ico { font-size: 24px; line-height: 1; }
+    .stat-body { flex: 1; min-width: 0; }
+    .stat-val { font-size: 17px; font-weight: 800; line-height: 1; color: var(--gray-800); }
+    .stat-track { margin-top: 4px; height: 4px; background: var(--gray-200); border-radius: 2px; overflow: hidden; }
+    .stat-fill { height: 100%; border-radius: 2px; transition: width .6s ease; }
+    .stat-fill.green { background: linear-gradient(90deg,var(--g1),var(--g2)); }
+    .stat-fill.yellow{ background: linear-gradient(90deg,var(--y1),var(--y2)); }
+    .stat-lbl { font-size: 10px; color: var(--gray-400); margin-top: 3px; }
+
+    /* Seed Card */
+    #seed-card { background: linear-gradient(135deg,#ecfdf5,#d1fae5); border-top: 1px solid #a7f3d0; padding: 10px 14px; display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+    .seed-ico { font-size: 30px; line-height: 1; }
+    .seed-body { flex: 1; min-width: 0; }
+    .seed-name  { font-size: 11px; font-weight: 600; color: #065f46; }
+    .seed-timer { font-size: 19px; font-weight: 800; color: #047857; font-variant-numeric: tabular-nums; line-height: 1.2; }
+    .seed-track { margin-top: 4px; height: 4px; background: #a7f3d0; border-radius: 2px; overflow: hidden; }
+    .seed-prog  { height: 100%; background: linear-gradient(90deg,var(--g1),#16a34a); border-radius: 2px; transition: width 1s linear; }
+    .seed-btn   { background: linear-gradient(135deg,var(--g1),#16a34a); color: #fff; border: none; border-radius: 20px; padding: 8px 16px; font-size: 13px; font-weight: 700; cursor: pointer; box-shadow: 0 3px 10px rgba(34,197,94,.38); white-space: nowrap; }
+
+    /* ── 精靈圖鑑 ── */
+    #page-creature { background: #f4f2ff; }
+    .cr-topbar { display:flex; align-items:center; gap:10px; padding:12px 14px 8px; background:var(--white); border-bottom:1px solid var(--gray-200); flex-shrink:0; }
+    .cr-topbar-back { width:32px; height:32px; border-radius:50%; background:var(--gray-100); border:none; cursor:pointer; font-size:21px; display:flex; align-items:center; justify-content:center; color:var(--gray-800); }
+    .cr-topbar-title { font-size:16px; font-weight:800; }
+    .cr-topbar-sub { font-size:10px; color:var(--gray-400); margin-top:1px; }
+    .cf-row { display:flex; gap:6px; padding:9px 12px; overflow-x:auto; flex-shrink:0; scrollbar-width:none; background:var(--white); }
+    .cf-row::-webkit-scrollbar { display:none; }
+    .cf-tab { border:1.5px solid var(--gray-200); background:var(--white); border-radius:20px; padding:5px 11px; font-size:11px; font-weight:600; white-space:nowrap; cursor:pointer; color:var(--gray-500); transition:all .18s; flex-shrink:0; }
+    .cf-tab.on { background:var(--p1); border-color:var(--p1); color:#fff; }
+    /* Featured card */
+    .cr-feat { margin:10px 12px 0; border-radius:var(--r-xl); overflow:hidden; box-shadow:var(--sh-lg); flex-shrink:0; cursor:pointer; }
+    .cr-feat-inner { display:flex; align-items:stretch; min-height:172px; }
+    .cr-feat-art { width:46%; position:relative; display:flex; align-items:flex-end; justify-content:center; padding-bottom:0; overflow:hidden; }
+    .cr-feat-art svg { width:108%; height:auto; margin-bottom:-4px; }
+    .cr-feat-details { flex:1; padding:13px 12px 13px 2px; color:#fff; display:flex; flex-direction:column; justify-content:center; gap:5px; }
+    .cr-feat-rarity { font-size:10px; font-weight:800; letter-spacing:.5px; background:linear-gradient(135deg,var(--y2),var(--y1)); color:#7c2d12; padding:2px 7px; border-radius:4px; display:inline-block; align-self:flex-start; }
+    .cr-feat-name { font-size:18px; font-weight:800; line-height:1.1; }
+    .cr-feat-en { font-size:9px; opacity:.55; letter-spacing:.5px; text-transform:uppercase; }
+    .cr-feat-type { display:inline-flex; align-items:center; gap:3px; font-size:10px; font-weight:700; padding:2px 9px; border-radius:20px; background:rgba(255,255,255,.18); align-self:flex-start; }
+    .cr-feat-stars { color:var(--y2); font-size:13px; letter-spacing:1px; }
+    .cr-feat-power { display:flex; align-items:baseline; gap:3px; }
+    .cr-feat-power-lbl { font-size:10px; opacity:.7; }
+    .cr-feat-power-val { font-size:21px; font-weight:800; line-height:1; color:var(--y2); }
+    /* Ability section */
+    .cr-abil { margin:10px 12px 0; flex-shrink:0; }
+    .cr-abil-title { font-size:11px; font-weight:700; color:var(--gray-400); margin-bottom:6px; text-transform:uppercase; letter-spacing:.5px; }
+    .cr-abil-item { display:flex; align-items:center; gap:9px; background:var(--white); border-radius:var(--r-md); padding:8px 11px; margin-bottom:5px; box-shadow:var(--sh-sm); border:1px solid var(--gray-200); }
+    .cr-abil-ico { width:30px; height:30px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
+    .cr-abil-name { font-size:12px; font-weight:700; }
+    .cr-abil-desc { font-size:10px; color:var(--gray-500); margin-top:1px; }
+    /* Collection grid */
+    .cr-coll-head { display:flex; align-items:center; justify-content:space-between; padding:12px 12px 7px; flex-shrink:0; }
+    .cr-coll-title { font-size:13px; font-weight:700; }
+    .cr-coll-grid { display:grid; grid-template-columns:1fr 1fr; gap:9px; padding:0 12px 16px; }
+    .cr-coll-card { border-radius:var(--r-lg); overflow:hidden; box-shadow:var(--sh-md); cursor:pointer; transition:transform .15s; position:relative; }
+    .cr-coll-card:active { transform:scale(.97); }
+    .cr-coll-art { height:128px; display:flex; align-items:flex-end; justify-content:center; padding-bottom:0; overflow:hidden; }
+    .cr-coll-art svg { width:92%; height:auto; margin-bottom:-3px; }
+    .cr-coll-rarity { position:absolute; top:6px; left:6px; font-size:8px; font-weight:800; letter-spacing:.4px; background:linear-gradient(135deg,var(--y2),var(--y1)); color:#7c2d12; padding:1.5px 5px; border-radius:3px; z-index:1; }
+    .cr-coll-fav { position:absolute; top:5px; right:7px; font-size:13px; z-index:1; }
+    .cr-coll-bottom { padding:6px 9px 9px; }
+    .cr-coll-name { font-size:12px; font-weight:700; }
+    .cr-coll-stars { font-size:11px; color:var(--y1); margin-top:2px; letter-spacing:.5px; }
+
+    /* Section header */
+    .sec-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px 8px; }
+    .sec-title { font-size: 14px; font-weight: 700; }
+    .sec-link  { font-size: 12px; color: var(--p1); font-weight: 600; cursor: pointer; }
+
+    /* Achievements */
+    .ach-list { padding: 0 14px; display: flex; flex-direction: column; gap: 8px; }
+    .ach-item { background: var(--white); border-radius: var(--r-md); padding: 11px 12px; display: flex; align-items: center; gap: 11px; box-shadow: var(--sh-sm); border: 1px solid var(--gray-200); }
+    .ach-ico-wrap { width: 40px; height: 40px; border-radius: var(--r-sm); display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+    .ach-body { flex: 1; min-width: 0; }
+    .ach-name { font-size: 13px; font-weight: 700; }
+    .ach-desc { font-size: 11px; color: var(--gray-500); margin-top: 1px; }
+    .ach-prog-row { display: flex; align-items: center; gap: 8px; margin-top: 5px; }
+    .ach-track { flex: 1; height: 6px; background: var(--gray-200); border-radius: 3px; overflow: hidden; }
+    .ach-fill  { height: 100%; border-radius: 3px; background: linear-gradient(90deg,var(--g1),var(--g2)); }
+    .ach-num   { font-size: 10px; color: var(--gray-500); white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .ach-done  { font-size: 11px; color: var(--gray-400); }
+
+    /* ── 背包 & 商店 placeholder ── */
+    .ph-page { align-items: center; justify-content: center; background: var(--gray-100); gap: 14px; padding: 32px; text-align: center; }
+    .ph-ico   { font-size: 60px; opacity: .3; }
+    .ph-title { font-size: 17px; font-weight: 700; color: var(--gray-500); }
+    .ph-desc  { font-size: 12px; color: var(--gray-400); line-height: 1.6; }
+
+    /* ── Bottom Nav ── */
+    #bottom-nav { height: var(--nav); background: var(--white); border-top: 1px solid var(--gray-200); display: grid; grid-template-columns: repeat(4,1fr); flex-shrink: 0; box-shadow: 0 -3px 14px rgba(0,0,0,.06); }
+    .nav-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border: none; background: none; cursor: pointer; padding: 6px 0; color: var(--gray-400); transition: color .2s; }
+    .nav-btn.on { color: var(--g1); }
+    .nav-btn .n-ico { font-size: 22px; transition: transform .2s; }
+    .nav-btn.on .n-ico { transform: scale(1.18); }
+    .nav-btn .n-lbl { font-size: 10px; font-weight: 600; }
+
+    /* ── Leaflet overrides ── */
+    .leaflet-control-attribution { display: none !important; }
+    .leaflet-control-zoom { border-radius: var(--r-sm) !important; border: none !important; box-shadow: var(--sh-md) !important; }
+
+    /* Sprite markers */
+    .spr { font-size: 22px; filter: drop-shadow(0 2px 4px rgba(0,0,0,.25)); animation: spr-float 2.8s ease-in-out infinite; }
+    .spr:nth-child(odd)  { animation-delay: .4s; }
+    .spr:nth-child(even) { animation-delay: .9s; }
+    @keyframes spr-float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }
+
+    /* Responsive: bigger viewport → letterbox */
+    @media (min-height: 812px) { #seed-card { padding: 12px 14px; } }
+  </style>
+</head>
+<body>
+
+<!-- Loading Screen -->
+<div id="loading">
+  <div class="ld-logo">🌿</div>
+  <div class="ld-name">MotionWorld</div>
+  <div class="ld-sub">載入探索地圖中...</div>
+  <div class="ld-bar"><div class="ld-bar-fill"></div></div>
+</div>
+
+<div id="app">
+
+  <!-- Top Bar -->
+  <header id="topbar">
+    <div class="t-avatar" id="t-avatar">S</div>
+    <div class="t-meta">
+      <div class="t-name" id="t-name">Steve</div>
+      <div class="t-lv-row">
+        <span class="t-lv-badge" id="t-lv">Lv.1</span>
+        <div class="t-lv-track"><div class="t-lv-fill" id="t-lv-fill" style="width:0%"></div></div>
+      </div>
+    </div>
+    <div class="t-actions">
+      <button class="t-btn" aria-label="通知">🔔<span class="t-badge">3</span></button>
+    </div>
+  </header>
+
+  <!-- ─── 探索 ─── -->
+  <section id="page-explore" class="page active">
+    <div id="map-wrap">
+      <div id="map"></div>
+      <div id="map-tools">
+        <button id="map-compass" aria-label="重新定位">🧭</button>
+        <button id="map-legend-btn" aria-label="圖例說明" aria-expanded="false">?</button>
+        <div id="map-legend-panel" aria-hidden="true">
+          <div class="legend-title">圖章說明</div>
+          <div class="legend-sub">重複經過越多次，這張圖會在同一路段堆得越密。</div>
+          <img class="legend-image" src="./nipple-detail.png" alt="MotionWorld 圖章說明圖">
+        </div>
+      </div>
+      <div id="tile-chip"><span class="tile-chip-icon">🗺️</span><span id="tile-count">0</span>&nbsp;格已探索</div>
+      <div id="toast">
+        <span class="toast-ico">🌿</span>
+        <div>
+          <div class="toast-lbl">新區域發現！</div>
+          <div class="toast-val" id="toast-place">河濱公園</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="stats-bar">
+      <div class="stat-card">
+        <span class="stat-ico">👟</span>
+        <div class="stat-body">
+          <div class="stat-val" id="s-dist">0 km</div>
+          <div class="stat-track"><div class="stat-fill green" id="s-dist-fill" style="width:0%"></div></div>
+          <div class="stat-lbl">目標 8 km</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-ico">⚡</span>
+        <div class="stat-body">
+          <div class="stat-val" id="s-xp">+0</div>
+          <div class="stat-track"><div class="stat-fill yellow" id="s-xp-fill" style="width:0%"></div></div>
+          <div class="stat-lbl" id="s-xp-lbl">下一級 0/100</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="seed-card">
+      <span class="seed-ico">🌱</span>
+      <div class="seed-body">
+        <div class="seed-name">種子正在成長中...</div>
+        <div class="seed-timer" id="seed-timer">02:45:12</div>
+        <div class="seed-track"><div class="seed-prog" id="seed-prog" style="width:35%"></div></div>
+      </div>
+      <button class="seed-btn">加速</button>
+    </div>
+  </section>
+
+  <!-- ─── 精靈 ─── -->
+  <section id="page-creature" class="page">
+    <div class="cr-topbar">
+      <button class="cr-topbar-back" id="cr-back">‹</button>
+      <div>
+        <div class="cr-topbar-title">精靈圖鑑 🌿</div>
+        <div class="cr-topbar-sub">與你的精靈夥伴一起冒險成長</div>
+      </div>
+    </div>
+    <div class="cf-row" id="cf-row">
+      <button class="cf-tab on" data-f="all">🍃 全部</button>
+      <button class="cf-tab" data-f="leaf">🌿 自然</button>
+      <button class="cf-tab" data-f="fire">🔥 火屬性</button>
+      <button class="cf-tab" data-f="water">💧 水屬性</button>
+      <button class="cf-tab" data-f="thunder">⚡ 電屬性</button>
+      <button class="cf-tab" data-f="moon">🌙 夜行系</button>
+    </div>
+    <div id="cr-body"></div>
+    <div class="sec-head" style="flex-shrink:0">
+      <span class="sec-title">成就</span>
+      <span class="sec-link">查看全部 ›</span>
+    </div>
+    <div class="ach-list" id="ach-list" style="flex-shrink:0"></div>
+    <div style="height:20px;flex-shrink:0"></div>
+  </section>
+
+  <!-- ─── 背包 ─── -->
+  <section id="page-bag" class="page ph-page">
+    <div class="ph-ico">🎒</div>
+    <div class="ph-title">背包</div>
+    <div class="ph-desc">收集運動中獲得的道具<br>下一版本開放</div>
+  </section>
+
+  <!-- ─── 商店 ─── -->
+  <section id="page-shop" class="page ph-page">
+    <div class="ph-ico">🏪</div>
+    <div class="ph-title">商店</div>
+    <div class="ph-desc">兌換限定精靈與道具<br>下一版本開放</div>
+  </section>
+
+  <!-- Bottom Nav -->
+  <nav id="bottom-nav">
+    <button class="nav-btn on"  data-tab="explore" ><span class="n-ico">🌿</span><span class="n-lbl">探索</span></button>
+    <button class="nav-btn"     data-tab="creature"><span class="n-ico">🐾</span><span class="n-lbl">精靈</span></button>
+    <button class="nav-btn"     data-tab="bag"     ><span class="n-ico">🎒</span><span class="n-lbl">背包</span></button>
+    <button class="nav-btn"     data-tab="shop"    ><span class="n-ico">🏪</span><span class="n-lbl">商店</span></button>
+  </nav>
+</div><!-- #app -->
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script>
+'use strict';
+
+/* ═══════════════════════════════════════════════
+   1. Geohash encode / decode
+═══════════════════════════════════════════════ */
+const GH = (() => {
+  const B32 = '0123456789bcdefghjkmnpqrstuvwxyz'
+
+  function encode(lat, lng, p = 7) {
+    let idx = 0, bit = 0, even = true
+    let laMin = -90, laMax = 90, lnMin = -180, lnMax = 180, h = ''
+    while (h.length < p) {
+      if (even) {
+        const m = (lnMin + lnMax) / 2
+        lng >= m ? (idx = idx * 2 + 1, lnMin = m) : (idx = idx * 2, lnMax = m)
+      } else {
+        const m = (laMin + laMax) / 2
+        lat >= m ? (idx = idx * 2 + 1, laMin = m) : (idx = idx * 2, laMax = m)
+      }
+      even = !even
+      if (++bit === 5) { h += B32[idx]; bit = 0; idx = 0 }
+    }
+    return h
+  }
+
+  function bbox(hash) {
+    let even = true, laMin = -90, laMax = 90, lnMin = -180, lnMax = 180
+    for (const c of hash) {
+      const v = B32.indexOf(c)
+      for (let i = 4; i >= 0; i--) {
+        const b = (v >> i) & 1
+        if (even) { const m = (lnMin + lnMax) / 2; b ? lnMin = m : lnMax = m }
+        else      { const m = (laMin + laMax) / 2; b ? laMin = m : laMax = m }
+        even = !even
+      }
+    }
+    return { latMin: laMin, latMax: laMax, lngMin: lnMin, lngMax: lnMax,
+             lat: (laMin + laMax) / 2, lng: (lnMin + lnMax) / 2 }
+  }
+
+  return { encode, bbox }
+})()
+
+/* ═══════════════════════════════════════════════
+   1b. Google Encoded Polyline decoder
+═══════════════════════════════════════════════ */
+function decodePolyline(encoded) {
+  const pts = []
+  let idx = 0, lat = 0, lng = 0
+  while (idx < encoded.length) {
+    let b, shift = 0, result = 0
+    do { b = encoded.charCodeAt(idx++) - 63; result |= (b & 0x1f) << shift; shift += 5 } while (b >= 0x20)
+    lat += (result & 1) ? ~(result >> 1) : (result >> 1)
+    shift = 0; result = 0
+    do { b = encoded.charCodeAt(idx++) - 63; result |= (b & 0x1f) << shift; shift += 5 } while (b >= 0x20)
+    lng += (result & 1) ? ~(result >> 1) : (result >> 1)
+    pts.push([lat / 1e5, lng / 1e5])
+  }
+  return pts
+}
+
+/* ═══════════════════════════════════════════════
+   2. Taipei Route Seeds (fallback when no real polylines)
+═══════════════════════════════════════════════ */
+const SEEDS = [
+  // 基隆河美堤河濱 (ride)
+  { type:'ride', age:2, pts:[
+    [25.0600,121.5570],[25.0640,121.5530],[25.0680,121.5490],[25.0720,121.5450],
+    [25.0760,121.5410],[25.0800,121.5370],[25.0840,121.5330],[25.0880,121.5290],
+    [25.0920,121.5250],[25.0960,121.5210],[25.1000,121.5170],[25.1040,121.5130],
+  ]},
+  // 淡水河右岸 圓山→社子島 ITT (ride)
+  { type:'ride', age:4, pts:[
+    [25.0700,121.5140],[25.0740,121.5100],[25.0780,121.5060],[25.0820,121.5020],
+    [25.0860,121.4980],[25.0900,121.4940],[25.0940,121.4900],[25.0980,121.4860],
+    [25.1020,121.4820],[25.1060,121.4780],
+  ]},
+  // 風櫃嘴 climb (ride) — starts near 士林
+  { type:'ride', age:6, pts:[
+    [25.0930,121.5540],[25.0960,121.5590],[25.0990,121.5640],[25.1020,121.5690],
+    [25.1050,121.5740],[25.1000,121.5780],[25.0970,121.5820],[25.1000,121.5860],
+    [25.1030,121.5900],[25.1060,121.5940],[25.1040,121.5980],[25.1060,121.6020],
+    [25.1080,121.6060],[25.1100,121.6100],
+  ]},
+  // 中社路 ITT (ride)
+  { type:'ride', age:9, pts:[
+    [25.1040,121.5980],[25.1090,121.5910],[25.1140,121.5840],[25.1190,121.5770],
+    [25.1240,121.5700],[25.1290,121.5630],
+  ]},
+  // 大安區 / 信義區 runs
+  { type:'run', age:1, pts:[
+    [25.0340,121.5450],[25.0380,121.5490],[25.0420,121.5530],[25.0460,121.5490],
+    [25.0500,121.5450],[25.0460,121.5410],[25.0420,121.5370],[25.0380,121.5410],
+    [25.0340,121.5450],
+  ]},
+  // 植物園附近 runs
+  { type:'run', age:3, pts:[
+    [25.0320,121.5100],[25.0360,121.5140],[25.0400,121.5100],[25.0360,121.5060],
+  ]},
+  // 河濱北延伸 (ride)
+  { type:'ride', age:12, pts:[
+    [25.1040,121.5130],[25.1080,121.5090],[25.1120,121.5050],[25.1160,121.5010],
+    [25.1200,121.4970],
+  ]},
+  // 士林夜市附近街騎 (ride — 今天 age=0)
+  { type:'ride', age:0, pts:[
+    [25.0930,121.5240],[25.0960,121.5210],[25.0990,121.5180],[25.1020,121.5150],
+    [25.0990,121.5120],[25.0960,121.5150],
+  ]},
+]
+
+/* ═══════════════════════════════════════════════
+   3. Tile Generation
+═══════════════════════════════════════════════ */
+function buildTiles(seeds) {
+  const map = new Map()   // geohash → {lat,lng,bb,type,age}
+  const dLa = 0.00038, dLn = 0.00076  // ~geohash-7 step
+
+  for (const s of seeds) {
+    for (const [la, ln] of s.pts) {
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          const h = GH.encode(la + dy * dLa, ln + dx * dLn, 7)
+          if (!map.has(h)) {
+            const bb = GH.bbox(h)
+            map.set(h, { lat: bb.lat, lng: bb.lng, bb, type: s.type, age: s.age })
+          }
+        }
+      }
+    }
+  }
+  return map
+}
+
+// Build seeds from real Strava polylines
+// age is computed from activity date vs today (TPE)
+function seedsFromStrava(data) {
+  const tpe = new Date(Date.now() + 8 * 3600 * 1000)
+  const today = tpe.toISOString().slice(0, 10)
+
+  function ageOf(date) {
+    if (!date) return 999
+    const diff = new Date(today) - new Date(date)
+    return Math.max(0, Math.round(diff / 86400000))
+  }
+
+  const seeds = []
+  const RIDE_TYPES = ['Ride', 'VirtualRide', 'EBikeRide', 'MountainBikeRide']
+  const RUN_TYPES  = ['Run', 'VirtualRun', 'TrailRun']
+  const SWIM_TYPES = ['Swim']
+
+  const all = [
+    ...(data.recent_rides  || []).map(a => ({ ...a, _cat: RIDE_TYPES.includes(a.sport_type) ? 'ride' : 'ride' })),
+    ...(data.recent_runs   || []).map(a => ({ ...a, _cat: 'run'  })),
+    ...(data.recent_swims  || []).map(a => ({ ...a, _cat: 'swim' })),
+  ]
+
+  let found = 0
+  for (const act of all) {
+    if (!act.polyline || act.trainer) continue
+    const pts = decodePolyline(act.polyline)
+    if (pts.length < 2) continue
+    seeds.push({ type: act._cat, age: ageOf(act.date), pts })
+    found++
+  }
+  console.log(`[MotionWorld] 真實 polyline 路線：${found} 條`)
+  return seeds
+}
+
+/* ═══════════════════════════════════════════════
+   4. Strava Data Adapter
+═══════════════════════════════════════════════ */
+async function loadStrava() {
+  try {
+    const r = await fetch('../data/strava.json')
+    if (!r.ok) throw new Error('HTTP ' + r.status)
+    return await r.json()
+  } catch (e) {
+    console.warn('[MotionWorld] strava.json unavailable, using demo mode')
+    return null
+  }
+}
+
+function extractStats(data) {
+  const tpe   = new Date(Date.now() + 8 * 3600 * 1000)
+  const today = tpe.toISOString().slice(0, 10)
+  if (!data) return { today, todayDist: 2.3, totalDist: 0, ytdRides: 0, recentAct: null, data: null }
+
+  const all = [
+    ...(data.recent_rides   || []).map(a => ({ ...a, _type:'ride' })),
+    ...(data.recent_runs    || []).map(a => ({ ...a, _type:'run'  })),
+    ...(data.recent_swims   || []).map(a => ({ ...a, _type:'swim' })),
+    ...(data.recent_weights || []).map(a => ({ ...a, _type:'weight' })),
+  ].sort((a, b) => (b.date || '').localeCompare(a.date || ''))
+
+  const todayActs = all.filter(a => a.date === today)
+  const todayDist = todayActs.reduce((s, a) => s + (a.distance_km || 0), 0)
+  const recentAct = all[0] || null
+
+  return {
+    today, todayDist,
+    totalDist: data.summary?.all_time_distance_km || 0,
+    ytdRides:  data.summary?.ytd_rides || 0,
+    ytdDistKm: data.summary?.ytd_distance_km || 0,
+    ytdElevM:  data.summary?.ytd_elevation_m  || 0,
+    recentAct, data,
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   5. Level System  (3 XP per tile)
+═══════════════════════════════════════════════ */
+function level(tiles) {
+  const xp = tiles * 3
+  const lv = Math.floor(xp / 100) + 1
+  return { lv, cur: xp % 100, max: 100, xp }
+}
+
+/* ═══════════════════════════════════════════════
+   6. Map
+═══════════════════════════════════════════════ */
+let MAP
+let _mapLayers = []
+let _stampCanvas = null
+
+/* ─── 圖章圖層 ─── */
+const STAMP_URL = './nipple.png'
+const STAMP_SIZE = 16    // 螢幕像素大小
+const STAMP_STEP = 20    // 每幾個螢幕像素蓋一顆章
+const STAMP_ALPHA = 0.72 // 每顆章的透明度（疊加後越騎越深）
+
+function addStampLayer(map, seeds) {
+  const canvas = document.createElement('canvas')
+  canvas.style.cssText = 'position:absolute;top:0;left:0;pointer-events:none;'
+  map.getPanes().overlayPane.appendChild(canvas)
+  _stampCanvas = canvas
+
+  const stampImg = new Image()
+  stampImg.src = STAMP_URL
+
+  let timer = null
+  function render() {
+    const size = map.getSize()
+    canvas.width = size.x
+    canvas.height = size.y
+    const tl = map.containerPointToLayerPoint([0, 0])
+    canvas.style.transform = `translate(${tl.x}px,${tl.y}px)`
+
+    const ctx = canvas.getContext('2d')
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+    const S = STAMP_SIZE
+    for (const s of seeds) {
+      if (!s.pts || s.pts.length < 2 || s.age === 0) continue  // 今天的路線保留 polyline 高亮
+      ctx.globalAlpha = STAMP_ALPHA
+      let acc = STAMP_STEP * 0.5
+      for (let i = 1; i < s.pts.length; i++) {
+        const a = map.latLngToContainerPoint(s.pts[i - 1])
+        const b = map.latLngToContainerPoint(s.pts[i])
+        const dx = b.x - a.x, dy = b.y - a.y
+        const seg = Math.sqrt(dx * dx + dy * dy)
+        if (seg < 0.01) continue
+        acc += seg
+        while (acc >= STAMP_STEP) {
+          acc -= STAMP_STEP
+          const t = 1 - acc / seg
+          const px = a.x + dx * t
+          const py = a.y + dy * t
+          ctx.drawImage(stampImg, px - S / 2, py - S / 2, S, S)
+        }
+      }
+    }
+  }
+
+  function schedule() {
+    if (timer) clearTimeout(timer)
+    timer = setTimeout(render, 80)
+  }
+
+  map.on('moveend zoomend resize', schedule)
+  stampImg.onload = render
+  stampImg.onerror = render
+}
+
+function initMapLegend() {
+  const btn = document.getElementById('map-legend-btn')
+  const panel = document.getElementById('map-legend-panel')
+  if (!btn || !panel) return
+
+  function setOpen(next) {
+    panel.classList.toggle('open', next)
+    btn.setAttribute('aria-expanded', String(next))
+    panel.setAttribute('aria-hidden', String(!next))
+  }
+
+  btn.addEventListener('click', (event) => {
+    event.stopPropagation()
+    setOpen(!panel.classList.contains('open'))
+  })
+
+  panel.addEventListener('click', (event) => event.stopPropagation())
+  document.addEventListener('click', () => setOpen(false))
+}
+
+function initMap(tiles, seeds) {
+  MAP = L.map('map', {
+    center: [25.077, 121.524], zoom: 13,
+    zoomControl: true, attributionControl: false,
+  })
+
+  // CartoDB Positron — clean pastel base map
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    maxZoom: 19, subdomains: 'abcd',
+  }).addTo(MAP)
+
+  // 花朵圖章 canvas layer（歷史路線）
+  addStampLayer(MAP, seeds)
+  initMapLegend()
+
+  // 今天的路線：金色 polyline 高亮
+  const todaySeeds = seeds.filter(s => s.age === 0)
+  todaySeeds.forEach(s => {
+    if (!s.pts || s.pts.length < 2) return
+    const pl = L.polyline(s.pts, {
+      color: '#f59e0b', weight: 5, opacity: 0.95, lineCap: 'round', lineJoin: 'round',
+    }).addTo(MAP)
+    _mapLayers.push(pl)
+  })
+
+  // Auto-fit to routes from last 90 days
+  const allPts = seeds.filter(s => s.age <= 90 && s.pts?.length > 1).flatMap(s => s.pts)
+  const fitPts = allPts.length > 0 ? allPts : seeds.flatMap(s => s.pts || [])
+  if (fitPts.length > 0) {
+    try { MAP.fitBounds(L.latLngBounds(fitPts).pad(0.12), { maxZoom: 14 }) } catch (e) {}
+  }
+
+  // Pin at end of today's route
+  const todaySeed = seeds.find(s => s.age === 0)
+  if (todaySeed && todaySeed.pts.length > 0) {
+    const last = todaySeed.pts[todaySeed.pts.length - 1]
+    const icon = L.divIcon({ html: '<div class="spr">📍</div>', className: '', iconSize: [28,28], iconAnchor: [14,28] })
+    L.marker(last, { icon }).addTo(MAP)
+  }
+
+  // Compass → fit all routes
+  document.getElementById('map-compass').addEventListener('click', () => {
+    const pts = seeds.flatMap(s => s.pts || [])
+    if (pts.length > 0) {
+      try { MAP.fitBounds(L.latLngBounds(pts).pad(0.10), { animate: true, duration: 0.8, maxZoom: 14 }) }
+      catch (e) { MAP.flyTo([25.077, 121.524], 13, { duration: .8 }) }
+    } else {
+      MAP.flyTo([25.077, 121.524], 13, { duration: .8 })
+    }
+  })
+}
+
+/* ═══════════════════════════════════════════════
+   6b. Creature System — 5 SVG characters
+═══════════════════════════════════════════════ */
+const CREATURES = [
+  {
+    id:'leaf', name:'葉風寶寶', en:'LEAFY BABY', rarity:'SSR', stars:5,
+    type:'自然屬性', typeIcon:'🍃', typeBg:'#d1fae5', typeColor:'#065f46',
+    cardBg:'linear-gradient(145deg,#14532d,#166534,#15803d)',
+    headGrad:['#ffe8c8','#f5c490'], outfitColor:'#166534', outfitDark:'#052e16',
+    accessory:'leaf',
+    abilities:[
+      {icon:'🌿', name:'戶外加持', desc:'戶外騎乘距離 × 1.2 倍探索格', bg:'#d1fae5'},
+      {icon:'💨', name:'風之步法', desc:'配速超過 25km/h 地圖探索範圍 +15%', bg:'#d1fae5'},
+    ],
+    powerFormula: tc => tc * 9 + 320,
+  },
+  {
+    id:'fire', name:'燃力寶寶', en:'BLAZE BABY', rarity:'SR', stars:4,
+    type:'火屬性', typeIcon:'🔥', typeBg:'#fff0e0', typeColor:'#c2410c',
+    cardBg:'linear-gradient(145deg,#431407,#9a3412,#c2410c)',
+    headGrad:['#ffe8c8','#f5c490'], outfitColor:'#9a3412', outfitDark:'#431407',
+    accessory:'flame',
+    abilities:[
+      {icon:'🔥', name:'間歇爆發', desc:'TSS > 60 的訓練日，戰力 +25%', bg:'#fff0e0'},
+      {icon:'💥', name:'燃燒激勵', desc:'間歇課表完成後能量恢復 +20%', bg:'#fff0e0'},
+    ],
+    powerFormula: tc => tc * 7 + 280,
+  },
+  {
+    id:'water', name:'水波寶寶', en:'AQUA BABY', rarity:'SR', stars:4,
+    type:'水屬性', typeIcon:'💧', typeBg:'#e0f2fe', typeColor:'#0369a1',
+    cardBg:'linear-gradient(145deg,#082f49,#075985,#0369a1)',
+    headGrad:['#ffe8c8','#f5c490'], outfitColor:'#075985', outfitDark:'#082f49',
+    accessory:'water',
+    abilities:[
+      {icon:'🌊', name:'水中精靈', desc:'游泳 100m 解鎖一個水域地圖格', bg:'#e0f2fe'},
+      {icon:'🏊', name:'三鐵適應', desc:'三種運動的週，額外 XP +30%', bg:'#e0f2fe'},
+    ],
+    powerFormula: tc => tc * 7 + 250,
+  },
+  {
+    id:'thunder', name:'閃電寶寶', en:'THUNDER BABY', rarity:'SR', stars:4,
+    type:'電屬性', typeIcon:'⚡', typeBg:'#fefce8', typeColor:'#854d0e',
+    cardBg:'linear-gradient(145deg,#3a2700,#92400e,#b45309)',
+    headGrad:['#ffe8c8','#f5c490'], outfitColor:'#92400e', outfitDark:'#3a2700',
+    accessory:'thunder',
+    abilities:[
+      {icon:'⚡', name:'功率激增', desc:'功率 PR 突破當天戰力 +30%', bg:'#fefce8'},
+      {icon:'🔋', name:'能量充電', desc:'NP > 200W 騎乘，種子倒計時 -15 分', bg:'#fefce8'},
+    ],
+    powerFormula: tc => tc * 8 + 260,
+  },
+  {
+    id:'moon', name:'月夜寶寶', en:'LUNAR BABY', rarity:'SSR', stars:5,
+    type:'夜行系', typeIcon:'🌙', typeBg:'#f5f3ff', typeColor:'#5b21b6',
+    cardBg:'linear-gradient(145deg,#1e1b4b,#2e1065,#4c1d95)',
+    headGrad:['#eedcff','#d5b8f0'], outfitColor:'#2e1065', outfitDark:'#1e1b4b',
+    accessory:'moon',
+    abilities:[
+      {icon:'🌙', name:'夜行者', desc:'20:00 後的活動探索格 × 1.5 倍', bg:'#f5f3ff'},
+      {icon:'✨', name:'星光收集', desc:'夜間累積 50km 召喚限定星座精靈', bg:'#f5f3ff'},
+    ],
+    powerFormula: tc => tc * 10 + 400,
+  },
+]
+
+function makeChibiSVG(c, uid) {
+  const [s1, s2] = c.headGrad
+  const o = c.outfitColor, od = c.outfitDark
+  const ACC = {
+    leaf: `<path d="M55,36 Q44,20 34,12 Q44,24 55,36Z" fill="#22c55e" stroke="#16a34a" stroke-width="0.7"/>
+      <path d="M55,36 Q66,20 76,12 Q66,24 55,36Z" fill="#4ade80" stroke="#22c55e" stroke-width="0.7"/>
+      <path d="M55,21 Q53,29 55,36" stroke="#16a34a" stroke-width="2" fill="none" stroke-linecap="round"/>`,
+    flame: `<path d="M55,22 Q47,11 49,5 Q55,11 61,5 Q63,13 55,22Z" fill="#fbbf24"/>
+      <path d="M55,22 Q50,13 52,8 Q55,12 58,8 Q60,14 55,22Z" fill="#fb923c"/>
+      <path d="M55,22 Q53,16 55,11 Q57,16 55,22Z" fill="#fef9c3"/>`,
+    water: `<path d="M55,5 Q63,16 63,22 Q63,30 55,30 Q47,30 47,22 Q47,16 55,5Z" fill="#38bdf8"/>
+      <path d="M55,7 Q61,17 61,22 Q61,28 55,28 Q49,28 49,22 Q49,17 55,7Z" fill="#7dd3fc" opacity="0.45"/>
+      <ellipse cx="51" cy="16" rx="2" ry="3.5" fill="white" opacity="0.5" transform="rotate(-20 51 16)"/>`,
+    thunder: `<path d="M61,5 L51,20 L58,20 L48,34 L62,17 L55,17 Z" fill="#fbbf24" stroke="#f59e0b" stroke-width="0.6" stroke-linejoin="round"/>
+      <ellipse cx="55" cy="19" rx="9" ry="13" fill="#fbbf24" opacity="0.13"/>`,
+    moon: `<path d="M62,7 Q73,15 73,23 Q73,32 62,38 Q69,30 69,23 Q69,15 62,7Z" fill="#c4b5fd"/>
+      <circle cx="62" cy="23" r="13" fill="${od}"/>
+      <circle cx="45" cy="9" r="2.2" fill="#fde68a"/>
+      <circle cx="71" cy="11" r="1.4" fill="#fde68a"/>
+      <circle cx="43" cy="20" r="1" fill="#e0e7ff" opacity="0.7"/>`,
+  }
+  return `<svg viewBox="0 0 110 130" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 7px 16px rgba(0,0,0,.38))">
+  <defs>
+    <radialGradient id="${uid}hg" cx="38%" cy="32%" r="68%">
+      <stop offset="0%" stop-color="${s1}"/><stop offset="100%" stop-color="${s2}"/>
+    </radialGradient>
+    <radialGradient id="${uid}bg" cx="42%" cy="36%" r="72%">
+      <stop offset="0%" stop-color="${o}"/><stop offset="100%" stop-color="${od}"/>
+    </radialGradient>
+  </defs>
+  <ellipse cx="55" cy="123" rx="35" ry="7.5" fill="#5c3d1e" opacity="0.42"/>
+  <ellipse cx="55" cy="121" rx="33" ry="6" fill="#7c5230"/>
+  <ellipse cx="55" cy="120" rx="31" ry="4.5" fill="#9a6840" opacity="0.55"/>
+  <ellipse cx="55" cy="120" rx="19" ry="1.8" fill="none" stroke="#6b4423" stroke-width="0.7" opacity="0.28"/>
+  <ellipse cx="55" cy="96" rx="26" ry="23" fill="url(#${uid}bg)"/>
+  <ellipse cx="47" cy="86" rx="9" ry="7" fill="rgba(255,255,255,.1)" transform="rotate(-18 47 86)"/>
+  <ellipse cx="24" cy="98" rx="11" ry="8" fill="${od}" transform="rotate(-18 24 98)"/>
+  <ellipse cx="86" cy="98" rx="11" ry="8" fill="${od}" transform="rotate(18 86 98)"/>
+  <circle cx="16" cy="103" r="7" fill="url(#${uid}hg)"/>
+  <circle cx="94" cy="103" r="7" fill="url(#${uid}hg)"/>
+  <circle cx="55" cy="57" r="40" fill="url(#${uid}hg)"/>
+  <path d="M16,54 Q14,28 32,14 Q43,6 55,5 Q67,6 78,14 Q96,28 94,54 Q88,38 55,36 Q22,38 16,54Z" fill="${od}"/>
+  <circle cx="12" cy="43" r="12" fill="${od}"/>
+  <circle cx="12" cy="43" r="8.5" fill="${o}" opacity="0.5"/>
+  <circle cx="12" cy="43" r="5" fill="${od}" opacity="0.7"/>
+  <circle cx="98" cy="43" r="12" fill="${od}"/>
+  <circle cx="98" cy="43" r="8.5" fill="${o}" opacity="0.5"/>
+  <circle cx="98" cy="43" r="5" fill="${od}" opacity="0.7"/>
+  <path d="M16,54 Q36,46 55,45 Q74,46 94,54" stroke="${o}" stroke-width="2.8" fill="none" stroke-linecap="round"/>
+  ${ACC[c.accessory] || ''}
+  <ellipse cx="38" cy="59" rx="11" ry="12" fill="white"/>
+  <ellipse cx="72" cy="59" rx="11" ry="12" fill="white"/>
+  <circle cx="40" cy="61" r="9" fill="#1a1a2e"/>
+  <circle cx="74" cy="61" r="9" fill="#1a1a2e"/>
+  <circle cx="40" cy="61" r="7" fill="#20243c"/>
+  <circle cx="74" cy="61" r="7" fill="#20243c"/>
+  <circle cx="41" cy="62" r="4.5" fill="#040407"/>
+  <circle cx="75" cy="62" r="4.5" fill="#040407"/>
+  <circle cx="36" cy="56" r="3.2" fill="white"/>
+  <circle cx="70" cy="56" r="3.2" fill="white"/>
+  <circle cx="44" cy="66" r="1.3" fill="rgba(255,255,255,.5)"/>
+  <circle cx="78" cy="66" r="1.3" fill="rgba(255,255,255,.5)"/>
+  <path d="M28,52 Q38,45 48,52" stroke="#1a1a2e" stroke-width="1.7" fill="none" stroke-linecap="round"/>
+  <path d="M62,52 Q72,45 82,52" stroke="#1a1a2e" stroke-width="1.7" fill="none" stroke-linecap="round"/>
+  <path d="M49,72 Q55,76 61,72" stroke="rgba(150,65,45,.22)" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+  <ellipse cx="22" cy="68" rx="12" ry="8" fill="#ff8fab" opacity="0.26"/>
+  <ellipse cx="88" cy="68" rx="12" ry="8" fill="#ff8fab" opacity="0.26"/>
+  <circle cx="55" cy="80" r="8" fill="#f0ece8" stroke="#d8d0c8" stroke-width="0.9"/>
+  <circle cx="55" cy="80" r="5.5" fill="#e4ddd6" opacity="0.8"/>
+  <circle cx="55" cy="80" r="3.2" fill="#d8d0c8"/>
+  <rect x="51" y="85" width="8.5" height="4" rx="2" fill="#c8bfb5"/>
+  <rect x="51" y="85" width="8.5" height="1.8" rx="0.9" fill="#d8d0c8"/></svg>`
+}
+
+let _featIdx = 0
+
+function renderCreaturePage(stats, tiles) {
+  const tc = tiles.size
+  const s = stats.data?.summary || {}
+
+  function renderFeatured(c) {
+    const power = c.powerFormula(tc)
+    const stars = '★'.repeat(c.stars) + '☆'.repeat(5 - c.stars)
+    return `<div class="cr-feat" style="background:${c.cardBg}">
+        <div class="cr-feat-inner">
+          <div class="cr-feat-art">${makeChibiSVG(c, 'feat')}</div>
+          <div class="cr-feat-details">
+            <span class="cr-feat-rarity">${c.rarity}</span>
+            <div class="cr-feat-name">${c.name}</div>
+            <div class="cr-feat-en">${c.en}</div>
+            <span class="cr-feat-type" style="background:${c.typeBg};color:${c.typeColor}">${c.typeIcon} ${c.type}</span>
+            <div class="cr-feat-stars">${stars}</div>
+            <div class="cr-feat-power"><span class="cr-feat-power-lbl">戰力</span><span class="cr-feat-power-val">${power.toLocaleString()}</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="cr-abil">
+        <div class="cr-abil-title">特殊能力</div>
+        ${c.abilities.map(a => `<div class="cr-abil-item">
+          <div class="cr-abil-ico" style="background:${a.bg}">${a.icon}</div>
+          <div><div class="cr-abil-name">${a.name}</div><div class="cr-abil-desc">${a.desc}</div></div>
+        </div>`).join('')}
+      </div>`
+  }
+
+  function renderGrid(currentIdx) {
+    const others = CREATURES.filter((_, i) => i !== currentIdx)
+    return `<div class="cr-coll-head"><span class="cr-coll-title">精靈收藏</span><span style="font-size:11px;color:var(--gray-400)">${CREATURES.length} 隻</span></div>
+      <div class="cr-coll-grid">${others.map(c => `<div class="cr-coll-card" style="background:${c.cardBg}" data-cid="${c.id}">
+          <div class="cr-coll-art"><span class="cr-coll-rarity">${c.rarity}</span><span class="cr-coll-fav">🤍</span>${makeChibiSVG(c, 'g' + c.id)}</div>
+          <div class="cr-coll-bottom">
+            <div class="cr-coll-name" style="color:#fff">${c.name}</div>
+            <div style="font-size:10px;color:rgba(255,255,255,.6);margin-top:2px">${c.typeIcon} ${c.type}</div>
+            <div class="cr-coll-stars">${'★'.repeat(c.stars)}</div>
+          </div>
+        </div>`).join('')}</div>`
+  }
+
+  function render() {
+    const body = document.getElementById('cr-body')
+    if (!body) return
+    body.innerHTML = renderFeatured(CREATURES[_featIdx]) + renderGrid(_featIdx)
+    body.querySelectorAll('.cr-coll-card').forEach(card => {
+      card.addEventListener('click', () => {
+        _featIdx = CREATURES.findIndex(c => c.id === card.dataset.cid)
+        render()
+        document.getElementById('page-creature').scrollTop = 0
+      })
+    })
+  }
+  render()
+
+  document.querySelectorAll('.cf-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.cf-tab').forEach(t => t.classList.remove('on'))
+      tab.classList.add('on')
+      const f = tab.dataset.f
+      const idx = f === 'all' ? 0 : CREATURES.findIndex(c => c.id === f)
+      if (idx >= 0) { _featIdx = idx; render(); document.getElementById('page-creature').scrollTop = 0 }
+    })
+  })
+
+  const backBtn = document.getElementById('cr-back')
+  if (backBtn) backBtn.addEventListener('click', () => document.querySelector('[data-tab=explore]').click())
+
+  const achs = [
+    { ico:'🗻', bg:'#fef3c7', name:'山岳探索者',   desc:`累積爬升 ${(s.ytd_elevation_m||0).toLocaleString()} m`,   pct: Math.min(100,(s.ytd_elevation_m||0)/100000*100), txt:`${(s.ytd_elevation_m||0).toLocaleString()} / 100,000 m` },
+    { ico:'🚴', bg:'#dcfce7', name:'騎乘里程達人', desc:`年度騎乘 ${(s.ytd_distance_km||0).toLocaleString()} km`, pct: Math.min(100,(s.ytd_distance_km||0)/10000*100),   txt:`${(s.ytd_distance_km||0).toLocaleString()} / 10,000 km` },
+    { ico:'🗺️', bg:'#e0f2fe', name:'地圖探索家',   desc:`已探索 ${tc} 個區域格`,                                 pct: Math.min(100, tc/500*100),                        txt:`${tc} / 500 格` },
+    { ico:'🌙', bg:'#fce7f3', name:'夜間騎手',     desc:'晚上 8 點後騎乘 50 km',                                 pct: 54,                                               txt:'27 / 50 km' },
+  ]
+  document.getElementById('ach-list').innerHTML = achs.map(a => `
+    <div class="ach-item">
+      <div class="ach-ico-wrap" style="background:${a.bg}">${a.ico}</div>
+      <div class="ach-body">
+        <div class="ach-name">${a.name}</div>
+        <div class="ach-desc">${a.desc}</div>
+        <div class="ach-prog-row">
+          <div class="ach-track"><div class="ach-fill" style="width:${a.pct}%"></div></div>
+          <span class="ach-num">${a.txt}</span>
+        </div>
+      </div>
+    </div>`).join('')
+}
+
+/* ═══════════════════════════════════════════════
+   7. UI fills
+═══════════════════════════════════════════════ */
+function fillUI(stats, tiles) {
+  const tc = tiles.size
+  const lv = level(tc)
+  const tpe = new Date(Date.now() + 8 * 3600 * 1000)
+  const dateStr = tpe.toISOString().slice(0, 10)
+
+  // Top bar
+  document.getElementById('t-lv').textContent      = 'Lv.' + lv.lv
+  document.getElementById('t-lv-fill').style.width  = (lv.cur / lv.max * 100) + '%'
+
+  // Tile count chip
+  document.getElementById('tile-count').textContent = tc.toLocaleString()
+
+  // Today stats
+  const dist = stats.todayDist || 0
+  document.getElementById('s-dist').textContent      = dist.toFixed(1) + ' km'
+  document.getElementById('s-dist-fill').style.width = Math.min(100, dist / 8 * 100) + '%'
+  const xpGain = Math.floor(dist * 12) + Math.floor(tc / 8)
+  document.getElementById('s-xp').textContent        = '+' + xpGain
+  document.getElementById('s-xp-fill').style.width   = (lv.cur / lv.max * 100) + '%'
+  document.getElementById('s-xp-lbl').textContent    = `下一級 ${lv.cur}/${lv.max}`
+
+  // Creature page + achievements
+  renderCreaturePage(stats, tiles)
+}
+
+/* ═══════════════════════════════════════════════
+   8. Toast
+═══════════════════════════════════════════════ */
+const PLACES = ['河濱公園','士林夜市','陽明山','大直橋','社子島','大稻埕','新北投','圓山','關渡','淡水','北投']
+function toast(name) {
+  const el = document.getElementById('toast')
+  document.getElementById('toast-place').textContent = name
+  el.classList.add('show')
+  setTimeout(() => el.classList.remove('show'), 3800)
+}
+
+/* ═══════════════════════════════════════════════
+   9. Seed Timer
+═══════════════════════════════════════════════ */
+function startSeed() {
+  const total = (2*3600 + 45*60 + 12) * 1000
+  const end   = Date.now() + total
+  const fill  = document.getElementById('seed-prog')
+  setInterval(() => {
+    const rem = Math.max(0, end - Date.now())
+    const h = Math.floor(rem / 3600000)
+    const m = Math.floor((rem % 3600000) / 60000)
+    const s = Math.floor((rem % 60000) / 1000)
+    document.getElementById('seed-timer').textContent =
+      String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0')
+    fill.style.width = (100 - rem / total * 100) + '%'
+  }, 1000)
+}
+
+/* ═══════════════════════════════════════════════
+   10. Navigation
+═══════════════════════════════════════════════ */
+function initNav() {
+  const PAGE = { explore:'page-explore', creature:'page-creature', bag:'page-bag', shop:'page-shop' }
+  document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('on'))
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'))
+      btn.classList.add('on')
+      document.getElementById(PAGE[btn.dataset.tab]).classList.add('active')
+      if (btn.dataset.tab === 'explore' && MAP) setTimeout(() => MAP.invalidateSize(), 60)
+    })
+  })
+}
+
+/* ═══════════════════════════════════════════════
+   11. Bootstrap
+═══════════════════════════════════════════════ */
+async function boot() {
+  initNav()
+  startSeed()
+
+  const [stravaData] = await Promise.all([ loadStrava() ])
+  const stats = extractStats(stravaData)
+
+  // Use real polylines if available, fall back to hardcoded seeds
+  let seeds = SEEDS
+  if (stravaData) {
+    const realSeeds = seedsFromStrava(stravaData)
+    if (realSeeds.length > 0) seeds = realSeeds
+    else console.log('[MotionWorld] 尚無 polyline 資料，使用 demo 路線')
+  }
+  const tiles = buildTiles(seeds)
+
+  initMap(tiles, seeds)
+  fillUI(stats, tiles)
+
+  // Delayed toast
+  setTimeout(() => {
+    const todayTiles = [...tiles.values()].filter(t => t.age === 0)
+    if (todayTiles.length) {
+      // reverse geocode first today-tile via Nominatim (best-effort, no API key needed)
+      const { lat, lng } = todayTiles[0]
+      fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`)
+        .then(r => r.json())
+        .then(d => {
+          const name = d.address?.suburb || d.address?.neighbourhood || d.address?.city_district
+                    || d.address?.town || d.address?.city || PLACES[Math.floor(Math.random()*PLACES.length)]
+          toast(name)
+        })
+        .catch(() => toast(PLACES[Math.floor(Math.random()*PLACES.length)]))
+    } else {
+      toast(PLACES[Math.floor(Math.random()*PLACES.length)])
+    }
+  }, 1400)
+
+  // Hide loading
+  setTimeout(() => {
+    const ld = document.getElementById('loading')
+    if (!ld) return
+    ld.style.transition = 'opacity .45s'
+    ld.style.opacity = '0'
+    setTimeout(() => { ld.remove(); MAP && MAP.invalidateSize() }, 450)
+  }, 900)
+}
+
+boot()
+</script>
+</body>
+</html>

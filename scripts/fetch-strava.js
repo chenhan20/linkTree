@@ -730,6 +730,7 @@ function buildJSON(stats, activities) {
       tss:            tss,
       calories_kcal:  a.calories ? Math.round(a.calories) : null,
       description:    null,  // 由 enrichRideLaps 補入
+      polyline:       (a.map && a.map.summary_polyline) ? a.map.summary_polyline : null,
     }
   })
 
@@ -749,6 +750,7 @@ function buildJSON(stats, activities) {
     avg_heartrate:  a.average_heartrate ? Math.round(a.average_heartrate) : null,
     max_heartrate:  a.max_heartrate ? Math.round(a.max_heartrate) : null,
     calories_kcal:  a.calories ? Math.round(a.calories) : null,
+    polyline:       (a.map && a.map.summary_polyline) ? a.map.summary_polyline : null,
   }))
 
   const recentSwims = activities.filter(a => isType(a, SWIM_TYPES)).map(a => ({
@@ -764,6 +766,7 @@ function buildJSON(stats, activities) {
     avg_heartrate:    a.average_heartrate ? Math.round(a.average_heartrate) : null,
     max_heartrate:    a.max_heartrate ? Math.round(a.max_heartrate) : null,
     calories_kcal:    a.calories ? Math.round(a.calories) : null,
+    polyline:         (a.map && a.map.summary_polyline) ? a.map.summary_polyline : null,
   }))
 
   const recentWeights = activities.filter(a => isType(a, WEIGHT_TYPES)).map(a => ({
