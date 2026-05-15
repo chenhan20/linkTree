@@ -729,7 +729,7 @@ function buildJSON(stats, activities) {
       if_score:       ifScore,
       tss:            tss,
       calories_kcal:  a.calories ? Math.round(a.calories) : null,
-      description:    null,  // 由 enrichRideLaps 補入
+      description:    a.description || null,  // 由 enrichRideLaps 可再補全
       polyline:       (a.map && a.map.summary_polyline) ? a.map.summary_polyline : null,
     }
   })
@@ -750,6 +750,7 @@ function buildJSON(stats, activities) {
     avg_heartrate:  a.average_heartrate ? Math.round(a.average_heartrate) : null,
     max_heartrate:  a.max_heartrate ? Math.round(a.max_heartrate) : null,
     calories_kcal:  a.calories ? Math.round(a.calories) : null,
+    description:    a.description || null,
     polyline:       (a.map && a.map.summary_polyline) ? a.map.summary_polyline : null,
   }))
 
@@ -766,6 +767,7 @@ function buildJSON(stats, activities) {
     avg_heartrate:    a.average_heartrate ? Math.round(a.average_heartrate) : null,
     max_heartrate:    a.max_heartrate ? Math.round(a.max_heartrate) : null,
     calories_kcal:    a.calories ? Math.round(a.calories) : null,
+    description:      a.description || null,
     polyline:         (a.map && a.map.summary_polyline) ? a.map.summary_polyline : null,
   }))
 
@@ -777,7 +779,41 @@ function buildJSON(stats, activities) {
     moving_time_hr: Math.round(a.moving_time / 360) / 10,
     avg_heartrate: a.average_heartrate ? Math.round(a.average_heartrate) : null,
     max_heartrate: a.max_heartrate ? Math.round(a.max_heartrate) : null,
+    description:   a.description || null,
   }))
+
+  // 非 FETCH_ALL 模式下，保留既有歷史活動，避免每次被最近 100 筆覆蓋。
+  function mergeActivityLists(newList, oldList) {
+    const byId = new Map()
+    for (const a of (oldList || [])) {
+      if (!a || a.id == null) continue
+      byId.set(String(a.id), a)
+    }
+    for (const a of (newList || [])) {
+      if (!a || a.id == null) continue
+      const key = String(a.id)
+      const prev = byId.get(key)
+      byId.set(key, prev ? { ...prev, ...a } : a)
+    }
+    return [...byId.values()].sort((a, b) => {
+      const dc = (b.date || '').localeCompare(a.date || '')
+      if (dc !== 0) return dc
+      return (b.time || '').localeCompare(a.time || '')
+    })
+  }
+
+  const mergedRecentRides = fetchAll
+    ? recentRides
+    : mergeActivityLists(recentRides, existing.recent_rides)
+  const mergedRecentRuns = fetchAll
+    ? recentRuns
+    : mergeActivityLists(recentRuns, existing.recent_runs)
+  const mergedRecentSwims = fetchAll
+    ? recentSwims
+    : mergeActivityLists(recentSwims, existing.recent_swims)
+  const mergedRecentWeights = fetchAll
+    ? recentWeights
+    : mergeActivityLists(recentWeights, existing.recent_weights)
 
   // ── Monthly Summary / Goals & Weekly Quest（PRD v1：FR-1 / FR-2 / FR-3）──
   // 區間皆以 Asia/Taipei 為準；activity.start_date_local 已是 TPE 牆鐘時間字串
@@ -885,10 +921,10 @@ function buildJSON(stats, activities) {
       all_time_rides:       s.all_ride_totals.count,
       all_time_elevation_m: Math.round(s.all_ride_totals.elevation_gain),
     },
-    recent_rides:    recentRides,
-    recent_runs:     recentRuns,
-    recent_swims:    recentSwims,
-    recent_weights:  recentWeights,
+    recent_rides:    mergedRecentRides,
+    recent_runs:     mergedRecentRuns,
+    recent_swims:    mergedRecentSwims,
+    recent_weights:  mergedRecentWeights,
     monthly_history: history,
     monthly_summary,
     monthly_goals,
