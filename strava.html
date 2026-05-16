@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
 <meta charset="utf-8">
@@ -220,6 +220,64 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 .seg-fade{height:30px;margin-top:-30px;background:linear-gradient(transparent,#060810);pointer-events:none}
 .seg-more-btn{width:100%;padding:7px 0;background:transparent;border:none;border-top:1px solid rgba(255,255,255,.06);color:#777;font-size:11px;cursor:pointer;letter-spacing:1.2px;margin-top:2px;display:block}
 .seg-more-btn:hover{color:#FC4C02}
+.seg-telemetry-nav{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.seg-tel-toggle{width:100%;padding:8px 0;border:1px solid rgba(252,76,2,.26);border-radius:999px;background:rgba(252,76,2,.06);color:#ff9a76;font-size:10px;letter-spacing:1.4px;text-transform:uppercase;cursor:pointer;font-weight:700;transition:background .2s,border-color .2s,color .2s}
+.seg-tel-toggle:hover,.seg-tel-toggle.active{background:rgba(252,76,2,.16);border-color:#FC4C02;color:#FC4C02}
+.seg-telemetry{display:block;margin-top:10px}
+.seg-telemetry.open{animation:segTelemetryIn .25s ease}
+.seg-telemetry-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#FC4C02;margin-bottom:8px}
+.seg-telemetry-sub{font-size:9px;letter-spacing:1px;color:rgba(255,255,255,.35)}
+.seg-telemetry .telemetry-card{padding:10px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid rgba(252,76,2,.1)}
+.seg-panel{display:none}
+.seg-panel.open{display:block}
+.seg-panel + .seg-panel{margin-top:10px}
+.seg-sector-grid{display:grid;gap:8px}
+.seg-sector-row{display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:8px;align-items:center;padding:8px 9px;border-radius:10px;background:rgba(252,76,2,.05);border:1px solid rgba(252,76,2,.09)}
+.seg-sector-name{font-size:10px;letter-spacing:1.6px;color:#ff9a76;text-transform:uppercase}
+.seg-sector-time{font-size:14px;font-weight:800;color:#f4f1ed;font-variant-numeric:tabular-nums}
+.seg-sector-delta{font-size:11px;font-weight:700;font-variant-numeric:tabular-nums;color:#5fd060;white-space:nowrap}
+.seg-sector-delta.bad{color:#ff7b52}
+.seg-mini-bar{height:6px;border-radius:999px;background:rgba(255,255,255,.06);overflow:hidden;margin-top:4px}
+.seg-mini-bar span{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,rgba(252,76,2,.35),#FC4C02)}
+.seg-engine{display:grid;gap:10px}
+.seg-engine-load{padding:10px;border-radius:12px;background:linear-gradient(180deg,rgba(252,76,2,.12),rgba(252,76,2,.04));border:1px solid rgba(252,76,2,.14)}
+.seg-engine-label{font-size:9px;letter-spacing:2px;color:rgba(255,255,255,.45);text-transform:uppercase}
+.seg-engine-value{margin-top:4px;font-size:26px;font-weight:900;line-height:1;color:#FC4C02;font-variant-numeric:tabular-nums}
+.seg-engine-meta{margin-top:4px;font-size:11px;color:#ffc08c;letter-spacing:.6px}
+.seg-record-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.seg-record-stat{padding:9px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid rgba(252,76,2,.1)}
+.seg-record-stat .seg-stat-lbl{margin-bottom:2px}
+.seg-record-stat .seg-stat-val{font-size:16px}
+.seg-record-list{display:grid;gap:7px;margin-top:10px}
+.seg-record-item{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;padding:7px 8px;border-radius:10px;background:rgba(252,76,2,.05);border:1px solid rgba(252,76,2,.08)}
+.seg-record-date{font-size:11px;color:#b7aea8;font-variant-numeric:tabular-nums;white-space:nowrap}
+.seg-record-time{font-size:13px;font-weight:800;color:#f5eee9;font-variant-numeric:tabular-nums}
+.seg-record-power{font-size:10px;color:#ff9a76;white-space:nowrap}
+.seg-f1-board{margin:.2rem 0 .9rem;border-radius:12px;border:1px solid rgba(252,76,2,.16);background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(0,0,0,.08));overflow:hidden}
+.seg-f1-top{display:grid;grid-template-columns:1.2fr .8fr;gap:10px;padding:10px 10px 9px;border-bottom:1px solid rgba(252,76,2,.12)}
+.seg-f1-top-lbl{font-size:10px;letter-spacing:1.8px;text-transform:uppercase;color:rgba(255,255,255,.48)}
+.seg-f1-best{display:flex;align-items:baseline;gap:8px;margin-top:2px}
+.seg-f1-best-time{font-size:40px;font-weight:900;line-height:.95;color:#f4f1ed;font-variant-numeric:tabular-nums}
+.seg-f1-crown{font-size:18px;line-height:1;color:#FC4C02}
+.seg-f1-pr{margin-top:2px;font-size:11px;letter-spacing:1.2px;color:#FC4C02;text-transform:uppercase;font-weight:700}
+.seg-f1-rank-val{margin-top:2px;font-size:30px;font-weight:900;line-height:1;color:#f4f1ed;font-variant-numeric:tabular-nums}
+.seg-f1-delta{margin-top:3px;font-size:28px;font-weight:900;line-height:1;color:#5fd060;font-variant-numeric:tabular-nums}
+.seg-f1-delta.bad{color:#ff7b52}
+.seg-f1-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:rgba(252,76,2,.08)}
+.seg-f1-cell{padding:10px 8px 9px;background:rgba(7,8,12,.78)}
+.seg-f1-val{font-size:32px;font-weight:900;line-height:.95;color:#f4f1ed;font-variant-numeric:tabular-nums;letter-spacing:-.5px}
+.seg-f1-val.small{font-size:22px;letter-spacing:0}
+.seg-f1-unit{font-size:10px;color:rgba(255,255,255,.45);letter-spacing:1.6px;text-transform:uppercase;margin-top:3px}
+.seg-f1-sub{font-size:9px;color:#FC4C02;letter-spacing:1.2px;text-transform:uppercase;margin-top:2px}
+@media(max-width:640px){
+  .seg-f1-top{grid-template-columns:1fr}
+  .seg-f1-best-time{font-size:34px}
+  .seg-f1-rank-val{font-size:26px}
+  .seg-f1-delta{font-size:24px}
+  .seg-f1-val{font-size:28px}
+}
+
+@keyframes segTelemetryIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
 @keyframes segCardIn{
   from{opacity:0;transform:translateY(14px) scale(.985);filter:blur(1px)}
@@ -740,48 +798,198 @@ function renderWeeklyQuest(wq) {
     <div class="section-title">本週任務 <span class="muted">· WEEKLY QUEST</span></div>
     <div class="quest-grid">${tiles}</div>`
 }
-function renderSegments(segs) {
+function toggleSegTelemetry(btn) {
+  const card = btn.closest('.seg-card')
+  if (!card) return
+  const panel = card.querySelector('.seg-telemetry')
+  if (!panel) return
+  const isOpen = panel.classList.toggle('open')
+  btn.textContent = isOpen ? 'Hide Timing' : 'View Details'
+  btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false')
+}
+function toggleSegPanel(btn, key) {
+  const card = btn.closest('.seg-card')
+  if (!card) return
+  const panel = card.querySelector(`[data-seg-panel="${key}"]`)
+  if (!panel) return
+  const isOpen = panel.classList.toggle('open')
+  btn.classList.toggle('active', isOpen)
+  btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false')
+}
+function formatClockSeconds(totalSec) {
+  const safe = Math.max(0, Math.round(totalSec || 0))
+  const minutes = Math.floor(safe / 60)
+  const seconds = safe % 60
+  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+}
+function fmtSignedDelta(sec) {
+  const safe = Math.round(sec || 0)
+  const sign = safe <= 0 ? '-' : '+'
+  const abs = Math.abs(safe)
+  return `${sign}${formatClockSeconds(abs)}`
+}
+function splitBySectors(totalSec) {
+  const safe = Math.max(0, Math.round(totalSec || 0))
+  const weights = [0.34, 0.33, 0.33]
+  const first = Math.round(safe * weights[0])
+  const second = Math.round(safe * weights[1])
+  const third = Math.max(0, safe - first - second)
+  return [first, second, third]
+}
+function sparklineSvg(values) {
+  const points = (values || []).map(v => Number(v)).filter(v => Number.isFinite(v) && v > 0)
+  if (points.length < 2) {
+    return '<svg class="seg-sparkline" viewBox="0 0 120 36" preserveAspectRatio="none" aria-hidden="true"><path d="M2 26L118 26" fill="none" stroke="rgba(252,76,2,.3)" stroke-width="2" stroke-linecap="round"/></svg>'
+  }
+  const min = Math.min(...points)
+  const max = Math.max(...points)
+  const span = Math.max(1, max - min)
+  const step = 116 / (points.length - 1)
+  const coords = points.map((value, index) => {
+    const x = 2 + index * step
+    const y = 30 - ((value - min) / span) * 22
+    return `${x.toFixed(2)},${y.toFixed(2)}`
+  })
+  const d = `M${coords.join('L')}`
+  return `<svg class="seg-sparkline" viewBox="0 0 120 36" preserveAspectRatio="none" aria-hidden="true"><path d="${d}" fill="none" stroke="url(#segSparkGradient)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><defs><linearGradient id="segSparkGradient" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="rgba(252,76,2,.18)"/><stop offset="100%" stop-color="#FC4C02"/></linearGradient></defs></svg>`
+}
+function renderSegmentSectorPanel(latest, pr) {
+  const latestSec = latest?.elapsed_sec || 0
+  const bestSec = pr?.elapsed_sec || latestSec
+  const latestSplits = splitBySectors(latestSec)
+  const bestSplits = splitBySectors(bestSec)
+  const rows = latestSplits.map((sec, idx) => {
+    const delta = sec - (bestSplits[idx] || 0)
+    const pct = latestSec ? Math.max(8, Math.round((sec / latestSec) * 100)) : 0
+    return `<div class="seg-sector-row">
+      <div class="seg-sector-name">S${idx + 1}</div>
+      <div>
+        <div class="seg-sector-time">${formatClockSeconds(sec)}</div>
+        <div class="seg-mini-bar"><span style="width:${pct}%"></span></div>
+      </div>
+      <div class="seg-sector-delta ${delta <= 0 ? '' : 'bad'}">${fmtSignedDelta(delta)}</div>
+    </div>`
+  }).join('')
+  const deltaText = pr && latestSec ? fmtSignedDelta(latestSec - bestSec) : '--:--'
+  return `
+    <div class="seg-panel" data-seg-panel="sector">
+      <div class="seg-telemetry-head"><span>Sectors</span><span class="seg-telemetry-sub">split timing / delta</span></div>
+      <div class="telemetry-card">
+        <div class="seg-sector-grid">
+          ${rows}
+        </div>
+        <div class="seg-since-pr" style="margin-top:10px">Delta vs best: <b style="color:#5fd060">${deltaText}</b></div>
+      </div>
+    </div>`
+}
+function renderSegmentPowerPanel(efforts, latest, pr) {
+  const watts = (efforts || []).map(e => e.avg_watts).filter(v => Number.isFinite(Number(v)) && Number(v) > 0).map(v => Number(v))
+  const latestW = Number(latest?.avg_watts || 0)
+  const bestW = Number(pr?.avg_watts || latestW)
+  const deltaW = latestW - bestW
+  const maxW = Math.max(latestW, bestW, ...watts, 1)
+  const pct = Math.min(100, Math.round((latestW / maxW) * 100))
+  return `
+    <div class="seg-panel" data-seg-panel="power">
+      <div class="seg-telemetry-head"><span>Power</span><span class="seg-telemetry-sub">engine / delivery</span></div>
+      <div class="telemetry-card seg-engine">
+        <div class="seg-engine-load">
+          <div class="seg-engine-label">ENGINE LOAD</div>
+          <div class="seg-engine-value">${latestW || '--'}W</div>
+          <div class="seg-engine-meta">${deltaW >= 0 ? '+' : '-'}${Math.abs(Math.round(deltaW))}W vs best</div>
+          <div class="seg-mini-bar" style="margin-top:8px"><span style="width:${pct}%"></span></div>
+        </div>
+        <div>
+          <div class="seg-engine-label" style="margin-bottom:6px">POWER DELIVERY</div>
+          ${sparklineSvg(watts)}
+        </div>
+      </div>
+    </div>`
+}
+function renderSegmentRecordPanel(efforts, latest) {
+  const ordered = [...(efforts || [])].sort((a, b) => (a.elapsed_sec || 999999) - (b.elapsed_sec || 999999))
+  const best = ordered[0] || latest || null
+  const runnerUp = ordered[1] || null
+  const wattsGain = best && runnerUp ? Math.round((best.avg_watts || 0) - (runnerUp.avg_watts || 0)) : 0
+  const topPct = best && ordered.length ? Math.max(1, Math.round(100 / ordered.length)) : 0
+  const logRows = ordered.slice(0, 3).map((e, index) => `
+    <div class="seg-record-item">
+      <div class="seg-record-date">${fmtDate(e.date, true)}</div>
+      <div class="seg-record-time">${e.elapsed_str}</div>
+      <div class="seg-record-power">${e.avg_watts ? `${e.avg_watts}W` : '--'}</div>
+    </div>`).join('')
+  const label = best?.is_pr ? 'NEW RECORD' : 'ATTEMPT LOG'
+  const topLabel = best?.is_pr ? 'TOP 3%' : `TOP ${topPct}%`
+  return `
+    <div class="seg-panel" data-seg-panel="record">
+      <div class="seg-telemetry-head"><span>Record</span><span class="seg-telemetry-sub">PR / ranking</span></div>
+      <div class="telemetry-card">
+        <div class="seg-record-grid">
+          <div class="seg-record-stat"><div class="seg-stat-lbl">Status</div><div class="seg-stat-val">${label}</div></div>
+          <div class="seg-record-stat"><div class="seg-stat-lbl">Power Gap</div><div class="seg-stat-val">${wattsGain >= 0 ? '+' : '-'}${Math.abs(wattsGain)}W</div></div>
+          <div class="seg-record-stat"><div class="seg-stat-lbl">Rank</div><div class="seg-stat-val">${topLabel}</div></div>
+        </div>
+        <div class="seg-record-list">${logRows}</div>
+      </div>
+    </div>`
+}
+function renderSegmentF1Board(seg, efforts, latest, pr, athleteWeightKg) {
+  const valid = efforts.filter(e => Number.isFinite(Number(e.elapsed_sec)) && Number(e.elapsed_sec) > 0)
+  const ranked = [...valid].sort((a, b) => a.elapsed_sec - b.elapsed_sec)
+  const best = ranked[0] || pr || latest || null
+  const second = ranked[1] || null
+  const bestTime = best?.elapsed_str || seg.pr_time_str || '--:--'
+  const deltaSec = second ? best.elapsed_sec - second.elapsed_sec : 0
+  const topPct = ranked.length ? Math.max(1, Math.round((1 / ranked.length) * 100)) : 100
+  const avgPower = Number(best?.avg_watts || latest?.avg_watts || 0)
+  const avgHr = Number(best?.avg_heartrate || latest?.avg_heartrate || 0)
+  const safeWeightKg = Number.isFinite(Number(athleteWeightKg)) && Number(athleteWeightKg) > 0 ? Number(athleteWeightKg) : 80
+  const wkg = avgPower ? (avgPower / safeWeightKg).toFixed(1) : '--'
+  const attempts = efforts.length
+  const finishRate = attempts ? Math.round((valid.length / attempts) * 100) : 0
+  const lastRide = latest?.date ? fmtDate(latest.date, true) : '--'
+  return `
+    <div class="seg-f1-board">
+      <div class="seg-f1-top">
+        <div>
+          <div class="seg-f1-top-lbl">Best Time</div>
+          <div class="seg-f1-best"><div class="seg-f1-best-time">${bestTime}</div><div class="seg-f1-crown">👑</div></div>
+          <div class="seg-f1-pr">Personal Best</div>
+        </div>
+        <div>
+          <div class="seg-f1-top-lbl">Rank</div>
+          <div class="seg-f1-rank-val">TOP ${topPct}%</div>
+          <div class="seg-f1-delta ${deltaSec <= 0 ? '' : 'bad'}">${fmtSignedDelta(deltaSec)}</div>
+        </div>
+      </div>
+      <div class="seg-f1-grid">
+        <div class="seg-f1-cell"><div class="seg-f1-val small">${avgPower || '--'}</div><div class="seg-f1-unit">AVG POWER</div><div class="seg-f1-sub">W</div></div>
+        <div class="seg-f1-cell"><div class="seg-f1-val small">${avgHr || '--'}</div><div class="seg-f1-unit">AVG HR</div><div class="seg-f1-sub">BPM</div></div>
+        <div class="seg-f1-cell"><div class="seg-f1-val small">${wkg}</div><div class="seg-f1-unit">W/KG</div><div class="seg-f1-sub">@ ${safeWeightKg}kg</div></div>
+        <div class="seg-f1-cell"><div class="seg-f1-val small">${attempts}</div><div class="seg-f1-unit">Attempts</div></div>
+        <div class="seg-f1-cell"><div class="seg-f1-val small">${finishRate}%</div><div class="seg-f1-unit">Finish Rate</div></div>
+        <div class="seg-f1-cell"><div class="seg-f1-val small">${lastRide}</div><div class="seg-f1-unit">Last Ride</div></div>
+      </div>
+    </div>`
+}
+function renderSegments(segs, athleteWeightKg = 80) {
   if (!segs || segs.length === 0) return ''
   const segCount = segs.length
-  const _today = new Date(Date.now() + 8*3600*1000).toISOString().slice(0,10)
-  const _sincePRLine = (efforts) => {
-    const pr = efforts.find(e => e.is_pr)
-    if (!pr || !pr.date) return ''
-    const d = Math.max(0, Math.round((Date.parse(_today) - Date.parse(pr.date.slice(0,10))) / 86400000))
-    if (d === 0) return `<div class="seg-since-pr" style="margin:6px 0 10px;padding:7px 11px;font-size:11.5px;background:linear-gradient(90deg,rgba(255,76,2,.18),rgba(255,76,2,.04));border-left:3px solid #FC4C02;border-radius:4px;letter-spacing:.5px">🔥 今天創下最快紀錄！</div>`
-    return `<div class="seg-since-pr" style="margin:6px 0 10px;padding:7px 11px;font-size:11.5px;background:rgba(255,255,255,.04);border-left:3px solid rgba(255,76,2,.55);border-radius:4px;opacity:.85;letter-spacing:.5px">⏱ 距PR紀錄已 <b style="font-weight:700;color:#FC4C02">${d}</b> 天</div>`
-  }
   const cards = segs.map((seg, segIndex) => {
-    const rowArr = seg.efforts.slice().sort((a,b) => (b.date||'').localeCompare(a.date||'')).map((e, effIndex) => {
-      const dateKey = (e.date || '').slice(0, 10)
-      const prMark = e.is_pr ? '<span class="seg-effort-pr">👑</span>' : ''
-      const watts = e.avg_watts ? `<span class="seg-chip watts">⚡ ${e.avg_watts}W</span>` : ''
-      const hr    = e.avg_heartrate ? `<span class="seg-chip hr">♥ ${e.avg_heartrate}</span>` : ''
-      const rank  = e.rank ? `<span class="seg-chip badge">#${e.rank}</span>` : ''
-      return `<div class="seg-effort${e.is_pr ? ' pr' : ''}" style="--eff-delay:${segIndex * 120 + effIndex * 60}ms" data-date="${dateKey}" data-actid="${e.activity_id || ''}" title="跳至活動紀錄">
-        ${prMark}
-        <div class="seg-effort-main">
-          <div class="seg-effort-top">
-            <div class="seg-effort-date">${fmtDate(e.date, true)}</div>
-            <div class="seg-effort-time">${e.elapsed_str}</div>
-          </div>
-          <div class="seg-effort-meta">
-            ${rank}${watts}${hr}
-          </div>
-        </div>
-      </div>`
-    })
-    const visRows  = rowArr.slice(0, 3).join('')
-    const moreRows = rowArr.slice(3).join('')
-    const extraWrap = moreRows ? `<div class="seg-extra" style="display:none">${moreRows}</div>` : ''
-    const moreWrap   = moreRows ? `<div class="seg-more-wrap"><div class="seg-fade"></div><button class="seg-more-btn" onclick="var c=this.closest('.seg-card');c.querySelector('.seg-extra').style.display='block';this.closest('.seg-more-wrap').remove()">▼ 全部 ${rowArr.length} 筆</button></div>` : ''
+    const efforts = [...seg.efforts].sort((a, b) => (b.date || '').localeCompare(a.date || ''))
+    const latest = efforts[0] || null
+    const pr = efforts.find(e => e.is_pr) || latest || null
+    const board = renderSegmentF1Board(seg, efforts, latest, pr, athleteWeightKg)
+    const sectorPanel = renderSegmentSectorPanel(latest, pr)
+    const powerPanel = renderSegmentPowerPanel(efforts, latest, pr)
+    const recordPanel = renderSegmentRecordPanel(efforts, latest)
     return `<div class="seg-card" style="--seg-delay:${segIndex * 120}ms">
       <div class="seg-card-head">
         <div class="seg-title-block">
           <div class="seg-badge-line">
             <span class="seg-pill">ITT</span>
             ${seg.pr_time_str ? '<span class="seg-pill pr">PR</span>' : ''}
-            <span class="seg-pill">${seg.efforts.length} efforts</span>
+            <span class="seg-pill">${efforts.length} efforts</span>
           </div>
           <div class="seg-name">${seg.name}</div>
           <div class="seg-dist">${seg.distance_km} km</div>
@@ -792,20 +1000,25 @@ function renderSegments(segs) {
         </div>` : ''}
       </div>
       <div class="seg-summary">
-        <div class="seg-stat"><div class="seg-stat-lbl">Latest</div><div class="seg-stat-val">${fmtDate(seg.efforts[0]?.date || '', true)}</div></div>
-        <div class="seg-stat"><div class="seg-stat-lbl">Best</div><div class="seg-stat-val">${seg.pr_time_str || '—'}</div></div>
-        <div class="seg-stat"><div class="seg-stat-lbl">Records</div><div class="seg-stat-val">${seg.efforts.length}</div></div>
+        <div class="seg-stat"><div class="seg-stat-lbl">Latest</div><div class="seg-stat-val">${latest ? fmtDate(latest.date, true) : '--'}</div></div>
+        <div class="seg-stat"><div class="seg-stat-lbl">Best</div><div class="seg-stat-val">${seg.pr_time_str || '--'}</div></div>
+        <div class="seg-stat"><div class="seg-stat-lbl">Records</div><div class="seg-stat-val">${efforts.length}</div></div>
       </div>
-      ${_sincePRLine(seg.efforts)}
-      <div class="seg-timeline">
-        ${visRows}
-        ${extraWrap}
+      ${board}
+      <div class="seg-telemetry-nav">
+        <button class="seg-tel-toggle" type="button" aria-expanded="false" onclick="toggleSegPanel(this, 'sector')">Sector</button>
+        <button class="seg-tel-toggle" type="button" aria-expanded="false" onclick="toggleSegPanel(this, 'power')">Power</button>
+        <button class="seg-tel-toggle" type="button" aria-expanded="false" onclick="toggleSegPanel(this, 'record')">Record</button>
       </div>
-      ${moreWrap}
+      <div class="seg-telemetry">
+        ${sectorPanel}
+        ${powerPanel}
+        ${recordPanel}
+      </div>
     </div>`
   }).join('')
   return `
-    <div class="section-title">ITT 區間 <span class="muted">· SEGMENT EFFORTS</span></div>
+    <div class="section-title">ITT <span class="muted">SEGMENT EFFORTS</span></div>
     <div class="seg-grid" data-count="${segCount}">${cards}</div>`
 }
 function fmtDate(d, withYear = false) {
@@ -1056,6 +1269,8 @@ function render(data) {
     return renderTimeline(t?.list, activeTab, showMore[activeTab] || false, ittMap)
   }
 
+  const athleteWeightKg = Number(data?.athlete_weight_kg || 80)
+
   document.getElementById('content').innerHTML = `
     <div class="hero">
       <div class="avatar">
@@ -1076,7 +1291,7 @@ function render(data) {
     ${renderMonthlySummary(data.monthly_summary)}
     ${renderMonthlyGoals(data.monthly_goals)}
     ${renderWeeklyQuest(data.weekly_quest)}
-    ${renderSegments(data.segments)}
+    ${renderSegments(data.segments, athleteWeightKg)}
 
     ${history.length ? `
     <div class="monthly-chart">
@@ -1481,9 +1696,16 @@ function bindPowerCard(prs) {
 }
 
 /* ── fetch strava.json ── */
-fetch('data/strava.json')
-  .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json() })
-  .then(data => { render(data); bindPowerCard(data.power_prs) })
+Promise.all([
+  fetch('data/strava.json').then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json() }),
+  fetch('athlete/基本資料.json').then(r => r.ok ? r.json() : null).catch(() => null),
+])
+  .then(([data, profile]) => {
+    const athleteWeightKg = Number(profile?.body_metrics?.latest_weight_kg || 80)
+    data.athlete_weight_kg = athleteWeightKg
+    render(data)
+    bindPowerCard(data.power_prs)
+  })
   .catch(err => {
     document.getElementById('content').innerHTML = `
       <div class="loading" style="color:#FC4C02">
