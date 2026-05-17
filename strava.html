@@ -164,65 +164,127 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 }
 .section-title .muted{color:rgba(252,76,2,.4)}
 
-/* ── ITT segments (new card design) ── */
-.s2-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:36px;margin-bottom:3rem;align-items:start}
-@media(max-width:580px){.s2-grid{grid-template-columns:1fr}}
+/* ── ITT segments — F1 CARD ── */
+.s2-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:24px;margin-bottom:3rem;align-items:start}
+@media(max-width:600px){.s2-grid{grid-template-columns:1fr}}
+
+/* card shell */
 .s2-card{
-  position:relative;background:#0d0d0d;border-radius:3px;overflow:hidden;
+  position:relative;background:#070707;border-radius:2px;overflow:hidden;
   display:flex;flex-direction:column;
-  box-shadow:0 0 0 1.5px #e87c1a,0 0 14px 2px rgba(232,124,26,.45),0 0 40px 4px rgba(232,124,26,.18),inset 0 0 60px rgba(0,0,0,.6);
+  border:1px solid rgba(232,124,26,.25);
+  box-shadow:0 0 0 1px rgba(0,0,0,.9),0 0 24px rgba(232,124,26,.15),0 0 48px rgba(232,124,26,.06);
 }
-.s2-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent 0%,#ff9a30 30%,#ffe066 50%,#ff9a30 70%,transparent 100%);z-index:20;opacity:.9}
-.s2-card::after{content:'';position:absolute;top:0;left:0;width:14px;height:14px;border-top:2px solid #ffb03a;border-left:2px solid #ffb03a;z-index:20}
-/* hero */
-.s2-hero{position:relative;height:100px;overflow:hidden;flex-shrink:0}
-.s2-hero-fade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,8,8,.05) 0%,rgba(8,8,8,.88) 100%)}
-.s2-corner-tr{position:absolute;top:0;right:0;width:14px;height:14px;border-top:2px solid #ffb03a;border-right:2px solid #ffb03a;z-index:21}
-.s2-num-badge{position:absolute;top:7px;left:9px;font-family:'Orbitron',monospace;font-size:13px;font-weight:700;color:rgba(255,255,255,.85);letter-spacing:1px;z-index:5;text-shadow:0 0 8px rgba(232,124,26,.7)}
-.s2-type-tag{position:absolute;top:5px;right:7px;background:rgba(12,12,12,.82);border:1px solid rgba(232,124,26,.55);border-radius:2px;padding:2px 9px;font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:700;color:#bbb;letter-spacing:1.5px;text-transform:uppercase;z-index:5}
-/* body */
-.s2-body{padding:14px 16px;display:flex;flex-direction:column;gap:10px;flex:1}
-.s2-title-block{border-bottom:1px solid rgba(232,124,26,.28);padding-bottom:10px}
-.s2-name-zh{font-size:20px;font-weight:700;color:#fff;letter-spacing:2px;font-family:'Barlow Condensed',sans-serif;line-height:1.2}
-/* since-pr pill */
-.s2-since{font-size:9.5px;color:rgba(255,255,255,.4);letter-spacing:.5px;padding:3px 0}
-.s2-since b{color:#FC4C02}
-/* time + distance row */
-.s2-tr-row{display:flex;justify-content:space-between;align-items:flex-start}
-.s2-time-lbl{font-size:10px;color:#e87c1a;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:1px}
-.s2-time-val{font-family:'Orbitron',monospace;font-size:30px;font-weight:700;line-height:1;display:flex;align-items:center;gap:4px}
-.s2-orange{color:#e87c1a;text-shadow:0 0 12px rgba(232,124,26,.6)}
-.s2-gold{color:#f0c040;text-shadow:0 0 12px rgba(240,192,64,.55)}
-.s2-crown{font-size:13px}
-.s2-status{font-size:10px;font-weight:700;letter-spacing:1px;margin-top:3px;text-transform:uppercase}
-.s2-s-rec{color:#e87c1a}.s2-s-pb{color:#f0c040}
-.s2-rank-blk{text-align:right}
-.s2-rank-lbl{font-size:8px;color:rgba(255,255,255,.42);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px}
-.s2-rank-val{font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;color:#fff}
-/* stats strip */
-.s2-stats{display:flex;gap:3px;padding:8px 0;border-top:1px solid rgba(255,255,255,.05);border-bottom:1px solid rgba(255,255,255,.05)}
-.s2-stat{flex:1}
-.s2-sv{font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:700;color:#fff;line-height:1;display:flex;align-items:center;gap:2px}
-.s2-ico-p{color:#e87c1a;font-size:11px}
-.s2-ico-h{color:#e84040;font-size:11px}
-.s2-sl{font-size:9px;color:rgba(255,255,255,.3);letter-spacing:1px;text-transform:uppercase;margin-top:2px}
-/* meta row */
-.s2-meta{display:flex;gap:3px}
-.s2-mi{flex:1}
-.s2-mv{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:600;color:rgba(255,255,255,.78);line-height:1}
-.s2-ml{font-size:9px;color:rgba(255,255,255,.28);letter-spacing:1px;text-transform:uppercase;margin-top:2px}
-/* footer */
-.s2-foot{display:flex;border-top:1px solid rgba(232,124,26,.22)}
-.s2-f-btn{flex:1;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;background:rgba(232,124,26,.07);cursor:pointer;transition:background .2s;-webkit-tap-highlight-color:transparent}
-.s2-f-btn:hover,.s2-f-btn.open{background:rgba(232,124,26,.16)}
-.s2-f-txt{font-family:'Rajdhani',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;color:#e87c1a;text-transform:uppercase}
-.s2-f-arr{color:#e87c1a;font-size:18px;line-height:1;transition:transform .2s}
-.s2-f-btn.open .s2-f-arr{transform:rotate(90deg)}
-/* footer detail button */
-.s2-foot-modal{padding:10px 14px;border-top:1px solid rgba(232,124,26,.22)}
+/* top racing stripe */
+.s2-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;z-index:20;
+  background:linear-gradient(90deg,transparent,var(--s2-accent,#e87c1a) 30%,#fff8e0 50%,var(--s2-accent,#e87c1a) 70%,transparent);
+}
+/* left accent bar */
+.s2-card::after{
+  content:'';position:absolute;top:0;left:0;width:2px;height:100%;z-index:20;
+  background:var(--s2-accent,#e87c1a);opacity:.6;
+}
+
+/* ── HEADER row: SEG 01 … TYPE TAG ── */
+.s2-hd{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:9px 12px 8px 16px;
+  border-bottom:1px solid rgba(255,255,255,.05);
+}
+.s2-num{
+  font-family:'Orbitron',monospace;font-size:9px;font-weight:700;
+  color:rgba(255,255,255,.28);letter-spacing:2.5px;
+}
+.s2-type-tag{
+  font-family:'Rajdhani',sans-serif;font-size:9px;font-weight:800;letter-spacing:2px;
+  color:var(--s2-accent,#e87c1a);text-transform:uppercase;
+  border:1px solid rgba(232,124,26,.3);border-radius:1px;
+  padding:2px 7px;background:rgba(0,0,0,.5);
+}
+
+/* ── NAME BLOCK ── */
+.s2-namblk{
+  padding:12px 16px 10px;
+  border-bottom:1px solid rgba(255,255,255,.05);
+}
+.s2-name-zh{
+  font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;
+  color:#fff;letter-spacing:3px;line-height:1;
+  text-shadow:0 0 24px rgba(232,124,26,.2);
+}
+
+/* ── TIMING BLOCK ── */
+.s2-timblk{
+  padding:14px 16px 12px;
+  border-bottom:1px solid rgba(255,255,255,.05);
+}
+.s2-best-time{
+  font-family:'Orbitron',monospace;font-size:36px;font-weight:700;line-height:1;
+  color:#fff;letter-spacing:2px;
+  text-shadow:0 0 30px rgba(232,124,26,.3);
+}
+.s2-best-time.is-new{
+  color:var(--s2-accent,#e87c1a);
+  text-shadow:0 0 30px rgba(232,124,26,.8),0 0 60px rgba(232,124,26,.35);
+}
+.s2-time-lbl{
+  font-family:'Rajdhani',sans-serif;font-size:9px;font-weight:700;
+  color:rgba(255,255,255,.25);letter-spacing:2px;text-transform:uppercase;
+  margin-top:3px;margin-bottom:8px;
+}
+.s2-gap-line{
+  font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;
+  letter-spacing:1px;color:rgba(255,255,255,.3);
+  margin-bottom:6px;
+}
+.s2-gap-line b{color:#4ab4ff;font-variant-numeric:tabular-nums}
+.s2-status-line{
+  display:inline-block;
+  font-family:'Rajdhani',sans-serif;font-size:10px;font-weight:800;
+  letter-spacing:2px;text-transform:uppercase;
+  color:var(--s2-status-color,#e87c1a);
+  border-left:2px solid var(--s2-status-color,#e87c1a);
+  padding-left:6px;
+}
+
+/* ── POWER ROW ── */
+.s2-prow{
+  display:grid;grid-template-columns:1fr 1fr;
+  border-bottom:1px solid rgba(255,255,255,.05);
+}
+.s2-pc{
+  padding:11px 16px;display:flex;flex-direction:column;gap:3px;
+  border-right:1px solid rgba(255,255,255,.05);
+}
+.s2-pc:last-child{border-right:none}
+.s2-pv{
+  font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;
+  line-height:1;color:#fff;display:flex;align-items:baseline;gap:3px;
+}
+.s2-pv .unit{font-size:11px;color:rgba(255,255,255,.35);font-weight:400}
+.s2-pl{font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.22);margin-top:1px}
+
+/* ── BOTTOM ROW: TOP % · ATTEMPTS ── */
+.s2-brow{
+  display:grid;grid-template-columns:1fr 1fr;
+  border-bottom:1px solid rgba(255,255,255,.05);
+}
+.s2-bc{
+  padding:10px 16px;display:flex;flex-direction:column;gap:3px;
+  border-right:1px solid rgba(255,255,255,.05);
+}
+.s2-bc:last-child{border-right:none}
+.s2-bv{
+  font-family:'Orbitron',monospace;font-size:14px;font-weight:700;line-height:1;
+}
+.s2-bl{font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.22);margin-top:2px}
+
+/* ── CTA button ── */
+.s2-foot-modal{padding:10px 12px;border-top:1px solid rgba(232,124,26,.15)}
 @keyframes s2-btn-pulse{
-  0%,100%{box-shadow:0 0 8px 0 rgba(232,124,26,.25),0 0 0 1px rgba(232,124,26,.2) inset;transform:translateY(0)}
-  50%{box-shadow:0 0 22px 4px rgba(232,124,26,.35),0 0 0 1.5px #e87c1a inset;transform:translateY(-1px)}
+  0%,100%{box-shadow:0 0 8px rgba(232,124,26,.2),inset 0 0 0 1px rgba(232,124,26,.15);transform:translateY(0)}
+  50%{box-shadow:0 0 20px rgba(232,124,26,.35),inset 0 0 0 1px rgba(232,124,26,.5);transform:translateY(-1px)}
 }
 @keyframes s2-btn-shine{
   0%{transform:translateX(-120%) skewX(-20deg)}
@@ -799,103 +861,127 @@ function renderSegments(segs) {
   const _today = new Date(Date.now() + 8*3600*1000).toISOString().slice(0,10)
   const ATHLETE_WT = 80
   const SEG_META = {
-    641218:  { nameEn:'Windmill ITT',    nameZh:'風櫃嘴',    type:'Climb',
-               bg:'linear-gradient(135deg,#1a1000 0%,#2d1e00 40%,#0d0d0d 100%)' },
-    1761462: { nameEn:'Zhongshe ITT',   nameZh:'中社路',    type:'Sprint',
-               bg:'linear-gradient(135deg,#1a2a1a 0%,#2a3a25 40%,#151515 100%)' },
-    7032136: { nameEn:'She Island ITT', nameZh:'社子島',    type:'Endurance',
-               bg:'linear-gradient(135deg,#15202a 0%,#1a2d3a 40%,#101520 100%)' },
-      956558:  { nameEn:'Jiannan Return', nameZh:'劍南路回程', type:'Sprint',
-                 bg:'linear-gradient(135deg,#1a1a2a 0%,#252540 40%,#0d0d18 100%)' },
+    641218:  {
+      nameZh:'風櫃嘴', type:'CLIMB', location:'Taipei · Yangming',
+      elevation:'+421 m', gradient:'6.2%', category:'CAT A',
+      komTime: null, rank: null, totalRiders: null,
+      bg:'linear-gradient(135deg,#1a1000 0%,#2d1e00 40%,#0d0d0d 100%)',
+      accent:'#e87c1a', statusColor:'#e87c1a',
+    },
+    1761462: {
+      nameZh:'中社路', type:'SPRINT', location:'Taipei · Zhongshe',
+      elevation:'+45 m', gradient:'2.1%', category:'CAT D',
+      komTime: null, rank: null, totalRiders: null,
+      bg:'linear-gradient(135deg,#1a2a1a 0%,#2a3a25 40%,#151515 100%)',
+      accent:'#2ecc71', statusColor:'#2ecc71',
+    },
+    7032136: {
+      nameZh:'社子島', type:'ENDURANCE', location:'Taipei · She Island',
+      elevation:'+12 m', gradient:'0.1%', category:'FLAT',
+      komTime: null, rank: null, totalRiders: null,
+      bg:'linear-gradient(135deg,#15202a 0%,#1a2d3a 40%,#101520 100%)',
+      accent:'#4ab4ff', statusColor:'#4ab4ff',
+    },
+    956558:  {
+      nameZh:'劍南路回程', type:'DESCENT', location:'Taipei · Jiannan',
+      elevation:'-180 m', gradient:'-5.8%', category:'FAST',
+      komTime: null, rank: null, totalRiders: null,
+      bg:'linear-gradient(135deg,#1a1a2a 0%,#252540 40%,#0d0d18 100%)',
+      accent:'#a78bfa', statusColor:'#a78bfa',
+    },
   }
+
   const cards = segs.map((seg, idx) => {
     const meta   = SEG_META[seg.id] || {}
     const sorted = (seg.efforts || []).slice().sort((a,b) => a.elapsed_sec - b.elapsed_sec)
     const pr     = seg.efforts.find(e => e.is_pr) || sorted[0]
     const latest = (seg.efforts || []).slice().sort((a,b) => b.date.localeCompare(a.date))[0]
 
-    const prWatts = pr && pr.avg_watts ? pr.avg_watts : null
-    const prHR    = pr && pr.avg_heartrate ? pr.avg_heartrate : null
-    const wkg     = prWatts ? (prWatts / ATHLETE_WT).toFixed(1) : '—'
+    const prWatts  = pr && pr.avg_watts    ? pr.avg_watts    : null
+    const wkg      = prWatts ? (prWatts / ATHLETE_WT).toFixed(1) : '—'
     const attempts = seg.efforts.length
-    const lastDate = latest ? latest.date.slice(5).replace('-', '/') : '—'
     const numBadge = String(idx + 1).padStart(2, '0')
+    const accent   = meta.accent || '#e87c1a'
+    const statusColor = meta.statusColor || '#e87c1a'
 
-    // since-PR pill
-    let sinceHtml = ''
+    // days since PR
+    let daysSince = null
     if (pr && pr.date) {
-      const d = Math.max(0, Math.round((Date.parse(_today) - Date.parse(pr.date.slice(0,10))) / 86400000))
-      sinceHtml = d === 0
-        ? `<div class="s2-since">🔥 今天創下最快紀錄！</div>`
-        : `<div class="s2-since">⏱ 距PR紀錄已 <b>${d}</b> 天</div>`
+      daysSince = Math.max(0, Math.round((Date.parse(_today) - Date.parse(pr.date.slice(0,10))) / 86400000))
     }
 
-    // new record = PR effort is also the latest effort
+    // STATUS label + color
+    let statusTxt, statusCol
+    if (daysSince === null)        { statusTxt = 'NO DATA';     statusCol = '#555' }
+    else if (daysSince === 0)      { statusTxt = 'RECORD TODAY'; statusCol = '#ff4f4f' }
+    else if (daysSince <= 7)       { statusTxt = 'HOT STREAK';  statusCol = '#ff6a00' }
+    else if (daysSince <= 30)      { statusTxt = 'RECENT PR';   statusCol = '#e87c1a' }
+    else if (daysSince <= 90)      { statusTxt = 'ACTIVE';      statusCol = '#f0c040' }
+    else if (daysSince <= 180)     { statusTxt = 'STALE';       statusCol = '#888' }
+    else                           { statusTxt = 'DORMANT';     statusCol = '#555' }
+
     const isNewRecord = pr && latest && pr.activity_id === latest.activity_id
-    const timeClass   = isNewRecord ? 's2-orange' : 's2-gold'
-    const statusTxt   = isNewRecord ? '▲ New Record' : '● Personal Best'
-    const statusCls   = isNewRecord ? 's2-s-rec' : 's2-s-pb'
+    const timeClass   = isNewRecord ? 'is-new' : ''
 
-    // effort rows for hidden table
-    const rowsHtml = seg.efforts.map(e => {
-      const crown = e.is_pr ? '👑 ' : ''
-      const watts = e.avg_watts ? `${e.avg_watts}w` : '—'
-      const hr    = e.avg_heartrate ? `${e.avg_heartrate}` : '—'
-      const dateKey = (e.date || '').slice(0, 10)
-      return `<tr class="${e.is_pr ? 's2-epr' : ''}" data-date="${dateKey}" data-actid="${e.activity_id || ''}" style="cursor:pointer" title="跳至活動紀錄">
-        <td>${fmtDate(e.date)}</td>
-        <td>${crown}${e.elapsed_str}</td>
-        <td>${watts}</td>
-        <td>${hr}</td>
-      </tr>`
-    }).join('')
+    // GAP TO KOM
+    let komGapHtml = ''
+    if (meta.komTime && pr) {
+      const gapSec = pr.elapsed_sec - meta.komTime
+      const sign   = gapSec >= 0 ? '+' : '−'
+      const abs    = Math.abs(gapSec)
+      const mm     = String(Math.floor(abs/60)).padStart(2,'0')
+      const ss     = String(abs%60).padStart(2,'0')
+      komGapHtml = `<b>${sign}${mm}:${ss}</b> TO KOM`
+    } else {
+      komGapHtml = `<span style="color:rgba(255,255,255,.18)">— TO KOM</span>`
+    }
 
-    const uid = `seg-efforts-${seg.id}`
-    return `<div class="s2-card">
-      <div class="s2-hero" style="background:${meta.bg}">
-        <div class="s2-hero-fade"></div>
-        <div class="s2-corner-tr"></div>
-        <span class="s2-num-badge">${numBadge}</span>
-        <span class="s2-type-tag">${meta.type}</span>
+    // RANK / TOP%
+    const rankTxt  = meta.rank       ? `#${meta.rank}`   : '—'
+    const topPct   = (meta.rank && meta.totalRiders)
+                   ? `TOP ${(meta.rank/meta.totalRiders*100).toFixed(0)}%`
+                   : '—'
+
+    const daysSinceHtml = daysSince === null ? '' : daysSince === 0
+      ? `<div class="s2-tm-v" style="color:#ff4f4f">TODAY</div><div class="s2-tm-l">LAST PR</div>`
+      : `<div class="s2-tm-v">${daysSince}d</div><div class="s2-tm-l">DAYS SINCE PR</div>`
+
+    return `<div class="s2-card" style="--s2-accent:${accent};--s2-status-color:${statusColor}">
+      <div class="s2-hd">
+        <span class="s2-num">SEG ${numBadge}</span>
+        <span class="s2-type-tag">${meta.type || 'ITT'}</span>
       </div>
-      <div class="s2-body">
-        <div class="s2-title-block">
-          ${meta.nameZh ? `<div class="s2-name-zh">${meta.nameZh}</div>` : meta.nameEn ? `<div class="s2-name-zh">${meta.nameEn}</div>` : ''}
+      <div class="s2-namblk">
+        <div class="s2-name-zh">${meta.nameZh || seg.name}</div>
+      </div>
+      <div class="s2-timblk">
+        <div class="s2-best-time ${timeClass}">${seg.pr_time_str || '—'}</div>
+        <div class="s2-time-lbl">BEST TIME</div>
+        <div class="s2-gap-line">${komGapHtml}</div>
+        <div class="s2-status-line">${statusTxt}</div>
+      </div>
+      <div class="s2-prow">
+        <div class="s2-pc">
+          <div class="s2-pv" style="color:${accent}">${prWatts || '—'}<span class="unit">${prWatts ? 'W' : ''}</span></div>
+          <div class="s2-pl">AVG POWER</div>
         </div>
-        ${sinceHtml}
-        <div class="s2-tr-row">
-          <div>
-            <div class="s2-time-lbl">Best Time</div>
-            <div class="s2-time-val ${timeClass}">${seg.pr_time_str || '—'} <span class="s2-crown">👑</span></div>
-            <div class="s2-status ${statusCls}">${statusTxt}</div>
-          </div>
-          <div class="s2-rank-blk">
-            <div class="s2-rank-lbl">Distance</div>
-            <div class="s2-rank-val">${seg.distance_km} km</div>
-          </div>
+        <div class="s2-pc">
+          <div class="s2-pv">${wkg}<span class="unit">${wkg !== '—' ? 'W/KG' : ''}</span></div>
+          <div class="s2-pl">W / KG</div>
         </div>
-        <div class="s2-stats">
-          <div class="s2-stat">
-            <div class="s2-sv"><span class="s2-ico-p">⚡</span>${prWatts ? prWatts + 'w' : '—'}</div>
-            <div class="s2-sl">PR Power</div>
-          </div>
-          <div class="s2-stat">
-            <div class="s2-sv"><span class="s2-ico-h">♥</span>${prHR || '—'}</div>
-            <div class="s2-sl">PR HR</div>
-          </div>
-          <div class="s2-stat">
-            <div class="s2-sv">${wkg}</div>
-            <div class="s2-sl">W/KG</div>
-          </div>
+      </div>
+      <div class="s2-brow">
+        <div class="s2-bc">
+          <div class="s2-bv" style="color:#4ab4ff">${topPct}</div>
+          <div class="s2-bl">TOP %</div>
         </div>
-        <div class="s2-meta">
-          <div class="s2-mi"><div class="s2-mv">${attempts}</div><div class="s2-ml">Attempts</div></div>
-          <div class="s2-mi"><div class="s2-mv">${lastDate}</div><div class="s2-ml">Last Ride</div></div>
-          <div class="s2-mi"><div class="s2-mv">${seg.distance_km}</div><div class="s2-ml">KM</div></div>
+        <div class="s2-bc">
+          <div class="s2-bv" style="color:rgba(255,255,255,.7)">${attempts}</div>
+          <div class="s2-bl">ATTEMPTS</div>
         </div>
       </div>
       <div class="s2-foot-modal">
-        <button class="seg-detail-btn" onclick="openSegModal(${seg.id})">▶ DETAILS</button>
+        <button class="seg-detail-btn" onclick="openSegModal(${seg.id})" style="background:linear-gradient(135deg,${accent},${accent}bb 60%,${accent}88 100%)">▶ OPEN TELEMETRY</button>
       </div>
     </div>`
   }).join('')
