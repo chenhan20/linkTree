@@ -861,34 +861,10 @@ function renderSegments(segs) {
   const _today = new Date(Date.now() + 8*3600*1000).toISOString().slice(0,10)
   const ATHLETE_WT = 80
   const SEG_META = {
-    641218:  {
-      nameZh:'風櫃嘴', type:'CLIMB', location:'Taipei · Yangming',
-      elevation:'+421 m', gradient:'6.2%', category:'CAT A',
-      komTime: null, rank: null, totalRiders: null,
-      bg:'linear-gradient(135deg,#1a1000 0%,#2d1e00 40%,#0d0d0d 100%)',
-      accent:'#e87c1a', statusColor:'#e87c1a',
-    },
-    1761462: {
-      nameZh:'中社路', type:'SPRINT', location:'Taipei · Zhongshe',
-      elevation:'+45 m', gradient:'2.1%', category:'CAT D',
-      komTime: null, rank: null, totalRiders: null,
-      bg:'linear-gradient(135deg,#1a2a1a 0%,#2a3a25 40%,#151515 100%)',
-      accent:'#2ecc71', statusColor:'#2ecc71',
-    },
-    7032136: {
-      nameZh:'社子島', type:'ENDURANCE', location:'Taipei · She Island',
-      elevation:'+12 m', gradient:'0.1%', category:'FLAT',
-      komTime: null, rank: null, totalRiders: null,
-      bg:'linear-gradient(135deg,#15202a 0%,#1a2d3a 40%,#101520 100%)',
-      accent:'#4ab4ff', statusColor:'#4ab4ff',
-    },
-    956558:  {
-      nameZh:'劍南路回程', type:'DESCENT', location:'Taipei · Jiannan',
-      elevation:'-180 m', gradient:'-5.8%', category:'FAST',
-      komTime: null, rank: null, totalRiders: null,
-      bg:'linear-gradient(135deg,#1a1a2a 0%,#252540 40%,#0d0d18 100%)',
-      accent:'#a78bfa', statusColor:'#a78bfa',
-    },
+    641218:  { nameZh:'風櫃嘴',    type:'CLIMB',    accent:'#e87c1a', statusColor:'#e87c1a' },
+    1761462: { nameZh:'中社路',    type:'SPRINT',   accent:'#2ecc71', statusColor:'#2ecc71' },
+    7032136: { nameZh:'社子島',    type:'ENDURANCE',accent:'#4ab4ff', statusColor:'#4ab4ff' },
+    956558:  { nameZh:'劍南路回程',type:'DESCENT',  accent:'#a78bfa', statusColor:'#a78bfa' },
   }
 
   const cards = segs.map((seg, idx) => {
@@ -923,10 +899,10 @@ function renderSegments(segs) {
     const isNewRecord = pr && latest && pr.activity_id === latest.activity_id
     const timeClass   = isNewRecord ? 'is-new' : ''
 
-    // GAP TO KOM
+    // GAP TO KOM — from seg.kom_elapsed_sec (fetched by script)
     let komGapHtml = ''
-    if (meta.komTime && pr) {
-      const gapSec = pr.elapsed_sec - meta.komTime
+    if (seg.kom_elapsed_sec && pr) {
+      const gapSec = pr.elapsed_sec - seg.kom_elapsed_sec
       const sign   = gapSec >= 0 ? '+' : '−'
       const abs    = Math.abs(gapSec)
       const mm     = String(Math.floor(abs/60)).padStart(2,'0')
@@ -936,15 +912,32 @@ function renderSegments(segs) {
       komGapHtml = `<span style="color:rgba(255,255,255,.18)">— TO KOM</span>`
     }
 
-    // RANK / TOP%
-    const rankTxt  = meta.rank       ? `#${meta.rank}`   : '—'
-    const topPct   = (meta.rank && meta.totalRiders)
-                   ? `TOP ${(meta.rank/meta.totalRiders*100).toFixed(0)}%`
-                   : '—'
+    // watt gap: last effort watts vs PR watts (left cell)
+    const latestWatts = latest && latest.avg_watts ? latest.avg_watts : null
+    let wattGapTxt, wattGapColor, wattGapLabel
+    if (!latestWatts || !prWatts) {
+      wattGapTxt = '—'; wattGapColor = 'rgba(255,255,255,.25)'; wattGapLabel = 'LAST vs PR'
+    } else if (latest.activity_id === pr.activity_id) {
+      wattGapTxt = 'PR ✓'; wattGapColor = accent; wattGapLabel = 'POWER'
+    } else {
+      const wDiff = latestWatts - prWatts
+      wattGapTxt = (wDiff >= 0 ? '+' : '') + wDiff + 'W'
+      wattGapColor = wDiff >= 0 ? '#2ecc71' : '#ff6a6a'
+      wattGapLabel = 'LAST vs PR'
+    }
 
-    const daysSinceHtml = daysSince === null ? '' : daysSince === 0
-      ? `<div class="s2-tm-v" style="color:#ff4f4f">TODAY</div><div class="s2-tm-l">LAST PR</div>`
-      : `<div class="s2-tm-v">${daysSince}d</div><div class="s2-tm-l">DAYS SINCE PR</div>`
+    // time gap: last effort vs PR (right cell)
+    let lastGapTxt, lastGapColor, lastGapLabel
+    if (!latest || !pr) {
+      lastGapTxt = '—'; lastGapColor = 'rgba(255,255,255,.25)'; lastGapLabel = 'LAST vs PR'
+    } else if (latest.activity_id === pr.activity_id) {
+      lastGapTxt = 'PR ✓'; lastGapColor = accent; lastGapLabel = 'LAST EFFORT'
+    } else {
+      const gapSec = latest.elapsed_sec - pr.elapsed_sec
+      const mm = String(Math.floor(gapSec / 60)).padStart(2,'0')
+      const ss = String(gapSec % 60).padStart(2,'0')
+      lastGapTxt = `+${mm}:${ss}`; lastGapColor = '#f0c040'; lastGapLabel = 'LAST vs PR'
+    }
 
     return `<div class="s2-card" style="--s2-accent:${accent};--s2-status-color:${statusColor}">
       <div class="s2-hd">
@@ -972,16 +965,16 @@ function renderSegments(segs) {
       </div>
       <div class="s2-brow">
         <div class="s2-bc">
-          <div class="s2-bv" style="color:#4ab4ff">${topPct}</div>
-          <div class="s2-bl">TOP %</div>
+          <div class="s2-bv" style="color:${wattGapColor}">${wattGapTxt}</div>
+          <div class="s2-bl">${wattGapLabel}</div>
         </div>
         <div class="s2-bc">
-          <div class="s2-bv" style="color:rgba(255,255,255,.7)">${attempts}</div>
-          <div class="s2-bl">ATTEMPTS</div>
+          <div class="s2-bv" style="color:${lastGapColor}">${lastGapTxt}</div>
+          <div class="s2-bl">${lastGapLabel}</div>
         </div>
       </div>
       <div class="s2-foot-modal">
-        <button class="seg-detail-btn" onclick="openSegModal(${seg.id})" style="background:linear-gradient(135deg,${accent},${accent}bb 60%,${accent}88 100%)">▶ OPEN TELEMETRY</button>
+        <button class="seg-detail-btn" onclick="openSegModal(${seg.id})" style="background:linear-gradient(135deg,${accent},${accent}bb 60%,${accent}88 100%)">▶ OPEN TELEMETRY <span style="opacity:.6;font-size:.85em">(${attempts})</span></button>
       </div>
     </div>`
   }).join('')

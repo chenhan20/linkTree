@@ -169,6 +169,26 @@ async function fetchSegmentInfo(token, segmentId) {
   return data
 }
 
+// 嘗試抓 segment leaderboard（需 Summit；失敗時靜默忽略）
+async function fetchSegmentLeaderboard(token, segmentId, athleteId) {
+  try {
+    const data = await request({
+      hostname: 'www.strava.com',
+      path:     `/api/v3/segments/${segmentId}/leaderboard?per_page=200`,
+      method:   'GET',
+      headers:  { Authorization: `Bearer ${token}` },
+    })
+    if (!data.entries) return null
+    const entry = data.entries.find(e => String(e.athlete_id) === String(athleteId))
+    return {
+      entry_count: data.entry_count || null,
+      rank:        entry ? entry.rank : null,
+    }
+  } catch (e) {
+    return null
+  }
+}
+
 // ── Step 4a：抓單一活動詳情（用於取得 laps）──
 async function fetchActivityDetail(token, activityId) {
   const data = await request({
@@ -492,6 +512,7 @@ async function enrichRideLaps(token, recentRides, existingRides, existingSegment
                 elapsed_str:   fmtElapsed(se.elapsed_time),
                 avg_watts:     se.average_watts     ? Math.round(se.average_watts)     : null,
                 avg_heartrate: se.average_heartrate ? Math.round(se.average_heartrate) : null,
+                pr_rank:       se.pr_rank           || null,
               })
             }
           }
@@ -515,14 +536,34 @@ async function buildSegmentsData(token, newSegEfforts, existingSegments) {
     const existing = (existingSegments || []).find(s => s.id === segId)
       || { id: segId, name: `Segment ${segId}`, distance_km: null, efforts: [] }
 
-    // 更新 segment info（距離）；名稱固定用自訂名稱
+    // 更新 segment info（距離、KOM、leaderboard）
     try {
       await new Promise(r => setTimeout(r, 300))
       const info = await fetchSegmentInfo(token, segId)
-      existing.distance_km  = info.distance ? Math.round(info.distance / 10) / 100 : existing.distance_km
+      existing.distance_km   = info.distance     ? Math.round(info.distance / 10) / 100 : existing.distance_km
+      existing.athlete_count = info.athlete_count || existing.athlete_count || null
+      existing.effort_count  = info.effort_count  || existing.effort_count  || null
+      // KOM time → parse to seconds
+      const komStr = info.xoms && (info.xoms.kom || info.xoms.overall)
+      if (komStr && /^\d/.test(komStr)) {
+        existing.kom_time_str = komStr
+        const parts = komStr.split(':').map(Number)
+        existing.kom_elapsed_sec = parts.length === 3
+          ? parts[0]*3600 + parts[1]*60 + parts[2]
+          : parts[0]*60  + (parts[1] || 0)
+      }
     } catch (e) {
       console.warn(`⚠️  Segment info ${segId} 失敗：${e.message}`)
     }
+    // leaderboard（Summit 限制時會靜默失敗）
+    try {
+      await new Promise(r => setTimeout(r, 300))
+      const board = await fetchSegmentLeaderboard(token, segId, ATHLETE_ID)
+      if (board) {
+        if (board.entry_count) existing.leaderboard_total = board.entry_count
+        if (board.rank)        existing.pr_rank           = board.rank
+      }
+    } catch (e) { /* Summit 限制，跳過 */ }
     // 永遠套用自訂名稱
     existing.name = SEGMENT_CUSTOM_NAMES[segId] || existing.name
 
@@ -547,10 +588,16 @@ async function buildSegmentsData(token, newSegEfforts, existingSegments) {
     const efforts = existingEfforts.map(e => ({ ...e, is_pr: e.elapsed_sec === prTime }))
 
     result.push({
-      id:          segId,
-      name:        existing.name,
-      distance_km: existing.distance_km,
-      pr_time_str: prTime ? fmtElapsed(prTime) : null,
+      id:               segId,
+      name:             existing.name,
+      distance_km:      existing.distance_km,
+      pr_time_str:      prTime ? fmtElapsed(prTime) : null,
+      athlete_count:    existing.athlete_count    || null,
+      effort_count:     existing.effort_count     || null,
+      leaderboard_total:existing.leaderboard_total|| null,
+      pr_rank:          existing.pr_rank          || null,
+      kom_time_str:     existing.kom_time_str     || null,
+      kom_elapsed_sec:  existing.kom_elapsed_sec  || null,
       efforts,
     })
     console.log(`✅ Segment ${segId} (${existing.name})：共 ${efforts.length} 次`)
