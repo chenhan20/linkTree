@@ -135,12 +135,13 @@ async function fetchRecentActivities(token) {
 }
 
 // ── ITT 區間設定 ──
-const SEGMENT_IDS = new Set([641218, 1761462, 7032136])
+const SEGMENT_IDS = new Set([641218, 1761462, 7032136, 956558])
 // 自訂顯示名稱（覆蓋 Strava API 回傳的原始名稱）
 const SEGMENT_CUSTOM_NAMES = {
   641218:  '風櫃嘴ITT',
   1761462: '中社路ITT',
   7032136: '圓山-社子島砍鴨頭ITT',
+  956558:  '劍南路（回程）ITT',
 }
 
 // 秒 → "M:SS" 或 "H:MM:SS"
