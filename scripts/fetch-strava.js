@@ -38,9 +38,10 @@ const CLIENT_SECRET = process.env.STRAVA_CLIENT_SECRET
 const REFRESH_TOKEN = process.env.STRAVA_REFRESH_TOKEN
 const ATHLETE_ID    = process.env.STRAVA_ATHLETE_ID  // 你的 161539959
 
-const OUT_FILE   = path.join(__dirname, '..', 'data', 'strava.json')
-const ITT_FILE   = path.join(__dirname, '..', 'data', 'itt-segments.json')
-const POWER_FILE = path.join(__dirname, '..', 'data', 'power-prs.json')
+const OUT_FILE        = path.join(__dirname, '..', 'data', 'strava.json')
+const ITT_FILE        = path.join(__dirname, '..', 'data', 'itt-segments.json')
+const ITT_CONFIG_FILE = path.join(__dirname, '..', 'data', 'itt-config.json')
+const POWER_FILE      = path.join(__dirname, '..', 'data', 'power-prs.json')
 
 // ── 簡單的 HTTPS helper（不裝額外套件）──
 function request(options, body = null) {
@@ -135,14 +136,13 @@ async function fetchRecentActivities(token) {
 }
 
 // ── ITT 區間設定 ──
-const SEGMENT_IDS = new Set([641218, 1761462, 7032136, 956558])
-// 自訂顯示名稱（覆蓋 Strava API 回傳的原始名稱）
-const SEGMENT_CUSTOM_NAMES = {
-  641218:  '風櫃嘴ITT',
-  1761462: '中社路ITT',
-  7032136: '圓山-社子島砍鴨頭ITT',
-  956558:  '劍南路（回程）ITT',
-}
+// ── ITT 路段設定（從 data/itt-config.json 讀取，新增路段只改那個檔）──
+const ittConfig = JSON.parse(fs.readFileSync(ITT_CONFIG_FILE, 'utf8'))
+const SEGMENT_IDS = new Set(ittConfig.segments.map(s => s.id))
+const SEGMENT_CUSTOM_NAMES = Object.fromEntries(
+  ittConfig.segments.filter(s => s.nameApi).map(s => [s.id, s.nameApi])
+)
+console.log(`📋 ITT config 讀取成功：${ittConfig.segments.map(s => s.nameZh).join(' / ')}`)
 
 // 秒 → "M:SS" 或 "H:MM:SS"
 function fmtElapsed(seconds) {
@@ -540,9 +540,11 @@ async function buildSegmentsData(token, newSegEfforts, existingSegments) {
     try {
       await new Promise(r => setTimeout(r, 300))
       const info = await fetchSegmentInfo(token, segId)
-      existing.distance_km   = info.distance     ? Math.round(info.distance / 10) / 100 : existing.distance_km
-      existing.athlete_count = info.athlete_count || existing.athlete_count || null
-      existing.effort_count  = info.effort_count  || existing.effort_count  || null
+      existing.distance_km      = info.distance            ? Math.round(info.distance / 10) / 100     : existing.distance_km
+      existing.athlete_count     = info.athlete_count       || existing.athlete_count     || null
+      existing.effort_count      = info.effort_count        || existing.effort_count      || null
+      existing.elevation_gain_m  = info.total_elevation_gain != null ? Math.round(info.total_elevation_gain)    : existing.elevation_gain_m
+      existing.average_grade     = info.average_grade        != null ? +info.average_grade.toFixed(1)           : existing.average_grade
       // KOM time → parse to seconds
       const komStr = info.xoms && (info.xoms.kom || info.xoms.overall)
       if (komStr && /^\d/.test(komStr)) {

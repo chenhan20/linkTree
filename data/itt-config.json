@@ -1,0 +1,48 @@
+{
+  "_comment": "ITT 路段設定檔 — 新增路段只需在此加一筆，其餘程式自動讀取",
+  "_howToAddSegment": [
+    "1. 在 Strava 網頁開啟目標路段，URL 中的數字就是 id",
+    "2. 在下方 segments 陣列新增一筆，填入 id / nameZh / nameApi / type / accent",
+    "3. 執行 FETCH_ALL=1 SCAN_SEGMENTS=1 重跑一次 fetch-strava.js",
+    "4. strava.html 無需改動，會自動顯示新路段"
+  ],
+  "_types": {
+    "CLIMB":    "爬坡路段（依功率與時間評估）",
+    "SPRINT":   "短衝路段（以瞬間輸出為主）",
+    "ENDURANCE":"耐力路段（長時間持續輸出）"
+  },
+  "segments": [
+    {
+      "id": 641218,
+      "nameZh": "風櫃嘴",
+      "nameApi": "風櫃嘴ITT",
+      "type": "CLIMB",
+      "accent": "#e87c1a",
+      "note": "陽明山主爬坡，6.13 km / 340m 爬升"
+    },
+    {
+      "id": 1761462,
+      "nameZh": "中社路",
+      "nameApi": "中社路ITT",
+      "type": "SPRINT",
+      "accent": "#2ecc71",
+      "note": "快速衝刺段"
+    },
+    {
+      "id": 7032136,
+      "nameZh": "社子島砍鴨頭",
+      "nameApi": "圓山-社子島砍鴨頭ITT",
+      "type": "ENDURANCE",
+      "accent": "#4ab4ff",
+      "note": "長距離平路耐力段"
+    },
+    {
+      "id": 956558,
+      "nameZh": "劍南路回程",
+      "nameApi": "劍南路（回程）ITT",
+      "type": "SPRINT",
+      "accent": "#a78bfa",
+      "note": "劍南路下坡回程，短衝計時"
+    }
+  ]
+}

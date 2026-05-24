@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>F1 Card FX Demo</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:#030303;color:#fff;
+  font-family:system-ui,sans-serif;
+  padding:32px 24px 80px;
+  min-height:100vh;
+}
+
+h1{
+  font-size:11px;letter-spacing:3px;text-transform:uppercase;
+  color:rgba(255,255,255,.25);margin-bottom:32px;text-align:center;
+}
+.demo-row{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+  gap:28px;max-width:1400px;margin:0 auto;
+}
+.demo-label{
+  font-size:10px;letter-spacing:2px;text-transform:uppercase;
+  color:rgba(255,255,255,.22);margin-bottom:10px;text-align:center;
+}
+.demo-num{
+  font-size:28px;font-weight:900;color:rgba(255,255,255,.06);
+  line-height:1;margin-bottom:4px;text-align:center;
+}
+
+/* ═══════════════════════════════════════
+   BASE CARD — mirrors strava.html exactly
+   ═══════════════════════════════════════ */
+.s2-card{
+  --s2-accent:#e87c1a;
+  --s2-status-color:#e87c1a;
+  position:relative;background:#070707;border-radius:2px;overflow:hidden;
+  display:flex;flex-direction:column;
+  border:1px solid rgba(232,124,26,.25);
+  box-shadow:0 0 0 1px rgba(0,0,0,.9),0 0 24px rgba(232,124,26,.15),0 0 48px rgba(232,124,26,.06);
+}
+.s2-card .stripe{
+  position:absolute;top:0;left:0;right:0;height:2px;z-index:20;
+  background:linear-gradient(90deg,transparent,var(--s2-accent) 30%,#fff8e0 50%,var(--s2-accent) 70%,transparent);
+}
+.s2-card .leftbar{
+  position:absolute;top:0;left:0;width:2px;height:100%;z-index:20;
+  background:var(--s2-accent);opacity:.6;
+}
+.s2-hd{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:9px 12px 8px 16px;
+  border-bottom:1px solid rgba(255,255,255,.05);
+}
+.s2-num{font-family:monospace;font-size:9px;font-weight:700;color:rgba(255,255,255,.28);letter-spacing:2.5px}
+.s2-kom-hd{font-family:monospace;font-size:9px;font-weight:700;color:rgba(255,255,255,.28);letter-spacing:1.5px;margin-left:8px}
+.s2-type-tag{
+  font-size:9px;font-weight:800;letter-spacing:2px;color:var(--s2-accent);
+  border:1px solid rgba(232,124,26,.3);border-radius:1px;padding:2px 7px;
+  background:rgba(0,0,0,.5);text-transform:uppercase;
+}
+.s2-namblk{padding:12px 16px 10px;border-bottom:1px solid rgba(255,255,255,.05)}
+.s2-name-zh{font-size:22px;font-weight:700;color:#fff;letter-spacing:3px;line-height:1}
+.s2-timblk{padding:14px 16px 12px;border-bottom:1px solid rgba(255,255,255,.05)}
+.s2-best-time{font-family:monospace;font-size:36px;font-weight:700;line-height:1;color:#fff;letter-spacing:2px}
+.s2-time-lbl{font-size:9px;font-weight:700;color:rgba(255,255,255,.25);letter-spacing:2px;text-transform:uppercase;margin-top:3px;margin-bottom:8px}
+.s2-status-block{display:flex;flex-direction:column;gap:3px}
+.s2-status-line{
+  display:inline-block;font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;
+  color:var(--s2-status-color);border-left:2px solid var(--s2-status-color);padding-left:6px;
+}
+.s2-status-sub{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.6);padding-left:8px}
+.s2-prow{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid rgba(255,255,255,.05)}
+.s2-pc{padding:11px 16px;display:flex;flex-direction:column;gap:3px;border-right:1px solid rgba(255,255,255,.05)}
+.s2-pc:last-child{border-right:none}
+.s2-pv{font-size:22px;font-weight:700;line-height:1;color:#fff;display:flex;align-items:baseline;gap:3px}
+.s2-pv .unit{font-size:11px;color:rgba(255,255,255,.35);font-weight:400}
+.s2-pl{font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.22);margin-top:1px}
+.s2-brow{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid rgba(255,255,255,.05)}
+.s2-bc{padding:10px 16px;display:flex;flex-direction:column;gap:3px;border-right:1px solid rgba(255,255,255,.05)}
+.s2-bc:last-child{border-right:none}
+.s2-bv{font-family:monospace;font-size:14px;font-weight:700;line-height:1}
+.s2-bl{font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.22);margin-top:2px}
+.s2-foot-modal{padding:10px 12px}
+.seg-detail-btn{
+  position:relative;overflow:hidden;width:100%;
+  display:flex;align-items:center;justify-content:center;gap:7px;padding:9px 0;
+  font-size:13px;font-weight:800;letter-spacing:1.5px;color:#0a0604;
+  background:linear-gradient(135deg,#e87c1a,#ff9a30 60%,#ffcd80 100%);
+  border:none;border-radius:4px;cursor:pointer;
+}
+
+
+/* ══════════════════════════════════════════════════════
+   FX LAYER CLASSES — toggle on each .s2-card variant
+   ══════════════════════════════════════════════════════ */
+
+
+/* ─── 0. BASE (no fx, reference) ──────────────────── */
+/* nothing extra */
+
+
+/* ─── 1. CHECKER FLAG SWEEP ───────────────────────── */
+.fx-checker .fx-layer{
+  position:absolute;inset:0;pointer-events:none;z-index:10;
+  background:repeating-linear-gradient(
+    90deg,
+    rgba(255,255,255,.03) 0 8px,
+    rgba(0,0,0,.06)       8px 16px
+  );
+  -webkit-mask:linear-gradient(90deg,transparent 0%,#000 20%,#000 80%,transparent 100%);
+          mask:linear-gradient(90deg,transparent 0%,#000 20%,#000 80%,transparent 100%);
+  transform:translateX(-110%);
+  transition:transform .9s cubic-bezier(.22,1,.36,1);
+}
+.fx-checker:hover .fx-layer{transform:translateX(110%)}
+.fx-checker::before{ /* override base stripe so checker presses through */
+  z-index:21!important;
+}
+
+
+/* ─── 2. SPEED LINES ──────────────────────────────── */
+@keyframes speedlines{to{background-position:-200px 0}}
+.fx-speed .fx-layer{
+  position:absolute;inset:0;pointer-events:none;z-index:10;opacity:.09;
+  background:repeating-linear-gradient(
+    -72deg,
+    var(--s2-accent) 0 1px,
+    transparent 1px 36px
+  );
+  animation:speedlines 5s linear infinite;
+}
+
+
+/* ─── 3. HEAT SHIMMER / ENGINE GLOW ──────────────── */
+@keyframes heatpulse{
+  0%,100%{opacity:.07;transform:scaleY(1)}
+  50%    {opacity:.22;transform:scaleY(1.15)}
+}
+.fx-heat .fx-layer{
+  position:absolute;inset:0;pointer-events:none;z-index:10;
+  background:radial-gradient(ellipse at 50% 115%,var(--s2-accent) 0%,transparent 60%);
+  animation:heatpulse 2.8s ease-in-out infinite;
+  transform-origin:bottom center;
+}
+
+
+/* ─── 4. HUD TELEMETRY GRID + SCANLINE ────────────── */
+@keyframes scan{0%{top:-2px}100%{top:100%}}
+.fx-hud .fx-grid{
+  position:absolute;inset:0;pointer-events:none;z-index:9;
+  background-image:radial-gradient(circle,rgba(255,255,255,.045) 1px,transparent 1px);
+  background-size:20px 20px;
+}
+.fx-hud .fx-scan{
+  position:absolute;left:0;right:0;height:2px;pointer-events:none;z-index:11;
+  background:linear-gradient(90deg,
+    transparent,
+    rgba(255,255,255,.07) 20%,
+    var(--s2-accent) 50%,
+    rgba(255,255,255,.07) 80%,
+    transparent
+  );
+  opacity:.55;animation:scan 4.5s linear infinite;
+}
+
+
+/* ─── 5. ODOMETER TICK (time digits) ──────────────── */
+@keyframes odom-flip{
+  0%  {transform:rotateX(0deg);opacity:1}
+  45% {transform:rotateX(-90deg);opacity:.2}
+  55% {transform:rotateX(90deg);opacity:.2}
+  100%{transform:rotateX(0deg);opacity:1}
+}
+.fx-odom:hover .s2-best-time{
+  animation:odom-flip .4s ease;
+  transform-origin:center;
+  perspective:300px;
+  display:inline-block;
+}
+
+
+/* ─── ALL-COMBINED card ───────────────────────────── */
+@keyframes speedlines-fast{to{background-position:-200px 0}}
+.fx-all .fx-grid{
+  position:absolute;inset:0;pointer-events:none;z-index:9;
+  background-image:radial-gradient(circle,rgba(255,255,255,.04) 1px,transparent 1px);
+  background-size:20px 20px;
+}
+.fx-all .fx-heat{
+  position:absolute;inset:0;pointer-events:none;z-index:10;
+  background:radial-gradient(ellipse at 50% 115%,var(--s2-accent) 0%,transparent 55%);
+  animation:heatpulse 2.8s ease-in-out infinite;transform-origin:bottom center;
+}
+.fx-all .fx-speed{
+  position:absolute;inset:0;pointer-events:none;z-index:10;opacity:.06;
+  background:repeating-linear-gradient(-72deg,var(--s2-accent) 0 1px,transparent 1px 36px);
+  animation:speedlines-fast 4s linear infinite;
+}
+.fx-all .fx-scan{
+  position:absolute;left:0;right:0;height:2px;pointer-events:none;z-index:11;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.05) 20%,var(--s2-accent) 50%,rgba(255,255,255,.05) 80%,transparent);
+  opacity:.45;animation:scan 4.5s linear infinite;
+}
+.fx-all .fx-checker{
+  position:absolute;inset:0;pointer-events:none;z-index:12;
+  background:repeating-linear-gradient(90deg,rgba(255,255,255,.025) 0 8px,rgba(0,0,0,.04) 8px 16px);
+  -webkit-mask:linear-gradient(90deg,transparent 0%,#000 20%,#000 80%,transparent 100%);
+          mask:linear-gradient(90deg,transparent 0%,#000 20%,#000 80%,transparent 100%);
+  transform:translateX(-110%);transition:transform .9s cubic-bezier(.22,1,.36,1);
+}
+.fx-all:hover .fx-checker{transform:translateX(110%)}
+.fx-all:hover .s2-best-time{
+  animation:odom-flip .4s ease;
+  perspective:300px;display:inline-block;
+}
+
+/* ── SECTION DIVIDER ─────────────────────────────── */
+.divider{
+  grid-column:1/-1;
+  border:none;border-top:1px solid rgba(255,255,255,.07);
+  margin:4px 0;
+}
+.section-title{
+  grid-column:1/-1;
+  font-size:10px;letter-spacing:3px;text-transform:uppercase;
+  color:rgba(255,255,255,.18);margin-bottom:-8px;
+  padding-left:2px;
+}
+</style>
+</head>
+<body>
+
+<h1>⬛ F1 Card FX · 效果對比 Demo</h1>
+
+<div class="demo-row">
+
+  <!-- ─── SECTION: 逐項 ─── -->
+  <div class="section-title">逐項效果（hover 可觸發互動型）</div>
+  <hr class="divider">
+
+  <!-- 0. BASE REF -->
+  <div>
+    <div class="demo-num">00</div>
+    <div class="demo-label">BASE（無特效，參考用）</div>
+    <div class="s2-card">
+      <div class="stripe"></div><div class="leftbar"></div>
+      <div class="s2-hd">
+        <span class="s2-num">SEG 01</span>
+        <span class="s2-kom-hd"><b>+12:06</b> TO KOM</span>
+        <span class="s2-type-tag">CLIMB</span>
+      </div>
+      <div class="s2-namblk"><div class="s2-name-zh">風櫃嘴</div></div>
+      <div class="s2-timblk">
+        <div class="s2-best-time">28:29</div>
+        <div class="s2-time-lbl">BEST TIME</div>
+        <div class="s2-status-block">
+          <div class="s2-status-line">⚡ RISING</div>
+          <div class="s2-status-sub">96% OF PEAK · APPROACHING PEAK</div>
+        </div>
+      </div>
+      <div class="s2-prow">
+        <div class="s2-pc"><div class="s2-pv" style="color:#e87c1a">250<span class="unit">W</span></div><div class="s2-pl">AVG POWER</div></div>
+        <div class="s2-pc"><div class="s2-pv">3.1<span class="unit">W/KG</span></div><div class="s2-pl">W / KG</div></div>
+      </div>
+      <div class="s2-brow">
+        <div class="s2-bc"><div class="s2-bv" style="color:#ff6a6a">−7W</div><div class="s2-bl">ALL-TIME AVG</div></div>
+        <div class="s2-bc"><div class="s2-bv" style="color:#f0c040">+04:20</div><div class="s2-bl">LAST vs PR</div></div>
+      </div>
+      <div class="s2-foot-modal">
+        <button class="seg-detail-btn">▶ REVIEW ATTEMPT <span style="opacity:.6;font-size:.85em">(8)</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 1. CHECKER SWEEP -->
+  <div>
+    <div class="demo-num">01</div>
+    <div class="demo-label">賽道格紋掃光 (Hover 觸發)</div>
+    <div class="s2-card fx-checker">
+      <div class="stripe"></div><div class="leftbar"></div>
+      <div class="fx-layer"></div>
+      <div class="s2-hd">
+        <span class="s2-num">SEG 01</span>
+        <span class="s2-kom-hd"><b>+12:06</b> TO KOM</span>
+        <span class="s2-type-tag">CLIMB</span>
+      </div>
+      <div class="s2-namblk"><div class="s2-name-zh">風櫃嘴</div></div>
+      <div class="s2-timblk">
+        <div class="s2-best-time">28:29</div>
+        <div class="s2-time-lbl">BEST TIME</div>
+        <div class="s2-status-block">
+          <div class="s2-status-line">⚡ RISING</div>
+          <div class="s2-status-sub">96% OF PEAK · APPROACHING PEAK</div>
+        </div>
+      </div>
+      <div class="s2-prow">
+        <div class="s2-pc"><div class="s2-pv" style="color:#e87c1a">250<span class="unit">W</span></div><div class="s2-pl">AVG POWER</div></div>
+        <div class="s2-pc"><div class="s2-pv">3.1<span class="unit">W/KG</span></div><div class="s2-pl">W / KG</div></div>
+      </div>
+      <div class="s2-brow">
+        <div class="s2-bc"><div class="s2-bv" style="color:#ff6a6a">−7W</div><div class="s2-bl">ALL-TIME AVG</div></div>
+        <div class="s2-bc"><div class="s2-bv" style="color:#f0c040">+04:20</div><div class="s2-bl">LAST vs PR</div></div>
+      </div>
+      <div class="s2-foot-modal">
+        <button class="seg-detail-btn">▶ REVIEW ATTEMPT <span style="opacity:.6;font-size:.85em">(8)</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. SPEED LINES -->
+  <div>
+    <div class="demo-num">02</div>
+    <div class="demo-label">速度線 Speed Lines (常態)</div>
+    <div class="s2-card fx-speed">
+      <div class="stripe"></div><div class="leftbar"></div>
+      <div class="fx-layer"></div>
+      <div class="s2-hd">
+        <span class="s2-num">SEG 01</span>
+        <span class="s2-kom-hd"><b>+12:06</b> TO KOM</span>
+        <span class="s2-type-tag">CLIMB</span>
+      </div>
+      <div class="s2-namblk"><div class="s2-name-zh">風櫃嘴</div></div>
+      <div class="s2-timblk">
+        <div class="s2-best-time">28:29</div>
+        <div class="s2-time-lbl">BEST TIME</div>
+        <div class="s2-status-block">
+          <div class="s2-status-line">⚡ RISING</div>
+          <div class="s2-status-sub">96% OF PEAK · APPROACHING PEAK</div>
+        </div>
+      </div>
+      <div class="s2-prow">
+        <div class="s2-pc"><div class="s2-pv" style="color:#e87c1a">250<span class="unit">W</span></div><div class="s2-pl">AVG POWER</div></div>
+        <div class="s2-pc"><div class="s2-pv">3.1<span class="unit">W/KG</span></div><div class="s2-pl">W / KG</div></div>
+      </div>
+      <div class="s2-brow">
+        <div class="s2-bc"><div class="s2-bv" style="color:#ff6a6a">−7W</div><div class="s2-bl">ALL-TIME AVG</div></div>
+        <div class="s2-bc"><div class="s2-bv" style="color:#f0c040">+04:20</div><div class="s2-bl">LAST vs PR</div></div>
+      </div>
+      <div class="s2-foot-modal">
+        <button class="seg-detail-btn">▶ REVIEW ATTEMPT <span style="opacity:.6;font-size:.85em">(8)</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. HEAT SHIMMER -->
+  <div>
+    <div class="demo-num">03</div>
+    <div class="demo-label">引擎熱浪 Heat Shimmer (常態)</div>
+    <div class="s2-card fx-heat">
+      <div class="stripe"></div><div class="leftbar"></div>
+      <div class="fx-layer"></div>
+      <div class="s2-hd">
+        <span class="s2-num">SEG 01</span>
+        <span class="s2-kom-hd"><b>+12:06</b> TO KOM</span>
+        <span class="s2-type-tag">CLIMB</span>
+      </div>
+      <div class="s2-namblk"><div class="s2-name-zh">風櫃嘴</div></div>
+      <div class="s2-timblk">
+        <div class="s2-best-time">28:29</div>
+        <div class="s2-time-lbl">BEST TIME</div>
+        <div class="s2-status-block">
+          <div class="s2-status-line">⚡ RISING</div>
+          <div class="s2-status-sub">96% OF PEAK · APPROACHING PEAK</div>
+        </div>
+      </div>
+      <div class="s2-prow">
+        <div class="s2-pc"><div class="s2-pv" style="color:#e87c1a">250<span class="unit">W</span></div><div class="s2-pl">AVG POWER</div></div>
+        <div class="s2-pc"><div class="s2-pv">3.1<span class="unit">W/KG</span></div><div class="s2-pl">W / KG</div></div>
+      </div>
+      <div class="s2-brow">
+        <div class="s2-bc"><div class="s2-bv" style="color:#ff6a6a">−7W</div><div class="s2-bl">ALL-TIME AVG</div></div>
+        <div class="s2-bc"><div class="s2-bv" style="color:#f0c040">+04:20</div><div class="s2-bl">LAST vs PR</div></div>
+      </div>
+      <div class="s2-foot-modal">
+        <button class="seg-detail-btn">▶ REVIEW ATTEMPT <span style="opacity:.6;font-size:.85em">(8)</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. HUD GRID + SCANLINE -->
+  <div>
+    <div class="demo-num">04</div>
+    <div class="demo-label">HUD Telemetry Grid + Scanline (常態)</div>
+    <div class="s2-card fx-hud">
+      <div class="stripe"></div><div class="leftbar"></div>
+      <div class="fx-grid"></div>
+      <div class="fx-scan"></div>
+      <div class="s2-hd">
+        <span class="s2-num">SEG 01</span>
+        <span class="s2-kom-hd"><b>+12:06</b> TO KOM</span>
+        <span class="s2-type-tag">CLIMB</span>
+      </div>
+      <div class="s2-namblk"><div class="s2-name-zh">風櫃嘴</div></div>
+      <div class="s2-timblk">
+        <div class="s2-best-time">28:29</div>
+        <div class="s2-time-lbl">BEST TIME</div>
+        <div class="s2-status-block">
+          <div class="s2-status-line">⚡ RISING</div>
+          <div class="s2-status-sub">96% OF PEAK · APPROACHING PEAK</div>
+        </div>
+      </div>
+      <div class="s2-prow">
+        <div class="s2-pc"><div class="s2-pv" style="color:#e87c1a">250<span class="unit">W</span></div><div class="s2-pl">AVG POWER</div></div>
+        <div class="s2-pc"><div class="s2-pv">3.1<span class="unit">W/KG</span></div><div class="s2-pl">W / KG</div></div>
+      </div>
+      <div class="s2-brow">
+        <div class="s2-bc"><div class="s2-bv" style="color:#ff6a6a">−7W</div><div class="s2-bl">ALL-TIME AVG</div></div>
+        <div class="s2-bc"><div class="s2-bv" style="color:#f0c040">+04:20</div><div class="s2-bl">LAST vs PR</div></div>
+      </div>
+      <div class="s2-foot-modal">
+        <button class="seg-detail-btn">▶ REVIEW ATTEMPT <span style="opacity:.6;font-size:.85em">(8)</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. ODOMETER -->
+  <div>
+    <div class="demo-num">05</div>
+    <div class="demo-label">碼錶翻轉 Odometer Tick (Hover 觸發)</div>
+    <div class="s2-card fx-odom">
+      <div class="stripe"></div><div class="leftbar"></div>
+      <div class="s2-hd">
+        <span class="s2-num">SEG 01</span>
+        <span class="s2-kom-hd"><b>+12:06</b> TO KOM</span>
+        <span class="s2-type-tag">CLIMB</span>
+      </div>
+      <div class="s2-namblk"><div class="s2-name-zh">風櫃嘴</div></div>
+      <div class="s2-timblk">
+        <div class="s2-best-time">28:29</div>
+        <div class="s2-time-lbl">BEST TIME</div>
+        <div class="s2-status-block">
+          <div class="s2-status-line">⚡ RISING</div>
+          <div class="s2-status-sub">96% OF PEAK · APPROACHING PEAK</div>
+        </div>
+      </div>
+      <div class="s2-prow">
+        <div class="s2-pc"><div class="s2-pv" style="color:#e87c1a">250<span class="unit">W</span></div><div class="s2-pl">AVG POWER</div></div>
+        <div class="s2-pc"><div class="s2-pv">3.1<span class="unit">W/KG</span></div><div class="s2-pl">W / KG</div></div>
+      </div>
+      <div class="s2-brow">
+        <div class="s2-bc"><div class="s2-bv" style="color:#ff6a6a">−7W</div><div class="s2-bl">ALL-TIME AVG</div></div>
+        <div class="s2-bc"><div class="s2-bv" style="color:#f0c040">+04:20</div><div class="s2-bl">LAST vs PR</div></div>
+      </div>
+      <div class="s2-foot-modal">
+        <button class="seg-detail-btn">▶ REVIEW ATTEMPT <span style="opacity:.6;font-size:.85em">(8)</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── SECTION: COMBINED ─── -->
+  <div class="section-title">全組合 + 不同顏色（建議最終方案）</div>
+  <hr class="divider">
+
+  <!-- ALL COMBINED – CLIMB orange -->
+  <div>
+    <div class="demo-num">ALL</div>
+    <div class="demo-label">全組合 · CLIMB (Hover 格紋掃光)</div>
+    <div class="s2-card fx-all" style="--s2-accent:#e87c1a;--s2-status-color:#f0a030">
+      <div class="stripe"></div><div class="leftbar"></div>
+      <div class="fx-grid"></div>
+      <div class="fx-heat"></div>
+      <div class="fx-speed"></div>
+      <div class="fx-scan"></div>
+      <div class="fx-checker"></div>
+      <div class="s2-hd">
+        <span class="s2-num">SEG 01</span>
+        <span class="s2-kom-hd"><b>+12:06</b> TO KOM</span>
+        <span class="s2-type-tag">CLIMB</span>
+      </div>
+      <div class="s2-namblk"><div class="s2-name-zh">風櫃嘴</div></div>
+      <div class="s2-timblk">
+        <div class="s2-best-time">28:29</div>
+        <div class="s2-time-lbl">BEST TIME</div>
+        <div class="s2-status-block">
+          <div class="s2-status-line">⚡ RISING</div>
+          <div class="s2-status-sub">96% OF PEAK · APPROACHING PEAK</div>
+        </div>
+      </div>
+      <div class="s2-prow">
+        <div class="s2-pc"><div class="s2-pv" style="color:#e87c1a">250<span class="unit">W</span></div><div class="s2-pl">AVG POWER</div></div>
+        <div class="s2-pc"><div class="s2-pv">3.1<span class="unit">W/KG</span></div><div class="s2-pl">W / KG</div></div>
+      </div>
+      <div class="s2-brow">
+        <div class="s2-bc"><div class="s2-bv" style="color:#ff6a6a">−7W</div><div class="s2-bl">ALL-TIME AVG</div></div>
+        <div class="s2-bc"><div class="s2-bv" style="color:#f0c040">+04:20</div><div class="s2-bl">LAST vs PR</div></div>
+      </div>
+      <div class="s2-foot-modal">
+        <button class="seg-detail-btn" style="background:linear-gradient(135deg,#e87c1a,#ff9a30 60%,#ffcd80 100%)">▶ REVIEW ATTEMPT <span style="opacity:.6;font-size:.85em">(8)</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ALL COMBINED – SPRINT green -->
+  <div>
+    <div class="demo-num">ALL</div>
+    <div class="demo-label">全組合 · SPRINT</div>
+    <div class="s2-card fx-all" style="--s2-accent:#2ecc71;--s2-status-color:#2ecc71;border-color:rgba(46,204,113,.25);box-shadow:0 0 0 1px rgba(0,0,0,.9),0 0 24px rgba(46,204,113,.15),0 0 48px rgba(46,204,113,.06)">
+      <div class="stripe" style="background:linear-gradient(90deg,transparent,#2ecc71 30%,#b8ffda 50%,#2ecc71 70%,transparent)"></div>
+      <div class="leftbar" style="background:#2ecc71"></div>
+      <div class="fx-grid"></div>
+      <div class="fx-heat"></div>
+      <div class="fx-speed"></div>
+      <div class="fx-scan"></div>
+      <div class="fx-checker"></div>
+      <div class="s2-hd">
+        <span class="s2-num">SEG 02</span>
+        <span class="s2-kom-hd"><b>+00:44</b> TO KOM</span>
+        <span class="s2-type-tag" style="color:#2ecc71;border-color:rgba(46,204,113,.3)">SPRINT</span>
+      </div>
+      <div class="s2-namblk"><div class="s2-name-zh">中社路</div></div>
+      <div class="s2-timblk">
+        <div class="s2-best-time">03:12</div>
+        <div class="s2-time-lbl">BEST TIME</div>
+        <div class="s2-status-block">
+          <div class="s2-status-line" style="border-color:#2ecc71;color:#2ecc71">🔥 PEAK</div>
+          <div class="s2-status-sub">99% OF PEAK · PEAK FORM</div>
+        </div>
+      </div>
+      <div class="s2-prow">
+        <div class="s2-pc"><div class="s2-pv" style="color:#2ecc71">310<span class="unit">W</span></div><div class="s2-pl">AVG POWER</div></div>
+        <div class="s2-pc"><div class="s2-pv">3.9<span class="unit">W/KG</span></div><div class="s2-pl">W / KG</div></div>
+      </div>
+      <div class="s2-brow">
+        <div class="s2-bc"><div class="s2-bv" style="color:#2ecc71">+3W</div><div class="s2-bl">ALL-TIME AVG</div></div>
+        <div class="s2-bc"><div class="s2-bv" style="color:#2ecc71">−00:08</div><div class="s2-bl">LAST vs PR</div></div>
+      </div>
+      <div class="s2-foot-modal">
+        <button class="seg-detail-btn" style="background:linear-gradient(135deg,#2ecc71,#5fffaa 60%,#b8ffd8 100%)">▶ REVIEW ATTEMPT <span style="opacity:.6;font-size:.85em">(12)</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ALL COMBINED – ENDURANCE blue -->
+  <div>
+    <div class="demo-num">ALL</div>
+    <div class="demo-label">全組合 · ENDURANCE</div>
+    <div class="s2-card fx-all" style="--s2-accent:#4ab4ff;--s2-status-color:#4ab4ff;border-color:rgba(74,180,255,.25);box-shadow:0 0 0 1px rgba(0,0,0,.9),0 0 24px rgba(74,180,255,.15),0 0 48px rgba(74,180,255,.06)">
+      <div class="stripe" style="background:linear-gradient(90deg,transparent,#4ab4ff 30%,#d0eeff 50%,#4ab4ff 70%,transparent)"></div>
+      <div class="leftbar" style="background:#4ab4ff"></div>
+      <div class="fx-grid"></div>
+      <div class="fx-heat"></div>
+      <div class="fx-speed"></div>
+      <div class="fx-scan"></div>
+      <div class="fx-checker"></div>
+      <div class="s2-hd">
+        <span class="s2-num">SEG 03</span>
+        <span class="s2-kom-hd"><b>+08:30</b> TO KOM</span>
+        <span class="s2-type-tag" style="color:#4ab4ff;border-color:rgba(74,180,255,.3)">ENDURANCE</span>
+      </div>
+      <div class="s2-namblk"><div class="s2-name-zh">社子島砍鴨頭</div></div>
+      <div class="s2-timblk">
+        <div class="s2-best-time">52:14</div>
+        <div class="s2-time-lbl">BEST TIME</div>
+        <div class="s2-status-block">
+          <div class="s2-status-line" style="border-color:#4ab4ff;color:#4ab4ff">➖ HOLD</div>
+          <div class="s2-status-sub">93% OF PEAK · STABLE</div>
+        </div>
+      </div>
+      <div class="s2-prow">
+        <div class="s2-pc"><div class="s2-pv" style="color:#4ab4ff">228<span class="unit">W</span></div><div class="s2-pl">AVG POWER</div></div>
+        <div class="s2-pc"><div class="s2-pv">2.9<span class="unit">W/KG</span></div><div class="s2-pl">W / KG</div></div>
+      </div>
+      <div class="s2-brow">
+        <div class="s2-bc"><div class="s2-bv" style="color:#f0c040">−2W</div><div class="s2-bl">ALL-TIME AVG</div></div>
+        <div class="s2-bc"><div class="s2-bv" style="color:#f0c040">+01:10</div><div class="s2-bl">LAST vs PR</div></div>
+      </div>
+      <div class="s2-foot-modal">
+        <button class="seg-detail-btn" style="background:linear-gradient(135deg,#4ab4ff,#90d4ff 60%,#cceeff 100%)">▶ REVIEW ATTEMPT <span style="opacity:.6;font-size:.85em">(5)</span></button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /demo-row -->
+
+<!-- quick note -->
+<p style="text-align:center;margin-top:40px;font-size:10px;letter-spacing:2px;color:rgba(255,255,255,.12);text-transform:uppercase">
+  hover 卡片觸發格紋掃光 + 碼錶翻轉 · 其餘常態動畫
+</p>
+
+</body>
+</html>

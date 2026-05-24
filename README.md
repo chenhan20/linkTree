@@ -45,10 +45,108 @@
 
 | 類別 | 技術 |
 |------|------|
-| 前端框架 | Vue 3 (CDN, Composition API) |
+| 前端 | 純 HTML / CSS / JS，無框架，無 build step |
 | 動畫 | Canvas API、CSS Animation |
 | 資料同步 | Strava OAuth 2.0 + GitHub Actions |
 | 部署 | GitHub Pages（靜態，零後端） |
+
+---
+
+## 🔧 Fork 後自己用（給其他人完整串接教學）
+
+> 想用自己的 Strava 帳號跑同一套？整套流程約 10–15 分鐘，**不需要寫任何程式**。
+
+### 前置
+- GitHub 帳號（要能開 GitHub Pages）
+- Strava 帳號（有運動紀錄）
+
+---
+
+### Step 1 · Fork 此 repo
+
+1. 點右上角 **Fork** → 建到自己的帳號下
+2. **Settings → Pages** → Source 選 `main` branch，Folder 選 `/(root)`
+3. 記下 Pages URL：`https://{你的帳號}.github.io/{repo名稱}/`
+
+---
+
+### Step 2 · 建立 Strava API App（拿 client_id / client_secret）
+
+1. 前往 https://www.strava.com/settings/api
+2. 點 **Create & Manage Your App**
+3. 填寫：
+   - **Application Name**：隨意（例：MyStravaSync）
+   - **Category**：Data Importer
+   - **Authorization Callback Domain**：填 `localhost`（給下一步授權用）
+4. 建立後記下：
+   - `Client ID`（純數字）
+   - `Client Secret`（長字串）
+
+---
+
+### Step 3 · 取得 OAuth Refresh Token（一次性授權）
+
+讓 GitHub Actions 機器人可以代你讀取資料。Refresh token 取得後**永久有效**（除非你撤銷）。
+
+```powershell
+# (a) 瀏覽器開以下 URL，把 YOUR_CLIENT_ID 換成 Step 2 的 Client ID
+# https://www.strava.com/oauth/authorize?client_id=YOUR_CLIENT_ID&redirect_uri=http://localhost&response_type=code&scope=activity:read_all
+
+# (b) 同意授權後瀏覽器會跳到 localhost（連線失敗沒關係）
+#     從網址列複製 code= 後面那串：
+#     http://localhost/?state=&code=abc123xyz&scope=read,activity:read_all
+#                              ↑ 這段就是 code（只能用一次）
+
+# (c) 用 code 換 refresh_token
+$body = "client_id=YOUR_CLIENT_ID&client_secret=YOUR_CLIENT_SECRET&code=abc123xyz&grant_type=authorization_code"
+Invoke-RestMethod -Method POST -Uri "https://www.strava.com/oauth/token" -Body $body
+# 回傳 JSON 的 "refresh_token" 欄位，複製下來（很長一串）
+```
+
+---
+
+### Step 4 · 設定 GitHub Secrets（把 4 個值塞進 repo）
+
+前往 **Settings → Secrets and variables → Actions → New repository secret**，逐一建立：
+
+| Secret 名稱 | 值來源 |
+|------------|--------|
+| `STRAVA_CLIENT_ID` | Step 2 |
+| `STRAVA_CLIENT_SECRET` | Step 2 |
+| `STRAVA_REFRESH_TOKEN` | Step 3 |
+| `STRAVA_ATHLETE_ID` | Strava 登入後網址 `/athletes/數字`，那個數字就是 |
+
+---
+
+### Step 5 · 首次全量同步
+
+**GitHub repo → Actions → Strava Daily Sync → Run workflow**，勾選「全量抓取」後按 Run。
+
+> 首次跑完，`data/strava.json` 和 `data/itt-segments.json` 會被 commit 回 repo，之後每天台灣時間 10:00 / 18:00 / 22:00 自動增量更新。
+
+---
+
+### Step 6 · 設定 ITT 路段（選用）
+
+想追蹤特定 Strava Segment 的計時成績，編輯 [data/itt-config.json](data/itt-config.json)：
+
+```json
+{
+  "segments": [
+    {
+      "id": 641218,
+      "nameZh": "風櫃嘴",
+      "nameApi": "風櫃嘴ITT",
+      "type": "CLIMB",
+      "accent": "#e87c1a"
+    }
+  ]
+}
+```
+
+- **找 Segment ID**：Strava 網頁開啟路段，URL 中的數字 `https://www.strava.com/segments/`**`641218`**
+- **`type` 可選**：`CLIMB` / `SPRINT` / `ENDURANCE`
+- 加完後重跑 Step 5 即可，`strava.html` 不需要改
 
 ---
 
@@ -173,6 +271,17 @@ rm -f power-prs.json power-prs-cache.json && $env:SCAN_POWER="1"; node scripts/f
 
 ---
 
+## 資料檔結構
+
+| 檔案 | 角色 | 誰維護 |
+|------|------|--------|
+| `data/strava.json` | 主資料：stats / 活動清單 / ITT segments / 功率 PR | 自動 |
+| `data/itt-segments.json` | ITT 努力紀錄備份 | 自動 |
+| `data/power-prs.json` | 功率 PR 快取 | 自動 |
+| **`data/itt-config.json`** | **ITT 路段設定（中文名、類型、顏色）** | **手動** |
+
+---
+
 ## 本機開發
 
 不需要安裝任何套件，直接用 VS Code Live Server 或：
@@ -183,16 +292,3 @@ python -m http.server 8080
 ```
 
 開啟 http://localhost:8080/linkTreeIndex.html
-
----
-
-## GitHub Secrets 設定
-
-需要在 **Settings → Secrets and variables → Actions** 設定：
-
-| Secret | 說明 |
-|--------|------|
-| `STRAVA_CLIENT_ID` | Strava App Client ID |
-| `STRAVA_CLIENT_SECRET` | Strava App Client Secret |
-| `STRAVA_REFRESH_TOKEN` | OAuth 2.0 Refresh Token（需含 `activity:read_all` scope） |
-| `STRAVA_ATHLETE_ID` | 你的 Strava Athlete ID |

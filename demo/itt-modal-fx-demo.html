@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ITT Modal · 5 Open FX Demo</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:#020202;color:#fff;
+  font-family:system-ui,sans-serif;
+  padding:40px 24px 80px;min-height:100vh;
+}
+h1{font-size:11px;letter-spacing:4px;text-transform:uppercase;color:rgba(255,255,255,.3);text-align:center;margin-bottom:8px}
+.sub{font-size:9px;letter-spacing:3px;color:rgba(255,80,40,.7);text-align:center;margin-bottom:40px;text-transform:uppercase}
+.launcher{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:18px;max-width:1100px;margin:0 auto;
+}
+.launch-btn{
+  position:relative;overflow:hidden;cursor:pointer;
+  background:#0a0a0a;border:1px solid rgba(232,124,26,.3);border-radius:4px;
+  padding:22px 20px;color:#fff;text-align:left;
+  transition:border-color .2s,transform .2s;
+  font-family:inherit;
+}
+.launch-btn:hover{border-color:#e87c1a;transform:translateY(-2px)}
+.launch-btn .ix{font-family:monospace;font-size:38px;font-weight:900;color:rgba(232,124,26,.3);line-height:1}
+.launch-btn .nm{font-size:14px;font-weight:800;letter-spacing:2px;color:#fff;margin-top:6px}
+.launch-btn .dc{font-size:10px;letter-spacing:1px;color:rgba(255,255,255,.45);margin-top:6px;line-height:1.5}
+.launch-btn .hi{font-size:9px;letter-spacing:2px;color:#e87c1a;margin-top:8px;text-transform:uppercase}
+
+/* ═══════════ MODAL BASE ═══════════ */
+.modal-ov{
+  position:fixed;inset:0;z-index:9999;
+  background:radial-gradient(ellipse at center,rgba(30,12,0,.88) 0%,rgba(0,0,0,.94) 70%);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .25s ease;padding:16px;
+}
+.modal-ov.open{opacity:1;pointer-events:auto}
+.modal-bx{
+  position:relative;width:100%;max-width:460px;max-height:86vh;
+  background:linear-gradient(160deg,rgba(16,8,2,.98),rgba(4,2,0,.99));
+  border:1.5px solid rgba(232,124,26,.55);border-radius:10px;
+  padding:22px 22px 16px;
+  box-shadow:0 0 0 1px rgba(232,124,26,.15),0 0 50px rgba(232,124,26,.35);
+  display:flex;flex-direction:column;overflow:hidden;
+}
+.modal-bx::before,.modal-bx::after{content:'';position:absolute;width:16px;height:16px;border:2px solid #e87c1a;pointer-events:none}
+.modal-bx::before{top:8px;left:8px;border-right:none;border-bottom:none}
+.modal-bx::after{bottom:8px;right:8px;border-left:none;border-top:none}
+.modal-cl{
+  position:absolute;top:10px;right:10px;width:28px;height:28px;border-radius:50%;
+  background:transparent;border:1px solid rgba(232,124,26,.4);color:#e87c1a;
+  font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:5;
+}
+.modal-hd{margin-bottom:14px;padding-right:36px;border-bottom:1px solid rgba(232,124,26,.2);padding-bottom:12px}
+.modal-nm{font-size:22px;font-weight:700;color:#fff;letter-spacing:2px;line-height:1.1}
+.modal-sb{font-size:10px;color:rgba(232,124,26,.7);letter-spacing:2px;text-transform:uppercase;margin-top:5px}
+.modal-bd{flex:1;overflow-y:auto;padding-right:2px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{color:#666;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.06);text-align:left}
+th:not(:first-child){text-align:right}
+td{padding:6px 0;color:#aaa;border-bottom:1px solid rgba(255,255,255,.04)}
+td:not(:first-child){text-align:right;font-variant-numeric:tabular-nums}
+tr.pr td{color:#FC4C02!important;font-weight:700}
+
+/* ═══════════════════════════════════════════════════
+   01 · GLITCH SLAM — chroma split + scanline tear
+   ═══════════════════════════════════════════════════ */
+@keyframes glitch-slam{
+  0%   {opacity:0;transform:scale(1.4) skewX(15deg);filter:hue-rotate(90deg) blur(20px)}
+  20%  {opacity:1;transform:scale(.92) skewX(-8deg);filter:hue-rotate(-60deg) blur(0)}
+  35%  {transform:scale(1.04) skewX(3deg) translateX(-8px);filter:hue-rotate(30deg)}
+  50%  {transform:scale(.98) translateX(6px);filter:none}
+  65%  {transform:translateX(-3px);filter:hue-rotate(15deg)}
+  80%  {transform:translateX(2px);filter:none}
+  100% {opacity:1;transform:scale(1) skewX(0);filter:none}
+}
+@keyframes glitch-tear{
+  0%,100%{transform:translateY(-100%);opacity:0}
+  20%    {transform:translateY(20%);opacity:1}
+  60%    {transform:translateY(80%);opacity:.4}
+  90%    {transform:translateY(110%);opacity:0}
+}
+.fx-glitch.open .modal-bx{animation:glitch-slam .7s cubic-bezier(.2,1.4,.3,1)}
+.fx-glitch .modal-bx::before{content:'';display:none}
+.fx-glitch .modal-bx .tear{
+  content:'';position:absolute;left:0;right:0;height:30px;z-index:6;pointer-events:none;
+  background:linear-gradient(transparent,#00ffff,#ff0040,transparent);
+  mix-blend-mode:screen;opacity:.7;
+  filter:blur(1px);
+}
+.fx-glitch.open .modal-bx .tear{animation:glitch-tear .7s linear}
+
+/* ═══════════════════════════════════════════════════
+   02 · TELEMETRY BOOT — HUD scan-in row by row
+   ═══════════════════════════════════════════════════ */
+@keyframes hud-frame{
+  0%  {clip-path:inset(50% 50% 50% 50%);opacity:0}
+  30% {clip-path:inset(0 50% 0 50%);opacity:1}
+  60% {clip-path:inset(0 0 0 0)}
+  100%{clip-path:inset(0 0 0 0);opacity:1}
+}
+@keyframes hud-scan{
+  0%  {top:-2px;opacity:1}
+  100%{top:100%;opacity:0}
+}
+@keyframes hud-row{
+  0%  {opacity:0;transform:translateX(-12px);filter:blur(4px)}
+  100%{opacity:1;transform:translateX(0);filter:blur(0)}
+}
+.fx-hud.open .modal-bx{animation:hud-frame .8s cubic-bezier(.2,.8,.3,1)}
+.fx-hud .modal-bx{position:relative}
+.fx-hud .modal-bx .scanbar{
+  position:absolute;left:0;right:0;height:3px;z-index:6;
+  background:linear-gradient(90deg,transparent,#00ffd0,#fff,#00ffd0,transparent);
+  filter:drop-shadow(0 0 8px #00ffd0);pointer-events:none;
+}
+.fx-hud.open .modal-bx .scanbar{animation:hud-scan 1s linear .2s}
+.fx-hud.open tbody tr{
+  opacity:0;animation:hud-row .35s ease forwards;
+}
+.fx-hud.open tbody tr:nth-child(1){animation-delay:.55s}
+.fx-hud.open tbody tr:nth-child(2){animation-delay:.65s}
+.fx-hud.open tbody tr:nth-child(3){animation-delay:.75s}
+.fx-hud.open tbody tr:nth-child(4){animation-delay:.85s}
+.fx-hud.open tbody tr:nth-child(5){animation-delay:.95s}
+.fx-hud.open tbody tr:nth-child(6){animation-delay:1.05s}
+.fx-hud.open tbody tr:nth-child(7){animation-delay:1.15s}
+.fx-hud.open tbody tr:nth-child(8){animation-delay:1.25s}
+.fx-hud.open .modal-hd,.fx-hud.open thead{opacity:0;animation:hud-row .35s ease .35s forwards}
+
+/* ═══════════════════════════════════════════════════
+   03 · WARP DRIVE — from pixel + radial light burst
+   ═══════════════════════════════════════════════════ */
+@keyframes warp-in{
+  0%  {transform:scale(.02) translateZ(0);opacity:0;filter:blur(30px) brightness(3)}
+  25% {opacity:.5;filter:blur(20px) brightness(2.5)}
+  60% {transform:scale(1.15);opacity:1;filter:blur(2px) brightness(1.3)}
+  85% {transform:scale(.95);filter:blur(0) brightness(1.1)}
+  100%{transform:scale(1);opacity:1;filter:none}
+}
+@keyframes warp-rays{
+  0%  {opacity:0;transform:scale(0) rotate(0)}
+  40% {opacity:1}
+  100%{opacity:0;transform:scale(8) rotate(180deg)}
+}
+.fx-warp.open .modal-bx{animation:warp-in .9s cubic-bezier(.18,1.3,.3,1)}
+.fx-warp .rays{
+  position:fixed;top:50%;left:50%;width:200px;height:200px;
+  transform:translate(-50%,-50%) scale(0);pointer-events:none;z-index:9998;
+  background:
+    conic-gradient(from 0deg,
+      transparent 0deg,#fff 5deg,transparent 12deg,
+      transparent 80deg,#e87c1a 85deg,transparent 92deg,
+      transparent 170deg,#fff 175deg,transparent 182deg,
+      transparent 260deg,#e87c1a 265deg,transparent 272deg,
+      transparent 360deg);
+  mix-blend-mode:screen;opacity:0;
+  filter:blur(2px) drop-shadow(0 0 20px #ffb060);
+}
+.fx-warp.open .rays{animation:warp-rays .8s ease-out}
+
+/* ═══════════════════════════════════════════════════
+   04 · SHATTER ASSEMBLE — 4 corner pieces snap together
+   ═══════════════════════════════════════════════════ */
+@keyframes shat-tl{0%{transform:translate(-200px,-200px) rotate(-25deg);opacity:0}70%{opacity:1}100%{transform:translate(0,0) rotate(0);opacity:1}}
+@keyframes shat-tr{0%{transform:translate(200px,-200px) rotate(25deg);opacity:0}70%{opacity:1}100%{transform:translate(0,0) rotate(0);opacity:1}}
+@keyframes shat-bl{0%{transform:translate(-200px,200px) rotate(25deg);opacity:0}70%{opacity:1}100%{transform:translate(0,0) rotate(0);opacity:1}}
+@keyframes shat-br{0%{transform:translate(200px,200px) rotate(-25deg);opacity:0}70%{opacity:1}100%{transform:translate(0,0) rotate(0);opacity:1}}
+@keyframes shat-content{0%,75%{opacity:0}100%{opacity:1}}
+@keyframes shat-flash{0%,75%{opacity:0}80%{opacity:1}100%{opacity:0}}
+.fx-shatter .modal-bx{background:transparent;border:none;box-shadow:none;padding:0;overflow:visible}
+.fx-shatter .modal-bx::before,.fx-shatter .modal-bx::after{display:none}
+.fx-shatter .modal-bx .piece{
+  position:absolute;width:50%;height:50%;
+  background:linear-gradient(160deg,rgba(16,8,2,.98),rgba(4,2,0,.99));
+  border:1.5px solid rgba(232,124,26,.55);
+}
+.fx-shatter .modal-bx .p-tl{top:0;left:0;border-radius:10px 0 0 0;border-right:none;border-bottom:none}
+.fx-shatter .modal-bx .p-tr{top:0;right:0;border-radius:0 10px 0 0;border-left:none;border-bottom:none}
+.fx-shatter .modal-bx .p-bl{bottom:0;left:0;border-radius:0 0 0 10px;border-right:none;border-top:none}
+.fx-shatter .modal-bx .p-br{bottom:0;right:0;border-radius:0 0 10px 0;border-left:none;border-top:none}
+.fx-shatter.open .p-tl{animation:shat-tl .55s cubic-bezier(.2,1.3,.3,1)}
+.fx-shatter.open .p-tr{animation:shat-tr .55s cubic-bezier(.2,1.3,.3,1)}
+.fx-shatter.open .p-bl{animation:shat-bl .55s cubic-bezier(.2,1.3,.3,1)}
+.fx-shatter.open .p-br{animation:shat-br .55s cubic-bezier(.2,1.3,.3,1)}
+.fx-shatter .modal-bx .content{
+  position:absolute;inset:0;padding:22px;
+  display:flex;flex-direction:column;overflow:hidden;opacity:0;
+  box-shadow:0 0 50px rgba(232,124,26,.35);border-radius:10px;
+}
+.fx-shatter.open .content{animation:shat-content .7s ease forwards}
+.fx-shatter .modal-bx .flash{
+  position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;
+  border-radius:10px;mix-blend-mode:overlay;
+}
+.fx-shatter.open .flash{animation:shat-flash .7s ease}
+
+/* ═══════════════════════════════════════════════════
+   05 · HOLOGRAM PROJECT — beam from bottom, scanlines
+   ═══════════════════════════════════════════════════ */
+@keyframes holo-rise{
+  0%  {transform:translateY(40px) scaleY(.02);opacity:0;filter:blur(8px)}
+  15% {transform:translateY(20px) scaleY(.05);opacity:.4}
+  40% {transform:translateY(8px) scaleY(.4);opacity:.85;filter:blur(3px)}
+  70% {transform:translateY(-3px) scaleY(1.05);filter:blur(0)}
+  100%{transform:translateY(0) scaleY(1);opacity:1}
+}
+@keyframes holo-beam{
+  0%  {transform:scaleY(0);opacity:0}
+  10% {opacity:1}
+  60% {transform:scaleY(1);opacity:.6}
+  100%{opacity:0;transform:scaleY(1)}
+}
+@keyframes holo-scan{
+  0%  {background-position:0 0}
+  100%{background-position:0 4px}
+}
+@keyframes holo-flicker{
+  0%,100%{opacity:1}
+  18%,22%{opacity:.8}
+  62%,66%{opacity:.9}
+}
+.fx-holo .modal-bx{
+  background:linear-gradient(160deg,rgba(0,30,40,.92),rgba(0,8,12,.96));
+  border-color:rgba(0,220,255,.6);transform-origin:bottom center;
+  box-shadow:0 0 0 1px rgba(0,220,255,.2),0 0 60px rgba(0,220,255,.5),inset 0 0 60px rgba(0,220,255,.06);
+}
+.fx-holo .modal-bx::before,.fx-holo .modal-bx::after{border-color:#00dcff}
+.fx-holo .modal-cl{border-color:rgba(0,220,255,.5);color:#00dcff}
+.fx-holo .modal-nm{color:#cef9ff;text-shadow:0 0 12px rgba(0,220,255,.5)}
+.fx-holo .modal-sb{color:rgba(0,220,255,.75)}
+.fx-holo tr.pr td{color:#00dcff!important}
+.fx-holo .modal-bx .scanlines{
+  position:absolute;inset:0;pointer-events:none;z-index:3;
+  background:repeating-linear-gradient(0deg,transparent 0 2px,rgba(0,220,255,.08) 2px 3px,transparent 3px 4px);
+  mix-blend-mode:screen;animation:holo-scan .3s linear infinite;
+}
+.fx-holo .modal-bx .beam{
+  position:fixed;left:50%;bottom:0;width:60px;height:100vh;
+  transform:translateX(-50%) scaleY(0);transform-origin:bottom center;
+  background:linear-gradient(0deg,#00dcff,rgba(0,220,255,.6) 30%,transparent 80%);
+  filter:blur(8px);opacity:0;mix-blend-mode:screen;pointer-events:none;z-index:9998;
+}
+.fx-holo.open .modal-bx{animation:holo-rise .8s cubic-bezier(.2,1,.3,1),holo-flicker 2.5s ease .8s infinite}
+.fx-holo.open .beam{animation:holo-beam 1s ease-out}
+
+/* ═══════════════════════════════════════════════════
+   06 · WARP + TELEMETRY — pixel burst 開場 + HUD 表格逐行
+   ═══════════════════════════════════════════════════ */
+.fx-combo.open .modal-bx{animation:warp-in .9s cubic-bezier(.18,1.3,.3,1)}
+.fx-combo .rays{
+  position:fixed;top:50%;left:50%;width:200px;height:200px;
+  transform:translate(-50%,-50%) scale(0);pointer-events:none;z-index:9998;
+  background:
+    conic-gradient(from 0deg,
+      transparent 0deg,#fff 5deg,transparent 12deg,
+      transparent 80deg,#e87c1a 85deg,transparent 92deg,
+      transparent 170deg,#fff 175deg,transparent 182deg,
+      transparent 260deg,#e87c1a 265deg,transparent 272deg,
+      transparent 360deg);
+  mix-blend-mode:screen;opacity:0;
+  filter:blur(2px) drop-shadow(0 0 20px #ffb060);
+}
+.fx-combo.open .rays{animation:warp-rays .8s ease-out}
+@keyframes hud-scan-loop{
+  0%   {top:-2px;opacity:0}
+  8%   {opacity:1}
+  45%  {top:calc(100% - 1px);opacity:1}
+  50%  {top:calc(100% - 1px);opacity:0}
+  55%  {top:-2px;opacity:0}
+  62%  {opacity:.85}
+  95%  {top:calc(100% - 1px);opacity:.85}
+  100% {top:calc(100% - 1px);opacity:0}
+}
+@keyframes hud-scan-second{
+  0%,40%{top:100%;opacity:0}
+  48%   {opacity:.7}
+  90%   {top:-2px;opacity:.7}
+  100%  {top:-2px;opacity:0}
+}
+.fx-combo .modal-bx .scanbar{
+  position:absolute;left:0;right:0;height:2px;z-index:6;
+  background:linear-gradient(90deg,transparent,#ffb060,#fff,#ffb060,transparent);
+  filter:drop-shadow(0 0 8px #e87c1a);pointer-events:none;top:-2px;opacity:0;
+}
+.fx-combo .modal-bx .scanbar.s2{
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.6),#fff,rgba(255,255,255,.6),transparent);
+  filter:drop-shadow(0 0 6px #fff);height:1px;
+}
+.fx-combo.open .modal-bx .scanbar{animation:hud-scan-loop 3.2s linear .75s infinite}
+.fx-combo.open .modal-bx .scanbar.s2{animation:hud-scan-second 4.4s linear 1.6s infinite}
+.fx-combo.open tbody tr{
+  opacity:0;animation:hud-row .35s ease forwards;
+}
+.fx-combo.open tbody tr:nth-child(1){animation-delay:1.05s}
+.fx-combo.open tbody tr:nth-child(2){animation-delay:1.15s}
+.fx-combo.open tbody tr:nth-child(3){animation-delay:1.25s}
+.fx-combo.open tbody tr:nth-child(4){animation-delay:1.35s}
+.fx-combo.open tbody tr:nth-child(5){animation-delay:1.45s}
+.fx-combo.open tbody tr:nth-child(6){animation-delay:1.55s}
+.fx-combo.open tbody tr:nth-child(7){animation-delay:1.65s}
+.fx-combo.open tbody tr:nth-child(8){animation-delay:1.75s}
+.fx-combo.open thead{opacity:0;animation:hud-row .35s ease .9s forwards}
+
+/* close anim for all */
+.modal-ov:not(.open) .modal-bx{transition:transform .2s,opacity .2s}
+
+/* sample table rows generator helper class */
+.note{
+  text-align:center;font-size:10px;letter-spacing:2px;
+  color:rgba(255,255,255,.2);margin-top:50px;text-transform:uppercase
+}
+</style>
+</head>
+<body>
+
+<h1>⬛ ITT REVIEW MODAL · 5 OPEN FX ⬛</h1>
+<div class="sub">點擊任一按鈕看效果 · 點背景或 ✕ 關閉</div>
+
+<div class="launcher">
+
+  <button class="launch-btn" onclick="openFx('glitch')">
+    <div class="ix">01</div>
+    <div class="nm">GLITCH SLAM</div>
+    <div class="dc">RGB chroma split + 中段彩光撕裂帶橫掃</div>
+    <div class="hi">▶ Cyberpunk · 故障藝術</div>
+  </button>
+
+  <button class="launch-btn" onclick="openFx('hud')">
+    <div class="ix">02</div>
+    <div class="nm">TELEMETRY BOOT</div>
+    <div class="dc">HUD 從中心展開 → 掃描線下移 → 表格 row 逐行 fade-in</div>
+    <div class="hi">▶ F1 儀錶 · 開機序列</div>
+  </button>
+
+  <button class="launch-btn" onclick="openFx('warp')">
+    <div class="ix">03</div>
+    <div class="nm">WARP DRIVE</div>
+    <div class="dc">從一個像素爆開 + 4 道放射光線旋轉發散</div>
+    <div class="hi">▶ 蟲洞躍遷 · 暴力綻放</div>
+  </button>
+
+  <button class="launch-btn" onclick="openFx('shatter')">
+    <div class="ix">04</div>
+    <div class="nm">SHATTER ASSEMBLE</div>
+    <div class="dc">4 個角落碎片從外側飛入 → 拼合 → 白光閃 → 內容 fade-in</div>
+    <div class="hi">▶ 碎片重組 · 機甲合體</div>
+  </button>
+
+  <button class="launch-btn" onclick="openFx('holo')">
+    <div class="ix">05</div>
+    <div class="nm">HOLOGRAM PROJECT</div>
+    <div class="dc">底部投影光束升起 + 掃描線常駐 + 持續微閃爍</div>
+    <div class="hi">▶ 全息投影 · 青色配色</div>
+  </button>
+
+  <button class="launch-btn" onclick="openFx('combo')" style="border-color:#ffb060;box-shadow:0 0 0 1px rgba(255,176,96,.2),0 0 24px rgba(232,124,26,.25)">
+    <div class="ix">06</div>
+    <div class="nm">WARP + TELEMETRY</div>
+    <div class="dc">像素爆開 + 放射光線 → 接掃描線下移 → 表格 row 逐行 fade-in</div>
+    <div class="hi">▶ 03 開場 × 02 內容 · 推薦組合</div>
+  </button>
+
+</div>
+
+
+<!-- ═══════════════ MODAL TEMPLATES ═══════════════ -->
+
+<!-- 01 GLITCH -->
+<div class="modal-ov fx-glitch" id="m-glitch" onclick="if(event.target===this)closeFx('glitch')">
+  <div class="modal-bx">
+    <div class="tear"></div>
+    <button class="modal-cl" onclick="closeFx('glitch')">✕</button>
+    <div class="modal-hd">
+      <div class="modal-nm">風櫃嘴 ITT</div>
+      <div class="modal-sb">6.13 km · PR 28:29 · 8 attempts</div>
+    </div>
+    <div class="modal-bd">
+      <table>
+        <thead><tr><th>日期</th><th>時間</th><th>功率</th><th>HR</th></tr></thead>
+        <tbody>
+          <tr class="pr"><td>2025/10/15</td><td>👑 28:29</td><td>262w</td><td>172</td></tr>
+          <tr><td>2025/09/22</td><td>29:18</td><td>255w</td><td>170</td></tr>
+          <tr><td>2025/08/30</td><td>30:02</td><td>248w</td><td>168</td></tr>
+          <tr><td>2025/08/10</td><td>30:41</td><td>241w</td><td>171</td></tr>
+          <tr><td>2025/07/19</td><td>31:25</td><td>235w</td><td>169</td></tr>
+          <tr><td>2025/06/28</td><td>32:08</td><td>228w</td><td>167</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- 02 HUD -->
+<div class="modal-ov fx-hud" id="m-hud" onclick="if(event.target===this)closeFx('hud')">
+  <div class="modal-bx">
+    <div class="scanbar"></div>
+    <button class="modal-cl" onclick="closeFx('hud')">✕</button>
+    <div class="modal-hd">
+      <div class="modal-nm">風櫃嘴 ITT</div>
+      <div class="modal-sb">6.13 km · PR 28:29 · 8 attempts</div>
+    </div>
+    <div class="modal-bd">
+      <table>
+        <thead><tr><th>日期</th><th>時間</th><th>功率</th><th>HR</th></tr></thead>
+        <tbody>
+          <tr class="pr"><td>2025/10/15</td><td>👑 28:29</td><td>262w</td><td>172</td></tr>
+          <tr><td>2025/09/22</td><td>29:18</td><td>255w</td><td>170</td></tr>
+          <tr><td>2025/08/30</td><td>30:02</td><td>248w</td><td>168</td></tr>
+          <tr><td>2025/08/10</td><td>30:41</td><td>241w</td><td>171</td></tr>
+          <tr><td>2025/07/19</td><td>31:25</td><td>235w</td><td>169</td></tr>
+          <tr><td>2025/06/28</td><td>32:08</td><td>228w</td><td>167</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- 03 WARP -->
+<div class="modal-ov fx-warp" id="m-warp" onclick="if(event.target===this)closeFx('warp')">
+  <div class="rays"></div>
+  <div class="modal-bx">
+    <button class="modal-cl" onclick="closeFx('warp')">✕</button>
+    <div class="modal-hd">
+      <div class="modal-nm">風櫃嘴 ITT</div>
+      <div class="modal-sb">6.13 km · PR 28:29 · 8 attempts</div>
+    </div>
+    <div class="modal-bd">
+      <table>
+        <thead><tr><th>日期</th><th>時間</th><th>功率</th><th>HR</th></tr></thead>
+        <tbody>
+          <tr class="pr"><td>2025/10/15</td><td>👑 28:29</td><td>262w</td><td>172</td></tr>
+          <tr><td>2025/09/22</td><td>29:18</td><td>255w</td><td>170</td></tr>
+          <tr><td>2025/08/30</td><td>30:02</td><td>248w</td><td>168</td></tr>
+          <tr><td>2025/08/10</td><td>30:41</td><td>241w</td><td>171</td></tr>
+          <tr><td>2025/07/19</td><td>31:25</td><td>235w</td><td>169</td></tr>
+          <tr><td>2025/06/28</td><td>32:08</td><td>228w</td><td>167</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- 04 SHATTER -->
+<div class="modal-ov fx-shatter" id="m-shatter" onclick="if(event.target===this)closeFx('shatter')">
+  <div class="modal-bx" style="width:100%;max-width:460px;aspect-ratio:auto">
+    <div class="piece p-tl"></div>
+    <div class="piece p-tr"></div>
+    <div class="piece p-bl"></div>
+    <div class="piece p-br"></div>
+    <div class="flash"></div>
+    <div class="content">
+      <button class="modal-cl" onclick="closeFx('shatter')">✕</button>
+      <div class="modal-hd">
+        <div class="modal-nm">風櫃嘴 ITT</div>
+        <div class="modal-sb">6.13 km · PR 28:29 · 8 attempts</div>
+      </div>
+      <div class="modal-bd">
+        <table>
+          <thead><tr><th>日期</th><th>時間</th><th>功率</th><th>HR</th></tr></thead>
+          <tbody>
+            <tr class="pr"><td>2025/10/15</td><td>👑 28:29</td><td>262w</td><td>172</td></tr>
+            <tr><td>2025/09/22</td><td>29:18</td><td>255w</td><td>170</td></tr>
+            <tr><td>2025/08/30</td><td>30:02</td><td>248w</td><td>168</td></tr>
+            <tr><td>2025/08/10</td><td>30:41</td><td>241w</td><td>171</td></tr>
+            <tr><td>2025/07/19</td><td>31:25</td><td>235w</td><td>169</td></tr>
+            <tr><td>2025/06/28</td><td>32:08</td><td>228w</td><td>167</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 05 HOLO -->
+<div class="modal-ov fx-holo" id="m-holo" onclick="if(event.target===this)closeFx('holo')">
+  <div class="beam"></div>
+  <div class="modal-bx">
+    <div class="scanlines"></div>
+    <button class="modal-cl" onclick="closeFx('holo')">✕</button>
+    <div class="modal-hd">
+      <div class="modal-nm">風櫃嘴 ITT</div>
+      <div class="modal-sb">6.13 km · PR 28:29 · 8 attempts</div>
+    </div>
+    <div class="modal-bd">
+      <table>
+        <thead><tr><th>日期</th><th>時間</th><th>功率</th><th>HR</th></tr></thead>
+        <tbody>
+          <tr class="pr"><td>2025/10/15</td><td>👑 28:29</td><td>262w</td><td>172</td></tr>
+          <tr><td>2025/09/22</td><td>29:18</td><td>255w</td><td>170</td></tr>
+          <tr><td>2025/08/30</td><td>30:02</td><td>248w</td><td>168</td></tr>
+          <tr><td>2025/08/10</td><td>30:41</td><td>241w</td><td>171</td></tr>
+          <tr><td>2025/07/19</td><td>31:25</td><td>235w</td><td>169</td></tr>
+          <tr><td>2025/06/28</td><td>32:08</td><td>228w</td><td>167</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<p class="note">tip · 開了再開可以重看動畫，按 ESC 也可關閉</p>
+
+<!-- 06 WARP + TELEMETRY COMBO -->
+<div class="modal-ov fx-combo" id="m-combo" onclick="if(event.target===this)closeFx('combo')">
+  <div class="rays"></div>
+  <div class="modal-bx">
+    <div class="scanbar"></div>
+    <div class="scanbar s2"></div>
+    <button class="modal-cl" onclick="closeFx('combo')">✕</button>
+    <div class="modal-hd">
+      <div class="modal-nm">風櫃嘴 ITT</div>
+      <div class="modal-sb">6.13 km · PR 28:29 · 8 attempts</div>
+    </div>
+    <div class="modal-bd">
+      <table>
+        <thead><tr><th>日期</th><th>時間</th><th>功率</th><th>HR</th></tr></thead>
+        <tbody>
+          <tr class="pr"><td>2025/10/15</td><td>👑 28:29</td><td>262w</td><td>172</td></tr>
+          <tr><td>2025/09/22</td><td>29:18</td><td>255w</td><td>170</td></tr>
+          <tr><td>2025/08/30</td><td>30:02</td><td>248w</td><td>168</td></tr>
+          <tr><td>2025/08/10</td><td>30:41</td><td>241w</td><td>171</td></tr>
+          <tr><td>2025/07/19</td><td>31:25</td><td>235w</td><td>169</td></tr>
+          <tr><td>2025/06/28</td><td>32:08</td><td>228w</td><td>167</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+function openFx(name){
+  // close all first to allow re-trigger animations
+  ['glitch','hud','warp','shatter','holo','combo'].forEach(n=>{
+    document.getElementById('m-'+n).classList.remove('open')
+  })
+  // force reflow + reopen
+  const el = document.getElementById('m-'+name)
+  void el.offsetWidth
+  el.classList.add('open')
+}
+function closeFx(name){
+  document.getElementById('m-'+name).classList.remove('open')
+}
+document.addEventListener('keydown', e=>{
+  if(e.key==='Escape'){
+    ['glitch','hud','warp','shatter','holo','combo'].forEach(n=>{
+      document.getElementById('m-'+n).classList.remove('open')
+    })
+  }
+})
+</script>
+
+</body>
+</html>

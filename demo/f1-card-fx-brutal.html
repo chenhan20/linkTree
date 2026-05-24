@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>F1 Card FX · BRUTAL EDITION</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:#020202;color:#fff;
+  font-family:system-ui,sans-serif;
+  padding:32px 24px 80px;min-height:100vh;
+  overflow-x:hidden;
+}
+h1{
+  font-size:11px;letter-spacing:4px;text-transform:uppercase;
+  color:rgba(255,255,255,.3);margin-bottom:8px;text-align:center;
+}
+.subtitle{
+  font-size:9px;letter-spacing:3px;color:rgba(255,80,40,.7);
+  text-align:center;margin-bottom:32px;text-transform:uppercase;
+}
+.demo-row{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+  gap:32px;max-width:1400px;margin:0 auto;
+}
+.demo-label{
+  font-size:10px;letter-spacing:2px;text-transform:uppercase;
+  color:rgba(255,255,255,.45);margin-bottom:6px;text-align:center;font-weight:700;
+}
+.demo-num{
+  font-family:monospace;
+  font-size:38px;font-weight:900;color:rgba(255,40,40,.18);
+  line-height:1;margin-bottom:0px;text-align:center;letter-spacing:2px;
+}
+.demo-hint{
+  font-size:9px;letter-spacing:1.5px;color:rgba(255,255,255,.25);
+  text-align:center;margin-bottom:10px;text-transform:uppercase;
+}
+
+/* ════════ BASE CARD ════════ */
+.s2-card{
+  --s2-accent:#e87c1a;--s2-status-color:#e87c1a;
+  position:relative;background:#070707;border-radius:2px;overflow:hidden;
+  display:flex;flex-direction:column;
+  border:1px solid rgba(232,124,26,.25);
+  box-shadow:0 0 0 1px rgba(0,0,0,.9),0 0 24px rgba(232,124,26,.15),0 0 48px rgba(232,124,26,.06);
+}
+.s2-card .stripe{position:absolute;top:0;left:0;right:0;height:2px;z-index:30;background:linear-gradient(90deg,transparent,var(--s2-accent) 30%,#fff8e0 50%,var(--s2-accent) 70%,transparent)}
+.s2-card .leftbar{position:absolute;top:0;left:0;width:2px;height:100%;z-index:30;background:var(--s2-accent);opacity:.6}
+.s2-hd{display:flex;align-items:center;justify-content:space-between;padding:9px 12px 8px 16px;border-bottom:1px solid rgba(255,255,255,.05);position:relative;z-index:20}
+.s2-num{font-family:monospace;font-size:9px;font-weight:700;color:rgba(255,255,255,.28);letter-spacing:2.5px}
+.s2-kom-hd{font-family:monospace;font-size:9px;font-weight:700;color:rgba(255,255,255,.28);letter-spacing:1.5px;margin-left:8px}
+.s2-type-tag{font-size:9px;font-weight:800;letter-spacing:2px;color:var(--s2-accent);border:1px solid rgba(232,124,26,.3);border-radius:1px;padding:2px 7px;background:rgba(0,0,0,.5);text-transform:uppercase}
+.s2-namblk{padding:12px 16px 10px;border-bottom:1px solid rgba(255,255,255,.05);position:relative;z-index:20}
+.s2-name-zh{font-size:22px;font-weight:700;color:#fff;letter-spacing:3px;line-height:1}
+.s2-timblk{padding:14px 16px 12px;border-bottom:1px solid rgba(255,255,255,.05);position:relative;z-index:20}
+.s2-best-time{font-family:monospace;font-size:36px;font-weight:700;line-height:1;color:#fff;letter-spacing:2px}
+.s2-time-lbl{font-size:9px;font-weight:700;color:rgba(255,255,255,.25);letter-spacing:2px;text-transform:uppercase;margin-top:3px;margin-bottom:8px}
+.s2-status-block{display:flex;flex-direction:column;gap:3px}
+.s2-status-line{display:inline-block;font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--s2-status-color);border-left:2px solid var(--s2-status-color);padding-left:6px}
+.s2-status-sub{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.6);padding-left:8px}
+.s2-prow{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid rgba(255,255,255,.05);position:relative;z-index:20}
+.s2-pc{padding:11px 16px;display:flex;flex-direction:column;gap:3px;border-right:1px solid rgba(255,255,255,.05)}
+.s2-pc:last-child{border-right:none}
+.s2-pv{font-size:22px;font-weight:700;line-height:1;color:#fff;display:flex;align-items:baseline;gap:3px}
+.s2-pv .unit{font-size:11px;color:rgba(255,255,255,.35);font-weight:400}
+.s2-pl{font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.22);margin-top:1px}
+.s2-brow{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid rgba(255,255,255,.05);position:relative;z-index:20}
+.s2-bc{padding:10px 16px;display:flex;flex-direction:column;gap:3px;border-right:1px solid rgba(255,255,255,.05)}
+.s2-bc:last-child{border-right:none}
+.s2-bv{font-family:monospace;font-size:14px;font-weight:700;line-height:1}
+.s2-bl{font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.22);margin-top:2px}
+.s2-foot-modal{padding:10px 12px;position:relative;z-index:20}
+.seg-detail-btn{position:relative;overflow:hidden;width:100%;display:flex;align-items:center;justify-content:center;gap:7px;padding:9px 0;font-size:13px;font-weight:800;letter-spacing:1.5px;color:#0a0604;background:linear-gradient(135deg,#e87c1a,#ff9a30 60%,#ffcd80 100%);border:none;border-radius:4px;cursor:pointer}
+
+/* ════════════════════════════════════════════════════
+   ☠ FX 06 — DRS BOOST (尾流加速,卡片整體前推+殘影)
+   ════════════════════════════════════════════════════ */
+@keyframes drs-boost{
+  0%   {transform:translateX(0) skewX(0);filter:none}
+  30%  {transform:translateX(-3px) skewX(-1deg);filter:hue-rotate(-10deg)}
+  60%  {transform:translateX(8px) skewX(2deg);filter:brightness(1.4) contrast(1.2)}
+  100% {transform:translateX(0) skewX(0);filter:none}
+}
+@keyframes drs-ghost{
+  0%   {opacity:0;transform:translateX(0)}
+  40%  {opacity:.6;transform:translateX(-18px)}
+  100% {opacity:0;transform:translateX(-40px)}
+}
+.fx-drs{transition:transform .2s}
+.fx-drs:hover{animation:drs-boost .55s cubic-bezier(.6,-.3,.4,1.3)}
+.fx-drs::after{
+  content:'';position:absolute;inset:0;
+  border:1px solid var(--s2-accent);border-radius:2px;
+  background:linear-gradient(90deg,var(--s2-accent) 0%,transparent 30%);
+  opacity:0;pointer-events:none;mix-blend-mode:screen;
+}
+.fx-drs:hover::after{animation:drs-ghost .55s ease-out}
+
+/* ════════════════════════════════════════════════════
+   ☠ FX 07 — TURBO BOOST (粒子噴流從左到右穿過卡片)
+   ════════════════════════════════════════════════════ */
+@keyframes turbo-particle{
+  0%  {transform:translateX(-10%) scaleX(.2);opacity:0}
+  20% {opacity:1}
+  80% {opacity:.8}
+  100%{transform:translateX(110%) scaleX(1.4);opacity:0}
+}
+.fx-turbo .fx-particle{
+  position:absolute;left:0;height:1px;pointer-events:none;z-index:14;
+  background:linear-gradient(90deg,transparent,#fff,var(--s2-accent),transparent);
+  filter:drop-shadow(0 0 4px var(--s2-accent)) drop-shadow(0 0 8px var(--s2-accent));
+  animation:turbo-particle 1.6s linear infinite;
+}
+.fx-turbo .fx-particle:nth-child(1){top:15%;width:40%;animation-delay:0s}
+.fx-turbo .fx-particle:nth-child(2){top:35%;width:55%;animation-delay:.3s;height:2px}
+.fx-turbo .fx-particle:nth-child(3){top:52%;width:30%;animation-delay:.7s}
+.fx-turbo .fx-particle:nth-child(4){top:68%;width:60%;animation-delay:.5s;height:2px}
+.fx-turbo .fx-particle:nth-child(5){top:82%;width:45%;animation-delay:.9s}
+.fx-turbo .fx-particle:nth-child(6){top:25%;width:35%;animation-delay:1.1s;height:2px}
+.fx-turbo .fx-particle:nth-child(7){top:60%;width:50%;animation-delay:.15s}
+
+/* ════════════════════════════════════════════════════
+   ☠ FX 08 — RGB GLITCH (CHROMA SPLIT 故障藝術)
+   ════════════════════════════════════════════════════ */
+@keyframes glitch-main{
+  0%,100%{transform:translate(0)}
+  10%    {transform:translate(-2px,1px)}
+  20%    {transform:translate(2px,-1px)}
+  30%    {transform:translate(0,0)}
+  92%    {transform:translate(-3px,2px)}
+  95%    {transform:translate(3px,-2px)}
+}
+@keyframes glitch-r{
+  0%,100%{transform:translate(0);opacity:0}
+  10%    {transform:translate(4px,-2px);opacity:.7}
+  20%    {transform:translate(-3px,2px);opacity:.5}
+  30%    {transform:translate(0,0);opacity:0}
+  92%    {transform:translate(5px,-1px);opacity:.8}
+}
+@keyframes glitch-g{
+  0%,100%{transform:translate(0);opacity:0}
+  10%    {transform:translate(-3px,2px);opacity:.7}
+  20%    {transform:translate(2px,-1px);opacity:.5}
+  92%    {transform:translate(-4px,1px);opacity:.8}
+}
+@keyframes glitch-flash{
+  0%,90%,100%{opacity:0}
+  92%        {opacity:.15}
+  94%        {opacity:0}
+  96%        {opacity:.25}
+}
+.fx-glitch .s2-best-time{
+  position:relative;animation:glitch-main 3.5s infinite;
+}
+.fx-glitch .s2-best-time::before,
+.fx-glitch .s2-best-time::after{
+  content:attr(data-text);position:absolute;top:0;left:0;width:100%;
+  pointer-events:none;
+}
+.fx-glitch .s2-best-time::before{color:#ff0040;animation:glitch-r 3.5s infinite;mix-blend-mode:screen}
+.fx-glitch .s2-best-time::after{color:#00ffff;animation:glitch-g 3.5s infinite;mix-blend-mode:screen}
+.fx-glitch .fx-flash{
+  position:absolute;inset:0;background:#fff;mix-blend-mode:overlay;
+  pointer-events:none;z-index:15;animation:glitch-flash 3.5s infinite;
+}
+
+/* ════════════════════════════════════════════════════
+   ☠ FX 09 — REDLINE PULSE (轉速到頂的呼吸+紅警邊框)
+   ════════════════════════════════════════════════════ */
+@keyframes redline-border{
+  0%,100%{box-shadow:0 0 0 1px rgba(0,0,0,.9),0 0 24px rgba(255,40,40,.4),0 0 80px rgba(255,40,40,.2),inset 0 0 0 1px rgba(255,40,40,.6)}
+  50%    {box-shadow:0 0 0 1px rgba(0,0,0,.9),0 0 60px rgba(255,40,40,.95),0 0 140px rgba(255,40,40,.5),inset 0 0 0 2px rgba(255,80,80,1)}
+}
+@keyframes redline-rpm{
+  0%,100%{transform:scaleX(0.5)}
+  50%    {transform:scaleX(1)}
+}
+@keyframes redline-bg{
+  0%,100%{opacity:.05}
+  50%    {opacity:.18}
+}
+.fx-redline{
+  animation:redline-border 1.1s ease-in-out infinite;
+  border-color:rgba(255,40,40,.7)!important;
+}
+.fx-redline::before{
+  content:'';position:absolute;inset:0;background:radial-gradient(ellipse at center,#ff2020 0%,transparent 65%);pointer-events:none;z-index:1;
+  animation:redline-bg 1.1s ease-in-out infinite;
+}
+.fx-redline .fx-rpm{
+  position:absolute;bottom:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,#ffd000 0%,#ff8000 40%,#ff2020 75%,#ff0000 100%);
+  transform-origin:left;animation:redline-rpm 1.1s ease-in-out infinite;
+  z-index:25;box-shadow:0 0 10px #ff2020;
+}
+
+/* ════════════════════════════════════════════════════
+   ☠ FX 10 — IGNITION (點火序列 — 從中心向外引燃)
+   ════════════════════════════════════════════════════ */
+@keyframes ignite-burst{
+  0%   {transform:scale(0);opacity:0}
+  20%  {opacity:1}
+  100% {transform:scale(8);opacity:0}
+}
+@keyframes ignite-flash{
+  0%   {opacity:0}
+  10%  {opacity:.9}
+  100% {opacity:0}
+}
+.fx-ignite:hover .fx-burst{animation:ignite-burst .9s ease-out}
+.fx-ignite:hover .fx-iflash{animation:ignite-flash .35s ease-out}
+.fx-ignite .fx-burst{
+  position:absolute;top:50%;left:50%;width:60px;height:60px;
+  margin:-30px 0 0 -30px;border-radius:50%;pointer-events:none;z-index:18;
+  background:radial-gradient(circle,#fff 0%,#ffd060 25%,var(--s2-accent) 50%,transparent 70%);
+  opacity:0;mix-blend-mode:screen;
+}
+.fx-ignite .fx-iflash{
+  position:absolute;inset:0;background:#fff;opacity:0;
+  pointer-events:none;z-index:17;mix-blend-mode:overlay;
+}
+
+/* ════════════════════════════════════════════════════
+   ☠ FX 11 — SHOCKWAVE (按按鈕後衝擊波從按鈕擴散)
+   ════════════════════════════════════════════════════ */
+@keyframes shockwave{
+  0%   {transform:translate(-50%,-50%) scale(0);opacity:1;border-width:3px}
+  100% {transform:translate(-50%,-50%) scale(20);opacity:0;border-width:0px}
+}
+.fx-shock .seg-detail-btn{position:relative;overflow:visible}
+.fx-shock .fx-wave{
+  position:absolute;bottom:25px;left:50%;width:30px;height:30px;
+  border:3px solid var(--s2-accent);border-radius:50%;pointer-events:none;
+  transform:translate(-50%,-50%) scale(0);opacity:0;z-index:25;
+}
+.fx-shock:hover .fx-wave{animation:shockwave .9s ease-out}
+.fx-shock:hover .fx-wave:nth-child(2){animation-delay:.15s}
+.fx-shock:hover .fx-wave:nth-child(3){animation-delay:.3s}
+
+/* ════════════════════════════════════════════════════
+   ☠ FX 12 — KERS RECHARGE (頂部能量條從左衝到右)
+   ════════════════════════════════════════════════════ */
+@keyframes kers-fill{
+  0%  {width:0%}
+  85% {width:100%}
+  100%{width:100%}
+}
+@keyframes kers-flash{
+  0%,85%{opacity:0}
+  90%   {opacity:1;background:#fff}
+  100%  {opacity:0}
+}
+.fx-kers .fx-kbar{
+  position:absolute;top:2px;left:0;height:3px;width:0%;z-index:25;
+  background:linear-gradient(90deg,#00ffaa,#00ddff,#ff00ff,#ffd000);
+  filter:drop-shadow(0 0 6px #00ddff);
+  animation:kers-fill 3.2s ease-out infinite;
+}
+.fx-kers .fx-kflash{
+  position:absolute;top:0;left:0;right:0;height:5px;opacity:0;z-index:26;
+  animation:kers-flash 3.2s linear infinite;
+  filter:blur(2px);
+}
+
+/* ════════════════════════════════════════════════════
+   ☠ FX 13 — TIRE SMOKE (底部上升白煙)
+   ════════════════════════════════════════════════════ */
+@keyframes smoke{
+  0%   {transform:translateY(0) scale(.4);opacity:0}
+  20%  {opacity:.45}
+  100% {transform:translateY(-180px) scale(2.5);opacity:0}
+}
+.fx-smoke .fx-puff{
+  position:absolute;bottom:-10px;width:40px;height:40px;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,255,255,.7),rgba(255,200,150,.2) 60%,transparent);
+  filter:blur(8px);pointer-events:none;z-index:13;
+  animation:smoke 2.4s ease-out infinite;
+}
+.fx-smoke .fx-puff:nth-child(1){left:10%;animation-delay:0s}
+.fx-smoke .fx-puff:nth-child(2){left:30%;animation-delay:.4s}
+.fx-smoke .fx-puff:nth-child(3){left:55%;animation-delay:.8s}
+.fx-smoke .fx-puff:nth-child(4){left:75%;animation-delay:.2s}
+.fx-smoke .fx-puff:nth-child(5){left:90%;animation-delay:1.2s}
+
+/* ════════════════════════════════════════════════════
+   ☠ FX 14 — CYBER GRID HORIZON (透視網格地平線往前衝)
+   ════════════════════════════════════════════════════ */
+@keyframes grid-rush{
+  0%  {background-position:0 0}
+  100%{background-position:0 80px}
+}
+.fx-cyber{position:relative;overflow:hidden}
+.fx-cyber .fx-horizon{
+  position:absolute;left:0;right:0;bottom:0;height:60%;z-index:8;
+  pointer-events:none;perspective:200px;perspective-origin:center top;
+  opacity:.5;
+}
+.fx-cyber .fx-horizon::before{
+  content:'';position:absolute;inset:0;
+  background:
+    linear-gradient(90deg,var(--s2-accent) 1px,transparent 1px) 0 0/40px 40px,
+    linear-gradient(0deg,var(--s2-accent) 1px,transparent 1px) 0 0/40px 40px;
+  transform:rotateX(70deg);transform-origin:center top;
+  filter:drop-shadow(0 0 4px var(--s2-accent));
+  animation:grid-rush 1.5s linear infinite;
+  -webkit-mask:linear-gradient(180deg,transparent,#000 80%);
+          mask:linear-gradient(180deg,transparent,#000 80%);
+}
+
+/* ════════════════════════════════════════════════════
+   ☠ FX 15 — TYPHOON MODE (全部一起來 · 終極形態)
+   ════════════════════════════════════════════════════ */
+.fx-typhoon{
+  animation:redline-border 1.4s ease-in-out infinite;
+  border-color:rgba(255,40,40,.5)!important;
+}
+.fx-typhoon .fx-particle{
+  position:absolute;left:0;height:1px;pointer-events:none;z-index:14;
+  background:linear-gradient(90deg,transparent,#fff,var(--s2-accent),transparent);
+  filter:drop-shadow(0 0 4px var(--s2-accent)) drop-shadow(0 0 8px var(--s2-accent));
+  animation:turbo-particle 1.4s linear infinite;
+}
+.fx-typhoon .fx-particle:nth-child(1){top:15%;width:40%;animation-delay:0s}
+.fx-typhoon .fx-particle:nth-child(2){top:35%;width:55%;animation-delay:.25s;height:2px}
+.fx-typhoon .fx-particle:nth-child(3){top:52%;width:30%;animation-delay:.6s}
+.fx-typhoon .fx-particle:nth-child(4){top:68%;width:60%;animation-delay:.4s;height:2px}
+.fx-typhoon .fx-particle:nth-child(5){top:82%;width:45%;animation-delay:.85s}
+.fx-typhoon .fx-particle:nth-child(6){top:25%;width:35%;animation-delay:1.05s;height:2px}
+.fx-typhoon .fx-horizon{
+  position:absolute;left:0;right:0;bottom:0;height:60%;z-index:8;
+  pointer-events:none;perspective:200px;perspective-origin:center top;opacity:.4;
+}
+.fx-typhoon .fx-horizon::before{
+  content:'';position:absolute;inset:0;
+  background:
+    linear-gradient(90deg,var(--s2-accent) 1px,transparent 1px) 0 0/40px 40px,
+    linear-gradient(0deg,var(--s2-accent) 1px,transparent 1px) 0 0/40px 40px;
+  transform:rotateX(70deg);transform-origin:center top;
+  filter:drop-shadow(0 0 4px var(--s2-accent));
+  animation:grid-rush 1.2s linear infinite;
+  -webkit-mask:linear-gradient(180deg,transparent,#000 80%);mask:linear-gradient(180deg,transparent,#000 80%);
+}
+.fx-typhoon .fx-kbar{
+  position:absolute;top:2px;left:0;height:3px;width:0%;z-index:25;
+  background:linear-gradient(90deg,#00ffaa,#00ddff,#ff00ff,#ffd000);
+  filter:drop-shadow(0 0 6px #00ddff);
+  animation:kers-fill 2.6s ease-out infinite;
+}
+.fx-typhoon .fx-rpm{
+  position:absolute;bottom:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,#ffd000,#ff8000 40%,#ff2020 75%,#ff0000);
+  transform-origin:left;animation:redline-rpm 1.4s ease-in-out infinite;
+  z-index:25;box-shadow:0 0 10px #ff2020;
+}
+.fx-typhoon .s2-best-time{position:relative;animation:glitch-main 3s infinite}
+.fx-typhoon .s2-best-time::before,
+.fx-typhoon .s2-best-time::after{content:attr(data-text);position:absolute;top:0;left:0;width:100%;pointer-events:none}
+.fx-typhoon .s2-best-time::before{color:#ff0040;animation:glitch-r 3s infinite;mix-blend-mode:screen}
+.fx-typhoon .s2-best-time::after{color:#00ffff;animation:glitch-g 3s infinite;mix-blend-mode:screen}
+
+.section-title{
+  grid-column:1/-1;
+  font-size:11px;letter-spacing:4px;text-transform:uppercase;
+  color:rgba(255,80,40,.75);margin:24px 0 -10px;text-align:center;
+  border-top:1px solid rgba(255,80,40,.2);padding-top:24px;font-weight:800;
+}
+</style>
+</head>
+<body>
+
+<h1>⬛ F1 CARD FX · BRUTAL EDITION ⬛</h1>
+<div class="subtitle">⚠ TURBO · GLITCH · REDLINE · SHOCKWAVE · TYPHOON ⚠</div>
+
+<div class="demo-row">
+
+  <div class="section-title">▼ 06 — 11 · 單發狂暴特效</div>
+
+  <!-- 06 DRS BOOST -->
+  <div>
+    <div class="demo-num">06</div>
+    <div class="demo-label">DRS BOOST</div>
+    <div class="demo-hint">⤷ Hover 整張卡 jolt 加速</div>
+    <div class="s2-card fx-drs">
+      <div class="stripe"></div><div class="leftbar"></div>
+      <div class="s2-hd"><span class="s2-num">SEG 01</span><span class="s2-kom-hd"><b>+12:06</b> TO KOM</span><span class="s2-type-tag">CLIMB</span></div>
+      <div class="s2-namblk"><div class="s2-name-zh">風櫃嘴</div></div>
+      <div class="s2-timblk">
+        <div class="s2-best-time">28:29</div><div class="s2-time-lbl">BEST TIME</div>
+        <div class="s2-status-block"><div class="s2-status-line">⚡ RISING</div><div class="s2-status-sub">96% OF PEAK</div></div>
+      </div>
+      <div class="s2-prow"><div class="s2-pc"><div class="s2-pv" style="color:#e87c1a">250<span class="unit">W</span></div><div class="s2-pl">AVG POWER</div></div><div class="s2-pc"><div class="s2-pv">3.1<span class="unit">W/KG</span></div><div class="s2-pl">W / KG</div></div></div>
+      <div class="s2-brow"><div class="s2-bc"><div class="s2-bv" style="color:#ff6a6a">−7W</div><div class="s2-bl">ALL-TIME AVG</div></div><div class="s2-bc"><div class="s2-bv" style="color:#f0c040">+04:20</div><div class="s2-bl">LAST vs PR</div></div></div>
+      <div class="s2-foot-modal"><button class="seg-detail-btn">▶ REVIEW ATTEMPT (8)</button></div>
+    </div>
+  </div>
+
+  <!-- 07 TURBO PARTICLE -->
+  <div>
+    <div class="demo-num">07</div>
+    <div class="demo-label">TURBO PARTICLE</div>
+    <div class="demo-hint">⤷ 常態粒子噴流穿過</div>
+    <div class="s2-card fx-turbo">
+      <div class="stripe"></div><div class="leftbar"></div>
+      <div class="fx-particle"></div><div class="fx-particle"></div><div class="fx-particle"></div><div class="fx-particle"></div><div class="fx-particle"></div><div class="fx-particle"></div><div class="fx-particle"></div>
+      <div class="s2-hd"><span class="s2-num">SEG 01</span><span class="s2-kom-hd"><b>+12:06</b> TO KOM</span><span class="s2-type-tag">CLIMB</span></div>
+      <div class="s2-namblk"><div class="s2-name-zh">風櫃嘴</div></div>
+      <div class="s2-timblk">
+        <div class="s2-best-time">28:29</div><div class="s2-time-lbl">BEST TIME</div>
+        <div class="s2-status-block"><div class="s2-status-line">⚡ RISING</div><div class="s2-status-sub">96% OF PEAK</div></div>
+      </div>
+      <div class="s2-prow"><div class="s2-pc"><div class="s2-pv" style="color:#e87c1a">250<span class="unit">W</span></div><div class="s2-pl">AVG POWER</div></div><div class="s2-pc"><div class="s2-pv">3.1<span class="unit">W/KG</span></div><div class="s2-pl">W / KG</div></div></div>
+      <div class="s2-brow"><div class="s2-bc"><div class="s2-bv" style="color:#ff6a6a">−7W</div><div class="s2-bl">ALL-TIME AVG</div></div><div class="s2-bc"><div class="s2-bv" style="color:#f0c040">+04:20</div><div class="s2-bl">LAST vs PR</div></div></div>
+      <div class="s2-foot-modal"><button class="seg-detail-btn">▶ REVIEW ATTEMPT (8)</button></div>
+    </div>
+  </div>
+
+  <!-- 08 GLITCH -->
+  <div>
+    <div class="demo-num">08</div>
+    <div class="demo-label">RGB GLITCH</div>
+    <div class="demo-hint">⤷ 時間數字 chroma split 故障</div>
+    <div class="s2-card fx-glitch">
+      <div class="stripe"></div><div class="leftbar"></div>
+      <div class="fx-flash"></div>
+      <div class="s2-hd"><span class="s2-num">SEG 01</span><span class="s2-kom-hd"><b>+12:06</b> TO KOM</span><span class="s2-type-tag">CLIMB</span></div>
+      <div class="s2-namblk"><div class="s2-name-zh">風櫃嘴</div></div>
+      <div class="s2-timblk">
+        <div class="s2-best-time" data-text="28:29">28:29</div><div class="s2-time-lbl">BEST TIME</div>
+        <div class="s2-status-block"><div class="s2-status-line">⚡ RISING</div><div class="s2-status-sub">96% OF PEAK</div></div>
+      </div>
+      <div class="s2-prow"><div class="s2-pc"><div class="s2-pv" style="color:#e87c1a">250<span class="unit">W</span></div><div class="s2-pl">AVG POWER</div></div><div class="s2-pc"><div class="s2-pv">3.1<span class="unit">W/KG</span></div><div class="s2-pl">W / KG</div></div></div>
+      <div class="s2-brow"><div class="s2-bc"><div class="s2-bv" style="color:#ff6a6a">−7W</div><div class="s2-bl">ALL-TIME AVG</div></div><div class="s2-bc"><div class="s2-bv" style="color:#f0c040">+04:20</div><div class="s2-bl">LAST vs PR</div></div></div>
+      <div class="s2-foot-modal"><button class="seg-detail-btn">▶ REVIEW ATTEMPT (8)</button></div>
+    </div>
+  </div>
+
+  <!-- 09 REDLINE -->
+  <div>
+    <div class="demo-num">09</div>
+    <div class="demo-label">REDLINE PULSE 🚨</div>
+    <div class="demo-hint">⤷ 轉速到頂的紅警呼吸</div>
+    <div class="s2-card fx-redline">
+      <div class="stripe"></div><div class="leftbar"></div>
+      <div class="fx-rpm"></div>
+      <div class="s2-hd"><span class="s2-num">SEG 01</span><span class="s2-kom-hd"><b>+12:06</b> TO KOM</span><span class="s2-type-tag" style="color:#ff4040;border-color:#ff4040">PEAK</span></div>
+      <div class="s2-namblk"><div class="s2-name-zh">風櫃嘴</div></div>
+      <div class="s2-timblk">
+        <div class="s2-best-time" style="color:#ffaaaa;text-shadow:0 0 20px #ff2020">28:29</div><div class="s2-time-lbl">BEST TIME</div>
+        <div class="s2-status-block"><div class="s2-status-line" style="color:#ff4040;border-color:#ff4040">🔥 PEAK FORM</div><div class="s2-status-sub" style="color:#ffaaaa">99% OF PEAK</div></div>
+      </div>
+      <div class="s2-prow"><div class="s2-pc"><div class="s2-pv" style="color:#ff4040">320<span class="unit">W</span></div><div class="s2-pl">AVG POWER</div></div><div class="s2-pc"><div class="s2-pv">4.1<span class="unit">W/KG</span></div><div class="s2-pl">W / KG</div></div></div>
+      <div class="s2-brow"><div class="s2-bc"><div class="s2-bv" style="color:#2ecc71">+12W</div><div class="s2-bl">ALL-TIME AVG</div></div><div class="s2-bc"><div class="s2-bv" style="color:#2ecc71">−00:18</div><div class="s2-bl">LAST vs PR</div></div></div>
+      <div class="s2-foot-modal"><button class="seg-detail-btn" style="background:linear-gradient(135deg,#ff2020,#ff6060 60%,#ffaaaa 100%)">▶ REVIEW ATTEMPT (8)</button></div>
+    </div>
+  </div>
+
+  <!-- 10 IGNITION -->
+  <div>
+    <div class="demo-num">10</div>
+    <div class="demo-label">IGNITION BURST</div>
+    <div class="demo-hint">⤷ Hover 從中心點火爆發</div>
+    <div class="s2-card fx-ignite">
+      <div class="stripe"></div><div class="leftbar"></div>
+      <div class="fx-iflash"></div>
+      <div class="fx-burst"></div>
+      <div class="s2-hd"><span class="s2-num">SEG 01</span><span class="s2-kom-hd"><b>+12:06</b> TO KOM</span><span class="s2-type-tag">CLIMB</span></div>
+      <div class="s2-namblk"><div class="s2-name-zh">風櫃嘴</div></div>
+      <div class="s2-timblk">
+        <div class="s2-best-time">28:29</div><div class="s2-time-lbl">BEST TIME</div>
+        <div class="s2-status-block"><div class="s2-status-line">⚡ RISING</div><div class="s2-status-sub">96% OF PEAK</div></div>
+      </div>
+      <div class="s2-prow"><div class="s2-pc"><div class="s2-pv" style="color:#e87c1a">250<span class="unit">W</span></div><div class="s2-pl">AVG POWER</div></div><div class="s2-pc"><div class="s2-pv">3.1<span class="unit">W/KG</span></div><div class="s2-pl">W / KG</div></div></div>
+      <div class="s2-brow"><div class="s2-bc"><div class="s2-bv" style="color:#ff6a6a">−7W</div><div class="s2-bl">ALL-TIME AVG</div></div><div class="s2-bc"><div class="s2-bv" style="color:#f0c040">+04:20</div><div class="s2-bl">LAST vs PR</div></div></div>
+      <div class="s2-foot-modal"><button class="seg-detail-btn">▶ REVIEW ATTEMPT (8)</button></div>
+    </div>
+  </div>
+
+  <!-- 11 SHOCKWAVE -->
+  <div>
+    <div class="demo-num">11</div>
+    <div class="demo-label">SHOCKWAVE</div>
+    <div class="demo-hint">⤷ Hover 衝擊波從按鈕擴散</div>
+    <div class="s2-card fx-shock">
+      <div class="stripe"></div><div class="leftbar"></div>
+      <div class="s2-hd"><span class="s2-num">SEG 01</span><span class="s2-kom-hd"><b>+12:06</b> TO KOM</span><span class="s2-type-tag">CLIMB</span></div>
+      <div class="s2-namblk"><div class="s2-name-zh">風櫃嘴</div></div>
+      <div class="s2-timblk">
+        <div class="s2-best-time">28:29</div><div class="s2-time-lbl">BEST TIME</div>
+        <div class="s2-status-block"><div class="s2-status-line">⚡ RISING</div><div class="s2-status-sub">96% OF PEAK</div></div>
+      </div>
+      <div class="s2-prow"><div class="s2-pc"><div class="s2-pv" style="color:#e87c1a">250<span class="unit">W</span></div><div class="s2-pl">AVG POWER</div></div><div class="s2-pc"><div class="s2-pv">3.1<span class="unit">W/KG</span></div><div class="s2-pl">W / KG</div></div></div>
+      <div class="s2-brow"><div class="s2-bc"><div class="s2-bv" style="color:#ff6a6a">−7W</div><div class="s2-bl">ALL-TIME AVG</div></div><div class="s2-bc"><div class="s2-bv" style="color:#f0c040">+04:20</div><div class="s2-bl">LAST vs PR</div></div></div>
+      <div class="s2-foot-modal">
+        <button class="seg-detail-btn">▶ REVIEW ATTEMPT (8)</button>
+        <div class="fx-wave"></div><div class="fx-wave"></div><div class="fx-wave"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title">▼ 12 — 14 · 進階能量系</div>
+
+  <!-- 12 KERS -->
+  <div>
+    <div class="demo-num">12</div>
+    <div class="demo-label">KERS RECHARGE ⚡</div>
+    <div class="demo-hint">⤷ 頂部能量條充滿後爆閃</div>
+    <div class="s2-card fx-kers">
+      <div class="stripe"></div><div class="leftbar"></div>
+      <div class="fx-kbar"></div><div class="fx-kflash"></div>
+      <div class="s2-hd"><span class="s2-num">SEG 01</span><span class="s2-kom-hd"><b>+12:06</b> TO KOM</span><span class="s2-type-tag">CLIMB</span></div>
+      <div class="s2-namblk"><div class="s2-name-zh">風櫃嘴</div></div>
+      <div class="s2-timblk">
+        <div class="s2-best-time">28:29</div><div class="s2-time-lbl">BEST TIME</div>
+        <div class="s2-status-block"><div class="s2-status-line">⚡ RISING</div><div class="s2-status-sub">96% OF PEAK</div></div>
+      </div>
+      <div class="s2-prow"><div class="s2-pc"><div class="s2-pv" style="color:#e87c1a">250<span class="unit">W</span></div><div class="s2-pl">AVG POWER</div></div><div class="s2-pc"><div class="s2-pv">3.1<span class="unit">W/KG</span></div><div class="s2-pl">W / KG</div></div></div>
+      <div class="s2-brow"><div class="s2-bc"><div class="s2-bv" style="color:#ff6a6a">−7W</div><div class="s2-bl">ALL-TIME AVG</div></div><div class="s2-bc"><div class="s2-bv" style="color:#f0c040">+04:20</div><div class="s2-bl">LAST vs PR</div></div></div>
+      <div class="s2-foot-modal"><button class="seg-detail-btn">▶ REVIEW ATTEMPT (8)</button></div>
+    </div>
+  </div>
+
+  <!-- 13 TIRE SMOKE -->
+  <div>
+    <div class="demo-num">13</div>
+    <div class="demo-label">TIRE SMOKE 💨</div>
+    <div class="demo-hint">⤷ 底部上升輪胎白煙</div>
+    <div class="s2-card fx-smoke">
+      <div class="stripe"></div><div class="leftbar"></div>
+      <div class="fx-puff"></div><div class="fx-puff"></div><div class="fx-puff"></div><div class="fx-puff"></div><div class="fx-puff"></div>
+      <div class="s2-hd"><span class="s2-num">SEG 01</span><span class="s2-kom-hd"><b>+12:06</b> TO KOM</span><span class="s2-type-tag">CLIMB</span></div>
+      <div class="s2-namblk"><div class="s2-name-zh">風櫃嘴</div></div>
+      <div class="s2-timblk">
+        <div class="s2-best-time">28:29</div><div class="s2-time-lbl">BEST TIME</div>
+        <div class="s2-status-block"><div class="s2-status-line">⚡ RISING</div><div class="s2-status-sub">96% OF PEAK</div></div>
+      </div>
+      <div class="s2-prow"><div class="s2-pc"><div class="s2-pv" style="color:#e87c1a">250<span class="unit">W</span></div><div class="s2-pl">AVG POWER</div></div><div class="s2-pc"><div class="s2-pv">3.1<span class="unit">W/KG</span></div><div class="s2-pl">W / KG</div></div></div>
+      <div class="s2-brow"><div class="s2-bc"><div class="s2-bv" style="color:#ff6a6a">−7W</div><div class="s2-bl">ALL-TIME AVG</div></div><div class="s2-bc"><div class="s2-bv" style="color:#f0c040">+04:20</div><div class="s2-bl">LAST vs PR</div></div></div>
+      <div class="s2-foot-modal"><button class="seg-detail-btn">▶ REVIEW ATTEMPT (8)</button></div>
+    </div>
+  </div>
+
+  <!-- 14 CYBER HORIZON -->
+  <div>
+    <div class="demo-num">14</div>
+    <div class="demo-label">CYBER HORIZON 🏁</div>
+    <div class="demo-hint">⤷ 透視地平線網格往前衝</div>
+    <div class="s2-card fx-cyber">
+      <div class="stripe"></div><div class="leftbar"></div>
+      <div class="fx-horizon"></div>
+      <div class="s2-hd"><span class="s2-num">SEG 01</span><span class="s2-kom-hd"><b>+12:06</b> TO KOM</span><span class="s2-type-tag">CLIMB</span></div>
+      <div class="s2-namblk"><div class="s2-name-zh">風櫃嘴</div></div>
+      <div class="s2-timblk">
+        <div class="s2-best-time">28:29</div><div class="s2-time-lbl">BEST TIME</div>
+        <div class="s2-status-block"><div class="s2-status-line">⚡ RISING</div><div class="s2-status-sub">96% OF PEAK</div></div>
+      </div>
+      <div class="s2-prow"><div class="s2-pc"><div class="s2-pv" style="color:#e87c1a">250<span class="unit">W</span></div><div class="s2-pl">AVG POWER</div></div><div class="s2-pc"><div class="s2-pv">3.1<span class="unit">W/KG</span></div><div class="s2-pl">W / KG</div></div></div>
+      <div class="s2-brow"><div class="s2-bc"><div class="s2-bv" style="color:#ff6a6a">−7W</div><div class="s2-bl">ALL-TIME AVG</div></div><div class="s2-bc"><div class="s2-bv" style="color:#f0c040">+04:20</div><div class="s2-bl">LAST vs PR</div></div></div>
+      <div class="s2-foot-modal"><button class="seg-detail-btn">▶ REVIEW ATTEMPT (8)</button></div>
+    </div>
+  </div>
+
+  <div class="section-title">⚠ 15 · TYPHOON MODE — 終極形態 ⚠</div>
+
+  <!-- 15 TYPHOON -->
+  <div style="grid-column:span 2">
+    <div class="demo-num" style="color:rgba(255,40,40,.35);font-size:48px">15</div>
+    <div class="demo-label" style="color:#ff4040;font-size:13px">⚡ TYPHOON MODE — 全特效同時開 ⚡</div>
+    <div class="demo-hint">⤷ Redline + Turbo Particles + Cyber Horizon + KERS + RPM bar + Glitch time</div>
+    <div class="s2-card fx-typhoon" style="--s2-accent:#ff4040;--s2-status-color:#ff4040">
+      <div class="stripe" style="background:linear-gradient(90deg,transparent,#ff4040 30%,#ffffff 50%,#ff4040 70%,transparent)"></div>
+      <div class="leftbar" style="background:#ff4040"></div>
+      <div class="fx-horizon"></div>
+      <div class="fx-particle"></div><div class="fx-particle"></div><div class="fx-particle"></div><div class="fx-particle"></div><div class="fx-particle"></div><div class="fx-particle"></div>
+      <div class="fx-kbar"></div>
+      <div class="fx-rpm"></div>
+      <div class="s2-hd"><span class="s2-num">SEG 01</span><span class="s2-kom-hd"><b>+12:06</b> TO KOM</span><span class="s2-type-tag" style="color:#ff4040;border-color:#ff4040">PEAK</span></div>
+      <div class="s2-namblk"><div class="s2-name-zh" style="text-shadow:0 0 20px rgba(255,40,40,.6)">風櫃嘴</div></div>
+      <div class="s2-timblk">
+        <div class="s2-best-time" data-text="28:29" style="color:#fff;text-shadow:0 0 30px rgba(255,40,40,.8)">28:29</div>
+        <div class="s2-time-lbl">BEST TIME</div>
+        <div class="s2-status-block">
+          <div class="s2-status-line" style="color:#ff4040;border-color:#ff4040">🔥 PEAK FORM</div>
+          <div class="s2-status-sub" style="color:rgba(255,170,170,.85)">99% OF PEAK · LIMIT BROKEN</div>
+        </div>
+      </div>
+      <div class="s2-prow">
+        <div class="s2-pc"><div class="s2-pv" style="color:#ff4040">320<span class="unit">W</span></div><div class="s2-pl">AVG POWER</div></div>
+        <div class="s2-pc"><div class="s2-pv">4.1<span class="unit">W/KG</span></div><div class="s2-pl">W / KG</div></div>
+      </div>
+      <div class="s2-brow">
+        <div class="s2-bc"><div class="s2-bv" style="color:#2ecc71">+12W</div><div class="s2-bl">ALL-TIME AVG</div></div>
+        <div class="s2-bc"><div class="s2-bv" style="color:#2ecc71">−00:18</div><div class="s2-bl">LAST vs PR</div></div>
+      </div>
+      <div class="s2-foot-modal">
+        <button class="seg-detail-btn" style="background:linear-gradient(135deg,#ff2020,#ff6060 60%,#ffaaaa 100%)">▶ REVIEW ATTEMPT (8)</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<p style="text-align:center;margin-top:50px;font-size:10px;letter-spacing:2px;color:rgba(255,40,40,.4);text-transform:uppercase">
+  ⚠ caution · these effects may cause excitement ⚠
+</p>
+
+</body>
+</html>

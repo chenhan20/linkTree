@@ -5,9 +5,6 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Steve Chuang · Strava</title>
 <link rel="icon" type="image/png" href="docs/strava_icon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Barlow+Condensed:ital,wght@0,400;0,600;0,700;1,700;1,800&family=Orbitron:wght@400;600;700;900&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0a0408;color:#ddd}
@@ -163,6 +160,148 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
   border-bottom:1px solid rgba(252,76,2,.15);
 }
 .section-title .muted{color:rgba(252,76,2,.4)}
+.section-title{display:flex;align-items:center;gap:0}
+.section-title-text{flex:1}
+/* ── ITT level info button ── */
+.itt-info-btn{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:18px;height:18px;border-radius:50%;flex-shrink:0;
+  border:1px solid rgba(232,124,26,.45);color:rgba(232,124,26,.75);
+  font-size:10px;font-weight:900;font-family:monospace;
+  cursor:pointer;background:transparent;transition:all .2s;
+  margin-left:10px;line-height:1;letter-spacing:0;
+  -webkit-tap-highlight-color:transparent;
+}
+.itt-info-btn:hover,.itt-info-btn.active{background:rgba(232,124,26,.18);color:#e87c1a;border-color:#e87c1a;box-shadow:0 0 8px rgba(232,124,26,.35)}
+/* ── ITT level popup ── */
+.itt-level-popup{
+  position:fixed;z-index:9990;
+  background:rgba(8,4,2,.97);border:1px solid rgba(232,124,26,.55);
+  border-radius:10px;padding:10px;
+  box-shadow:0 0 40px rgba(232,124,26,.3),0 0 0 1px rgba(232,124,26,.12);
+  opacity:0;pointer-events:none;
+  transition:opacity .2s ease,transform .2s ease;
+  transform:scale(.94) translateY(6px);
+  max-width:calc(100vw - 16px);
+  -webkit-overflow-scrolling:touch;
+}
+@media(min-width:1000px){.itt-level-popup{zoom:1.25}}
+.itt-level-popup.open{opacity:1;pointer-events:auto;transform:scale(1) translateY(0)}
+.itt-level-popup img{display:block;max-width:100%;width:100%;border-radius:6px;}
+.itt-level-popup-close{
+  position:absolute;top:6px;right:8px;
+  background:transparent;border:none;color:rgba(232,124,26,.6);
+  font-size:14px;cursor:pointer;line-height:1;padding:2px 4px;
+}
+.itt-level-popup-close:hover{color:#e87c1a}
+/* ── ITT popup inner ── */
+.ilp{font-family:system-ui,sans-serif;color:#ccc;padding:0 2px 12px;max-width:660px}
+.ilp-title{font-family:monospace;font-size:14px;font-weight:700;color:#e87c1a;letter-spacing:2px;margin-bottom:2px}
+.ilp-sub{font-size:9px;letter-spacing:3px;color:rgba(232,124,26,.45);text-transform:uppercase;margin-bottom:14px}
+.ilp-sec{margin-bottom:16px}
+.ilp-sh{font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:#e87c1a;border-bottom:1px solid rgba(232,124,26,.2);padding-bottom:5px;margin-bottom:10px}
+.ilp-tbl{width:100%;border-collapse:collapse;font-size:11px}
+.ilp-tbl th{font-size:8px;letter-spacing:1px;text-transform:uppercase;color:#555;padding:3px 5px;border-bottom:1px solid rgba(255,255,255,.07);text-align:left;white-space:nowrap}
+.ilp-tbl td{padding:5px 5px;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:middle;line-height:1.4}
+.ilp-tbl tr:hover td{background:rgba(255,255,255,.03)}
+.ilp-pri{font-family:monospace;font-size:9px;color:#666;text-align:center}
+.ilp-cond{font-size:10px;color:#888}
+.ilp-ex{font-size:11px;font-weight:700;white-space:nowrap;color:#fff}
+.ilp-notes{font-size:10px;color:#777;line-height:1.75;padding:8px 10px;background:rgba(255,255,255,.03);border-radius:5px;border-left:2px solid rgba(232,124,26,.3);margin-top:8px}
+.ilp-notes b{color:rgba(232,124,26,.8)}
+.ilp-step{background:rgba(232,124,26,.04);border:1px solid rgba(232,124,26,.15);border-radius:6px;padding:11px 13px;margin-bottom:10px}
+.ilp-step-n{font-family:monospace;font-size:8px;color:#e87c1a;letter-spacing:2px;margin-bottom:3px}
+.ilp-step-t{font-size:13px;font-weight:700;color:#fff;margin-bottom:7px}
+.ilp-b{font-size:11px;color:#aaa;line-height:1.85;padding-left:2px}
+.ilp-b b{color:#e87c1a}.ilp-b em{color:#fff;font-style:normal}
+.ilp-formula{background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.08);border-radius:5px;padding:10px 13px;margin:7px 0 4px;font-size:11px;line-height:2}
+.ilp-formula .fn{font-family:monospace;color:#e87c1a;font-size:10px}
+.ilp-formula .fv{color:#aaa;font-size:10px}
+.ilp-formula .fr{color:#fff;font-weight:700}
+.ilp-bench{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}
+.ilp-bbox{background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.07);border-radius:5px;padding:7px 8px;text-align:center}
+.ilp-btag{font-size:9px;font-weight:700;letter-spacing:1px;color:#e87c1a;margin-bottom:3px}
+.ilp-bdesc{font-size:9px;color:#666;line-height:1.4}
+.ilp-flow{display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin-top:6px}
+.ilp-fnode{background:rgba(232,124,26,.08);border:1px solid rgba(232,124,26,.25);border-radius:4px;padding:4px 8px;font-size:10px;font-weight:700;color:#e87c1a;text-align:center;line-height:1.3}
+.ilp-fnode small{display:block;font-size:8px;color:rgba(232,124,26,.55);font-weight:400}
+.ilp-farr{color:rgba(255,255,255,.2);font-size:11px}
+.ilp-eg{background:rgba(74,180,255,.04);border:1px solid rgba(74,180,255,.2);border-radius:6px;padding:11px 13px}
+.ilp-eg-sh{font-size:9px;letter-spacing:2px;color:#4ab4ff;text-transform:uppercase;font-weight:700;margin-bottom:8px}
+.ilp-eg-row{display:flex;justify-content:space-between;gap:12px;padding:3px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:11px}
+.ilp-eg-lbl{color:#888}.ilp-eg-val{color:#fff;font-weight:600;text-align:right}
+.ilp-eg-tbl{width:100%;border-collapse:collapse;font-size:11px;margin-top:10px}
+.ilp-eg-tbl th{font-size:8px;color:#555;letter-spacing:1px;text-transform:uppercase;padding:3px 6px;border-bottom:1px solid rgba(255,255,255,.07);text-align:left}
+.ilp-eg-tbl td{padding:5px 6px;color:#aaa;border-bottom:1px solid rgba(255,255,255,.04)}
+.ilp-eg-tbl td:last-child{color:#e87c1a;font-weight:700;text-align:right}
+.ilp-result{margin-top:10px;background:rgba(232,124,26,.1);border:1px solid rgba(232,124,26,.4);border-radius:6px;padding:10px;text-align:center}
+.ilp-result-s{font-size:18px;font-weight:800;color:#e87c1a;letter-spacing:2px}
+.ilp-result-p{font-size:11px;color:rgba(232,124,26,.7);letter-spacing:1.5px;margin-top:2px}
+.ilp-result-r{font-size:10px;color:#666;margin-top:3px}
+.ilp-panel{font-family:system-ui,sans-serif;color:#ccc;padding:0 2px 8px;display:none}
+.ilp-panel-title{font-family:monospace;font-size:11px;color:#e87c1a;letter-spacing:2px;margin-bottom:12px;padding-bottom:7px;border-bottom:1px solid rgba(232,124,26,.22)}
+/* ── ITT popup RWD (≤ 600px phone) ── */
+@media(max-width:600px){
+  .itt-level-popup{padding:8px 6px}
+  .ilp{padding:0 0 8px}
+  .ilp-panel{padding:0 0 6px}
+  .ilp-panel-title{font-size:10px;letter-spacing:1.5px;margin-bottom:8px;padding-bottom:5px}
+  /* status table — let th wrap, tighten padding */
+  .ilp-tbl{font-size:10px;table-layout:fixed}
+  .ilp-tbl th{font-size:8px;letter-spacing:.5px;padding:3px 3px;white-space:normal;line-height:1.3}
+  .ilp-tbl td{padding:5px 3px;font-size:10px;line-height:1.35;word-break:break-word}
+  .ilp-tbl th:nth-child(1),.ilp-tbl td:nth-child(1){width:18px;text-align:center}
+  .ilp-tbl th:nth-child(2),.ilp-tbl td:nth-child(2){width:24px;text-align:center;font-size:14px}
+  .ilp-tbl th:nth-child(3),.ilp-tbl td:nth-child(3){width:24%}
+  .ilp-tbl th:nth-child(4),.ilp-tbl td:nth-child(4){width:auto}
+  .ilp-tbl th:nth-child(5),.ilp-tbl td:nth-child(5){width:22%;text-align:right}
+  .ilp-pri{font-size:9px}
+  .ilp-cond{font-size:9px;line-height:1.4}
+  .ilp-ex{font-size:9px;white-space:normal}
+  .ilp-ex small{font-size:7.5px;letter-spacing:.5px}
+  /* steps */
+  .ilp-step{padding:9px 10px;margin-bottom:8px}
+  .ilp-step-t{font-size:12px}
+  .ilp-b{font-size:10px;line-height:1.7}
+  .ilp-formula{padding:8px 10px;font-size:10px;line-height:1.85;overflow-x:auto}
+  .ilp-formula .fn,.ilp-formula .fv{font-size:9px}
+  /* benchmark grid → vertical stack on narrow */
+  .ilp-bench{grid-template-columns:1fr;gap:5px}
+  .ilp-bbox{padding:6px 8px;display:flex;align-items:center;gap:8px;text-align:left}
+  .ilp-btag{margin-bottom:0;flex-shrink:0;width:84px}
+  .ilp-bdesc{font-size:9px;text-align:left}
+  /* flow nodes */
+  .ilp-flow{gap:4px}
+  .ilp-fnode{padding:3px 6px;font-size:9px}
+  .ilp-fnode small{font-size:7.5px}
+  .ilp-farr{font-size:10px}
+  /* example panel */
+  .ilp-eg{padding:9px 10px}
+  .ilp-eg-row{font-size:10px;gap:8px;flex-wrap:wrap}
+  .ilp-eg-lbl,.ilp-eg-val{font-size:10px}
+  .ilp-eg-tbl{font-size:10px}
+  .ilp-eg-tbl th{font-size:7.5px;padding:3px 4px}
+  .ilp-eg-tbl td{padding:4px;font-size:10px}
+  .ilp-result{padding:8px}
+  .ilp-result-s{font-size:15px}
+  .ilp-notes{font-size:9px;padding:7px 9px;line-height:1.6}
+  /* tabs themselves */
+  .itt-tabs{gap:6px}
+  .itt-tab-btn{padding:7px 12px;font-size:12px;letter-spacing:.5px}
+}
+.itt-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1.2rem}
+.itt-tab-btn{
+  display:flex;align-items:center;gap:7px;
+  padding:10px 18px;border-radius:22px;
+  font-family:system-ui,sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;
+  border:1px solid rgba(232,124,26,.35);color:rgba(232,124,26,.8);
+  background:rgba(232,124,26,.06);cursor:pointer;
+  transition:all .2s;-webkit-tap-highlight-color:transparent;
+}
+.itt-tab-btn:hover,.itt-tab-btn.active{
+  background:rgba(232,124,26,.2);color:#e87c1a;border-color:#e87c1a;
+  box-shadow:0 0 12px rgba(232,124,26,.25);
+}
 
 /* ── ITT segments — F1 CARD ── */
 .s2-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:24px;margin-bottom:3rem;align-items:start}
@@ -193,11 +332,16 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
   border-bottom:1px solid rgba(255,255,255,.05);
 }
 .s2-num{
-  font-family:'Orbitron',monospace;font-size:9px;font-weight:700;
+  font-family:monospace;font-size:9px;font-weight:700;
   color:rgba(255,255,255,.28);letter-spacing:2.5px;
 }
+.s2-kom-hd{
+  font-family:monospace;font-size:9px;font-weight:700;
+  color:rgba(255,255,255,.28);letter-spacing:1.5px;
+  margin-left:8px;
+}
 .s2-type-tag{
-  font-family:'Rajdhani',sans-serif;font-size:9px;font-weight:800;letter-spacing:2px;
+  font-family:system-ui,sans-serif;font-size:9px;font-weight:800;letter-spacing:2px;
   color:var(--s2-accent,#e87c1a);text-transform:uppercase;
   border:1px solid rgba(232,124,26,.3);border-radius:1px;
   padding:2px 7px;background:rgba(0,0,0,.5);
@@ -209,7 +353,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
   border-bottom:1px solid rgba(255,255,255,.05);
 }
 .s2-name-zh{
-  font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;
+  font-family:system-ui,sans-serif;font-size:22px;font-weight:700;
   color:#fff;letter-spacing:3px;line-height:1;
   text-shadow:0 0 24px rgba(232,124,26,.2);
 }
@@ -220,7 +364,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
   border-bottom:1px solid rgba(255,255,255,.05);
 }
 .s2-best-time{
-  font-family:'Orbitron',monospace;font-size:36px;font-weight:700;line-height:1;
+  font-family:monospace;font-size:36px;font-weight:700;line-height:1;
   color:#fff;letter-spacing:2px;
   text-shadow:0 0 30px rgba(232,124,26,.3);
 }
@@ -229,23 +373,29 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
   text-shadow:0 0 30px rgba(232,124,26,.8),0 0 60px rgba(232,124,26,.35);
 }
 .s2-time-lbl{
-  font-family:'Rajdhani',sans-serif;font-size:9px;font-weight:700;
+  font-family:system-ui,sans-serif;font-size:9px;font-weight:700;
   color:rgba(255,255,255,.25);letter-spacing:2px;text-transform:uppercase;
   margin-top:3px;margin-bottom:8px;
 }
 .s2-gap-line{
-  font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;
+  font-family:system-ui,sans-serif;font-size:12px;font-weight:700;
   letter-spacing:1px;color:rgba(255,255,255,.3);
   margin-bottom:6px;
 }
 .s2-gap-line b{color:#4ab4ff;font-variant-numeric:tabular-nums}
+.s2-status-block{display:flex;flex-direction:column;gap:3px}
 .s2-status-line{
   display:inline-block;
-  font-family:'Rajdhani',sans-serif;font-size:10px;font-weight:800;
+  font-family:system-ui,sans-serif;font-size:11px;font-weight:800;
   letter-spacing:2px;text-transform:uppercase;
   color:var(--s2-status-color,#e87c1a);
   border-left:2px solid var(--s2-status-color,#e87c1a);
   padding-left:6px;
+}
+.s2-status-sub{
+  font-family:system-ui,sans-serif;font-size:11px;font-weight:700;
+  letter-spacing:1px;text-transform:uppercase;
+  color:rgba(255,255,255,.6);padding-left:8px;
 }
 
 /* ── POWER ROW ── */
@@ -259,7 +409,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 }
 .s2-pc:last-child{border-right:none}
 .s2-pv{
-  font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;
+  font-family:system-ui,sans-serif;font-size:22px;font-weight:700;
   line-height:1;color:#fff;display:flex;align-items:baseline;gap:3px;
 }
 .s2-pv .unit{font-size:11px;color:rgba(255,255,255,.35);font-weight:400}
@@ -276,7 +426,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 }
 .s2-bc:last-child{border-right:none}
 .s2-bv{
-  font-family:'Orbitron',monospace;font-size:14px;font-weight:700;line-height:1;
+  font-family:monospace;font-size:14px;font-weight:700;line-height:1;
 }
 .s2-bl{font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.22);margin-top:2px}
 
@@ -294,7 +444,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
   position:relative;overflow:hidden;width:100%;
   display:flex;align-items:center;justify-content:center;gap:7px;
   padding:9px 0;
-  font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:800;letter-spacing:1.5px;
+  font-family:system-ui,sans-serif;font-size:13px;font-weight:800;letter-spacing:1.5px;
   color:#0a0604;background:linear-gradient(135deg,#e87c1a,#ff9a30 60%,#ffcd80 100%);
   border:none;border-radius:4px;cursor:pointer;
   animation:s2-btn-pulse 2s ease-in-out infinite;
@@ -306,6 +456,107 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
   animation:s2-btn-shine 2.8s ease-in-out infinite;pointer-events:none;
 }
 .seg-detail-btn:hover{filter:brightness(1.15)}
+
+/* ════════════════════════════════════════════════════
+   TYPHOON MODE — F1 brutal fx (always-on, all cards)
+   + IGNITION BURST on hover
+   ════════════════════════════════════════════════════ */
+.s2-card{ animation:typh-border 2.4s ease-in-out infinite; }
+@keyframes typh-border{
+  0%,100%{box-shadow:0 0 0 1px rgba(0,0,0,.9),0 0 24px rgba(255,255,255,.04) inset,0 0 24px color-mix(in srgb,var(--s2-accent) 40%,transparent),0 0 60px color-mix(in srgb,var(--s2-accent) 15%,transparent)}
+  50%    {box-shadow:0 0 0 1px rgba(0,0,0,.9),0 0 28px rgba(255,255,255,.06) inset,0 0 48px color-mix(in srgb,var(--s2-accent) 70%,transparent),0 0 120px color-mix(in srgb,var(--s2-accent) 30%,transparent)}
+}
+/* ensure inner blocks sit above all fx layers */
+.s2-card .s2-hd,.s2-card .s2-namblk,.s2-card .s2-timblk,
+.s2-card .s2-prow,.s2-card .s2-brow,.s2-card .s2-foot-modal{
+  position:relative;z-index:22;
+}
+/* particle streaks across the card */
+@keyframes typh-particle{
+  0%  {transform:translateX(-10%) scaleX(.2);opacity:0}
+  20% {opacity:1}
+  80% {opacity:.8}
+  100%{transform:translateX(110%) scaleX(1.4);opacity:0}
+}
+.s2-fx-particle{
+  position:absolute;left:0;height:1px;pointer-events:none;z-index:14;
+  background:linear-gradient(90deg,transparent,#fff,var(--s2-accent),transparent);
+  filter:drop-shadow(0 0 4px var(--s2-accent)) drop-shadow(0 0 8px var(--s2-accent));
+  animation:typh-particle 1.6s linear infinite;
+}
+.s2-fx-particle:nth-child(1){top:15%;width:40%;animation-delay:0s}
+.s2-fx-particle:nth-child(2){top:35%;width:55%;animation-delay:.3s;height:2px}
+.s2-fx-particle:nth-child(3){top:52%;width:30%;animation-delay:.7s}
+.s2-fx-particle:nth-child(4){top:68%;width:60%;animation-delay:.5s;height:2px}
+.s2-fx-particle:nth-child(5){top:82%;width:45%;animation-delay:.9s}
+.s2-fx-particle:nth-child(6){top:25%;width:35%;animation-delay:1.1s;height:2px}
+/* perspective cyber horizon grid */
+@keyframes typh-grid-rush{0%{background-position:0 0}100%{background-position:0 80px}}
+.s2-fx-horizon{
+  position:absolute;left:0;right:0;bottom:0;height:60%;z-index:8;
+  pointer-events:none;perspective:200px;perspective-origin:center top;opacity:.4;
+}
+.s2-fx-horizon::before{
+  content:'';position:absolute;inset:0;
+  background:
+    linear-gradient(90deg,var(--s2-accent) 1px,transparent 1px) 0 0/40px 40px,
+    linear-gradient(0deg,var(--s2-accent) 1px,transparent 1px) 0 0/40px 40px;
+  transform:rotateX(70deg);transform-origin:center top;
+  filter:drop-shadow(0 0 4px var(--s2-accent));
+  animation:typh-grid-rush 1.5s linear infinite;
+  -webkit-mask:linear-gradient(180deg,transparent,#000 80%);
+          mask:linear-gradient(180deg,transparent,#000 80%);
+}
+/* KERS energy bar (top) */
+@keyframes typh-kers{0%{width:0%}85%{width:100%}100%{width:100%}}
+.s2-fx-kbar{
+  position:absolute;top:2px;left:0;height:3px;width:0%;z-index:25;
+  background:linear-gradient(90deg,#00ffaa,#00ddff,#ff00ff,#ffd000);
+  filter:drop-shadow(0 0 6px #00ddff);
+  animation:typh-kers 3.2s ease-out infinite;
+}
+/* RPM redline bar (bottom) */
+@keyframes typh-rpm{0%,100%{transform:scaleX(.5)}50%{transform:scaleX(1)}}
+.s2-fx-rpm{
+  position:absolute;bottom:0;left:0;right:0;height:3px;z-index:25;
+  background:linear-gradient(90deg,#ffd000 0%,#ff8000 40%,var(--s2-accent) 75%,#ff0000 100%);
+  transform-origin:left;animation:typh-rpm 2.4s ease-in-out infinite;
+  box-shadow:0 0 10px var(--s2-accent);
+}
+/* RGB glitch on best-time digits */
+@keyframes typh-glitch-main{0%,100%{transform:translate(0)}10%{transform:translate(-2px,1px)}20%{transform:translate(2px,-1px)}30%{transform:translate(0,0)}92%{transform:translate(-3px,2px)}95%{transform:translate(3px,-2px)}}
+@keyframes typh-glitch-r{0%,100%{transform:translate(0);opacity:0}10%{transform:translate(4px,-2px);opacity:.7}20%{transform:translate(-3px,2px);opacity:.5}30%{opacity:0}92%{transform:translate(5px,-1px);opacity:.8}}
+@keyframes typh-glitch-g{0%,100%{transform:translate(0);opacity:0}10%{transform:translate(-3px,2px);opacity:.7}20%{transform:translate(2px,-1px);opacity:.5}92%{transform:translate(-4px,1px);opacity:.8}}
+.s2-best-time{position:relative;animation:typh-glitch-main 3.5s infinite}
+.s2-best-time::before,.s2-best-time::after{
+  content:attr(data-text);position:absolute;top:0;left:0;width:100%;
+  pointer-events:none;
+}
+.s2-best-time::before{color:#ff0040;animation:typh-glitch-r 3.5s infinite;mix-blend-mode:screen}
+.s2-best-time::after{color:#00ffff;animation:typh-glitch-g 3.5s infinite;mix-blend-mode:screen}
+
+/* IGNITION BURST — hover only */
+@keyframes typh-ignite{0%{transform:scale(0);opacity:0}20%{opacity:1}100%{transform:scale(8);opacity:0}}
+@keyframes typh-iflash{0%{opacity:0}10%{opacity:.9}100%{opacity:0}}
+.s2-fx-burst{
+  position:absolute;top:50%;left:50%;width:60px;height:60px;
+  margin:-30px 0 0 -30px;border-radius:50%;pointer-events:none;z-index:18;
+  background:radial-gradient(circle,#fff 0%,#ffd060 25%,var(--s2-accent) 50%,transparent 70%);
+  opacity:0;mix-blend-mode:screen;
+}
+.s2-fx-iflash{
+  position:absolute;inset:0;background:#fff;opacity:0;
+  pointer-events:none;z-index:17;mix-blend-mode:overlay;
+}
+.s2-card:hover .s2-fx-burst{animation:typh-ignite .9s ease-out}
+.s2-card:hover .s2-fx-iflash{animation:typh-iflash .35s ease-out}
+
+/* respect reduced motion */
+@media (prefers-reduced-motion:reduce){
+  .s2-card,.s2-fx-particle,.s2-fx-horizon::before,.s2-fx-kbar,.s2-fx-rpm,.s2-best-time,.s2-best-time::before,.s2-best-time::after{animation:none!important}
+  .s2-fx-particle,.s2-fx-horizon,.s2-fx-kbar,.s2-fx-rpm,.s2-best-time::before,.s2-best-time::after{display:none!important}
+}
+
 /* segment modal */
 .seg-modal-overlay{
   position:fixed;inset:0;z-index:9999;
@@ -321,11 +572,88 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
   border:1.5px solid rgba(232,124,26,.55);border-radius:10px;
   padding:22px 22px 16px;
   box-shadow:0 0 0 1px rgba(232,124,26,.15),0 0 50px rgba(232,124,26,.35),inset 0 0 40px rgba(232,124,26,.04);
-  transform:scale(.5) rotate(-3deg);opacity:0;
-  transition:transform .45s cubic-bezier(.2,1.2,.3,1.05),opacity .3s ease;
+  opacity:0;
   display:flex;flex-direction:column;overflow:hidden;
 }
-.seg-modal-overlay.open .seg-modal{transform:scale(1) rotate(0);opacity:1}
+@keyframes seg-warp-in{
+  0%  {transform:scale(.02) translateZ(0);opacity:0;filter:blur(30px) brightness(3)}
+  25% {opacity:.5;filter:blur(20px) brightness(2.5)}
+  60% {transform:scale(1.15);opacity:1;filter:blur(2px) brightness(1.3)}
+  85% {transform:scale(.95);filter:blur(0) brightness(1.1)}
+  100%{transform:scale(1);opacity:1;filter:none}
+}
+@keyframes seg-warp-rays{
+  0%  {opacity:0;transform:translate(-50%,-50%) scale(0) rotate(0)}
+  40% {opacity:1}
+  100%{opacity:0;transform:translate(-50%,-50%) scale(8) rotate(180deg)}
+}
+@keyframes seg-hud-row{
+  0%  {opacity:0;transform:translateX(-12px);filter:blur(4px)}
+  100%{opacity:1;transform:translateX(0);filter:blur(0)}
+}
+@keyframes seg-scan-loop{
+  0%   {top:-2px;opacity:0}
+  8%   {opacity:1}
+  45%  {top:calc(100% - 1px);opacity:1}
+  50%  {top:calc(100% - 1px);opacity:0}
+  55%  {top:-2px;opacity:0}
+  62%  {opacity:.85}
+  95%  {top:calc(100% - 1px);opacity:.85}
+  100% {top:calc(100% - 1px);opacity:0}
+}
+@keyframes seg-scan-second{
+  0%,40%{top:100%;opacity:0}
+  48%   {opacity:.7}
+  90%   {top:-2px;opacity:.7}
+  100%  {top:-2px;opacity:0}
+}
+.seg-modal-overlay.open .seg-modal{animation:seg-warp-in .9s cubic-bezier(.18,1.3,.3,1) forwards}
+.seg-rays{
+  position:fixed;top:50%;left:50%;width:200px;height:200px;
+  transform:translate(-50%,-50%) scale(0);pointer-events:none;z-index:9998;opacity:0;
+  background:
+    conic-gradient(from 0deg,
+      transparent 0deg,#fff 5deg,transparent 12deg,
+      transparent 80deg,#e87c1a 85deg,transparent 92deg,
+      transparent 170deg,#fff 175deg,transparent 182deg,
+      transparent 260deg,#e87c1a 265deg,transparent 272deg,
+      transparent 360deg);
+  mix-blend-mode:screen;
+  filter:blur(2px) drop-shadow(0 0 20px #ffb060);
+}
+.seg-modal-overlay.open .seg-rays{animation:seg-warp-rays .8s ease-out}
+.seg-scanbar{
+  position:absolute;left:0;right:0;height:2px;z-index:6;
+  background:linear-gradient(90deg,transparent,#ffb060,#fff,#ffb060,transparent);
+  filter:drop-shadow(0 0 8px #e87c1a);pointer-events:none;top:-2px;opacity:0;
+}
+.seg-scanbar.s2{
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.6),#fff,rgba(255,255,255,.6),transparent);
+  filter:drop-shadow(0 0 6px #fff);height:1px;
+}
+.seg-modal-overlay.open .seg-scanbar{animation:seg-scan-loop 3.2s linear .75s infinite}
+.seg-modal-overlay.open .seg-scanbar.s2{animation:seg-scan-second 4.4s linear 1.6s infinite}
+.seg-modal-overlay.open .s2-etable tbody tr{opacity:0;animation:seg-hud-row .35s ease forwards}
+.seg-modal-overlay.open .s2-etable tbody tr:nth-child(1){animation-delay:1.05s}
+.seg-modal-overlay.open .s2-etable tbody tr:nth-child(2){animation-delay:1.13s}
+.seg-modal-overlay.open .s2-etable tbody tr:nth-child(3){animation-delay:1.21s}
+.seg-modal-overlay.open .s2-etable tbody tr:nth-child(4){animation-delay:1.29s}
+.seg-modal-overlay.open .s2-etable tbody tr:nth-child(5){animation-delay:1.37s}
+.seg-modal-overlay.open .s2-etable tbody tr:nth-child(6){animation-delay:1.45s}
+.seg-modal-overlay.open .s2-etable tbody tr:nth-child(7){animation-delay:1.53s}
+.seg-modal-overlay.open .s2-etable tbody tr:nth-child(8){animation-delay:1.61s}
+.seg-modal-overlay.open .s2-etable tbody tr:nth-child(9){animation-delay:1.69s}
+.seg-modal-overlay.open .s2-etable tbody tr:nth-child(10){animation-delay:1.77s}
+.seg-modal-overlay.open .s2-etable tbody tr:nth-child(n+11){animation-delay:1.85s}
+.seg-modal-overlay.open .s2-etable thead{opacity:0;animation:seg-hud-row .35s ease .9s forwards}
+@media (prefers-reduced-motion:reduce){
+  .seg-modal-overlay.open .seg-modal,
+  .seg-modal-overlay.open .seg-rays,
+  .seg-modal-overlay.open .seg-scanbar,
+  .seg-modal-overlay.open .s2-etable tbody tr,
+  .seg-modal-overlay.open .s2-etable thead{animation:none!important;opacity:1!important}
+  .seg-rays,.seg-scanbar{display:none!important}
+}
 .seg-modal::before,.seg-modal::after{content:'';position:absolute;width:16px;height:16px;border:2px solid #e87c1a;pointer-events:none}
 .seg-modal::before{top:8px;left:8px;border-right:none;border-bottom:none}
 .seg-modal::after{bottom:8px;right:8px;border-left:none;border-top:none}
@@ -337,7 +665,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 }
 .seg-modal-close:hover{background:rgba(232,124,26,.2);transform:rotate(90deg)}
 .seg-modal-head{margin-bottom:14px;padding-right:36px;border-bottom:1px solid rgba(232,124,26,.2);padding-bottom:12px}
-.seg-modal-name{font-size:22px;font-weight:700;color:#fff;letter-spacing:2px;font-family:'Barlow Condensed',sans-serif;line-height:1.1}
+.seg-modal-name{font-size:22px;font-weight:700;color:#fff;letter-spacing:2px;font-family:system-ui,sans-serif;line-height:1.1}
 .seg-modal-sub{font-size:10px;color:rgba(232,124,26,.7);letter-spacing:2px;text-transform:uppercase;margin-top:5px}
 .seg-modal-body{flex:1;overflow-y:auto;padding-right:2px}
 .seg-modal-body::-webkit-scrollbar{width:4px}
@@ -652,9 +980,136 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 <div id="space-bg"></div>
 <canvas id="star-canvas"></canvas>
 
+<!-- ITT level explainer popup -->
+<div id="itt-level-popup" class="itt-level-popup">
+  <button class="itt-level-popup-close" onclick="closeIttLevel()">✕</button>
+
+  <!-- Panel 1: 狀態一覽 -->
+  <div class="ilp-panel" data-panel="status">
+    <div class="ilp-panel-title">📋 狀態一覽 · ALL STATUS TABLE</div>
+    <table class="ilp-tbl">
+      <thead><tr><th>#</th><th>圖示</th><th>名稱</th><th>觸發條件</th><th>顯示範例</th></tr></thead>
+      <tbody>
+        <tr><td class="ilp-pri">1</td><td>🆕</td><td>新紀錄<br><span style="color:#555;font-size:9px">NEW</span></td><td class="ilp-cond">只有 1 次嘗試</td><td class="ilp-ex" style="color:#4ab4ff">🆕 NEW<br><small>FIRST ATTEMPT</small></td></tr>
+        <tr><td class="ilp-pri">2</td><td>🚀</td><td>突破最佳<br><span style="color:#555;font-size:9px">BREAKTHROUGH</span></td><td class="ilp-cond">最新一次就是 PR（非首次）</td><td class="ilp-ex" style="color:#FFD700">🚀 BREAKTHROUGH<br><small>NEW PR</small></td></tr>
+        <tr><td class="ilp-pri">3</td><td>🔥</td><td>持續進步<br><span style="color:#555;font-size:9px">HEATING UP</span></td><td class="ilp-cond">最近 3 次依日期排序，每次比上次快</td><td class="ilp-ex" style="color:#ff6a00">🔥 HEATING UP<br><small>3 STREAK</small></td></tr>
+        <tr><td class="ilp-pri">4</td><td>💀</td><td>無法計算<br><span style="color:#555;font-size:9px">UNTOUCHED</span></td><td class="ilp-cond">最新紀錄缺功率資料</td><td class="ilp-ex" style="color:#666">💀 UNTOUCHED<br><small>NO POWER DATA</small></td></tr>
+        <tr><td class="ilp-pri">5</td><td>💀</td><td>久未挑戰<br><span style="color:#555;font-size:9px">UNTOUCHED</span></td><td class="ilp-cond">距上次 &gt; 45 天，或 score &lt; 88%</td><td class="ilp-ex" style="color:#666">💀 UNTOUCHED<br><small>WAKE THIS SEGMENT</small></td></tr>
+        <tr><td class="ilp-pri">6</td><td>🔥</td><td>巔峰狀態<br><span style="color:#555;font-size:9px">PEAK</span></td><td class="ilp-cond">segScore ≥ 99%</td><td class="ilp-ex" style="color:#FF4500">🔥 PEAK<br><small>AT YOUR BEST</small></td></tr>
+        <tr><td class="ilp-pri">7</td><td>⚡</td><td>上升中<br><span style="color:#555;font-size:9px">RISING</span></td><td class="ilp-cond">96% ≤ segScore &lt; 99%</td><td class="ilp-ex" style="color:#e87c1a">⚡ RISING<br><small>96% – 99%</small></td></tr>
+        <tr><td class="ilp-pri">8</td><td>➖</td><td>穩定中<br><span style="color:#555;font-size:9px">HOLD</span></td><td class="ilp-cond">92% ≤ segScore &lt; 96%</td><td class="ilp-ex" style="color:#f0c040">➖ HOLD<br><small>92% – 96%</small></td></tr>
+        <tr><td class="ilp-pri">9</td><td>📉</td><td>表現下滑<br><span style="color:#555;font-size:9px">DECLINING</span></td><td class="ilp-cond">88% ≤ segScore &lt; 92%</td><td class="ilp-ex" style="color:#ff6a6a">📉 DECLINING<br><small>88% – 92%</small></td></tr>
+      </tbody>
+    </table>
+    <div class="ilp-notes" style="margin-top:10px">
+      <b>優先順序由上到下，第一個符合的條件即生效。</b><br>
+      HEATING UP 若 segScore &lt; 88%，仍歸為 UNTOUCHED。<br>
+      最新紀錄缺功率資料時，直接顯示 UNTOUCHED。
+    </div>
+  </div>
+
+  <!-- Panel 2: 計算方式 -->
+  <div class="ilp-panel" data-panel="calc">
+    <div class="ilp-panel-title">⚙️ 計算方式 · HOW IT'S CALCULATED</div>
+    <div class="ilp-step">
+      <div class="ilp-step-n">STEP 1</div>
+      <div class="ilp-step-t">建立基準線 Peak Benchmark</div>
+      <div class="ilp-b">
+        <b>① 優先用 90 天內資料</b>（有功率紀錄的努力）<br>
+        &nbsp;&nbsp;依功率高→低排序，取前 5 名，若 ≥ 3 筆 → 計算平均 <em>（標示 TOP5 AVG）</em><br><br>
+        <b>② 若 90 天內不足 3 筆，改用全時間</b><br>
+        &nbsp;&nbsp;取歷史功率最高前 5 名，若 ≥ 3 筆 → 計算平均 <em>（標示 ALL-TIME AVG）</em><br>
+        &nbsp;&nbsp;若全時間也 &lt; 3 筆 → 顯示 <em>NO BENCHMARK</em>
+      </div>
+      <div class="ilp-formula">
+        <div><span class="fn">peakAvgPow</span>  <span class="fv">= 前 5 筆平均功率（W）</span></div>
+        <div><span class="fn">peakAvgTime</span> <span class="fv">= 前 5 筆平均時間（秒）</span></div>
+      </div>
+      <div class="ilp-bench">
+        <div class="ilp-bbox"><div class="ilp-btag">TOP5 AVG</div><div class="ilp-bdesc">90 天內 ≥ 3 筆<br>用近期資料</div></div>
+        <div class="ilp-bbox"><div class="ilp-btag">ALL-TIME AVG</div><div class="ilp-bdesc">90 天不足<br>用全時間</div></div>
+        <div class="ilp-bbox"><div class="ilp-btag" style="color:#666">NO BENCHMARK</div><div class="ilp-bdesc">總紀錄 &lt; 3 筆<br>資料不足</div></div>
+      </div>
+    </div>
+    <div class="ilp-step" style="margin-top:10px">
+      <div class="ilp-step-n">STEP 2</div>
+      <div class="ilp-step-t">計算 Segment Score</div>
+      <div class="ilp-b">以<b>最新一次努力</b>的功率與時間，對比基準線：</div>
+      <div class="ilp-formula">
+        <div><span class="fn">powerScore</span> <span class="fv">= 最新功率 ÷ peakAvgPow</span><br><span style="font-size:9px;color:#555">（這次騎了幾瓦 ÷ 歷史最好平均瓦）</span></div>
+        <div style="margin-top:6px"><span class="fn">timeScore</span>  <span class="fv">= peakAvgTime ÷ 最新時間（秒）</span><br><span style="font-size:9px;color:#555">（歷史最快平均秒數 ÷ 這次騎了幾秒）</span></div>
+        <div style="margin-top:8px;border-top:1px solid rgba(255,255,255,.07);padding-top:8px">
+          <span class="fn">segmentScore</span> <span class="fv">= powerScore</span> <span class="fr">× 0.7</span> <span class="fv">+ timeScore</span> <span class="fr">× 0.3</span><br>
+          <span style="font-size:9px;color:#555">結果 0∼100%，功率佔 70%，時間佔 30%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel 3: 判斷流程 -->
+  <div class="ilp-panel" data-panel="flow">
+    <div class="ilp-panel-title">🔀 判斷流程 · DECISION FLOW</div>
+    <div class="ilp-step">
+      <div class="ilp-step-n">STEP 3</div>
+      <div class="ilp-step-t">狀態判斷（依優先順序，第一個符合即生效）</div>
+      <div class="ilp-flow">
+        <div class="ilp-fnode">① NEW<small>只有 1 次</small></div>
+        <span class="ilp-farr">▶</span>
+        <div class="ilp-fnode">② BREAKTHROUGH<small>最新 = PR</small></div>
+        <span class="ilp-farr">▶</span>
+        <div class="ilp-fnode">③ HEATING UP<small>連續 3 次進步</small></div>
+        <span class="ilp-farr">▶</span>
+        <div class="ilp-fnode">④ UNTOUCHED<small>缺功率資料</small></div>
+        <span class="ilp-farr">▶</span>
+        <div class="ilp-fnode">⑤ UNTOUCHED<small>&gt;45天 或 &lt;88%</small></div>
+        <span class="ilp-farr">▶</span>
+        <div class="ilp-fnode" style="border-color:rgba(255,255,255,.2);color:#aaa">⑥–⑨<small>依 segScore 區間</small></div>
+      </div>
+    </div>
+    <div class="ilp-notes" style="margin-top:12px">
+      <b>①→②→③</b>：特殊狀態優先，不需計算 segScore。<br>
+      <b>③ HEATING UP 例外</b>：若 segScore &lt; 88%，不觸發 HEATING UP，繼續往下判斷。<br>
+      <b>④</b>：最新紀錄沒有功率資料，無法算分，直接 UNTOUCHED。<br>
+      <b>⑤</b>：有功率資料但分數太低（&lt;88%）或超過 45 天沒騎。<br>
+      <b>⑥–⑨</b>：根據 segScore 落在哪個區間決定狀態。
+    </div>
+  </div>
+
+  <!-- Panel 4: 範例 -->
+  <div class="ilp-panel" data-panel="example">
+    <div class="ilp-panel-title">📊 範例 · 風櫃嘴 2026-05-24</div>
+    <div class="ilp-eg">
+      <div class="ilp-eg-sh">資料狀況</div>
+      <div class="ilp-eg-row"><span class="ilp-eg-lbl">90 天內筆數</span><span class="ilp-eg-val">1 筆（不足 3，改用全時間）</span></div>
+      <div class="ilp-eg-row"><span class="ilp-eg-lbl">全時間 Top5 功率</span><span class="ilp-eg-val">250, 248, 241, 233, 226 W</span></div>
+      <div class="ilp-eg-row"><span class="ilp-eg-lbl">peakAvgPow</span><span class="ilp-eg-val">239.6 W</span></div>
+      <div class="ilp-eg-row"><span class="ilp-eg-lbl">peakAvgTime</span><span class="ilp-eg-val">約 1,896 秒（31:36）</span></div>
+      <div class="ilp-eg-row"><span class="ilp-eg-lbl">最新努力</span><span class="ilp-eg-val">2026-05-21 · 233W · 32:49 (1969s)</span></div>
+      <div class="ilp-eg-row"><span class="ilp-eg-lbl">距上次騎乘</span><span class="ilp-eg-val">3 天（&lt; 45 天，不觸發 UNTOUCHED）</span></div>
+    </div>
+    <table class="ilp-eg-tbl" style="margin-top:12px">
+      <thead><tr><th>計算項目</th><th>公式</th><th>結果</th></tr></thead>
+      <tbody>
+        <tr><td>powerScore</td><td>233 ÷ 239.6</td><td>≈ 0.972</td></tr>
+        <tr><td>timeScore</td><td>1896 ÷ 1969</td><td>≈ 0.963</td></tr>
+        <tr><td>segmentScore</td><td>0.972×0.7 + 0.963×0.3</td><td>≈ 0.969 (97%)</td></tr>
+      </tbody>
+    </table>
+    <div class="ilp-result">
+      <div class="ilp-result-s">⚡ RISING</div>
+      <div class="ilp-result-p">97% OF PEAK (ALL-TIME)</div>
+      <div class="ilp-result-r">符合第 7 條：96% ≤ segScore &lt; 99%</div>
+    </div>
+  </div>
+
+</div>
+
 <!-- ITT segment detail modal -->
 <div id="seg-modal-overlay" class="seg-modal-overlay" onclick="if(event.target===this)closeSegModal()">
+  <div class="seg-rays"></div>
   <div class="seg-modal">
+    <div class="seg-scanbar"></div>
+    <div class="seg-scanbar s2"></div>
     <button class="seg-modal-close" onclick="closeSegModal()">✕</button>
     <div class="seg-modal-head">
       <div class="seg-modal-name" id="seg-modal-name"></div>
@@ -860,12 +1315,7 @@ function renderSegments(segs) {
   if (!segs || segs.length === 0) return ''
   const _today = new Date(Date.now() + 8*3600*1000).toISOString().slice(0,10)
   const ATHLETE_WT = 80
-  const SEG_META = {
-    641218:  { nameZh:'風櫃嘴',    type:'CLIMB',    accent:'#e87c1a', statusColor:'#e87c1a' },
-    1761462: { nameZh:'中社路',    type:'SPRINT',   accent:'#2ecc71', statusColor:'#2ecc71' },
-    7032136: { nameZh:'社子島',    type:'ENDURANCE',accent:'#4ab4ff', statusColor:'#4ab4ff' },
-    956558:  { nameZh:'劍南路回程',type:'DESCENT',  accent:'#a78bfa', statusColor:'#a78bfa' },
-  }
+  const SEG_META = window._ittSegMeta || {}
 
   const cards = segs.map((seg, idx) => {
     const meta   = SEG_META[seg.id] || {}
@@ -873,33 +1323,81 @@ function renderSegments(segs) {
     const pr     = seg.efforts.find(e => e.is_pr) || sorted[0]
     const latest = (seg.efforts || []).slice().sort((a,b) => b.date.localeCompare(a.date))[0]
 
-    const prWatts  = pr && pr.avg_watts    ? pr.avg_watts    : null
+    const prWatts  = pr && pr.avg_watts ? pr.avg_watts : null
     const wkg      = prWatts ? (prWatts / ATHLETE_WT).toFixed(1) : '—'
     const attempts = seg.efforts.length
     const numBadge = String(idx + 1).padStart(2, '0')
     const accent   = meta.accent || '#e87c1a'
-    const statusColor = meta.statusColor || '#e87c1a'
 
-    // days since PR
-    let daysSince = null
-    if (pr && pr.date) {
-      daysSince = Math.max(0, Math.round((Date.parse(_today) - Date.parse(pr.date.slice(0,10))) / 86400000))
+    // ── PeakBenchmark: top-5 best efforts by watts in last 90 days (min 3).
+    //    Falls back to all-time top-5 when recent data is insufficient. ──
+    const cutoff90 = new Date(Date.now() + 8*3600*1000)
+    cutoff90.setDate(cutoff90.getDate() - 90)
+    const cutoff90Str    = cutoff90.toISOString().slice(0,10)
+    const effsWithWatts  = (seg.efforts || []).filter(e => e.avg_watts)
+    const recent90       = effsWithWatts.filter(e => e.date >= cutoff90Str)
+    const top5w          = recent90.slice().sort((a,b) => b.avg_watts - a.avg_watts).slice(0,5)
+    const useRecent      = top5w.length >= 3
+    const allTop5w       = !useRecent ? effsWithWatts.slice().sort((a,b) => b.avg_watts - a.avg_watts).slice(0,5) : []
+    const useAllTime     = !useRecent && allTop5w.length >= 3
+    const hasBench       = useRecent || useAllTime
+    const benchSrc       = useRecent ? top5w : allTop5w
+    const peakAvgPow     = hasBench ? benchSrc.reduce((s,e) => s + e.avg_watts, 0) / benchSrc.length : null
+    const peakAvgTime    = hasBench ? benchSrc.reduce((s,e) => s + e.elapsed_sec, 0) / benchSrc.length : null
+    const benchLabel     = useRecent ? 'TOP5 AVG' : 'ALL-TIME AVG'
+
+    // days since latest ride
+    let daysSinceLast = null
+    if (latest && latest.date) {
+      daysSinceLast = Math.max(0, Math.round((Date.parse(_today) - Date.parse(latest.date.slice(0,10))) / 86400000))
     }
 
-    // STATUS label + color
-    let statusTxt, statusCol
-    if (daysSince === null)        { statusTxt = 'NO DATA';     statusCol = '#555' }
-    else if (daysSince === 0)      { statusTxt = 'RECORD TODAY'; statusCol = '#ff4f4f' }
-    else if (daysSince <= 7)       { statusTxt = 'HOT STREAK';  statusCol = '#ff6a00' }
-    else if (daysSince <= 30)      { statusTxt = 'RECENT PR';   statusCol = '#e87c1a' }
-    else if (daysSince <= 90)      { statusTxt = 'ACTIVE';      statusCol = '#f0c040' }
-    else if (daysSince <= 180)     { statusTxt = 'STALE';       statusCol = '#888' }
-    else                           { statusTxt = 'DORMANT';     statusCol = '#555' }
+    // ── Segment score (latest vs benchmark) ──
+    let segScore = null
+    if (hasBench && latest && latest.avg_watts && latest.elapsed_sec && peakAvgPow && peakAvgTime) {
+      const powerScore = latest.avg_watts / peakAvgPow
+      const timeScore  = peakAvgTime / latest.elapsed_sec
+      segScore = powerScore * 0.7 + timeScore * 0.3
+    }
+    const scorePct = segScore !== null ? Math.round(segScore * 100) : null
 
-    const isNewRecord = pr && latest && pr.activity_id === latest.activity_id
-    const timeClass   = isNewRecord ? 'is-new' : ''
+    // ── Special states ──
+    const isFirst         = attempts === 1
+    const isBreakthrough  = attempts > 1 && latest && pr && latest.activity_id === pr.activity_id
+    const byDateAsc       = (seg.efforts||[]).slice().sort((a,b) => a.date.localeCompare(b.date))
+    const isHeatingUp     = byDateAsc.length >= 3 &&
+      byDateAsc.slice(-3)[0].elapsed_sec > byDateAsc.slice(-3)[1].elapsed_sec &&
+      byDateAsc.slice(-3)[1].elapsed_sec > byDateAsc.slice(-3)[2].elapsed_sec
 
-    // GAP TO KOM — from seg.kom_elapsed_sec (fetched by script)
+    // ── Status mapping ──
+    let statusEmoji, statusLine, statusSub, statusCol
+    if (isFirst) {
+      statusEmoji = '🆕'; statusLine = 'NEW';          statusSub = 'FIRST ATTEMPT';    statusCol = '#4ab4ff'
+    } else if (isBreakthrough) {
+      statusEmoji = '🚀'; statusLine = 'BREAKTHROUGH'; statusSub = 'NEW PEAK';         statusCol = '#FFD700'
+    } else if (isHeatingUp && (segScore === null || segScore >= 0.88)) {
+      statusEmoji = '🔥'; statusLine = 'HEATING UP';   statusSub = '3 STREAK';         statusCol = '#ff6a00'
+    } else if (segScore === null || daysSinceLast === null) {
+      // hasBench but score couldn't be computed (missing watts on latest), or no date at all
+      statusEmoji = '💀'; statusLine = 'UNTOUCHED';    statusSub = 'NO RECENT EFFORT'; statusCol = '#666'
+    } else if (daysSinceLast > 45 || segScore < 0.88) {
+      statusEmoji = '💀'; statusLine = 'UNTOUCHED';    statusSub = 'WAKE THIS SEGMENT';statusCol = '#666'
+    } else if (segScore >= 0.99) {
+      statusEmoji = '🔥'; statusLine = 'PEAK';         statusSub = 'AT YOUR BEST';     statusCol = '#FF4500'
+    } else if (segScore >= 0.96) {
+      statusEmoji = '⚡'; statusLine = 'RISING';        statusSub = 'APPROACHING PEAK'; statusCol = '#e87c1a'
+    } else if (segScore >= 0.92) {
+      statusEmoji = '➖'; statusLine = 'HOLD';          statusSub = 'STABLE OUTPUT';    statusCol = '#f0c040'
+    } else {
+      statusEmoji = '📉'; statusLine = 'DECLINING';    statusSub = 'BELOW TREND';      statusCol = '#ff6a6a'
+    }
+
+    const benchTag      = useAllTime ? ' (ALL-TIME)' : ''
+    const scoreDisplay  = scorePct !== null ? `${scorePct}% OF PEAK${benchTag}` : (hasBench ? '—' : 'NO BENCHMARK')
+    const isNewRecord   = pr && latest && pr.activity_id === latest.activity_id
+    const timeClass     = isNewRecord ? 'is-new' : ''
+
+    // ── GAP TO KOM ──
     let komGapHtml = ''
     if (seg.kom_elapsed_sec && pr) {
       const gapSec = pr.elapsed_sec - seg.kom_elapsed_sec
@@ -912,21 +1410,19 @@ function renderSegments(segs) {
       komGapHtml = `<span style="color:rgba(255,255,255,.18)">— TO KOM</span>`
     }
 
-    // watt gap: last effort watts vs PR watts (left cell)
+    // ── VS TOP5 AVG (bottom-row left) ──
     const latestWatts = latest && latest.avg_watts ? latest.avg_watts : null
     let wattGapTxt, wattGapColor, wattGapLabel
-    if (!latestWatts || !prWatts) {
-      wattGapTxt = '—'; wattGapColor = 'rgba(255,255,255,.25)'; wattGapLabel = 'LAST vs PR'
-    } else if (latest.activity_id === pr.activity_id) {
-      wattGapTxt = 'PR ✓'; wattGapColor = accent; wattGapLabel = 'POWER'
+    if (!latestWatts || !peakAvgPow) {
+      wattGapTxt = '—';     wattGapColor = 'rgba(255,255,255,.25)'; wattGapLabel = benchLabel
     } else {
-      const wDiff = latestWatts - prWatts
-      wattGapTxt = (wDiff >= 0 ? '+' : '') + wDiff + 'W'
+      const wDiff  = Math.round(latestWatts - peakAvgPow)
+      wattGapTxt   = (wDiff >= 0 ? '+' : '−') + Math.abs(wDiff) + 'W'
       wattGapColor = wDiff >= 0 ? '#2ecc71' : '#ff6a6a'
-      wattGapLabel = 'LAST vs PR'
+      wattGapLabel = benchLabel
     }
 
-    // time gap: last effort vs PR (right cell)
+    // ── time gap: last effort vs PR (bottom-row right) ──
     let lastGapTxt, lastGapColor, lastGapLabel
     if (!latest || !pr) {
       lastGapTxt = '—'; lastGapColor = 'rgba(255,255,255,.25)'; lastGapLabel = 'LAST vs PR'
@@ -934,24 +1430,34 @@ function renderSegments(segs) {
       lastGapTxt = 'PR ✓'; lastGapColor = accent; lastGapLabel = 'LAST EFFORT'
     } else {
       const gapSec = latest.elapsed_sec - pr.elapsed_sec
-      const mm = String(Math.floor(gapSec / 60)).padStart(2,'0')
-      const ss = String(gapSec % 60).padStart(2,'0')
-      lastGapTxt = `+${mm}:${ss}`; lastGapColor = '#f0c040'; lastGapLabel = 'LAST vs PR'
+      const mm = String(Math.floor(Math.abs(gapSec) / 60)).padStart(2,'0')
+      const ss = String(Math.abs(gapSec) % 60).padStart(2,'0')
+      lastGapTxt = (gapSec >= 0 ? '+' : '−') + `${mm}:${ss}`; lastGapColor = '#f0c040'; lastGapLabel = 'LAST vs PR'
     }
 
-    return `<div class="s2-card" style="--s2-accent:${accent};--s2-status-color:${statusColor}">
+    const prTimeStr = seg.pr_time_str || '—'
+    return `<div class="s2-card" style="--s2-accent:${accent};--s2-status-color:${statusCol}">
+      <div class="s2-fx-horizon"></div>
+      <div class="s2-fx-particle"></div><div class="s2-fx-particle"></div><div class="s2-fx-particle"></div><div class="s2-fx-particle"></div><div class="s2-fx-particle"></div><div class="s2-fx-particle"></div>
+      <div class="s2-fx-kbar"></div>
+      <div class="s2-fx-rpm"></div>
+      <div class="s2-fx-iflash"></div>
+      <div class="s2-fx-burst"></div>
       <div class="s2-hd">
-        <span class="s2-num">SEG ${numBadge}</span>
+        <span class="s2-num">${numBadge}</span><span class="s2-kom-hd">${komGapHtml}</span>
         <span class="s2-type-tag">${meta.type || 'ITT'}</span>
       </div>
       <div class="s2-namblk">
         <div class="s2-name-zh">${meta.nameZh || seg.name}</div>
       </div>
       <div class="s2-timblk">
-        <div class="s2-best-time ${timeClass}">${seg.pr_time_str || '—'}</div>
+        <div class="s2-best-time ${timeClass}" data-text="${prTimeStr}">${prTimeStr}</div>
         <div class="s2-time-lbl">BEST TIME</div>
-        <div class="s2-gap-line">${komGapHtml}</div>
-        <div class="s2-status-line">${statusTxt}</div>
+        <div class="s2-status-block">
+          <div class="s2-status-line">${statusEmoji} ${statusLine}</div>
+          <div class="s2-status-sub">${scoreDisplay} · ${statusSub}</div>
+        </div>
+
       </div>
       <div class="s2-prow">
         <div class="s2-pc">
@@ -974,13 +1480,19 @@ function renderSegments(segs) {
         </div>
       </div>
       <div class="s2-foot-modal">
-        <button class="seg-detail-btn" onclick="openSegModal(${seg.id})" style="background:linear-gradient(135deg,${accent},${accent}bb 60%,${accent}88 100%)">▶ OPEN TELEMETRY <span style="opacity:.6;font-size:.85em">(${attempts})</span></button>
+        <button class="seg-detail-btn" onclick="openSegModal(${seg.id})" style="background:linear-gradient(135deg,${accent},${accent}bb 60%,${accent}88 100%)">▶ REVIEW ATTEMPT <span style="opacity:.6;font-size:.85em">(${attempts})</span></button>
       </div>
     </div>`
   }).join('')
 
   return `
-    <div class="section-title">ITT 區間 <span class="muted">· SEGMENT EFFORTS</span></div>
+    <div class="section-title" style="font-size:9px"><span>ITT 區間 <span class="muted">· SEGMENT EFFORTS</span></span></div>
+    <div class="itt-tabs">
+      <button class="itt-tab-btn" onclick="toggleIttLevel(this,'status')">📋 狀態一覽</button>
+      <button class="itt-tab-btn" onclick="toggleIttLevel(this,'calc')">⚙️ 計算方式</button>
+      <button class="itt-tab-btn" onclick="toggleIttLevel(this,'flow')">🔀 判斷流程</button>
+      <button class="itt-tab-btn" onclick="toggleIttLevel(this,'example')">📊 範例</button>
+    </div>
     <div class="s2-grid">${cards}</div>`
 }
 function fmtDate(d) {
@@ -1000,7 +1512,7 @@ function openSegModal(id) {
     const crown = e.is_pr ? '👑 ' : ''
     const watts = e.avg_watts ? e.avg_watts + 'w' : '—'
     const hr    = e.avg_heartrate || '—'
-    const date  = e.date ? e.date.slice(5).replace('-','/') : '—'
+    const date  = e.date ? e.date.replace(/-/g,'/') : '—'
     return `<tr class="${e.is_pr ? 's2-epr' : ''}" data-date="${e.date||''}" data-actid="${e.activity_id||''}" style="cursor:pointer" title="跳至活動紀錄">
       <td>${date}</td><td>${crown}${e.elapsed_str}</td><td>${watts}</td><td>${hr}</td>
     </tr>`
@@ -1017,10 +1529,48 @@ function openSegModal(id) {
       }, 350)
     })
   })
-  document.getElementById('seg-modal-overlay').classList.add('open')
+  const ov = document.getElementById('seg-modal-overlay')
+  ov.classList.remove('open')
+  void ov.offsetWidth
+  ov.classList.add('open')
 }
 function closeSegModal() {
   document.getElementById('seg-modal-overlay').classList.remove('open')
+}
+function toggleIttLevel(btn, panelId) {
+  const popup = document.getElementById('itt-level-popup')
+  const isOpen = popup.classList.contains('open')
+  const currentPanel = popup.dataset.panel
+  if (isOpen && currentPanel === panelId) { closeIttLevel(); return }
+  popup.querySelectorAll('.ilp-panel').forEach(p => p.style.display = 'none')
+  popup.querySelector(`.ilp-panel[data-panel="${panelId}"]`).style.display = 'block'
+  popup.dataset.panel = panelId
+  document.querySelectorAll('.itt-tab-btn').forEach(b => b.classList.remove('active'))
+  btn.classList.add('active')
+  if (isOpen) { popup.scrollTop = 0; return }
+  const r = btn.getBoundingClientRect()
+  const pw = Math.min(680, window.innerWidth - 16)
+  const left = Math.max(8, Math.round((window.innerWidth - pw) / 2))
+  const spaceBelow = window.innerHeight - r.bottom - 16
+  const spaceAbove = r.top - 16
+  const top = spaceBelow >= 200 ? r.bottom + 10
+            : spaceAbove >= 200 ? Math.max(8, r.top - 10 - 400)
+            : 60
+  popup.style.left = left + 'px'
+  popup.style.top  = top  + 'px'
+  popup.style.width = pw  + 'px'
+  popup.style.maxHeight = (window.innerHeight - top - 16) + 'px'
+  popup.style.overflowY = 'auto'
+  popup.classList.add('open')
+  setTimeout(() => document.addEventListener('click', _ittOutside, {once:true, capture:true}), 10)
+}
+function closeIttLevel() {
+  document.getElementById('itt-level-popup').classList.remove('open')
+  document.querySelectorAll('.itt-tab-btn').forEach(b => b.classList.remove('active'))
+}
+function _ittOutside(e) {
+  const popup = document.getElementById('itt-level-popup')
+  if (!popup.contains(e.target) && !e.target.closest('.itt-tab-btn')) closeIttLevel()
 }
 function fmtMonthLabel(m) {
   return m.replace(/^\d{4}-/, '')
@@ -1690,10 +2240,17 @@ function bindPowerCard(prs) {
   })
 }
 
-/* ── fetch strava.json ── */
-fetch('data/strava.json')
-  .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json() })
-  .then(data => { render(data); bindPowerCard(data.power_prs) })
+/* ── fetch strava.json + itt-config.json ── */
+Promise.all([
+  fetch('data/strava.json').then(r => { if (!r.ok) throw new Error(`strava.json HTTP ${r.status}`); return r.json() }),
+  fetch('data/itt-config.json').then(r => { if (!r.ok) throw new Error(`itt-config.json HTTP ${r.status}`); return r.json() }),
+])
+  .then(([data, ittConfig]) => {
+    // 建立 SEG_META lookup，下面 renderSegments 用
+    window._ittSegMeta = Object.fromEntries(ittConfig.segments.map(s => [s.id, s]))
+    render(data)
+    bindPowerCard(data.power_prs)
+  })
   .catch(err => {
     document.getElementById('content').innerHTML = `
       <div class="loading" style="color:#FC4C02">
