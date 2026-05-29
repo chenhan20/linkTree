@@ -1,3 +1,25 @@
 {
-    "liveServer.settings.port": 5501
+    "liveServer.settings.port": 5501,
+    "chat.tools.terminal.autoApprove": {
+        "/^node -e \"const d=require\\('\\./data/strava\\.json'\\); const find=\\(o,p=''\\)=>\\{for\\(const k in o\\)\\{if\\(k==='polyline'&&o\\[k\\]\\)\\{console\\.log\\(p\\+k,'=',String\\(o\\[k\\]\\)\\.slice\\(0,40\\)\\+'\\.\\.\\.'\\);return true\\}if\\(typeof o\\[k\\]==='object'&&o\\[k\\]\\)\\{if\\(find\\(o\\[k\\],p\\+k\\+'\\.'\\)\\)return true\\}\\}\\}; find\\(d\\); console\\.log\\('top keys:',Object\\.keys\\(d\\)\\)\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^wc -l activity-modal\\.js activity-modal\\.css && node -e \"const d=require\\('\\./data/strava\\.json'\\); console\\.log\\(JSON\\.stringify\\(d\\.recent_rides\\[0\\],null,1\\)\\.slice\\(0,900\\)\\)\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^node -e \"const d=require\\('\\./data/strava\\.json'\\); const r=d\\.recent_rides\\.filter\\(a=>a\\.polyline\\)\\.sort\\(\\(a,b\\)=>\\(b\\.polyline\\.length\\)-\\(a\\.polyline\\.length\\)\\); r\\.slice\\(0,4\\)\\.forEach\\(a=>console\\.log\\(a\\.name, a\\.distance_km\\+'km', 'len='\\+a\\.polyline\\.length\\)\\); console\\.log\\('---PICK---'\\); const p=r\\[0\\]; console\\.log\\(JSON\\.stringify\\(\\{name:p\\.name,distance_km:p\\.distance_km,elevation_m:p\\.elevation_m,moving_time_sec:p\\.moving_time_sec,polyline:p\\.polyline\\}\\)\\)\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^node -e \"const d=require\\('\\./data/strava\\.json'\\); console\\.log\\(JSON\\.stringify\\(d\\.power_prs\\.find\\(p=>p\\.duration_sec===5\\),null,1\\)\\)\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^node scripts/backfill-streams\\.js 2>&1$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
 }

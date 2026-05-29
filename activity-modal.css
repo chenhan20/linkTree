@@ -283,6 +283,192 @@
 .act-strava-link:hover::before { opacity: 1; }
 .act-strava-link:active { transform: translateY(0) scale(.98); }
 
+/* ── 路線星座區塊（GPS 軌跡化作星圖） ── */
+@keyframes am-star-pop{ 0%{opacity:0;transform:scale(.2)} 70%{opacity:1;transform:scale(1.25)} 100%{opacity:1;transform:scale(1)} }
+@keyframes am-star-twk{ 0%,100%{opacity:.55} 50%{opacity:1} }
+@keyframes am-link-draw{ to{stroke-dashoffset:0} }
+.am-route{
+  position:relative;
+  margin-bottom:18px;
+  padding:18px 18px 16px;
+  border-radius:14px;
+  border:1px solid var(--am-border);
+  background:
+    radial-gradient(120% 90% at 50% 40%, rgba(70,90,170,.16), transparent 65%),
+    radial-gradient(120% 80% at 50% 100%, rgba(252,76,2,.06), transparent 60%),
+    linear-gradient(160deg, #0b1226, #060812 80%);
+  overflow:hidden;
+  display:flex;
+  gap:16px;
+  align-items:flex-start;
+}
+.am-route::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background-image:
+    linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
+  background-size:26px 26px;
+  -webkit-mask-image:radial-gradient(80% 80% at 50% 40%, #000, transparent 80%);
+          mask-image:radial-gradient(80% 80% at 50% 40%, #000, transparent 80%);
+}
+/* ── Left panel (constellation) ── */
+.am-route-left{
+  flex:1 1 0;
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+/* ── Right panel (gauge + stats) ── */
+.am-route-right{
+  flex:0 0 162px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:6px;
+  padding-top:2px;
+}
+.am-route-canvas{
+  position:relative;
+  height:220px;
+  display:flex;align-items:center;justify-content:center;
+}
+.am-route-svg{ width:100%;height:100%; overflow:visible; }
+
+/* Legacy CSS-animated constellation (fallback for rides without route_stream) */
+.am-route-svg .am-link{
+  stroke:#7d96ff; stroke-width:1; opacity:.55;
+  animation:am-link-draw .85s ease-out both;
+}
+.am-route-svg .am-star{
+  transform-box:fill-box; transform-origin:center;
+  animation:am-star-pop .8s ease-out both;
+}
+.am-route-svg .am-star circle{
+  animation:am-star-twk 3s ease-in-out infinite;
+}
+/* JS-driven constellation (new route_stream path) */
+.am-route-svg .am-link-js{
+  stroke-width:1.2;
+  fill:none;
+}
+.am-route-svg .am-star-js{
+  transform-box:fill-box;
+  transform-origin:center;
+}
+.am-route-svg .am-star-popped{
+  animation:am-star-pop .45s ease-out both;
+}
+.am-route-svg .am-cursor{
+  pointer-events:none;
+  transition:opacity .1s;
+}
+
+/* ── Stats (inside right panel) ── */
+.am-route-right .am-route-stats{
+  display:flex;
+  flex-direction:column;
+  width:100%;
+  gap:3px;
+  padding-top:8px;
+  border-top:1px solid rgba(255,255,255,.07);
+}
+.am-route-right .am-route-stats .am-rs{
+  display:flex;
+  justify-content:space-between;
+  align-items:baseline;
+  padding:0 2px;
+}
+.am-route-right .am-route-stats .v{
+  font-size:15px;font-weight:800;color:var(--am-text);line-height:1.1;
+}
+.am-route-right .am-route-stats .am-stat-val{
+  transition:none;
+}
+.am-route-right .am-route-stats .v small{ font-size:10px;font-weight:700;color:var(--am-text-dim);margin-left:2px }
+.am-route-right .am-route-stats .l{
+  font-size:9px;letter-spacing:1.5px;color:var(--am-text-dim);text-transform:uppercase;
+}
+/* Full-width stats (legacy fallback layout) */
+.am-route > .am-route-stats{
+  display:flex;justify-content:center;gap:30px;
+  margin-top:6px;
+}
+.am-route > .am-route-stats .am-rs{ text-align:center }
+.am-route > .am-route-stats .v{
+  font-size:22px;font-weight:800;color:var(--am-text);line-height:1.1;letter-spacing:.5px;
+}
+.am-route > .am-route-stats .v small{ font-size:11px;font-weight:700;color:var(--am-text-dim);margin-left:2px }
+.am-route > .am-route-stats .l{ font-size:10px;letter-spacing:2px;color:var(--am-text-dim);margin-top:3px;text-transform:uppercase }
+
+/* ── Gauge (tachometer) ── */
+.am-gauge-wrap{
+  width:100%;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:2px;
+}
+.am-gauge-svg{ width:100%; height:auto; }
+.am-gauge-val{
+  font-size:24px; font-weight:900; fill:white; letter-spacing:-1px;
+}
+.am-gauge-unit{
+  font-size:10px; fill:rgba(255,255,255,.38); letter-spacing:1.5px; text-transform:uppercase;
+}
+.am-gauge-live-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  width:100%;
+  padding:0 6px;
+  gap:6px;
+}
+.am-gauge-zone-lbl{
+  font-size:11px; font-weight:800; letter-spacing:1px;
+  padding:2px 8px; border-radius:5px;
+  background:rgba(255,255,255,.1); color:rgba(255,255,255,.6);
+  transition:background .25s, color .25s;
+}
+.am-gz-z1{ background:rgba(80,110,220,.3); color:#a0b8ff; }
+.am-gz-z2{ background:rgba(25,215,107,.25); color:#19d76b; }
+.am-gz-z3{ background:rgba(245,197,24,.25); color:#f5c518; }
+.am-gz-z4{ background:rgba(255,140,0,.25); color:#ff8c00; }
+.am-gz-z5{ background:rgba(255,59,48,.25); color:#ff5046; }
+.am-gauge-spd{ font-size:11px; color:rgba(255,255,255,.5); white-space:nowrap; }
+.am-gauge-spd small{ font-size:9px; opacity:.7; }
+.am-gauge-spd-val{ font-size:13px; font-weight:700; color:rgba(255,255,255,.85); }
+
+.am-gauge-needle{
+  transform-box:view-box;
+  transform-origin:90px 90px;
+  transition:transform .12s linear;
+}
+.am-route-footer{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding-left:2px;
+}
+.am-route-brand{
+  font-size:10px;font-weight:800;letter-spacing:2px;
+  color:#7d96ff;opacity:.5;
+}
+.am-replay-btn{
+  font-size:10px;font-weight:800;letter-spacing:1.5px;
+  color:#7d96ff;opacity:.55;
+  background:none;border:1px solid rgba(125,150,255,.3);
+  border-radius:6px;padding:2px 9px;cursor:pointer;
+  transition:opacity .15s, border-color .15s;
+  white-space:nowrap;
+}
+.am-replay-btn:hover{ opacity:1; border-color:rgba(125,150,255,.7); }
+@media (prefers-reduced-motion: reduce){
+  .am-route-svg .am-link{animation:none;stroke-dashoffset:0!important}
+  .am-route-svg .am-star{animation:none;opacity:1}
+  .am-route-svg .am-star circle{animation:none}
+}
+
 /* 響應式 */
 @media (max-width:560px){
   .am-overlay{padding:8px}
@@ -291,4 +477,11 @@
   .am-body{padding:14px 16px 18px}
   .am-cell .val{font-size:18px}
   .am-strava{padding:3px 7px;font-size:10px}
+  .am-route{ flex-direction:column; gap:10px; }
+  .am-route-right{ flex:0 0 auto; width:100%; flex-direction:row; align-items:flex-start; gap:12px; }
+  .am-gauge-wrap{ flex:0 0 160px; }
+  .am-route-right .am-route-stats{ flex-direction:row; justify-content:space-around; border-top:none; padding-top:0; flex:1; }
+  .am-route-right .am-route-stats .am-rs{ flex-direction:column; align-items:center; }
+  .am-route-canvas{height:200px}
+  .am-route-stats .v{font-size:18px}
 }

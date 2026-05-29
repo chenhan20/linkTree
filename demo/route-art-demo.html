@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>路線藝術 · Route Art Concepts</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  background:#070710;color:#e7e7f0;padding:32px 18px 80px;
+  background-image:radial-gradient(60% 50% at 50% 0%,rgba(80,80,160,.12),transparent 70%);
+}
+header{max-width:1180px;margin:0 auto 28px}
+h1{font-size:24px;font-weight:800;letter-spacing:1px}
+.lead{color:#9b9bb5;font-size:13px;margin-top:8px;line-height:1.7;max-width:760px}
+.route-meta{margin-top:12px;font-size:12px;color:#6f6f8a;letter-spacing:.5px}
+.route-meta b{color:#c9c9e0}
+
+.grid{
+  max-width:1180px;margin:0 auto;
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:22px;
+}
+.card{
+  position:relative;border-radius:18px;overflow:hidden;
+  border:1px solid rgba(255,255,255,.08);
+  background:#0c0c16;
+  box-shadow:0 18px 50px rgba(0,0,0,.5);
+}
+.stage{position:relative;width:100%;aspect-ratio:1/1;overflow:hidden}
+.stage svg,.stage canvas{position:absolute;inset:0;width:100%;height:100%}
+.card-foot{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:14px 16px;border-top:1px solid rgba(255,255,255,.06);
+  background:rgba(255,255,255,.015);
+}
+.card-foot .ttl{font-size:14px;font-weight:800;letter-spacing:.5px}
+.card-foot .sub{font-size:11px;color:#8b8ba6;margin-top:3px;letter-spacing:.5px}
+.replay{
+  flex:none;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.05);
+  color:#e7e7f0;border-radius:10px;padding:7px 12px;font-size:12px;font-weight:700;
+  cursor:pointer;transition:.15s;-webkit-tap-highlight-color:transparent;
+}
+.replay:hover{background:rgba(255,255,255,.12);transform:translateY(-1px)}
+.replay:active{transform:scale(.96)}
+.badge{
+  position:absolute;top:12px;left:12px;z-index:5;
+  font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;
+  padding:5px 9px;border-radius:999px;background:rgba(0,0,0,.45);
+  border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(4px);
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>路線藝術 · Route Art Concepts</h1>
+  <p class="lead">
+    用同一條真實路線跑 6 種跳脫 Strava 制式風格的呈現方式。每張卡片都會「從頭畫到尾」做開場動畫，按
+    <b>重播</b> 可再看一次。挑一個（或混搭）我就接進活動詳情彈窗。
+  </p>
+  <div class="route-meta">📍 <b>烏來-福山部落</b> · 85.29 km · 爬升 1204 m · 4 小時 5 分 · 1319 GPS 點</div>
+</header>
+
+<main class="grid" id="grid">
+  <!-- cards injected -->
+</main>
+
+<script>
+/* ===== 共用：polyline 解碼 + 投影 ===== */
+const POLY = "cnrwC}vsdV{D_EbCgFgEcd@bKyPNgH_EQb@wJdBu@HsBcQ{BzHsEg@sBd@vBwI|DeF}J`CeBjEJpRmGh]`J`_@fB`OhExi@lr@~VbNXiBlI{CoDoDgAyEt@_NfLqCxB{EnMqGlKqMdIyQx\\sUdBuGpT_A`g@`BpKuD|BuFgCqITwMqA{Ml@qEbD_EvEpDnr@_AtB~BbH\\xLrLfE}SnC`BuA~GfA`AnMkDfDx@nCqBxIkVrA~Y`BpG|CmE}@eFjGcOtr@qErJbHtNxB`YeL~KqKxMQzRoPsD{LfG_GkG|FzDrKsBfBdB|DhN~ObQpC~LfRvGtCbGqAjCqDxDsPfPcKrPrBpCeAxEzHQxEnBzK{BhLb@`GdJG`EnE`K`A|YsKWaIfCgFnPqC~Kx@`GwIpJsB|ExAdNaBfJuItl@dAvN{IvZpKxB~_@{AvN~S|AtEpGlJxFd@pC_@dPdIdK@~CwHdMBzTsArF`Gs@pH|E`OBxBzCyCtKf@`AhFwEpPf@hFgHhOnI`NiDzDz@ShDqD|Eb@lGxLfK\\tCnJlE|E~LfEiD~IeAzFnF~CD`B|ElDu@nK~DvL`@dUxLhY}DzAjLwBxVhExENtCfU`IfOtH|JpAqI`LYfHqEjHQpHtAhAzWrIjFD|GqErKqR|R_PrUkYtL}FtEw@xJzIcBfKnBmI}AgE_HqE_Ft@oLzFeV~YkRbOuKxReHnEcFIqYkJMsH|E{IBuFbJiMqJqAyOwHcUcIOyCcE}DpBkWqAaLa_@fCuP{K_LWmKaEkDv@_B{EsDQgGoFeInAgEdDwCqJoLwG_@qCyLcKi@mGnEoKaE_AwMjDiOsIyFhHoPe@gFvEg@{@vCsKmBuC_PUwGwEeGp@nAoFD}TlHoL?qDaIqKg@gFjAaIy@eCcJyFoEsGcT_BzAoNiBe[sb@tAeBfCgP{AmHlEmO_DoF`EuJ{AmEjB_Au@tJiEsOb@yGeBoRnMiLaAkPvCcC`GNbHsYvKmJaAoEoEaJ?c@yF|BqKuBiLR_FyEcI{Cz@qN{BqLfFuEzE}DdQsJ`EyIiEsJmPkQyC{QiU_M~J{JzSoFp@uLjJ_GmJsObFeL{B}JmHuZr@cXjDaAhG{DnF~@zEoCrEuDmb@cJnVyBbBiDm@sN|Cn@_I{C_CaEbT}K{KiEgBuBp@mBcC}r@fAqE_EuE|K|@h]fCrIgCnFmPtDfAXm\\oCk\\`AsAhGg]|UgIzQgKnM{M|GuBvEgLnCs@zNv@rDbE~DoIpCg@tBsU_M_j@{n@__AeKuZdCyHzD[dCfIpP}KrW`EtFvBeCx@l@zCdb@zDvCcA~A|AjAyAzB";
+
+function decodePolyline(str,precision){
+  let i=0,lat=0,lng=0,b,sh,r;const c=[],f=Math.pow(10,precision||5);
+  while(i<str.length){
+    sh=0;r=0;do{b=str.charCodeAt(i++)-63;r|=(b&0x1f)<<sh;sh+=5}while(b>=0x20);lat+=(r&1)?~(r>>1):(r>>1);
+    sh=0;r=0;do{b=str.charCodeAt(i++)-63;r|=(b&0x1f)<<sh;sh+=5}while(b>=0x20);lng+=(r&1)?~(r>>1):(r>>1);
+    c.push([lat/f,lng/f]);
+  }
+  return c;
+}
+/* 投影到 size×size，回傳螢幕座標點與 path d */
+function project(latlng,size,pad){
+  const meanLat=latlng.reduce((s,p)=>s+p[0],0)/latlng.length;
+  const k=Math.cos(meanLat*Math.PI/180)||1;
+  const proj=latlng.map(p=>[p[1]*k,-p[0]]);
+  let minX=1/0,maxX=-1/0,minY=1/0,maxY=-1/0;
+  for(const[x,y]of proj){if(x<minX)minX=x;if(x>maxX)maxX=x;if(y<minY)minY=y;if(y>maxY)maxY=y;}
+  const w=(maxX-minX)||1,h=(maxY-minY)||1;
+  const scale=Math.min((size-pad*2)/w,(size-pad*2)/h);
+  const ox=(size-w*scale)/2,oy=(size-h*scale)/2;
+  const pts=proj.map(([x,y])=>({x:(x-minX)*scale+ox,y:(y-minY)*scale+oy}));
+  const d=pts.map((p,i)=>(i?'L':'M')+p.x.toFixed(1)+' '+p.y.toFixed(1)).join(' ');
+  return {pts,d};
+}
+
+const SIZE=360, PAD=40;
+const ROUTE=project(decodePolyline(POLY),SIZE,PAD);
+
+/* ===== 卡片骨架 ===== */
+const CONCEPTS=[
+  {id:'comet',  ttl:'彗星騎乘',   sub:'COMET RIDE · 你在路線上奔馳的光點'},
+  {id:'synth',  ttl:'霓虹合成波', sub:'SYNTHWAVE · 賽博視覺＋流動光流'},
+  {id:'star',   ttl:'騎乘星座',   sub:'CONSTELLATION · 把路線變成星圖'},
+  {id:'holo',   ttl:'全息藍圖',   sub:'HOLOGRAM HUD · 科幻儀表掃描'},
+  {id:'energy', ttl:'能量電流',   sub:'ENERGY FLOW · 粒子沿路線循環流動'},
+  {id:'ink',    ttl:'水墨書法',   sub:'INK BRUSH · 一筆畫出的軌跡'},
+];
+const grid=document.getElementById('grid');
+CONCEPTS.forEach(c=>{
+  const card=document.createElement('div');
+  card.className='card';
+  card.innerHTML=`
+    <div class="badge">${c.id}</div>
+    <div class="stage" id="stage-${c.id}"></div>
+    <div class="card-foot">
+      <div><div class="ttl">${c.ttl}</div><div class="sub">${c.sub}</div></div>
+      <button class="replay" data-id="${c.id}">↻ 重播</button>
+    </div>`;
+  grid.appendChild(card);
+});
+
+/* svg helper */
+function svgEl(stage){
+  const s=document.createElementNS('http://www.w3.org/2000/svg','svg');
+  s.setAttribute('viewBox',`0 0 ${SIZE} ${SIZE}`);
+  stage.appendChild(s);return s;
+}
+function ns(tag,attrs){const e=document.createElementNS('http://www.w3.org/2000/svg',tag);for(const k in attrs)e.setAttribute(k,attrs[k]);return e;}
+
+/* ============================================================
+   1) 彗星騎乘 — 從頭畫到尾，光點(你)領著發光尾巴跑
+   ============================================================ */
+function buildComet(stage){
+  stage.innerHTML='';stage.style.background='radial-gradient(120% 90% at 50% 20%,#16122a,#06060f 70%)';
+  const svg=svgEl(stage);
+  // faint stars
+  for(let i=0;i<60;i++)svg.appendChild(ns('circle',{cx:Math.random()*SIZE,cy:Math.random()*SIZE,r:Math.random()*1.1,fill:'#ffffff',opacity:(Math.random()*.5+.1).toFixed(2)}));
+  const defs=ns('defs',{});svg.appendChild(defs);
+  defs.innerHTML=`<filter id="cglow" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="4"/></filter>
+    <linearGradient id="cgrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff8a3c"/><stop offset="1" stop-color="#ff2d6f"/></linearGradient>`;
+  const glow=ns('path',{d:ROUTE.d,fill:'none',stroke:'url(#cgrad)','stroke-width':9,'stroke-linecap':'round','stroke-linejoin':'round',opacity:.35,filter:'url(#cglow)'});
+  const line=ns('path',{d:ROUTE.d,fill:'none',stroke:'#ffd9a8','stroke-width':2.4,'stroke-linecap':'round','stroke-linejoin':'round'});
+  svg.appendChild(glow);svg.appendChild(line);
+  const head=ns('circle',{r:5,fill:'#fff',filter:'url(#cglow)'});svg.appendChild(head);
+  const head2=ns('circle',{r:3,fill:'#ffe6c2'});svg.appendChild(head2);
+  const len=line.getTotalLength();
+  [glow,line].forEach(p=>{p.style.strokeDasharray=len;p.style.strokeDashoffset=len;});
+  let raf;
+  function run(){cancelAnimationFrame(raf);const t0=performance.now(),dur=2600;
+    (function f(now){let t=Math.min(1,(now-t0)/dur);const e=t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+      glow.style.strokeDashoffset=line.style.strokeDashoffset=len*(1-e);
+      const pt=line.getPointAtLength(e*len);head.setAttribute('cx',pt.x);head.setAttribute('cy',pt.y);head2.setAttribute('cx',pt.x);head2.setAttribute('cy',pt.y);
+      head.setAttribute('opacity',t<1?1:.0);head2.setAttribute('opacity',t<1?1:0);
+      if(t<1)raf=requestAnimationFrame(f);})(t0);
+  }
+  return run;
+}
+
+/* ============================================================
+   2) 霓虹合成波 — 透視網格地板 + 霓虹流動光流
+   ============================================================ */
+function buildSynth(stage){
+  stage.innerHTML='';stage.style.background='linear-gradient(180deg,#1a0633 0%,#3b0a47 45%,#11030f 100%)';
+  const svg=svgEl(stage);
+  const defs=ns('defs',{});svg.appendChild(defs);
+  defs.innerHTML=`<linearGradient id="sun" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe14d"/><stop offset=".5" stop-color="#ff7ad9"/><stop offset="1" stop-color="#ff2d95"/></linearGradient>
+    <linearGradient id="sgrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#00f0ff"/><stop offset=".5" stop-color="#b14dff"/><stop offset="1" stop-color="#ff2d95"/></linearGradient>
+    <filter id="sglow" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="3.5"/></filter>`;
+  // sun
+  svg.appendChild(ns('circle',{cx:SIZE/2,cy:120,r:70,fill:'url(#sun)',opacity:.9}));
+  for(let i=0;i<5;i++)svg.appendChild(ns('rect',{x:SIZE/2-72,y:120+i*9,width:144,height:4,fill:'#11030f',opacity:.55+i*.05}));
+  // perspective grid floor
+  const floor=ns('g',{stroke:'#ff4dd2','stroke-width':1,opacity:.55});svg.appendChild(floor);
+  for(let i=0;i<=10;i++){const x=i/10*SIZE;floor.appendChild(ns('line',{x1:x,y1:220,x2:SIZE/2+(x-SIZE/2)*4.5,y2:SIZE,opacity:.5}));}
+  const hgroup=ns('g',{stroke:'#9b4dff','stroke-width':1});svg.appendChild(hgroup);
+  // route neon
+  const base=ns('path',{d:ROUTE.d,fill:'none',stroke:'url(#sgrad)','stroke-width':6,'stroke-linecap':'round','stroke-linejoin':'round',opacity:.25,filter:'url(#sglow)'});
+  const flow=ns('path',{d:ROUTE.d,fill:'none',stroke:'#eafcff','stroke-width':2.4,'stroke-linecap':'round','stroke-linejoin':'round'});
+  svg.appendChild(base);svg.appendChild(flow);
+  const len=flow.getTotalLength();flow.style.strokeDasharray=len;flow.style.strokeDashoffset=len;
+  let raf,floorPhase=0;
+  function run(){cancelAnimationFrame(raf);const t0=performance.now(),dur=2200;
+    (function f(now){let t=Math.min(1,(now-t0)/dur);const e=1-Math.pow(1-t,3);
+      flow.style.strokeDashoffset=len*(1-e);
+      floorPhase=(floorPhase+1.4)%26;
+      hgroup.innerHTML='';
+      for(let y=220;y<=SIZE+26;y+=26){const yy=y - (26-floorPhase);const k=(yy-220)/(SIZE-220);const spread=1+k*3.5;
+        hgroup.appendChild(ns('line',{x1:SIZE/2-SIZE/2*spread,y1:yy,x2:SIZE/2+SIZE/2*spread,y2:yy,opacity:(.15+k*.5).toFixed(2)}));}
+      raf=requestAnimationFrame(f);})(t0);
+  }
+  return run;
+}
+
+/* ============================================================
+   3) 騎乘星座 — 路線頂點化作星星，依序亮起並連線
+   ============================================================ */
+function buildStar(stage){
+  stage.innerHTML='';stage.style.background='radial-gradient(120% 100% at 50% 50%,#0b1430,#05060f 75%)';
+  const svg=svgEl(stage);
+  const defs=ns('defs',{});svg.appendChild(defs);
+  defs.innerHTML=`<filter id="stglow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="2.2"/></filter>`;
+  for(let i=0;i<80;i++)svg.appendChild(ns('circle',{cx:Math.random()*SIZE,cy:Math.random()*SIZE,r:Math.random()*.9,fill:'#9fb4ff',opacity:(Math.random()*.4+.1).toFixed(2)}));
+  // pick nodes along route
+  const step=Math.max(1,Math.floor(ROUTE.pts.length/46));
+  const nodes=ROUTE.pts.filter((_,i)=>i%step===0);
+  const linkG=ns('g',{stroke:'#6f8bff','stroke-width':1,fill:'none',opacity:.6});svg.appendChild(linkG);
+  const starG=ns('g',{});svg.appendChild(starG);
+  let raf;
+  function run(){cancelAnimationFrame(raf);linkG.innerHTML='';starG.innerHTML='';
+    let idx=0;const t0=performance.now();
+    (function f(now){const target=Math.floor((now-t0)/55);
+      while(idx<=target&&idx<nodes.length){const n=nodes[idx];
+        const s=ns('circle',{cx:n.x,cy:n.y,r:0,fill:'#dbe4ff',filter:'url(#stglow)'});starG.appendChild(s);
+        const rr=idx%7===0?2.8:1.7;let r=0;const grow=()=>{r+=.5;s.setAttribute('r',Math.min(rr,r));if(r<rr)requestAnimationFrame(grow);};grow();
+        s.style.animation='twk 2.2s ease-in-out infinite';s.style.animationDelay=(Math.random()*2)+'s';
+        if(idx>0){const p=nodes[idx-1];linkG.appendChild(ns('line',{x1:p.x,y1:p.y,x2:n.x,y2:n.y}));}
+        idx++;}
+      if(idx<nodes.length)raf=requestAnimationFrame(f);})(t0);
+  }
+  return run;
+}
+
+/* ============================================================
+   4) 全息藍圖 — 青色線框 + 掃描線 + HUD 讀數
+   ============================================================ */
+function buildHolo(stage){
+  stage.innerHTML='';stage.style.background='linear-gradient(160deg,#04161c,#020a10)';
+  const svg=svgEl(stage);
+  const defs=ns('defs',{});svg.appendChild(defs);
+  defs.innerHTML=`<filter id="hglow" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="2"/></filter>`;
+  // grid
+  const g=ns('g',{stroke:'#0bf0e0','stroke-width':.5,opacity:.12});svg.appendChild(g);
+  for(let i=0;i<=SIZE;i+=24){g.appendChild(ns('line',{x1:i,y1:0,x2:i,y2:SIZE}));g.appendChild(ns('line',{x1:0,y1:i,x2:SIZE,y2:i}));}
+  // corner brackets
+  const br='M10 30 L10 10 L30 10';const corners=ns('g',{stroke:'#0bf0e0','stroke-width':2,fill:'none',opacity:.8});svg.appendChild(corners);
+  [[0,0,1,1],[SIZE,0,-1,1],[0,SIZE,1,-1],[SIZE,SIZE,-1,-1]].forEach(([x,y,sx,sy])=>corners.appendChild(ns('path',{d:br,transform:`translate(${x} ${y}) scale(${sx} ${sy})`})));
+  const glow=ns('path',{d:ROUTE.d,fill:'none',stroke:'#0bf0e0','stroke-width':5,'stroke-linecap':'round','stroke-linejoin':'round',opacity:.3,filter:'url(#hglow)'});
+  const line=ns('path',{d:ROUTE.d,fill:'none',stroke:'#9bfff7','stroke-width':1.8,'stroke-linecap':'round','stroke-linejoin':'round'});
+  svg.appendChild(glow);svg.appendChild(line);
+  // scan line
+  const scan=ns('rect',{x:0,y:0,width:SIZE,height:3,fill:'#0bf0e0',opacity:.5,filter:'url(#hglow)'});svg.appendChild(scan);
+  // HUD text
+  const txt=ns('text',{x:14,y:SIZE-16,fill:'#0bf0e0','font-family':'monospace','font-size':12,opacity:.9});svg.appendChild(txt);
+  const len=line.getTotalLength();[glow,line].forEach(p=>{p.style.strokeDasharray=len;p.style.strokeDashoffset=len;});
+  const full='DIST 85.3km  ELEV 1204m  T 4:05:42';
+  let raf;
+  function run(){cancelAnimationFrame(raf);txt.textContent='';const t0=performance.now(),dur=2400;
+    (function f(now){let t=Math.min(1,(now-t0)/dur);const e=1-Math.pow(1-t,2);
+      glow.style.strokeDashoffset=line.style.strokeDashoffset=len*(1-e);
+      scan.setAttribute('y',(e*SIZE)%SIZE);
+      txt.textContent=full.slice(0,Math.floor(e*full.length));
+      line.setAttribute('opacity',(0.85+Math.random()*0.15).toFixed(2)); // flicker
+      if(t<1)raf=requestAnimationFrame(f);else{line.setAttribute('opacity',1);scan.setAttribute('opacity',0);}})(t0);
+  }
+  return run;
+}
+
+/* ============================================================
+   5) 能量電流 — 粒子沿路線持續循環流動（canvas）
+   ============================================================ */
+function buildEnergy(stage){
+  stage.innerHTML='';stage.style.background='radial-gradient(120% 90% at 50% 50%,#0a1020,#04060d 75%)';
+  const svg=svgEl(stage);svg.style.opacity='.25';
+  svg.appendChild(ns('path',{d:ROUTE.d,fill:'none',stroke:'#1e90ff','stroke-width':2,'stroke-linecap':'round','stroke-linejoin':'round'}));
+  const measure=ns('path',{d:ROUTE.d,fill:'none'});svg.appendChild(measure);
+  const len=measure.getTotalLength();
+  const cv=document.createElement('canvas');cv.width=SIZE;cv.height=SIZE;stage.appendChild(cv);
+  const ctx=cv.getContext('2d');
+  const N=90;const parts=Array.from({length:N},()=>({off:Math.random(),v:(Math.random()*.0006+.0006),s:Math.random()*1.6+1}));
+  let raf,reveal=0;
+  function run(){cancelAnimationFrame(raf);reveal=0;
+    (function f(){ctx.clearRect(0,0,SIZE,SIZE);reveal=Math.min(1,reveal+.012);
+      ctx.globalCompositeOperation='lighter';
+      for(const p of parts){p.off=(p.off+p.v)%1;if(p.off>reveal)continue;const pt=measure.getPointAtLength(p.off*len);
+        const g=ctx.createRadialGradient(pt.x,pt.y,0,pt.x,pt.y,p.s*4);
+        g.addColorStop(0,'rgba(120,220,255,.9)');g.addColorStop(.4,'rgba(60,140,255,.5)');g.addColorStop(1,'rgba(60,140,255,0)');
+        ctx.fillStyle=g;ctx.beginPath();ctx.arc(pt.x,pt.y,p.s*4,0,7);ctx.fill();}
+      raf=requestAnimationFrame(f);})();
+  }
+  return run;
+}
+
+/* ============================================================
+   6) 水墨書法 — 一筆畫出，墨韻暈染
+   ============================================================ */
+function buildInk(stage){
+  stage.innerHTML='';stage.style.background='radial-gradient(120% 100% at 30% 20%,#1c1a17,#0d0c0a 75%)';
+  const svg=svgEl(stage);
+  const defs=ns('defs',{});svg.appendChild(defs);
+  defs.innerHTML=`<filter id="bleed" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="2.2"/></filter>`;
+  const bleed=ns('path',{d:ROUTE.d,fill:'none',stroke:'#0a0a0a','stroke-width':11,'stroke-linecap':'round','stroke-linejoin':'round',opacity:.5,filter:'url(#bleed)'});
+  const ink=ns('path',{d:ROUTE.d,fill:'none',stroke:'#111','stroke-width':6,'stroke-linecap':'round','stroke-linejoin':'round'});
+  const ink2=ns('path',{d:ROUTE.d,fill:'none',stroke:'#2b2b2b','stroke-width':2.2,'stroke-linecap':'round','stroke-linejoin':'round',opacity:.7});
+  svg.appendChild(bleed);svg.appendChild(ink);svg.appendChild(ink2);
+  // seal
+  const seal=ns('g',{opacity:0});svg.appendChild(seal);
+  seal.appendChild(ns('rect',{x:SIZE-58,y:SIZE-58,width:40,height:40,rx:5,fill:'none',stroke:'#c0392b','stroke-width':2.5}));
+  seal.appendChild(ns('text',{x:SIZE-38,y:SIZE-31,fill:'#c0392b','font-size':16,'font-weight':'700','text-anchor':'middle','font-family':'serif'}));
+  seal.querySelector('text').textContent='騎';
+  const len=ink.getTotalLength();[bleed,ink,ink2].forEach(p=>{p.style.strokeDasharray=len;p.style.strokeDashoffset=len;});
+  let raf;
+  function run(){cancelAnimationFrame(raf);seal.setAttribute('opacity',0);const t0=performance.now(),dur=2800;
+    (function f(now){let t=Math.min(1,(now-t0)/dur);const e=t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+      const off=len*(1-e);bleed.style.strokeDashoffset=ink.style.strokeDashoffset=ink2.style.strokeDashoffset=off;
+      if(t<1)raf=requestAnimationFrame(f);else{seal.style.transition='opacity .6s';seal.setAttribute('opacity',1);}})(t0);
+  }
+  return run;
+}
+
+/* twinkle keyframes for stars */
+const style=document.createElement('style');style.textContent='@keyframes twk{0%,100%{opacity:.35}50%{opacity:1}}';document.head.appendChild(style);
+
+/* ===== boot ===== */
+const BUILDERS={comet:buildComet,synth:buildSynth,star:buildStar,holo:buildHolo,energy:buildEnergy,ink:buildInk};
+const runners={};
+CONCEPTS.forEach((c,i)=>{
+  const stage=document.getElementById('stage-'+c.id);
+  const run=BUILDERS[c.id](stage);runners[c.id]=run;
+  setTimeout(run, 200+i*350); // staggered intro
+});
+document.querySelectorAll('.replay').forEach(b=>b.addEventListener('click',()=>{
+  const id=b.dataset.id;const run=BUILDERS[id](document.getElementById('stage-'+id));runners[id]=run;run();
+}));
+</script>
+</body>
+</html>

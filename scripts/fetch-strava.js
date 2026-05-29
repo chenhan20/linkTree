@@ -249,6 +249,79 @@ async function fetchWattsStream(token, activityId) {
   return data
 }
 
+// 抓 GPS + 心率 + 速度 stream，降採樣至 ~120 點，回傳 [[lat,lng,hr,kmh], ...]
+async function fetchRouteStream(token, activityId) {
+  const data = await request({
+    hostname: 'www.strava.com',
+    path:     `/api/v3/activities/${activityId}/streams?keys=latlng,heartrate,velocity_smooth,time&key_by_type=true`,
+    method:   'GET',
+    headers:  { Authorization: `Bearer ${token}` },
+  })
+  const latlng = data.latlng?.data   || []
+  const hr     = data.heartrate?.data || []
+  const vel    = data.velocity_smooth?.data || []
+  const n = latlng.length
+  if (n < 2) return null
+  const target = 120
+  const step = n <= target ? 1 : (n - 1) / (target - 1)
+  const indices = n <= target
+    ? Array.from({ length: n }, (_, i) => i)
+    : Array.from({ length: target }, (_, i) => Math.round(i * step))
+  return indices.map(i => [
+    Math.round(latlng[i][0] * 1e5) / 1e5,
+    Math.round(latlng[i][1] * 1e5) / 1e5,
+    hr[i]  != null ? Math.round(hr[i])          : null,
+    vel[i] != null ? Math.round(vel[i] * 36) / 10 : null,
+  ])
+}
+
+// ── Route stream enrichment：為沒有 route_stream 的外騎補齊 ──
+// SCAN_STREAMS=1 → 強制重抓；STREAM_FETCH_MAX=N（預設 8，日常省 quota）
+async function enrichRouteStreams(token, rides, existingRides) {
+  const scanStreams  = process.env.SCAN_STREAMS === '1'
+  const maxFetch    = parseInt(process.env.STREAM_FETCH_MAX || (scanStreams ? '999' : '8'), 10)
+
+  // 把舊有 route_stream 合併進來（避免重跑時洗掉）
+  const oldStreamMap = new Map(
+    (existingRides || []).filter(r => r.route_stream).map(r => [String(r.id), r.route_stream])
+  )
+  for (const ride of rides) {
+    if (!ride.route_stream && oldStreamMap.has(String(ride.id))) {
+      ride.route_stream = oldStreamMap.get(String(ride.id))
+    }
+  }
+
+  const todo = rides.filter(r =>
+    r.polyline && !r.trainer && (scanStreams ? true : !r.route_stream)
+  ).slice(0, maxFetch)
+
+  if (todo.length === 0) {
+    console.log('✅ Route stream：全部已有快取，跳過')
+    return
+  }
+  console.log(`🛰  Route stream：待補 ${todo.length} 筆（上限 ${maxFetch}）`)
+
+  let done = 0
+  for (const ride of todo) {
+    try {
+      await new Promise(r => setTimeout(r, 380))
+      const stream = await fetchRouteStream(token, ride.id)
+      if (stream) {
+        ride.route_stream = stream
+        const hasHR  = stream.some(p => p[2] != null)
+        const hasSpd = stream.some(p => p[3] != null)
+        console.log(`  🛰  ${ride.date} ${ride.name}：${stream.length} pts HR=${hasHR} spd=${hasSpd}`)
+        done++
+      } else {
+        console.log(`  ⚠️  ${ride.name}：無 GPS stream`)
+      }
+    } catch (e) {
+      console.warn(`  ⚠️  route stream 失敗 (${ride.id})：${e.message}`)
+    }
+  }
+  console.log(`✅ Route stream 完成：${done} 筆新增`)
+}
+
 // 滑動視窗計算指定秒數的最高平均功率
 function calcPeakPower(wattsArr, durationSec) {
   const n = wattsArr.length
@@ -1026,7 +1099,7 @@ async function main() {
     const oldRideMap = new Map(
       (existingData.recent_rides || []).map(r => [String(r.id), r])
     )
-    let mergedDesc = 0, mergedLaps = 0
+    let mergedDesc = 0, mergedLaps = 0, mergedStreams = 0
     for (const ride of result.recent_rides) {
       const old = oldRideMap.get(String(ride.id))
       if (!old) continue
@@ -1038,8 +1111,12 @@ async function main() {
         ride.top_laps = old.top_laps
         if (old.top_laps.length) mergedLaps++
       }
+      if (old.route_stream && !ride.route_stream) {
+        ride.route_stream = old.route_stream
+        mergedStreams++
+      }
     }
-    console.log(`   🔁 從舊 JSON 合併 description ${mergedDesc} 筆、top_laps ${mergedLaps} 筆`)
+    console.log(`   🔁 從舊 JSON 合併 description ${mergedDesc} 筆、top_laps ${mergedLaps} 筆、route_stream ${mergedStreams} 筆`)
   } else {
     // ── Detail enrichment：Laps + Description + Segment efforts（一次 API call 搞定）──
     // enrichRideLaps 現在同時處理 segment 掃描（用 seg_scan_ids 快取避免重複打）
@@ -1056,6 +1133,9 @@ async function main() {
   // ── Power PR：自動補新活動；SCAN_POWER=1 才全史重掃 ──
   const powerUpdate = await updatePowerPRs(token, activities)
   result.power_prs = powerUpdate.prs
+
+  // ── Route stream：補齊 GPS + 心率 + 速度（新 ride 最多 8 筆，SCAN_STREAMS=1 全掃）──
+  await enrichRouteStreams(token, result.recent_rides, existingData.recent_rides)
 
   // 以 streams 精算值覆寫單車活動關鍵指標（NP 與最大功率），提高和 Garmin 對齊度。
   let ftpForRideScores = 238
