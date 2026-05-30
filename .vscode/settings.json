@@ -20,6 +20,14 @@
         "/^node scripts/backfill-streams\\.js 2>&1$/": {
             "approve": true,
             "matchCommandLine": true
+        },
+        "/^node -e \"const d=require\\('\\./data/strava\\.json'\\); console\\.log\\('recent_rides count:', d\\.recent_rides\\?\\.length\\); const rideIds = new Set\\(\\(d\\.recent_rides\\|\\|\\[\\]\\)\\.map\\(r=>String\\(r\\.id\\)\\)\\); console\\.log\\('Sample trainer rides:', d\\.recent_rides\\?\\.filter\\(r=>r\\.trainer\\)\\.slice\\(0,3\\)\\.map\\(r=>\\(\\{id:r\\.id,name:r\\.name,trainer:r\\.trainer,type:r\\.type\\}\\)\\)\\); console\\.log\\('Types in recent_rides:', \\[\\.\\.\\.new Set\\(d\\.recent_rides\\?\\.map\\(r=>r\\.type\\)\\)\\]\\)\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^node -e \"const d=require\\('\\./data/strava\\.json'\\); const rides=d\\.recent_rides\\|\\|\\[\\]; console\\.log\\('trainer count:', rides\\.filter\\(r=>r\\.trainer\\)\\.length, '/ total:', rides\\.length\\); console\\.log\\('non-trainer count:', rides\\.filter\\(r=>!r\\.trainer\\)\\.length\\); const acts=d\\.recent_activities\\|\\|\\[\\]; console\\.log\\('recent_activities count:', acts\\.length\\); console\\.log\\('act types:', \\[\\.\\.\\.new Set\\(acts\\.map\\(r=>r\\.type\\|\\|r\\.sport_type\\)\\)\\]\\)\"$/": {
+            "approve": true,
+            "matchCommandLine": true
         }
     }
 }
