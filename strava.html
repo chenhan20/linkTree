@@ -97,54 +97,35 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 .hero-updated{font-size:11px;color:rgba(252,76,2,.35);letter-spacing:1.5px;text-transform:uppercase;margin-top:5px}
 
 /* ── name card (boarding pass) ── */
-.namecard{flex:1 1 100%;position:relative;display:flex;align-items:stretch;border-radius:16px;filter:drop-shadow(0 14px 40px rgba(0,0,0,.5));cursor:pointer}
-.namecard .nc-hole{position:absolute;right:140px;width:20px;height:20px;border-radius:50%;background:#0a0408;z-index:5}
-.namecard .nc-hole.t{top:-10px}
-.namecard .nc-hole.b{bottom:-10px}
-.nc-main{
-  flex:1;min-width:0;height:136px;background:linear-gradient(135deg,rgba(30,19,12,.96),rgba(16,10,7,.96));color:#f3efea;
-  padding:16px 20px;display:flex;align-items:center;gap:16px;
-  position:relative;z-index:2;margin-right:-9px;
-  clip-path:polygon(0 0,
-    100% 0,calc(100% - 9px) 8px,100% 16px,calc(100% - 9px) 24px,100% 32px,
-    calc(100% - 9px) 40px,100% 48px,calc(100% - 9px) 56px,100% 64px,
-    calc(100% - 9px) 72px,100% 80px,calc(100% - 9px) 88px,100% 96px,
-    calc(100% - 9px) 104px,100% 112px,calc(100% - 9px) 120px,100% 128px,
-    calc(100% - 9px) 100%,
-    0 100%);
-}
-.nc-av{width:64px;height:64px;flex-shrink:0;border-radius:14px;overflow:hidden;border:2px solid #FC4C02;background:linear-gradient(135deg,#FC4C02,#ff7a3c);display:grid;place-items:center;color:#fff;font-weight:800;font-size:22px}
+/* ── name card (V13 Live Constellation) ── */
+.namecard{flex:1 1 100%;position:relative;display:flex;align-items:center;gap:22px;border-radius:16px;overflow:hidden;min-height:150px;padding:20px 26px;cursor:pointer;
+  background:linear-gradient(135deg,#1a0e06,#0a0604);border:1px solid rgba(252,76,2,.3);box-shadow:0 16px 46px rgba(0,0,0,.55)}
+.nc-canvas{position:absolute;inset:0;width:100%;height:100%;z-index:1}
+.nc-scrim{position:absolute;inset:0;z-index:2;pointer-events:none;background:
+  radial-gradient(80% 120% at 12% 50%,rgba(10,6,4,.92),rgba(10,6,4,.3) 36%,transparent 52%),
+  linear-gradient(90deg,transparent 48%,rgba(10,6,4,.55) 62%,rgba(10,6,4,.9) 78%,rgba(10,6,4,.95))}
+.nc-row{position:relative;z-index:3;display:flex;align-items:center;gap:22px;width:100%}
+.nc-badge{flex-shrink:0;width:96px;height:96px;position:relative;display:grid;place-items:center}
+.nc-ring{position:absolute;inset:0;border-radius:50%;border:1px solid rgba(252,76,2,.4);box-shadow:inset 0 0 20px rgba(252,76,2,.3)}
+.nc-ring.r2{inset:8px;border-style:dashed;border-color:rgba(252,76,2,.3);animation:nc-spin 22s linear infinite}
+@keyframes nc-spin{to{transform:rotate(360deg)}}
+.nc-av{width:64px;height:64px;flex-shrink:0;border-radius:50%;overflow:hidden;border:2px solid #FC4C02;box-shadow:0 0 18px rgba(252,76,2,.5);background:linear-gradient(135deg,#FC4C02,#ff7a3c);display:grid;place-items:center;color:#fff;font-weight:800;font-size:20px}
 .nc-av img{width:100%;height:100%;object-fit:cover;display:block}
-.nc-id{flex-shrink:0}
-.nc-id h2{margin:0;font-size:21px;font-weight:800;letter-spacing:.5px;color:#fff;display:flex;align-items:center;gap:6px}
+.nc-id{min-width:0}
+.nc-sign{font-size:9px;letter-spacing:3px;color:rgba(252,76,2,.85);text-transform:uppercase}
+.nc-id h2{margin:4px 0 0;font-size:24px;font-weight:800;letter-spacing:1px;color:#fff;display:flex;align-items:center;gap:8px;text-shadow:0 0 14px rgba(252,76,2,.4)}
 .nc-vbadge{width:17px;height:17px;fill:#FC4C02}
-.nc-role{color:#FC4C02;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-top:3px}
-.nc-upd{color:rgba(255,255,255,.38);font-size:11px;margin-top:4px;letter-spacing:.5px}
-.nc-seam{width:1px;align-self:stretch;border-left:2px dashed rgba(252,76,2,.28);margin:10px 14px}
-.nc-stats{display:flex;gap:20px;flex:1;justify-content:flex-end}
-.nc-stat{text-align:center}
-.nc-stat b{display:block;font-size:20px;font-weight:800;color:#ff7a3c;font-variant-numeric:tabular-nums;line-height:1}
-.nc-stat span{font-size:9px;color:rgba(255,255,255,.4);letter-spacing:.5px;text-transform:uppercase;margin-top:4px;display:block}
-.nc-stub{
-  width:150px;flex-shrink:0;background:linear-gradient(135deg,#FC4C02,#ff6a2a);color:#fff;
-  padding:16px 16px 16px 22px;border-radius:0 16px 16px 0;
-  display:flex;flex-direction:column;justify-content:space-between;gap:10px;
-  transform-origin:left center;
-  transition:transform .55s cubic-bezier(.34,1.4,.5,1),box-shadow .55s ease;
-  clip-path:polygon(
-    9px 0,100% 0,100% 100%,0 100%,
-    9px 128px,0 120px,9px 112px,0 104px,9px 96px,0 88px,9px 80px,0 72px,
-    9px 64px,0 56px,9px 48px,0 40px,9px 32px,0 24px,9px 16px,0 8px);
-}
-.nc-tt{font-size:10px;letter-spacing:2px;opacity:.9}
-.nc-stub-lbl{font-size:10px;opacity:.85}
-.nc-big{font-size:30px;font-weight:900;line-height:.95}
-.nc-big span{font-size:14px;font-weight:700}
-.nc-barcode{height:28px;background:repeating-linear-gradient(90deg,#fff 0 2px,transparent 2px 5px);border-radius:2px;opacity:.92}
-.nc-tearhint{position:absolute;right:16px;bottom:-22px;font-size:11px;color:rgba(255,255,255,.4);letter-spacing:.5px;transition:opacity .3s}
-.namecard:hover .nc-stub{transform:translate(26px,14px) rotate(6deg);box-shadow:-8px 14px 30px rgba(0,0,0,.55)}
-.namecard:hover .nc-tearhint{opacity:0}
-@media (prefers-reduced-motion: reduce){.nc-stub{transition:none}}
+.nc-role{color:rgba(252,76,2,.85);font-size:10px;letter-spacing:2px;text-transform:uppercase;margin-top:4px;font-weight:600}
+.nc-stats{margin-left:auto;display:flex;flex-direction:column;min-width:236px}
+.nc-stat{display:grid;grid-template-columns:18px 1fr auto;align-items:center;gap:11px;padding:8px 2px}
+.nc-stat + .nc-stat{border-top:1px solid rgba(252,76,2,.16)}
+.nc-stat-ico{width:16px;height:16px;fill:#FC4C02;opacity:.85;filter:drop-shadow(0 0 5px rgba(252,76,2,.5))}
+.nc-stat span{font-size:10px;color:rgba(255,255,255,.55);letter-spacing:1.5px;text-transform:uppercase;text-align:left}
+.nc-stat b{font-size:18px;font-weight:800;color:#ff7a3c;font-variant-numeric:tabular-nums;text-shadow:0 0 10px rgba(252,76,2,.4);line-height:1;text-align:right}
+.nc-stat b small{font-size:9px;color:rgba(252,76,2,.7);font-weight:600;margin-left:3px}
+.nc-reroll{position:absolute;left:50%;bottom:10px;top:auto;right:auto;transform:translateX(-50%);z-index:4;font-size:10px;letter-spacing:1px;color:rgba(252,76,2,.85);background:rgba(10,6,4,.55);border:1px solid rgba(252,76,2,.4);border-radius:14px;padding:4px 12px;cursor:pointer;font-family:inherit;transition:all .15s;backdrop-filter:blur(2px)}
+.nc-reroll:hover{background:rgba(252,76,2,.28);color:#fff}
+@media (prefers-reduced-motion: reduce){.nc-ring.r2{animation:none}}
 
 /* ── stats grid ── */
 .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:2.2rem}
@@ -757,19 +738,30 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 
 /* ── monthly chart ── */
 .monthly-chart{margin-bottom:2.2rem}
-.chart-rows{display:flex;flex-direction:column;gap:10px}
-.chart-row{display:flex;align-items:center;gap:10px;padding:4px 0}
+.chart-rows{display:flex;flex-direction:column;gap:0}
+.chart-row{display:flex;align-items:center;gap:10px;padding:8px 0}
+.chart-row + .chart-row{border-top:1px solid rgba(252,76,2,.1)}
 .chart-label{font-size:12px;color:#aaa;width:24px;text-align:right;flex-shrink:0}
-.chart-bar-wrap{flex:1;height:44px;background:rgba(252,76,2,.1);border-radius:6px;overflow:hidden}
+.chart-bar-wrap{flex:1;display:flex;flex-direction:column;gap:5px;min-width:0}
+.chart-track{position:relative;height:22px;border-radius:6px;overflow:hidden}
+.chart-track.dist{background:rgba(252,76,2,.1)}
+.chart-track.elev{background:rgba(60,200,220,.08)}
 .chart-bar{
   height:100%;border-radius:6px;
-  background:linear-gradient(90deg,#992b00,#FC4C02,#ff7040);
   display:flex;align-items:center;justify-content:flex-end;
-  padding-right:10px;min-width:44px;
+  padding-right:9px;min-width:46px;
   width:0;transition:width 1s cubic-bezier(.25,.46,.45,.94);
 }
-.chart-bar-val{font-size:12px;font-weight:700;color:#fff;white-space:nowrap}
-.chart-unit-label{font-size:11px;color:#666;width:28px;flex-shrink:0}
+.chart-bar.dist{background:linear-gradient(90deg,#992b00,#FC4C02,#ff7040)}
+.chart-bar.elev{background:linear-gradient(90deg,#0a5a66,#19b6c9,#5fe3f0)}
+.chart-bar-val{font-size:11px;font-weight:700;color:#fff;white-space:nowrap;font-variant-numeric:tabular-nums}
+.chart-bar-val small{font-size:8px;font-weight:600;opacity:.75;margin-left:2px}
+.chart-bar.elev .chart-bar-val{color:#04222a}
+.chart-legend{display:flex;gap:16px;margin:0 0 14px 34px}
+.chart-legend span{display:flex;align-items:center;gap:6px;font-size:10px;letter-spacing:1px;color:#888;text-transform:uppercase}
+.chart-legend i{width:14px;height:6px;border-radius:3px;display:inline-block}
+.chart-legend i.dist{background:linear-gradient(90deg,#FC4C02,#ff7040)}
+.chart-legend i.elev{background:linear-gradient(90deg,#19b6c9,#5fe3f0)}
 
 /* ── chart year toggle ── */
 .chart-year-header{
@@ -906,6 +898,9 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
   .total-val{font-size:16px}
   .consistency-row{grid-template-columns:auto 1fr;row-gap:8px}
   .consistency-row .status-badge{grid-column:1 / -1;justify-self:start}
+  .activity-name-wrap{flex-wrap:wrap;gap:6px}
+  .activity-name{white-space:normal;overflow:visible;text-overflow:clip;flex:1 1 100%}
+  .act-detail-btn{margin-right:0}
 }
 @media(max-width:420px){
   .topbar-title{letter-spacing:1.4px}
@@ -913,8 +908,9 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
   .hero{gap:1rem;padding:1.5rem 0 1.2rem}
   .activity-card{align-items:flex-start;gap:9px;padding:.75rem .85rem;margin-left:0}
   .activity-icon{width:38px;height:38px}
-  .activity-name-wrap{flex-wrap:wrap}
-  .activity-name{white-space:normal;overflow:visible;text-overflow:clip}
+  .activity-name-wrap{flex-wrap:wrap;gap:6px}
+  .activity-name{white-space:normal;overflow:visible;text-overflow:clip;flex:1 1 100%}
+  .act-detail-btn{margin-right:0}
   .activity-dist{font-size:16px;margin-left:auto}
   .itt-badge{align-items:flex-start;gap:8px}
   .itt-attempt{text-align:right;max-width:38%}
@@ -1042,15 +1038,11 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
   .pm-hero{grid-template-columns:1fr;gap:10px}
   .pm-dial{width:140px;height:140px}
   .pm-dial-val{font-size:36px}
-  .namecard{flex-wrap:wrap}
-  .nc-main{flex:1 1 100%;height:auto;border-radius:16px 16px 0 0;clip-path:none;flex-wrap:wrap;margin-right:0}
-  .nc-seam{display:none}
-  .nc-stats{flex:1 1 100%;justify-content:space-around;border-top:1px solid rgba(252,76,2,.18);margin-top:12px;padding-top:12px}
-  .nc-stub{width:100%;flex-direction:row;align-items:center;border-radius:0 0 16px 16px;clip-path:none}
-  .nc-stub > div{flex-shrink:0}
-  .nc-barcode{flex:1;height:34px}
-  .namecard .nc-hole,.nc-tearhint{display:none}
-  .namecard:hover .nc-stub{transform:none;box-shadow:none}
+  .namecard{padding:18px}
+  .nc-row{flex-wrap:wrap}
+  .nc-badge{width:80px;height:80px}
+  .nc-av{width:56px;height:56px}
+  .nc-stats{margin-left:0;width:100%;justify-content:space-between;border-top:1px solid rgba(252,76,2,.18);margin-top:14px;padding-top:14px}
 }
 @media(max-width:480px){
   .hpc-grid{grid-template-columns:repeat(3,1fr)}
@@ -1729,6 +1721,10 @@ function monthDist(h) {
   if (h.ride && typeof h.ride === 'object') return h.ride.distance_km || 0
   return h.distance_km || 0
 }
+function monthElev(h) {
+  if (h.ride && typeof h.ride === 'object') return h.ride.elevation_m || 0
+  return h.elevation_m || 0
+}
 
 /* ── group activities by date ── */
 function groupByDate(list) {
@@ -1917,6 +1913,7 @@ function render(data) {
     data.weekly_quest.weight.parts = detectTrainPartsFromActivities(wWeights)
   }
   const maxDist = Math.max(...history.map(monthDist), 1)
+  const maxElev = Math.max(...history.map(monthElev), 1)
 
   // build ALL list (merged, sorted by date)
   const allList = []
@@ -1979,7 +1976,8 @@ function render(data) {
 
     ${history.length ? `
     <div class="monthly-chart">
-      <div class="section-title">月度里程分佈 <span class="muted">· MONTHLY DISTANCE (KM)</span></div>
+      <div class="section-title">月度里程 / 爬升 <span class="muted">· MONTHLY DISTANCE / ELEVATION</span></div>
+      <div class="chart-legend"><span><i class="dist"></i>里程 KM</span><span><i class="elev"></i>爬升 M</span></div>
       <div class="chart-rows" id="chart-rows">
         ${(() => {
           // group by year
@@ -1995,16 +1993,24 @@ function render(data) {
             const collapsed = year !== currentYear
             const rows = byYear[year].map(h => {
               const dist = monthDist(h)
-              const pct = dist > 0 ? Math.max((dist / maxDist) * 100, 4) : 0
+              const elev = monthElev(h)
+              const distPct = dist > 0 ? Math.max((dist / maxDist) * 100, 4) : 0
+              const elevPct = elev > 0 ? Math.max((elev / maxElev) * 100, 4) : 0
               return `
                 <div class="chart-row">
                   <div class="chart-label">${fmtMonthLabel(h.month)}</div>
                   <div class="chart-bar-wrap">
-                    <div class="chart-bar" data-pct="${pct}">
-                      <span class="chart-bar-val">${dist}</span>
+                    <div class="chart-track dist">
+                      <div class="chart-bar dist" data-pct="${distPct}">
+                        <span class="chart-bar-val">${dist.toLocaleString()}<small>km</small></span>
+                      </div>
+                    </div>
+                    <div class="chart-track elev">
+                      <div class="chart-bar elev" data-pct="${elevPct}">
+                        <span class="chart-bar-val">${elev.toLocaleString()}<small>m</small></span>
+                      </div>
                     </div>
                   </div>
-                  <div class="chart-unit-label">km</div>
                 </div>
               `
             }).join('')
@@ -2181,41 +2187,237 @@ function buildPwrMap(prs) {
 function renderNameCard(data) {
   const s = data.summary || {}
   const prs = data.power_prs || []
-  const bestW = prs.length ? Math.max(...prs.map(p => p.watts)) : null
   const num = v => typeof v === 'number' ? Math.round(v).toLocaleString() : (v ?? '—')
+  // FTP = 20分鐘功率 × 0.95
+  const p20 = prs.find(p => p.duration_sec === 1200)
+  const ftp = p20 ? Math.round(p20.watts * 0.95) : null
   const ytdKm = num(s.ytd_distance_km)
   const ytdElev = num(s.ytd_elevation_m)
-  const ytdRides = s.ytd_rides ?? '—'
-  const allKm = num(s.all_time_distance_km)
-  const upd = (data.updated_at || '').slice(0, 10)
   return `
     <div class="namecard" id="namecard">
-      <span class="nc-hole t"></span><span class="nc-hole b"></span>
-      <div class="nc-main">
-        <div class="nc-av">
-          <img src="docs/avatar.jpg" alt="SC" onerror="this.style.display='none';this.nextElementSibling.style.display='grid'">
-          <span class="nc-ini" style="display:none">SC</span>
+      <canvas class="nc-canvas" id="nc-canvas"></canvas>
+      <div class="nc-scrim"></div>
+      <button class="nc-reroll" id="nc-reroll" type="button" title="換一個星座">✦ 換星座</button>
+      <div class="nc-row">
+        <div class="nc-badge">
+          <div class="nc-ring"></div><div class="nc-ring r2"></div>
+          <div class="nc-av">
+            <img src="docs/avatar.jpg" alt="SC" onerror="this.style.display='none';this.nextElementSibling.style.display='grid'">
+            <span class="nc-ini" style="display:none">SC</span>
+          </div>
         </div>
         <div class="nc-id">
+          <div class="nc-sign" id="nc-sign">✦ Leo · 獅子座 ✦</div>
           <h2>STEVE <svg class="nc-vbadge" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg></h2>
           <div class="nc-role">Cyclist · Athlete</div>
-          <div class="nc-upd">Updated ${upd}</div>
         </div>
-        <div class="nc-seam"></div>
         <div class="nc-stats">
-          <div class="nc-stat"><b>${ytdKm}</b><span>YTD KM</span></div>
-          <div class="nc-stat"><b>${ytdElev}</b><span>YTD 爬升 M</span></div>
-          <div class="nc-stat"><b>${ytdRides}</b><span>YTD 騎乘</span></div>
-          <div class="nc-stat"><b>${allKm}</b><span>總里程 KM</span></div>
+          <div class="nc-stat">
+            <svg class="nc-stat-ico" viewBox="0 0 24 24"><path d="M13 2L4.5 13.5H11l-1 8.5L19.5 10H13z"/></svg>
+            <span>FTP</span><b>${ftp ?? '—'}<small>W</small></b>
+          </div>
+          <div class="nc-stat">
+            <svg class="nc-stat-ico" viewBox="0 0 24 24"><path d="M11 3h2v4h-2zm0 7h2v4h-2zm0 7h2v4h-2zM5 5h3l-1.5 14H6L5 5zm14 0l-1 14h-1.5L15 5h4z"/></svg>
+            <span>Distance</span><b>${ytdKm}<small>KM</small></b>
+          </div>
+          <div class="nc-stat">
+            <svg class="nc-stat-ico" viewBox="0 0 24 24"><path d="M14 6l7 14H3l5-9 2.5 4.5L14 6z"/></svg>
+            <span>Elevation</span><b>${ytdElev}<small>M</small></b>
+          </div>
         </div>
       </div>
-      <div class="nc-stub">
-        <div class="nc-tt">ATHLETE PASS</div>
-        <div><div class="nc-stub-lbl">最佳功率</div><div class="nc-big">${bestW ?? '—'}<span>W</span></div></div>
-        <div class="nc-barcode"></div>
-      </div>
-      <div class="nc-tearhint">滑鼠移過擕票根 →</div>
     </div>`
+}
+
+/* ── 星座名片引擎：真實星座圖（先獅子座），逐線繪製 · 亮點脈動 · 流星 ── */
+// 每個星座以 0~1 正規化座標定義，b = 亮度權重（Regulus 之類主星較亮），bright:true 為特亮單點
+const NC_CONSTELLATIONS = [
+  {
+    name: '✦ Leo · 獅子座 ✦',
+    nodes: [
+      {x:.86,y:.66,b:1.0,bright:true}, // 0 Regulus 軒轅十四（最亮）
+      {x:.885,y:.50,b:.45},            // 1 Eta
+      {x:.90,y:.36,b:.85},             // 2 Algieba 軒轅十二
+      {x:.865,y:.24,b:.55},            // 3 Zeta
+      {x:.80,y:.17,b:.55},             // 4 Mu
+      {x:.71,y:.22,b:.6},              // 5 Epsilon
+      {x:.46,y:.55,b:.55},             // 6 Chort θ
+      {x:.44,y:.33,b:.6},              // 7 Zosma δ
+      {x:.14,y:.42,b:.85},             // 8 Denebola 五帝座一（尾）
+    ],
+    edges: [[0,1],[1,2],[2,3],[3,4],[4,5],[0,6],[6,7],[2,7],[7,8],[6,8]],
+  },
+  {
+    name: '✦ Orion · 獵戶座 ✦',
+    nodes: [
+      {x:.30,y:.14,b:.85,bright:true}, // 0 Betelgeuse
+      {x:.66,y:.18,b:.6},              // 1 Bellatrix
+      {x:.44,y:.46,b:.7},              // 2 Alnilam (belt mid)
+      {x:.36,y:.45,b:.6},              // 3 Alnitak
+      {x:.52,y:.47,b:.6},              // 4 Mintaka
+      {x:.28,y:.84,b:.9,bright:true},  // 5 Rigel
+      {x:.68,y:.80,b:.65},             // 6 Saiph
+    ],
+    edges: [[0,3],[1,4],[3,2],[2,4],[3,5],[4,6],[0,1]],
+  },
+  {
+    name: '✦ Ursa Major · 北斗七星 ✦',
+    nodes: [
+      {x:.10,y:.42,b:.7},              // 0 Dubhe
+      {x:.24,y:.55,b:.6},              // 1 Merak
+      {x:.40,y:.58,b:.6},              // 2 Phecda
+      {x:.50,y:.46,b:.55},             // 3 Megrez
+      {x:.66,y:.40,b:.7,bright:true},  // 4 Alioth
+      {x:.80,y:.30,b:.6},              // 5 Mizar
+      {x:.93,y:.20,b:.7,bright:true},  // 6 Alkaid
+    ],
+    edges: [[0,1],[1,2],[2,3],[3,0],[3,4],[4,5],[5,6]],
+  },
+  {
+    name: '✦ Cassiopeia · 仙后座 ✦',
+    nodes: [
+      {x:.10,y:.40,b:.7},
+      {x:.30,y:.66,b:.6},
+      {x:.50,y:.34,b:.8,bright:true},
+      {x:.70,y:.64,b:.6},
+      {x:.90,y:.36,b:.7},
+    ],
+    edges: [[0,1],[1,2],[2,3],[3,4]],
+  },
+  {
+    name: '✦ Cygnus · 天鵝座 ✦',
+    nodes: [
+      {x:.50,y:.10,b:.7},              // 0 Deneb top
+      {x:.50,y:.40,b:.55},             // 1 mid
+      {x:.50,y:.78,b:.85,bright:true}, // 2 Albireo (beak)
+      {x:.18,y:.34,b:.6},              // 3 left wing
+      {x:.82,y:.34,b:.6},              // 4 right wing
+    ],
+    edges: [[0,1],[1,2],[3,1],[1,4]],
+  },
+]
+
+function bindNameCard() {
+  const canvas = document.getElementById('nc-canvas')
+  if (!canvas) return
+  const ctx = canvas.getContext('2d')
+  const DPR = Math.min(window.devicePixelRatio || 1, 2)
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches
+  const rnd = (a, b) => a + Math.random() * (b - a)
+
+  let W = 0, H = 0, stars = [], meteors = [], shape = null, t = 0, prog = 0, raf = 0
+
+  function fit() {
+    const r = canvas.getBoundingClientRect()
+    W = canvas.width = Math.max(1, r.width * DPR)
+    H = canvas.height = Math.max(1, r.height * DPR)
+  }
+  function makeStars() {
+    stars = []
+    const n = Math.round((W * H) / (9000 * DPR))
+    for (let i = 0; i < n; i++) stars.push({ x: Math.random() * W, y: Math.random() * H, r: rnd(.4, 1.5) * DPR, tw: Math.random() * 6.28, sp: rnd(1, 3) })
+  }
+  function meteor() {
+    return { x: rnd(W * .1, W * .9), y: rnd(0, H * .4), len: rnd(70, 130) * DPR, vx: rnd(3.5, 6) * DPR, vy: rnd(1.2, 2.4) * DPR, life: 0, max: rnd(36, 64) }
+  }
+  let idx = 0
+  function setShape(i) {
+    shape = NC_CONSTELLATIONS[i % NC_CONSTELLATIONS.length]
+    prog = 0
+    const sign = document.getElementById('nc-sign')
+    if (sign) sign.textContent = shape.name
+  }
+  function reroll() { idx = (idx + 1) % NC_CONSTELLATIONS.length; setShape(idx) }
+
+  // 把正規化座標映射到 canvas（星座畫在中段，避開左側文字與右側數字）
+  function px(nx) { return W * (0.24 + nx * 0.34) }
+  function py(ny) { return H * (0.12 + ny * 0.76) }
+
+  function frame() {
+    t += 0.016
+    ctx.clearRect(0, 0, W, H)
+
+    // 背景散星
+    for (const s of stars) {
+      const a = .3 + .55 * (0.5 + 0.5 * Math.sin(t * s.sp + s.tw))
+      ctx.globalAlpha = a
+      ctx.fillStyle = '#ffe9d6'
+      ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, 7); ctx.fill()
+    }
+    ctx.globalAlpha = 1
+
+    // 流星
+    if (!reduce && Math.random() < 0.014 && meteors.length < 2) meteors.push(meteor())
+    for (let i = meteors.length - 1; i >= 0; i--) {
+      const m = meteors[i]; m.life++; m.x += m.vx; m.y += m.vy
+      const a = 1 - m.life / m.max
+      const g = ctx.createLinearGradient(m.x, m.y, m.x - m.len, m.y - m.len * 0.4)
+      g.addColorStop(0, `rgba(255,200,150,${a})`); g.addColorStop(1, 'rgba(255,200,150,0)')
+      ctx.strokeStyle = g; ctx.lineWidth = 1.6 * DPR
+      ctx.beginPath(); ctx.moveTo(m.x, m.y); ctx.lineTo(m.x - m.len, m.y - m.len * 0.4); ctx.stroke()
+      if (m.life > m.max) meteors.splice(i, 1)
+    }
+
+    if (shape) {
+      const edges = shape.edges, nodes = shape.nodes
+      if (prog < edges.length) prog += reduce ? edges.length : 0.022
+
+      // 連線（暗一點）
+      ctx.lineWidth = 1.1 * DPR
+      for (let i = 0; i < edges.length; i++) {
+        const p = Math.min(1, prog - i); if (p <= 0) break
+        const a = nodes[edges[i][0]], b = nodes[edges[i][1]]
+        const ax = px(a.x), ay = py(a.y), bx = px(b.x), by = py(b.y)
+        const x = ax + (bx - ax) * p, y = ay + (by - ay) * p
+        ctx.strokeStyle = 'rgba(255,160,100,.42)'
+        ctx.shadowColor = 'rgba(252,76,2,.6)'; ctx.shadowBlur = 6 * DPR
+        ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(x, y); ctx.stroke()
+      }
+      ctx.shadowBlur = 0
+
+      // 節點（亮，主星特亮＋脈動）
+      const drawnRatio = prog / Math.max(1, edges.length)
+      for (let i = 0; i < nodes.length; i++) {
+        if (i / nodes.length > drawnRatio + 0.25 && prog < edges.length) continue
+        const nd = nodes[i]
+        const x = px(nd.x), y = py(nd.y)
+        const pulse = .75 + .25 * Math.sin(t * 2.2 + i)
+        const baseR = (nd.bright ? 3.6 : 1.8 + nd.b * 1.4) * DPR
+        // 光暈
+        ctx.fillStyle = nd.bright ? '#fff' : '#ffe2c8'
+        ctx.shadowColor = nd.bright ? 'rgba(255,210,150,1)' : 'rgba(252,76,2,.9)'
+        ctx.shadowBlur = (nd.bright ? 22 : 11) * DPR * pulse
+        ctx.beginPath(); ctx.arc(x, y, baseR, 0, 7); ctx.fill()
+        // 主星十字星芒
+        if (nd.bright) {
+          ctx.shadowBlur = 0
+          const ray = 13 * DPR * pulse
+          const grd = ctx.createLinearGradient(x - ray, y, x + ray, y)
+          grd.addColorStop(0, 'rgba(255,210,150,0)'); grd.addColorStop(.5, 'rgba(255,225,180,.9)'); grd.addColorStop(1, 'rgba(255,210,150,0)')
+          ctx.strokeStyle = grd; ctx.lineWidth = 1.2 * DPR
+          ctx.beginPath(); ctx.moveTo(x - ray, y); ctx.lineTo(x + ray, y); ctx.stroke()
+          ctx.beginPath(); ctx.moveTo(x, y - ray); ctx.lineTo(x, y + ray); ctx.stroke()
+        }
+      }
+      ctx.shadowBlur = 0
+    }
+
+    raf = requestAnimationFrame(frame)
+  }
+
+  function start() {
+    cancelAnimationFrame(raf)
+    fit(); makeStars()
+    if (!shape) setShape(0)
+    frame()
+  }
+  start()
+
+  const ro = new ResizeObserver(() => { fit(); makeStars() })
+  ro.observe(canvas)
+
+  const btn = document.getElementById('nc-reroll')
+  if (btn) btn.addEventListener('click', e => { e.stopPropagation(); reroll() })
 }
 
 function renderPowerCard(prs) {
@@ -2431,6 +2633,7 @@ Promise.all([
     window._ittSegMeta = Object.fromEntries(ittConfig.segments.map(s => [s.id, s]))
     render(data)
     bindPowerCard(data.power_prs)
+    bindNameCard()
   })
   .catch(err => {
     document.getElementById('content').innerHTML = `

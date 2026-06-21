@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>名片版型 DEMO 2 · 太空 / 賽車 / 星座</title>
+<style>
+  :root{
+    --orange:#FC4C02;
+    --orange2:#ff7a3c;
+    --ink:#06070d;
+    --txt:#f4f6fb;
+    --muted:rgba(255,255,255,.5);
+    --line:rgba(255,255,255,.08);
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;font-family:-apple-system,"Segoe UI","Noto Sans TC",system-ui,sans-serif;
+    background:
+      radial-gradient(1200px 600px at 85% -10%,rgba(252,76,2,.10),transparent 60%),
+      radial-gradient(900px 500px at -5% 110%,rgba(80,120,255,.10),transparent 60%),
+      var(--ink);
+    color:var(--txt);padding:48px 20px 90px;min-height:100vh;
+  }
+  .wrap{max-width:880px;margin:0 auto}
+  .page-title{font-size:13px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin:0 0 4px}
+  .page-h1{font-size:26px;font-weight:800;margin:0 0 6px;letter-spacing:.5px}
+  .page-desc{color:var(--muted);font-size:13.5px;line-height:1.75;margin:0 0 40px}
+  .page-desc b{color:var(--orange)}
+  .variant{margin-bottom:50px}
+  .variant > .label{display:flex;align-items:center;gap:10px;margin:0 0 14px;flex-wrap:wrap}
+  .variant > .label .num{width:24px;height:24px;border-radius:7px;display:grid;place-items:center;background:var(--orange);color:#fff;font-size:12px;font-weight:800;flex-shrink:0}
+  .variant > .label .name{font-size:15px;font-weight:700}
+  .variant > .label .tag{font-size:12px;color:var(--muted)}
+
+  /* shared avatar */
+  .av{flex-shrink:0;overflow:hidden;background:linear-gradient(135deg,var(--orange),var(--orange2));display:grid;place-items:center;color:#fff;font-weight:800}
+  .av img{width:100%;height:100%;object-fit:cover;display:block}
+  .av .ini{font-size:1em}
+
+  @keyframes twinkle{0%,100%{opacity:.25}50%{opacity:1}}
+  @keyframes scan{0%{transform:translateY(-100%)}100%{transform:translateY(2000%)}}
+  @keyframes orbitspin{to{transform:rotate(360deg)}}
+  @keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
+  @keyframes sweep{0%{transform:rotate(-118deg)}100%{transform:rotate(40deg)}}
+  @keyframes streak{0%{transform:translateX(-120%)}100%{transform:translateX(420%)}}
+
+  /* =========================================================
+     V1 — 太空艙 HUD Cosmic HUD
+  ==========================================================*/
+  .v1{position:relative;display:flex;align-items:center;gap:18px;padding:18px 22px;border-radius:14px;overflow:hidden;
+     background:linear-gradient(135deg,#0b1022,#080a14);border:1px solid rgba(252,76,2,.3);
+     box-shadow:0 14px 44px rgba(0,0,0,.55),inset 0 0 50px rgba(252,76,2,.05)}
+  .v1::before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(252,76,2,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(252,76,2,.07) 1px,transparent 1px);background-size:26px 26px;mask:radial-gradient(120% 120% at 70% 0%,#000,transparent 75%);pointer-events:none}
+  .v1 .corner{position:absolute;width:18px;height:18px;border:2px solid var(--orange);pointer-events:none}
+  .v1 .corner.tl{top:8px;left:8px;border-right:none;border-bottom:none}
+  .v1 .corner.tr{top:8px;right:8px;border-left:none;border-bottom:none}
+  .v1 .corner.bl{bottom:8px;left:8px;border-right:none;border-top:none}
+  .v1 .corner.br{bottom:8px;right:8px;border-left:none;border-top:none}
+  .v1 .scan{position:absolute;left:0;right:0;height:60px;top:0;background:linear-gradient(rgba(252,76,2,.16),transparent);animation:scan 4.5s linear infinite;pointer-events:none}
+  .v1 .av{width:66px;height:66px;clip-path:polygon(50% 0,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%);border:0;position:relative;z-index:2}
+  .v1 .id{position:relative;z-index:2;min-width:0}
+  .v1 .id h2{margin:0;font-size:22px;font-weight:800;letter-spacing:1px;display:flex;align-items:center;gap:8px;text-shadow:0 0 12px rgba(252,76,2,.5)}
+  .v1 .id h2 small{font-size:9px;letter-spacing:3px;color:var(--orange);font-weight:700;border:1px solid rgba(252,76,2,.5);padding:2px 6px;border-radius:4px}
+  .v1 .id .role{color:rgba(252,76,2,.85);font-size:10px;font-weight:600;letter-spacing:2.5px;text-transform:uppercase;margin-top:5px}
+  .v1 .id .upd{color:var(--muted);font-size:10px;margin-top:4px;letter-spacing:1px}
+  .v1 .stats{position:relative;z-index:2;display:flex;gap:18px;margin-left:auto}
+  .v1 .stat{text-align:center}
+  .v1 .stat b{display:block;font-size:19px;font-weight:800;color:var(--orange2);font-variant-numeric:tabular-nums;text-shadow:0 0 10px rgba(252,76,2,.4)}
+  .v1 .stat span{font-size:8px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-top:3px;display:block}
+
+  /* =========================================================
+     V2 — 星座盤 Constellation Map
+  ==========================================================*/
+  .v2{position:relative;display:flex;align-items:center;gap:20px;padding:20px 24px;border-radius:14px;overflow:hidden;
+     background:radial-gradient(140% 120% at 80% 0%,#141a33,#070912 70%);border:1px solid rgba(120,150,255,.22)}
+  .v2 .stars{position:absolute;inset:0;pointer-events:none}
+  .v2 .stars i{position:absolute;width:2px;height:2px;border-radius:50%;background:#cfe0ff;box-shadow:0 0 6px #9bb8ff;animation:twinkle 3s ease-in-out infinite}
+  .v2 svg.lines{position:absolute;top:0;right:30px;width:260px;height:100%;opacity:.55;pointer-events:none}
+  .v2 .av{width:64px;height:64px;border-radius:50%;border:2px solid #7c9bff;box-shadow:0 0 16px rgba(124,155,255,.4);position:relative;z-index:2}
+  .v2 .id{position:relative;z-index:2}
+  .v2 .id .sign{font-size:9px;letter-spacing:3px;color:#9bb8ff;text-transform:uppercase}
+  .v2 .id h2{margin:3px 0 0;font-size:23px;font-weight:800;letter-spacing:1px;color:#eef3ff}
+  .v2 .id .role{color:#7c9bff;font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;margin-top:4px}
+  .v2 .stats{position:relative;z-index:2;display:flex;gap:20px;margin-left:auto;text-align:center}
+  .v2 .stat b{display:block;font-size:19px;font-weight:800;color:#cfe0ff;font-variant-numeric:tabular-nums}
+  .v2 .stat span{font-size:8px;color:rgba(155,184,255,.6);letter-spacing:1px;text-transform:uppercase;margin-top:3px;display:block}
+
+  /* =========================================================
+     V3 — 賽車計時板 Pit Wall Timing
+  ==========================================================*/
+  .v3{display:flex;align-items:stretch;border-radius:12px;overflow:hidden;background:#0a0c10;border:1px solid rgba(255,255,255,.08);box-shadow:0 14px 40px rgba(0,0,0,.5)}
+  .v3 .pos{flex-shrink:0;width:78px;background:linear-gradient(160deg,var(--orange),#b32f00);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;position:relative}
+  .v3 .pos .p{font-size:38px;font-weight:900;line-height:.85;font-family:"Arial Narrow",sans-serif}
+  .v3 .pos .pl{font-size:8px;letter-spacing:2px;opacity:.85;margin-top:4px}
+  .v3 .pos::after{content:"";position:absolute;right:0;top:0;bottom:0;width:6px;background:repeating-linear-gradient(45deg,#fff 0 4px,#000 4px 8px);opacity:.85}
+  .v3 .core{flex:1;padding:14px 18px;display:flex;align-items:center;gap:14px;min-width:0;font-family:"SF Mono",ui-monospace,monospace}
+  .v3 .av{width:54px;height:54px;border-radius:8px;border:1px solid rgba(252,76,2,.5)}
+  .v3 .id h2{margin:0;font-size:19px;font-weight:800;letter-spacing:.5px;color:#fff}
+  .v3 .id .role{color:var(--orange);font-size:10px;letter-spacing:2px;text-transform:uppercase;margin-top:3px}
+  .v3 .sectors{margin-left:auto;display:flex;gap:1px;border-radius:6px;overflow:hidden}
+  .v3 .sec{padding:8px 12px;text-align:center;background:#11141a}
+  .v3 .sec small{display:block;font-size:8px;letter-spacing:1px;color:var(--muted);margin-bottom:4px}
+  .v3 .sec b{font-size:15px;font-weight:800;font-variant-numeric:tabular-nums}
+  .v3 .sec.purple b{color:#c479ff}
+  .v3 .sec.green b{color:#39d353}
+  .v3 .sec.yellow b{color:#ffd200}
+
+  /* =========================================================
+     V4 — 太空船控制台 Spaceship Console
+  ==========================================================*/
+  .v4{position:relative;display:flex;align-items:center;gap:18px;padding:18px 22px;border-radius:14px;overflow:hidden;
+     background:linear-gradient(135deg,#0e0a08,#060708);border:1px solid rgba(252,76,2,.25)}
+  .v4 .av{width:64px;height:64px;border-radius:12px;border:2px solid rgba(252,76,2,.6);position:relative;z-index:2}
+  .v4 .id{position:relative;z-index:2}
+  .v4 .id h2{margin:0;font-size:21px;font-weight:800;letter-spacing:.5px;display:flex;align-items:center;gap:8px}
+  .v4 .id .role{color:var(--orange);font-size:10px;letter-spacing:2px;text-transform:uppercase;margin-top:4px;font-weight:600}
+  .v4 .tele{margin-left:auto;display:flex;flex-direction:column;gap:7px;min-width:230px;position:relative;z-index:2}
+  .v4 .trow{display:flex;align-items:center;gap:10px}
+  .v4 .trow .tl{font-size:9px;letter-spacing:1px;color:var(--muted);width:64px;text-transform:uppercase;text-align:right}
+  .v4 .trow .tb{flex:1;height:7px;border-radius:4px;background:rgba(252,76,2,.12);overflow:hidden}
+  .v4 .trow .tf{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--orange),var(--orange2));box-shadow:0 0 8px rgba(252,76,2,.6)}
+  .v4 .trow .tv{font-size:12px;font-weight:800;color:var(--orange2);width:60px;font-variant-numeric:tabular-nums;text-align:right}
+
+  /* =========================================================
+     V5 — 星雲玻璃 Nebula Glass
+  ==========================================================*/
+  .v5{position:relative;display:flex;align-items:center;gap:18px;padding:20px 24px;border-radius:18px;overflow:hidden;
+     background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+  .v5::before{content:"";position:absolute;inset:-40%;background:
+     radial-gradient(circle at 20% 30%,rgba(252,76,2,.5),transparent 40%),
+     radial-gradient(circle at 80% 70%,rgba(120,90,255,.45),transparent 42%),
+     radial-gradient(circle at 60% 20%,rgba(255,120,60,.4),transparent 40%);
+     filter:blur(30px);animation:orbitspin 28s linear infinite;pointer-events:none;z-index:0}
+  .v5 > *{position:relative;z-index:2}
+  .v5 .av{width:66px;height:66px;border-radius:50%;border:2px solid rgba(255,255,255,.4);box-shadow:0 0 22px rgba(252,76,2,.4)}
+  .v5 .id h2{margin:0;font-size:23px;font-weight:800;letter-spacing:.5px;text-shadow:0 2px 12px rgba(0,0,0,.5)}
+  .v5 .id .role{color:#fff;font-size:10px;letter-spacing:2px;text-transform:uppercase;margin-top:4px;opacity:.8}
+  .v5 .pills{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;max-width:340px}
+  .v5 .pill{font-size:12px;padding:7px 13px;border-radius:20px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);backdrop-filter:blur(6px)}
+  .v5 .pill b{color:var(--orange2);font-weight:800;font-variant-numeric:tabular-nums}
+
+  /* =========================================================
+     V6 — 碳纖維超級駕照 Carbon Super License
+  ==========================================================*/
+  .v6{position:relative;display:flex;align-items:stretch;gap:0;border-radius:12px;overflow:hidden;
+     background:
+       repeating-linear-gradient(45deg,#15171c 0 6px,#101216 6px 12px),
+       #101216;border:1px solid rgba(255,255,255,.1);box-shadow:0 14px 40px rgba(0,0,0,.55)}
+  .v6 .stripe{flex-shrink:0;width:10px;background:linear-gradient(180deg,var(--orange),#b32f00)}
+  .v6 .photo{flex-shrink:0;padding:16px 0 16px 18px;display:flex;align-items:center}
+  .v6 .av{width:64px;height:64px;border-radius:10px;border:2px solid var(--orange)}
+  .v6 .main{flex:1;padding:16px 20px;min-width:0}
+  .v6 .no{font-size:9px;letter-spacing:2px;color:var(--orange);font-family:ui-monospace,monospace}
+  .v6 .lic{font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-top:2px}
+  .v6 h2{margin:4px 0 0;font-size:22px;font-weight:900;letter-spacing:.5px;background:linear-gradient(90deg,#fff,#ffd9c8,#fff);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .v6 .sub{font-size:10px;color:var(--muted);letter-spacing:1px;margin-top:3px}
+  .v6 .grid{display:flex;gap:22px;margin-top:12px}
+  .v6 .g span{font-size:8px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;display:block}
+  .v6 .g b{font-size:17px;font-weight:800;color:var(--orange2);font-variant-numeric:tabular-nums}
+  .v6 .flag{flex-shrink:0;width:34px;background:repeating-conic-gradient(#fff 0 25%,#0a0c10 0 50%) 0 0/14px 14px;opacity:.85}
+
+  /* =========================================================
+     V7 — 黃道星座徽印 Zodiac Seal
+  ==========================================================*/
+  .v7{position:relative;display:flex;align-items:center;gap:22px;padding:18px 24px;border-radius:14px;overflow:hidden;
+     background:radial-gradient(120% 130% at 0% 50%,#1a1206,#0a0907 70%);border:1px solid rgba(212,175,55,.3)}
+  .v7 .seal{flex-shrink:0;width:84px;height:84px;position:relative;display:grid;place-items:center}
+  .v7 .seal .ring{position:absolute;inset:0;border-radius:50%;border:1.5px solid rgba(212,175,55,.5);animation:orbitspin 30s linear infinite}
+  .v7 .seal .ring::before{content:"★ ARIES ★ RIDER ★ STRAVA ";position:absolute;inset:0;font-size:7px;letter-spacing:2px;color:rgba(212,175,55,.7)}
+  .v7 .seal .av{width:60px;height:60px;border-radius:50%;border:2px solid #d4af37;background:linear-gradient(135deg,#d4af37,#f0d97a)}
+  .v7 .id h2{margin:0;font-size:22px;font-weight:800;letter-spacing:1px;color:#f7ecc7}
+  .v7 .id .zodiac{font-size:10px;letter-spacing:2px;color:#d4af37;text-transform:uppercase;margin-top:4px;font-weight:600}
+  .v7 .id .role{font-size:9px;letter-spacing:2px;color:rgba(212,175,55,.6);text-transform:uppercase;margin-top:3px}
+  .v7 .stats{margin-left:auto;display:flex;gap:20px;text-align:center}
+  .v7 .stat b{display:block;font-size:19px;font-weight:800;color:#f0d97a;font-variant-numeric:tabular-nums}
+  .v7 .stat span{font-size:8px;color:rgba(212,175,55,.55);letter-spacing:1px;text-transform:uppercase;margin-top:3px;display:block}
+
+  /* =========================================================
+     V8 — 任務徽章 Mission Patch
+  ==========================================================*/
+  .v8{position:relative;display:flex;align-items:center;gap:20px;padding:18px 24px;border-radius:14px;overflow:hidden;
+     background:linear-gradient(135deg,#0a0f1c,#070a12);border:1px solid rgba(252,76,2,.25)}
+  .v8 .patch{flex-shrink:0;width:80px;height:80px;position:relative;display:grid;place-items:center}
+  .v8 .patch .orbit{position:absolute;inset:4px;border-radius:50%;border:1px dashed rgba(252,76,2,.45);animation:orbitspin 18s linear infinite}
+  .v8 .patch .orbit::after{content:"";position:absolute;top:-3px;left:50%;width:6px;height:6px;border-radius:50%;background:var(--orange);box-shadow:0 0 8px var(--orange)}
+  .v8 .patch .av{width:58px;height:58px;border-radius:50%;border:2px solid rgba(252,76,2,.6)}
+  .v8 .id .mno{font-size:9px;letter-spacing:3px;color:var(--orange);text-transform:uppercase;font-family:ui-monospace,monospace}
+  .v8 .id h2{margin:3px 0 0;font-size:22px;font-weight:800;letter-spacing:.5px}
+  .v8 .id .role{font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-top:4px}
+  .v8 .stats{margin-left:auto;display:grid;grid-template-columns:1fr 1fr;gap:6px 18px}
+  .v8 .stat{display:flex;align-items:baseline;gap:6px}
+  .v8 .stat b{font-size:16px;font-weight:800;color:var(--orange2);font-variant-numeric:tabular-nums}
+  .v8 .stat span{font-size:8px;color:var(--muted);letter-spacing:1px;text-transform:uppercase}
+
+  /* =========================================================
+     V9 — 賽車儀表 Telemetry Dashboard
+  ==========================================================*/
+  .v9{position:relative;display:flex;align-items:center;gap:20px;padding:16px 22px;border-radius:14px;overflow:hidden;
+     background:linear-gradient(135deg,#12100e,#070605);border:1px solid rgba(252,76,2,.28)}
+  .v9 .tach{flex-shrink:0;width:74px;height:74px;position:relative}
+  .v9 .tach svg{width:100%;height:100%;transform:rotate(0deg)}
+  .v9 .tach .needle{position:absolute;left:50%;bottom:50%;width:2px;height:32px;background:var(--orange);transform-origin:bottom center;transform:rotate(20deg);box-shadow:0 0 8px var(--orange);animation:sweep 2.6s cubic-bezier(.5,0,.4,1) infinite alternate}
+  .v9 .tach .rpm{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none}
+  .v9 .tach .rpm b{font-size:16px;font-weight:900;color:var(--orange2)}
+  .v9 .tach .rpm span{font-size:7px;letter-spacing:1px;color:var(--muted)}
+  .v9 .av{width:58px;height:58px;border-radius:10px;border:2px solid rgba(252,76,2,.5)}
+  .v9 .id h2{margin:0;font-size:20px;font-weight:800;letter-spacing:.5px}
+  .v9 .id .role{font-size:9px;letter-spacing:2px;color:var(--orange);text-transform:uppercase;margin-top:4px;font-weight:600}
+  .v9 .gear{margin-left:auto;display:flex;align-items:center;gap:16px}
+  .v9 .gbox{text-align:center;width:46px;height:54px;border:1px solid rgba(252,76,2,.4);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(252,76,2,.06)}
+  .v9 .gbox b{font-size:24px;font-weight:900;color:var(--orange2);line-height:1}
+  .v9 .gbox span{font-size:7px;letter-spacing:1px;color:var(--muted);margin-top:2px}
+  .v9 .read{display:flex;flex-direction:column;gap:6px}
+  .v9 .read .r{display:flex;align-items:baseline;gap:6px}
+  .v9 .read .r b{font-size:15px;font-weight:800;color:#fff;font-variant-numeric:tabular-nums}
+  .v9 .read .r span{font-size:8px;letter-spacing:1px;color:var(--muted);text-transform:uppercase}
+
+  /* =========================================================
+     V10 — 深空登機證 Deep Space Boarding Pass
+  ==========================================================*/
+  .v10{position:relative;display:flex;align-items:stretch;border-radius:14px;overflow:hidden;box-shadow:0 16px 46px rgba(0,0,0,.55)}
+  .v10 .body{flex:1;position:relative;padding:18px 22px;display:flex;align-items:center;gap:16px;min-width:0;
+     background:radial-gradient(130% 130% at 90% 0%,#101830,#070a14 70%);overflow:hidden}
+  .v10 .body .stars{position:absolute;inset:0;pointer-events:none}
+  .v10 .body .stars i{position:absolute;width:2px;height:2px;border-radius:50%;background:#dce8ff;animation:twinkle 3.5s ease-in-out infinite}
+  .v10 .av{width:60px;height:60px;border-radius:12px;border:2px solid var(--orange);position:relative;z-index:2}
+  .v10 .id{position:relative;z-index:2;min-width:0}
+  .v10 .id .tt{font-size:8px;letter-spacing:3px;color:rgba(252,76,2,.8);text-transform:uppercase}
+  .v10 .id h2{margin:3px 0 0;font-size:21px;font-weight:800;letter-spacing:.5px;color:#eef3ff}
+  .v10 .id .route{display:flex;align-items:center;gap:8px;margin-top:6px;font-size:11px;color:#9bb8ff;font-weight:700;letter-spacing:1px}
+  .v10 .id .route .arr{flex:1;height:1px;background:repeating-linear-gradient(90deg,#9bb8ff 0 4px,transparent 4px 8px);position:relative}
+  .v10 .id .route .arr::after{content:"✈";position:absolute;right:-2px;top:-8px;font-size:11px;color:var(--orange2)}
+  .v10 .fields{position:relative;z-index:2;margin-left:auto;display:flex;gap:18px}
+  .v10 .f span{font-size:8px;letter-spacing:1px;color:rgba(155,184,255,.6);text-transform:uppercase;display:block}
+  .v10 .f b{font-size:16px;font-weight:800;color:#cfe0ff;font-variant-numeric:tabular-nums}
+  .v10 .stub{flex-shrink:0;width:124px;background:linear-gradient(160deg,var(--orange),#b32f00);color:#fff;padding:16px 14px;display:flex;flex-direction:column;justify-content:space-between;position:relative}
+  .v10 .stub::before{content:"";position:absolute;left:-8px;top:0;bottom:0;width:16px;background:radial-gradient(circle,#070a14 7px,transparent 8px) 0 0/16px 22px}
+  .v10 .stub .tt{font-size:8px;letter-spacing:2px;opacity:.9}
+  .v10 .stub .big{font-size:30px;font-weight:900;line-height:.9}
+  .v10 .stub .big span{font-size:13px}
+  .v10 .stub .bar{height:26px;background:repeating-linear-gradient(90deg,#fff 0 2px,transparent 2px 5px);border-radius:2px;opacity:.9}
+
+  /* =========================================================
+     V11 — 星圖卡 Star Chart（右側 canvas 隨機星座，文字區乾淨）
+  ==========================================================*/
+  .v11{position:relative;display:flex;align-items:stretch;border-radius:16px;overflow:hidden;min-height:140px;
+     background:linear-gradient(135deg,#0b1024,#070912);border:1px solid rgba(124,155,255,.28);box-shadow:0 16px 46px rgba(0,0,0,.55)}
+  .v11 .info{flex:1;position:relative;z-index:3;padding:20px 24px;display:flex;align-items:center;gap:18px;min-width:0}
+  .v11 .av{width:66px;height:66px;border-radius:50%;border:2px solid #7c9bff;box-shadow:0 0 18px rgba(124,155,255,.5)}
+  .v11 .id .sign{font-size:9px;letter-spacing:3px;color:#9bb8ff;text-transform:uppercase;display:flex;align-items:center;gap:6px}
+  .v11 .id h2{margin:4px 0 0;font-size:24px;font-weight:800;letter-spacing:1px;color:#eef3ff;text-shadow:0 0 14px rgba(124,155,255,.4)}
+  .v11 .id .role{color:#7c9bff;font-size:10px;letter-spacing:2px;text-transform:uppercase;margin-top:4px;font-weight:600}
+  .v11 .stats{display:flex;gap:22px;margin-left:8px}
+  .v11 .stat span{font-size:8px;color:rgba(155,184,255,.6);letter-spacing:1px;text-transform:uppercase;display:block}
+  .v11 .stat b{font-size:19px;font-weight:800;color:#cfe0ff;font-variant-numeric:tabular-nums;text-shadow:0 0 10px rgba(124,155,255,.4)}
+  .v11 .skypanel{flex-shrink:0;width:200px;position:relative;border-left:1px dashed rgba(124,155,255,.2);
+     background:radial-gradient(120% 120% at 80% 30%,#101838,#070a16 75%)}
+  .v11 .skypanel canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+  .v11 .reroll{position:absolute;right:12px;top:12px;z-index:4;font-size:10px;letter-spacing:1px;color:#9bb8ff;background:rgba(124,155,255,.12);border:1px solid rgba(124,155,255,.4);border-radius:14px;padding:4px 12px;cursor:pointer;font-family:inherit;transition:all .15s}
+  .v11 .reroll:hover{background:rgba(124,155,255,.3);color:#fff}
+
+  /* =========================================================
+     V12 — 銀河護照 Galaxy Pass（全幅動畫星空＋流星＋發光晶片）
+  ==========================================================*/
+  .v12{position:relative;display:flex;align-items:center;gap:20px;padding:22px 26px;border-radius:16px;overflow:hidden;min-height:150px;
+     background:radial-gradient(150% 120% at 80% -10%,#241a52,#0a0a1e 60%,#06060f);border:1px solid rgba(150,130,255,.3);box-shadow:0 16px 50px rgba(0,0,0,.6)}
+  .v12 canvas.sky{position:absolute;inset:0;width:100%;height:100%;z-index:1}
+  .v12 .neb{position:absolute;inset:-30%;z-index:0;pointer-events:none;background:
+     radial-gradient(circle at 25% 35%,rgba(140,90,255,.45),transparent 40%),
+     radial-gradient(circle at 75% 65%,rgba(252,76,2,.35),transparent 42%),
+     radial-gradient(circle at 60% 15%,rgba(90,150,255,.4),transparent 38%);filter:blur(34px);animation:orbitspin 36s linear infinite}
+  .v12 > *{position:relative;z-index:3}
+  .v12 .av{width:70px;height:70px;border-radius:50%;border:2px solid rgba(180,170,255,.6);box-shadow:0 0 24px rgba(140,90,255,.55)}
+  .v12 .id .sign{font-size:9px;letter-spacing:3px;color:#b9aaff;text-transform:uppercase}
+  .v12 .id h2{margin:4px 0 0;font-size:25px;font-weight:900;letter-spacing:1px;color:#fff;text-shadow:0 0 16px rgba(150,130,255,.6)}
+  .v12 .id .role{color:#b9aaff;font-size:10px;letter-spacing:2px;text-transform:uppercase;margin-top:4px;font-weight:600}
+  .v12 .chips{margin-left:auto;display:flex;gap:10px}
+  .v12 .chip{text-align:center;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid rgba(180,170,255,.25);backdrop-filter:blur(6px);box-shadow:inset 0 0 18px rgba(140,90,255,.15)}
+  .v12 .chip span{font-size:8px;color:#b9aaff;letter-spacing:1.5px;text-transform:uppercase;display:block;margin-bottom:4px}
+  .v12 .chip b{font-size:18px;font-weight:800;color:#fff;font-variant-numeric:tabular-nums;text-shadow:0 0 12px rgba(150,130,255,.7)}
+  .v12 .chip b small{font-size:9px;opacity:.6;margin-left:2px;font-weight:600}
+
+  /* =========================================================
+     V13 — 星座連線 Live Constellation（canvas 隨機星座逐線繪製＋脈動）
+  ==========================================================*/
+  .v13{position:relative;display:flex;align-items:center;gap:22px;padding:20px 26px;border-radius:16px;overflow:hidden;min-height:150px;
+     background:linear-gradient(135deg,#070b1a,#05060d);border:1px solid rgba(124,155,255,.3);box-shadow:0 16px 50px rgba(0,0,0,.6)}
+  .v13 canvas.con{position:absolute;inset:0;width:100%;height:100%;z-index:1}
+  .v13 .scrim{position:absolute;inset:0;z-index:2;pointer-events:none;background:
+     radial-gradient(120% 120% at 18% 50%,rgba(5,6,13,.92),rgba(5,6,13,.35) 42%,transparent 60%),
+     linear-gradient(90deg,transparent 58%,rgba(5,6,13,.55) 80%,rgba(5,6,13,.7))}
+  .v13 > .row{position:relative;z-index:3;display:flex;align-items:center;gap:22px;width:100%}
+  .v13 .badge{flex-shrink:0;width:92px;height:92px;position:relative;display:grid;place-items:center}
+  .v13 .badge .ring{position:absolute;inset:0;border-radius:50%;border:1px solid rgba(124,155,255,.4);box-shadow:0 0 20px rgba(124,155,255,.3) inset}
+  .v13 .badge .ring.r2{inset:8px;border-style:dashed;border-color:rgba(124,155,255,.3);animation:orbitspin 22s linear infinite}
+  .v13 .badge .av{width:62px;height:62px;border-radius:50%;border:2px solid #7c9bff;box-shadow:0 0 18px rgba(124,155,255,.5)}
+  .v13 .id .sign{font-size:9px;letter-spacing:3px;color:#9bb8ff;text-transform:uppercase}
+  .v13 .id h2{margin:4px 0 0;font-size:24px;font-weight:800;letter-spacing:1px;color:#eef3ff;text-shadow:0 0 14px rgba(124,155,255,.5)}
+  .v13 .id .role{color:#7c9bff;font-size:10px;letter-spacing:2px;text-transform:uppercase;margin-top:4px;font-weight:600}
+  .v13 .stats{margin-left:auto;display:flex;gap:24px;text-align:center}
+  .v13 .stat span{font-size:8px;color:rgba(155,184,255,.6);letter-spacing:1px;text-transform:uppercase;display:block}
+  .v13 .stat b{font-size:20px;font-weight:800;color:#cfe0ff;font-variant-numeric:tabular-nums;text-shadow:0 0 12px rgba(124,155,255,.5)}
+  .v13 .reroll{position:absolute;right:12px;top:12px;z-index:4;font-size:10px;letter-spacing:1px;color:#9bb8ff;background:rgba(124,155,255,.1);border:1px solid rgba(124,155,255,.35);border-radius:14px;padding:4px 12px;cursor:pointer;font-family:inherit;transition:all .15s}
+  .v13 .reroll:hover{background:rgba(124,155,255,.25);color:#fff}
+
+  @media(max-width:640px){
+    .v1,.v2,.v4,.v5,.v7,.v8,.v9{flex-wrap:wrap}
+    .v1 .stats,.v2 .stats,.v5 .pills,.v7 .stats,.v8 .stats,.v9 .gear{margin-left:0;width:100%;justify-content:space-between}
+    .v4 .tele{margin-left:0;width:100%;min-width:0}
+    .v3 .sectors{display:none}
+    .v10{flex-direction:column}.v10 .stub{width:100%;flex-direction:row;align-items:center;justify-content:space-between}
+    .v10 .fields{margin-left:0;width:100%;justify-content:space-between;margin-top:10px}
+    .v11{flex-direction:column}.v11 .info{width:100%}.v11 .skypanel{width:100%;height:90px;border-left:none;border-top:1px dashed rgba(124,155,255,.2)}
+    .v12{flex-wrap:wrap}.v12 .chips{margin-left:0;width:100%;justify-content:space-between}
+    .v13 .row{flex-wrap:wrap}.v13 .stats{margin-left:0;width:100%;justify-content:space-between}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="page-title">Strava · Name Card · Round 2</p>
+  <h1 class="page-h1">名片版型 DEMO 2 — 太空 / 賽車 / 星座</h1>
+  <p class="page-desc">
+    覺得舊版名片太普通，這裡用 <b>太空 🛰</b>、<b>賽車 🏎</b>、<b>星座 ✦</b> 三種帥氣風格延伸出 10 種版型，全部套用你的真實 Strava 數據。<br>
+    挑一個喜歡的編號告訴我，我就把它套進 <b>strava.html</b> 的 hero 名片區。也可以混搭（例如「V1 外觀 ＋ V10 的票根」）。
+  </p>
+
+  <!-- V1 -->
+  <div class="variant">
+    <div class="label"><span class="num">1</span><span class="name">太空艙 HUD Cosmic HUD</span><span class="tag">太空 · 全息網格＋掃描線＋六角頭像</span></div>
+    <div class="v1">
+      <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+      <span class="scan"></span>
+      <div class="av"><img src="../docs/avatar.jpg" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='grid'"><span class="ini" style="display:none">SC</span></div>
+      <div class="id">
+        <h2>STEVE <small>RIDER</small></h2>
+        <div class="role">Cyclist · Athlete</div>
+        <div class="upd">SYS · Updated 2026-05-28</div>
+      </div>
+      <div class="stats">
+        <div class="stat"><b>1,100</b><span>YTD KM</span></div>
+        <div class="stat"><b>9,920</b><span>爬升 M</span></div>
+        <div class="stat"><b>39</b><span>騎乘</span></div>
+        <div class="stat"><b>913</b><span>功率 W</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- V2 -->
+  <div class="variant">
+    <div class="label"><span class="num">2</span><span class="name">星座盤 Constellation Map</span><span class="tag">星座 · 閃爍星點＋連線星圖</span></div>
+    <div class="v2">
+      <div class="stars">
+        <i style="top:20%;left:10%"></i><i style="top:60%;left:18%;animation-delay:.6s"></i>
+        <i style="top:30%;left:40%;animation-delay:1.2s"></i><i style="top:75%;left:52%;animation-delay:.3s"></i>
+        <i style="top:15%;left:70%;animation-delay:.9s"></i><i style="top:50%;left:85%;animation-delay:1.5s"></i>
+      </div>
+      <svg class="lines" viewBox="0 0 260 100" preserveAspectRatio="none">
+        <polyline points="20,70 70,30 120,55 175,20 230,50" fill="none" stroke="#9bb8ff" stroke-width="1"/>
+        <circle cx="20" cy="70" r="2.5" fill="#cfe0ff"/><circle cx="70" cy="30" r="2.5" fill="#cfe0ff"/>
+        <circle cx="120" cy="55" r="2.5" fill="#cfe0ff"/><circle cx="175" cy="20" r="2.5" fill="#cfe0ff"/>
+        <circle cx="230" cy="50" r="2.5" fill="#cfe0ff"/>
+      </svg>
+      <div class="av"><img src="../docs/avatar.jpg" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='grid'"><span class="ini" style="display:none">SC</span></div>
+      <div class="id">
+        <div class="sign">✦ The Cyclist ✦</div>
+        <h2>STEVE</h2>
+        <div class="role">Strava · Cyclist · Athlete</div>
+      </div>
+      <div class="stats">
+        <div class="stat"><b>1,100</b><span>YTD KM</span></div>
+        <div class="stat"><b>9,920</b><span>爬升 M</span></div>
+        <div class="stat"><b>913</b><span>功率 W</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- V3 -->
+  <div class="variant">
+    <div class="label"><span class="num">3</span><span class="name">賽車計時板 Pit Wall Timing</span><span class="tag">賽車 · 名次牌＋分段時間（紫/綠最速）</span></div>
+    <div class="v3">
+      <div class="pos"><span class="p">P1</span><span class="pl">POS</span></div>
+      <div class="core">
+        <div class="av"><img src="../docs/avatar.jpg" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='grid'"><span class="ini" style="display:none">SC</span></div>
+        <div class="id">
+          <h2>STEVE CHUANG</h2>
+          <div class="role">Cyclist · Athlete</div>
+        </div>
+        <div class="sectors">
+          <div class="sec purple"><small>YTD KM</small><b>1,100</b></div>
+          <div class="sec green"><small>爬升 M</small><b>9,920</b></div>
+          <div class="sec yellow"><small>功率 W</small><b>913</b></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- V4 -->
+  <div class="variant">
+    <div class="label"><span class="num">4</span><span class="name">太空船控制台 Spaceship Console</span><span class="tag">太空 · 遙測光條＋發光數值</span></div>
+    <div class="v4">
+      <div class="av"><img src="../docs/avatar.jpg" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='grid'"><span class="ini" style="display:none">SC</span></div>
+      <div class="id">
+        <h2>STEVE</h2>
+        <div class="role">Cyclist · Athlete</div>
+      </div>
+      <div class="tele">
+        <div class="trow"><span class="tl">YTD KM</span><span class="tb"><span class="tf" style="width:72%"></span></span><span class="tv">1,100</span></div>
+        <div class="trow"><span class="tl">爬升 M</span><span class="tb"><span class="tf" style="width:88%"></span></span><span class="tv">9,920</span></div>
+        <div class="trow"><span class="tl">功率 W</span><span class="tb"><span class="tf" style="width:95%"></span></span><span class="tv">913</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- V5 -->
+  <div class="variant">
+    <div class="label"><span class="num">5</span><span class="name">星雲玻璃 Nebula Glass</span><span class="tag">太空 · 磨砂玻璃＋旋轉星雲＋膠囊</span></div>
+    <div class="v5">
+      <div class="av"><img src="../docs/avatar.jpg" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='grid'"><span class="ini" style="display:none">SC</span></div>
+      <div class="id">
+        <h2>STEVE</h2>
+        <div class="role">Strava · Cyclist · Athlete</div>
+      </div>
+      <div class="pills">
+        <div class="pill">YTD <b>1,100</b> km</div>
+        <div class="pill">爬升 <b>9,920</b> m</div>
+        <div class="pill">騎乘 <b>39</b></div>
+        <div class="pill">⚡ <b>913</b> W</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- V6 -->
+  <div class="variant">
+    <div class="label"><span class="num">6</span><span class="name">碳纖維超級駕照 Carbon License</span><span class="tag">賽車 · 碳纖維紋＋方格旗＋全息姓名</span></div>
+    <div class="v6">
+      <div class="stripe"></div>
+      <div class="photo"><div class="av"><img src="../docs/avatar.jpg" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='grid'"><span class="ini" style="display:none">SC</span></div></div>
+      <div class="main">
+        <div class="no">№ TPE-2026-039</div>
+        <div class="lic">Super License</div>
+        <h2>STEVE CHUANG</h2>
+        <div class="sub">Strava · Cyclist · Athlete · Updated 2026-05-28</div>
+        <div class="grid">
+          <div class="g"><span>YTD 里程</span><b>1,100km</b></div>
+          <div class="g"><span>YTD 爬升</span><b>9,920m</b></div>
+          <div class="g"><span>總里程</span><b>3,490km</b></div>
+          <div class="g"><span>最佳功率</span><b>913W</b></div>
+        </div>
+      </div>
+      <div class="flag"></div>
+    </div>
+  </div>
+
+  <!-- V7 -->
+  <div class="variant">
+    <div class="label"><span class="num">7</span><span class="name">黃道星座徽印 Zodiac Seal</span><span class="tag">星座 · 旋轉金環＋十二宮＋金色印章</span></div>
+    <div class="v7">
+      <div class="seal">
+        <div class="ring"></div>
+        <div class="av"><img src="../docs/avatar.jpg" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='grid'"><span class="ini" style="display:none">SC</span></div>
+      </div>
+      <div class="id">
+        <h2>STEVE</h2>
+        <div class="zodiac">♈ Aries · The Climber</div>
+        <div class="role">Cyclist · Athlete</div>
+      </div>
+      <div class="stats">
+        <div class="stat"><b>1,100</b><span>YTD KM</span></div>
+        <div class="stat"><b>9,920</b><span>爬升 M</span></div>
+        <div class="stat"><b>913</b><span>功率 W</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- V8 -->
+  <div class="variant">
+    <div class="label"><span class="num">8</span><span class="name">任務徽章 Mission Patch</span><span class="tag">太空 · 軌道環繞＋任務編號 NASA 風</span></div>
+    <div class="v8">
+      <div class="patch">
+        <div class="orbit"></div>
+        <div class="av"><img src="../docs/avatar.jpg" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='grid'"><span class="ini" style="display:none">SC</span></div>
+      </div>
+      <div class="id">
+        <div class="mno">MISSION · STRAVA-39</div>
+        <h2>STEVE</h2>
+        <div class="role">Cyclist · Athlete</div>
+      </div>
+      <div class="stats">
+        <div class="stat"><b>1,100</b><span>YTD KM</span></div>
+        <div class="stat"><b>9,920</b><span>爬升 M</span></div>
+        <div class="stat"><b>39</b><span>騎乘</span></div>
+        <div class="stat"><b>913</b><span>功率 W</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- V9 -->
+  <div class="variant">
+    <div class="label"><span class="num">9</span><span class="name">賽車儀表 Telemetry Dash</span><span class="tag">賽車 · 轉速錶指針＋檔位＋讀數</span></div>
+    <div class="v9">
+      <div class="tach">
+        <svg viewBox="0 0 80 80">
+          <path d="M14 64 A34 34 0 1 1 66 64" fill="none" stroke="rgba(252,76,2,.18)" stroke-width="5" stroke-linecap="round"/>
+          <path d="M14 64 A34 34 0 0 1 40 8" fill="none" stroke="#FC4C02" stroke-width="5" stroke-linecap="round"/>
+        </svg>
+        <span class="needle"></span>
+        <div class="rpm"><b>913</b><span>WATT</span></div>
+      </div>
+      <div class="av"><img src="../docs/avatar.jpg" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='grid'"><span class="ini" style="display:none">SC</span></div>
+      <div class="id">
+        <h2>STEVE</h2>
+        <div class="role">Cyclist · Athlete</div>
+      </div>
+      <div class="gear">
+        <div class="gbox"><b>6</b><span>GEAR</span></div>
+        <div class="read">
+          <div class="r"><b>1,100</b><span>YTD KM</span></div>
+          <div class="r"><b>9,920</b><span>爬升 M</span></div>
+          <div class="r"><b>3,490</b><span>總里程</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- V10 -->
+  <div class="variant">
+    <div class="label"><span class="num">10</span><span class="name">深空登機證 Deep Space Pass</span><span class="tag">太空＋賽車 · 星空票根＋目的地航線＋條碼</span></div>
+    <div class="v10">
+      <div class="body">
+        <div class="stars">
+          <i style="top:18%;left:14%"></i><i style="top:64%;left:24%;animation-delay:.7s"></i>
+          <i style="top:34%;left:46%;animation-delay:1.3s"></i><i style="top:78%;left:60%;animation-delay:.4s"></i>
+          <i style="top:22%;left:74%;animation-delay:1s"></i>
+        </div>
+        <div class="av"><img src="../docs/avatar.jpg" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='grid'"><span class="ini" style="display:none">SC</span></div>
+        <div class="id">
+          <div class="tt">BOARDING PASS · STRAVA AIR</div>
+          <h2>STEVE CHUANG</h2>
+          <div class="route">BASE <span class="arr"></span> SUMMIT</div>
+        </div>
+        <div class="fields">
+          <div class="f"><span>YTD KM</span><b>1,100</b></div>
+          <div class="f"><span>爬升 M</span><b>9,920</b></div>
+          <div class="f"><span>騎乘</span><b>39</b></div>
+        </div>
+      </div>
+      <div class="stub">
+        <div class="tt">ATHLETE PASS</div>
+        <div><div style="font-size:9px;opacity:.85">最佳功率</div><div class="big">913<span>W</span></div></div>
+        <div class="bar"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- V11 -->
+  <div class="variant">
+    <div class="label"><span class="num">11</span><span class="name">星圖卡 Star Chart</span><span class="tag">星座 · 右側隨機星座 canvas＋閃爍＋流星（文字不被擋）</span></div>
+    <div class="v11">
+      <div class="info">
+        <div class="av"><img src="../docs/avatar.jpg" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='grid'"><span class="ini" style="display:none">SC</span></div>
+        <div class="id">
+          <div class="sign">✦ The Cyclist ✦</div>
+          <h2>STEVE</h2>
+          <div class="role">Cyclist · Athlete</div>
+        </div>
+        <div class="stats">
+          <div class="stat"><span>FTP</span><b>285<small style="font-size:11px;color:#9bb8ff"> W</small></b></div>
+          <div class="stat"><span>Distance</span><b>1,100<small style="font-size:11px;color:#9bb8ff"> KM</small></b></div>
+          <div class="stat"><span>Elevation</span><b>9,920<small style="font-size:11px;color:#9bb8ff"> M</small></b></div>
+        </div>
+      </div>
+      <div class="skypanel">
+        <button class="reroll" data-reroll="chart">✦ 重生</button>
+        <canvas data-sky="chart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- V12 -->
+  <div class="variant">
+    <div class="label"><span class="num">12</span><span class="name">銀河護照 Galaxy Pass</span><span class="tag">星座 · 全幅動畫星空＋流星＋旋轉星雲＋發光晶片</span></div>
+    <div class="v12">
+      <div class="neb"></div>
+      <canvas class="sky" data-sky="galaxy"></canvas>
+      <div class="av"><img src="../docs/avatar.jpg" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='grid'"><span class="ini" style="display:none">SC</span></div>
+      <div class="id">
+        <div class="sign">✦ Galactic Rider ✦</div>
+        <h2>STEVE</h2>
+        <div class="role">Strava · Cyclist</div>
+      </div>
+      <div class="chips">
+        <div class="chip"><span>FTP</span><b>285<small>W</small></b></div>
+        <div class="chip"><span>Distance</span><b>1,100<small>KM</small></b></div>
+        <div class="chip"><span>Elevation</span><b>9,920<small>M</small></b></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- V13 -->
+  <div class="variant">
+    <div class="label"><span class="num">13</span><span class="name">星座連線 Live Constellation</span><span class="tag">星座 · 隨機星座逐線繪製＋脈動＋暗角護字</span></div>
+    <div class="v13">
+      <canvas class="con" data-sky="live"></canvas>
+      <div class="scrim"></div>
+      <button class="reroll" data-reroll="live">✦ 重新生成</button>
+      <div class="row">
+        <div class="badge">
+          <div class="ring"></div><div class="ring r2"></div>
+          <div class="av"><img src="../docs/avatar.jpg" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='grid'"><span class="ini" style="display:none">SC</span></div>
+        </div>
+        <div class="id">
+          <div class="sign">✦ The Climber ✦</div>
+          <h2>STEVE</h2>
+          <div class="role">Cyclist · Athlete</div>
+        </div>
+        <div class="stats">
+          <div class="stat"><span>FTP</span><b>285</b></div>
+          <div class="stat"><span>Distance</span><b>1,100</b></div>
+          <div class="stat"><span>Elevation</span><b>9,920</b></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ── 星座 canvas 引擎：隨機生成星座、閃爍、流星、逐線繪製 ── */
+(function(){
+  const DPR = Math.min(window.devicePixelRatio || 1, 2);
+  const rnd = (a,b)=>a+Math.random()*(b-a);
+
+  function fit(canvas){
+    const r = canvas.getBoundingClientRect();
+    canvas.width = Math.max(1, r.width*DPR);
+    canvas.height = Math.max(1, r.height*DPR);
+    return r;
+  }
+
+  // 在指定矩形區域內生成一條隨機星座（節點＋連線順序）
+  function makeConstellation(w, h, region){
+    const n = Math.round(rnd(5,8));
+    const x0 = w*region.x0, x1 = w*region.x1, y0 = h*region.y0, y1 = h*region.y1;
+    const nodes = [];
+    for(let i=0;i<n;i++){
+      nodes.push({ x: rnd(x0,x1), y: rnd(y0,y1), r: rnd(1.6,3.2), tw: Math.random()*Math.PI*2 });
+    }
+    // 最近鄰串接成一條折線（避免交叉太亂）
+    const order = [0]; const used = new Set([0]);
+    while(order.length < n){
+      const last = nodes[order[order.length-1]];
+      let best=-1, bd=1e9;
+      for(let i=0;i<n;i++){ if(used.has(i)) continue;
+        const d=(nodes[i].x-last.x)**2+(nodes[i].y-last.y)**2;
+        if(d<bd){bd=d;best=i;}
+      }
+      order.push(best); used.add(best);
+    }
+    return { nodes, order };
+  }
+
+  // 背景散星
+  function makeStars(w,h,count){
+    const arr=[];
+    for(let i=0;i<count;i++) arr.push({x:Math.random()*w,y:Math.random()*h,r:rnd(.4,1.5),tw:Math.random()*Math.PI*2,sp:rnd(1,3)});
+    return arr;
+  }
+
+  function meteor(w,h){
+    return { x:rnd(w*.1,w*.9), y:rnd(0,h*.4), len:rnd(60,120), vx:rnd(3,6), vy:rnd(1.2,2.4), life:0, max:rnd(40,70) };
+  }
+
+  function setup(canvas, kind){
+    let rect = fit(canvas);
+    const ctx = canvas.getContext('2d');
+    const region = kind==='chart' ? {x0:.1,x1:.9,y0:.12,y1:.9}
+                  : kind==='live'  ? {x0:.04,x1:.96,y0:.08,y1:.92}
+                  : {x0:.04,x1:.96,y0:.06,y1:.94};
+    let con = makeConstellation(canvas.width, canvas.height, region);
+    let stars = makeStars(canvas.width, canvas.height, kind==='galaxy'?120:60);
+    let meteors = [];
+    let t = 0, drawProg = 0;
+
+    function reset(){
+      rect = fit(canvas);
+      con = makeConstellation(canvas.width, canvas.height, region);
+      stars = makeStars(canvas.width, canvas.height, kind==='galaxy'?120:60);
+      drawProg = 0;
+    }
+    canvas._reset = reset;
+
+    function frame(){
+      t += 0.016;
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+
+      // 背景散星
+      for(const s of stars){
+        const a = .35 + .55*(0.5+0.5*Math.sin(t*s.sp + s.tw));
+        ctx.globalAlpha = a;
+        ctx.fillStyle = '#dce8ff';
+        ctx.beginPath(); ctx.arc(s.x,s.y,s.r*DPR,0,7); ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+
+      // 流星
+      if(Math.random() < (kind==='galaxy'?0.03:0.015) && meteors.length<2) meteors.push(meteor(canvas.width,canvas.height));
+      for(let i=meteors.length-1;i>=0;i--){
+        const m=meteors[i]; m.life++; m.x+=m.vx*DPR; m.y+=m.vy*DPR;
+        const a = 1-(m.life/m.max);
+        const g=ctx.createLinearGradient(m.x,m.y,m.x-m.len*DPR,m.y-m.len*0.4*DPR);
+        g.addColorStop(0,`rgba(207,224,255,${a})`); g.addColorStop(1,'rgba(207,224,255,0)');
+        ctx.strokeStyle=g; ctx.lineWidth=1.6*DPR; ctx.beginPath();
+        ctx.moveTo(m.x,m.y); ctx.lineTo(m.x-m.len*DPR,m.y-m.len*0.4*DPR); ctx.stroke();
+        if(m.life>m.max) meteors.splice(i,1);
+      }
+
+      // 星座連線（逐線繪製）
+      const segs = con.order.length-1;
+      if(drawProg < segs) drawProg += 0.02;
+      ctx.lineWidth = 1.4*DPR;
+      for(let i=0;i<segs;i++){
+        const p=Math.min(1, drawProg-i); if(p<=0) break;
+        const a=con.nodes[con.order[i]], b=con.nodes[con.order[i+1]];
+        const x=a.x+(b.x-a.x)*p, y=a.y+(b.y-a.y)*p;
+        ctx.strokeStyle='rgba(170,198,255,.8)';
+        ctx.shadowColor='rgba(124,155,255,.9)'; ctx.shadowBlur=8*DPR;
+        ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(x,y); ctx.stroke();
+      }
+      ctx.shadowBlur=0;
+
+      // 星座節點（脈動）
+      for(let i=0;i<con.nodes.length;i++){
+        if(i/con.nodes.length > drawProg/Math.max(1,segs)+0.15) continue;
+        const nd=con.nodes[i];
+        const pulse = .7 + .3*Math.sin(t*2 + nd.tw);
+        ctx.fillStyle = '#ffffff';
+        ctx.shadowColor='rgba(150,180,255,1)'; ctx.shadowBlur=14*DPR*pulse;
+        ctx.beginPath(); ctx.arc(nd.x,nd.y,(nd.r+0.6)*DPR,0,7); ctx.fill();
+      }
+      ctx.shadowBlur=0;
+
+      requestAnimationFrame(frame);
+    }
+    frame();
+    new ResizeObserver(()=>reset()).observe(canvas);
+  }
+
+  function init(){
+    document.querySelectorAll('canvas[data-sky]').forEach(c=>{
+      // 等版面就緒
+      requestAnimationFrame(()=>setup(c, c.dataset.sky));
+    });
+    document.querySelectorAll('[data-reroll]').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        const kind = btn.dataset.reroll;
+        const c = document.querySelector(`canvas[data-sky="${kind}"]`);
+        if(c && c._reset) c._reset();
+      });
+    });
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
+})();
+</script>
+</body>
+</html>
