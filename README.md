@@ -9,11 +9,34 @@
 
 ## 頁面預覽
 
-| 首頁 | Strava 儀表板 |
-|------|--------------|
-| ![Home](docs/preview-home.png) | ![Strava](docs/preview-strava.png) |
-
 > 截圖放在 `docs/` 資料夾，檔名 `preview-home.png` / `preview-strava.png`
+
+---
+
+## 🚴 Strava 儀表板 · 重點功能
+
+> 太空主題運動儀表板，資料每天自動同步。以下為桌面版實際畫面。
+
+### 星座名片 + 功率排行榜
+即時星座動畫名片（FTP / 里程 / 爬升），下方為最佳功率 PR（5s ~ 60m）排行。
+
+![名片與功率排行榜](docs/strava-hero.png)
+
+### ITT 區間 · F1 卡片
+自訂計時賽路段，F1 賽車風格卡片（颱風特效、最佳成績、功率、嘗試次數與狀態評分）。
+
+![ITT 區間 F1 卡片](docs/strava-segments.png)
+
+### 月度紀律 + 本週任務
+各運動項目月度達標進度，以及單車 / 跑步 / 游泳 / 重訓的每週任務挑戰。
+
+![月度紀律與本週任務](docs/strava-overview.png)
+
+### 月度里程 / 爬升 + 活動紀錄
+
+| 月度里程 / 爬升 | 活動紀錄時間軸 |
+|------|------|
+| ![月度里程爬升](docs/strava-chart.png) | ![活動紀錄](docs/strava-activity.png) |
 
 ---
 
