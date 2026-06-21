@@ -66,3 +66,20 @@ jobs:
           # 如果沒有變動就不 commit（避免空 commit）
           git diff --staged --quiet || git commit -m "chore: update strava data $(date -u '+%Y-%m-%d')"
           git push
+
+      # 5. 截圖最新公路車活動，發送到 Telegram
+      - name: Install puppeteer
+        run: npm install --omit=dev
+
+      - name: Screenshot latest ride → Telegram
+        env:
+          TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
+          TG_CHAT_ID:   ${{ secrets.TG_CHAT_ID }}
+        run: node scripts/screenshot-ride.js
+
+      # 6. 如果有新的 screenshot-sent.json，commit 回 repo
+      - name: Commit screenshot-sent.json
+        run: |
+          git add data/screenshot-sent.json || true
+          git diff --staged --quiet || git commit -m "chore: update screenshot-sent $(date -u '+%Y-%m-%d')"
+          git push || true
