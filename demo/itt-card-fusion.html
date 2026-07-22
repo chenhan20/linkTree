@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ITT Card Fusion · Holo × Liquid Glass × Bento × Fluid</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:#050506;color:#fff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  min-height:100vh;padding-bottom:100px;overflow-x:hidden;
+}
+::selection{background:#fff;color:#000}
+
+.bg-blobs{position:fixed;inset:0;z-index:0;filter:blur(90px);opacity:.35;pointer-events:none}
+.bg-blob{position:absolute;border-radius:50%;animation:bgfloat 20s ease-in-out infinite}
+@keyframes bgfloat{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(40px,-30px) scale(1.2)}}
+
+.page-hd{position:relative;z-index:2;padding:56px 24px 20px;text-align:center;max-width:760px;margin:0 auto}
+.page-hd .eyebrow{font-size:10px;letter-spacing:4px;color:rgba(255,255,255,.35);text-transform:uppercase;margin-bottom:10px}
+.page-hd h1{font-size:clamp(26px,4.6vw,40px);font-weight:800;letter-spacing:-.5px;margin-bottom:12px}
+.page-hd p{font-size:13px;line-height:1.8;color:rgba(255,255,255,.5)}
+.page-hd p b{color:rgba(255,255,255,.85)}
+
+.legend{
+  position:relative;z-index:2;max-width:900px;margin:0 auto 48px;padding:14px 20px;
+  display:flex;gap:28px;flex-wrap:wrap;justify-content:center;
+  border-top:1px solid rgba(255,255,255,.1);border-bottom:1px solid rgba(255,255,255,.1);
+}
+.legend-item{font-size:11px;color:rgba(255,255,255,.55);display:flex;align-items:center;gap:8px}
+.legend-item b{color:#fff}
+.legend-dot{width:8px;height:8px;border-radius:50%}
+
+/* ── fusion grid ── */
+.fusion-grid{
+  position:relative;z-index:2;max-width:1200px;margin:0 auto;padding:0 20px;
+  display:grid;grid-template-columns:repeat(6,1fr);gap:22px;grid-auto-flow:dense;perspective:1400px;
+}
+.fc{
+  --accent:#e87c1a;position:relative;grid-column:span var(--span,3);border-radius:24px;overflow:hidden;isolation:isolate;
+  border:1px solid rgba(255,255,255,.14);box-shadow:0 24px 60px -24px rgba(0,0,0,.8);
+  transform-style:preserve-3d;transition:transform .5s cubic-bezier(.2,.9,.25,1),box-shadow .4s,opacity .6s,translate .6s;
+  cursor:pointer;opacity:0;translate:0 24px;
+}
+.fc.revealed{opacity:1;translate:0 0}
+.fc.sz-lg{--span:4;min-height:360px}
+.fc.sz-md{--span:3;min-height:320px}
+.fc.sz-sm{--span:2;min-height:280px}
+.fc:hover{box-shadow:0 32px 70px -20px rgba(0,0,0,.9),0 0 50px -12px var(--accent)}
+
+.fc-canvas{position:absolute;inset:0;z-index:0;opacity:.8}
+.fc-glass{
+  position:absolute;inset:0;z-index:1;backdrop-filter:blur(22px) saturate(1.7);-webkit-backdrop-filter:blur(22px) saturate(1.7);
+  background:linear-gradient(165deg,rgba(255,255,255,.11),rgba(255,255,255,.02) 55%,rgba(0,0,0,.08));
+}
+.fc-rim{position:absolute;top:0;left:8%;right:8%;height:1px;z-index:2;background:linear-gradient(90deg,transparent,rgba(255,255,255,.7),transparent)}
+.fc-sheen{
+  position:absolute;inset:0;z-index:2;opacity:0;transition:opacity .3s;pointer-events:none;
+  background:radial-gradient(240px circle at var(--mx,50%) var(--my,50%),rgba(255,255,255,.4),transparent 60%);
+}
+.fc:hover .fc-sheen{opacity:1}
+.fc-holo{
+  position:absolute;inset:0;z-index:2;opacity:0;transition:opacity .35s;pointer-events:none;mix-blend-mode:color-dodge;
+  background:repeating-linear-gradient(115deg,#ff5ea8 0%,#ffce5e 12%,#7dff8a 24%,#5ecbff 36%,#b98bff 48%,#ff5ea8 60%);
+  background-size:220% 220%;background-position:var(--mx,50%) var(--my,50%);filter:saturate(1.3) brightness(1.05);
+}
+.fc:hover .fc-holo{opacity:.2}
+
+.fc-inner{position:relative;z-index:3;padding:24px;display:flex;flex-direction:column;height:100%;transform:translateZ(28px)}
+.fc-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.fc-type{font-size:9px;font-weight:800;letter-spacing:2px;color:var(--accent)}
+.fc-attempts{font-size:9px;font-weight:700;letter-spacing:.5px;color:rgba(255,255,255,.6);background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.1);padding:4px 9px;border-radius:100px;white-space:nowrap}
+.fc-name{font-weight:800;margin-bottom:2px;text-shadow:0 2px 14px rgba(0,0,0,.5)}
+.sz-lg .fc-name{font-size:23px}
+.sz-md .fc-name{font-size:19px}
+.sz-sm .fc-name{font-size:17px}
+.fc-status{font-size:10px;font-weight:700;letter-spacing:1px;color:rgba(255,255,255,.55);margin-bottom:14px}
+
+.fc-spark{display:block;width:100%;height:44px;margin-bottom:4px}
+.fc-spark path{stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset 1.6s cubic-bezier(.16,.7,.2,1)}
+.fc.revealed .fc-spark path{stroke-dashoffset:0;transition-delay:.3s}
+.fc-spark-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px}
+.fc-spark-lbl{font-size:8px;letter-spacing:1.5px;color:rgba(255,255,255,.3);text-transform:uppercase}
+.fc-spark-grade{font-size:9px;font-weight:700;color:rgba(255,255,255,.45)}
+
+.fc-time{font-variant-numeric:tabular-nums;font-weight:900;letter-spacing:-1.5px;line-height:.95;color:#fff;margin-bottom:2px}
+.sz-lg .fc-time{font-size:58px}
+.sz-md .fc-time{font-size:44px}
+.sz-sm .fc-time{font-size:36px}
+.fc-timelbl{font-size:9px;letter-spacing:2px;color:rgba(255,255,255,.4);text-transform:uppercase;margin-bottom:auto}
+
+.fc-stats{display:flex;gap:20px;padding-top:14px;margin-top:16px;border-top:1px solid rgba(255,255,255,.14)}
+.fc-stat b{font-size:16px;font-weight:800;color:#fff}
+.fc-stat b small{font-size:9px;color:rgba(255,255,255,.4);font-weight:600;margin-left:1px}
+.fc-stat span{display:block;font-size:8px;letter-spacing:1.5px;color:rgba(255,255,255,.35);text-transform:uppercase;margin-top:2px}
+
+@media (max-width:760px){
+  .fusion-grid{grid-template-columns:repeat(2,1fr)}
+  .fc.sz-lg,.fc.sz-md,.fc.sz-sm{--span:2}
+}
+</style>
+</head>
+<body>
+
+<div class="bg-blobs" id="bg-blobs"></div>
+
+<div class="page-hd">
+  <div class="eyebrow">Fusion Direction · Holo + Liquid Glass + Bento + Fluid</div>
+  <h1>四個方向的合體版</h1>
+  <p>玻璃卡殼(液態玻璃的透明感)裡面跑著會飄動的流體色塊(SHADER)，滑鼠移過去卡片會 3D 傾斜、浮出全息彩虹光(HOLO)，排版是依資料大小分配的 Bento 網格。新增一條<b>坡度示意曲線</b>，加上一顆沿線跑動的光點，做成心電圖的感覺。</p>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><span class="legend-dot" style="background:#fff"></span>卡片大小 = <b>挑戰次數</b>（次數越多，卡片越大／數字越大）</div>
+  <div class="legend-item"><span class="legend-dot" style="background:#ffce5e"></span>坡度曲線是依路段類型 + 已知均坡/最陡值畫的<b>示意圖</b>，不是逐點量測的真實爬升資料</div>
+</div>
+
+<div class="fusion-grid" id="fusion-grid"></div>
+
+<script>
+/* x:0-100 時間軸, y:0(最高)-40(最低) 高度示意 */
+const SEGMENTS = [
+  {nameZh:'風櫃嘴', type:'CLIMB', accent:'#e87c1a', time:'28:29', kom:'16:23', dist:'6.13', watt:250, wkg:3.1,
+   attempts:10, status:'💀 UNTOUCHED · 88% OF PEAK', gradeLabel:'均坡 5.5%',
+   profile:[[0,36],[15,32],[30,28],[45,23],[60,18],[75,13],[90,8],[100,5]]},
+  {nameZh:'中社路', type:'SPRINT', accent:'#2ecc71', time:'16:25', kom:'9:39', dist:'3.94', watt:268, wkg:3.4,
+   attempts:25, status:'— HOLD · 96% OF PEAK', gradeLabel:'衝刺陡坡',
+   profile:[[0,33],[20,32],[38,30],[52,28],[66,23],[78,13],[90,6],[100,4]]},
+  {nameZh:'社子島砍鴨頭', type:'ENDURANCE', accent:'#4ab4ff', time:'29:08', kom:'20:40', dist:'16.31', watt:193, wkg:2.4,
+   attempts:10, status:'🔥 HEATING UP · 3 STREAK', gradeLabel:'長距離平路',
+   profile:[[0,29],[14,26],[28,30],[42,25],[56,28],[70,23],[84,27],[100,22]]},
+  {nameZh:'劍南路回程', type:'SPRINT', accent:'#a78bfa', time:'8:06', kom:'5:03', dist:'2.61', watt:262, wkg:3.3,
+   attempts:27, status:'💀 UNTOUCHED · 88% OF PEAK', gradeLabel:'下坡路段',
+   profile:[[0,7],[16,11],[32,15],[46,19],[60,24],[74,29],[88,33],[100,36]]},
+  {nameZh:'碧山露營場', type:'CLIMB', accent:'#f2c14e', time:'28:34', kom:'13:43', dist:'3.67', watt:208, wkg:2.6,
+   attempts:3, status:'🔥 PEAK · AT YOUR BEST', gradeLabel:'均坡 9.1% · 最陡 43.6%',
+   profile:[[0,37],[14,33],[28,29],[42,25],[54,21],[64,17],[70,9],[78,16],[88,8],[100,3]]},
+]
+
+function sizeClass(n){ return n>=20 ? 'sz-lg' : n>=8 ? 'sz-md' : 'sz-sm' }
+function hexToRgb(hex){ const n=parseInt(hex.slice(1),16); return {r:(n>>16)&255,g:(n>>8)&255,b:n&255} }
+function smoothPath(pts){
+  let d = `M ${pts[0][0]} ${pts[0][1]}`
+  for(let i=0;i<pts.length-1;i++){
+    const [x0,y0]=pts[i], [x1,y1]=pts[i+1]
+    d += ` Q ${x0} ${y0} ${(x0+x1)/2} ${(y0+y1)/2}`
+  }
+  const last = pts[pts.length-1]
+  d += ` T ${last[0]} ${last[1]}`
+  return d
+}
+
+function renderFusion(s, i){
+  const sz = sizeClass(s.attempts)
+  const pathD = smoothPath(s.profile)
+  const pid = 'spark-' + i
+  return `<div class="fc ${sz}" style="--accent:${s.accent}" data-fc data-idx="${i}">
+    <canvas class="fc-canvas"></canvas>
+    <div class="fc-glass"></div>
+    <div class="fc-rim"></div>
+    <div class="fc-sheen"></div>
+    <div class="fc-holo"></div>
+    <div class="fc-inner">
+      <div class="fc-top">
+        <span class="fc-type">${s.type}</span>
+        <span class="fc-attempts">🔁 ${s.attempts} 次挑戰</span>
+      </div>
+      <div class="fc-name">${s.nameZh}</div>
+      <div class="fc-status">${s.status}</div>
+      <svg class="fc-spark" viewBox="0 0 100 40" preserveAspectRatio="none">
+        <path id="${pid}" d="${pathD}" fill="none" stroke="${s.accent}" stroke-width="2.4" stroke-linecap="round" pathLength="1" style="filter:drop-shadow(0 0 5px ${s.accent})"/>
+        <circle r="2.4" fill="#fff" style="filter:drop-shadow(0 0 4px #fff)">
+          <animateMotion dur="3.4s" begin="${.4+i*.15}s" repeatCount="indefinite">
+            <mpath href="#${pid}"/>
+          </animateMotion>
+        </circle>
+      </svg>
+      <div class="fc-spark-row">
+        <span class="fc-spark-lbl">Gradient · 示意</span>
+        <span class="fc-spark-grade">${s.gradeLabel}</span>
+      </div>
+      <div class="fc-time" data-countto="${s.time}">0:00</div>
+      <div class="fc-timelbl">Best Time · KOM ${s.kom}</div>
+      <div class="fc-stats">
+        <div class="fc-stat"><b>${s.watt}<small>W</small></b><span>Avg Power</span></div>
+        <div class="fc-stat"><b>${s.wkg}<small>W/KG</small></b><span>Ratio</span></div>
+        <div class="fc-stat"><b>${s.dist}<small>KM</small></b><span>Distance</span></div>
+      </div>
+    </div>
+  </div>`
+}
+
+const grid = document.getElementById('fusion-grid')
+grid.innerHTML = SEGMENTS.map(renderFusion).join('')
+
+document.getElementById('bg-blobs').innerHTML = SEGMENTS.map((s,i)=>{
+  const size = 260+(i%3)*80
+  return `<div class="bg-blob" style="width:${size}px;height:${size}px;left:${(i*21)%90}%;top:${(i*33)%80}%;background:${s.accent};animation-delay:${i*1.6}s"></div>`
+}).join('')
+
+/* ── pointer tilt + spotlight/holo tracking ── */
+document.querySelectorAll('[data-fc]').forEach(card=>{
+  card.addEventListener('pointermove', e=>{
+    const r = card.getBoundingClientRect()
+    const px = (e.clientX-r.left)/r.width, py = (e.clientY-r.top)/r.height
+    const rx = (px-.5)*12, ry = (py-.5)*-12
+    card.style.transform = `perspective(1400px) rotateX(${ry}deg) rotateY(${rx}deg) scale(1.02)`
+    card.style.setProperty('--mx', (px*100)+'%')
+    card.style.setProperty('--my', (py*100)+'%')
+  })
+  card.addEventListener('pointerleave', ()=>{
+    card.style.transform = 'perspective(1400px) rotateX(0) rotateY(0) scale(1)'
+  })
+})
+
+/* ── fluid canvas blobs per card ── */
+function initBlobCanvas(canvas, hex){
+  const ctx = canvas.getContext('2d')
+  const rgb = hexToRgb(hex)
+  let W,H,DPR
+  function resize(){
+    DPR = Math.min(devicePixelRatio||1,2)
+    const r = canvas.getBoundingClientRect()
+    W = r.width; H = r.height
+    canvas.width = W*DPR; canvas.height = H*DPR
+    ctx.setTransform(DPR,0,0,DPR,0,0)
+  }
+  resize()
+  const blobs = Array.from({length:3},(_,i)=>({a:Math.random()*Math.PI*2,spd:.005+Math.random()*.006,rad:.28+Math.random()*.16,phase:i*2.1}))
+  function draw(){
+    ctx.clearRect(0,0,W,H)
+    ctx.filter='blur(30px)'
+    for(const b of blobs){
+      b.a += b.spd
+      const cx = W*(.5+Math.sin(b.a+b.phase)*.42)
+      const cy = H*(.5+Math.cos(b.a*1.3+b.phase)*.48)
+      const rad = W*b.rad
+      const g = ctx.createRadialGradient(cx,cy,0,cx,cy,rad)
+      g.addColorStop(0,`rgba(${rgb.r},${rgb.g},${rgb.b},.7)`)
+      g.addColorStop(1,`rgba(${rgb.r},${rgb.g},${rgb.b},0)`)
+      ctx.fillStyle=g
+      ctx.beginPath();ctx.arc(cx,cy,rad,0,Math.PI*2);ctx.fill()
+    }
+    ctx.filter='none'
+    requestAnimationFrame(draw)
+  }
+  draw()
+  addEventListener('resize',resize)
+}
+document.querySelectorAll('.fc-canvas').forEach((canvas,i)=>{
+  initBlobCanvas(canvas, SEGMENTS[i].accent)
+})
+
+/* ── count-up + reveal on scroll ── */
+function animateCount(el){
+  const [tm,ts] = el.dataset.countto.split(':').map(Number)
+  const totalSec = tm*60+ts
+  const start = performance.now(), dur = 1500
+  function step(now){
+    const p = Math.min(1,(now-start)/dur)
+    const eased = 1-Math.pow(1-p,3)
+    const cur = Math.round(totalSec*eased)
+    el.textContent = Math.floor(cur/60)+':'+String(cur%60).padStart(2,'0')
+    if(p<1) requestAnimationFrame(step)
+  }
+  requestAnimationFrame(step)
+}
+const revealObserver = new IntersectionObserver(entries=>{
+  entries.forEach(en=>{
+    if(en.isIntersecting){
+      en.target.classList.add('revealed')
+      const t = en.target.querySelector('[data-countto]')
+      if(t) animateCount(t)
+      revealObserver.unobserve(en.target)
+    }
+  })
+},{threshold:.25})
+document.querySelectorAll('[data-fc]').forEach(el=>revealObserver.observe(el))
+</script>
+</body>
+</html>

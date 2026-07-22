@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ITT Card Evolution · 5 Directions (2026)</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:#050506;color:#fff;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  min-height:100vh;padding-bottom:120px;
+}
+::selection{background:#fff;color:#000}
+
+/* ── page chrome ── */
+.page-hd{padding:56px 24px 28px;text-align:center;max-width:760px;margin:0 auto}
+.page-hd .eyebrow{font-size:10px;letter-spacing:4px;color:rgba(255,255,255,.35);text-transform:uppercase;margin-bottom:10px}
+.page-hd h1{font-size:clamp(28px,5vw,44px);font-weight:800;letter-spacing:-.5px;margin-bottom:12px}
+.page-hd p{font-size:13px;line-height:1.7;color:rgba(255,255,255,.5)}
+
+.jumpnav{
+  position:sticky;top:0;z-index:100;display:flex;gap:6px;justify-content:center;flex-wrap:wrap;
+  padding:12px 16px;background:rgba(5,5,6,.7);backdrop-filter:blur(16px) saturate(1.3);
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+.jumpnav a{
+  font-size:11px;font-weight:700;letter-spacing:1px;color:rgba(255,255,255,.55);
+  text-decoration:none;padding:7px 14px;border-radius:100px;border:1px solid rgba(255,255,255,.12);
+  transition:.2s;white-space:nowrap;
+}
+.jumpnav a:hover{color:#fff;border-color:rgba(255,255,255,.4);background:rgba(255,255,255,.06)}
+
+.version-section{padding:80px 20px 40px;position:relative;overflow:hidden}
+.version-hd{max-width:1200px;margin:0 auto 36px;position:relative;z-index:2}
+.version-num{font-family:monospace;font-size:11px;letter-spacing:3px;color:rgba(255,255,255,.3);margin-bottom:8px}
+.version-title{font-size:clamp(22px,3.4vw,32px);font-weight:800;margin-bottom:8px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.version-tag{font-size:10px;font-weight:700;letter-spacing:2px;padding:4px 10px;border-radius:4px;text-transform:uppercase}
+.version-desc{font-size:13px;line-height:1.8;color:rgba(255,255,255,.5);max-width:640px}
+.version-desc b{color:rgba(255,255,255,.85);font-weight:600}
+
+.grid{
+  max-width:1200px;margin:0 auto;position:relative;z-index:2;
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:26px;
+}
+
+/* ════════════════════════════════════════════════════════
+   V1 · HOLO FOIL — Pokémon-card holographic pointer tracking
+   ════════════════════════════════════════════════════════ */
+#v1{background:radial-gradient(ellipse at 50% 0%,#14141a,#050506 60%)}
+.ce-v1-wrap{perspective:1200px}
+.ce-v1-card{
+  --ax:var(--accent);position:relative;border-radius:16px;overflow:hidden;
+  background:linear-gradient(160deg,#111114,#0a0a0c);
+  border:1px solid rgba(255,255,255,.08);
+  transform-style:preserve-3d;transition:transform .5s cubic-bezier(.2,.9,.25,1),box-shadow .5s;
+  box-shadow:0 20px 40px -20px rgba(0,0,0,.8);
+  will-change:transform;cursor:pointer;
+}
+.ce-v1-card:hover{box-shadow:0 30px 60px -20px rgba(0,0,0,.9),0 0 40px -10px var(--ax)}
+.ce-v1-holo{
+  position:absolute;inset:0;z-index:3;pointer-events:none;mix-blend-mode:color-dodge;opacity:0;
+  background:repeating-linear-gradient(115deg,
+    #ff5ea8 0%,#ffce5e 12%,#7dff8a 24%,#5ecbff 36%,#b98bff 48%,#ff5ea8 60%);
+  background-size:220% 220%;
+  background-position:var(--mx,50%) var(--my,50%);
+  transition:opacity .3s;filter:saturate(1.4) brightness(1.1);
+}
+.ce-v1-card:hover .ce-v1-holo{opacity:.35}
+.ce-v1-glare{
+  position:absolute;inset:0;z-index:4;pointer-events:none;opacity:0;transition:opacity .3s;
+  background:radial-gradient(circle at var(--mx,50%) var(--my,50%),rgba(255,255,255,.55),transparent 45%);
+  mix-blend-mode:overlay;
+}
+.ce-v1-card:hover .ce-v1-glare{opacity:1}
+.ce-v1-inner{position:relative;z-index:2;padding:20px 22px 22px;transform:translateZ(30px)}
+.ce-v1-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.ce-v1-rank{font-family:monospace;font-size:10px;color:rgba(255,255,255,.35);letter-spacing:2px}
+.ce-v1-type{font-size:9px;font-weight:800;letter-spacing:2px;color:var(--ax);border:1px solid var(--ax);border-radius:3px;padding:3px 8px}
+.ce-v1-name{font-size:24px;font-weight:800;letter-spacing:1px;margin-bottom:4px;text-shadow:0 2px 12px rgba(0,0,0,.5)}
+.ce-v1-kom{font-size:9px;color:rgba(255,255,255,.35);letter-spacing:1px;margin-bottom:16px}
+.ce-v1-time{font-family:monospace;font-size:42px;font-weight:800;line-height:1;
+  background:linear-gradient(180deg,#fff,rgba(255,255,255,.65));-webkit-background-clip:text;background-clip:text;color:transparent;
+  text-shadow:0 0 30px var(--ax);margin-bottom:4px;transform:translateZ(10px)}
+.ce-v1-timelbl{font-size:9px;letter-spacing:2px;color:rgba(255,255,255,.35);text-transform:uppercase;margin-bottom:18px}
+.ce-v1-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.ce-v1-stat{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:10px 12px}
+.ce-v1-stat b{display:block;font-size:19px;font-weight:800;color:#fff}
+.ce-v1-stat b small{font-size:10px;font-weight:600;color:rgba(255,255,255,.4);margin-left:2px}
+.ce-v1-stat span{font-size:8px;letter-spacing:1.5px;color:rgba(255,255,255,.35);text-transform:uppercase}
+.ce-v1-status{font-size:10px;font-weight:800;letter-spacing:1.5px;color:var(--ax);display:flex;align-items:center;gap:6px}
+.ce-v1-foil-edge{position:absolute;inset:0;border-radius:16px;padding:1px;z-index:5;pointer-events:none;
+  background:conic-gradient(from calc(var(--mx,50%)*3.6deg),#ff5ea8,#ffce5e,#7dff8a,#5ecbff,#b98bff,#ff5ea8);
+  -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+  -webkit-mask-composite:xor;mask-composite:exclude;opacity:0;transition:opacity .3s}
+.ce-v1-card:hover .ce-v1-foil-edge{opacity:.8}
+
+/* ════════════════════════════════════════════════════════
+   V2 · LIQUID GLASS — 2026 refined glassmorphism / refraction
+   ════════════════════════════════════════════════════════ */
+#v2{background:#0a0a10}
+.ce-v2-blobs{position:absolute;inset:0;z-index:0;filter:blur(70px);opacity:.55}
+.ce-v2-blob{position:absolute;border-radius:50%;animation:v2float 16s ease-in-out infinite}
+@keyframes v2float{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(30px,-24px) scale(1.15)}}
+.ce-v2-card{
+  --ax:var(--accent);position:relative;border-radius:22px;overflow:hidden;
+  background:linear-gradient(160deg,rgba(255,255,255,.09),rgba(255,255,255,.02));
+  backdrop-filter:blur(22px) saturate(1.6);-webkit-backdrop-filter:blur(22px) saturate(1.6);
+  border:1px solid rgba(255,255,255,.16);
+  box-shadow:0 8px 32px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.25);
+  padding:22px 22px 24px;transition:transform .4s cubic-bezier(.2,.9,.3,1.2),box-shadow .4s;
+}
+.ce-v2-card:hover{transform:translateY(-6px) scale(1.015);box-shadow:0 20px 50px rgba(0,0,0,.5),0 0 0 1px var(--ax),inset 0 1px 0 rgba(255,255,255,.3)}
+.ce-v2-sheen{
+  position:absolute;inset:0;pointer-events:none;z-index:1;opacity:0;transition:opacity .35s;
+  background:radial-gradient(180px circle at var(--mx,50%) var(--my,50%),rgba(255,255,255,.35),transparent 60%);
+}
+.ce-v2-card:hover .ce-v2-sheen{opacity:1}
+.ce-v2-rim{position:absolute;top:0;left:10%;right:10%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.6),transparent);z-index:2}
+.ce-v2-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;position:relative;z-index:2}
+.ce-v2-type{font-size:9px;font-weight:800;letter-spacing:2px;color:var(--ax);background:rgba(255,255,255,.08);border-radius:100px;padding:4px 10px}
+.ce-v2-rank{font-family:monospace;font-size:10px;color:rgba(255,255,255,.35)}
+.ce-v2-name{font-size:21px;font-weight:700;margin-bottom:18px;position:relative;z-index:2}
+.ce-v2-time{font-family:monospace;font-size:38px;font-weight:800;line-height:1;color:#fff;position:relative;z-index:2;margin-bottom:2px}
+.ce-v2-timelbl{font-size:9px;letter-spacing:2px;color:rgba(255,255,255,.4);text-transform:uppercase;margin-bottom:16px;position:relative;z-index:2}
+.ce-v2-stats{display:flex;gap:0;border-top:1px solid rgba(255,255,255,.14);padding-top:14px;position:relative;z-index:2}
+.ce-v2-stat{flex:1}
+.ce-v2-stat b{display:block;font-size:18px;font-weight:700;color:#fff}
+.ce-v2-stat b small{font-size:10px;color:rgba(255,255,255,.4);margin-left:2px;font-weight:500}
+.ce-v2-stat span{font-size:8px;letter-spacing:1.5px;color:rgba(255,255,255,.35);text-transform:uppercase}
+.ce-v2-pill{position:absolute;top:20px;right:20px;z-index:2;font-size:9px;font-weight:700;letter-spacing:1px;
+  padding:4px 10px;border-radius:100px;color:#fff;background:var(--ax);opacity:.85}
+
+/* ════════════════════════════════════════════════════════
+   V3 · CYBERPUNK HUD — neon glitch / scanlines / targeting reticle
+   ════════════════════════════════════════════════════════ */
+#v3{background:
+    repeating-linear-gradient(0deg,rgba(255,255,255,.025) 0 1px,transparent 1px 3px),
+    #030304;
+}
+.ce-v3-card{
+  --ax:var(--accent);position:relative;background:#08090c;border:1px solid rgba(255,255,255,.1);
+  clip-path:polygon(0 14px,14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%);
+  padding:20px 22px 22px;overflow:hidden;transition:.25s;cursor:pointer;
+}
+.ce-v3-card::before{
+  content:'';position:absolute;inset:0;pointer-events:none;opacity:.5;
+  background:repeating-linear-gradient(180deg,rgba(255,255,255,.035) 0 1px,transparent 1px 3px);
+}
+.ce-v3-card::after{
+  content:'';position:absolute;left:0;right:0;height:2px;top:-10%;pointer-events:none;
+  background:linear-gradient(90deg,transparent,var(--ax),transparent);opacity:.7;
+  animation:v3scan 3.2s linear infinite;
+}
+@keyframes v3scan{0%{top:-5%}100%{top:105%}}
+.ce-v3-card:hover{border-color:var(--ax);box-shadow:0 0 0 1px var(--ax),0 0 30px -6px var(--ax)}
+.ce-v3-card:hover .ce-v3-glitchable{animation:v3glitch .35s steps(2) 2}
+@keyframes v3glitch{
+  0%{transform:translate(0,0)}
+  20%{transform:translate(-3px,2px);text-shadow:2px 0 #ff2b6d,-2px 0 #2bd9ff}
+  40%{transform:translate(3px,-1px);text-shadow:-2px 0 #ff2b6d,2px 0 #2bd9ff}
+  60%{transform:translate(-2px,1px);text-shadow:2px 0 #ff2b6d,-2px 0 #2bd9ff}
+  100%{transform:translate(0,0);text-shadow:none}
+}
+.ce-v3-top{display:flex;justify-content:space-between;font-family:monospace;font-size:9px;letter-spacing:2px;color:rgba(255,255,255,.4);margin-bottom:12px}
+.ce-v3-top b{color:var(--ax)}
+.ce-v3-name{font-family:monospace;font-size:20px;font-weight:700;letter-spacing:2px;color:#fff;margin-bottom:14px;
+  border-left:3px solid var(--ax);padding-left:10px}
+.ce-v3-time{font-family:'Courier New',monospace;font-size:44px;font-weight:800;line-height:1;color:var(--ax);
+  text-shadow:0 0 16px var(--ax),0 0 40px var(--ax);margin-bottom:4px}
+.ce-v3-timelbl{font-family:monospace;font-size:9px;letter-spacing:2px;color:rgba(255,255,255,.4);margin-bottom:16px}
+.ce-v3-timelbl::before{content:'▮';color:var(--ax);margin-right:6px;animation:v3blink 1s step-end infinite}
+@keyframes v3blink{50%{opacity:0}}
+.ce-v3-stats{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:rgba(255,255,255,.08);margin-bottom:14px;border:1px solid rgba(255,255,255,.08)}
+.ce-v3-stat{background:#08090c;padding:9px 12px}
+.ce-v3-stat b{display:block;font-family:monospace;font-size:17px;font-weight:700;color:#fff}
+.ce-v3-stat span{font-family:monospace;font-size:8px;letter-spacing:1.5px;color:rgba(255,255,255,.35)}
+.ce-v3-status{font-family:monospace;font-size:10px;font-weight:700;letter-spacing:2px;color:var(--ax)}
+.ce-v3-crosshair{position:absolute;width:18px;height:18px;pointer-events:none;z-index:5;opacity:0;transition:opacity .2s;transform:translate(-50%,-50%)}
+.ce-v3-card:hover .ce-v3-crosshair{opacity:.9}
+.ce-v3-crosshair::before,.ce-v3-crosshair::after{content:'';position:absolute;background:var(--ax)}
+.ce-v3-crosshair::before{left:8px;top:0;width:2px;height:18px}
+.ce-v3-crosshair::after{top:8px;left:0;height:2px;width:18px}
+
+/* ════════════════════════════════════════════════════════
+   V4 · KINETIC BENTO — oversized type, magnetic buttons, squish
+   ════════════════════════════════════════════════════════ */
+#v4{background:linear-gradient(180deg,#0d0d10,#050506)}
+.grid.v4-grid{grid-template-columns:repeat(6,1fr);gap:16px}
+.ce-v4-card{
+  --ax:var(--accent);position:relative;border-radius:28px;background:#111114;border:1px solid rgba(255,255,255,.07);
+  padding:24px;overflow:hidden;grid-column:span 3;transition:transform .35s cubic-bezier(.5,1.8,.4,1),border-color .3s;
+}
+.ce-v4-card:nth-child(1),.ce-v4-card:nth-child(4){grid-column:span 4}
+.ce-v4-card:nth-child(2),.ce-v4-card:nth-child(3),.ce-v4-card:nth-child(5){grid-column:span 2}
+.ce-v4-card:hover{transform:scale(1.035) rotate(-.4deg);border-color:var(--ax)}
+.ce-v4-card:active{transform:scale(.97)}
+.ce-v4-glow{position:absolute;width:200px;height:200px;border-radius:50%;background:var(--ax);filter:blur(70px);opacity:.18;top:-60px;right:-60px}
+.ce-v4-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;position:relative;z-index:2}
+.ce-v4-type{font-size:9px;font-weight:800;letter-spacing:2px;color:var(--ax)}
+.ce-v4-name{font-size:15px;font-weight:700;color:rgba(255,255,255,.85);margin-bottom:6px;position:relative;z-index:2}
+.ce-v4-time{
+  font-size:clamp(38px,7vw,58px);font-weight:900;line-height:.95;letter-spacing:-2px;color:#fff;
+  position:relative;z-index:2;font-variant-numeric:tabular-nums;
+}
+.ce-v4-timelbl{font-size:9px;letter-spacing:2px;color:rgba(255,255,255,.35);text-transform:uppercase;margin-bottom:16px;position:relative;z-index:2}
+.ce-v4-row{display:flex;gap:18px;position:relative;z-index:2;margin-bottom:14px;flex-wrap:wrap}
+.ce-v4-stat b{font-size:17px;font-weight:800;color:#fff}
+.ce-v4-stat b small{font-size:10px;color:rgba(255,255,255,.4)}
+.ce-v4-stat span{display:block;font-size:8px;letter-spacing:1.5px;color:rgba(255,255,255,.35);text-transform:uppercase}
+.ce-v4-btn{
+  position:relative;z-index:2;display:inline-flex;align-items:center;gap:6px;
+  font-size:10px;font-weight:800;letter-spacing:1.5px;color:#000;background:#fff;
+  border-radius:100px;padding:9px 16px;cursor:pointer;transition:background .2s;
+}
+.ce-v4-btn span.mtxt{display:inline-block;transition:transform .15s ease-out}
+.ce-v4-btn:hover{background:var(--ax);color:#fff}
+
+/* ════════════════════════════════════════════════════════
+   V5 · FLUID SHADER — canvas metaball drift + particle burst
+   ════════════════════════════════════════════════════════ */
+#v5{background:#040404}
+.ce-v5-card{
+  --ax:var(--accent);position:relative;border-radius:14px;overflow:hidden;
+  border:1px solid rgba(255,255,255,.08);background:#050506;isolation:isolate;
+  transition:transform .4s;
+}
+.ce-v5-card:hover{transform:translateY(-4px)}
+.ce-v5-canvas{position:absolute;inset:0;z-index:0;opacity:.85}
+.ce-v5-scrim{position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,rgba(5,5,6,.2),rgba(5,5,6,.88) 65%)}
+.ce-v5-inner{position:relative;z-index:2;padding:22px}
+.ce-v5-top{display:flex;justify-content:space-between;font-size:9px;letter-spacing:2px;color:rgba(255,255,255,.5);margin-bottom:60px}
+.ce-v5-type{color:var(--ax);font-weight:800}
+.ce-v5-name{font-size:20px;font-weight:800;margin-bottom:6px;text-shadow:0 2px 14px rgba(0,0,0,.7)}
+.ce-v5-time{font-family:monospace;font-size:40px;font-weight:800;text-shadow:0 0 24px var(--ax),0 2px 10px rgba(0,0,0,.8);margin-bottom:16px}
+.ce-v5-stats{display:flex;gap:22px;margin-bottom:4px}
+.ce-v5-stat b{font-size:16px;font-weight:700}
+.ce-v5-stat span{display:block;font-size:8px;letter-spacing:1.5px;color:rgba(255,255,255,.4);text-transform:uppercase}
+.ce-v5-particle{position:absolute;border-radius:50%;pointer-events:none;z-index:3}
+@keyframes v5burst{
+  0%{transform:translate(0,0) scale(1);opacity:1}
+  100%{transform:translate(var(--dx),var(--dy)) scale(0);opacity:0}
+}
+
+@media (max-width:640px){
+  .grid.v4-grid{grid-template-columns:repeat(2,1fr)}
+  .ce-v4-card,.ce-v4-card:nth-child(1),.ce-v4-card:nth-child(4){grid-column:span 2}
+}
+</style>
+</head>
+<body>
+
+<nav class="jumpnav">
+  <a href="#v1">01 · 全息卡牌 HOLO</a>
+  <a href="#v2">02 · 液態玻璃 LIQUID GLASS</a>
+  <a href="#v3">03 · 賽博 HUD CYBERPUNK</a>
+  <a href="#v4">04 · 動態字體 BENTO</a>
+  <a href="#v5">05 · 流體漸層 SHADER</a>
+</nav>
+
+<div class="page-hd">
+  <div class="eyebrow">ITT Segment Card · Redesign Exploration</div>
+  <h1>5 個方向，5 種炫炮</h1>
+  <p>不管效能、只求視覺衝擊。每個版本對應一個 2026 現正流行、評價很好的實驗性互動手法，套用同一組真實 ITT 資料（風櫃嘴 / 中社路 / 社子島砍鴨頭 / 劍南路回程 / 碧山露營場）。滑動滑鼠 hover 每張卡片感受差異，選一個方向我再收斂做成正式版。</p>
+</div>
+
+<!-- ═══ V1 · HOLO FOIL ═══ -->
+<section id="v1" class="version-section">
+  <div class="version-hd">
+    <div class="version-num">01 / 05</div>
+    <div class="version-title">全息卡牌 <span class="version-tag" style="background:rgba(255,94,168,.15);color:#ff5ea8">HOLO FOIL</span></div>
+    <div class="version-desc">靈感來自 <b>Pokémon 卡牌全息效果</b> 的 2026 復刻版：JS 追蹤滑鼠算出 --mx/--my，驅動 3D 傾斜(rotateX/Y) + 對角彩虹全息貼膜(mix-blend-mode:color-dodge) + 邊框流光。滑鼠移到哪，卡片就往哪傾斜、彩虹光斑就跟到哪，像真的在轉動一張限定卡。</div>
+  </div>
+  <div class="grid ce-v1-wrap" id="v1-grid"></div>
+</section>
+
+<!-- ═══ V2 · LIQUID GLASS ═══ -->
+<section id="v2" class="version-section">
+  <div class="ce-v2-blobs" id="v2-blobs"></div>
+  <div class="version-hd">
+    <div class="version-num">02 / 05</div>
+    <div class="version-title">液態玻璃 <span class="version-tag" style="background:rgba(120,200,255,.15);color:#78c8ff">LIQUID GLASS</span></div>
+    <div class="version-desc">2026 年最被討論的介面語言：<b>Apple Liquid Glass</b> 的網頁版詮釋。多層 backdrop-filter 折射出背後漂浮的色塊，卡片邊緣有一條會呼吸的高光線，hover 時整張卡浮起、滑鼠位置變成一道會移動的鏡面反光，質感比舊版玻璃擬態更真實、更有深度層次。</div>
+  </div>
+  <div class="grid" id="v2-grid"></div>
+</section>
+
+<!-- ═══ V3 · CYBERPUNK HUD ═══ -->
+<section id="v3" class="version-section">
+  <div class="version-hd">
+    <div class="version-num">03 / 05</div>
+    <div class="version-title">賽博 HUD <span class="version-tag" style="background:rgba(43,217,255,.15);color:#2bd9ff">CYBERPUNK HUD</span></div>
+    <div class="version-desc">切角外框 + 掃描線 + 系統終端機字體，hover 觸發<b>故障閃爍(RGB 色差)</b>，滑鼠在卡片內留下瞄準十字準星，像 FPS 遊戲 HUD 鎖定目標。呼應賽博朋克儀表板一直是資料視覺化很受歡迎的風格方向。</div>
+  </div>
+  <div class="grid" id="v3-grid"></div>
+</section>
+
+<!-- ═══ V4 · KINETIC BENTO ═══ -->
+<section id="v4" class="version-section">
+  <div class="version-hd">
+    <div class="version-num">04 / 05</div>
+    <div class="version-title">動態字體 Bento <span class="version-tag" style="background:rgba(167,139,250,.15);color:#a78bfa">KINETIC BENTO</span></div>
+    <div class="version-desc"><b>Bento Grid 2.0</b>：不等大小的模組化排版，一眼掃過 5 段成績；數字用超大字重當主視覺，卡片有彈簧回彈的「squish」手感，按鈕會被滑鼠磁吸靠近。2026 年 Q3 檢視後仍然是留存率最高的兩個趨勢之一。</div>
+  </div>
+  <div class="grid v4-grid" id="v4-grid"></div>
+</section>
+
+<!-- ═══ V5 · FLUID SHADER ═══ -->
+<section id="v5" class="version-section">
+  <div class="version-hd">
+    <div class="version-num">05 / 05</div>
+    <div class="version-title">流體漸層 <span class="version-tag" style="background:rgba(255,206,94,.15);color:#ffce5e">FLUID SHADER</span></div>
+    <div class="version-desc">每張卡背景是一顆用 Canvas 即時運算的流體色塊（模擬 WebGL shader 質感，純 2D API 不吃額外套件），色彩取自路段 accent；hover 會炸開一小波粒子慶祝，呼應近年 Awwwards 常見的「WebGL 流動背景＋cinematic reveal」手法。</div>
+  </div>
+  <div class="grid" id="v5-grid"></div>
+</section>
+
+<script>
+const SEGMENTS = [
+  {rank:'01',nameZh:'風櫃嘴',      type:'CLIMB',     accent:'#e87c1a', time:'28:29', kom:'16:23', dist:'6.13',  watt:250, wkg:3.1, dTop5:-28, dPr:'+12:03', status:'UNTOUCHED',  sub:'88% OF PEAK · WAKE THIS SEGMENT', peak:88},
+  {rank:'02',nameZh:'中社路',      type:'SPRINT',    accent:'#2ecc71', time:'16:25', kom:'9:39',  dist:'3.94',  watt:268, wkg:3.4, dTop5:-11, dPr:'+03:36', status:'HOLD',        sub:'96% OF PEAK · STABLE OUTPUT',     peak:96},
+  {rank:'03',nameZh:'社子島砍鴨頭', type:'ENDURANCE', accent:'#4ab4ff', time:'29:08', kom:'20:40', dist:'16.31', watt:193, wkg:2.4, dTop5:-15, dPr:'+00:08', status:'HEATING UP',  sub:'96% OF PEAK (ALL-TIME) · 3 STREAK',peak:96},
+  {rank:'04',nameZh:'劍南路回程',   type:'SPRINT',    accent:'#a78bfa', time:'8:06',  kom:'5:03',  dist:'2.61',  watt:262, wkg:3.3, dTop5:-35, dPr:'+01:09', status:'UNTOUCHED',  sub:'88% OF PEAK · WAKE THIS SEGMENT', peak:88},
+  {rank:'05',nameZh:'碧山露營場',   type:'CLIMB',     accent:'#f2c14e', time:'28:34', kom:'13:43', dist:'3.67',  watt:208, wkg:2.6, dTop5:9,   dPr:'+00:24', status:'PEAK',        sub:'104% OF PEAK · AT YOUR BEST',     peak:104},
+]
+const STATUS_ICON = {UNTOUCHED:'💀',HOLD:'—','HEATING UP':'🔥',PEAK:'🔥'}
+
+function hexToRgb(hex){
+  const n = parseInt(hex.slice(1),16)
+  return {r:(n>>16)&255,g:(n>>8)&255,b:n&255}
+}
+
+/* ── V1 · Holo Foil ── */
+function renderV1(s){
+  return `<div class="ce-v1-card" style="--accent:${s.accent}" data-tilt>
+    <div class="ce-v1-holo"></div>
+    <div class="ce-v1-glare"></div>
+    <div class="ce-v1-foil-edge"></div>
+    <div class="ce-v1-inner">
+      <div class="ce-v1-top"><span class="ce-v1-rank">${s.rank}</span><span class="ce-v1-type">${s.type}</span></div>
+      <div class="ce-v1-name">${s.nameZh}</div>
+      <div class="ce-v1-kom">KOM ${s.kom} · ${s.dist} KM</div>
+      <div class="ce-v1-time">${s.time}</div>
+      <div class="ce-v1-timelbl">Best Time</div>
+      <div class="ce-v1-stats">
+        <div class="ce-v1-stat"><b>${s.watt}<small>W</small></b><span>Avg Power</span></div>
+        <div class="ce-v1-stat"><b>${s.wkg}<small>W/KG</small></b><span>Power/Weight</span></div>
+      </div>
+      <div class="ce-v1-status">${STATUS_ICON[s.status]} ${s.status}</div>
+    </div>
+  </div>`
+}
+
+/* ── V2 · Liquid Glass ── */
+function renderV2(s){
+  return `<div class="ce-v2-card" data-glow style="--accent:${s.accent}">
+    <div class="ce-v2-rim"></div>
+    <div class="ce-v2-sheen"></div>
+    <div class="ce-v2-pill" style="--accent:${s.accent}">${s.status}</div>
+    <div class="ce-v2-top"><span class="ce-v2-type" style="--accent:${s.accent}">${s.type}</span></div>
+    <div class="ce-v2-name">${s.nameZh}</div>
+    <div class="ce-v2-time">${s.time}</div>
+    <div class="ce-v2-timelbl">Best Time · KOM ${s.kom}</div>
+    <div class="ce-v2-stats">
+      <div class="ce-v2-stat"><b>${s.watt}<small>W</small></b><span>Avg Power</span></div>
+      <div class="ce-v2-stat"><b>${s.wkg}<small>W/KG</small></b><span>W / KG</span></div>
+      <div class="ce-v2-stat"><b>${s.peak}<small>%</small></b><span>Of Peak</span></div>
+    </div>
+  </div>`
+}
+
+/* ── V3 · Cyberpunk HUD ── */
+function renderV3(s){
+  return `<div class="ce-v3-card" data-crosshair style="--accent:${s.accent}">
+    <div class="ce-v3-crosshair"></div>
+    <div class="ce-v3-top"><span>SEG.${s.rank}</span><b>${s.type}</b></div>
+    <div class="ce-v3-name ce-v3-glitchable">${s.nameZh}</div>
+    <div class="ce-v3-time ce-v3-glitchable">${s.time}</div>
+    <div class="ce-v3-timelbl">BEST_TIME.LOG</div>
+    <div class="ce-v3-stats">
+      <div class="ce-v3-stat"><b>${s.watt}W</b><span>AVG_POWER</span></div>
+      <div class="ce-v3-stat"><b>${s.wkg}</b><span>W/KG</span></div>
+    </div>
+    <div class="ce-v3-status">${STATUS_ICON[s.status]} ${s.status}_</div>
+  </div>`
+}
+
+/* ── V4 · Kinetic Bento ── */
+function renderV4(s){
+  return `<div class="ce-v4-card" style="--accent:${s.accent}">
+    <div class="ce-v4-glow"></div>
+    <div class="ce-v4-top"><span class="ce-v4-type">${s.type}</span><span class="ce-v4-type">${s.rank}</span></div>
+    <div class="ce-v4-name">${s.nameZh}</div>
+    <div class="ce-v4-time" data-countto="${s.time}">0:00</div>
+    <div class="ce-v4-timelbl">Best Time</div>
+    <div class="ce-v4-row">
+      <div class="ce-v4-stat"><b>${s.watt}<small>W</small></b><span>Power</span></div>
+      <div class="ce-v4-stat"><b>${s.wkg}<small>W/KG</small></b><span>Ratio</span></div>
+      <div class="ce-v4-stat"><b>${s.peak}<small>%</small></b><span>Of Peak</span></div>
+    </div>
+    <div class="ce-v4-btn" data-magnetic><span class="mtxt">▶ 挑戰這段</span></div>
+  </div>`
+}
+
+/* ── V5 · Fluid Shader ── */
+function renderV5(s){
+  return `<div class="ce-v5-card" data-burst style="--accent:${s.accent}">
+    <canvas class="ce-v5-canvas"></canvas>
+    <div class="ce-v5-scrim"></div>
+    <div class="ce-v5-inner">
+      <div class="ce-v5-top"><span class="ce-v5-type">${s.type} · ${s.rank}/05</span><span>${STATUS_ICON[s.status]} ${s.status}</span></div>
+      <div class="ce-v5-name">${s.nameZh}</div>
+      <div class="ce-v5-time">${s.time}</div>
+      <div class="ce-v5-stats">
+        <div class="ce-v5-stat"><b>${s.watt}W</b><span>Avg Power</span></div>
+        <div class="ce-v5-stat"><b>${s.wkg}</b><span>W/KG</span></div>
+        <div class="ce-v5-stat"><b>${s.dist}km</b><span>Distance</span></div>
+      </div>
+    </div>
+  </div>`
+}
+
+document.getElementById('v1-grid').innerHTML = SEGMENTS.map(renderV1).join('')
+document.getElementById('v2-grid').innerHTML = SEGMENTS.map(renderV2).join('')
+document.getElementById('v3-grid').innerHTML = SEGMENTS.map(renderV3).join('')
+document.getElementById('v4-grid').innerHTML = SEGMENTS.map(renderV4).join('')
+document.getElementById('v5-grid').innerHTML = SEGMENTS.map(renderV5).join('')
+
+/* ── V2 background blobs ── */
+document.getElementById('v2-blobs').innerHTML = SEGMENTS.map((s,i)=>{
+  const size = 220 + (i%3)*60
+  const x = (i*23)%100, y = (i*37)%100
+  return `<div class="ce-v2-blob" style="width:${size}px;height:${size}px;left:${x}%;top:${y}%;background:${s.accent};animation-delay:${i*1.3}s"></div>`
+}).join('')
+
+/* ── V1: pointer tilt + holo tracking ── */
+document.querySelectorAll('[data-tilt]').forEach(card=>{
+  card.addEventListener('pointermove', e=>{
+    const r = card.getBoundingClientRect()
+    const px = (e.clientX-r.left)/r.width, py = (e.clientY-r.top)/r.height
+    const rx = (px-.5)*22, ry = (py-.5)*-22
+    card.style.transform = `perspective(1000px) rotateX(${ry}deg) rotateY(${rx}deg) scale(1.04)`
+    card.style.setProperty('--mx', (px*100)+'%')
+    card.style.setProperty('--my', (py*100)+'%')
+  })
+  card.addEventListener('pointerleave', ()=>{
+    card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale(1)'
+  })
+})
+
+/* ── V2: spotlight sheen tracking (no tilt, glass stays flat) ── */
+document.querySelectorAll('[data-glow]').forEach(card=>{
+  card.addEventListener('pointermove', e=>{
+    const r = card.getBoundingClientRect()
+    card.style.setProperty('--mx', ((e.clientX-r.left)/r.width*100)+'%')
+    card.style.setProperty('--my', ((e.clientY-r.top)/r.height*100)+'%')
+  })
+})
+
+/* ── V3: crosshair follow ── */
+document.querySelectorAll('[data-crosshair]').forEach(card=>{
+  const ch = card.querySelector('.ce-v3-crosshair')
+  card.addEventListener('pointermove', e=>{
+    const r = card.getBoundingClientRect()
+    ch.style.left = (e.clientX-r.left)+'px'
+    ch.style.top = (e.clientY-r.top)+'px'
+  })
+})
+
+/* ── V4: magnetic buttons + spring count-up on scroll into view ── */
+document.querySelectorAll('[data-magnetic]').forEach(btn=>{
+  const txt = btn.querySelector('.mtxt')
+  btn.addEventListener('pointermove', e=>{
+    const r = btn.getBoundingClientRect()
+    const mx = (e.clientX-r.left-r.width/2)*.35
+    const my = (e.clientY-r.top-r.height/2)*.5
+    txt.style.transform = `translate(${mx}px,${my}px)`
+  })
+  btn.addEventListener('pointerleave', ()=>{ txt.style.transform = 'translate(0,0)' })
+})
+
+function animateCount(el){
+  const target = el.dataset.countto
+  const [tm,ts] = target.split(':').map(Number)
+  const totalSec = tm*60+ts
+  const start = performance.now(), dur = 1400
+  function step(now){
+    const p = Math.min(1,(now-start)/dur)
+    const eased = 1-Math.pow(1-p,3)
+    const cur = Math.round(totalSec*eased)
+    const m = Math.floor(cur/60), s = cur%60
+    el.textContent = m+':'+String(s).padStart(2,'0')
+    if(p<1) requestAnimationFrame(step)
+  }
+  requestAnimationFrame(step)
+}
+const countObserver = new IntersectionObserver(entries=>{
+  entries.forEach(en=>{
+    if(en.isIntersecting){ animateCount(en.target); countObserver.unobserve(en.target) }
+  })
+},{threshold:.6})
+document.querySelectorAll('[data-countto]').forEach(el=>countObserver.observe(el))
+
+/* ── V5: canvas fluid blobs + hover particle burst ── */
+function initBlobCanvas(canvas, hex){
+  const ctx = canvas.getContext('2d')
+  const rgb = hexToRgb(hex)
+  let W,H,DPR
+  function resize(){
+    DPR = Math.min(devicePixelRatio||1,2)
+    const r = canvas.getBoundingClientRect()
+    W = r.width; H = r.height
+    canvas.width = W*DPR; canvas.height = H*DPR
+    ctx.setTransform(DPR,0,0,DPR,0,0)
+  }
+  resize()
+  const blobs = Array.from({length:4},(_,i)=>({a:Math.random()*Math.PI*2,spd:.006+Math.random()*.006,rad:.22+Math.random()*.14,phase:i*1.7}))
+  function draw(){
+    ctx.clearRect(0,0,W,H)
+    ctx.filter='blur(26px)'
+    for(const b of blobs){
+      b.a += b.spd
+      const cx = W*(.5+Math.sin(b.a+b.phase)*.4)
+      const cy = H*(.5+Math.cos(b.a*1.4+b.phase)*.5)
+      const r = W*b.rad
+      const g = ctx.createRadialGradient(cx,cy,0,cx,cy,r)
+      g.addColorStop(0,`rgba(${rgb.r},${rgb.g},${rgb.b},.65)`)
+      g.addColorStop(1,`rgba(${rgb.r},${rgb.g},${rgb.b},0)`)
+      ctx.fillStyle=g
+      ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fill()
+    }
+    ctx.filter='none'
+    requestAnimationFrame(draw)
+  }
+  draw()
+  addEventListener('resize',resize)
+}
+document.querySelectorAll('.ce-v5-card').forEach(card=>{
+  const canvas = card.querySelector('canvas')
+  initBlobCanvas(canvas, getComputedStyle(card).getPropertyValue('--accent').trim())
+  card.addEventListener('pointerenter', e=>{
+    const hex = getComputedStyle(card).getPropertyValue('--accent').trim()
+    const r = card.getBoundingClientRect()
+    for(let i=0;i<16;i++){
+      const p = document.createElement('div')
+      const ang = Math.random()*Math.PI*2, dist = 40+Math.random()*70
+      p.className='ce-v5-particle'
+      const size = 3+Math.random()*4
+      p.style.cssText = `width:${size}px;height:${size}px;background:${hex};left:${e.clientX-r.left}px;top:${e.clientY-r.top}px;--dx:${Math.cos(ang)*dist}px;--dy:${Math.sin(ang)*dist}px;animation:v5burst ${.6+Math.random()*.4}s ease-out forwards`
+      card.appendChild(p)
+      setTimeout(()=>p.remove(),1100)
+    }
+  })
+})
+</script>
+</body>
+</html>
