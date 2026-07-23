@@ -361,258 +361,95 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
   box-shadow:0 0 12px rgba(232,124,26,.25);
 }
 
-/* ── ITT segments — F1 CARD ── */
-.s2-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:24px;margin-bottom:3rem;align-items:start}
-@media(max-width:600px){.s2-grid{grid-template-columns:1fr}}
-
-/* card shell */
-.s2-card{
-  position:relative;background:#070707;border-radius:2px;overflow:hidden;
-  display:flex;flex-direction:column;
-  border:1px solid rgba(232,124,26,.25);
-  box-shadow:0 0 0 1px rgba(0,0,0,.9),0 0 24px rgba(232,124,26,.15),0 0 48px rgba(232,124,26,.06);
+/* ── ITT segments — FUSION CARD (holo × liquid glass × bento × fluid) ── */
+.fc-grid{
+  display:grid;grid-template-columns:repeat(6,1fr);gap:20px;margin-bottom:3rem;
+  grid-auto-flow:dense;perspective:1400px;
 }
-/* top racing stripe */
-.s2-card::before{
-  content:'';position:absolute;top:0;left:0;right:0;height:2px;z-index:20;
-  background:linear-gradient(90deg,transparent,var(--s2-accent,#e87c1a) 30%,#fff8e0 50%,var(--s2-accent,#e87c1a) 70%,transparent);
+.fc{
+  --fc-accent:#e87c1a;--fc-status:#e87c1a;position:relative;grid-column:span var(--fc-span,3);
+  border-radius:20px;overflow:hidden;isolation:isolate;cursor:default;
+  border:1px solid rgba(255,255,255,.14);box-shadow:0 20px 50px -22px rgba(0,0,0,.8);
+  transform-style:preserve-3d;transition:transform .5s cubic-bezier(.2,.9,.25,1),box-shadow .4s,opacity .6s,translate .6s;
+  opacity:0;translate:0 20px;
 }
-/* left accent bar */
-.s2-card::after{
-  content:'';position:absolute;top:0;left:0;width:2px;height:100%;z-index:20;
-  background:var(--s2-accent,#e87c1a);opacity:.6;
-}
-
-/* ── HEADER row: SEG 01 … TYPE TAG ── */
-.s2-hd{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:9px 12px 8px 16px;
-  border-bottom:1px solid rgba(255,255,255,.05);
-}
-.s2-num{
-  font-family:monospace;font-size:9px;font-weight:700;
-  color:rgba(255,255,255,.28);letter-spacing:2.5px;
-}
-.s2-kom-hd{
-  font-family:monospace;font-size:9px;font-weight:700;
-  color:rgba(255,255,255,.28);letter-spacing:1.5px;
-  margin-left:8px;
-}
-.s2-type-tag{
-  font-family:system-ui,sans-serif;font-size:9px;font-weight:800;letter-spacing:2px;
-  color:var(--s2-accent,#e87c1a);text-transform:uppercase;
-  border:1px solid rgba(232,124,26,.3);border-radius:1px;
-  padding:2px 7px;background:rgba(0,0,0,.5);
+.fc.fc-revealed{opacity:1;translate:0 0}
+.fc.fc-sz-lg{--fc-span:4;min-height:330px}
+.fc.fc-sz-md{--fc-span:3;min-height:300px}
+.fc.fc-sz-sm{--fc-span:2;min-height:270px}
+.fc:hover{box-shadow:0 28px 60px -20px rgba(0,0,0,.9),0 0 44px -12px var(--fc-accent)}
+@media(max-width:700px){
+  .fc-grid{grid-template-columns:repeat(2,1fr)}
+  .fc.fc-sz-lg,.fc.fc-sz-md,.fc.fc-sz-sm{--fc-span:2}
 }
 
-/* ── NAME BLOCK ── */
-.s2-namblk{
-  padding:12px 16px 10px;
-  border-bottom:1px solid rgba(255,255,255,.05);
+.fc-canvas{position:absolute;inset:0;z-index:0;opacity:.75}
+.fc-glass{
+  position:absolute;inset:0;z-index:1;
+  backdrop-filter:blur(20px) saturate(1.6);-webkit-backdrop-filter:blur(20px) saturate(1.6);
+  background:linear-gradient(165deg,rgba(255,255,255,.10),rgba(255,255,255,.02) 55%,rgba(0,0,0,.1));
 }
-.s2-name-zh{
-  font-family:system-ui,sans-serif;font-size:22px;font-weight:700;
-  color:#fff;letter-spacing:3px;line-height:1;
-  text-shadow:0 0 24px rgba(232,124,26,.2);
+.fc-rim{position:absolute;top:0;left:8%;right:8%;height:1px;z-index:2;background:linear-gradient(90deg,transparent,rgba(255,255,255,.65),transparent)}
+.fc-sheen{
+  position:absolute;inset:0;z-index:2;opacity:0;transition:opacity .3s;pointer-events:none;
+  background:radial-gradient(220px circle at var(--fc-mx,50%) var(--fc-my,50%),rgba(255,255,255,.38),transparent 60%);
 }
+.fc:hover .fc-sheen{opacity:1}
+.fc-holo{
+  position:absolute;inset:0;z-index:2;opacity:0;transition:opacity .35s;pointer-events:none;mix-blend-mode:color-dodge;
+  background:repeating-linear-gradient(115deg,#ff5ea8 0%,#ffce5e 12%,#7dff8a 24%,#5ecbff 36%,#b98bff 48%,#ff5ea8 60%);
+  background-size:220% 220%;background-position:var(--fc-mx,50%) var(--fc-my,50%);filter:saturate(1.3) brightness(1.05);
+}
+.fc:hover .fc-holo{opacity:.18}
 
-/* ── TIMING BLOCK ── */
-.s2-timblk{
-  padding:14px 16px 12px;
-  border-bottom:1px solid rgba(255,255,255,.05);
-}
-.s2-best-time{
-  font-family:monospace;font-size:36px;font-weight:700;line-height:1;
-  color:#fff;letter-spacing:2px;
-  text-shadow:0 0 30px rgba(232,124,26,.3);
-}
-.s2-best-time.is-new{
-  color:var(--s2-accent,#e87c1a);
-  text-shadow:0 0 30px rgba(232,124,26,.8),0 0 60px rgba(232,124,26,.35);
-}
-.s2-time-lbl{
-  font-family:system-ui,sans-serif;font-size:9px;font-weight:700;
-  color:rgba(255,255,255,.25);letter-spacing:2px;text-transform:uppercase;
-  margin-top:3px;margin-bottom:8px;
-}
-.s2-gap-line{
-  font-family:system-ui,sans-serif;font-size:12px;font-weight:700;
-  letter-spacing:1px;color:rgba(255,255,255,.3);
-  margin-bottom:6px;
-}
-.s2-gap-line b{color:#4ab4ff;font-variant-numeric:tabular-nums}
-.s2-status-block{display:flex;flex-direction:column;gap:3px}
-.s2-status-line{
-  display:inline-block;
-  font-family:system-ui,sans-serif;font-size:11px;font-weight:800;
-  letter-spacing:2px;text-transform:uppercase;
-  color:var(--s2-status-color,#e87c1a);
-  border-left:2px solid var(--s2-status-color,#e87c1a);
-  padding-left:6px;
-}
-.s2-status-sub{
-  font-family:system-ui,sans-serif;font-size:11px;font-weight:700;
-  letter-spacing:1px;text-transform:uppercase;
-  color:rgba(255,255,255,.6);padding-left:8px;
-}
+.fc-inner{position:relative;z-index:3;padding:20px 22px 22px;display:flex;flex-direction:column;height:100%;transform:translateZ(26px)}
+.fc-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}
+.fc-type{font-family:system-ui,sans-serif;font-size:9px;font-weight:800;letter-spacing:2px;color:var(--fc-accent);text-transform:uppercase}
+.fc-attempts{font-size:9px;font-weight:700;letter-spacing:.5px;color:rgba(255,255,255,.6);background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.1);padding:4px 9px;border-radius:100px;white-space:nowrap}
+.fc-name{font-family:system-ui,sans-serif;font-weight:800;margin-bottom:3px;text-shadow:0 2px 14px rgba(0,0,0,.5)}
+.fc-sz-lg .fc-name{font-size:22px}
+.fc-sz-md .fc-name{font-size:19px}
+.fc-sz-sm .fc-name{font-size:16px}
+.fc-kom{font-family:system-ui,sans-serif;font-size:10px;color:rgba(255,255,255,.4);margin-bottom:10px}
+.fc-kom b{color:#4ab4ff;font-variant-numeric:tabular-nums}
+.fc-status{font-family:system-ui,sans-serif;font-size:10px;font-weight:800;letter-spacing:1px;color:var(--fc-status);margin-bottom:12px}
 
-/* ── POWER ROW ── */
-.s2-prow{
-  display:grid;grid-template-columns:1fr 1fr;
-  border-bottom:1px solid rgba(255,255,255,.05);
-}
-.s2-pc{
-  padding:11px 16px;display:flex;flex-direction:column;gap:3px;
-  border-right:1px solid rgba(255,255,255,.05);
-}
-.s2-pc:last-child{border-right:none}
-.s2-pv{
-  font-family:system-ui,sans-serif;font-size:22px;font-weight:700;
-  line-height:1;color:#fff;display:flex;align-items:baseline;gap:3px;
-}
-.s2-pv .unit{font-size:11px;color:rgba(255,255,255,.35);font-weight:400}
-.s2-pl{font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.22);margin-top:1px}
+.fc-spark{display:block;width:100%;height:38px;margin-bottom:3px}
+.fc-spark path{stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset 1.5s cubic-bezier(.16,.7,.2,1)}
+.fc-revealed .fc-spark path{stroke-dashoffset:0;transition-delay:.25s}
+.fc-spark-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px}
+.fc-spark-lbl{font-size:8px;letter-spacing:1.5px;color:rgba(255,255,255,.28);text-transform:uppercase}
+.fc-spark-grade{font-size:9px;font-weight:700;color:rgba(255,255,255,.4)}
 
-/* ── BOTTOM ROW: TOP % · ATTEMPTS ── */
-.s2-brow{
-  display:grid;grid-template-columns:1fr 1fr;
-  border-bottom:1px solid rgba(255,255,255,.05);
-}
-.s2-bc{
-  padding:10px 16px;display:flex;flex-direction:column;gap:3px;
-  border-right:1px solid rgba(255,255,255,.05);
-}
-.s2-bc:last-child{border-right:none}
-.s2-bv{
-  font-family:monospace;font-size:14px;font-weight:700;line-height:1;
-}
-.s2-bl{font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.22);margin-top:2px}
+.fc-time{font-family:monospace;font-variant-numeric:tabular-nums;font-weight:800;letter-spacing:-1px;line-height:.95;color:#fff;margin-bottom:2px}
+.fc-sz-lg .fc-time{font-size:48px}
+.fc-sz-md .fc-time{font-size:38px}
+.fc-sz-sm .fc-time{font-size:30px}
+.fc-time.fc-time-new{color:var(--fc-accent);text-shadow:0 0 24px var(--fc-accent)}
+.fc-timelbl{font-family:system-ui,sans-serif;font-size:9px;letter-spacing:2px;color:rgba(255,255,255,.38);text-transform:uppercase;margin-bottom:auto}
 
-/* ── CTA button ── */
-.s2-foot-modal{padding:10px 12px;border-top:1px solid rgba(232,124,26,.15)}
-@keyframes s2-btn-pulse{
-  0%,100%{box-shadow:0 0 8px rgba(232,124,26,.2),inset 0 0 0 1px rgba(232,124,26,.15);transform:translateY(0)}
-  50%{box-shadow:0 0 20px rgba(232,124,26,.35),inset 0 0 0 1px rgba(232,124,26,.5);transform:translateY(-1px)}
-}
-@keyframes s2-btn-shine{
-  0%{transform:translateX(-120%) skewX(-20deg)}
-  60%,100%{transform:translateX(220%) skewX(-20deg)}
-}
+.fc-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding-top:13px;margin-top:14px;border-top:1px solid rgba(255,255,255,.13)}
+.fc-sz-sm .fc-stats{grid-template-columns:repeat(2,1fr)}
+.fc-stat b{display:block;font-size:15px;font-weight:800;color:#fff;font-variant-numeric:tabular-nums}
+.fc-stat b small{font-size:9px;color:rgba(255,255,255,.4);font-weight:600;margin-left:1px}
+.fc-stat span{display:block;font-size:7.5px;letter-spacing:1px;color:rgba(255,255,255,.32);text-transform:uppercase;margin-top:2px}
+
+.fc-foot{margin-top:14px}
 .seg-detail-btn{
   position:relative;overflow:hidden;width:100%;
   display:flex;align-items:center;justify-content:center;gap:7px;
-  padding:9px 0;
-  font-family:system-ui,sans-serif;font-size:13px;font-weight:800;letter-spacing:1.5px;
-  color:#0a0604;background:linear-gradient(135deg,#e87c1a,#ff9a30 60%,#ffcd80 100%);
-  border:none;border-radius:4px;cursor:pointer;
-  animation:s2-btn-pulse 2s ease-in-out infinite;
-  transition:filter .15s;
+  padding:10px 0;
+  font-family:system-ui,sans-serif;font-size:12px;font-weight:800;letter-spacing:1.5px;
+  color:#fff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);
+  border-radius:100px;cursor:pointer;backdrop-filter:blur(6px);
+  transition:background .2s,border-color .2s,transform .15s;
 }
-.seg-detail-btn::before{
-  content:'';position:absolute;top:0;left:0;width:40%;height:100%;
-  background:linear-gradient(90deg,transparent,rgba(255,255,255,.5),transparent);
-  animation:s2-btn-shine 2.8s ease-in-out infinite;pointer-events:none;
-}
-.seg-detail-btn:hover{filter:brightness(1.15)}
+.seg-detail-btn:hover{background:var(--fc-accent);border-color:var(--fc-accent);color:#000}
+.seg-detail-btn:active{transform:scale(.97)}
 
-/* ════════════════════════════════════════════════════
-   TYPHOON MODE — F1 brutal fx (always-on, all cards)
-   + IGNITION BURST on hover
-   ════════════════════════════════════════════════════ */
-.s2-card{ animation:typh-border 2.4s ease-in-out infinite; }
-@keyframes typh-border{
-  0%,100%{box-shadow:0 0 0 1px rgba(0,0,0,.9),0 0 24px rgba(255,255,255,.04) inset,0 0 24px color-mix(in srgb,var(--s2-accent) 40%,transparent),0 0 60px color-mix(in srgb,var(--s2-accent) 15%,transparent)}
-  50%    {box-shadow:0 0 0 1px rgba(0,0,0,.9),0 0 28px rgba(255,255,255,.06) inset,0 0 48px color-mix(in srgb,var(--s2-accent) 70%,transparent),0 0 120px color-mix(in srgb,var(--s2-accent) 30%,transparent)}
-}
-/* ensure inner blocks sit above all fx layers */
-.s2-card .s2-hd,.s2-card .s2-namblk,.s2-card .s2-timblk,
-.s2-card .s2-prow,.s2-card .s2-brow,.s2-card .s2-foot-modal{
-  position:relative;z-index:22;
-}
-/* particle streaks across the card */
-@keyframes typh-particle{
-  0%  {transform:translateX(-10%) scaleX(.2);opacity:0}
-  20% {opacity:1}
-  80% {opacity:.8}
-  100%{transform:translateX(110%) scaleX(1.4);opacity:0}
-}
-.s2-fx-particle{
-  position:absolute;left:0;height:1px;pointer-events:none;z-index:14;
-  background:linear-gradient(90deg,transparent,#fff,var(--s2-accent),transparent);
-  filter:drop-shadow(0 0 4px var(--s2-accent)) drop-shadow(0 0 8px var(--s2-accent));
-  animation:typh-particle 1.6s linear infinite;
-}
-.s2-fx-particle:nth-child(1){top:15%;width:40%;animation-delay:0s}
-.s2-fx-particle:nth-child(2){top:35%;width:55%;animation-delay:.3s;height:2px}
-.s2-fx-particle:nth-child(3){top:52%;width:30%;animation-delay:.7s}
-.s2-fx-particle:nth-child(4){top:68%;width:60%;animation-delay:.5s;height:2px}
-.s2-fx-particle:nth-child(5){top:82%;width:45%;animation-delay:.9s}
-.s2-fx-particle:nth-child(6){top:25%;width:35%;animation-delay:1.1s;height:2px}
-/* perspective cyber horizon grid */
-@keyframes typh-grid-rush{0%{background-position:0 0}100%{background-position:0 80px}}
-.s2-fx-horizon{
-  position:absolute;left:0;right:0;bottom:0;height:60%;z-index:8;
-  pointer-events:none;perspective:200px;perspective-origin:center top;opacity:.4;
-}
-.s2-fx-horizon::before{
-  content:'';position:absolute;inset:0;
-  background:
-    linear-gradient(90deg,var(--s2-accent) 1px,transparent 1px) 0 0/40px 40px,
-    linear-gradient(0deg,var(--s2-accent) 1px,transparent 1px) 0 0/40px 40px;
-  transform:rotateX(70deg);transform-origin:center top;
-  filter:drop-shadow(0 0 4px var(--s2-accent));
-  animation:typh-grid-rush 1.5s linear infinite;
-  -webkit-mask:linear-gradient(180deg,transparent,#000 80%);
-          mask:linear-gradient(180deg,transparent,#000 80%);
-}
-/* KERS energy bar (top) */
-@keyframes typh-kers{0%{width:0%}85%{width:100%}100%{width:100%}}
-.s2-fx-kbar{
-  position:absolute;top:2px;left:0;height:3px;width:0%;z-index:25;
-  background:linear-gradient(90deg,#00ffaa,#00ddff,#ff00ff,#ffd000);
-  filter:drop-shadow(0 0 6px #00ddff);
-  animation:typh-kers 3.2s ease-out infinite;
-}
-/* RPM redline bar (bottom) */
-@keyframes typh-rpm{0%,100%{transform:scaleX(.5)}50%{transform:scaleX(1)}}
-.s2-fx-rpm{
-  position:absolute;bottom:0;left:0;right:0;height:3px;z-index:25;
-  background:linear-gradient(90deg,#ffd000 0%,#ff8000 40%,var(--s2-accent) 75%,#ff0000 100%);
-  transform-origin:left;animation:typh-rpm 2.4s ease-in-out infinite;
-  box-shadow:0 0 10px var(--s2-accent);
-}
-/* RGB glitch on best-time digits */
-@keyframes typh-glitch-main{0%,100%{transform:translate(0)}10%{transform:translate(-2px,1px)}20%{transform:translate(2px,-1px)}30%{transform:translate(0,0)}92%{transform:translate(-3px,2px)}95%{transform:translate(3px,-2px)}}
-@keyframes typh-glitch-r{0%,100%{transform:translate(0);opacity:0}10%{transform:translate(4px,-2px);opacity:.7}20%{transform:translate(-3px,2px);opacity:.5}30%{opacity:0}92%{transform:translate(5px,-1px);opacity:.8}}
-@keyframes typh-glitch-g{0%,100%{transform:translate(0);opacity:0}10%{transform:translate(-3px,2px);opacity:.7}20%{transform:translate(2px,-1px);opacity:.5}92%{transform:translate(-4px,1px);opacity:.8}}
-.s2-best-time{position:relative;animation:typh-glitch-main 3.5s infinite}
-.s2-best-time::before,.s2-best-time::after{
-  content:attr(data-text);position:absolute;top:0;left:0;width:100%;
-  pointer-events:none;
-}
-.s2-best-time::before{color:#ff0040;animation:typh-glitch-r 3.5s infinite;mix-blend-mode:screen}
-.s2-best-time::after{color:#00ffff;animation:typh-glitch-g 3.5s infinite;mix-blend-mode:screen}
-
-/* IGNITION BURST — hover only */
-@keyframes typh-ignite{0%{transform:scale(0);opacity:0}20%{opacity:1}100%{transform:scale(8);opacity:0}}
-@keyframes typh-iflash{0%{opacity:0}10%{opacity:.9}100%{opacity:0}}
-.s2-fx-burst{
-  position:absolute;top:50%;left:50%;width:60px;height:60px;
-  margin:-30px 0 0 -30px;border-radius:50%;pointer-events:none;z-index:18;
-  background:radial-gradient(circle,#fff 0%,#ffd060 25%,var(--s2-accent) 50%,transparent 70%);
-  opacity:0;mix-blend-mode:screen;
-}
-.s2-fx-iflash{
-  position:absolute;inset:0;background:#fff;opacity:0;
-  pointer-events:none;z-index:17;mix-blend-mode:overlay;
-}
-.s2-card:hover .s2-fx-burst{animation:typh-ignite .9s ease-out}
-.s2-card:hover .s2-fx-iflash{animation:typh-iflash .35s ease-out}
-
-/* respect reduced motion */
 @media (prefers-reduced-motion:reduce){
-  .s2-card,.s2-fx-particle,.s2-fx-horizon::before,.s2-fx-kbar,.s2-fx-rpm,.s2-best-time,.s2-best-time::before,.s2-best-time::after{animation:none!important}
-  .s2-fx-particle,.s2-fx-horizon,.s2-fx-kbar,.s2-fx-rpm,.s2-best-time::before,.s2-best-time::after{display:none!important}
+  .fc{transition:opacity .01s,translate .01s !important;opacity:1!important;translate:0 0!important}
+  .fc-spark path{transition:none!important;stroke-dashoffset:0!important}
 }
 
 /* segment modal */
@@ -1453,11 +1290,22 @@ function renderWeeklyQuest(wq) {
     <div class="section-title">本週任務 <span class="muted">· WEEKLY QUEST</span></div>
     <div class="quest-grid">${tiles}</div>`
 }
+function smoothPath(pts) {
+  let d = `M ${pts[0][0]} ${pts[0][1]}`
+  for (let i = 0; i < pts.length - 1; i++) {
+    const [x0, y0] = pts[i], [x1, y1] = pts[i + 1]
+    d += ` Q ${x0} ${y0} ${(x0 + x1) / 2} ${(y0 + y1) / 2}`
+  }
+  const last = pts[pts.length - 1]
+  d += ` T ${last[0]} ${last[1]}`
+  return d
+}
 function renderSegments(segs) {
   if (!segs || segs.length === 0) return ''
   const _today = new Date(Date.now() + 8*3600*1000).toISOString().slice(0,10)
   const ATHLETE_WT = 80
   const SEG_META = window._ittSegMeta || {}
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches
 
   const cards = segs.map((seg, idx) => {
     const meta   = SEG_META[seg.id] || {}
@@ -1577,52 +1425,48 @@ function renderSegments(segs) {
       lastGapTxt = (gapSec >= 0 ? '+' : '−') + `${mm}:${ss}`; lastGapColor = '#f0c040'; lastGapLabel = 'LAST vs PR'
     }
 
-    const prTimeStr = seg.pr_time_str || '—'
-    return `<div class="s2-card" style="--s2-accent:${accent};--s2-status-color:${statusCol}">
-      <div class="s2-fx-horizon"></div>
-      <div class="s2-fx-particle"></div><div class="s2-fx-particle"></div><div class="s2-fx-particle"></div><div class="s2-fx-particle"></div><div class="s2-fx-particle"></div><div class="s2-fx-particle"></div>
-      <div class="s2-fx-kbar"></div>
-      <div class="s2-fx-rpm"></div>
-      <div class="s2-fx-iflash"></div>
-      <div class="s2-fx-burst"></div>
-      <div class="s2-hd">
-        <span class="s2-num">${numBadge}</span><span class="s2-kom-hd">${komGapHtml}</span>
-        <span class="s2-type-tag">${meta.type || 'ITT'}</span>
-      </div>
-      <div class="s2-namblk">
-        <div class="s2-name-zh">${meta.nameZh || seg.name}</div>
-      </div>
-      <div class="s2-timblk">
-        <div class="s2-best-time ${timeClass}" data-text="${prTimeStr}">${prTimeStr}</div>
-        <div class="s2-time-lbl">BEST TIME</div>
-        <div class="s2-status-block">
-          <div class="s2-status-line">${statusEmoji} ${statusLine}</div>
-          <div class="s2-status-sub">${scoreDisplay} · ${statusSub}</div>
-        </div>
+    const prTimeStr  = seg.pr_time_str || '—'
+    const sizeClass  = attempts >= 20 ? 'fc-sz-lg' : attempts >= 8 ? 'fc-sz-md' : 'fc-sz-sm'
+    const profile    = Array.isArray(meta.profile) ? meta.profile : null
+    const sparkPath  = profile ? smoothPath(profile) : null
+    const sparkId    = `fc-spark-${seg.id}`
+    const gradeLabel = (meta.avgGrade != null && meta.maxGrade != null)
+      ? `均坡 ${meta.avgGrade}% · 最陡 ${meta.maxGrade}%` : ''
 
-      </div>
-      <div class="s2-prow">
-        <div class="s2-pc">
-          <div class="s2-pv" style="color:${accent}">${prWatts || '—'}<span class="unit">${prWatts ? 'W' : ''}</span></div>
-          <div class="s2-pl">AVG POWER</div>
+    return `<div class="fc ${sizeClass}" style="--fc-accent:${accent};--fc-status:${statusCol}" data-fc>
+      <canvas class="fc-canvas"></canvas>
+      <div class="fc-glass"></div>
+      <div class="fc-rim"></div>
+      <div class="fc-sheen"></div>
+      <div class="fc-holo"></div>
+      <div class="fc-inner">
+        <div class="fc-top">
+          <span class="fc-type">${meta.type || 'ITT'}</span>
+          <span class="fc-attempts">🔁 ${attempts} 次挑戰</span>
         </div>
-        <div class="s2-pc">
-          <div class="s2-pv">${wkg}<span class="unit">${wkg !== '—' ? 'W/KG' : ''}</span></div>
-          <div class="s2-pl">W / KG</div>
+        <div class="fc-name">${meta.nameZh || seg.name}</div>
+        <div class="fc-kom">${komGapHtml}</div>
+        <div class="fc-status">${statusEmoji} ${statusLine} · ${scoreDisplay}</div>
+        ${sparkPath ? `
+        <svg class="fc-spark" viewBox="0 0 100 40" preserveAspectRatio="none">
+          <path id="${sparkId}" d="${sparkPath}" fill="none" stroke="${accent}" stroke-width="2.4" stroke-linecap="round" pathLength="1" style="filter:drop-shadow(0 0 5px ${accent})"/>
+          ${reduceMotion ? '' : `<circle r="2.4" fill="#fff" style="filter:drop-shadow(0 0 4px #fff)">
+            <animateMotion dur="3.4s" begin="${(.3 + idx * .15).toFixed(2)}s" repeatCount="indefinite"><mpath href="#${sparkId}"/></animateMotion>
+          </circle>`}
+        </svg>
+        <div class="fc-spark-row"><span class="fc-spark-lbl">Gradient · 示意</span><span class="fc-spark-grade">${gradeLabel}</span></div>
+        ` : ''}
+        <div class="fc-time${timeClass ? ' fc-time-new' : ''}" data-countto="${prTimeStr}">${prTimeStr}</div>
+        <div class="fc-timelbl">BEST TIME</div>
+        <div class="fc-stats">
+          <div class="fc-stat"><b style="color:${accent}">${prWatts || '—'}<small>${prWatts ? 'W' : ''}</small></b><span>Avg Power</span></div>
+          <div class="fc-stat"><b>${wkg}<small>${wkg !== '—' ? 'W/KG' : ''}</small></b><span>W / KG</span></div>
+          <div class="fc-stat"><b style="color:${wattGapColor}">${wattGapTxt}</b><span>${wattGapLabel}</span></div>
+          <div class="fc-stat"><b style="color:${lastGapColor}">${lastGapTxt}</b><span>${lastGapLabel}</span></div>
         </div>
-      </div>
-      <div class="s2-brow">
-        <div class="s2-bc">
-          <div class="s2-bv" style="color:${wattGapColor}">${wattGapTxt}</div>
-          <div class="s2-bl">${wattGapLabel}</div>
+        <div class="fc-foot">
+          <button class="seg-detail-btn" onclick="openSegModal(${seg.id})">▶ REVIEW ATTEMPT <span style="opacity:.6;font-size:.85em">(${attempts})</span></button>
         </div>
-        <div class="s2-bc">
-          <div class="s2-bv" style="color:${lastGapColor}">${lastGapTxt}</div>
-          <div class="s2-bl">${lastGapLabel}</div>
-        </div>
-      </div>
-      <div class="s2-foot-modal">
-        <button class="seg-detail-btn" onclick="openSegModal(${seg.id})" style="background:linear-gradient(135deg,${accent},${accent}bb 60%,${accent}88 100%)">▶ REVIEW ATTEMPT <span style="opacity:.6;font-size:.85em">(${attempts})</span></button>
       </div>
     </div>`
   }).join('')
@@ -1635,12 +1479,121 @@ function renderSegments(segs) {
       <button class="itt-tab-btn" onclick="toggleIttLevel(this,'flow')">🔀 判斷流程</button>
       <button class="itt-tab-btn" onclick="toggleIttLevel(this,'example')">📊 範例</button>
     </div>
-    <div class="s2-grid">${cards}</div>`
+    <div class="fc-grid">${cards}</div>`
 }
 function fmtDate(d) {
   // "2026-04-22" → "04 / 22"
   const [,mm,dd] = d.split('-')
   return `${mm} / ${dd}`
+}
+
+/* ── ITT fusion cards: pointer tilt/holo, fluid canvas, reveal + count-up ── */
+function fcFmtElapsed(sec, partsLen) {
+  if (partsLen >= 3) {
+    const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60
+    return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+  }
+  const m = Math.floor(sec / 60), s = sec % 60
+  return `${m}:${String(s).padStart(2, '0')}`
+}
+function animateFcCount(el) {
+  const parts = el.dataset.countto.split(':').map(Number)
+  if (!parts.length || parts.some(isNaN)) return
+  const totalSec = parts.reduce((acc, p) => acc * 60 + p, 0)
+  const start = performance.now(), dur = 1200
+  function step(now) {
+    const p = Math.min(1, (now - start) / dur)
+    const eased = 1 - Math.pow(1 - p, 3)
+    el.textContent = fcFmtElapsed(Math.round(totalSec * eased), parts.length)
+    if (p < 1) requestAnimationFrame(step)
+  }
+  requestAnimationFrame(step)
+}
+function initFcCanvas(canvas, hex, reduce, card) {
+  const ctx = canvas.getContext('2d')
+  const n = parseInt(hex.slice(1), 16)
+  const rgb = { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 }
+  let W, H, DPR, raf = 0, running = false
+  function resize() {
+    DPR = Math.min(devicePixelRatio || 1, 2)
+    const r = canvas.getBoundingClientRect()
+    W = r.width; H = r.height
+    canvas.width = W * DPR; canvas.height = H * DPR
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0)
+  }
+  resize()
+  const blobs = Array.from({ length: 3 }, (_, i) => ({
+    a: Math.random() * Math.PI * 2, spd: .005 + Math.random() * .006, rad: .28 + Math.random() * .16, phase: i * 2.1,
+  }))
+  function paint() {
+    if (W < 2 || H < 2) return
+    ctx.clearRect(0, 0, W, H)
+    ctx.filter = 'blur(28px)'
+    for (const b of blobs) {
+      if (!reduce) b.a += b.spd
+      const cx = W * (.5 + Math.sin(b.a + b.phase) * .42)
+      const cy = H * (.5 + Math.cos(b.a * 1.3 + b.phase) * .48)
+      const rad = W * b.rad
+      const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, rad)
+      g.addColorStop(0, `rgba(${rgb.r},${rgb.g},${rgb.b},.68)`)
+      g.addColorStop(1, `rgba(${rgb.r},${rgb.g},${rgb.b},0)`)
+      ctx.fillStyle = g
+      ctx.beginPath(); ctx.arc(cx, cy, rad, 0, Math.PI * 2); ctx.fill()
+    }
+    ctx.filter = 'none'
+  }
+  function loop() { paint(); if (running) raf = requestAnimationFrame(loop) }
+  paint()
+  if (!reduce) {
+    const io = new IntersectionObserver(entries => {
+      entries.forEach(en => {
+        if (en.isIntersecting) { if (!running) { running = true; loop() } }
+        else { running = false; cancelAnimationFrame(raf) }
+      })
+    }, { threshold: 0 })
+    io.observe(card)
+  }
+  addEventListener('resize', resize)
+}
+function bindSegmentCards() {
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches
+  const cards = document.querySelectorAll('.fc')
+  if (!cards.length) return
+
+  cards.forEach(card => {
+    if (!reduce) {
+      card.addEventListener('pointermove', e => {
+        const r = card.getBoundingClientRect()
+        const px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height
+        const rx = (px - .5) * 10, ry = (py - .5) * -10
+        card.style.transform = `perspective(1400px) rotateX(${ry}deg) rotateY(${rx}deg) scale(1.015)`
+        card.style.setProperty('--fc-mx', (px * 100) + '%')
+        card.style.setProperty('--fc-my', (py * 100) + '%')
+      })
+      card.addEventListener('pointerleave', () => {
+        card.style.transform = 'perspective(1400px) rotateX(0) rotateY(0) scale(1)'
+      })
+    }
+    const canvas = card.querySelector('.fc-canvas')
+    if (canvas) {
+      const accent = getComputedStyle(card).getPropertyValue('--fc-accent').trim() || '#e87c1a'
+      initFcCanvas(canvas, accent, reduce, card)
+    }
+  })
+
+  const revealObs = new IntersectionObserver(entries => {
+    entries.forEach(en => {
+      if (en.isIntersecting) {
+        en.target.classList.add('fc-revealed')
+        if (!reduce) {
+          const t = en.target.querySelector('[data-countto]')
+          if (t) animateFcCount(t)
+        }
+        revealObs.unobserve(en.target)
+      }
+    })
+  }, { threshold: .2 })
+  cards.forEach(c => revealObs.observe(c))
 }
 
 function openSegModal(id) {
@@ -2634,6 +2587,7 @@ Promise.all([
     render(data)
     bindPowerCard(data.power_prs)
     bindNameCard()
+    bindSegmentCards()
   })
   .catch(err => {
     document.getElementById('content').innerHTML = `
