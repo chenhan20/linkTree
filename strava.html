@@ -414,12 +414,19 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 .fc-kom b{color:#4ab4ff;font-variant-numeric:tabular-nums}
 .fc-status{font-family:system-ui,sans-serif;font-size:10px;font-weight:800;letter-spacing:1px;color:var(--fc-status);margin-bottom:12px}
 
-.fc-spark{display:block;width:100%;height:38px;margin-bottom:3px}
-.fc-spark path{stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset 1.5s cubic-bezier(.16,.7,.2,1)}
-.fc-revealed .fc-spark path{stroke-dashoffset:0;transition-delay:.25s}
-.fc-spark-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px}
-.fc-spark-lbl{font-size:8px;letter-spacing:1.5px;color:rgba(255,255,255,.28);text-transform:uppercase}
-.fc-spark-grade{font-size:9px;font-weight:700;color:rgba(255,255,255,.4)}
+.fc-spark-block{display:block;text-decoration:none;color:inherit;cursor:pointer}
+.fc-spark{display:block;width:100%;height:54px;margin-bottom:4px;overflow:visible}
+.fc-spark path:not(.fc-spark-fill){stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset 1.5s cubic-bezier(.16,.7,.2,1)}
+.fc-revealed .fc-spark path:not(.fc-spark-fill){stroke-dashoffset:0;transition-delay:.25s}
+.fc-spark-fill{opacity:0;transition:opacity .7s ease;transition-delay:.35s}
+.fc-revealed .fc-spark-fill{opacity:1}
+.fc-spark-row{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:12px}
+.fc-spark-lbl{flex-shrink:0;font-size:8px;letter-spacing:1.5px;color:rgba(255,255,255,.32);text-transform:uppercase;white-space:nowrap}
+.fc-spark-grade{font-size:10px;font-weight:700;color:rgba(255,255,255,.68);transition:color .2s;white-space:nowrap}
+.fc-spark-linkicon{display:inline-block;margin-left:3px;opacity:.5;transition:opacity .2s,transform .2s}
+.fc-sz-sm .fc-spark-row{flex-direction:column;align-items:flex-start;gap:2px}
+.fc-spark-block:hover .fc-spark-grade{color:var(--fc-accent)}
+.fc-spark-block:hover .fc-spark-linkicon{opacity:1;transform:translate(1px,-1px)}
 
 .fc-time{font-family:monospace;font-variant-numeric:tabular-nums;font-weight:800;letter-spacing:-1px;line-height:.95;color:#fff;margin-bottom:2px}
 .fc-sz-lg .fc-time{font-size:48px}
@@ -449,129 +456,82 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 
 @media (prefers-reduced-motion:reduce){
   .fc{transition:opacity .01s,translate .01s !important;opacity:1!important;translate:0 0!important}
-  .fc-spark path{transition:none!important;stroke-dashoffset:0!important}
+  .fc-spark path:not(.fc-spark-fill){transition:none!important;stroke-dashoffset:0!important}
+  .fc-spark-fill{transition:none!important;opacity:1!important}
 }
 
-/* segment modal */
+/* segment modal — liquid glass, accent-aware (matches .fc card system) */
 .seg-modal-overlay{
   position:fixed;inset:0;z-index:9999;
-  background:radial-gradient(ellipse at center,rgba(30,12,0,.88) 0%,rgba(0,0,0,.94) 70%);
-  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  background:radial-gradient(ellipse at center,rgba(10,6,4,.85) 0%,rgba(2,1,1,.94) 70%);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
   display:flex;align-items:center;justify-content:center;
   opacity:0;pointer-events:none;transition:opacity .3s ease;padding:16px;
 }
 .seg-modal-overlay.open{opacity:1;pointer-events:auto}
 .seg-modal{
+  --modal-accent:#e87c1a;
   position:relative;width:100%;max-width:460px;max-height:86vh;
-  background:linear-gradient(160deg,rgba(16,8,2,.98),rgba(4,2,0,.99));
-  border:1.5px solid rgba(232,124,26,.55);border-radius:10px;
+  background:linear-gradient(165deg,rgba(255,241,224,.10),rgba(255,241,224,.02) 55%,rgba(8,4,2,.5));
+  backdrop-filter:blur(24px) saturate(1.4);-webkit-backdrop-filter:blur(24px) saturate(1.4);
+  border:1px solid rgba(255,255,255,.16);border-radius:18px;
   padding:22px 22px 16px;
-  box-shadow:0 0 0 1px rgba(232,124,26,.15),0 0 50px rgba(232,124,26,.35),inset 0 0 40px rgba(232,124,26,.04);
-  opacity:0;
+  box-shadow:0 24px 60px -20px rgba(0,0,0,.7),0 0 40px -14px var(--modal-accent);
+  opacity:0;transform:translateY(14px) scale(.97);
   display:flex;flex-direction:column;overflow:hidden;
+  transition:opacity .35s ease,transform .35s cubic-bezier(.2,.9,.25,1.05);
 }
-@keyframes seg-warp-in{
-  0%  {transform:scale(.02) translateZ(0);opacity:0;filter:blur(30px) brightness(3)}
-  25% {opacity:.5;filter:blur(20px) brightness(2.5)}
-  60% {transform:scale(1.15);opacity:1;filter:blur(2px) brightness(1.3)}
-  85% {transform:scale(.95);filter:blur(0) brightness(1.1)}
-  100%{transform:scale(1);opacity:1;filter:none}
-}
-@keyframes seg-warp-rays{
-  0%  {opacity:0;transform:translate(-50%,-50%) scale(0) rotate(0)}
-  40% {opacity:1}
-  100%{opacity:0;transform:translate(-50%,-50%) scale(8) rotate(180deg)}
-}
+.seg-modal-overlay.open .seg-modal{opacity:1;transform:translateY(0) scale(1)}
+.seg-modal-rim{position:absolute;top:0;left:10%;right:10%;height:1px;z-index:2;background:linear-gradient(90deg,transparent,rgba(255,255,255,.6),transparent)}
 @keyframes seg-hud-row{
-  0%  {opacity:0;transform:translateX(-12px);filter:blur(4px)}
-  100%{opacity:1;transform:translateX(0);filter:blur(0)}
+  0%  {opacity:0;transform:translateX(-10px)}
+  100%{opacity:1;transform:translateX(0)}
 }
-@keyframes seg-scan-loop{
-  0%   {top:-2px;opacity:0}
-  8%   {opacity:1}
-  45%  {top:calc(100% - 1px);opacity:1}
-  50%  {top:calc(100% - 1px);opacity:0}
-  55%  {top:-2px;opacity:0}
-  62%  {opacity:.85}
-  95%  {top:calc(100% - 1px);opacity:.85}
-  100% {top:calc(100% - 1px);opacity:0}
-}
-@keyframes seg-scan-second{
-  0%,40%{top:100%;opacity:0}
-  48%   {opacity:.7}
-  90%   {top:-2px;opacity:.7}
-  100%  {top:-2px;opacity:0}
-}
-.seg-modal-overlay.open .seg-modal{animation:seg-warp-in .9s cubic-bezier(.18,1.3,.3,1) forwards}
-.seg-rays{
-  position:fixed;top:50%;left:50%;width:200px;height:200px;
-  transform:translate(-50%,-50%) scale(0);pointer-events:none;z-index:9998;opacity:0;
-  background:
-    conic-gradient(from 0deg,
-      transparent 0deg,#fff 5deg,transparent 12deg,
-      transparent 80deg,#e87c1a 85deg,transparent 92deg,
-      transparent 170deg,#fff 175deg,transparent 182deg,
-      transparent 260deg,#e87c1a 265deg,transparent 272deg,
-      transparent 360deg);
-  mix-blend-mode:screen;
-  filter:blur(2px) drop-shadow(0 0 20px #ffb060);
-}
-.seg-modal-overlay.open .seg-rays{animation:seg-warp-rays .8s ease-out}
-.seg-scanbar{
-  position:absolute;left:0;right:0;height:2px;z-index:6;
-  background:linear-gradient(90deg,transparent,#ffb060,#fff,#ffb060,transparent);
-  filter:drop-shadow(0 0 8px #e87c1a);pointer-events:none;top:-2px;opacity:0;
-}
-.seg-scanbar.s2{
-  background:linear-gradient(90deg,transparent,rgba(255,255,255,.6),#fff,rgba(255,255,255,.6),transparent);
-  filter:drop-shadow(0 0 6px #fff);height:1px;
-}
-.seg-modal-overlay.open .seg-scanbar{animation:seg-scan-loop 3.2s linear .75s infinite}
-.seg-modal-overlay.open .seg-scanbar.s2{animation:seg-scan-second 4.4s linear 1.6s infinite}
-.seg-modal-overlay.open .s2-etable tbody tr{opacity:0;animation:seg-hud-row .35s ease forwards}
-.seg-modal-overlay.open .s2-etable tbody tr:nth-child(1){animation-delay:1.05s}
-.seg-modal-overlay.open .s2-etable tbody tr:nth-child(2){animation-delay:1.13s}
-.seg-modal-overlay.open .s2-etable tbody tr:nth-child(3){animation-delay:1.21s}
-.seg-modal-overlay.open .s2-etable tbody tr:nth-child(4){animation-delay:1.29s}
-.seg-modal-overlay.open .s2-etable tbody tr:nth-child(5){animation-delay:1.37s}
-.seg-modal-overlay.open .s2-etable tbody tr:nth-child(6){animation-delay:1.45s}
-.seg-modal-overlay.open .s2-etable tbody tr:nth-child(7){animation-delay:1.53s}
-.seg-modal-overlay.open .s2-etable tbody tr:nth-child(8){animation-delay:1.61s}
-.seg-modal-overlay.open .s2-etable tbody tr:nth-child(9){animation-delay:1.69s}
-.seg-modal-overlay.open .s2-etable tbody tr:nth-child(10){animation-delay:1.77s}
-.seg-modal-overlay.open .s2-etable tbody tr:nth-child(n+11){animation-delay:1.85s}
-.seg-modal-overlay.open .s2-etable thead{opacity:0;animation:seg-hud-row .35s ease .9s forwards}
+.seg-modal-overlay.open .s2-etable tbody tr{opacity:0;animation:seg-hud-row .3s ease forwards}
+.seg-modal-overlay.open .s2-etable tbody tr:nth-child(1){animation-delay:.30s}
+.seg-modal-overlay.open .s2-etable tbody tr:nth-child(2){animation-delay:.34s}
+.seg-modal-overlay.open .s2-etable tbody tr:nth-child(3){animation-delay:.38s}
+.seg-modal-overlay.open .s2-etable tbody tr:nth-child(4){animation-delay:.42s}
+.seg-modal-overlay.open .s2-etable tbody tr:nth-child(5){animation-delay:.46s}
+.seg-modal-overlay.open .s2-etable tbody tr:nth-child(6){animation-delay:.50s}
+.seg-modal-overlay.open .s2-etable tbody tr:nth-child(7){animation-delay:.54s}
+.seg-modal-overlay.open .s2-etable tbody tr:nth-child(8){animation-delay:.58s}
+.seg-modal-overlay.open .s2-etable tbody tr:nth-child(9){animation-delay:.62s}
+.seg-modal-overlay.open .s2-etable tbody tr:nth-child(10){animation-delay:.66s}
+.seg-modal-overlay.open .s2-etable tbody tr:nth-child(n+11){animation-delay:.70s}
+.seg-modal-overlay.open .s2-etable thead{opacity:0;animation:seg-hud-row .3s ease .2s forwards}
 @media (prefers-reduced-motion:reduce){
   .seg-modal-overlay.open .seg-modal,
-  .seg-modal-overlay.open .seg-rays,
-  .seg-modal-overlay.open .seg-scanbar,
   .seg-modal-overlay.open .s2-etable tbody tr,
-  .seg-modal-overlay.open .s2-etable thead{animation:none!important;opacity:1!important}
-  .seg-rays,.seg-scanbar{display:none!important}
+  .seg-modal-overlay.open .s2-etable thead{animation:none!important;opacity:1!important;transform:none!important}
 }
-.seg-modal::before,.seg-modal::after{content:'';position:absolute;width:16px;height:16px;border:2px solid #e87c1a;pointer-events:none}
+.seg-modal::before,.seg-modal::after{content:'';position:absolute;width:14px;height:14px;border:1.5px solid var(--modal-accent);opacity:.6;pointer-events:none}
 .seg-modal::before{top:8px;left:8px;border-right:none;border-bottom:none}
 .seg-modal::after{bottom:8px;right:8px;border-left:none;border-top:none}
 .seg-modal-close{
   position:absolute;top:10px;right:10px;width:28px;height:28px;border-radius:50%;
-  background:transparent;border:1px solid rgba(232,124,26,.4);color:#e87c1a;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);color:#fff;
   font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;
-  transition:background .15s,transform .25s;z-index:2;
+  transition:background .15s,transform .25s,border-color .15s;z-index:2;
 }
-.seg-modal-close:hover{background:rgba(232,124,26,.2);transform:rotate(90deg)}
-.seg-modal-head{margin-bottom:14px;padding-right:36px;border-bottom:1px solid rgba(232,124,26,.2);padding-bottom:12px}
-.seg-modal-name{font-size:22px;font-weight:700;color:#fff;letter-spacing:2px;font-family:system-ui,sans-serif;line-height:1.1}
-.seg-modal-sub{font-size:10px;color:rgba(232,124,26,.7);letter-spacing:2px;text-transform:uppercase;margin-top:5px}
+.seg-modal-close:hover{background:var(--modal-accent);border-color:var(--modal-accent);color:#000;transform:rotate(90deg)}
+.seg-modal-head{margin-bottom:14px;padding-right:36px;border-bottom:1px solid rgba(255,255,255,.12);padding-bottom:12px}
+.seg-modal-name{font-size:21px;font-weight:800;color:#fff;letter-spacing:1px;font-family:system-ui,sans-serif;line-height:1.1}
+.seg-modal-sub{font-size:10px;color:var(--modal-accent);letter-spacing:1.5px;text-transform:uppercase;margin-top:6px;opacity:.85}
+.seg-modal-link{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;letter-spacing:.5px;
+  color:rgba(255,255,255,.55);text-decoration:none;margin-top:8px;transition:color .15s}
+.seg-modal-link:hover{color:var(--modal-accent)}
 .seg-modal-body{flex:1;overflow-y:auto;padding-right:2px}
 .seg-modal-body::-webkit-scrollbar{width:4px}
-.seg-modal-body::-webkit-scrollbar-thumb{background:rgba(232,124,26,.4);border-radius:2px}
+.seg-modal-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border-radius:2px}
 /* effort table (shared, also used in modal) */
 .s2-etable{width:100%;border-collapse:collapse;font-size:12px}
-.s2-etable th{color:#666;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.06);text-align:left}
+.s2-etable th{color:rgba(255,255,255,.4);font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:6px 4px;border-bottom:1px solid rgba(255,255,255,.1);text-align:left}
 .s2-etable th:not(:first-child){text-align:right}
-.s2-etable td{padding:6px 0;color:#aaa;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:middle}
+.s2-etable td{padding:8px 4px;color:rgba(255,255,255,.72);border-bottom:1px solid rgba(255,255,255,.05);vertical-align:middle;transition:background .15s}
 .s2-etable td:not(:first-child){text-align:right;font-variant-numeric:tabular-nums}
-.s2-etable tr.s2-epr td{color:#FC4C02!important;font-weight:700}
+.s2-etable tbody tr:hover td{background:rgba(255,255,255,.04)}
+.s2-etable tr.s2-epr td{color:var(--modal-accent)!important;font-weight:700;background:color-mix(in srgb,var(--modal-accent) 12%,transparent)}
 
 /* ── monthly chart ── */
 .monthly-chart{margin-bottom:2.2rem}
@@ -1020,18 +980,17 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 
 <!-- ITT segment detail modal -->
 <div id="seg-modal-overlay" class="seg-modal-overlay" onclick="if(event.target===this)closeSegModal()">
-  <div class="seg-rays"></div>
   <div class="seg-modal">
-    <div class="seg-scanbar"></div>
-    <div class="seg-scanbar s2"></div>
+    <div class="seg-modal-rim"></div>
     <button class="seg-modal-close" onclick="closeSegModal()">✕</button>
     <div class="seg-modal-head">
       <div class="seg-modal-name" id="seg-modal-name"></div>
       <div class="seg-modal-sub" id="seg-modal-sub"></div>
+      <a class="seg-modal-link" id="seg-modal-link" href="#" target="_blank" rel="noopener">🔗 在 Strava 查看官方路段資料 ↗</a>
     </div>
     <div class="seg-modal-body">
       <table class="s2-etable">
-        <thead><tr><th>日期</th><th>時間</th><th>功率</th><th>HR</th></tr></thead>
+        <thead><tr><th>日期</th><th>時間</th><th>⚡ 功率</th><th>❤️ HR</th></tr></thead>
         <tbody id="seg-modal-tbody"></tbody>
       </table>
     </div>
@@ -1300,6 +1259,9 @@ function smoothPath(pts) {
   d += ` T ${last[0]} ${last[1]}`
   return d
 }
+function smoothAreaPath(pts) {
+  return `${smoothPath(pts)} L ${pts[pts.length - 1][0]} 40 L ${pts[0][0]} 40 Z`
+}
 function renderSegments(segs) {
   if (!segs || segs.length === 0) return ''
   const _today = new Date(Date.now() + 8*3600*1000).toISOString().slice(0,10)
@@ -1429,7 +1391,9 @@ function renderSegments(segs) {
     const sizeClass  = attempts >= 20 ? 'fc-sz-lg' : attempts >= 8 ? 'fc-sz-md' : 'fc-sz-sm'
     const profile    = Array.isArray(meta.profile) ? meta.profile : null
     const sparkPath  = profile ? smoothPath(profile) : null
+    const sparkFill  = profile ? smoothAreaPath(profile) : null
     const sparkId    = `fc-spark-${seg.id}`
+    const fillId     = `fc-fill-${seg.id}`
     const gradeLabel = (meta.avgGrade != null && meta.maxGrade != null)
       ? `均坡 ${meta.avgGrade}% · 最陡 ${meta.maxGrade}%` : ''
 
@@ -1448,13 +1412,26 @@ function renderSegments(segs) {
         <div class="fc-kom">${komGapHtml}</div>
         <div class="fc-status">${statusEmoji} ${statusLine} · ${scoreDisplay}</div>
         ${sparkPath ? `
-        <svg class="fc-spark" viewBox="0 0 100 40" preserveAspectRatio="none">
-          <path id="${sparkId}" d="${sparkPath}" fill="none" stroke="${accent}" stroke-width="2.4" stroke-linecap="round" pathLength="1" style="filter:drop-shadow(0 0 5px ${accent})"/>
-          ${reduceMotion ? '' : `<circle r="2.4" fill="#fff" style="filter:drop-shadow(0 0 4px #fff)">
-            <animateMotion dur="3.4s" begin="${(.3 + idx * .15).toFixed(2)}s" repeatCount="indefinite"><mpath href="#${sparkId}"/></animateMotion>
-          </circle>`}
-        </svg>
-        <div class="fc-spark-row"><span class="fc-spark-lbl">Gradient · 示意</span><span class="fc-spark-grade">${gradeLabel}</span></div>
+        <a class="fc-spark-block" href="https://www.strava.com/segments/${seg.id}" target="_blank" rel="noopener" title="在 Strava 查看官方路段資料">
+          <svg class="fc-spark" viewBox="0 0 100 42" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="${fillId}" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="${accent}" stop-opacity=".5"/>
+                <stop offset="100%" stop-color="${accent}" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <line class="fc-spark-base" x1="0" y1="40" x2="100" y2="40" stroke="rgba(255,255,255,.14)" stroke-width="1"/>
+            <path class="fc-spark-fill" d="${sparkFill}" fill="url(#${fillId})" stroke="none"/>
+            <path id="${sparkId}" d="${sparkPath}" fill="none" stroke="${accent}" stroke-width="3" stroke-linecap="round" pathLength="1" style="filter:drop-shadow(0 0 6px ${accent})"/>
+            ${reduceMotion ? '' : `<circle r="2.6" fill="#fff" style="filter:drop-shadow(0 0 4px #fff)">
+              <animateMotion dur="3.4s" begin="${(.3 + idx * .15).toFixed(2)}s" repeatCount="indefinite"><mpath href="#${sparkId}"/></animateMotion>
+            </circle>`}
+          </svg>
+          <div class="fc-spark-row">
+            <span class="fc-spark-lbl">Gradient · 實測示意</span>
+            <span class="fc-spark-grade">${gradeLabel}<span class="fc-spark-linkicon">↗</span></span>
+          </div>
+        </a>
         ` : ''}
         <div class="fc-time${timeClass ? ' fc-time-new' : ''}" data-countto="${prTimeStr}">${prTimeStr}</div>
         <div class="fc-timelbl">BEST TIME</div>
@@ -1599,9 +1576,12 @@ function bindSegmentCards() {
 function openSegModal(id) {
   const seg = window.__segData && window.__segData[id]
   if (!seg) return
-  document.getElementById('seg-modal-name').textContent = seg.name || id
+  const meta = (window._ittSegMeta && window._ittSegMeta[id]) || {}
+  document.querySelector('.seg-modal').style.setProperty('--modal-accent', meta.accent || '#e87c1a')
+  document.getElementById('seg-modal-name').textContent = meta.nameZh || seg.name || id
   document.getElementById('seg-modal-sub').textContent =
     `${seg.distance_km} km · PR ${seg.pr_time_str || '—'} · ${seg.efforts.length} attempts`
+  document.getElementById('seg-modal-link').href = `https://www.strava.com/segments/${id}`
   const tbody = document.getElementById('seg-modal-tbody')
   tbody.innerHTML = seg.efforts.map(e => {
     const crown = e.is_pr ? '👑 ' : ''
