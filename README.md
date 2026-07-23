@@ -22,10 +22,10 @@
 
 ![名片與功率排行榜](docs/strava-hero.png)
 
-### ITT 區間 · F1 卡片
-自訂計時賽路段，F1 賽車風格卡片（颱風特效、最佳成績、功率、嘗試次數與狀態評分）。
+### ITT 區間 · Fusion 卡片
+自訂計時賽路段，液態玻璃 + 全息傾斜 + Bento 排版的卡片：卡片大小依挑戰次數自動縮放、內建依真實 altitude/grade stream 畫出的坡度示意曲線，滑鼠移過去有 3D 傾斜與全息光澤，並保留最佳成績、功率、狀態評分（UNTOUCHED / HEATING UP / PEAK...）等既有判斷邏輯。
 
-![ITT 區間 F1 卡片](docs/strava-segments.png)
+![ITT 區間 Fusion 卡片](docs/strava-segments.png)
 
 ### 月度紀律 + 本週任務
 各運動項目月度達標進度，以及單車 / 跑步 / 游泳 / 重訓的每週任務挑戰。

@@ -4,7 +4,8 @@
     "1. 在 Strava 網頁開啟目標路段，URL 中的數字就是 id",
     "2. 在下方 segments 陣列新增一筆，填入 id / nameZh / nameApi / type / accent",
     "3. 執行 FETCH_ALL=1 SCAN_SEGMENTS=1 重跑一次 fetch-strava.js",
-    "4. strava.html 無需改動，會自動顯示新路段"
+    "4. strava.html 無需改動，會自動顯示新路段",
+    "5. accent 色彩：整頁是暖橘太空主題，配色故意收在暖色家族（橘/琥珀/金/珊瑚）+ 一個固定的冷色點綴（#4ab4ff 藍，已用在社子島砍鴨頭與其他頁面元件），新增路段挑色時避免再加第二個高飽和冷色（綠/紫/青），才不會跟其他版塊打架"
   ],
   "_types": {
     "CLIMB":    "爬坡路段（依功率與時間評估）",
@@ -29,7 +30,7 @@
       "nameZh": "中社路",
       "nameApi": "中社路ITT",
       "type": "SPRINT",
-      "accent": "#2ecc71",
+      "accent": "#ffb020",
       "note": "快速衝刺段",
       "avgGrade": 6.3,
       "maxGrade": 13.1,
@@ -51,7 +52,7 @@
       "nameZh": "劍南路回程",
       "nameApi": "劍南路（回程）ITT",
       "type": "SPRINT",
-      "accent": "#a78bfa",
+      "accent": "#ff6a4d",
       "note": "劍南路下坡回程，短衝計時",
       "avgGrade": 4.2,
       "maxGrade": 15.2,
