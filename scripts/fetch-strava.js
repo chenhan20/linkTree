@@ -253,13 +253,15 @@ async function fetchWattsStream(token, activityId) {
 async function fetchRouteStream(token, activityId) {
   const data = await request({
     hostname: 'www.strava.com',
-    path:     `/api/v3/activities/${activityId}/streams?keys=latlng,heartrate,velocity_smooth,time&key_by_type=true`,
+    path:     `/api/v3/activities/${activityId}/streams?keys=latlng,heartrate,velocity_smooth,altitude,watts,time&key_by_type=true`,
     method:   'GET',
     headers:  { Authorization: `Bearer ${token}` },
   })
   const latlng = data.latlng?.data   || []
   const hr     = data.heartrate?.data || []
   const vel    = data.velocity_smooth?.data || []
+  const alt    = data.altitude?.data  || []
+  const watts  = data.watts?.data     || []
   const n = latlng.length
   if (n < 2) return null
   const target = 120
@@ -267,11 +269,14 @@ async function fetchRouteStream(token, activityId) {
   const indices = n <= target
     ? Array.from({ length: n }, (_, i) => i)
     : Array.from({ length: target }, (_, i) => Math.round(i * step))
+  // 格式：[lat, lng, hr(bpm), speed(km/h), elev(m), watts] —— index 2 是心率不是高度
   return indices.map(i => [
     Math.round(latlng[i][0] * 1e5) / 1e5,
     Math.round(latlng[i][1] * 1e5) / 1e5,
-    hr[i]  != null ? Math.round(hr[i])          : null,
-    vel[i] != null ? Math.round(vel[i] * 36) / 10 : null,
+    hr[i]    != null ? Math.round(hr[i])          : null,
+    vel[i]   != null ? Math.round(vel[i] * 36) / 10 : null,
+    alt[i]   != null ? Math.round(alt[i])         : null,
+    watts[i] != null ? Math.round(watts[i])       : null,
   ])
 }
 
@@ -291,8 +296,11 @@ async function enrichRouteStreams(token, rides, existingRides) {
     }
   }
 
+  // 舊快取欄位不足六欄（缺 elev 或 watts 欄位）視為待補，讓每日跑批逐步升級。
+  // 用「欄位數」判斷而非值：沒功率計的騎乘 watts 全 null 但仍是六欄，不會重抓
+  const needsFetch = r => !r.route_stream || (r.route_stream[0] || []).length < 6
   const todo = rides.filter(r =>
-    r.polyline && !r.trainer && (scanStreams ? true : !r.route_stream)
+    r.polyline && !r.trainer && (scanStreams ? true : needsFetch(r))
   ).slice(0, maxFetch)
 
   if (todo.length === 0) {
@@ -310,7 +318,9 @@ async function enrichRouteStreams(token, rides, existingRides) {
         ride.route_stream = stream
         const hasHR  = stream.some(p => p[2] != null)
         const hasSpd = stream.some(p => p[3] != null)
-        console.log(`  🛰  ${ride.date} ${ride.name}：${stream.length} pts HR=${hasHR} spd=${hasSpd}`)
+        const hasAlt = stream.some(p => p[4] != null)
+        const hasW   = stream.some(p => p[5] != null)
+        console.log(`  🛰  ${ride.date} ${ride.name}：${stream.length} pts HR=${hasHR} spd=${hasSpd} alt=${hasAlt} watts=${hasW}`)
         done++
       } else {
         console.log(`  ⚠️  ${ride.name}：無 GPS stream`)
@@ -1074,15 +1084,27 @@ async function main() {
     try { existingData = JSON.parse(fs.readFileSync(OUT_FILE, 'utf8')) }
     catch (e) { /* 讀失敗就當空 */ }
   }
-  // ITT 歷史另存檔優先：若存在且 efforts 更多，以它為準
+  // ITT 歷史另存檔優先：逐一區段比較 efforts 數量，哪邊較多就採用哪邊。
+  // 注意：不可用「全部區段加總」比較（舊寫法），否則新增區段時，其他已追蹤
+  // 區段在 main/itt 兩邊的加總差異會蓋掉這個新區段僅有的少量資料，
+  // 導致新區段顯示 0 次 ——「碧山露營場」剛加入時就是撞到這個問題。
   if (fs.existsSync(ITT_FILE)) {
     try {
       const ittData = JSON.parse(fs.readFileSync(ITT_FILE, 'utf8'))
       const ittSegs = Array.isArray(ittData) ? ittData : ittData.segments
       if (ittSegs && ittSegs.length > 0) {
-        const ittTotal   = ittSegs.reduce((n, s) => n + (s.efforts || []).length, 0)
-        const mainTotal  = (existingData.segments || []).reduce((n, s) => n + (s.efforts || []).length, 0)
-        if (ittTotal >= mainTotal) existingData.segments = ittSegs
+        const mainSegs  = existingData.segments || []
+        const mainById  = new Map(mainSegs.map(s => [s.id, s]))
+        for (const ittSeg of ittSegs) {
+          const mainSeg   = mainById.get(ittSeg.id)
+          const ittCount  = (ittSeg.efforts || []).length
+          const mainCount = mainSeg ? (mainSeg.efforts || []).length : 0
+          if (ittCount >= mainCount) {
+            if (mainSeg) Object.assign(mainSeg, ittSeg)
+            else mainSegs.push(ittSeg)
+          }
+        }
+        existingData.segments = mainSegs
       }
     } catch (e) { /* 讀失敗忽略 */ }
   }
