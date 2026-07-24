@@ -379,7 +379,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 .fc.fc-sz-sm{min-height:270px}
 .fc:hover{box-shadow:0 28px 60px -20px rgba(0,0,0,.9),0 0 44px -12px var(--fc-accent)}
 
-.fc-canvas{position:absolute;inset:0;z-index:0;opacity:.32}
+.fc-canvas{position:absolute;inset:0;width:100%;height:100%;z-index:0;opacity:.32}
 .fc-glass{
   position:absolute;inset:0;z-index:1;
   backdrop-filter:blur(20px) saturate(1.3);-webkit-backdrop-filter:blur(20px) saturate(1.3);
@@ -581,6 +581,14 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 .r3d-compass-inner{display:flex;flex-direction:column;align-items:center;line-height:1;gap:1px;will-change:transform}
 .r3d-compass-arrow{color:#FC4C02;font-size:11px;text-shadow:0 0 6px rgba(252,76,2,.6)}
 .r3d-compass-n{color:rgba(255,255,255,.85);font-size:9px;font-weight:800}
+.r3d-minimap{
+  position:absolute;top:60px;left:12px;z-index:3;width:150px;height:150px;border-radius:12px;
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.16);
+  overflow:hidden;pointer-events:none;
+  backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
+}
+#r3dMiniMapCanvas{display:block;width:100%;height:100%}
+@media(max-width:640px){.r3d-minimap{width:104px;height:104px}}
 .r3d-tag{
   position:absolute;z-index:2;pointer-events:none;white-space:nowrap;
   font-size:11px;font-weight:700;padding:3px 9px;border-radius:10px;
@@ -589,6 +597,15 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 }
 .r3d-tag.peak{color:#ffe9cf}
 .r3d-tag.steep{color:#ffd24d;transform:translate(-50%,50%)}
+.r3d-tag.landmark{
+  background:none;border:none;padding:0 0 0 9px;font-size:10px;font-weight:500;
+  color:rgba(255,255,255,.65);text-shadow:0 1px 3px rgba(0,0,0,.85);
+  transform:translate(0,-50%);
+}
+.r3d-tag.landmark::before{
+  content:'';position:absolute;left:-1px;top:50%;transform:translate(-50%,-50%);
+  width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.6);
+}
 .r3d-hud{
   position:absolute;left:0;right:0;bottom:0;z-index:2;padding:16px 18px 14px;
   background:linear-gradient(0deg,rgba(6,3,1,.92) 0%,rgba(6,3,1,.55) 60%,transparent 100%);
@@ -943,6 +960,67 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
   .pm-table .h-act,.pm-table td.act{display:none}
   .pwr-modal{padding:14px 12px 10px}
 }
+
+/* ── 每日一句 quote book ── */
+.quote-section{margin-bottom:2.4rem}
+.qb-tabs{display:flex;gap:8px;margin-bottom:12px}
+.qb-tab{
+  padding:6px 14px;font-size:11px;letter-spacing:1px;font-family:inherit;
+  background:transparent;border:1px solid rgba(252,76,2,.3);border-radius:14px;
+  color:rgba(255,255,255,.55);cursor:pointer;transition:all .15s;
+}
+.qb-tab:hover{border-color:rgba(252,76,2,.6);color:#fff}
+.qb-tab.active{background:rgba(252,76,2,.18);border-color:#FC4C02;color:#FC4C02}
+.quote-book{
+  position:relative;display:grid;grid-template-columns:1fr 210px;gap:0;
+  border-radius:16px;overflow:hidden;
+  background:linear-gradient(160deg,rgba(28,14,6,.85),rgba(10,5,2,.9));
+  box-shadow:0 16px 40px rgba(0,0,0,.5);
+  border:1px solid rgba(252,76,2,.25);
+  opacity:0;transform:translateY(6px);transition:opacity .35s ease,transform .35s ease;
+}
+.quote-book.ready{opacity:1;transform:none}
+.qb-main{padding:26px 26px 22px;min-width:0;position:relative}
+.qb-num{font-size:11px;color:rgba(252,76,2,.35);font-weight:700;margin-bottom:14px;letter-spacing:1px}
+.qb-tag{display:flex;align-items:center;gap:6px;font-size:12px;color:#FC4C02;font-weight:700;margin-bottom:16px;letter-spacing:.5px}
+.qb-text{font-family:'Noto Serif TC','Songti TC',serif;font-size:22px;line-height:1.75;color:#f2ece4;font-weight:700;margin-bottom:20px;word-break:break-word;text-shadow:0 0 20px rgba(0,0,0,.4)}
+.qb-src{font-size:12.5px;color:rgba(255,255,255,.5)}
+.qb-src .qb-work{display:block;margin-top:2px;color:rgba(252,76,2,.6)}
+.qb-stamp{
+  position:absolute;right:24px;bottom:18px;width:40px;height:40px;
+  border:2px solid rgba(252,76,2,.55);border-radius:6px;color:#FC4C02;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Noto Serif TC','Songti TC',serif;font-size:17px;font-weight:800;
+  transform:rotate(-6deg);opacity:.85;box-shadow:0 0 12px rgba(252,76,2,.2);
+}
+.qb-side{background:rgba(0,0,0,.25);border-left:1px dashed rgba(252,76,2,.2);padding:20px 20px 18px;display:flex;flex-direction:column;gap:14px}
+.qb-side-block .qb-side-title{font-size:11px;font-weight:800;color:#FC4C02;margin-bottom:5px;letter-spacing:.5px}
+.qb-side-block .qb-side-text{font-size:12.5px;line-height:1.6;color:rgba(255,255,255,.7)}
+.qb-actions{display:flex;gap:8px;margin-top:auto;padding-top:4px}
+.qb-btn{
+  flex:1;display:flex;align-items:center;justify-content:center;gap:5px;
+  padding:8px 6px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;
+  font-family:inherit;transition:all .15s;border:1px solid transparent;
+}
+.qb-fav{background:rgba(63,204,74,.15);border-color:rgba(63,204,74,.4);color:#5fd060}
+.qb-fav:hover{background:rgba(63,204,74,.25)}
+.qb-fav.active{background:rgba(252,76,2,.22);border-color:#FC4C02;color:#FC4C02}
+.qb-copy{background:transparent;border-color:rgba(252,76,2,.35);color:rgba(255,255,255,.75)}
+.qb-copy:hover{background:rgba(252,76,2,.1);border-color:rgba(252,76,2,.6);color:#fff}
+.qb-shuffle{
+  margin-top:12px;display:inline-flex;align-items:center;gap:6px;
+  background:rgba(252,76,2,.1);border:1px solid rgba(252,76,2,.35);border-radius:20px;
+  padding:8px 16px;color:#FC4C02;font-size:12.5px;font-weight:600;cursor:pointer;
+  font-family:inherit;transition:background .15s;
+}
+.qb-shuffle:hover{background:rgba(252,76,2,.22)}
+@media(max-width:600px){
+  .quote-book{grid-template-columns:1fr}
+  .qb-side{border-left:none;border-top:1px dashed rgba(252,76,2,.2)}
+  .qb-main{padding:20px 18px 18px}
+  .qb-text{font-size:19px}
+  .qb-stamp{width:34px;height:34px;font-size:14px;right:18px;bottom:16px}
+}
 </style>
 </head>
 <body>
@@ -1098,6 +1176,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
   <div class="r3d-box">
     <button class="r3d-close" onclick="closeRoute3D()">✕</button>
     <div class="r3d-compass"><div class="r3d-compass-inner" id="r3dCompassInner"><span class="r3d-compass-arrow">▲</span><span class="r3d-compass-n">N</span></div></div>
+    <div class="r3d-minimap"><canvas id="r3dMiniMapCanvas"></canvas></div>
     <div id="r3dCanvasWrap">
       <canvas id="r3dCanvas"></canvas>
       <div class="r3d-loading" id="r3dLoading">建立航跡模型…</div>
@@ -1247,6 +1326,91 @@ const STATUS_META = {
   warning: { emoji: '🟡', text: '近期需補課' },
   done:    { emoji: '🟢', text: '達標' },
   over:    { emoji: '🔥', text: '超標' },
+}
+/* ── 每日一句：quote book widget ── */
+function renderQuoteSection() {
+  return `
+    <div class="quote-section">
+      <div class="section-title">每日一句 <span class="muted">· LIFE QUOTES</span></div>
+      <div class="qb-tabs" id="qb-tabs">
+        <button class="qb-tab active" data-src="all">✨ 全部</button>
+        <button class="qb-tab" data-src="anime">🎴 動畫</button>
+        <button class="qb-tab" data-src="movie">🎬 影劇</button>
+      </div>
+      <div class="quote-book" id="quote-book"></div>
+      <button class="qb-shuffle" id="qb-shuffle">🎲 換一句</button>
+    </div>
+  `
+}
+function qbEscape(s) {
+  return (s || '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]))
+}
+function qbPick(src) {
+  const pool = (window._quotePool || []).filter(q => src === 'all' || q._src === src)
+  if (!pool.length) return null
+  return pool[Math.floor(Math.random() * pool.length)]
+}
+function qbRenderCard(q) {
+  const book = document.getElementById('quote-book')
+  if (!book) return
+  if (!q) {
+    book.classList.remove('ready')
+    book.innerHTML = `<div class="qb-main"><div class="qb-text" style="font-size:15px;color:#7a6a4a">名言資料載入中或暫無內容…</div></div>`
+    return
+  }
+  const work = q.anime || q.movie || ''
+  const icon = q._src === 'movie' ? '🎬' : '✨'
+  const stamp = (q.character || work || '?').trim().charAt(0)
+  const favKey = 'qbFav:' + q.id
+  const isFav = localStorage.getItem(favKey) === '1'
+  book.classList.remove('ready')
+  book.innerHTML = `
+    <div class="qb-main">
+      <div class="qb-num">${String(Math.floor(Math.random() * 89) + 10)}</div>
+      <div class="qb-tag">${icon} ${qbEscape(work)}${q.theme ? '．' + qbEscape(q.theme) : ''}</div>
+      <div class="qb-text">${qbEscape(q.adaptedQuote)}</div>
+      <div class="qb-src">—— ${qbEscape(q.character || '')}<span class="qb-work">${qbEscape(q.source || '')}</span></div>
+      <div class="qb-stamp">${qbEscape(stamp)}</div>
+    </div>
+    <div class="qb-side">
+      ${q.scene ? `<div class="qb-side-block"><div class="qb-side-title">場景</div><div class="qb-side-text">${qbEscape(q.scene)}</div></div>` : ''}
+      ${q.reflection ? `<div class="qb-side-block"><div class="qb-side-title">帶回生活</div><div class="qb-side-text">${qbEscape(q.reflection)}</div></div>` : ''}
+      <div class="qb-actions">
+        <button class="qb-btn qb-fav${isFav ? ' active' : ''}" id="qb-fav-btn">${isFav ? '♥' : '♡'} 收藏</button>
+        <button class="qb-btn qb-copy" id="qb-copy-btn">⧉ 複製</button>
+      </div>
+    </div>
+  `
+  requestAnimationFrame(() => book.classList.add('ready'))
+  const favBtn = document.getElementById('qb-fav-btn')
+  favBtn.addEventListener('click', () => {
+    const nowFav = favBtn.classList.toggle('active')
+    favBtn.textContent = (nowFav ? '♥' : '♡') + ' 收藏'
+    if (nowFav) localStorage.setItem(favKey, '1'); else localStorage.removeItem(favKey)
+  })
+  document.getElementById('qb-copy-btn').addEventListener('click', () => {
+    const text = `${q.adaptedQuote}\n—— ${q.character || ''}《${work}》`
+    navigator.clipboard?.writeText(text).catch(() => {})
+    const btn = document.getElementById('qb-copy-btn')
+    const old = btn.textContent
+    btn.textContent = '✓ 已複製'
+    setTimeout(() => { btn.textContent = old }, 1400)
+  })
+}
+function initQuoteWidget() {
+  const book = document.getElementById('quote-book')
+  if (!book) return
+  let activeSrc = 'all'
+  qbRenderCard(qbPick(activeSrc))
+  document.getElementById('qb-shuffle')?.addEventListener('click', () => qbRenderCard(qbPick(activeSrc)))
+  document.getElementById('qb-tabs')?.addEventListener('click', e => {
+    const btn = e.target.closest('.qb-tab')
+    if (!btn) return
+    document.querySelectorAll('.qb-tab').forEach(b => b.classList.remove('active'))
+    btn.classList.add('active')
+    activeSrc = btn.dataset.src
+    qbRenderCard(qbPick(activeSrc))
+  })
 }
 function renderMonthlySummary(ms) {
   if (!ms) return ''
@@ -1680,8 +1844,8 @@ function bindSegmentCards() {
       card.addEventListener('pointermove', e => {
         const r = card.getBoundingClientRect()
         const px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height
-        const rx = (px - .5) * 10, ry = (py - .5) * -10
-        card.style.transform = `perspective(1400px) rotateX(${ry}deg) rotateY(${rx}deg) scale(1.015)`
+        const rx = (px - .5) * 3, ry = (py - .5) * -3
+        card.style.transform = `perspective(1400px) rotateX(${ry}deg) rotateY(${rx}deg) scale(1.006)`
         card.style.setProperty('--fc-mx', (px * 100) + '%')
         card.style.setProperty('--fc-my', (py * 100) + '%')
       })
@@ -1801,7 +1965,8 @@ function buildRouteModel(stream) {
   const elevRange = maxElev - minElev
   const exaggeration = hasElev ? Math.min(28, Math.max(4, 0.22 * horizExtent / Math.max(1, elevRange))) : 1
   const maxSpeed = Math.max(1, ...pts.map(p => p.speed))
-  return { pts, horizExtent, elevRange, hasElev, hasHR, hasWatts, minElev, exaggeration, maxSpeed, totalDist: cum }
+  // lat0/lng0/mLat/mLng 一併回傳：地標要投影進同一個座標系，才能跟路線對齊
+  return { pts, horizExtent, elevRange, hasElev, hasHR, hasWatts, minElev, exaggeration, maxSpeed, totalDist: cum, lat0, lng0, mLat, mLng }
 }
 // 速度漸層沿用暖橘太空主題：餘燼紅 → Strava 橘 → 熾金，不引入冷色
 function r3dSpeedColor(ratio) {
@@ -1858,6 +2023,8 @@ function openRoute3D(activityId) {
   document.getElementById('r3dHrWrap').style.display = model.hasHR ? '' : 'none'
   document.getElementById('r3dWattsWrap').style.display = model.hasWatts ? '' : 'none'
   document.getElementById('r3dElevWrap').style.display = model.hasElev ? '' : 'none'
+  // 小地圖不依賴 Three.js，開窗當下先畫，不用等 3D 場景載入完
+  drawTaipeiMiniMap(document.getElementById('r3dMiniMapCanvas'), window._taipeiMiniMap, a.route_stream)
   loadThreeJS()
     .then(() => requestAnimationFrame(() => requestAnimationFrame(() => init3D(a, model))))
     .catch(err => {
@@ -2001,6 +2168,14 @@ function init3D(a, model) {
       mkTag(pi, 'peak', `▲ ${Math.round(model.minElev + model.pts[pi].elevRaw)}m`)
       if (si !== pi && slopes[si] > 0.02) mkTag(si, 'steep', `最陡 ${Math.round(slopes[si] * 100)}%`)
     }
+    // 地標：純視覺提示，跟區段卡同一套比對邏輯（離路線 400m 內才顯示）
+    findNearbyLandmarks(model, window._landmarks).forEach(lm => {
+      const el = document.createElement('div')
+      el.className = 'r3d-tag landmark'
+      el.textContent = lm.name
+      wrap.appendChild(el)
+      tags.push({ el, v: new THREE.Vector3(lm.x, lm.elevRaw * model.exaggeration, lm.z) })
+    })
     const tagV = new THREE.Vector3()
 
     function resize() {
@@ -2129,6 +2304,102 @@ function initSeg3DWhenVisible() {
   io.observe(first)
 }
 // 坡度上色：0% 餘燼紅 → 12%+ 熾金（越陡越亮），沿用速度色帶的暖色 ramp
+// 地標清單由使用者自己維護（data/landmarks.json），這裡只負責判斷「路線有沒有經過附近」。
+// 用同一組 lat0/lng0/mLat/mLng 投影地標座標，才會跟路線落在同一個平面上。
+const LANDMARK_MAX_DIST_M = 400
+function findNearbyLandmarks(model, landmarks, maxDist) {
+  if (!landmarks || !landmarks.length) return []
+  const limit = maxDist || LANDMARK_MAX_DIST_M
+  const found = []
+  for (const lm of landmarks) {
+    if (lm.lat == null || lm.lng == null || !lm.name) continue
+    const lx = (lm.lng - model.lng0) * model.mLng
+    const lz = (model.lat0 - lm.lat) * model.mLat
+    let minD = Infinity, nearestIdx = 0
+    model.pts.forEach((p, i) => {
+      const d = Math.hypot(p.x - lx, p.z - lz)
+      if (d < minD) { minD = d; nearestIdx = i }
+    })
+    if (minD <= limit) found.push({ name: lm.name, x: lx, z: lz, elevRaw: model.pts[nearestIdx].elevRaw })
+  }
+  return found
+}
+// ITT 區段是固定的已知路段，門檻放寬一些讓「附近有什麼」看得出來；
+// 個別騎乘的大顆回放涵蓋範圍廣很多（同一顆地標常命中上百趟活動），維持 400m 避免太雜
+const SEGMENT_LANDMARK_MAX_DIST_M = 1500
+// 台北小地圖：市界 + 河流用固定座標系投影一次（跟個別路線的 local 座標系不同，
+// 這樣不管開哪趟騎乘，市界形狀跟比例尺都一致，才看得出「這次騎了哪一塊」）
+function buildTaipeiMiniMap(outline) {
+  if (!outline || !Array.isArray(outline.boundary) || outline.boundary.length < 3) return null
+  const lats = outline.boundary.map(p => p[0]), lngs = outline.boundary.map(p => p[1])
+  const lat0 = (Math.min(...lats) + Math.max(...lats)) / 2
+  const lng0 = (Math.min(...lngs) + Math.max(...lngs)) / 2
+  const mLat = 110540, mLng = 111320 * Math.cos(lat0 * Math.PI / 180)
+  const proj = ([lat, lng]) => ({ x: (lng - lng0) * mLng, y: (lat0 - lat) * mLat })
+  const boundary = outline.boundary.map(proj)
+  const rivers = (outline.rivers || []).map(r => ({ name: r.name, pts: r.points.map(proj) }))
+  const xs = boundary.map(p => p.x), ys = boundary.map(p => p.y)
+  return { lat0, lng0, mLat, mLng, boundary, rivers, minX: Math.min(...xs), maxX: Math.max(...xs), minY: Math.min(...ys), maxY: Math.max(...ys) }
+}
+function drawTaipeiMiniMap(canvas, mm, rideStream) {
+  if (!canvas) return
+  if (!mm) { canvas.parentElement.style.display = 'none'; return }
+  canvas.parentElement.style.display = ''
+  const dpr = Math.min(2, window.devicePixelRatio || 1)
+  const size = Math.round((canvas.clientWidth || 150) * dpr)
+  canvas.width = size; canvas.height = size
+  const ctx = canvas.getContext('2d')
+  ctx.clearRect(0, 0, size, size)
+  const pad = 10 * dpr
+  const spanX = mm.maxX - mm.minX, spanY = mm.maxY - mm.minY
+  const scale = Math.min((size - pad * 2) / spanX, (size - pad * 2) / spanY)
+  const offX = (size - spanX * scale) / 2, offY = (size - spanY * scale) / 2
+  const toPx = p => ({ x: offX + (p.x - mm.minX) * scale, y: offY + (p.y - mm.minY) * scale })
+  const drawPath = (pts, close) => {
+    ctx.beginPath()
+    pts.forEach((p, i) => { const q = toPx(p); i === 0 ? ctx.moveTo(q.x, q.y) : ctx.lineTo(q.x, q.y) })
+    if (close) ctx.closePath()
+  }
+  drawPath(mm.boundary, true)
+  ctx.strokeStyle = 'rgba(230,235,245,.55)'; ctx.lineWidth = Math.max(1, dpr * 0.9); ctx.stroke()
+  ctx.strokeStyle = 'rgba(70,150,255,.85)'; ctx.lineWidth = Math.max(1.3, dpr * 1.2)
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round'
+  mm.rivers.forEach(r => { drawPath(r.pts, false); ctx.stroke() })
+  // 河流名稱：貼在該河流點陣列的中點，字體小、淡藍偏白，加深色描邊避免糊在背景上
+  ctx.font = `600 ${9 * dpr}px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif`
+  ctx.textBaseline = 'middle'
+  const labelMargin = 15 * dpr
+  // 河流常常流出市界框外，用陣列中點當標籤位置可能落在畫面外（如基隆河向東延伸出框）；
+  // 改成挑「離可視範圍中心最近」的那個點，確保標籤一定落在看得到的地方
+  const frameCx = (mm.minX + mm.maxX) / 2, frameCy = (mm.minY + mm.maxY) / 2
+  mm.rivers.forEach(r => {
+    if (!r.pts.length) return
+    let best = r.pts[0], bestD = Infinity
+    r.pts.forEach(p => { const d = Math.hypot(p.x - frameCx, p.y - frameCy); if (d < bestD) { bestD = d; best = p } })
+    const mid = toPx(best)
+    const alignRight = mid.x > size * 0.6
+    ctx.textAlign = alignRight ? 'right' : 'left'
+    let tx = mid.x + (alignRight ? -5 * dpr : 5 * dpr)
+    tx = alignRight ? Math.max(tx, labelMargin) : Math.min(tx, size - labelMargin)
+    const ty = Math.max(labelMargin, Math.min(size - labelMargin, mid.y))
+    ctx.lineWidth = 2.5 * dpr; ctx.strokeStyle = 'rgba(4,10,20,.75)'
+    ctx.strokeText(r.name, tx, ty)
+    ctx.fillStyle = 'rgba(190,220,255,.9)'
+    ctx.fillText(r.name, tx, ty)
+  })
+  if (rideStream && rideStream.length > 1) {
+    ctx.beginPath()
+    rideStream.forEach((p, i) => {
+      const q = toPx({ x: (p[1] - mm.lng0) * mm.mLng, y: (mm.lat0 - p[0]) * mm.mLat })
+      i === 0 ? ctx.moveTo(q.x, q.y) : ctx.lineTo(q.x, q.y)
+    })
+    ctx.strokeStyle = '#ff8a3d'; ctx.lineWidth = Math.max(1.6, dpr * 1.5)
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round'
+    ctx.shadowColor = 'rgba(252,76,2,.6)'; ctx.shadowBlur = 3 * dpr
+    ctx.stroke()
+    ctx.shadowBlur = 0
+  }
+}
 function buildSegSlopes(model) {
   const pts = model.pts, n = pts.length, slopes = new Array(n)
   const WIN = 25  // 半窗 25m（總窗約 50m）：太短會被 GPS 海拔雜訊放大到離譜的 %
@@ -2154,7 +2425,7 @@ function buildSegTubeColors(tubularSegments, radialSegments, model, slopes) {
   }
   return colors
 }
-function buildSegScene(model, officialMaxGrade) {
+function buildSegScene(model, officialMaxGrade, landmarks) {
   const scene = new THREE.Scene()
   const group = new THREE.Group()
   const slopes = buildSegSlopes(model)
@@ -2214,8 +2485,12 @@ function buildSegScene(model, officialMaxGrade) {
     const steepPct = officialMaxGrade != null ? Math.round(officialMaxGrade) : Math.round(slopes[si] * 100)
     if (slopes[si] > 0.02 && si !== pi) tags.push({ v: mk(si), text: `最陡 ${steepPct}%`, color: '#ffd24d', below: true })
   }
+  // 地標：純視覺提示，錨點用 v 存 pivot 座標系位置（跟 tags 同一套投影邏輯）
+  const landmarkTags = findNearbyLandmarks(model, landmarks, SEGMENT_LANDMARK_MAX_DIST_M).map(lm => ({
+    v: new THREE.Vector3(lm.x - cx, lm.elevRaw * model.exaggeration, lm.z - cz), name: lm.name,
+  }))
   // R = 水平包圍圓半徑（自轉時任何角度都不會超出這個範圍）
-  return { scene, pivot, ex, ez, R: 0.5 * Math.hypot(ex, ez), elevY: maxElevY, tags }
+  return { scene, pivot, ex, ez, R: 0.5 * Math.hypot(ex, ez), elevY: maxElevY, tags, landmarkTags }
 }
 // 2D 浮標：錨點圓點 + 細連接線 + 圓角 pill，畫在 drawImage 之後的同一顆 canvas
 function drawSegTag(ctx, x, y, text, color, dpr, below) {
@@ -2247,6 +2522,19 @@ function drawSegTag(ctx, x, y, text, color, dpr, below) {
   ctx.fillStyle = color
   ctx.textBaseline = 'middle'; ctx.textAlign = 'left'
   ctx.fillText(text, bx + padX, by + pillH / 2 + 0.5 * dpr)
+}
+// 地標標籤：純視覺、不搶戲——只有小白點 + 淡字，沒有 pill 底色，跟海拔/坡度標籤明顯區隔
+function drawSegLandmark(ctx, x, y, text, dpr) {
+  const cw = ctx.canvas.width, ch = ctx.canvas.height
+  x = Math.max(6 * dpr, Math.min(cw - 6 * dpr, x))
+  y = Math.max(6 * dpr, Math.min(ch - 6 * dpr, y))
+  ctx.beginPath(); ctx.arc(x, y, 2.2 * dpr, 0, Math.PI * 2)
+  ctx.fillStyle = 'rgba(255,255,255,.55)'; ctx.fill()
+  const alignRight = x > cw * 0.62
+  ctx.font = `500 ${8.5 * dpr}px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif`
+  ctx.fillStyle = 'rgba(255,255,255,.6)'
+  ctx.textBaseline = 'middle'; ctx.textAlign = alignRight ? 'right' : 'left'
+  ctx.fillText(text, x + (alignRight ? -5 : 5) * dpr, y)
 }
 // 依 canvas 長寬比精算相機距離，讓路線盡量塞滿畫面：
 // 3D 模式用包圍球（自轉任何角度都不出界）、俯視模式用邊界框（不自轉，可貼更緊）
@@ -2294,7 +2582,7 @@ function setupSeg3D() {
     // 轉五欄 route_stream 格式重用 buildRouteModel（爬坡段誇張倍率壓低些，形狀較自然）
     const model = buildRouteModel(raw.pts.map(p => [p[0], p[1], null, null, p[2]]))
     model.exaggeration = Math.min(model.exaggeration, 8)
-    const built = buildSegScene(model, ((window._ittSegMeta || {})[cv.dataset.seg3d] || {}).maxGrade)
+    const built = buildSegScene(model, ((window._ittSegMeta || {})[cv.dataset.seg3d] || {}).maxGrade, window._landmarks)
     const camera = new THREE.PerspectiveCamera(45, 2.6, 0.1, 100000)
     const it = { cv, ctx: cv.getContext('2d'), ...built, camera, flat: cv.dataset.flat === '1', rot: 0, dragging: false, lastX: 0, visible: true }
     if (it.flat) it.tags = []  // 俯視路線圖不掛海拔/坡度浮標
@@ -2337,6 +2625,11 @@ function setupSeg3D() {
       for (const tg of it.tags) {
         tagV.copy(tg.v).applyAxisAngle(yAxis, it.rot).project(it.camera)
         drawSegTag(it.ctx, (tagV.x * 0.5 + 0.5) * pw, (-tagV.y * 0.5 + 0.5) * ph, tg.text, tg.color, dpr, tg.below)
+      }
+      for (const lm of (it.landmarkTags || [])) {
+        tagV.copy(lm.v).applyAxisAngle(yAxis, it.rot).project(it.camera)
+        if (tagV.z >= 1) continue
+        drawSegLandmark(it.ctx, (tagV.x * 0.5 + 0.5) * pw, (-tagV.y * 0.5 + 0.5) * ph, lm.name, dpr)
       }
     }
   }
@@ -2662,6 +2955,8 @@ function render(data) {
       ${renderNameCard(data)}
       ${renderPowerCard(data.power_prs)}
     </div>
+
+    ${renderQuoteSection()}
 
     ${renderMonthlySummary(data.monthly_summary)}
     ${renderMonthlyGoals(data.monthly_goals)}
@@ -3348,13 +3643,27 @@ Promise.all([
   fetch('data/itt-config.json').then(r => { if (!r.ok) throw new Error(`itt-config.json HTTP ${r.status}`); return r.json() }),
   // 區段 3D 路線快取（scripts/fetch-segment-streams.js 產生）；缺檔就退回 SVG 坡度圖
   fetch('data/segment-streams.json').then(r => r.ok ? r.json() : null).catch(() => null),
+  // 地標清單（使用者自行維護，見 data/landmarks.json 格式說明）；缺檔就不顯示地標
+  fetch('data/landmarks.json').then(r => r.ok ? r.json() : []).catch(() => []),
+  // 台北市界 + 淡水河/基隆河（OpenStreetMap 資料整理，見 buildTaipeiMiniMap）；缺檔就不顯示小地圖
+  fetch('data/taipei-outline.json').then(r => r.ok ? r.json() : null).catch(() => null),
+  // 每日一句：動畫 + 影劇語錄（缺檔就不顯示該來源）
+  fetch('data/life-quotes.json').then(r => r.ok ? r.json() : null).catch(() => null),
+  fetch('data/movie-life-quotes.json').then(r => r.ok ? r.json() : null).catch(() => null),
 ])
-  .then(([data, ittConfig, segStreams]) => {
+  .then(([data, ittConfig, segStreams, landmarks, taipeiOutline, animeQuotes, movieQuotes]) => {
     // 建立 SEG_META lookup，下面 renderSegments 用
     window._ittSegMeta = Object.fromEntries(ittConfig.segments.map(s => [s.id, s]))
     window.__rideFeed = data.recent_rides || []
     window._segStreams = segStreams || {}
+    window._landmarks = Array.isArray(landmarks) ? landmarks : []
+    window._taipeiMiniMap = buildTaipeiMiniMap(taipeiOutline)
+    window._quotePool = [
+      ...((animeQuotes?.quotes || []).map(q => ({ ...q, _src: 'anime' }))),
+      ...((movieQuotes?.quotes || []).map(q => ({ ...q, _src: 'movie' }))),
+    ]
     render(data)
+    initQuoteWidget()
     initSeg3DWhenVisible()
     bindPowerCard(data.power_prs)
     bindNameCard()
