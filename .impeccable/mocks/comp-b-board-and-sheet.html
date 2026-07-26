@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>COMP B · 板牌 + 計時紙並置</title>
+<style>
+:root{
+  --slate:#101215; --panel:#191C20; --panel-2:#22262B; --rule:#31363D;
+  --chalk:#EDEAE3; --chalk-dim:#9BA0A6; --chalk-faint:#6B7178;
+  --purple:#A97BFF; --green:#3FD98A; --yellow:#F5C542; --untimed:#5A6068;
+  --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--slate);color:var(--chalk);font-family:var(--sans);
+  font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
+.wrap{max-width:980px;margin:0 auto;padding:0 20px 80px}
+
+/* ── 牆頭：固定板牌條 ── */
+.wall{position:sticky;top:0;z-index:10;background:var(--slate);
+  border-bottom:2px solid var(--chalk);padding:14px 0 0;margin-bottom:0}
+.wall-top{display:flex;align-items:baseline;justify-content:space-between;
+  font-size:10.5px;letter-spacing:3px;color:var(--chalk-faint);
+  text-transform:uppercase;margin-bottom:12px}
+.board-row{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;
+  background:var(--rule);margin-bottom:-1px}
+.bcell{background:var(--slate);padding:12px 16px 16px}
+.bcell-lbl{font-size:9.5px;letter-spacing:2.5px;color:var(--chalk-faint);
+  text-transform:uppercase;margin-bottom:6px}
+.bcell-val{font-size:clamp(30px,5.4vw,46px);font-weight:800;line-height:.9;letter-spacing:-1.5px}
+.bcell-val small{font-size:.32em;font-weight:600;letter-spacing:1px;
+  color:var(--chalk-faint);margin-left:7px}
+.v-yellow{color:var(--yellow)} .v-green{color:var(--green)}
+.v-purple{color:var(--purple)} .v-chalk{color:var(--chalk)}
+
+/* ── 計時紙：立刻開始 ── */
+.sheet{padding-top:28px}
+.seg-block{margin-bottom:38px}
+.seg-head{display:flex;align-items:baseline;justify-content:space-between;
+  border-bottom:1px solid var(--chalk);padding-bottom:7px;margin-bottom:0;gap:12px}
+.seg-name{font-size:14px;font-weight:700;letter-spacing:1px}
+.seg-name em{font-style:normal;font-size:10px;letter-spacing:2.5px;
+  color:var(--chalk-faint);text-transform:uppercase;margin-left:10px}
+.seg-pr{font-family:var(--mono);font-size:11.5px;color:var(--chalk-dim);white-space:nowrap}
+.seg-pr b{color:var(--green)}
+
+table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12px}
+thead th{text-align:left;padding:8px 10px;font-size:9.5px;letter-spacing:2px;
+  color:var(--chalk-faint);text-transform:uppercase;font-weight:600;
+  border-bottom:1px solid var(--rule)}
+thead th:not(:first-child){text-align:right}
+tbody td{padding:8px 10px;border-bottom:1px solid var(--rule);color:var(--chalk-dim)}
+tbody td:not(:first-child){text-align:right}
+tbody tr:hover td{background:var(--panel);color:var(--chalk)}
+td.t-purple{color:var(--purple);font-weight:700}
+td.t-green{color:var(--green);font-weight:700}
+td.t-yellow{color:var(--yellow)}
+.dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:8px;vertical-align:1px}
+.d-purple{background:var(--purple)} .d-green{background:var(--green)}
+.d-yellow{background:var(--yellow)} .d-untimed{background:var(--untimed)}
+
+/* 坡度剖面：計時紙上的小圖 */
+.profile{height:38px;margin-top:10px;position:relative}
+.profile svg{width:100%;height:100%;display:block}
+
+.legend{display:flex;gap:18px;flex-wrap:wrap;margin-top:14px;
+  font-size:10px;letter-spacing:1.5px;color:var(--chalk-faint);text-transform:uppercase}
+.legend span{display:flex;align-items:center}
+
+@media(max-width:640px){
+  .board-row{grid-template-columns:1fr;gap:1px}
+  .bcell{display:grid;grid-template-columns:1fr auto;align-items:baseline;padding:10px 14px}
+  .bcell-lbl{margin-bottom:0}
+  .bcell-val{font-size:28px}
+  table{font-size:11px} thead th,tbody td{padding:7px 5px}
+  .seg-head{flex-direction:column;gap:3px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- 固定板牌條 -->
+  <div class="wall">
+    <div class="wall-top">
+      <span>PIT WALL · STEVE CHUANG</span>
+      <span>2026-07-23 · 更新於 22:00</span>
+    </div>
+    <div class="board-row">
+      <div class="bcell">
+        <div class="bcell-lbl">與 PR 差距</div>
+        <div class="bcell-val v-yellow">+12:03</div>
+      </div>
+      <div class="bcell">
+        <div class="bcell-lbl">本月單車</div>
+        <div class="bcell-val v-green">6<small>／4 達標</small></div>
+      </div>
+      <div class="bcell">
+        <div class="bcell-lbl">本週任務</div>
+        <div class="bcell-val v-yellow">2<small>／4 完成</small></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 計時紙立刻開始 -->
+  <section class="sheet">
+
+    <div class="seg-block">
+      <div class="seg-head">
+        <div class="seg-name">風櫃嘴 <em>CLIMB · 6.13 KM · 均坡 7.9%</em></div>
+        <div class="seg-pr">PR <b>28:29</b> · 11 EFFORTS</div>
+      </div>
+      <div class="profile">
+        <svg viewBox="0 0 400 38" preserveAspectRatio="none">
+          <polyline points="0,36 40,32 90,29 148,26 192,22 220,18 248,15 290,12 322,8 361,5 400,2"
+            fill="none" stroke="#31363D" stroke-width="1.5"/>
+          <polygon points="0,36 40,32 90,29 148,26 192,22 220,18 248,15 290,12 322,8 361,5 400,2 400,38 0,38"
+            fill="#191C20"/>
+        </svg>
+      </div>
+      <table>
+        <thead><tr><th>日期</th><th>時間</th><th>差距</th><th>功率</th><th>心率</th></tr></thead>
+        <tbody>
+          <tr><td><span class="dot d-green"></span>2025-11-02</td><td class="t-green">28:29</td><td class="t-green">PR</td><td>251</td><td>168</td></tr>
+          <tr><td><span class="dot d-yellow"></span>2026-05-24</td><td>32:49</td><td class="t-yellow">+4:20</td><td>233</td><td>161</td></tr>
+          <tr><td><span class="dot d-yellow"></span>2026-06-23</td><td>34:36</td><td class="t-yellow">+6:07</td><td>220</td><td>166</td></tr>
+          <tr><td><span class="dot d-yellow"></span>2026-07-23</td><td>40:32</td><td class="t-yellow">+12:03</td><td>183</td><td>153</td></tr>
+          <tr><td><span class="dot d-untimed"></span>2026-03-15</td><td>36:11</td><td class="t-yellow">+7:42</td><td>—</td><td>—</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="seg-block">
+      <div class="seg-head">
+        <div class="seg-name">中社路 <em>SPRINT · 3.94 KM · 均坡 6.3%</em></div>
+        <div class="seg-pr">PR <b>16:25</b> · 26 EFFORTS</div>
+      </div>
+      <div class="profile">
+        <svg viewBox="0 0 400 38" preserveAspectRatio="none">
+          <polyline points="0,34 52,30 104,27 160,21 214,17 268,13 320,9 400,4"
+            fill="none" stroke="#31363D" stroke-width="1.5"/>
+          <polygon points="0,34 52,30 104,27 160,21 214,17 268,13 320,9 400,4 400,38 0,38" fill="#191C20"/>
+        </svg>
+      </div>
+      <table>
+        <thead><tr><th>日期</th><th>時間</th><th>差距</th><th>功率</th><th>心率</th></tr></thead>
+        <tbody>
+          <tr><td><span class="dot d-green"></span>2025-10-18</td><td class="t-green">16:25</td><td class="t-green">PR</td><td>262</td><td>171</td></tr>
+          <tr><td><span class="dot d-yellow"></span>2026-05-27</td><td>19:39</td><td class="t-yellow">+3:14</td><td>240</td><td>157</td></tr>
+          <tr><td><span class="dot d-yellow"></span>2026-06-16</td><td>20:01</td><td class="t-yellow">+3:36</td><td>232</td><td>164</td></tr>
+          <tr><td><span class="dot d-yellow"></span>2026-07-23</td><td>25:02</td><td class="t-yellow">+8:37</td><td>184</td><td>149</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="legend">
+      <span><i class="dot d-purple"></i>全場最速</span>
+      <span><i class="dot d-green"></i>個人最佳</span>
+      <span><i class="dot d-yellow"></i>比自己慢</span>
+      <span><i class="dot d-untimed"></i>尚未計時</span>
+    </div>
+
+  </section>
+</div>
+</body>
+</html>

@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>COMP C · 翻面</title>
+<style>
+:root{
+  --slate:#101215; --panel:#191C20; --panel-2:#22262B; --rule:#31363D;
+  --chalk:#EDEAE3; --chalk-dim:#9BA0A6; --chalk-faint:#6B7178;
+  --purple:#A97BFF; --green:#3FD98A; --yellow:#F5C542; --untimed:#5A6068;
+  --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--slate);color:var(--chalk);font-family:var(--sans);
+  font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
+.wrap{max-width:900px;margin:0 auto;padding:36px 20px 80px}
+
+.hdr{display:flex;align-items:baseline;justify-content:space-between;
+  font-size:10.5px;letter-spacing:3px;color:var(--chalk-faint);
+  text-transform:uppercase;padding-bottom:12px;border-bottom:1px solid var(--rule);
+  margin-bottom:30px}
+
+/* ── 可翻面的板 ── */
+.plate{perspective:1600px;margin-bottom:22px}
+.plate-inner{position:relative;transform-style:preserve-3d;
+  transition:transform .62s cubic-bezier(.3,.9,.25,1)}
+.plate.flipped .plate-inner{transform:rotateX(180deg)}
+.face{backface-visibility:hidden;border:1px solid var(--rule);background:var(--slate)}
+.face.back{position:absolute;inset:0;transform:rotateX(180deg);overflow:hidden}
+
+/* 正面：三個巨大事實 */
+.front-top{display:flex;align-items:baseline;justify-content:space-between;
+  padding:14px 20px;border-bottom:1px solid var(--rule)}
+.front-seg{font-size:14px;font-weight:700;letter-spacing:1px}
+.front-seg em{font-style:normal;font-size:10px;letter-spacing:2.5px;
+  color:var(--chalk-faint);text-transform:uppercase;margin-left:9px}
+.front-tag{font-family:var(--mono);font-size:10.5px;color:var(--chalk-faint);letter-spacing:1px}
+.front-grid{display:grid;grid-template-columns:repeat(3,1fr)}
+.fcell{padding:22px 20px 24px;border-right:1px solid var(--rule)}
+.fcell:last-child{border-right:none}
+.fcell-lbl{font-size:9.5px;letter-spacing:2.5px;color:var(--chalk-faint);
+  text-transform:uppercase;margin-bottom:9px}
+.fcell-val{font-size:clamp(34px,6.6vw,58px);font-weight:800;line-height:.86;letter-spacing:-2px}
+.fcell-val small{display:block;font-size:.2em;font-weight:600;letter-spacing:1.6px;
+  color:var(--chalk-faint);margin-top:9px}
+.v-yellow{color:var(--yellow)} .v-green{color:var(--green)}
+.v-purple{color:var(--purple)} .v-chalk{color:var(--chalk)}
+
+/* 背面：計時紙 */
+.back-head{display:flex;align-items:baseline;justify-content:space-between;
+  padding:11px 20px;border-bottom:1px solid var(--chalk)}
+.back-title{font-size:10.5px;letter-spacing:3px;text-transform:uppercase;font-weight:700}
+.back-meta{font-family:var(--mono);font-size:10px;color:var(--chalk-faint)}
+table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:11.5px}
+thead th{text-align:left;padding:7px 20px;font-size:9px;letter-spacing:2px;
+  color:var(--chalk-faint);text-transform:uppercase;font-weight:600;
+  border-bottom:1px solid var(--rule)}
+thead th:not(:first-child){text-align:right}
+tbody td{padding:7px 20px;border-bottom:1px solid var(--rule);color:var(--chalk-dim)}
+tbody td:not(:first-child){text-align:right}
+td.t-green{color:var(--green);font-weight:700}
+td.t-yellow{color:var(--yellow)}
+.dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:8px;vertical-align:1px}
+.d-green{background:var(--green)} .d-yellow{background:var(--yellow)}
+.d-untimed{background:var(--untimed)} .d-purple{background:var(--purple)}
+
+.flip-btn{display:flex;align-items:center;gap:9px;width:100%;
+  background:none;border:none;border-top:1px solid var(--rule);
+  padding:11px 20px;color:var(--chalk-faint);font-family:var(--sans);
+  font-size:10px;letter-spacing:2.5px;text-transform:uppercase;cursor:pointer;
+  transition:color .15s ease,background .15s ease}
+.flip-btn:hover{color:var(--chalk);background:var(--panel)}
+.flip-btn span{margin-left:auto;font-family:var(--mono);letter-spacing:0}
+
+.note{margin-top:34px;padding-top:16px;border-top:1px solid var(--rule);
+  font-size:11px;color:var(--chalk-faint);line-height:1.7;letter-spacing:.3px}
+.note b{color:var(--chalk-dim);font-weight:600}
+
+@media(max-width:640px){
+  .front-grid{grid-template-columns:1fr}
+  .fcell{border-right:none;border-bottom:1px solid var(--rule);
+    display:grid;grid-template-columns:1fr auto;align-items:center;padding:14px 16px}
+  .fcell:last-child{border-bottom:none}
+  .fcell-lbl{margin-bottom:0}
+  .fcell-val{font-size:32px;text-align:right}
+  .fcell-val small{display:inline;margin-left:8px;font-size:.32em}
+  thead th,tbody td{padding:7px 12px}
+  table{font-size:11px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hdr">
+    <span>PIT WALL · STEVE CHUANG</span>
+    <span>2026-07-23</span>
+  </div>
+
+  <!-- 板 1：風櫃嘴（正面朝上） -->
+  <div class="plate" id="p1">
+    <div class="plate-inner">
+      <div class="face front">
+        <div class="front-top">
+          <div class="front-seg">風櫃嘴 <em>CLIMB · 6.13 KM</em></div>
+          <div class="front-tag">11 EFFORTS</div>
+        </div>
+        <div class="front-grid">
+          <div class="fcell"><div class="fcell-lbl">位置</div>
+            <div class="fcell-val v-chalk">P8<small>／11</small></div></div>
+          <div class="fcell"><div class="fcell-lbl">與 PR 差距</div>
+            <div class="fcell-val v-yellow">+12:03<small>PR 28:29</small></div></div>
+          <div class="fcell"><div class="fcell-lbl">最新</div>
+            <div class="fcell-val v-chalk">40:32<small>183 W · 153 BPM</small></div></div>
+        </div>
+        <button class="flip-btn" onclick="document.getElementById('p1').classList.toggle('flipped')">
+          翻到計時紙 <span>↻</span></button>
+      </div>
+      <div class="face back">
+        <div class="back-head"><div class="back-title">計時紙 · 風櫃嘴</div>
+          <div class="back-meta">11 EFFORTS</div></div>
+        <table>
+          <thead><tr><th>日期</th><th>時間</th><th>差距</th><th>功率</th></tr></thead>
+          <tbody>
+            <tr><td><span class="dot d-green"></span>2025-11-02</td><td class="t-green">28:29</td><td class="t-green">PR</td><td>251</td></tr>
+            <tr><td><span class="dot d-yellow"></span>2026-05-24</td><td>32:49</td><td class="t-yellow">+4:20</td><td>233</td></tr>
+            <tr><td><span class="dot d-yellow"></span>2026-06-23</td><td>34:36</td><td class="t-yellow">+6:07</td><td>220</td></tr>
+            <tr><td><span class="dot d-yellow"></span>2026-07-23</td><td>40:32</td><td class="t-yellow">+12:03</td><td>183</td></tr>
+          </tbody>
+        </table>
+        <button class="flip-btn" onclick="document.getElementById('p1').classList.toggle('flipped')">
+          翻回板牌 <span>↺</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 板 2：中社路（已翻到計時紙那面，示範兩個 register 共存） -->
+  <div class="plate flipped" id="p2">
+    <div class="plate-inner">
+      <div class="face front">
+        <div class="front-top">
+          <div class="front-seg">中社路 <em>SPRINT · 3.94 KM</em></div>
+          <div class="front-tag">26 EFFORTS</div>
+        </div>
+        <div class="front-grid">
+          <div class="fcell"><div class="fcell-lbl">位置</div>
+            <div class="fcell-val v-chalk">P19<small>／26</small></div></div>
+          <div class="fcell"><div class="fcell-lbl">與 PR 差距</div>
+            <div class="fcell-val v-yellow">+8:37<small>PR 16:25</small></div></div>
+          <div class="fcell"><div class="fcell-lbl">最新</div>
+            <div class="fcell-val v-chalk">25:02<small>184 W · 149 BPM</small></div></div>
+        </div>
+        <button class="flip-btn" onclick="document.getElementById('p2').classList.toggle('flipped')">
+          翻到計時紙 <span>↻</span></button>
+      </div>
+      <div class="face back">
+        <div class="back-head"><div class="back-title">計時紙 · 中社路</div>
+          <div class="back-meta">26 EFFORTS</div></div>
+        <table>
+          <thead><tr><th>日期</th><th>時間</th><th>差距</th><th>功率</th></tr></thead>
+          <tbody>
+            <tr><td><span class="dot d-green"></span>2025-10-18</td><td class="t-green">16:25</td><td class="t-green">PR</td><td>262</td></tr>
+            <tr><td><span class="dot d-yellow"></span>2026-05-27</td><td>19:39</td><td class="t-yellow">+3:14</td><td>240</td></tr>
+            <tr><td><span class="dot d-yellow"></span>2026-06-16</td><td>20:01</td><td class="t-yellow">+3:36</td><td>232</td></tr>
+            <tr><td><span class="dot d-yellow"></span>2026-07-23</td><td>25:02</td><td class="t-yellow">+8:37</td><td>184</td></tr>
+          </tbody>
+        </table>
+        <button class="flip-btn" onclick="document.getElementById('p2').classList.toggle('flipped')">
+          翻回板牌 <span>↺</span></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="note">
+    <b>簽名互動：</b>同一塊板，兩個 register。正面是舉給車手看的三個巨大事實，背面是工程師的完整分段表。<br>
+    上方兩塊示範兩面同時存在 —— 風櫃嘴顯示板牌面，中社路已翻到計時紙面。點任一塊的翻面鍵可切換。
+  </div>
+
+</div>
+</body>
+</html>
