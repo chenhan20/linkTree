@@ -712,7 +712,9 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
   background:linear-gradient(0deg,rgba(6,3,1,.92) 0%,rgba(6,3,1,.55) 60%,transparent 100%);
   pointer-events:none;
 }
-.r3d-hud > *{pointer-events:auto}
+/* 只在開窗時才收點擊。沒有 .open 限定的話，遮罩雖然 opacity:0 但仍在命中測試樹裡，
+   HUD 子元素會把視窗底部一整條的點擊吃掉（手機 y617-801、桌機 y427-560，17 種控制項點不到）。 */
+.r3d-overlay.open .r3d-hud > *{pointer-events:auto}
 .r3d-title{font-size:14px;font-weight:700;color:#fff;margin-bottom:9px;letter-spacing:.5px;text-shadow:0 0 10px rgba(252,76,2,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .r3d-flat-tag{font-size:9px;color:#f2c14e;margin-left:8px;letter-spacing:.5px;white-space:nowrap;font-weight:600}
 .r3d-stats{display:flex;gap:20px;margin-bottom:10px}
