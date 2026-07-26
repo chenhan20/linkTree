@@ -1,6 +1,6 @@
 # SteveChuang · Personal Hub
 
-> 太空主題個人入口網站，整合線上履歷與 Strava 運動儀表板。
+> 賽車維修站主題個人入口網站，整合線上履歷與 Strava 運動儀表板。
 > 部署於 GitHub Pages，每天透過 GitHub Actions 自動同步 Strava 資料（台灣時間 10:00 / 18:00 / 22:00）。
 
 🔗 **Live：** https://chenhan20.github.io/linkTree/linkTreeIndex.html
@@ -15,7 +15,7 @@
 
 ## 🚴 Strava 儀表板 · 重點功能
 
-> 太空主題運動儀表板，資料每天自動同步。以下為桌面版實際畫面。
+> 賽車維修站主題運動儀表板，資料每天自動同步。以下為桌面版實際畫面。
 
 ### 星座名片 + 功率排行榜
 即時星座動畫名片（FTP / 里程 / 爬升），下方為最佳功率 PR（5s ~ 60m）排行。

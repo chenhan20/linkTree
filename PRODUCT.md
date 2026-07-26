@@ -48,6 +48,8 @@ GitHub Actions 一天三次（台灣時間 10:00 / 18:00 / 22:00）用 OAuth ref
 ### 術語（使用者的既有詞彙，不得改寫）
 ITT、segScore、FTP、TSS、PR、以及狀態詞 NEW / BREAKTHROUGH / HEATING UP / UNTOUCHED / PEAK / RISING / HOLD / DECLINING。
 
+**新增顯示狀態（2026-07-27 確認）：「90 天內最佳」。** 沿用 segScore 既有的 90 天基準線窗口，不是新的計算邏輯，只是把既有窗口內的最快一次獨立標示出來。它與「歷史 PR」是兩個不同狀態，可同時存在於同一路段。
+
 `segScore = powerScore × 0.7 + timeScore × 0.3`，基準線優先取 90 天內功率前 5 名平均（標示 TOP5 AVG），不足 3 筆改用全時間（ALL-TIME AVG），再不足則 NO BENCHMARK。
 
 ### 技術限制
@@ -72,8 +74,9 @@ ITT、segScore、FTP、TSS、PR、以及狀態詞 NEW / BREAKTHROUGH / HEATING U
 
 - **名稱**：SteveChuang · Personal Hub
 - **語言**：繁體中文（`zh-TW`）為主，搭配英文大寫標籤作為次級資訊層（如 `SEGMENT EFFORTS`、`ALL STATUS TABLE`）。此雙語混排是既有慣例，非疏漏。
-- **主題**：README 自述為「太空主題」，`linkTreeIndex.html` 與 `strava.html` 皆有 canvas 星空／流星／粒子動畫。此為既有身分，非本次可自由更換的裝飾。
-- **既有資產**：`docs/avatar.jpg`、`docs/space_bg.png`、`docs/strava_icon.png`、`logo.ico`
+- **主題**：**賽車維修站（Pit Wall）**。使用者於 2026-07-27 確認以此取代原本的「太空主題」。維修站牆上只有兩種東西：舉給車手看的**板牌**（極少字、極大字）與工程師桌上的**計時紙**（密集分段秒數）——這兩個 register 是整站的組織原則。前一版的星空／流星／粒子動畫為已淘汰身分，僅作反面參照。
+- **例外保留**：星座名片改置於**車手識別證的頭盔徽記**位置。賽車世界中頭盔塗裝是唯一容許純粹個人符號的表面，故此元件以新語彙留存，非舊世界殘骸。
+- **既有資產**：`docs/avatar.jpg`、`docs/strava_icon.png`、`logo.ico`。`docs/space_bg.png`（2.25 MB）隨主題更換退役。
 - **對外連結**：Instagram、Facebook、YouTube、Strava、LinkedIn、GitHub
 
 ## Evidence on Hand
