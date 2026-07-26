@@ -18,77 +18,124 @@
 <title>Steve Chuang · Strava</title>
 <link rel="icon" type="image/png" href="docs/strava_icon.png">
 <style>
+/* ══════════════════════════════════════════════════════════════
+   維修站牆 THE PIT WALL — design tokens
+   板牌（極少字、極大字）與計時紙（密集分段秒數）兩個 register。
+   材質是暗示不是模擬：消光石板、陽極鋁、發絲分隔線。無發光、無毛玻璃。
+   ══════════════════════════════════════════════════════════════ */
+:root{
+  /* 表面：石板 → 陽極鋁，越上層越亮 */
+  --slate:#101215;
+  --panel:#191C20;
+  --panel-2:#22262B;
+  --rule:#31363D;
+  --rule-strong:#454B54;
+
+  /* 墨：粉筆白帶暖，不是純白 */
+  --chalk:#EDEAE3;
+  --chalk-dim:#9BA0A6;
+  --chalk-faint:#6B7178;
+
+  /* 分段計時色 —— 唯一的彩色，且只表功能，不做裝飾。
+     紫=90天內最佳（沿用 segScore 的 90 天基準線窗口）
+     綠=歷史 PR ／ 黃=比自己慢 ／ 灰=尚未計時或缺資料 */
+  --t-purple:#A97BFF;
+  --t-green:#3FD98A;
+  --t-yellow:#F5C542;
+  --t-untimed:#5A6068;
+
+  /* 字：系統堆疊，零字體載入（無 build step）。簽名是 tabular-nums。 */
+  --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+
+  --maxw:860px;
+  --pad:1.2rem;
+  --ease:cubic-bezier(.3,.9,.25,1);
+}
+
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0a0408;color:#ddd}
+html{scroll-behavior:smooth}
+html,body{min-height:100%;font-family:var(--sans);background:var(--slate);color:var(--chalk);
+  font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
 
-/* space photo backdrop — push hue toward warm/orange to fit Strava theme */
-#space-bg{
-  position:fixed;inset:0;z-index:0;pointer-events:none;
-  background:url('docs/space_bg.png') center/cover no-repeat fixed;
-  filter:hue-rotate(-35deg) saturate(.85) brightness(.55) contrast(1.05);
-  animation:spaceDrift 60s ease-in-out infinite alternate;
-}
-/* nebula breathing glow */
-#space-bg::after{
-  content:'';position:absolute;inset:-10%;
-  background:
-    radial-gradient(ellipse at 25% 80%, rgba(252,76,2,.20), transparent 55%),
-    radial-gradient(ellipse at 75% 20%, rgba(255,120,40,.12), transparent 60%),
-    linear-gradient(180deg, rgba(10,4,8,.45), rgba(10,4,8,.65));
-  animation:nebulaPulse 14s ease-in-out infinite alternate;
-}
-/* slow drifting aurora veil */
-#space-bg::before{
-  content:'';position:absolute;inset:-20%;z-index:1;pointer-events:none;
-  background:
-    radial-gradient(40% 60% at 70% 30%, rgba(255,140,60,.10), transparent 70%),
-    radial-gradient(50% 50% at 20% 60%, rgba(120,90,255,.07), transparent 70%),
-    conic-gradient(from 200deg at 60% 40%, rgba(252,76,2,.05), transparent 30%, rgba(80,140,255,.04) 60%, transparent 80%);
-  mix-blend-mode:screen;
-  filter:blur(20px);
-  animation:auroraDrift 38s linear infinite;
-}
-@keyframes spaceDrift{
-  0%  {transform:scale(1.04) translate(0,0)}
-  100%{transform:scale(1.08) translate(-1.2%, -.8%)}
-}
-@keyframes nebulaPulse{
-  0%  {opacity:.75;transform:scale(1)}
-  100%{opacity:1;transform:scale(1.06)}
-}
-@keyframes auroraDrift{
-  0%  {transform:rotate(0deg) scale(1.05) translate(0,0)}
-  50% {transform:rotate(180deg) scale(1.15) translate(2%,-2%)}
-  100%{transform:rotate(360deg) scale(1.05) translate(0,0)}
-}
+/* 焦點指示：稽核發現全檔零個 outline 宣告，99 個可 Tab 元素只有瀏覽器預設環 */
+:focus-visible{outline:2px solid var(--chalk);outline-offset:2px;border-radius:2px}
 
-#star-canvas{position:fixed;inset:0;width:100%;height:100%;background:transparent;z-index:1;pointer-events:none;mix-blend-mode:screen;opacity:.9}
+/* 太空背景已隨主題退役。保留選擇器讓既有 DOM 節點安靜地不佔位。 */
+#space-bg,#star-canvas{display:none}
 
-@media (prefers-reduced-motion: reduce){
-  #space-bg,#space-bg::after,#space-bg::before{animation:none}
+#app{position:relative;z-index:2;min-height:100vh;max-width:var(--maxw);margin:0 auto;padding:0 var(--pad) 5rem}
+
+/* ══ 板牌 PIT BOARD — 第一屏 ══
+   不做滿 100svh：計時紙必須探頭，否則使用者只會看第一屏。 */
+.pitboard{padding:26px 0 30px;position:relative}
+.pitboard-tag{font-size:11px;letter-spacing:4px;color:var(--chalk-faint);
+  text-transform:uppercase;margin-bottom:5px}
+.pitboard-seg{font-size:15px;letter-spacing:1px;color:var(--chalk-dim);margin-bottom:26px}
+.pb-slot{border-top:1px solid var(--rule);padding:20px 0 18px;display:grid;
+  grid-template-columns:1fr auto;align-items:baseline;gap:16px}
+.pb-slot:last-of-type{border-bottom:1px solid var(--rule)}
+.pb-lbl{font-size:12px;letter-spacing:3px;color:var(--chalk-faint);text-transform:uppercase;line-height:1.55}
+.pb-lbl b{display:block;font-weight:400;letter-spacing:2px;color:var(--chalk-dim);font-size:11px}
+.pb-val{font-size:clamp(46px,11vw,88px);font-weight:800;line-height:.84;letter-spacing:-3px;
+  justify-self:end;text-align:right}
+.pb-val small{font-size:.24em;font-weight:600;letter-spacing:1.4px;color:var(--chalk-dim);
+  margin-left:10px;white-space:nowrap}
+.t-purple{color:var(--t-purple)} .t-green{color:var(--t-green)}
+.t-yellow{color:var(--t-yellow)} .t-untimed{color:var(--t-untimed)}
+.t-chalk{color:var(--chalk)}
+.pitboard-foot{margin-top:24px;display:flex;justify-content:space-between;align-items:center;
+  gap:14px;flex-wrap:wrap;font-size:11px;letter-spacing:2px;color:var(--chalk-faint);
+  text-transform:uppercase}
+/* 明說章節數，不用含糊的「TIMING SHEET」 */
+.pitboard-cue{display:flex;align-items:center;gap:9px;color:var(--chalk-dim);
+  text-decoration:none;transition:color .15s ease}
+.pitboard-cue:hover{color:var(--chalk)}
+.pitboard-cue::after{content:'';width:26px;height:1px;background:currentColor}
+
+/* 捲動後壓縮成固定三格條 —— comp B 的頂條沒有被丟棄，它是 A 的捲動狀態 */
+/* 貼在頂欄「下方」而非同一層 —— --topbar-h 由 initPitRail 量測後寫入 */
+.pb-rail{position:sticky;top:var(--topbar-h,58px);z-index:9;background:var(--slate);
+  border-bottom:2px solid var(--chalk);margin:0 calc(var(--pad) * -1);
+  padding:0 var(--pad);display:none}
+.pb-rail.on{display:block}
+.pb-rail-row{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--rule)}
+.pb-rail-cell{background:var(--slate);padding:9px 12px 11px}
+.pb-rail-lbl{font-size:9px;letter-spacing:2.5px;color:var(--chalk-faint);
+  text-transform:uppercase;margin-bottom:3px}
+.pb-rail-val{font-size:22px;font-weight:800;line-height:1;letter-spacing:-.5px}
+.pb-rail-val small{font-size:.42em;font-weight:600;color:var(--chalk-faint);margin-left:5px}
+
+@media(max-width:600px){
+  .pb-slot{grid-template-columns:1fr;gap:2px}
+  .pb-val{justify-self:start;text-align:left;letter-spacing:-2px}
+  .pb-rail-cell{padding:8px 9px 9px}
+  .pb-rail-val{font-size:18px}
+  .pb-rail-lbl{font-size:8px;letter-spacing:2px}
 }
-
-#app{position:relative;z-index:2;min-height:100vh;max-width:800px;margin:0 auto;padding:0 1.2rem 5rem}
+@media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} }
 
 /* ── topbar ── */
 .topbar{
   position:sticky;top:0;z-index:10;
   display:flex;align-items:center;gap:12px;
   padding:14px 1.2rem;margin:0 -1.2rem;
-  border-bottom:1px solid rgba(252,76,2,.15);
-  background:rgba(6,8,16,.95);
-  backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--rule);
+  background:var(--slate);
 }
+/* 觸控目標 44px：稽核測出 100 個可點元素有 90 個不足 */
 .back-btn{
-  display:flex;align-items:center;gap:6px;
-  background:rgba(252,76,2,.1);border:1px solid rgba(252,76,2,.3);
-  border-radius:20px;padding:6px 14px;
-  color:#FC4C02;font-size:13px;font-weight:500;
-  cursor:pointer;text-decoration:none;transition:background .2s;
-  -webkit-tap-highlight-color:transparent;
+  display:inline-flex;align-items:center;gap:7px;
+  background:none;border:1px solid var(--rule-strong);
+  border-radius:2px;padding:0 14px;min-height:34px;
+  color:var(--chalk-dim);font-size:11px;font-weight:600;letter-spacing:2px;
+  text-transform:uppercase;cursor:pointer;text-decoration:none;
+  transition:color .15s ease,border-color .15s ease;
+  -webkit-tap-highlight-color:transparent;position:relative;
 }
-.back-btn:hover{background:rgba(252,76,2,.2)}
-.topbar-title{font-size:12px;color:rgba(252,76,2,.55);letter-spacing:2.5px;text-transform:uppercase;flex:1;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.back-btn::before{content:'';position:absolute;inset:-6px -4px}
+.back-btn:hover{color:var(--chalk);border-color:var(--chalk-dim)}
+.topbar-title{font-size:11px;color:var(--chalk-faint);letter-spacing:3px;text-transform:uppercase;flex:1;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 
 /* ── hero ── */
 .hero{display:flex;align-items:stretch;gap:1.2rem;padding:2rem 0 1.5rem;flex-wrap:wrap}
@@ -224,12 +271,13 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 .lap-toggle:hover{color:#FC4C02}
 
 /* ── section title ── */
+/* 區塊標題＝計時紙的欄位表頭：粉筆白、寬字距、下方一條實線 */
 .section-title{
-  font-size:11px;font-weight:600;color:#FC4C02;letter-spacing:3px;text-transform:uppercase;
+  font-size:11px;font-weight:700;color:var(--chalk);letter-spacing:3px;text-transform:uppercase;
   margin-bottom:1rem;padding-bottom:.5rem;
-  border-bottom:1px solid rgba(252,76,2,.15);
+  border-bottom:1px solid var(--chalk);
 }
-.section-title .muted{color:rgba(252,76,2,.4)}
+.section-title .muted{color:var(--chalk-faint);font-weight:400}
 .section-title{display:flex;align-items:center;gap:0}
 .section-title-text{flex:1}
 /* ── ITT level info button ── */
@@ -1348,6 +1396,8 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
     <a class="back-btn" href="javascript:history.length>1?history.back():location.href='linkTreeIndex.html'">← BACK</a>
     <span class="topbar-title">Athletics · Strava</span>
   </div>
+  <!-- 板牌捲動後壓縮成固定三格條 -->
+  <div class="pb-rail" id="pb-rail" aria-hidden="true"><div class="pb-rail-row" id="pb-rail-row"></div></div>
   <div id="content"><div class="loading">Loading athlete data…</div></div>
 </div>
 
@@ -4014,6 +4064,128 @@ function renderTimeline(list, type, expanded, ittMap) {
 }
 
 /* ── main render ── */
+/* ── 板牌 PIT BOARD ──
+   舉給車手看的三個事實：位置、與 PR 差距、本月還差幾次。
+   取最近一次有計時的 ITT 路段當主角；沒有任何計時紀錄時退回總量模式。 */
+function fmtGap(sec) {
+  const s = Math.abs(Math.round(sec))
+  const m = Math.floor(s / 60), r = s % 60
+  return (sec >= 0 ? '+' : '−') + m + ':' + String(r).padStart(2, '0')
+}
+function buildPitBoard(data) {
+  const segs = (data.segments || []).filter(s => (s.efforts || []).length)
+  let best = null
+  segs.forEach(seg => {
+    const withDate = seg.efforts.filter(e => e.date)
+    if (!withDate.length) return
+    const latest = withDate.slice().sort((a, b) => b.date.localeCompare(a.date))[0]
+    if (!best || latest.date > best.latest.date) best = { seg, latest }
+  })
+  if (!best) return null
+
+  const { seg, latest } = best
+  const byTime = seg.efforts.slice().sort((a, b) => (a.elapsed_sec || 0) - (b.elapsed_sec || 0))
+  const prEffort = byTime[0]
+  const rank = byTime.findIndex(e => e.activity_id === latest.activity_id) + 1
+  const gapSec = (latest.elapsed_sec || 0) - (prEffort.elapsed_sec || 0)
+
+  // 90 天內最佳：沿用 segScore 既有的 90 天基準線窗口
+  const cutoff = new Date(Date.now() - 90 * 864e5).toISOString().slice(0, 10)
+  const recent = seg.efforts.filter(e => e.date && e.date >= cutoff)
+  const recentBest = recent.length
+    ? recent.slice().sort((a, b) => (a.elapsed_sec || 0) - (b.elapsed_sec || 0))[0]
+    : null
+  const isPR = gapSec === 0
+  const isRecentBest = !!recentBest && recentBest.activity_id === latest.activity_id && !isPR
+
+  const meta = (window._ittSegMeta && window._ittSegMeta[seg.id]) || {}
+  const gapTone = isPR ? 't-green' : isRecentBest ? 't-purple' : 't-yellow'
+  const gapText = isPR ? 'PR' : fmtGap(gapSec)
+  const gapNote = isPR ? '本次即個人最佳'
+    : isRecentBest ? `90 天內最佳 · PR ${prEffort.elapsed_str || '—'}`
+    : `PR ${prEffort.elapsed_str || '—'}`
+
+  const g = (data.monthly_goals && data.monthly_goals.ride) || null
+  const remain = g ? Math.max(0, (g.target || 0) - (g.count || 0)) : null
+  const goalTone = !g ? 't-untimed' : remain === 0 ? 't-green' : 't-yellow'
+  const goalVal = !g ? '—' : remain === 0 ? `+${(g.count || 0) - (g.target || 0)}` : remain
+  const goalNote = !g ? '無月度目標資料'
+    : remain === 0 ? `RIDES · ${g.count} ／ ${g.target} 已達標`
+    : `RIDES · ${g.count} ／ ${g.target}`
+
+  const power = latest.avg_watts ? `${latest.avg_watts} W` : '無功率資料'
+  const hr = latest.avg_heartrate ? ` · ${latest.avg_heartrate} BPM` : ''
+  const segCount = (data.segments || []).length
+  const monthCount = (data.monthly_history || []).length
+
+  window.__pitRail = [
+    { lbl: '與 PR 差距', val: gapText, tone: gapTone, sub: '' },
+    { lbl: '位置', val: 'P' + rank, tone: 't-chalk', sub: `／${byTime.length}` },
+    { lbl: '本月還差', val: goalVal, tone: goalTone, sub: 'RIDES' },
+  ]
+
+  return `
+  <section class="pitboard" aria-labelledby="pb-heading">
+    <div class="pitboard-tag">PIT BOARD · ${latest.date || '—'}</div>
+    <h2 class="pitboard-seg" id="pb-heading">${meta.nameZh || seg.name || '路段'} · ${seg.distance_km || '—'} km · ${meta.type || 'ITT'}</h2>
+
+    <div class="pb-slot">
+      <div class="pb-lbl">位置<b>Position</b></div>
+      <div class="pb-val t-chalk">P${rank}<small>／${byTime.length} ATTEMPTS</small></div>
+    </div>
+    <div class="pb-slot">
+      <div class="pb-lbl">與 PR 差距<b>Gap to PR</b></div>
+      <div class="pb-val ${gapTone}">${gapText}<small>${gapNote}</small></div>
+    </div>
+    <div class="pb-slot">
+      <div class="pb-lbl">本月還差<b>To Target</b></div>
+      <div class="pb-val ${goalTone}">${goalVal}<small>${goalNote}</small></div>
+    </div>
+
+    <div class="pitboard-foot">
+      <span>LAST TIMED ${latest.elapsed_str || '—'} · ${power}${hr}</span>
+      <a class="pitboard-cue" href="#pb-sheet">計時紙 · ${segCount} 個路段 · ${monthCount} 個月</a>
+    </div>
+  </section>`
+}
+
+/* 板牌捲出畫面後，壓縮成頂部三格條 —— 滿版第一屏必須配常駐導引，
+   否則使用者只會看第一屏。用 IntersectionObserver 而非 scroll 監聽，避免每幀讀版面。 */
+function initPitRail() {
+  const rail = document.getElementById('pb-rail')
+  const row = document.getElementById('pb-rail-row')
+  const board = document.querySelector('.pitboard')
+  if (!rail || !row || !board || !window.__pitRail) return
+  row.innerHTML = window.__pitRail.map(c => `
+    <div class="pb-rail-cell">
+      <div class="pb-rail-lbl">${c.lbl}</div>
+      <div class="pb-rail-val ${c.tone}">${c.val}${c.sub ? `<small>${c.sub}</small>` : ''}</div>
+    </div>`).join('')
+  // 頂欄是 sticky top:0，rail 必須貼在它下面而不是同一層，否則被蓋住
+  const topbar = document.querySelector('.topbar')
+  const measure = () => {
+    const h = topbar ? Math.round(topbar.getBoundingClientRect().height) : 58
+    document.documentElement.style.setProperty('--topbar-h', h + 'px')
+    return h
+  }
+  let topH = measure()
+
+  // rAF 節流：每幀最多算一次，捲動事件本身不做版面讀取以外的事
+  let ticking = false, last = null
+  const sync = () => {
+    ticking = false
+    const on = board.getBoundingClientRect().bottom <= topH
+    if (on === last) return
+    last = on
+    rail.classList.toggle('on', on)
+    rail.setAttribute('aria-hidden', on ? 'false' : 'true')
+  }
+  const onScroll = () => { if (!ticking) { ticking = true; requestAnimationFrame(sync) } }
+  window.addEventListener('scroll', onScroll, { passive: true })
+  window.addEventListener('resize', () => { topH = measure(); last = null; onScroll() }, { passive: true })
+  sync()
+}
+
 function render(data) {
   // store segment data for modal lookup
   window.__segData = {}
@@ -4181,7 +4353,9 @@ function render(data) {
   }
 
   document.getElementById('content').innerHTML = `
-    <div class="hero">
+    ${buildPitBoard(data) || ''}
+
+    <div class="hero" id="pb-sheet">
       ${renderNameCard(data)}
       ${renderPowerCard(data.power_prs)}
     </div>
@@ -4908,6 +5082,7 @@ Promise.all([
       ...((movieQuotes?.quotes || []).map(q => ({ ...q, _src: 'movie' }))),
     ]
     render(data)
+    initPitRail()
     initQuoteWidget()
     initSeg3DWhenVisible()
     bindPowerCard(data.power_prs)
