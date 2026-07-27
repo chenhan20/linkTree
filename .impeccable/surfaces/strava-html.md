@@ -101,8 +101,12 @@ related_targets: ["linkTreeIndex.html"]
 1. `SEG_SELF.color = '#FC4C02'`（strava.html 約 L3241）—— 本人在 PK／自我對戰面板上的識別點，
    與 3D 回放場景裡的標記共用同一個值。場景本階段凍結，所以這顆橘留著；
    階段 6 改 HUD 時要跟同事識別色一起決定。面板上顏色不是唯一編碼（`is-self` 底色帶＋「你」＋白框）。
-2. `DESIGN.md` 仍是重做前那套（signal-orange／圓角藥丸／Telemetry Dashboard），
-   設計 hook 會把階段 1–4 的所有值報成 drift。建置完成後要 re-document，不要反過來遷就舊文件。
+2. `DESIGN.md` 仍是重做前那套（signal-orange／圓角藥丸／Telemetry Dashboard）。
+   **2026-07-27 使用者決定：維持現狀，不要 re-document。** 分家之後那份文件描述的是
+   `strava.html`（已還原成它記錄的那版），所以它是準確的，只是不涵蓋維修站牆與 linkTree。
+   Impeccable 只認專案根目錄一份 DESIGN.md ＋ 一份 `.impeccable/design.json`，
+   沒有 per-surface 設計系統，所以三個世界必然有兩個會被 hook 報 drift ——
+   這是已知且被接受的代價，不是待辦事項。**不要因為 hook 在叫就去重寫 DESIGN.md。**
 
 **狀態色對應（階段 3 起適用，全站一致）**：紫＝超越目標／綠＝達標／黃＝未達標／灰＝完全沒有紀錄。
 沿用分段計時四色的語意分層，不另開一套 danger/warning/done/over 的紅琥珀綠金。
