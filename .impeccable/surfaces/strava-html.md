@@ -1,11 +1,16 @@
 ---
 version: 1
 slug: "strava-html"
-primary_target: "strava.html"
+primary_target: "strava_pitwall.html"
 related_targets: ["linkTreeIndex.html"]
 ---
 
-# Surface brief — strava.html + linkTreeIndex.html
+# Surface brief — strava_pitwall.html + linkTreeIndex.html
+
+> **2026-07-27 分家**：使用者要保留原本那版，所以維修站牆從階段 1 起的全部成果
+> 移到 **`strava_pitwall.html`**，`strava.html` 已還原成 pass 之前的深空觀測站版（commit `9948c05` 的內容）。
+> 本文件以下所有「strava.html」指的都是現在的 `strava_pitwall.html`。
+> `linkTreeIndex.html` 的 STEVE 專用版那一列改成三選一：深空觀測站／維修站牆／遙測 OPUS MAX。
 
 ## Scope & mode
 
@@ -71,6 +76,56 @@ related_targets: ["linkTreeIndex.html"]
 | 頭像 | 現有 raster | `docs/avatar.jpg` 需縮至 128px（現為 1024px／1.57 MB） |
 | 太空背景 | **淘汰** | `docs/space_bg.png`（2.25 MB）隨主題退役，不替換為等價大圖 |
 | 材質（石板／陽極鋁） | CSS | **材質暗示，非材質模擬**。不得使用寫實粉筆／黑板貼圖，會變黑板報 |
+
+## 建置階段（2026-07-27 重建；原計畫未留紀錄，這份依檔案現況推導）
+
+| 階段 | 內容 | 狀態 |
+|---|---|---|
+| 1 | token 基座、板牌第一屏、頂欄、區塊標題 | ✅ `61e1d7d` |
+| 2 | 統計卡、月度圖表、活動卡、時間軸（＋底部總計、運動分頁） | ✅ |
+| 3 | 月度紀律、本週任務 | ✅ |
+| 4 | ITT 區段卡、路段彈窗、等級說明、PK 對戰面板 | ✅ |
+| 5 | 星座名片、功率卡、每日一句 | ✅ |
+| 6 | 3D 回放 HUD（場景不動，只改遙測語彙） | — |
+| 7 | 收尾：CTA、主題切換器收掉、to-top、星空死碼、README／截圖 | — |
+
+**階段 4 是重做不是重新上色。** 那組卡片原始註解是 `holo × liquid glass × bento × fluid`，
+與本方向的「無發光、無毛玻璃、材質是暗示不是模擬」直接衝突，沒有調和空間。
+
+階段 4 實際做掉的：毛玻璃層、虹彩層、跟游標跑的高光層、每張卡一顆流體 blob canvas
+（連同 `initFcCanvas` 與它的 rAF／IntersectionObserver）、依挑戰次數決定卡片大小的
+`fc-sz-lg/md/sm`、每個路段一個專屬 accent 色、九個狀態的九種色相、彈窗的 HUD 四角括號
+與逐列滑入動畫、剖面上那顆沒帶資訊的發光跑點、桌機 `zoom:1.25`（會把 1px 髮絲線放大成 1.25px）。
+
+**階段 4 留給階段 6 的兩筆**：
+1. `SEG_SELF.color = '#FC4C02'`（strava.html 約 L3241）—— 本人在 PK／自我對戰面板上的識別點，
+   與 3D 回放場景裡的標記共用同一個值。場景本階段凍結，所以這顆橘留著；
+   階段 6 改 HUD 時要跟同事識別色一起決定。面板上顏色不是唯一編碼（`is-self` 底色帶＋「你」＋白框）。
+2. `DESIGN.md` 仍是重做前那套（signal-orange／圓角藥丸／Telemetry Dashboard），
+   設計 hook 會把階段 1–4 的所有值報成 drift。建置完成後要 re-document，不要反過來遷就舊文件。
+
+**狀態色對應（階段 3 起適用，全站一致）**：紫＝超越目標／綠＝達標／黃＝未達標／灰＝完全沒有紀錄。
+沿用分段計時四色的語意分層，不另開一套 danger/warning/done/over 的紅琥珀綠金。
+
+**階段 5 的三件事**：
+1. **星座名片 → 車手識別證**。滿版星空、雙橘環（外環 22 秒轉一圈）、發光頭像退役。
+   星座依契約搬進頭盔徽記位置（96px 圓形貼紙），從背景風景變成識別記號。
+   canvas 邏輯保留，但流星、所有 shadowBlur、主星十字星芒、每顆星的呼吸都拿掉 ——
+   主星改用「實心點＋一圈髮絲環」標記。揭示動畫 0.022→0.09/幀（7.5 秒→1.8 秒）
+   且畫完就停，不留常駐 rAF。散星密度式子重算（原式換算到 96px 只會得到 1 顆星）。
+2. **功率卡 → 功率板**。橘漸層、四角括號、呼吸光暈與 320ms 彈跳開場退役，
+   改成六格髮絲網格。整張卡改成真的 `<button>`。
+   彈窗比照路段彈窗重做（旋轉進場、毛玻璃、發光指針、獎牌 emoji 全退役，名次改用數字），
+   並補上 `role="dialog"`、開啟時聚焦關閉鈕、關閉後把焦點還給觸發它的板。
+3. **每日一句**。置中排版、64px 橘襯線引號、襯線內文與外光暈退役，改成板牌語域的靠左大字。
+   收藏鍵原本借用綠色（綠鎖給「歷史 PR」），改成靠 ♥／♡ 的形狀編碼。
+   順手修掉一個 bug：無資料時的提示訊息從來沒被看見過（移除了 `.ready` 卻沒有再加回去，永遠停在 opacity:0）。
+
+**階段 5 一併停掉的兩個舊世界檔案**（檔案本身留著，五個舊主題頁還在用；只是 strava.html 不再載入）：
+- `theme-strava.css` —— 功率卡的呼吸光暈／掃光，外加給統計卡、月度紀律、本週任務、活動卡
+  掛上橘色 hover 光暈與 translateY，會把階段 2–4 已改完的髮絲語彙蓋回去。
+- `power-card-glow.js` —— 往卡片裡塞四角閃爍框、旋轉獎盃與閃爍 CTA 條。
+  鍵盤入口原本掛在那條 CTA 上，已由 `.pwr-board` 改成真的 button 承接。
 
 ## Unresolved
 
