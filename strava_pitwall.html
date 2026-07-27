@@ -48,81 +48,118 @@
   --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
 
-  --maxw:860px;
+  --maxw:1080px;
   --pad:1.2rem;
+  --gut:clamp(18px,4.6vw,64px);
   --ease:cubic-bezier(.3,.9,.25,1);
 }
 
 *{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth}
-html,body{min-height:100%;font-family:var(--sans);background:var(--slate);color:var(--chalk);
-  font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
+html,body{height:100%;font-family:var(--sans);background:var(--slate);color:var(--chalk);
+  font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased;
+  overflow:hidden;overscroll-behavior:none}
 
 /* 焦點指示：稽核發現全檔零個 outline 宣告，99 個可 Tab 元素只有瀏覽器預設環 */
 :focus-visible{outline:2px solid var(--chalk);outline-offset:2px;border-radius:2px}
 
-#app{position:relative;z-index:2;min-height:100vh;max-width:var(--maxw);margin:0 auto;padding:0 var(--pad) 5rem}
+/* 中文不吃 Latin 的寬字距 —— 「活 動 紀 錄」是把大寫慣例套到漢字上的錯誤。
+   .en 是拉丁大寫標籤（維修站牆的技術詞彙），.zh 是漢字，兩者字距分開管。 */
+.en{font-family:var(--mono);text-transform:uppercase;letter-spacing:.2em}
+.zh{letter-spacing:.05em}
 
-/* ══ 板牌 PIT BOARD — 第一屏 ══
-   不做滿 100svh：計時紙必須探頭，否則使用者只會看第一屏。 */
-.pitboard{padding:26px 0 30px;position:relative}
-.pitboard-tag{font-size:11px;letter-spacing:4px;color:var(--chalk-faint);
-  text-transform:uppercase;margin-bottom:5px}
-.pitboard-seg{font-size:15px;letter-spacing:1px;color:var(--chalk-dim);margin-bottom:26px}
-.pb-slot{border-top:1px solid var(--rule);padding:20px 0 18px;display:grid;
-  grid-template-columns:1fr auto;align-items:baseline;gap:16px}
-.pb-slot:last-of-type{border-bottom:1px solid var(--rule)}
-.pb-lbl{font-size:12px;letter-spacing:3px;color:var(--chalk-faint);text-transform:uppercase;line-height:1.55}
-.pb-lbl b{display:block;font-weight:400;letter-spacing:2px;color:var(--chalk-dim);font-size:11px}
-.pb-val{font-size:clamp(46px,11vw,88px);font-weight:800;line-height:.84;letter-spacing:-3px;
-  justify-self:end;text-align:right}
-.pb-val small{font-size:.24em;font-weight:600;letter-spacing:1.4px;color:var(--chalk-dim);
-  margin-left:10px;white-space:nowrap}
+/* ══════════════════════════════════════════════════════════════
+   牆 THE WALL — 上下左右的站台網格
+   維修站牆是一排工程席，每席一疊螢幕。左右換席（站），上下換螢幕（面）。
+   捲動由原生 scroll-snap 兩軸承擔：不劫持手勢、慣性與無障礙全部免費。
+   ══════════════════════════════════════════════════════════════ */
+#app{height:100dvh;height:100svh;display:flex;flex-direction:column;overflow:hidden;
+  position:relative;z-index:2}
+@supports not (height:100dvh){#app{height:100vh}}
+
+#wall{flex:1;min-height:0;display:flex;overflow-x:auto;overflow-y:hidden;
+  scroll-snap-type:x mandatory;scroll-behavior:smooth;scrollbar-width:none;
+  -webkit-overflow-scrolling:touch}
+#wall::-webkit-scrollbar{display:none}
+
+/* 垂直軸用 proximity 不用 mandatory：路段細節、賽季表、活動流水的面高度不一，
+   mandatory 會在長面裡把人往回拉。水平軸維持 mandatory —— 席與席之間高度一致。 */
+.stn{flex:0 0 100%;width:100%;height:100%;overflow-y:auto;overflow-x:hidden;
+  scroll-snap-align:start;scroll-snap-stop:always;scroll-snap-type:y proximity;
+  scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.stn::-webkit-scrollbar{display:none}
+
+.scr{min-height:100%;scroll-snap-align:start;scroll-snap-stop:always;
+  display:flex;flex-direction:column;padding:22px var(--gut) 18px}
+.scr-in{width:100%;max-width:var(--maxw);margin:0 auto;flex:1;display:flex;flex-direction:column;min-height:0}
+
+/* 面首：一行，不是「中文標題＋英文副標＋整寬框」的儀式。
+   站名已經在頂欄與底軌上寫過，這裡只講這一面是什麼。 */
+.scr-head{display:flex;align-items:baseline;justify-content:space-between;gap:14px;
+  flex-wrap:wrap;padding-bottom:10px;margin-bottom:clamp(14px,2.4vh,26px);
+  border-bottom:1px solid var(--chalk)}
+.scr-head h2{font-size:clamp(15px,2.1vw,19px);font-weight:700;color:var(--chalk);letter-spacing:.05em}
+.scr-head .meta{font-family:var(--mono);font-size:10px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--chalk-dim);white-space:nowrap}
+
+/* 面尾的去向提示：滿版第一屏最大的風險是使用者不知道還有東西。
+   每一面都明說「下一面是什麼」「下一站是什麼」，不用含糊的箭頭。 */
+.scr-cue{display:flex;align-items:center;justify-content:space-between;gap:12px;
+  flex-wrap:wrap;margin-top:auto;padding-top:16px;
+  font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase}
+.scr-cue button{background:none;border:none;padding:6px 0;cursor:pointer;color:var(--chalk-dim);
+  font:inherit;letter-spacing:inherit;text-transform:inherit;display:inline-flex;align-items:center;gap:8px;
+  -webkit-tap-highlight-color:transparent;transition:color .15s ease}
+.scr-cue button:hover{color:var(--chalk)}
+.scr-cue button::after{content:'';width:22px;height:1px;background:currentColor}
+.scr-cue .down::after{display:none}
+
+/* 右緣的面數指示：垂直軸用垂直記號，跟底軌的水平軸分工 */
+.vdots{position:absolute;right:6px;top:50%;transform:translateY(-50%);z-index:6;
+  display:flex;flex-direction:column;gap:7px;pointer-events:none}
+.vdots i{width:3px;height:16px;background:var(--rule-strong);transition:background .2s ease}
+.vdots i.on{background:var(--chalk)}
+@media(max-width:600px){.vdots{right:3px}.vdots i{height:13px;width:2px}}
+
+/* ══ 底軌 THE RAIL —— 六個工程席，常駐 ══ */
+.rail{flex:none;display:flex;background:var(--slate);border-top:1px solid var(--rule-strong)}
+.rail-btn{flex:1;min-width:0;min-height:54px;padding:8px 4px 9px;cursor:pointer;
+  background:none;border:none;border-right:1px solid var(--rule);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
+  color:var(--chalk-faint);-webkit-tap-highlight-color:transparent;
+  transition:color .15s ease,background .15s ease}
+.rail-btn:last-child{border-right:none}
+.rail-btn:hover{color:var(--chalk-dim);background:var(--panel)}
+.rail-btn .rzh{font-size:12px;font-weight:700;letter-spacing:.05em;line-height:1}
+.rail-btn .ren{font-family:var(--mono);font-size:8px;letter-spacing:.18em;text-transform:uppercase;line-height:1}
+.rail-btn.on{color:var(--chalk);background:var(--panel);box-shadow:inset 0 2px 0 var(--chalk)}
+@media(max-width:600px){
+  .rail-btn{min-height:50px;gap:4px}
+  .rail-btn .rzh{font-size:11px}
+  .rail-btn .ren{font-size:7px;letter-spacing:.12em}
+}
+@media (prefers-reduced-motion: reduce){
+  #wall,.stn{scroll-behavior:auto}
+}
+
 .t-purple{color:var(--t-purple)} .t-green{color:var(--t-green)}
 .t-yellow{color:var(--t-yellow)} .t-untimed{color:var(--t-untimed)}
 .t-chalk{color:var(--chalk)}
 /* emoji 是既有的資訊圖示，留著；但彩色 emoji 會跟「四色只表功能」搶話語權，
    所以去飽和收進粉筆語彙 —— 圖形還在，顏色不再是它的。 */
 .ico{font-style:normal;filter:grayscale(1);opacity:.75}
-.pitboard-foot{margin-top:24px;display:flex;justify-content:space-between;align-items:center;
-  gap:14px;flex-wrap:wrap;font-size:11px;letter-spacing:2px;color:var(--chalk-faint);
-  text-transform:uppercase}
-/* 明說章節數，不用含糊的「TIMING SHEET」 */
-.pitboard-cue{display:flex;align-items:center;gap:9px;color:var(--chalk-dim);
-  text-decoration:none;transition:color .15s ease}
-.pitboard-cue:hover{color:var(--chalk)}
-.pitboard-cue::after{content:'';width:26px;height:1px;background:currentColor}
-
-/* 捲動後壓縮成固定三格條 —— comp B 的頂條沒有被丟棄，它是 A 的捲動狀態 */
-/* 貼在頂欄「下方」而非同一層 —— --topbar-h 由 initPitRail 量測後寫入 */
-.pb-rail{position:sticky;top:var(--topbar-h,58px);z-index:9;background:var(--slate);
-  border-bottom:2px solid var(--chalk);margin:0 calc(var(--pad) * -1);
-  padding:0 var(--pad);display:none}
-.pb-rail.on{display:block}
-.pb-rail-row{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--rule)}
-.pb-rail-cell{background:var(--slate);padding:9px 12px 11px}
-.pb-rail-lbl{font-size:9px;letter-spacing:2.5px;color:var(--chalk-faint);
-  text-transform:uppercase;margin-bottom:3px}
-.pb-rail-val{font-size:22px;font-weight:800;line-height:1;letter-spacing:-.5px}
-.pb-rail-val small{font-size:.42em;font-weight:600;color:var(--chalk-faint);margin-left:5px}
-
-@media(max-width:600px){
-  .pb-slot{grid-template-columns:1fr;gap:2px}
-  .pb-val{justify-self:start;text-align:left;letter-spacing:-2px}
-  .pb-rail-cell{padding:8px 9px 9px}
-  .pb-rail-val{font-size:18px}
-  .pb-rail-lbl{font-size:8px;letter-spacing:2px}
-}
-@media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} }
 
 /* ── topbar ── */
 .topbar{
-  position:sticky;top:0;z-index:10;
+  flex:none;position:relative;z-index:10;
   display:flex;align-items:center;gap:12px;
-  padding:14px 1.2rem;margin:0 -1.2rem;
+  padding:11px var(--gut);
   border-bottom:1px solid var(--rule);
   background:var(--slate);
 }
+.topbar-where{margin-left:auto;display:flex;align-items:baseline;gap:9px;min-width:0}
+.topbar-where .w-zh{font-size:13px;font-weight:700;color:var(--chalk);letter-spacing:.05em;white-space:nowrap}
+.topbar-where .w-pos{font-family:var(--mono);font-size:10px;letter-spacing:.14em;
+  color:var(--chalk-dim);white-space:nowrap}
 /* 觸控目標 44px：稽核測出 100 個可點元素有 90 個不足 */
 .back-btn{
   display:inline-flex;align-items:center;gap:7px;
@@ -136,179 +173,6 @@ html,body{min-height:100%;font-family:var(--sans);background:var(--slate);color:
 .back-btn::before{content:'';position:absolute;inset:-6px -4px}
 .back-btn:hover{color:var(--chalk);border-color:var(--chalk-dim)}
 .topbar-title{font-size:11px;color:var(--chalk-faint);letter-spacing:3px;text-transform:uppercase;flex:1;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
-
-/* ── 車手識別證 RIDER CREDENTIAL ──
-   原本是「深空名片」：滿版星空 canvas、兩圈橘環（外圈虛線 22 秒轉一圈）、
-   發光頭像框、橘色數值、右側三行發光統計。整組是太空語彙，全數退役。
-   星座沒有被丟掉 —— 它從「襯在文字後面的背景風景」搬進頭盔徽記的位置：
-   識別證上唯一屬於這個人的圖形，圓形是安全帽貼紙的形狀，不是星球。 */
-.cred{border:1px solid var(--rule);border-top:2px solid var(--chalk);
-  background:var(--slate);margin:1.6rem 0 2.4rem}
-.cred-strip{display:flex;align-items:baseline;justify-content:space-between;gap:12px;
-  padding:9px 14px;border-bottom:1px solid var(--rule);
-  font-family:var(--mono);font-size:9px;letter-spacing:2.5px;text-transform:uppercase;
-  color:var(--chalk-dim)}
-.cred-strip-date{white-space:nowrap}
-.cred-body{display:flex;align-items:center;gap:16px;padding:16px 14px}
-.cred-photo{width:78px;height:78px;flex-shrink:0;overflow:hidden;border-radius:0;
-  border:1px solid var(--rule-strong);background:var(--panel-2);display:grid;place-items:center}
-.cred-photo img{width:100%;height:100%;object-fit:cover;display:block}
-.cred-ini{font-family:var(--mono);font-size:24px;font-weight:800;letter-spacing:2px;
-  color:var(--chalk-dim)}
-.cred-id{flex:1;min-width:0}
-.cred-name{font-size:30px;font-weight:800;letter-spacing:1px;line-height:1;color:var(--chalk)}
-.cred-role{font-family:var(--mono);font-size:10px;letter-spacing:2.5px;text-transform:uppercase;
-  color:var(--chalk-dim);margin-top:9px}
-.cred-emblem{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:6px}
-.cred-helmet{width:96px;height:96px;border-radius:50%;overflow:hidden;
-  border:1px solid var(--rule-strong);background:var(--panel)}
-.cred-helmet canvas{display:block;width:100%;height:100%}
-.cred-sign{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--chalk-dim);
-  text-transform:uppercase;text-align:center;line-height:1.4}
-/* 用 --chalk-dim 不用 --chalk-faint：faint 在石板上只有 3.81:1，9px 的字撐不住
-   （階段 2 已經為同樣的理由訂過這條規則）。層級交給位置與級數，不靠再暗一階。 */
-.cred-reroll{position:relative;background:none;border:none;padding:0;cursor:pointer;
-  font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;
-  color:var(--chalk-dim);transition:color .15s ease;-webkit-tap-highlight-color:transparent}
-/* 觸控目標補到 44px，但不撐開這一欄的版面 */
-.cred-reroll::before{content:'';position:absolute;left:50%;top:50%;
-  transform:translate(-50%,-50%);width:100%;min-width:68px;height:44px}
-.cred-reroll:hover{color:var(--chalk)}
-/* 數值列：跟底部總計同一套髮絲網格 */
-.cred-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;
-  background:var(--rule);border-top:1px solid var(--rule)}
-.cred-stat{background:var(--slate);padding:13px 14px 15px}
-.cred-stat-lbl{font-family:var(--mono);font-size:9px;letter-spacing:2px;
-  text-transform:uppercase;color:var(--chalk-dim)}
-.cred-stat-val{font-size:22px;font-weight:800;color:var(--chalk);line-height:1;
-  letter-spacing:-1px;margin-top:8px}
-.cred-stat-val small{font-size:9px;font-weight:600;letter-spacing:1.5px;
-  color:var(--chalk-dim);margin-left:4px}
-@media(max-width:600px){
-  /* 375px 上「車手識別證 · RIDER CREDENTIAL」會斷成兩行、日期也被拆開 —— 英文副標收掉 */
-  .cred-strip{letter-spacing:2px;padding:9px 12px}
-  .cred-strip-en{display:none}
-  .cred-body{gap:12px;padding:14px 12px}
-  .cred-photo{width:60px;height:60px}
-  .cred-ini{font-size:19px}
-  .cred-name{font-size:23px}
-  .cred-role{font-size:9px;letter-spacing:2px;margin-top:7px}
-  .cred-helmet{width:68px;height:68px}
-  .cred-sign{font-size:8px;letter-spacing:1.2px}
-  .cred-stat{padding:11px 11px 13px}
-  .cred-stat-val{font-size:18px}
-}
-
-/* ── 統計卡 stats grid ── */
-/* 板牌插槽的縮小版：髮絲網格、石板底、粉筆白數值。無圓角、無填色、無橘。
-   格線本身就是分隔 —— 1px gap 露出底下的 --rule，不需要每格再畫框。 */
-.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;
-  background:var(--rule);border:1px solid var(--rule);margin-bottom:2.2rem}
-.stat-card{padding:15px 14px 17px;border:none;border-radius:0;background:var(--slate)}
-.stat-val{font-size:26px;font-weight:800;color:var(--chalk);line-height:1;letter-spacing:-1px}
-/* 9–11px 的小標一律用 --chalk-dim 而非 --chalk-faint：
-   faint 在石板上只有 3.8:1，最小的字反而最需要對比。
-   層級改由級數、字距、大小寫承擔 —— 計時紙本來就是這樣分欄的。 */
-.stat-unit{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--chalk-dim);margin-top:5px}
-.stat-label{font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:var(--chalk-dim);
-  margin-bottom:12px;display:flex;align-items:center;gap:6px}
-.stat-metrics{display:flex;align-items:flex-start;gap:0}
-.stat-metric{flex:1;min-width:0}
-.stat-vdiv{width:1px;background:var(--rule);align-self:stretch;margin:0 12px 2px;flex-shrink:0}
-
-/* ── 月度紀律 monthly consistency ──
-   狀態色沿用分段計時四色的語意分層，不另開一套紅／琥珀／綠／金：
-   紫＝超越目標、綠＝達標、黃＝未達標、灰＝完全沒有紀錄。
-   「嚴重落後」與「近期需補課」共用黃 —— 差別由進度條長度與文字徽章講，
-   不靠再多發明一個色相。顏色永遠配文字，從來不是唯一編碼。 */
-.consistency-list{display:flex;flex-direction:column;gap:0;margin-bottom:2.2rem;
-  border-top:1px solid var(--rule)}
-.consistency-row{
-  display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center;
-  padding:13px 6px;border:none;border-bottom:1px solid var(--rule);
-  border-radius:0;background:none;
-}
-.consistency-name{font-size:12px;color:var(--chalk);display:flex;align-items:center;gap:7px;
-  white-space:nowrap;letter-spacing:2px}
-.consistency-name .count{font-size:11px;font-family:var(--mono);color:var(--chalk-dim);
-  margin-left:6px;letter-spacing:0}
-.consistency-name .count b{color:var(--chalk);font-weight:700;font-size:13px}
-.progress-bar{position:relative;height:4px;border-radius:0;background:var(--panel-2);overflow:hidden}
-.progress-fill{height:100%;border-radius:0;width:0;transition:width .8s var(--ease)}
-.progress-fill.danger,
-.progress-fill.warning{background:var(--t-yellow)}
-.progress-fill.done   {background:var(--t-green)}
-.progress-fill.over   {background:var(--t-purple)}
-.status-badge{font-size:9px;font-weight:700;font-family:var(--mono);padding:3px 7px;border-radius:2px;
-  white-space:nowrap;letter-spacing:1.5px;background:none;border:1px solid currentColor}
-.status-badge.danger,
-.status-badge.warning{color:var(--t-yellow)}
-.status-badge.done   {color:var(--t-green)}
-.status-badge.over   {color:var(--t-purple)}
-
-/* ── 本週任務 weekly quest ──
-   這是打勾清單，不是遊戲成就牆：拿掉圓角磚、金色光暈與 40px 彩色 emoji，
-   改成跟本月訓練量同一套髮絲網格。四格一列，與統計卡同構。 */
-.quest-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;
-  background:var(--rule);border:1px solid var(--rule);margin-bottom:2.4rem}
-.quest-tile{padding:16px 12px 18px;border-radius:0;border:none;text-align:center;
-  background:var(--slate);user-select:none}
-.quest-tile.on{background:var(--panel)}
-.quest-tile .qico{font-size:22px;display:block;margin-bottom:10px;filter:grayscale(1);opacity:.35}
-.quest-tile.on .qico{opacity:.85}
-.quest-tile .qlabel{font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:var(--chalk-dim)}
-.quest-tile.on .qlabel{color:var(--chalk)}
-.quest-tile .qcheck{font-size:15px;font-weight:700;margin-top:10px;line-height:1;color:var(--chalk-dim)}
-.quest-tile.on .qcheck{color:var(--t-green)}
-.quest-tile .qcheck-or{font-size:8px;font-weight:700;letter-spacing:2.5px;color:var(--chalk-dim);
-  font-family:var(--mono)}
-.quest-tile .qcheck-tgt{font-size:9px;letter-spacing:1.5px;color:var(--chalk-dim);font-family:var(--mono)}
-.quest-tile .qprog-wrap{margin:12px auto 0;width:80%;height:4px;border-radius:0;background:var(--panel-2)}
-/* width:0 是安全網：inline width 若為無效值會被丟棄，沒有它就會撐滿＝假的 100% */
-.quest-tile .qprog-fill{height:100%;width:0;border-radius:0;background:var(--t-yellow);transition:width .6s var(--ease)}
-.quest-tile .qpct{font-size:10px;margin-top:7px;color:var(--chalk-dim);letter-spacing:1px;font-family:var(--mono)}
-.quest-tile.on .qpct{color:var(--t-green)}
-.quest-tile .qdetail{font-size:10px;margin-top:4px;color:var(--chalk-dim);letter-spacing:.3px}
-/* 重訓部位圖：唯一的彩色點陣資產，去飽和收進粉筆語彙 */
-.qparts{margin-top:10px;display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
-.qparts img{width:32px;height:32px;object-fit:contain;padding:3px;border-radius:2px;
-  background:var(--panel-2);border:1px solid var(--rule);filter:grayscale(1);opacity:.85}
-@media(max-width:600px){
-  .quest-grid{grid-template-columns:repeat(2,1fr)}
-  .quest-tile{padding:14px 10px 16px}
-  .quest-tile .qico{font-size:20px;margin-bottom:8px}
-  .quest-tile .qlabel{font-size:9px;letter-spacing:2px}
-  .quest-tile .qcheck{font-size:14px;margin-top:8px}
-  .quest-tile .qpct{font-size:9px;margin-top:5px}
-}
-@media(max-width:360px){.quest-grid{grid-template-columns:1fr}}
-/* OR dual-progress for ride/run tiles */
-.qprog-or{display:flex;gap:10px;margin:12px auto 0;width:90%}
-.qprog-or-slot{flex:1;min-width:0}
-.qprog-or-lbl{font-size:9px;letter-spacing:1.5px;color:var(--chalk-dim);margin-bottom:5px;
-  text-align:center;font-family:var(--mono)}
-.qprog-or-lbl.met{color:var(--t-green)}
-.qprog-or-bar{height:4px;border-radius:0;background:var(--panel-2)}
-.qprog-or-fill{height:100%;width:0;border-radius:0;background:var(--t-yellow);transition:width .6s var(--ease)}
-.qprog-or-slot.met .qprog-or-fill{background:var(--t-green)}
-.qprog-or-val{font-size:10px;margin-top:6px;text-align:center;color:var(--chalk-dim);
-  letter-spacing:.3px;font-family:var(--mono)}
-.qprog-or-slot.met .qprog-or-val{color:var(--t-green)}
-@media(max-width:600px){.qprog-or{gap:6px;margin-top:8px;width:94%}.qprog-or-lbl{font-size:8px;margin-bottom:3px}.qprog-or-bar{height:3px}.qprog-or-val{font-size:9px;margin-top:4px}}
-/* SUPER：兩個 OR 條件都達成 → 紫（超越那一層），非金色光暈。
-   勾號用「✓✓」而不是 ⚡：兩個條件都中，形狀本身就說得清楚。 */
-.quest-tile.super{background:var(--panel)}
-.quest-tile.super .qlabel{color:var(--t-purple)}
-.quest-tile.super .qcheck{color:var(--t-purple);letter-spacing:-2px}
-.quest-tile.super .qpct{color:var(--t-purple)}
-/* act highlight flash —— 跳轉定位用的一閃，改成陽極鋁面板亮一下，不用橘光 */
-.act-highlight{animation:actFlash .9s ease-out}
-@keyframes actFlash{0%,40%{background:var(--panel-2)}100%{background:transparent}}
-/* act-strava-link 基礎樣式已移至 activity-modal.css（與 act-detail-btn 同規格）*/
-.activity-name-wrap{display:flex;align-items:center;gap:8px;min-width:0;margin-bottom:0}
-.lap-toggle{background:transparent;border:none;color:var(--chalk-dim);font-size:10px;cursor:pointer;
-  padding:4px;letter-spacing:1.5px;display:inline-block;font-family:var(--mono)}
-.lap-toggle:hover{color:var(--chalk)}
 
 /* ── section title ── */
 /* 區塊標題＝計時紙的欄位表頭：粉筆白、寬字距、下方一條實線 */
@@ -327,21 +191,6 @@ html,body{min-height:100%;font-family:var(--sans);background:var(--slate);color:
    與本方向的「無發光、無毛玻璃、材質是暗示不是模擬」直接衝突，沒有調和空間。
    每個路段一個專屬 accent 色（六種橘／藍／金）也一併退役 ——
    路段類型改由 CLIMB／SPRINT／ENDURANCE 文字講，顏色只留給分段計時四色。 */
-
-/* ── 說明分頁 ── 四個頁籤，不是四顆發光藥丸 */
-.itt-tabs{display:flex;flex-wrap:wrap;gap:1px;margin-bottom:1.4rem;
-  background:var(--rule);border:1px solid var(--rule)}
-.itt-tab-btn{
-  flex:1 1 130px;display:flex;align-items:center;justify-content:center;gap:7px;
-  min-height:44px;padding:11px 12px;border:none;border-radius:0;
-  font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:2px;
-  color:var(--chalk-dim);background:var(--slate);cursor:pointer;
-  -webkit-tap-highlight-color:transparent;
-  transition:background .15s ease,color .15s ease;
-}
-.itt-tab-btn:hover{background:var(--panel);color:var(--chalk)}
-/* 選中不靠底色深淺（在石板上兩階差異太小），靠底下那條粉筆白實線 */
-.itt-tab-btn.active{background:var(--panel);color:var(--chalk);box-shadow:inset 0 -2px 0 var(--chalk)}
 
 /* ── 等級說明彈窗 ── 一張攤開的計時紙，不是發光的 HUD 面板。
    原本 ≥1000px 有 zoom:1.25 —— 那會把 1px 髮絲線一起放大成 1.25px，
@@ -844,64 +693,6 @@ html,body{min-height:100%;font-family:var(--sans);background:var(--slate);color:
   .r3d-overlay,.r3d-box{transition:none}
 }
 
-/* ── 月度圖表 monthly chart —— 計時紙的長條版 ──
-   三個序列改用明度分階而非色相：里程最亮、爬升次之、時數最暗。
-   分段計時四色刻意不用在這裡 —— 訓練量沒有「比 PR 快或慢」的語意，
-   借用會把功能色稀釋成裝飾。每條長條自己印單位（km／m／hr），
-   顏色從來不是唯一編碼。 */
-.monthly-chart{margin-bottom:2.2rem}
-.chart-rows{display:flex;flex-direction:column;gap:0}
-.chart-row{display:flex;align-items:center;gap:12px;padding:9px 0}
-.chart-row + .chart-row{border-top:1px solid var(--rule)}
-.chart-label{font-size:12px;font-family:var(--mono);color:var(--chalk-dim);width:34px;text-align:right;
-  flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:4px}
-/* PR 月份：綠＝歷史最佳，且用文字「PR」而不是獎盃 emoji —— 色盲也讀得到 */
-.chart-pr{font-size:9px;font-weight:800;letter-spacing:1px;line-height:1;cursor:help;
-  color:var(--t-green);border:1px solid var(--t-green);border-radius:2px;padding:2px 4px;white-space:nowrap}
-.chart-pr i{font-style:normal;margin-left:2px}
-.chart-side{display:flex;flex-direction:column;gap:5px;align-items:flex-end;width:64px;flex-shrink:0}
-/* 趨勢：方向由箭頭字符承擔，明度只做強弱，不借用功能色 */
-.chart-trend{font-size:10px;font-weight:700;font-family:var(--mono);letter-spacing:.3px;color:var(--chalk-dim)}
-.chart-trend.up{color:var(--chalk)}
-.chart-trend.down{color:var(--chalk-dim)}
-.chart-trend.flat{color:var(--chalk-dim)}
-.chart-tss{font-size:9px;font-weight:700;font-family:var(--mono);color:var(--chalk-dim);
-  background:none;border:1px solid var(--rule);padding:2px 6px;border-radius:2px;cursor:help;white-space:nowrap}
-.chart-bar-wrap{flex:1;display:flex;flex-direction:column;gap:4px;min-width:0}
-.chart-track{position:relative;height:20px;border-radius:0;overflow:hidden;background:var(--panel)}
-.chart-track.hr{height:14px}
-.chart-bar{
-  height:100%;border-radius:0;
-  display:flex;align-items:center;justify-content:flex-end;
-  padding-right:8px;min-width:52px;
-  width:0;transition:width 1s var(--ease);
-}
-.chart-bar.dist{background:var(--chalk)}
-.chart-bar.elev{background:var(--chalk-dim)}
-.chart-bar.hr{background:var(--rule-strong)}
-.chart-bar-val{font-size:11px;font-weight:700;font-family:var(--mono);color:var(--slate);white-space:nowrap}
-.chart-bar-val small{font-size:8px;font-weight:600;opacity:.8;margin-left:2px}
-.chart-bar.hr .chart-bar-val{color:var(--chalk);font-size:10px}
-.chart-legend{display:flex;gap:18px;flex-wrap:wrap;margin:0 0 12px 46px;align-items:center}
-.chart-legend span{display:flex;align-items:center;gap:7px;font-size:10px;letter-spacing:1.5px;
-  color:var(--chalk-dim);text-transform:uppercase}
-.chart-legend i{width:14px;height:6px;border-radius:0;display:inline-block}
-.chart-legend i.dist{background:var(--chalk)}
-.chart-legend i.elev{background:var(--chalk-dim)}
-.chart-legend i.hr{background:var(--rule-strong)}
-
-/* ── chart year toggle ── */
-.chart-year-header{
-  display:flex;align-items:center;gap:9px;
-  font-size:11px;font-weight:700;color:var(--chalk-dim);letter-spacing:3px;
-  text-transform:uppercase;padding:15px 0 7px;margin-top:6px;
-  border-top:1px solid var(--rule-strong);
-  cursor:pointer;user-select:none;transition:color .15s ease;
-}
-.chart-year-header:hover{color:var(--chalk)}
-.chart-year-arrow{transition:transform .25s;font-style:normal;font-size:9px;color:var(--chalk-dim)}
-.chart-year-rows{overflow:hidden;transition:max-height .35s ease}
-
 /* ── sport tabs —— 方角髮絲鍵；選中的那個用粉筆白框＋底線標記，
    而不是換一種顏色（顏色留給計時語意用） ── */
 .sport-tabs{display:flex;gap:8px;margin-bottom:1.1rem;flex-wrap:wrap}
@@ -917,6 +708,11 @@ html,body{min-height:100%;font-family:var(--sans);background:var(--slate);color:
 .sport-tab.active{background:var(--panel-2);border-color:var(--chalk);color:var(--chalk);
   box-shadow:inset 0 -2px 0 var(--chalk)}
 .sport-tab:hover:not(.active){border-color:var(--rule-strong);color:var(--chalk)}
+/* 五個分頁要擠進一列（375–430px 上原本會把「重訓」擠到第二排） */
+@media(max-width:520px){
+  .sport-tabs{gap:5px}
+  .sport-tab{padding:0 8px;letter-spacing:.06em;gap:4px;font-size:11px}
+}
 
 /* ── 時間軸 timeline —— 計時紙的日期分欄 ──
    日期是欄位表頭（粉筆白＋較強的線），活動是表列（髮絲線）。
@@ -1027,13 +823,6 @@ html,body{min-height:100%;font-family:var(--sans);background:var(--slate);color:
 .itt-badge.pr .itt-time{color:var(--t-green)}
 .itt-attempt{font-size:9px;color:var(--chalk-dim);letter-spacing:1px;font-family:var(--mono)}
 
-/* ── 底部總計 —— 跟本月訓練量同一套髮絲網格，只是欄數不同 ── */
-.totals-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;
-  background:var(--rule);border:1px solid var(--rule);margin-bottom:2rem}
-.total-card{padding:16px 14px;border:none;border-radius:0;background:var(--slate);text-align:left}
-.total-val{font-size:24px;font-weight:800;color:var(--chalk);line-height:1;letter-spacing:-1px}
-.total-label{font-size:9px;color:var(--chalk-dim);letter-spacing:2.5px;text-transform:uppercase;margin-top:6px}
-
 /* ── 出站連結 —— 頁尾唯一的離站動作，語域跟區段卡的 .seg-detail-btn 對齊 ──
    原本是橘色藥丸。這頁沒有主色調的按鈕，最後一列不該憑空長出一個。 */
 .strava-cta{
@@ -1046,17 +835,6 @@ html,body{min-height:100%;font-family:var(--sans);background:var(--slate);color:
 }
 .strava-cta:hover{background:var(--panel);color:var(--chalk);border-color:var(--rule-strong)}
 .strava-cta svg{width:15px;height:15px;fill:currentColor;flex-shrink:0}
-
-/* ── 回到板牌 ── 方牌，跟頂欄同一套石板／髮絲語彙 */
-#to-top-btn{
-  position:fixed;bottom:22px;right:20px;z-index:9998;
-  width:44px;height:44px;border-radius:0;
-  background:var(--slate);border:1px solid var(--rule-strong);color:var(--chalk-dim);
-  font-size:13px;cursor:pointer;display:none;align-items:center;justify-content:center;
-  transition:background .15s ease,color .15s ease,border-color .15s ease;
-}
-#to-top-btn.on{display:flex}
-#to-top-btn:hover{background:var(--panel);color:var(--chalk);border-color:var(--chalk-dim)}
 
 /* ── loading / error ── */
 .loading{text-align:center;padding:4rem 0;color:var(--chalk-dim);font-size:14px;
@@ -1124,36 +902,6 @@ html,body{min-height:100%;font-family:var(--sans);background:var(--slate);color:
    剩下的是計時紙的一列：六個時長、六個數字，髮絲網格分欄。
    整張卡改成真的 <button> —— 原本是 div + click，鍵盤唯一的入口是那條 CTA 的 tabindex，
    拆掉裝飾就會連帶拆掉鍵盤操作，所以語意要先補上。 */
-.pwr-board{display:block;width:100%;margin:0 0 2.4rem;padding:0;border:none;background:none;
-  color:inherit;font-family:inherit;text-align:left;cursor:pointer;
-  -webkit-tap-highlight-color:transparent}
-.pwr-head{display:flex;align-items:baseline;justify-content:space-between;gap:6px 12px;
-  flex-wrap:wrap;margin-bottom:10px;
-  font-family:var(--mono);font-size:11px;letter-spacing:1.5px;color:var(--chalk-dim)}
-.pwr-head b{color:var(--chalk);font-size:14px;font-weight:700;margin:0 3px}
-.pwr-more{display:inline-flex;align-items:center;gap:7px;flex-shrink:0;
-  font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--chalk-dim);
-  transition:color .15s ease}
-.pwr-board:hover .pwr-more{color:var(--chalk)}
-.pwr-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:1px;
-  background:var(--rule);border:1px solid var(--rule)}
-.pwr-cell{display:block;min-width:0;padding:13px 10px 15px;background:var(--slate);
-  transition:background .15s ease}
-.pwr-board:hover .pwr-cell{background:var(--panel)}
-.pwr-cell-lbl{display:block;font-family:var(--mono);font-size:9px;letter-spacing:2px;
-  text-transform:uppercase;color:var(--chalk-dim);white-space:nowrap}
-.pwr-cell-val{display:block;font-size:21px;font-weight:800;color:var(--chalk);line-height:1;
-  letter-spacing:-1px;margin-top:8px;white-space:nowrap}
-.pwr-cell-val small{font-size:9px;font-weight:600;letter-spacing:1px;
-  color:var(--chalk-dim);margin-left:3px}
-/* 缺資料就明說是缺，不是 0 */
-.pwr-cell.empty .pwr-cell-val{color:var(--chalk-dim);font-size:17px}
-@media(max-width:600px){
-  .pwr-grid{grid-template-columns:repeat(3,1fr)}
-  .pwr-cell{padding:11px 9px 13px}
-  .pwr-cell-val{font-size:18px}
-}
-
 /* ── 功率彈窗 ── 攤開來單看的那張功率計時紙。
    原本是 scale(.5) rotate(-5deg) 旋進畫面的發光 HUD：橘色徑向遮罩、8px 毛玻璃、
    四角括號、指針帶 drop-shadow 光暈、選中列一條橘色內陰影。
@@ -1277,18 +1025,6 @@ html,body{min-height:100%;font-family:var(--sans);background:var(--slate);color:
    收藏改用「♥／♡」形狀本身編碼，不靠顏色。
    場景／帶回生活仍收在 chip 的 tooltip，滑鼠移入（或點擊）才出現。 */
 .quote-section{margin-bottom:2.4rem}
-.qb-tabs{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
-.qb-tab{
-  display:flex;align-items:center;gap:6px;
-  font-size:11px;font-weight:600;letter-spacing:2px;font-family:inherit;
-  padding:0 13px;min-height:34px;border-radius:2px;
-  border:1px solid var(--rule);background:transparent;color:var(--chalk-dim);
-  cursor:pointer;-webkit-tap-highlight-color:transparent;
-  transition:color .15s ease,border-color .15s ease,background .15s ease;
-}
-.qb-tab:hover:not(.active){border-color:var(--rule-strong);color:var(--chalk)}
-.qb-tab.active{background:var(--panel-2);border-color:var(--chalk);color:var(--chalk);
-  box-shadow:inset 0 -2px 0 var(--chalk)}
 .quote-book{
   position:relative;border-radius:0;padding:20px 18px 16px;text-align:left;
   background:var(--panel);border:1px solid var(--rule);border-top:2px solid var(--chalk);
@@ -1360,6 +1096,352 @@ html,body{min-height:100%;font-family:var(--sans);background:var(--slate);color:
   .quote-book{padding:18px 14px 14px}
   .qb-orig{font-size:12.5px}
 }
+
+/* ══════════════════════════════════════════════════════════════
+   十面螢幕，十個構圖。
+   舊版的病不在材質，在於八個區塊共用同一個模子：
+   「標題 → 整寬框 → repeat(N,1fr) + gap:1px 的等分格」。
+   全站數過十處。以下每一面各自從內容長出形狀，沒有兩面同構。
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── 1.1 識別證 —— 證件，不是儀表板 ────────────────────────────
+   構圖：左上人像與姓名成一塊，右上頭盔徽記，下半是一份靠右對齊的清單。
+   數值排在同一條右軸上（護照／賽照的排法），不是四個等分方格。 */
+.idc{display:flex;flex-direction:column;gap:clamp(18px,3vh,34px);flex:1;min-height:0}
+.idc-top{display:flex;align-items:flex-start;gap:clamp(14px,2.5vw,26px)}
+.idc-photo{width:clamp(76px,11vw,112px);aspect-ratio:1;flex:none;overflow:hidden;
+  border:1px solid var(--rule-strong);background:var(--panel-2);display:grid;place-items:center}
+.idc-photo img{width:100%;height:100%;object-fit:cover;display:block}
+.idc-ini{font-family:var(--mono);font-size:26px;font-weight:800;letter-spacing:.08em;color:var(--chalk-dim)}
+.idc-who{flex:1;min-width:0;padding-top:2px}
+.idc-name{font-size:clamp(38px,8.6vw,86px);font-weight:800;line-height:.86;
+  letter-spacing:-.035em;color:var(--chalk)}
+.idc-role{font-family:var(--mono);font-size:clamp(9px,1.2vw,11px);letter-spacing:.24em;
+  text-transform:uppercase;color:var(--chalk-dim);margin-top:clamp(9px,1.4vh,15px)}
+.idc-emblem{flex:none;display:flex;flex-direction:column;align-items:center;gap:6px}
+.idc-helmet{width:clamp(64px,8.4vw,96px);aspect-ratio:1;border-radius:50%;overflow:hidden;
+  border:1px solid var(--rule-strong);background:var(--panel)}
+.idc-helmet canvas{display:block;width:100%;height:100%}
+.idc-sign{font-family:var(--mono);font-size:9px;letter-spacing:.16em;color:var(--chalk-dim);
+  text-transform:uppercase;text-align:center;line-height:1.4}
+.idc-reroll{position:relative;background:none;border:none;padding:0;cursor:pointer;
+  font-family:var(--mono);font-size:9px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--chalk-dim);transition:color .15s ease;-webkit-tap-highlight-color:transparent}
+.idc-reroll::before{content:'';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:100%;min-width:68px;height:44px}
+.idc-reroll:hover{color:var(--chalk)}
+/* 清單：標籤靠左、數值靠右軸，中間是空的。沒有格子、沒有填色。 */
+.idc-list{margin-top:auto;border-top:1px solid var(--rule)}
+.idc-row{display:flex;align-items:baseline;justify-content:space-between;gap:16px;
+  padding:clamp(13px,3.4vh,34px) 0;border-bottom:1px solid var(--rule)}
+.idc-k{font-family:var(--mono);font-size:clamp(9px,1.1vw,11px);letter-spacing:.2em;
+  text-transform:uppercase;color:var(--chalk-dim);white-space:nowrap}
+.idc-v{font-size:clamp(24px,4.6vw,40px);font-weight:800;line-height:1;letter-spacing:-.035em;
+  color:var(--chalk);white-space:nowrap}
+.idc-v small{font-family:var(--mono);font-size:.3em;font-weight:700;letter-spacing:.16em;
+  color:var(--chalk-dim);margin-left:7px}
+@media(max-width:600px){
+  .idc-top{gap:12px}
+  .idc-emblem{order:3}
+  .idc-name{font-size:clamp(34px,11vw,54px)}
+}
+
+/* ── 1.2 功率 —— 一條功率持續曲線，數字長在曲線上 ────────────
+   舊版是 3×2 的等分格。功率最佳本來就是一條曲線：時長越長、瓦數越低，
+   那個形狀才是資訊。九段全部畫在同一張圖上，值標在點旁邊，
+   FTP 推估畫成一條橫的參考線 —— 這是遙測圖表的原生語法。 */
+.pwv{flex:1;min-height:0;display:flex;flex-direction:column;gap:14px;padding-bottom:8px}
+.pwv-box{flex:1;min-height:210px;display:flex}
+.pwv-chart{width:100%;height:100%;display:block}
+.pwv-grid{stroke:var(--rule);stroke-width:1}
+.pwv-ftp{stroke:var(--chalk-dim);stroke-width:1;stroke-dasharray:5 4}
+.pwv-area{fill:var(--chalk-dim);opacity:.13}
+.pwv-line{fill:none;stroke:var(--chalk);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.pwv-dot{fill:var(--slate);stroke:var(--chalk);stroke-width:2}
+.pwv-val{fill:var(--chalk);font-family:var(--mono);font-size:15px;font-weight:800;text-anchor:middle}
+.pwv-dur{fill:var(--chalk-dim);font-family:var(--mono);font-size:13px;letter-spacing:.06em;text-anchor:middle}
+.pwv-ax{fill:var(--chalk-dim);font-family:var(--mono);font-size:12px}
+.pwv-open{align-self:flex-start;background:none;border:none;padding:8px 0;cursor:pointer;
+  font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--chalk-dim);display:inline-flex;align-items:center;gap:9px;
+  -webkit-tap-highlight-color:transparent;transition:color .15s ease}
+.pwv-open:hover{color:var(--chalk)}
+.pwv-open::after{content:'';width:26px;height:1px;background:currentColor}
+.pwv-none{font-family:var(--mono);font-size:12px;color:var(--chalk-dim);letter-spacing:.1em}
+
+/* ── 2.1 本月 —— 四條全寬的量尺，目標畫成刻線 ───────────────
+   舊版是 2×2 訓練量 ＋ 另一組 2×2 紀律，兩塊講同一件事。合成一塊：
+   長條可以超過目標刻線（舊版夾在 100% 就看不出超標多少）。 */
+.mvol{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center}
+.mvol-row{padding:clamp(12px,2.2vh,22px) 0 clamp(24px,3vh,32px);border-bottom:1px solid var(--rule)}
+.mvol-row:first-child{border-top:1px solid var(--rule)}
+.mvol-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:11px}
+.mvol-name{font-size:clamp(16px,2.5vw,22px);font-weight:700;color:var(--chalk);letter-spacing:.05em;
+  display:flex;align-items:baseline;gap:9px}
+.mvol-name .ct{font-family:var(--mono);font-size:.62em;font-weight:700;color:var(--chalk-dim);letter-spacing:.06em}
+.mvol-name .ct b{color:var(--chalk);font-size:1.25em}
+.mvol-fig{font-family:var(--mono);font-size:clamp(11px,1.5vw,13px);color:var(--chalk-dim);
+  letter-spacing:.06em;white-space:nowrap}
+.mvol-fig b{color:var(--chalk);font-weight:800;font-size:1.35em;letter-spacing:-.02em}
+.mvol-track{position:relative;height:10px;background:var(--panel-2)}
+/* 長條用 scaleX 而不是 width：動 width 會逼版面重算，transform 走合成層 */
+.mvol-fill{position:absolute;left:0;top:0;bottom:0;width:100%;transform:scaleX(0);
+  transform-origin:left center;transition:transform .8s var(--ease)}
+.mvol-fill.danger,.mvol-fill.warning{background:var(--t-yellow)}
+.mvol-fill.done{background:var(--t-green)}
+.mvol-fill.over{background:var(--t-purple)}
+/* 目標刻線：長條越過它就是超標。刻線帶數字，顏色不是唯一編碼。
+   標籤掛在長條「下方」而不是上方 —— 上方是右側那組讀數的地盤（實測 187.8 被壓到）。 */
+.mvol-tick{position:absolute;top:-5px;bottom:-5px;width:1px;background:var(--chalk)}
+.mvol-tick span{position:absolute;left:6px;top:calc(100% + 3px);font-family:var(--mono);font-size:9px;
+  font-weight:700;letter-spacing:.12em;color:var(--chalk);white-space:nowrap}
+/* 刻線貼在右緣時標籤往左長，否則整段溢出版面 */
+.mvol-tick.end span{left:auto;right:6px}
+.mvol-note{margin-top:18px;font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--chalk-dim)}
+.mvol-note.over{color:var(--t-purple)} .mvol-note.done{color:var(--t-green)}
+.mvol-note.warning,.mvol-note.danger{color:var(--t-yellow)}
+
+/* ── 2.2 本週任務 —— 簽收清單 ───────────────────────────────
+   舊版是 2×2 的四塊等分磚，四塊長得一模一樣。這是「達成了沒有」的清單，
+   所以主角是勾選欄：方框在左，條件在右，一列一項。 */
+.qlist{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center}
+.qrow{display:grid;grid-template-columns:auto 1fr;gap:clamp(12px,2vw,20px);align-items:start;
+  padding:clamp(12px,2.1vh,20px) 0;border-bottom:1px solid var(--rule)}
+.qrow:first-child{border-top:1px solid var(--rule)}
+.qbox{width:clamp(30px,4vw,38px);aspect-ratio:1;border:1px solid var(--rule-strong);
+  display:grid;place-items:center;font-family:var(--mono);font-size:17px;font-weight:800;
+  color:var(--chalk-faint);line-height:1}
+.qrow.on .qbox{border-color:var(--chalk);color:var(--t-green)}
+.qrow.super .qbox{border-color:var(--t-purple);color:var(--t-purple);font-size:14px;letter-spacing:-.08em}
+.qrow-name{font-size:clamp(15px,2.2vw,19px);font-weight:700;color:var(--chalk);letter-spacing:.05em;
+  display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.qrow-name .tgt{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--chalk-dim)}
+/* 兩個 OR 條件：一行文字＋一條髮絲進度，不是兩個並排的小方塊 */
+.qconds{display:flex;flex-wrap:wrap;gap:8px clamp(16px,3vw,32px);margin-top:11px}
+/* 條件量尺吃掉整列的寬度 —— 夾一個 max-width 會讓桌機的右半邊整片空著，
+   而且量尺越短越難讀出「還差多少」 */
+.qcond{min-width:112px;flex:1 1 200px}
+.qcond-top{display:flex;align-items:baseline;justify-content:space-between;gap:8px;
+  font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--chalk-dim);margin-bottom:5px}
+.qcond-top b{color:var(--chalk);font-weight:800;font-size:1.2em}
+.qcond.met .qcond-top,.qcond.met .qcond-top b{color:var(--t-green)}
+.qcond-bar{height:3px;background:var(--panel-2)}
+.qcond-fill{height:100%;width:100%;background:var(--t-yellow);transform:scaleX(0);
+  transform-origin:left center;transition:transform .6s var(--ease)}
+.qcond.met .qcond-fill{background:var(--t-green)}
+.qor{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.2em;color:var(--chalk-faint);
+  align-self:center;padding-top:14px}
+.qparts{margin-top:11px;display:flex;gap:7px;flex-wrap:wrap}
+.qparts img{width:30px;height:30px;object-fit:contain;padding:3px;
+  background:var(--panel-2);border:1px solid var(--rule);filter:grayscale(1);opacity:.85}
+@media(max-width:600px){.qconds{gap:10px 16px}}
+
+/* ── 3.1 計時紙 —— 工程師桌上那張表 ─────────────────────────
+   六個路段一次看完：最佳、最近、差距、次數、狀態。狀態靠 2px 左緣色條
+   ＋英文狀態字，顏色不是唯一編碼。整列可點，帶去 3.2 的路段細節。 */
+.sheet{width:100%;border-collapse:collapse;font-family:var(--mono)}
+.sheet th{font-size:9px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--chalk-dim);text-align:left;padding:0 8px 8px;border-bottom:1px solid var(--rule-strong);
+  white-space:nowrap}
+.sheet th.r,.sheet td.r{text-align:right}
+.sheet td{padding:clamp(10px,1.9vh,17px) 8px;border-bottom:1px solid var(--rule);
+  color:var(--chalk-dim);font-size:12px;vertical-align:middle}
+.sheet tbody tr{cursor:pointer;transition:background .15s ease}
+.sheet tbody tr:hover td{background:var(--panel)}
+.sheet td.no{width:1%;padding-left:0;color:var(--chalk-faint);font-size:10px;letter-spacing:.1em}
+.sheet td.nm{color:var(--chalk);font-family:var(--sans);font-size:clamp(14px,1.9vw,17px);
+  font-weight:700;letter-spacing:.04em;white-space:nowrap}
+.sheet td.nm em{display:block;font-style:normal;font-family:var(--mono);font-size:9px;font-weight:600;
+  letter-spacing:.18em;color:var(--chalk-dim);margin-top:4px}
+.sheet td.best{color:var(--chalk);font-weight:800;font-size:clamp(15px,2.1vw,19px);
+  letter-spacing:-.02em;white-space:nowrap}
+.sheet td.gap{font-weight:700;font-size:13px;white-space:nowrap}
+.sheet td.st{white-space:nowrap;padding-left:12px;box-shadow:inset 2px 0 0 var(--sc,var(--chalk-dim))}
+.sheet td.st b{display:block;font-size:10px;font-weight:800;letter-spacing:.12em;color:var(--sc,var(--chalk))}
+.sheet td.st span{display:block;font-size:9px;letter-spacing:.08em;color:var(--chalk-dim);margin-top:3px}
+@media(max-width:760px){.sheet .hide-sm{display:none}}
+@media(max-width:600px){
+  .sheet td{padding:11px 5px;font-size:11px}
+  .sheet th{padding:0 5px 7px;font-size:8px;letter-spacing:.1em}
+  .sheet td.st span{display:none}
+}
+/* 說明入口：四顆等分方鍵 → 一行文字連結 */
+.sheet-help{margin-top:16px;display:flex;align-items:baseline;gap:4px 14px;flex-wrap:wrap;
+  font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--chalk-faint)}
+.sheet-help button{background:none;border:none;padding:7px 0;cursor:pointer;font:inherit;
+  letter-spacing:inherit;color:var(--chalk-dim);border-bottom:1px solid var(--rule-strong);
+  -webkit-tap-highlight-color:transparent;transition:color .15s ease,border-color .15s ease}
+.sheet-help button:hover,.sheet-help button.on{color:var(--chalk);border-color:var(--chalk)}
+
+/* ── 3.2 路段細節 —— 上方選路段的席位條，下面是那張紙 ──────── */
+.segpick{position:sticky;top:0;z-index:5;background:var(--slate);
+  display:flex;gap:0;margin-bottom:clamp(12px,2vh,20px);overflow-x:auto;
+  border-bottom:1px solid var(--rule);scrollbar-width:none}
+.segpick::-webkit-scrollbar{display:none}
+.segpick button{flex:none;background:none;border:none;padding:9px 13px 10px;cursor:pointer;
+  font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--chalk-faint);
+  white-space:nowrap;-webkit-tap-highlight-color:transparent;
+  transition:color .15s ease,box-shadow .15s ease}
+.segpick button:first-child{padding-left:0}
+.segpick button:hover{color:var(--chalk-dim)}
+.segpick button.on{color:var(--chalk);box-shadow:inset 0 -2px 0 var(--chalk)}
+/* 六張紙疊在同一面上，卡與卡之間只有一條髮絲線。整入場動畫退場 ——
+   在二維牆上每次左右切換都重播一次淡入，會變成暈車。 */
+.seg-stage{display:flex;flex-direction:column}
+.fc{position:relative;background:none;padding:0;opacity:1;translate:none;transition:none}
+.fc + .fc{margin-top:clamp(26px,5vh,52px);padding-top:clamp(24px,4.4vh,46px);
+  border-top:1px solid var(--rule-strong)}
+.fc-inner{display:flex;flex-direction:column}
+/* 四格等分統計 → 同一條基線上的四個讀數，沒有框 */
+.fc-stats{display:flex;flex-wrap:wrap;gap:clamp(16px,4vw,52px);margin-top:clamp(14px,2.4vh,24px);
+  background:none;border:none;padding-top:14px;border-top:1px solid var(--rule)}
+.fc-stat{background:none;padding:0;min-width:74px}
+.fc-stat b{display:block;font-family:var(--mono);font-size:clamp(18px,2.8vw,26px);font-weight:800;
+  color:var(--chalk);line-height:1;letter-spacing:-.03em}
+.fc-stat b small{font-size:.42em;font-weight:700;color:var(--chalk-dim);margin-left:3px;letter-spacing:.08em}
+.fc-stat span{display:block;font-family:var(--mono);font-size:9px;letter-spacing:.16em;
+  color:var(--chalk-dim);text-transform:uppercase;margin-top:8px;line-height:1.3}
+
+/* ── 4.1 賽季 —— 十六個月的一張長表，里程長條畫在格子裡 ────
+   舊版是每個月三根堆疊長條（里程／爬升／時數），十六列讀起來像雜訊。
+   改成表：里程帶長條（主序列），爬升／時數／TSS 是對齊的數字欄。 */
+.season-wrap{flex:1;min-height:0;overflow-y:auto;scrollbar-width:thin}
+.season{width:100%;border-collapse:collapse;font-family:var(--mono)}
+.season th{position:sticky;top:0;z-index:1;background:var(--slate);
+  font-size:9px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--chalk-dim);
+  text-align:right;padding:0 7px 7px;border-bottom:1px solid var(--rule-strong);white-space:nowrap}
+.season th:first-child{text-align:left;padding-left:0}
+.season td{padding:0 7px;height:38px;border-bottom:1px solid var(--rule);
+  color:var(--chalk-dim);font-size:11px;text-align:right;white-space:nowrap}
+.season td:first-child{text-align:left;padding-left:0;color:var(--chalk);font-weight:700;font-size:12px}
+.season tr.yr td{border-bottom:1px solid var(--rule-strong);padding-top:16px;height:auto;
+  color:var(--chalk-dim);font-size:10px;letter-spacing:.24em;cursor:pointer;padding-bottom:6px}
+.season tr.yr td:hover{color:var(--chalk)}
+/* 里程格：長條是格子的底，數字壓在上面靠右 —— 一格同時是刻度與讀數。
+   ::before 是那條軌：沒有軌的話短長條看起來像另外一欄的灰方塊，跟右邊的數字接不起來。 */
+.season td.km{position:relative;color:var(--chalk);font-weight:800;font-size:13px;
+  letter-spacing:-.02em;width:42%;overflow:hidden}
+.season td.km::before{content:'';position:absolute;left:0;right:7px;top:6px;bottom:6px;
+  background:var(--panel);}
+.season td.km i{position:absolute;left:0;right:7px;top:6px;bottom:6px;background:var(--rule-strong);
+  transform:scaleX(0);transform-origin:left center;transition:transform .9s var(--ease)}
+.season td.km span{position:relative}
+.season td.pr b{font-size:9px;font-weight:800;letter-spacing:.1em;color:var(--t-green);
+  border:1px solid var(--t-green);padding:2px 4px;cursor:help}
+/* 手機上不砍欄位（「資訊變少了」是使用者指定的失敗長相），改成縮字距與內距 */
+@media(max-width:640px){
+  .season td{height:34px;font-size:10px;padding:0 3px}
+  .season th{font-size:8px;letter-spacing:.06em;padding:0 3px 6px}
+  .season td:first-child{font-size:11px}
+  .season td.km{width:33%;font-size:11.5px}
+}
+
+/* ── 4.2 總計 —— 三個大數字，一面螢幕的收尾 ────────────────── */
+.grand{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center}
+.grand-row{display:flex;align-items:baseline;justify-content:space-between;gap:16px;
+  padding:clamp(14px,3.2vh,34px) 0;border-bottom:1px solid var(--rule)}
+.grand-row:first-child{border-top:1px solid var(--rule)}
+.grand-k{font-family:var(--mono);font-size:clamp(9px,1.2vw,12px);letter-spacing:.22em;
+  text-transform:uppercase;color:var(--chalk-dim)}
+.grand-v{font-size:clamp(34px,8vw,76px);font-weight:800;line-height:.9;letter-spacing:-.04em;color:var(--chalk)}
+.grand-v small{font-family:var(--mono);font-size:.24em;font-weight:700;letter-spacing:.16em;
+  color:var(--chalk-dim);margin-left:9px}
+/* 離站連結：整寬鏤空鈕 → 文字連結。這一面的主角是三個數字，不是按鈕。 */
+.grand .strava-cta{width:auto;min-height:auto;align-self:flex-start;justify-content:flex-start;
+  border:none;border-bottom:1px solid var(--rule-strong);padding:9px 0;margin-top:clamp(16px,3vh,32px);
+  font-size:10px;letter-spacing:.16em}
+.grand .strava-cta:hover{background:none;border-color:var(--chalk);color:var(--chalk)}
+.grand .strava-cta svg{width:13px;height:13px}
+
+/* ── 5.1 活動紀錄 —— 一條連續的流水帳，內部捲動 ────────────
+   舊版每張卡片掛九顆等重的小膠囊（詳情／Strava／3D／時間／爬升／速度／心率／IF／TSS），
+   換行還會亂掉，是全頁最像自動生成的一塊。膠囊全部拆掉：
+   量測值收成一行等寬文字，用中點分隔；動作退成文字連結。 */
+.logwrap{flex:1;min-height:0;overflow-y:auto;scrollbar-width:thin;margin:0 calc(var(--gut) * -1);
+  padding:0 var(--gut)}
+.timeline{margin-bottom:0}
+.timeline-day{margin-bottom:1.3rem}
+.timeline-date{padding-left:0}
+.timeline-date::before{display:none}
+.activity-card{margin-left:0;padding:12px 0;gap:11px;align-items:flex-start}
+/* 量測值：一行等寬文字，不是九個框 */
+.activity-meta{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.02em;
+  color:var(--chalk-dim);margin-top:7px;line-height:1.7}
+/* nowrap 是必要的：分隔的中點是下一顆 tag 的 ::before，不鎖住就會被斷到上一行末尾
+   （實測「16.6 km/h ·」孤零零掛在行尾） */
+.activity-meta .tag{display:inline;background:none;border:none;padding:0;margin:0;
+  font-size:inherit;font-family:inherit;color:inherit;white-space:nowrap}
+.activity-meta .tag + .tag::before{content:' · ';color:var(--chalk-faint)}
+.activity-meta .tag b{color:var(--chalk);font-weight:700}
+.activity-meta .tag .ico{display:none}
+/* IF／TSS 併進同一行 */
+.power-metrics{display:inline;margin:0}
+.power-metrics::before{content:' · ';color:var(--chalk-faint)}
+.power-metrics .pm-pill{display:inline;background:none;border:none;padding:0;
+  font-size:11px;letter-spacing:.02em;color:var(--chalk-dim)}
+.power-metrics .pm-pill + .pm-pill::before{content:' · ';color:var(--chalk-faint)}
+/* 動作：文字連結，不是三顆鈕 */
+.activity-name-wrap{display:flex;align-items:center;gap:8px;min-width:0}
+.lap-toggle{background:transparent;border:none;color:var(--chalk-dim);font-size:10px;cursor:pointer;
+  padding:4px 0;letter-spacing:.14em;display:inline-block;font-family:var(--mono)}
+.lap-toggle:hover{color:var(--chalk)}
+/* 從計時紙／功率彈窗跳過來時的定位一閃：陽極鋁面板亮一下，不用彩色光暈 */
+.act-highlight{animation:actFlash .9s ease-out}
+@keyframes actFlash{0%,40%{background:var(--panel-2)}100%{background:transparent}}
+.act-row{display:flex;gap:16px;flex-wrap:wrap;margin-top:9px}
+.activity-card .act-detail-btn,
+.activity-card .act-strava-link,
+.activity-card .r3d-trigger-btn{
+  padding:5px 0;border:none;border-bottom:1px solid var(--rule-strong);background:none;
+  color:var(--chalk-dim);font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.14em;
+  text-transform:uppercase;border-radius:0;box-shadow:none;animation:none}
+.activity-card .act-detail-btn:hover,
+.activity-card .act-strava-link:hover,
+.activity-card .r3d-trigger-btn:hover{background:none;color:var(--chalk);border-color:var(--chalk);transform:none}
+@media(max-width:600px){.activity-meta{font-size:10.5px}}
+
+/* ── 6.1 板牌 —— 那三個假數字被刪掉了，板牌留下來寫今天這句話 ──
+   維修站的板牌本來就是舉出去給人看一句話的東西。 */
+.board{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;gap:clamp(14px,2.6vh,26px)}
+.board-src{display:flex;gap:18px;flex-wrap:wrap;font-family:var(--mono);font-size:10px;
+  letter-spacing:.14em;text-transform:uppercase}
+.board-src button{background:none;border:none;padding:6px 0;cursor:pointer;font:inherit;
+  letter-spacing:inherit;text-transform:inherit;color:var(--chalk-faint);
+  -webkit-tap-highlight-color:transparent;transition:color .15s ease,box-shadow .15s ease}
+.board-src button:hover{color:var(--chalk-dim)}
+.board-src button.on{color:var(--chalk);box-shadow:inset 0 -2px 0 var(--chalk)}
+.quote-book{background:none;border:none;padding:0;opacity:0;transform:translateY(6px);
+  transition:opacity .3s ease,transform .3s ease}
+.quote-book.ready{opacity:1;transform:none}
+.qb-tag{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--chalk-dim);margin-bottom:clamp(12px,2vh,22px);
+  display:flex;align-items:center;gap:8px}
+.qb-text{font-size:clamp(23px,4.4vw,46px);line-height:1.34;font-weight:800;color:var(--chalk);
+  letter-spacing:-.01em;max-width:20ch;word-break:break-word}
+.qb-orig{font-size:clamp(12px,1.5vw,14px);line-height:1.75;margin-top:clamp(12px,2vh,20px);
+  max-width:52ch;color:var(--chalk-dim);word-break:break-word}
+.qb-src{font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--chalk-dim);
+  margin-top:clamp(12px,2vh,20px)}
+.qb-actions{border-top:1px solid var(--rule);margin-top:clamp(14px,2.4vh,24px);padding-top:14px;
+  display:flex;gap:20px;flex-wrap:wrap;align-items:center}
+.qb-btn,.qb-shuffle{position:relative;background:none;border:none;padding:7px 0;margin:0;cursor:pointer;
+  min-height:auto;border-bottom:1px solid var(--rule-strong);border-radius:0;
+  font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--chalk-dim);display:inline-flex;align-items:center;gap:7px;
+  transition:color .15s ease,border-color .15s ease}
+.qb-btn:hover,.qb-shuffle:hover{background:none;color:var(--chalk);border-color:var(--chalk)}
+/* 在 .board 這個 flex column 裡按鈕會被拉滿寬 —— 換一句只需要它自己那麼寬 */
+.board > .qb-shuffle{align-self:flex-start;margin-top:0}
+.qb-fav.active{color:var(--chalk);border-color:var(--chalk);background:none}
+.qb-chips{margin-top:clamp(12px,2vh,20px)}
+.qb-chip>span{background:none;border:none;border-bottom:1px solid var(--rule-strong);
+  border-radius:0;padding:5px 0;letter-spacing:.14em;text-transform:uppercase}
+.qb-chip:hover>span,.qb-chip.open>span{border-color:var(--chalk);color:var(--chalk)}
+@media(max-width:600px){.qb-text{max-width:none}}
+
+/* 資料還沒到 */
+.loading{padding:3rem 0}
 </style>
 </head>
 <body>
@@ -1543,14 +1625,34 @@ html,body{min-height:100%;font-family:var(--sans);background:var(--slate);color:
   </div>
 </div>
 
+<!--
+  ══ 方向契約 THE WALL（2026-07-27）══
+  THESIS：維修站牆不是一份可以一直往下捲的長文件，它是一面牆 —— 一排工程席，
+    每席一疊螢幕。左右換席、上下換面。拒絕的正是本頁前一版的排法：
+    八個區塊共用「標題 → 整寬框 → repeat(N,1fr)+gap:1px 等分格」同一個模子。
+  OWN-WORLD：消光石板黑（#101215／#191C20）、粉筆白墨（#EDEAE3）、髮絲分隔線；
+    彩色只有分段計時四色（紫＝90天內最佳／綠＝歷史PR／黃＝比自己慢／灰＝未計時）。
+    無圓角、無發光、無毛玻璃。系統字堆疊，簽名是 tabular-nums。
+  STORY：騎完車回家打開 → 認出這是誰的牆 → 走到本月看還差多少 → 走到分段看跟 PR 差多少
+    → 賽季看長期 → 紀錄查那一趟 → 板牌上是今天這句話。
+  FIRST VIEWPORT：車手席第一面。左上人像方塊與 clamp(38-86px) 的 STEVE 成一塊，
+    右上頭盔星座徽記；下半是靠右軸對齊的證件清單（FTP／本年里程／本年爬升／本月騎乘）。
+    導航常駐：頂欄寫現在在哪，底軌六席，右緣直立面數記號。
+  FORM：使用者指定的一頁式二維全螢幕牆（不是我方推導清單，因此不擲骰）。
+    捲動用原生 scroll-snap 兩軸，不劫持手勢。已刪除：PIT BOARD 頭條與它的三個數字
+    （單人計時沒有名次；「本月還差」配「+2」自相矛盾）。
+-->
 <div id="app">
-  <div class="topbar">
+  <header class="topbar">
     <a class="back-btn" href="javascript:history.length>1?history.back():location.href='linkTreeIndex.html'">← BACK</a>
-    <span class="topbar-title">Athletics · Strava</span>
-  </div>
-  <!-- 板牌捲動後壓縮成固定三格條 -->
-  <div class="pb-rail" id="pb-rail" aria-hidden="true"><div class="pb-rail-row" id="pb-rail-row"></div></div>
-  <div id="content"><div class="loading">讀取計時紙…</div></div>
+    <div class="topbar-where">
+      <span class="w-zh" id="w-zh">維修站牆</span>
+      <span class="w-pos" id="w-pos">Steve Chuang</span>
+    </div>
+  </header>
+  <main id="wall"><div class="loading">讀取計時紙…</div></main>
+  <div class="vdots" id="vdots" aria-hidden="true"></div>
+  <nav class="rail" id="rail" aria-label="工程席"></nav>
 </div>
 
 <script>
@@ -1581,31 +1683,21 @@ function fmtMovingTime(hr) {
   if (m === 0) return `${h} 小時`
   return `${h} 小時 ${m} 分`
 }
-const SPORT_META = {
-  ride:   { icon: '🚴', label: '單車' },
-  run:    { icon: '🏃', label: '跑步' },
-  swim:   { icon: '🏊', label: '游泳' },
-  weight: { icon: '🏋️', label: '重訓' },
-}
-/* 徽章已經有邊框色＋文字兩層編碼，紅黃綠火四顆彩色 emoji 是純冗餘，移除 */
-const STATUS_META = {
-  danger:  { text: '嚴重落後' },
-  warning: { text: '近期需補課' },
-  done:    { text: '達標' },
-  over:    { text: '超標' },
-}
 /* ── 每日一句：quote book widget ── */
+/* ── 6.1 板牌 —— 刪掉的頭條把「板牌」這個形式留了下來 ──
+   維修站的板牌本來就是舉出去給人看一句話的東西，那正好是每日一句。
+   舊版是「標題 → 整寬框 → 置中卡片 → 三顆膠囊分頁」，跟其他七個區塊同一個模子。
+   現在整面螢幕就是那塊板：分頁退成三個文字開關，內文放到 clamp(23–46px)。 */
 function renderQuoteSection() {
-  return `
-    <div class="quote-section">
-      <div class="section-title">每日一句 <span class="muted">· LIFE QUOTES</span></div>
-      <div class="qb-tabs" id="qb-tabs">
-        <button class="qb-tab active" data-src="all"><i class="ico">✨</i>全部</button>
-        <button class="qb-tab" data-src="anime"><i class="ico">🎴</i>動畫</button>
-        <button class="qb-tab" data-src="movie"><i class="ico">🎬</i>影劇</button>
+  return scrHead('今天的板牌', '每日一句') + `
+    <div class="board">
+      <div class="board-src" id="qb-tabs">
+        <button type="button" class="on" data-src="all">全部</button>
+        <button type="button" data-src="anime">動畫</button>
+        <button type="button" data-src="movie">影劇</button>
       </div>
       <div class="quote-book" id="quote-book"></div>
-      <button class="qb-shuffle" id="qb-shuffle"><i class="ico">🎲</i>換一句</button>
+      <button class="qb-shuffle" id="qb-shuffle" type="button">換一句</button>
     </div>
   `
 }
@@ -1625,6 +1717,9 @@ function qbRenderCard(q) {
     book.innerHTML = `<div class="qb-tag">無資料 · NO DATA</div>
       <div class="qb-text" style="font-size:15px;color:var(--chalk-dim)">名言資料載入中或暫無內容…</div>`
     requestAnimationFrame(() => book.classList.add('ready'))
+  // 安全網：分頁在背景時 rAF 不派送，.ready 永遠加不上去 → 整張板牌卡在 opacity:0。
+  // 這個檔案已經被同一個 bug 咬過一次（無資料提示從來沒被看見過），所以兩條路都要走。
+  setTimeout(() => book.classList.add('ready'), 90)
     return
   }
   // 影劇的 movie 欄位存的是「系列」而不是片名（Christopher Nolan Collection、黑暗騎士三部曲…），
@@ -1674,6 +1769,9 @@ function qbRenderCard(q) {
     })
   })
   requestAnimationFrame(() => book.classList.add('ready'))
+  // 安全網：分頁在背景時 rAF 不派送，.ready 永遠加不上去 → 整張板牌卡在 opacity:0。
+  // 這個檔案已經被同一個 bug 咬過一次（無資料提示從來沒被看見過），所以兩條路都要走。
+  setTimeout(() => book.classList.add('ready'), 90)
   const favBtn = document.getElementById('qb-fav-btn')
   favBtn.addEventListener('click', () => {
     // 收藏狀態靠「♥／♡」的形狀分辨，不靠顏色 —— 四個計時色各自綁死一個語意，不外借
@@ -1698,47 +1796,116 @@ function initQuoteWidget() {
   qbRenderCard(qbPick(activeSrc))
   document.getElementById('qb-shuffle')?.addEventListener('click', () => qbRenderCard(qbPick(activeSrc)))
   document.getElementById('qb-tabs')?.addEventListener('click', e => {
-    const btn = e.target.closest('.qb-tab')
+    const btn = e.target.closest('button[data-src]')
     if (!btn) return
-    document.querySelectorAll('.qb-tab').forEach(b => b.classList.remove('active'))
-    btn.classList.add('active')
+    document.querySelectorAll('#qb-tabs button').forEach(b => b.classList.remove('on'))
+    btn.classList.add('on')
     activeSrc = btn.dataset.src
     qbRenderCard(qbPick(activeSrc))
   })
 }
-function renderMonthlySummary(ms) {
-  if (!ms) return ''
-  const m = (v, u) => `<div class="stat-metric"><div class="stat-val">${v}</div><div class="stat-unit">${u}</div></div>`
-  const div = '<div class="stat-vdiv"></div>'
-  const hr = v => v != null ? v : '—'
-  return `
-    <div class="section-title">本月訓練量 <span class="muted">· MONTHLY SUMMARY</span></div>
-    <div class="stats-grid">
-      <div class="stat-card"><div class="stat-label"><i class="ico">🚴</i>單車</div><div class="stat-metrics">${m((+(ms.ride_km??0)).toFixed(1),'km')}${div}${m(hr(ms.ride_hr),'hr')}</div></div>
-      <div class="stat-card"><div class="stat-label"><i class="ico">🏃</i>跑步</div><div class="stat-metrics">${m((+(ms.run_km??0)).toFixed(1),'km')}${div}${m(hr(ms.run_hr),'hr')}</div></div>
-      <div class="stat-card"><div class="stat-label"><i class="ico">🏊</i>游泳</div><div class="stat-metrics">${m(ms.swim_m??0,'m')}${div}${m(hr(ms.swim_hr),'hr')}</div></div>
-      <div class="stat-card"><div class="stat-label"><i class="ico">🏋️</i>重訓</div><div class="stat-metrics">${m(ms.weight_count??0,'次')}${div}${m(hr(ms.weight_hr),'hr')}</div></div>
-    </div>`
-}
-function renderMonthlyGoals(mg) {
-  if (!mg) return ''
-  const order = ['ride','run','swim','weight']
-  const rows = order.map(k => {
-    const g = mg[k]; if (!g) return ''
-    const meta = SPORT_META[k]
-    const sm = STATUS_META[g.status] || STATUS_META.danger
-    const pct = Math.min(100, g.target > 0 ? (g.count / g.target) * 100 : 0)
-    const badgeLabel = g.status === 'over' ? `超標 +${g.count - g.target}` : sm.text
+/* ── 2.1 本月 —— 四條全寬量尺，目標是刻線不是天花板 ──
+   舊版把同一件事拆成兩塊、各自一套等分格：2×2 的「本月訓練量」＋四列的「月度紀律」。
+   合成一面：一項運動一條。長條可以越過目標刻線 —— 舊版的進度條夾在 100%，
+   單車 6/4 看起來跟 4/4 一模一樣，超標多少完全讀不到。 */
+function renderMonthlyVolume(ms, mg, month) {
+  if (!ms && !mg) return ''
+  ms = ms || {}; mg = mg || {}
+  const defs = [
+    { k:'ride',   zh:'單車', main:(+(ms.ride_km ?? 0)).toFixed(1), unit:'km', hr:ms.ride_hr },
+    { k:'run',    zh:'跑步', main:(+(ms.run_km  ?? 0)).toFixed(1), unit:'km', hr:ms.run_hr  },
+    { k:'swim',   zh:'游泳', main:ms.swim_m ?? 0,                  unit:'m',  hr:ms.swim_hr },
+    { k:'weight', zh:'重訓', main:ms.weight_count ?? 0,            unit:'次', hr:ms.weight_hr },
+  ]
+  const rows = defs.map(d => {
+    const g = mg[d.k]
+    const count = g ? (g.count || 0) : null
+    const target = g ? (g.target || 0) : null
+    const status = g ? (g.status || 'danger') : 'danger'
+    // 刻度尺的上限取「目標與實績的較大者」，長條才有超過刻線的空間
+    const span = Math.max(target || 1, count || 0)
+    const fillPct = span > 0 ? Math.min(100, (count || 0) / span * 100) : 0
+    const tickPct = span > 0 ? Math.min(100, (target || 0) / span * 100) : 100
+    const note = !g ? '無月度目標資料'
+      : count > target ? `已達標 · 超出 ${count - target} 次`
+      : count === target ? '剛好達標'
+      : `還差 ${target - count} 次`
+    const hrTxt = d.hr != null ? ` · ${d.hr} hr` : ''
     return `
-      <div class="consistency-row">
-        <div class="consistency-name"><i class="ico">${meta.icon}</i>${meta.label}<span class="count"><b>${g.count}</b> / ${g.target}</span></div>
-        <div class="progress-bar"><div class="progress-fill ${g.status}" data-pct="${pct}"></div></div>
-        <div class="status-badge ${g.status}">${badgeLabel}</div>
+      <div class="mvol-row">
+        <div class="mvol-head">
+          <div class="mvol-name zh">${d.zh}${g ? `<span class="ct"><b>${count}</b> / ${target}</span>` : ''}</div>
+          <div class="mvol-fig"><b>${d.main}</b> ${d.unit}${hrTxt}</div>
+        </div>
+        <div class="mvol-track">
+          <div class="mvol-fill ${status}" data-pct="${fillPct}"></div>
+          ${g ? `<div class="mvol-tick${tickPct >= 88 ? ' end' : ''}" style="left:${tickPct}%"><span>目標 ${target}</span></div>` : ''}
+        </div>
+        <div class="mvol-note ${status}">${note}</div>
       </div>`
   }).join('')
-  return `
-    <div class="section-title">月度紀律 <span class="muted">· MONTHLY CONSISTENCY</span></div>
-    <div class="consistency-list">${rows}</div>`
+  return scrHead('本月訓練量', month ? month.replace('-', ' / ') : '') +
+    `<div class="mvol">${rows}</div>`
+}
+
+/* ── 2.2 本週任務 —— 簽收清單 ──
+   舊版是 2×2 的四塊等分磚，四塊構造一模一樣（圖示、標籤、OR、兩條進度）。
+   這是「達成了沒有」的清單，主角應該是勾選欄：方框在左、條件在右，一列一項。 */
+function renderWeeklyQuest(wq, weekStart) {
+  if (!wq) return ''
+  const defs = [
+    { k:'ride',   zh:'單車', or:true  },
+    { k:'run',    zh:'跑步', or:true  },
+    { k:'swim',   zh:'游泳', or:true, m:true },
+    { k:'weight', zh:'重訓', or:false },
+  ]
+  const isDone  = v => typeof v === 'object' ? !!v.done  : !!v
+  const isSuper = v => typeof v === 'object' && !!v.super
+  const pctOf   = (v, t) => (t > 0 ? Math.min(100, Math.round(v / t * 100)) : 0)
+  const cond = (label, val, unit, pct) => `
+    <div class="qcond${pct >= 100 ? ' met' : ''}">
+      <div class="qcond-top"><span>${label}</span><span><b>${val}</b> ${unit}</span></div>
+      <div class="qcond-bar"><div class="qcond-fill" data-pct="${pct}"></div></div>
+    </div>`
+  const rows = defs.map(d => {
+    const v = wq[d.k]
+    if (v == null) return ''
+    const on = isDone(v), sup = isSuper(v)
+    let body = '', tgt = ''
+    if (d.or && typeof v === 'object') {
+      const dist  = d.m ? (v.distance_m || 0) : (v.distance_km || 0)
+      const tDist = d.m ? v.target_m : v.target_km
+      const hr    = v.moving_time_hr || 0
+      tgt = `${tDist}${d.m ? 'M' : 'KM'} 或 ${v.target_hr || 1}HR`
+      body = `<div class="qconds">
+        ${cond(`${tDist} ${d.m ? 'm' : 'km'}`, dist, d.m ? 'm' : 'km', pctOf(dist, tDist))}
+        <span class="qor">OR</span>
+        ${cond(`${v.target_hr || 1} hr`, hr, 'hr', pctOf(hr, v.target_hr))}
+      </div>`
+    } else if (typeof v === 'object') {
+      const c = v.count || 0, t = v.target || 1
+      tgt = `${t} 次`
+      body = `<div class="qconds">${cond(`${t} 次`, c, '次', pctOf(c, t))}</div>
+        ${renderTrainPartIcons(v.parts)}`
+    }
+    // 目標已經寫在每個條件的左標了，名稱旁不再重複一次（舊版「30KM 或 1HR」跟下面兩格同義）
+    return `<div class="qrow${sup ? ' on super' : on ? ' on' : ''}">
+      <div class="qbox">${sup ? '✓✓' : on ? '✓' : ''}</div>
+      <div>
+        <div class="qrow-name zh">${d.zh}<span class="tgt">${on ? '已達成' : '未達成'}</span></div>
+        ${body}
+      </div>
+    </div>`
+  }).join('')
+  // 週別區間是真的資料（render() 算出來的本週一），不是裝飾
+  let range = ''
+  if (weekStart) {
+    const a = new Date(weekStart + 'T00:00:00Z')
+    const b = new Date(a.getTime() + 6 * 864e5)
+    const f = d => `${String(d.getUTCMonth() + 1).padStart(2, '0')}/${String(d.getUTCDate()).padStart(2, '0')}`
+    range = `${f(a)} – ${f(b)}`
+  }
+  return scrHead('本週任務', range) + `<div class="qlist">${rows}</div>`
 }
 const TRAIN_PART_IMAGE_MAP = {
   chest: 'docs/chest.png',
@@ -1771,71 +1938,6 @@ function renderTrainPartIcons(parts) {
   const matched = ['chest', 'back', 'legs', 'shoulders', 'arms'].filter(k => normalized[k])
   if (!matched.length) return ''
   return `<div class="qparts">${matched.map(k => `<img src="${TRAIN_PART_IMAGE_MAP[k]}" alt="${k}" title="${k}">`).join('')}</div>`
-}
-function renderWeeklyQuest(wq) {
-  if (!wq) return ''
-  const wqSports = [
-    { key:'ride',   icon:'🚴', label:'RIDE',  isOr:true,  tKm:'30KM', tHr:'1HR' },
-    { key:'run',    icon:'🏃', label:'RUN',   isOr:true,  tKm:'10KM', tHr:'1HR' },
-    { key:'swim',   icon:'🏊', label:'SWIM',  isOr:true,  tKm:'1000M', tHr:'1HR', unit:'m' },
-    { key:'weight', icon:'🏋️', label:'TRAIN', isOr:false, targetLabel:'1 次'   },
-  ]
-  function isDone(v)  { return typeof v === 'object' ? v.done  : !!v }
-  function isSuper(v) { return typeof v === 'object' && !!v.super }
-  const tiles = wqSports.map(sp => {
-    const val = wq[sp.key]
-    const on = isDone(val), sup = isSuper(val)
-    const cls = `quest-tile${sup ? ' on super' : on ? ' on' : ''}`
-    if (sp.isOr && typeof val === 'object') {
-      const isM = sp.unit === 'm'
-      const d = isM ? (val.distance_m || 0) : (val.distance_km || 0)
-      const tD = isM ? val.target_m : val.target_km
-      const dStr = isM ? `${d}m` : `${d}km`
-      const h = val.moving_time_hr || 0
-      // 缺目標時算出來是 NaN，width:NaN% 會被丟棄 → 長條反而滿格，等於謊報 100%。
-      // 游泳目前就沒有 target_hr（見 weekly_quest 組裝處），一律先歸零。
-      const pctOf = (v, t) => (t > 0 ? Math.min(100, Math.round(v / t * 100)) : 0)
-      const dPct = pctOf(d, tD)
-      const hPct = pctOf(h, val.target_hr)
-      const dMet = dPct >= 100, hMet = hPct >= 100
-      const body = (on || sup)
-        ? `<div class="qcheck">${sup ? '✓✓' : '✓'}</div>
-          <div class="qpct">${dStr} · ${h}hr</div>`
-        : `<div class="qcheck"><span class="qcheck-or">OR</span></div>
-          <div class="qprog-or">
-            <div class="qprog-or-slot${dMet ? ' met' : ''}">
-              <div class="qprog-or-lbl${dMet ? ' met' : ''}">${sp.tKm}</div>
-              <div class="qprog-or-bar"><div class="qprog-or-fill" style="width:${dPct}%"></div></div>
-              <div class="qprog-or-val">${dStr}</div>
-            </div>
-            <div class="qprog-or-slot${hMet ? ' met' : ''}">
-              <div class="qprog-or-lbl${hMet ? ' met' : ''}">${sp.tHr}</div>
-              <div class="qprog-or-bar"><div class="qprog-or-fill" style="width:${hPct}%"></div></div>
-              <div class="qprog-or-val">${h}hr</div>
-            </div>
-          </div>`
-      return `<div class="${cls}"><span class="qico ico">${sp.icon}</span><div class="qlabel">${sp.label}</div>${body}</div>`
-    }
-    const pct = (() => {
-      if (typeof val !== 'object') return val ? 100 : 0
-      if (sp.key === 'swim') return Math.min(100, Math.round((val.distance_m||0)/val.target_m*100))
-      return val.count >= val.target ? 100 : 0
-    })()
-    const detail = typeof val === 'object' ? (sp.key==='swim' ? `${val.distance_m||0}m` : `${val.count||0} 次`) : ''
-    const progHtml = !on ? `
-      <div class="qprog-wrap"><div class="qprog-fill" style="width:${pct}%"></div></div>
-      <div class="qpct">${detail ? `${detail} · ` : ''}${pct}%</div>` : ''
-    return `<div class="${cls}">
-      <span class="qico ico">${sp.icon}</span>
-      <div class="qlabel">${sp.label}</div>
-      <div class="qcheck">${on ? '✓' : `<span class="qcheck-tgt">${sp.targetLabel}</span>`}</div>
-      ${progHtml}
-      ${sp.key === 'weight' ? renderTrainPartIcons(val?.parts) : ''}
-    </div>`
-  }).join('')
-  return `
-    <div class="section-title">本週任務 <span class="muted">· WEEKLY QUEST</span></div>
-    <div class="quest-grid">${tiles}</div>`
 }
 function smoothPath(pts) {
   let d = `M ${pts[0][0]} ${pts[0][1]}`
@@ -1986,222 +2088,258 @@ function togglePkPanel(ev, segId) {
     segPlayStart(it, false, 'pk')
   }
 }
-function renderSegments(segs) {
-  if (!segs || segs.length === 0) return ''
+/* ── 分段 SECTORS —— 計算與呈現分家 ──
+   同一份運算現在餵兩面螢幕：3.1 的計時紙（六個路段一次看完）與 3.2 的路段細節。
+   運算本身一行沒改（segScore、90 天基準線、九個狀態的優先序都是既有制度）。 */
+function segMetrics(seg) {
   const _today = new Date(Date.now() + 8*3600*1000).toISOString().slice(0,10)
   const ATHLETE_WT = 80
-  const SEG_META = window._ittSegMeta || {}
-  const cards = segs.map(seg => {
-    const meta   = SEG_META[seg.id] || {}
-    const sorted = (seg.efforts || []).slice().sort((a,b) => a.elapsed_sec - b.elapsed_sec)
-    const pr     = seg.efforts.find(e => e.is_pr) || sorted[0]
-    const latest = (seg.efforts || []).slice().sort((a,b) => b.date.localeCompare(a.date))[0]
+  const meta   = (window._ittSegMeta || {})[seg.id] || {}
+  const sorted = (seg.efforts || []).slice().sort((a,b) => a.elapsed_sec - b.elapsed_sec)
+  const pr     = seg.efforts.find(e => e.is_pr) || sorted[0]
+  const latest = (seg.efforts || []).slice().sort((a,b) => b.date.localeCompare(a.date))[0]
 
-    const prWatts  = pr && pr.avg_watts ? pr.avg_watts : null
-    const wkg      = prWatts ? (prWatts / ATHLETE_WT).toFixed(1) : '—'
-    const attempts = seg.efforts.length
+  const prWatts  = pr && pr.avg_watts ? pr.avg_watts : null
+  const wkg      = prWatts ? (prWatts / ATHLETE_WT).toFixed(1) : '—'
+  const attempts = seg.efforts.length
 
-    // ── PeakBenchmark: top-5 best efforts by watts in last 90 days (min 3).
-    //    Falls back to all-time top-5 when recent data is insufficient. ──
-    const cutoff90 = new Date(Date.now() + 8*3600*1000)
-    cutoff90.setDate(cutoff90.getDate() - 90)
-    const cutoff90Str    = cutoff90.toISOString().slice(0,10)
-    const effsWithWatts  = (seg.efforts || []).filter(e => e.avg_watts)
-    const recent90       = effsWithWatts.filter(e => e.date >= cutoff90Str)
-    const top5w          = recent90.slice().sort((a,b) => b.avg_watts - a.avg_watts).slice(0,5)
-    const useRecent      = top5w.length >= 3
-    const allTop5w       = !useRecent ? effsWithWatts.slice().sort((a,b) => b.avg_watts - a.avg_watts).slice(0,5) : []
-    const useAllTime     = !useRecent && allTop5w.length >= 3
-    const hasBench       = useRecent || useAllTime
-    const benchSrc       = useRecent ? top5w : allTop5w
-    const peakAvgPow     = hasBench ? benchSrc.reduce((s,e) => s + e.avg_watts, 0) / benchSrc.length : null
-    const peakAvgTime    = hasBench ? benchSrc.reduce((s,e) => s + e.elapsed_sec, 0) / benchSrc.length : null
-    const benchLabel     = useRecent ? 'TOP5 AVG' : 'ALL-TIME AVG'
+  // ── PeakBenchmark: top-5 best efforts by watts in last 90 days (min 3).
+  //    Falls back to all-time top-5 when recent data is insufficient. ──
+  const cutoff90 = new Date(Date.now() + 8*3600*1000)
+  cutoff90.setDate(cutoff90.getDate() - 90)
+  const cutoff90Str    = cutoff90.toISOString().slice(0,10)
+  const effsWithWatts  = (seg.efforts || []).filter(e => e.avg_watts)
+  const recent90       = effsWithWatts.filter(e => e.date >= cutoff90Str)
+  const top5w          = recent90.slice().sort((a,b) => b.avg_watts - a.avg_watts).slice(0,5)
+  const useRecent      = top5w.length >= 3
+  const allTop5w       = !useRecent ? effsWithWatts.slice().sort((a,b) => b.avg_watts - a.avg_watts).slice(0,5) : []
+  const useAllTime     = !useRecent && allTop5w.length >= 3
+  const hasBench       = useRecent || useAllTime
+  const benchSrc       = useRecent ? top5w : allTop5w
+  const peakAvgPow     = hasBench ? benchSrc.reduce((s,e) => s + e.avg_watts, 0) / benchSrc.length : null
+  const peakAvgTime    = hasBench ? benchSrc.reduce((s,e) => s + e.elapsed_sec, 0) / benchSrc.length : null
+  const benchLabel     = useRecent ? 'TOP5 AVG' : 'ALL-TIME AVG'
 
-    // days since latest ride
-    let daysSinceLast = null
-    if (latest && latest.date) {
-      daysSinceLast = Math.max(0, Math.round((Date.parse(_today) - Date.parse(latest.date.slice(0,10))) / 86400000))
-    }
+  let daysSinceLast = null
+  if (latest && latest.date) {
+    daysSinceLast = Math.max(0, Math.round((Date.parse(_today) - Date.parse(latest.date.slice(0,10))) / 86400000))
+  }
 
-    // ── Segment score (latest vs benchmark) ──
-    let segScore = null
-    if (hasBench && latest && latest.avg_watts && latest.elapsed_sec && peakAvgPow && peakAvgTime) {
-      const powerScore = latest.avg_watts / peakAvgPow
-      const timeScore  = peakAvgTime / latest.elapsed_sec
-      segScore = powerScore * 0.7 + timeScore * 0.3
-    }
-    const scorePct = segScore !== null ? Math.round(segScore * 100) : null
+  let segScore = null
+  if (hasBench && latest && latest.avg_watts && latest.elapsed_sec && peakAvgPow && peakAvgTime) {
+    segScore = (latest.avg_watts / peakAvgPow) * 0.7 + (peakAvgTime / latest.elapsed_sec) * 0.3
+  }
+  const scorePct = segScore !== null ? Math.round(segScore * 100) : null
 
-    // ── Special states ──
-    const isFirst         = attempts === 1
-    const isBreakthrough  = attempts > 1 && latest && pr && latest.activity_id === pr.activity_id
-    const byDateAsc       = (seg.efforts||[]).slice().sort((a,b) => a.date.localeCompare(b.date))
-    const isHeatingUp     = byDateAsc.length >= 3 &&
-      byDateAsc.slice(-3)[0].elapsed_sec > byDateAsc.slice(-3)[1].elapsed_sec &&
-      byDateAsc.slice(-3)[1].elapsed_sec > byDateAsc.slice(-3)[2].elapsed_sec
+  const isFirst        = attempts === 1
+  const isBreakthrough = attempts > 1 && latest && pr && latest.activity_id === pr.activity_id
+  const byDateAsc      = (seg.efforts||[]).slice().sort((a,b) => a.date.localeCompare(b.date))
+  const isHeatingUp    = byDateAsc.length >= 3 &&
+    byDateAsc.slice(-3)[0].elapsed_sec > byDateAsc.slice(-3)[1].elapsed_sec &&
+    byDateAsc.slice(-3)[1].elapsed_sec > byDateAsc.slice(-3)[2].elapsed_sec
 
-    // ── Status mapping ──
-    // 九個狀態原本有九種色相（藍／金／橘／灰／朱紅／琥珀／珊瑚）。收進分段計時四色：
-    //   綠＝歷史 PR（BREAKTHROUGH）／紫＝90 天內最佳（PEAK、HEATING UP）
-    //   黃＝比自己慢（DECLINING）／灰＝尚未計時或缺資料（UNTOUCHED）
-    //   粉筆白＝已計時但沒有可比的極值（NEW、RISING、HOLD）
-    // 同色的兩個狀態靠字分（PEAK / HEATING UP 讀起來本來就不一樣），顏色從不是唯一編碼。
-    // UNTOUCHED 用 --chalk-dim 而非 --t-untimed：#5A6068 在 10px 上只有 2.6:1。
-    let statusEmoji, statusLine, statusSub, statusCol
-    if (isFirst) {
-      statusEmoji = '🆕'; statusLine = 'NEW';          statusSub = 'FIRST ATTEMPT';    statusCol = 'var(--chalk)'
-    } else if (isBreakthrough) {
-      statusEmoji = '🚀'; statusLine = 'BREAKTHROUGH'; statusSub = 'NEW PEAK';         statusCol = 'var(--t-green)'
-    } else if (isHeatingUp && (segScore === null || segScore >= 0.88)) {
-      statusEmoji = '🔥'; statusLine = 'HEATING UP';   statusSub = '3 STREAK';         statusCol = 'var(--t-purple)'
-    } else if (segScore === null || daysSinceLast === null) {
-      // hasBench but score couldn't be computed (missing watts on latest), or no date at all
-      statusEmoji = '💀'; statusLine = 'UNTOUCHED';    statusSub = 'NO RECENT EFFORT'; statusCol = 'var(--chalk-dim)'
-    } else if (daysSinceLast > 45 || segScore < 0.88) {
-      statusEmoji = '💀'; statusLine = 'UNTOUCHED';    statusSub = 'WAKE THIS SEGMENT';statusCol = 'var(--chalk-dim)'
-    } else if (segScore >= 0.99) {
-      statusEmoji = '🔥'; statusLine = 'PEAK';         statusSub = 'AT YOUR BEST';     statusCol = 'var(--t-purple)'
-    } else if (segScore >= 0.96) {
-      statusEmoji = '⚡'; statusLine = 'RISING';        statusSub = 'APPROACHING PEAK'; statusCol = 'var(--chalk)'
-    } else if (segScore >= 0.92) {
-      statusEmoji = '➖'; statusLine = 'HOLD';          statusSub = 'STABLE OUTPUT';    statusCol = 'var(--chalk)'
-    } else {
-      statusEmoji = '📉'; statusLine = 'DECLINING';    statusSub = 'BELOW TREND';      statusCol = 'var(--t-yellow)'
-    }
+  // 九個狀態收在分段計時四色裡（階段 4 的決定，不動）：
+  //   綠＝歷史 PR／紫＝90 天內最佳／黃＝比自己慢／灰＝尚未計時或缺資料／粉筆白＝已計時但無極值
+  let statusEmoji, statusLine, statusSub, statusCol
+  if (isFirst) {
+    statusEmoji = '🆕'; statusLine = 'NEW';          statusSub = 'FIRST ATTEMPT';    statusCol = 'var(--chalk)'
+  } else if (isBreakthrough) {
+    statusEmoji = '🚀'; statusLine = 'BREAKTHROUGH'; statusSub = 'NEW PEAK';         statusCol = 'var(--t-green)'
+  } else if (isHeatingUp && (segScore === null || segScore >= 0.88)) {
+    statusEmoji = '🔥'; statusLine = 'HEATING UP';   statusSub = '3 STREAK';         statusCol = 'var(--t-purple)'
+  } else if (segScore === null || daysSinceLast === null) {
+    statusEmoji = '💀'; statusLine = 'UNTOUCHED';    statusSub = 'NO RECENT EFFORT'; statusCol = 'var(--chalk-dim)'
+  } else if (daysSinceLast > 45 || segScore < 0.88) {
+    statusEmoji = '💀'; statusLine = 'UNTOUCHED';    statusSub = 'WAKE THIS SEGMENT';statusCol = 'var(--chalk-dim)'
+  } else if (segScore >= 0.99) {
+    statusEmoji = '🔥'; statusLine = 'PEAK';         statusSub = 'AT YOUR BEST';     statusCol = 'var(--t-purple)'
+  } else if (segScore >= 0.96) {
+    statusEmoji = '⚡'; statusLine = 'RISING';        statusSub = 'APPROACHING PEAK'; statusCol = 'var(--chalk)'
+  } else if (segScore >= 0.92) {
+    statusEmoji = '➖'; statusLine = 'HOLD';          statusSub = 'STABLE OUTPUT';    statusCol = 'var(--chalk)'
+  } else {
+    statusEmoji = '📉'; statusLine = 'DECLINING';    statusSub = 'BELOW TREND';      statusCol = 'var(--t-yellow)'
+  }
 
-    const benchTag      = useAllTime ? ' (ALL-TIME)' : ''
-    const scoreDisplay  = scorePct !== null ? `${scorePct}% OF PEAK${benchTag}` : (hasBench ? '—' : 'NO BENCHMARK')
-    const isNewRecord   = pr && latest && pr.activity_id === latest.activity_id
-    const timeClass     = isNewRecord ? 'is-new' : ''
+  const scoreDisplay = scorePct !== null
+    ? `${scorePct}% OF PEAK${useAllTime ? ' (ALL-TIME)' : ''}`
+    : (hasBench ? '—' : 'NO BENCHMARK')
 
-    // ── GAP TO KOM ──
-    let komGapHtml = ''
-    if (seg.kom_elapsed_sec && pr) {
-      const gapSec = pr.elapsed_sec - seg.kom_elapsed_sec
-      const sign   = gapSec >= 0 ? '+' : '−'
-      const abs    = Math.abs(gapSec)
-      const mm     = String(Math.floor(abs/60)).padStart(2,'0')
-      const ss     = String(abs%60).padStart(2,'0')
-      komGapHtml = `<b>${sign}${mm}:${ss}</b> TO KOM`
-    } else {
-      // KOM 是別人的紀錄，不在「跟自己比」的四色語意裡 —— 一律粉筆白／灰，不著色
-      komGapHtml = `— TO KOM`
-    }
+  let komGapHtml = '— TO KOM'
+  if (seg.kom_elapsed_sec && pr) {
+    const gapSec = pr.elapsed_sec - seg.kom_elapsed_sec
+    const abs = Math.abs(gapSec)
+    komGapHtml = `<b>${gapSec >= 0 ? '+' : '−'}${String(Math.floor(abs/60)).padStart(2,'0')}:${String(abs%60).padStart(2,'0')}</b> TO KOM`
+  }
 
-    // ── VS TOP5 AVG (bottom-row left) ──
-    const latestWatts = latest && latest.avg_watts ? latest.avg_watts : null
-    let wattGapTxt, wattGapColor, wattGapLabel
-    if (!latestWatts || !peakAvgPow) {
-      wattGapTxt = '—';     wattGapColor = 'var(--chalk-dim)'; wattGapLabel = benchLabel
-    } else {
-      const wDiff  = Math.round(latestWatts - peakAvgPow)
-      wattGapTxt   = (wDiff >= 0 ? '+' : '−') + Math.abs(wDiff) + 'W'
-      // 達到基準線＝綠、低於＝黃，跟月度紀律的達標／未達標同一層
-      wattGapColor = wDiff >= 0 ? 'var(--t-green)' : 'var(--t-yellow)'
-      wattGapLabel = benchLabel
-    }
+  const latestWatts = latest && latest.avg_watts ? latest.avg_watts : null
+  let wattGapTxt = '—', wattGapColor = 'var(--chalk-dim)'
+  if (latestWatts && peakAvgPow) {
+    const wDiff = Math.round(latestWatts - peakAvgPow)
+    wattGapTxt = (wDiff >= 0 ? '+' : '−') + Math.abs(wDiff) + 'W'
+    wattGapColor = wDiff >= 0 ? 'var(--t-green)' : 'var(--t-yellow)'
+  }
 
-    // ── time gap: last effort vs PR (bottom-row right) ──
-    let lastGapTxt, lastGapColor, lastGapLabel
-    if (!latest || !pr) {
-      lastGapTxt = '—'; lastGapColor = 'var(--chalk-dim)'; lastGapLabel = 'LAST vs PR'
-    } else if (latest.activity_id === pr.activity_id) {
+  let lastGapTxt = '—', lastGapColor = 'var(--chalk-dim)', lastGapLabel = 'LAST vs PR'
+  if (latest && pr) {
+    if (latest.activity_id === pr.activity_id) {
       lastGapTxt = 'PR ✓'; lastGapColor = 'var(--t-green)'; lastGapLabel = 'LAST EFFORT'
     } else {
       const gapSec = latest.elapsed_sec - pr.elapsed_sec
-      const mm = String(Math.floor(Math.abs(gapSec) / 60)).padStart(2,'0')
-      const ss = String(Math.abs(gapSec) % 60).padStart(2,'0')
-      // 比自己的 PR 慢多少 —— 這就是黃的定義
-      lastGapTxt = (gapSec >= 0 ? '+' : '−') + `${mm}:${ss}`; lastGapColor = 'var(--t-yellow)'; lastGapLabel = 'LAST vs PR'
+      const mm = String(Math.floor(Math.abs(gapSec)/60)).padStart(2,'0')
+      const ss = String(Math.abs(gapSec)%60).padStart(2,'0')
+      lastGapTxt = (gapSec >= 0 ? '+' : '−') + `${mm}:${ss}`; lastGapColor = 'var(--t-yellow)'
     }
+  }
 
-    const prTimeStr  = seg.pr_time_str || '—'
-    const segStream  = (window._segStreams || {})[seg.id]
-    // 均坡 ≤2% 的平路段畫立體圖沒意義，改成俯視路線圖（北在上）
-    const segFlat    = meta.avgGrade != null && meta.avgGrade <= 2
-    const profile    = Array.isArray(meta.profile) ? meta.profile : null
-    const sparkPath  = profile ? smoothPath(profile) : null
-    const sparkFill  = profile ? smoothAreaPath(profile) : null
-    const sparkId    = `fc-spark-${seg.id}`
-    const fillId     = `fc-fill-${seg.id}`
-    const gradeLabel = (meta.avgGrade != null && meta.maxGrade != null)
-      ? `均坡 ${meta.avgGrade}% · 最陡 ${meta.maxGrade}%` : '官方路段資料'
+  return { seg, meta, pr, latest, attempts, prWatts, wkg, benchLabel, statusEmoji, statusLine,
+    statusSub, statusCol, scoreDisplay, komGapHtml, wattGapTxt, wattGapColor,
+    lastGapTxt, lastGapColor, lastGapLabel,
+    prTimeStr: seg.pr_time_str || '—',
+    isNewRecord: !!(pr && latest && pr.activity_id === latest.activity_id) }
+}
 
-    return `<div class="fc" style="--fc-status:${statusCol}" data-fc>
-      <div class="fc-inner">
-        <div class="fc-top">
-          <span class="fc-type">${meta.type || 'ITT'}</span>
-          <span class="fc-attempts"><i class="ico">🔁</i> ${attempts} 次挑戰</span>
+function segAll(segs) {
+  if (!window.__segM) window.__segM = (segs || []).map(segMetrics)
+  return window.__segM
+}
+
+/* ── 3.1 計時紙 —— 六個路段一次看完 ──
+   舊版第一眼看到的是六張各佔一屏的大卡，要滑到第六張才知道全貌。
+   計時紙把六列擺在同一張表上，最佳／最近／差距／次數／狀態一次對齊。
+   點任一列去 3.2 的那張紙。 */
+function renderSegSheet(segs) {
+  const rows = segAll(segs)
+  if (!rows.length) return ''
+  const body = rows.map((m, i) => `
+    <tr onclick="pickSeg(${m.seg.id})" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();pickSeg(${m.seg.id})}">
+      <td class="no">${String(i + 1).padStart(2, '0')}</td>
+      <td class="nm">${m.meta.nameZh || m.seg.name}<em>${m.meta.type || 'ITT'} · ${m.seg.distance_km || '—'} KM</em></td>
+      <td class="best r">${m.prTimeStr}</td>
+      <td class="r hide-sm">${m.latest ? (m.latest.elapsed_str || '—') : '—'}</td>
+      <td class="gap r" style="color:${m.lastGapColor}">${m.lastGapTxt}</td>
+      <td class="r hide-sm">${m.attempts}</td>
+      <td class="st" style="--sc:${m.statusCol}"><b>${m.statusLine}</b><span>${m.statusSub}</span></td>
+    </tr>`).join('')
+  return scrHead('ITT 計時紙', `${rows.length} 個路段`) + `
+    <table class="sheet">
+      <thead><tr>
+        <th></th><th>路段</th><th class="r">最佳</th><th class="r hide-sm">最近</th>
+        <th class="r">與 PR</th><th class="r hide-sm">次數</th><th>狀態</th>
+      </tr></thead>
+      <tbody>${body}</tbody>
+    </table>
+    <div class="sheet-help">
+      <span>狀態怎麼算的</span>
+      <button type="button" onclick="toggleIttLevel(this,'status')">狀態一覽</button>
+      <button type="button" onclick="toggleIttLevel(this,'calc')">計算方式</button>
+      <button type="button" onclick="toggleIttLevel(this,'flow')">判斷流程</button>
+      <button type="button" onclick="toggleIttLevel(this,'example')">範例</button>
+    </div>`
+}
+
+/* ── 3.2 路段細節 —— 六張紙疊在一起，上緣是常駐的席位條 ── */
+function renderSegDetail(segs) {
+  const rows = segAll(segs)
+  if (!rows.length) return ''
+  const pick = rows.map((m, i) => `
+    <button type="button" class="${i === 0 ? 'on' : ''}" data-seg="${m.seg.id}"
+            onclick="pickSeg(${m.seg.id})">${m.meta.nameZh || m.seg.name}</button>`).join('')
+  return scrHead('路段細節', '拖曳旋轉 · 點下面看全部計時') +
+    `<div class="segpick">${pick}</div>` +
+    `<div class="seg-stage">${rows.map(segCardHTML).join('')}</div>`
+}
+
+function pickSeg(id) {
+  const wall = document.getElementById('wall'), stn = document.getElementById('stn-sector')
+  if (!wall || !stn) return
+  const beh = _reduceMo() ? 'instant' : 'smooth'
+  const wr = wall.getBoundingClientRect()
+  wall.scrollTo({ left: stn.getBoundingClientRect().left - wr.left + wall.scrollLeft, behavior: beh })
+  const el = document.getElementById('fc-' + id)
+  if (el) {
+    const top = el.getBoundingClientRect().top - stn.getBoundingClientRect().top + stn.scrollTop
+    stn.scrollTo({ top: Math.max(0, top - 54), behavior: beh })
+  }
+  document.querySelectorAll('.segpick button').forEach(b =>
+    b.classList.toggle('on', String(b.dataset.seg) === String(id)))
+  syncNav(2, 1)
+}
+
+function segCardHTML(m) {
+  const { seg, meta, pr, attempts } = m
+  const segStream  = (window._segStreams || {})[seg.id]
+  const segFlat    = meta.avgGrade != null && meta.avgGrade <= 2
+  const profile    = Array.isArray(meta.profile) ? meta.profile : null
+  const sparkPath  = profile ? smoothPath(profile) : null
+  const sparkFill  = profile ? smoothAreaPath(profile) : null
+  const sparkId    = `fc-spark-${seg.id}`
+  const fillId     = `fc-fill-${seg.id}`
+  const gradeLabel = (meta.avgGrade != null && meta.maxGrade != null)
+    ? `均坡 ${meta.avgGrade}% · 最陡 ${meta.maxGrade}%` : '官方路段資料'
+
+  return `<div class="fc" id="fc-${seg.id}" style="--fc-status:${m.statusCol}" data-fc>
+    <div class="fc-inner">
+      <div class="fc-top">
+        <span class="fc-type">${meta.type || 'ITT'} · ${seg.distance_km || '—'} KM</span>
+        <span class="fc-attempts">${attempts} 次挑戰</span>
+      </div>
+      <div class="fc-name zh">${meta.nameZh || seg.name}</div>
+      <div class="fc-kom">${m.komGapHtml}</div>
+      <div class="fc-status"><i class="ico">${m.statusEmoji}</i><span class="fc-status-word">${m.statusLine}</span><span class="fc-status-score">${m.scoreDisplay}</span></div>
+      ${segStream ? `
+      <div class="fc-spark-block">
+        <canvas class="fc-3d" data-seg3d="${seg.id}"${segFlat ? ' data-flat="1"' : ''} data-pr-sec="${pr && pr.elapsed_sec ? pr.elapsed_sec : ''}"></canvas>
+        <div class="fc-lights" id="lights-${seg.id}">
+          <div class="fc-light-bar"><i class="fc-light"></i><i class="fc-light"></i><i class="fc-light"></i><i class="fc-light"></i><i class="fc-light"></i></div>
+          <span class="fc-light-cap"></span>
         </div>
-        <div class="fc-name">${meta.nameZh || seg.name}</div>
-        <div class="fc-kom">${komGapHtml}</div>
-        <div class="fc-status"><i class="ico">${statusEmoji}</i><span class="fc-status-word">${statusLine}</span><span class="fc-status-score">${scoreDisplay}</span></div>
-        ${segStream ? `
-        <div class="fc-spark-block">
-          <canvas class="fc-3d" data-seg3d="${seg.id}"${segFlat ? ' data-flat="1"' : ''} data-pr-sec="${pr && pr.elapsed_sec ? pr.elapsed_sec : ''}"></canvas>
-          <div class="fc-lights" id="lights-${seg.id}">
-            <div class="fc-light-bar"><i class="fc-light"></i><i class="fc-light"></i><i class="fc-light"></i><i class="fc-light"></i><i class="fc-light"></i></div>
-            <span class="fc-light-cap"></span>
-          </div>
-          ${segStream ? `<div class="fc-race-bar">
-            ${pkBarHTML(seg.id, pr)}
-            ${selfBarHTML(seg.id)}
-            <button class="fc-replay-btn" onclick="segReplay(event,${seg.id})" title="重看一次">↻</button>
-          </div>` : ''}
-          ${renderPkPanel(seg.id, pr)}
-          ${renderSelfPanel(seg.id)}
-          <div class="fc-spark-row">
-            <span class="fc-spark-lbl">${segFlat ? 'Route Map · 北在上' : 'Route 3D · 拖曳旋轉'}</span>
-            <a class="fc-spark-grade" href="https://www.strava.com/segments/${seg.id}" target="_blank" rel="noopener" title="在 Strava 查看官方路段資料" style="text-decoration:none">${gradeLabel}<span class="fc-spark-linkicon">↗</span></a>
-          </div>
+        <div class="fc-race-bar">
+          ${pkBarHTML(seg.id, pr)}
+          ${selfBarHTML(seg.id)}
+          <button class="fc-replay-btn" onclick="segReplay(event,${seg.id})" title="重看一次">↻</button>
         </div>
-        ` : sparkPath ? `
-        <a class="fc-spark-block" href="https://www.strava.com/segments/${seg.id}" target="_blank" rel="noopener" title="在 Strava 查看官方路段資料">
-          <!-- 坡度剖面：comp 稿裡 #31363D 壓在 #191C20 對比太低，線改走 --chalk-dim，
-               底線走 --rule-strong。原本沿著剖面跑的發光圓點沒有帶任何資訊，隨發光一起退役。 -->
-          <svg class="fc-spark" viewBox="0 0 100 42" preserveAspectRatio="none">
-            <defs>
-              <linearGradient id="${fillId}" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="var(--chalk-dim)" stop-opacity=".28"/>
-                <stop offset="100%" stop-color="var(--chalk-dim)" stop-opacity="0"/>
-              </linearGradient>
-            </defs>
-            <line class="fc-spark-base" x1="0" y1="40" x2="100" y2="40" stroke="var(--rule-strong)" stroke-width="1"/>
-            <path class="fc-spark-fill" d="${sparkFill}" fill="url(#${fillId})" stroke="none"/>
-            <path id="${sparkId}" d="${sparkPath}" fill="none" stroke="var(--chalk-dim)" stroke-width="2.5" stroke-linecap="round" pathLength="1"/>
-          </svg>
-          <div class="fc-spark-row">
-            <span class="fc-spark-lbl">Gradient · 實測示意</span>
-            <span class="fc-spark-grade">${gradeLabel}<span class="fc-spark-linkicon">↗</span></span>
-          </div>
-        </a>
-        ` : ''}
-        <div class="fc-time${timeClass ? ' fc-time-new' : ''}" data-countto="${prTimeStr}">${prTimeStr}</div>
-        <div class="fc-timelbl">BEST TIME</div>
-        <div class="fc-stats">
-          <div class="fc-stat"><b>${prWatts || '—'}<small>${prWatts ? 'W' : ''}</small></b><span>Avg Power</span></div>
-          <div class="fc-stat"><b>${wkg}<small>${wkg !== '—' ? 'W/KG' : ''}</small></b><span>W / KG</span></div>
-          <div class="fc-stat"><b style="color:${wattGapColor}">${wattGapTxt}</b><span>${wattGapLabel}</span></div>
-          <div class="fc-stat"><b style="color:${lastGapColor}">${lastGapTxt}</b><span>${lastGapLabel}</span></div>
-        </div>
-        <div class="fc-foot">
-          <button class="seg-detail-btn" onclick="openSegModal(${seg.id})">${attempts} 次計時 · ALL EFFORTS</button>
+        ${renderPkPanel(seg.id, pr)}
+        ${renderSelfPanel(seg.id)}
+        <div class="fc-spark-row">
+          <span class="fc-spark-lbl">${segFlat ? 'Route Map · 北在上' : 'Route 3D · 拖曳旋轉'}</span>
+          <a class="fc-spark-grade" href="https://www.strava.com/segments/${seg.id}" target="_blank" rel="noopener" title="在 Strava 查看官方路段資料" style="text-decoration:none">${gradeLabel}<span class="fc-spark-linkicon">↗</span></a>
         </div>
       </div>
-    </div>`
-  }).join('')
-
-  return `
-    <div class="section-title" style="font-size:9px"><span>ITT 區間 <span class="muted">· SEGMENT EFFORTS</span></span></div>
-    <div class="itt-tabs">
-      <button class="itt-tab-btn" onclick="toggleIttLevel(this,'status')"><i class="ico">📋</i> 狀態一覽</button>
-      <button class="itt-tab-btn" onclick="toggleIttLevel(this,'calc')"><i class="ico">⚙️</i> 計算方式</button>
-      <button class="itt-tab-btn" onclick="toggleIttLevel(this,'flow')"><i class="ico">🔀</i> 判斷流程</button>
-      <button class="itt-tab-btn" onclick="toggleIttLevel(this,'example')"><i class="ico">📊</i> 範例</button>
+      ` : sparkPath ? `
+      <a class="fc-spark-block" href="https://www.strava.com/segments/${seg.id}" target="_blank" rel="noopener" title="在 Strava 查看官方路段資料">
+        <svg class="fc-spark" viewBox="0 0 100 42" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="${fillId}" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="var(--chalk-dim)" stop-opacity=".28"/>
+              <stop offset="100%" stop-color="var(--chalk-dim)" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <line class="fc-spark-base" x1="0" y1="40" x2="100" y2="40" stroke="var(--rule-strong)" stroke-width="1"/>
+          <path class="fc-spark-fill" d="${sparkFill}" fill="url(#${fillId})" stroke="none"/>
+          <path id="${sparkId}" d="${sparkPath}" fill="none" stroke="var(--chalk-dim)" stroke-width="2.5" stroke-linecap="round" pathLength="1"/>
+        </svg>
+        <div class="fc-spark-row">
+          <span class="fc-spark-lbl">Gradient · 實測示意</span>
+          <span class="fc-spark-grade">${gradeLabel}<span class="fc-spark-linkicon">↗</span></span>
+        </div>
+      </a>
+      ` : ''}
+      <div class="fc-time${m.isNewRecord ? ' fc-time-new' : ''}" data-countto="${m.prTimeStr}">${m.prTimeStr}</div>
+      <div class="fc-timelbl">BEST TIME</div>
+      <div class="fc-stats">
+        <div class="fc-stat"><b>${m.prWatts || '—'}<small>${m.prWatts ? 'W' : ''}</small></b><span>Avg Power</span></div>
+        <div class="fc-stat"><b>${m.wkg}<small>${m.wkg !== '—' ? 'W/KG' : ''}</small></b><span>W / KG</span></div>
+        <div class="fc-stat"><b style="color:${m.wattGapColor}">${m.wattGapTxt}</b><span>${m.benchLabel}</span></div>
+        <div class="fc-stat"><b style="color:${m.lastGapColor}">${m.lastGapTxt}</b><span>${m.lastGapLabel}</span></div>
+      </div>
+      <div class="fc-foot">
+        <button class="seg-detail-btn" onclick="openSegModal(${seg.id})">${attempts} 次計時 · ALL EFFORTS</button>
+      </div>
     </div>
-    <div class="fc-grid">${cards}</div>`
+  </div>`
 }
+
 function fmtDate(d) {
   // "2026-04-22" → "04 / 22"
   const [,mm,dd] = d.split('-')
@@ -2224,6 +2362,7 @@ function animateFcCount(el) {
   const parts = el.dataset.countto.split(':').map(Number)
   if (!parts.length || parts.some(isNaN)) return
   const totalSec = parts.reduce((acc, p) => acc * 60 + p, 0)
+  const final = el.dataset.countto
   const start = performance.now(), dur = 1200
   function step(now) {
     const p = Math.min(1, (now - start) / dur)
@@ -2232,6 +2371,9 @@ function animateFcCount(el) {
     if (p < 1) requestAnimationFrame(step)
   }
   requestAnimationFrame(step)
+  // 安全網：分頁在背景時 rAF 不派送，數字會永遠卡在半路（實測停在 0:42 而不是 28:29）。
+  // 動畫時間到了不管跑到哪裡，一律把最終值寫回去。
+  setTimeout(() => { el.textContent = final }, dur + 60)
 }
 function bindSegmentCards() {
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -3954,8 +4096,8 @@ function toggleIttLevel(btn, panelId) {
   popup.querySelectorAll('.ilp-panel').forEach(p => p.style.display = 'none')
   popup.querySelector(`.ilp-panel[data-panel="${panelId}"]`).style.display = 'block'
   popup.dataset.panel = panelId
-  document.querySelectorAll('.itt-tab-btn').forEach(b => b.classList.remove('active'))
-  btn.classList.add('active')
+  document.querySelectorAll('.sheet-help button').forEach(b => b.classList.remove('on'))
+  btn.classList.add('on')
   if (isOpen) { popup.scrollTop = 0; return }
   const r = btn.getBoundingClientRect()
   const pw = Math.min(680, window.innerWidth - 16)
@@ -3975,7 +4117,7 @@ function toggleIttLevel(btn, panelId) {
 }
 function closeIttLevel() {
   document.getElementById('itt-level-popup').classList.remove('open')
-  document.querySelectorAll('.itt-tab-btn').forEach(b => b.classList.remove('active'))
+  document.querySelectorAll('.sheet-help button').forEach(b => b.classList.remove('on'))
 }
 function _ittOutside(e) {
   const popup = document.getElementById('itt-level-popup')
@@ -4073,13 +4215,15 @@ function renderTimeline(list, type, expanded, ittMap) {
               </div>`
             }).join('')
           : ''
+        // 量測值全部收成同一行等寬文字（.activity-meta 內用中點分隔），
+        // 動作退到自己那一列的文字連結。舊版是九顆等重的小膠囊擠在一起換行。
         return `
         <div class="activity-card">
           <div class="activity-icon"><svg viewBox="0 0 24 24">${aIcon}</svg></div>
           <div class="activity-info">
-            <div class="activity-name-wrap"><div class="activity-name">${a.trainer ? INDOOR_TAG : (aIsRide ? BIKE_TAG : '')}${a.name || '—'}</div>${stravaLink}${route3dBtn}</div>
-            <div class="activity-meta">${tags.join('')}</div>
-            ${powerHtml}
+            <div class="activity-name-wrap"><div class="activity-name">${a.trainer ? INDOOR_TAG : (aIsRide ? BIKE_TAG : '')}${a.name || '—'}</div></div>
+            <div class="activity-meta">${tags.join('')}${powerHtml}</div>
+            <div class="act-row">${stravaLink}${route3dBtn}</div>
             ${lapHtml}
             ${ittBadges}
           </div>
@@ -4096,126 +4240,183 @@ function renderTimeline(list, type, expanded, ittMap) {
 }
 
 /* ── main render ── */
-/* ── 板牌 PIT BOARD ──
-   舉給車手看的三個事實：位置、與 PR 差距、本月還差幾次。
-   取最近一次有計時的 ITT 路段當主角；沒有任何計時紀錄時退回總量模式。 */
-function fmtGap(sec) {
-  const s = Math.abs(Math.round(sec))
-  const m = Math.floor(s / 60), r = s % 60
-  return (sec >= 0 ? '+' : '−') + m + ':' + String(r).padStart(2, '0')
-}
-function buildPitBoard(data) {
-  const segs = (data.segments || []).filter(s => (s.efforts || []).length)
-  let best = null
-  segs.forEach(seg => {
-    const withDate = seg.efforts.filter(e => e.date)
-    if (!withDate.length) return
-    const latest = withDate.slice().sort((a, b) => b.date.localeCompare(a.date))[0]
-    if (!best || latest.date > best.latest.date) best = { seg, latest }
-  })
-  if (!best) return null
 
-  const { seg, latest } = best
-  const byTime = seg.efforts.slice().sort((a, b) => (a.elapsed_sec || 0) - (b.elapsed_sec || 0))
-  const prEffort = byTime[0]
-  const rank = byTime.findIndex(e => e.activity_id === latest.activity_id) + 1
-  const gapSec = (latest.elapsed_sec || 0) - (prEffort.elapsed_sec || 0)
+/* ══════════════════════════════════════════════════════════════
+   牆 THE WALL —— 六個工程席，左右換席、上下換面
+   PIT BOARD 頭條在此刪除（2026-07-27，使用者指定）。它報的三個數字都站不住：
+   單人計時沒有名次（P10／11 是假的戲劇性）、「本月還差」配「+2」自相矛盾、
+   「與 PR 差距」拿一趟輕鬆騎去比生涯最佳。板牌這個形式沒有被丟掉 ——
+   它搬到最後一席，改寫今天那句話，那本來就是維修站板牌在做的事。
 
-  // 90 天內最佳：沿用 segScore 既有的 90 天基準線窗口
-  const cutoff = new Date(Date.now() - 90 * 864e5).toISOString().slice(0, 10)
-  const recent = seg.efforts.filter(e => e.date && e.date >= cutoff)
-  const recentBest = recent.length
-    ? recent.slice().sort((a, b) => (a.elapsed_sec || 0) - (b.elapsed_sec || 0))[0]
-    : null
-  const isPR = gapSec === 0
-  const isRecentBest = !!recentBest && recentBest.activity_id === latest.activity_id && !isPR
+   捲動全部交給原生 scroll-snap 兩軸：不劫持手勢、慣性與鍵盤操作免費。
+   這裡只負責建骨架、同步導航狀態，以及提供程式化的 goTo。
+   ══════════════════════════════════════════════════════════════ */
+const WALL = [
+  { id:'driver', zh:'車手', en:'Driver', screens:[
+    { id:'id',     zh:'識別證' },
+    { id:'power',  zh:'功率'   } ] },
+  { id:'month',  zh:'本月', en:'Month', screens:[
+    { id:'volume', zh:'訓練量' },
+    { id:'quest',  zh:'本週'   } ] },
+  { id:'sector', zh:'分段', en:'Sectors', screens:[
+    { id:'sheet',  zh:'計時紙' },
+    { id:'seg',    zh:'路段'   } ] },
+  { id:'season', zh:'賽季', en:'Season', screens:[
+    { id:'months', zh:'月度'   },
+    { id:'total',  zh:'總計'   } ] },
+  { id:'log',    zh:'紀錄', en:'Log',   screens:[ { id:'feed',  zh:'活動' } ] },
+  { id:'board',  zh:'板牌', en:'Board', screens:[ { id:'quote', zh:'今天' } ] },
+]
+let _pos = { c: 0, r: 0 }
+const _reduceMo = () => matchMedia('(prefers-reduced-motion: reduce)').matches
 
-  const meta = (window._ittSegMeta && window._ittSegMeta[seg.id]) || {}
-  const gapTone = isPR ? 't-green' : isRecentBest ? 't-purple' : 't-yellow'
-  const gapText = isPR ? 'PR' : fmtGap(gapSec)
-  const gapNote = isPR ? '本次即個人最佳'
-    : isRecentBest ? `90 天內最佳 · PR ${prEffort.elapsed_str || '—'}`
-    : `PR ${prEffort.elapsed_str || '—'}`
-
-  const g = (data.monthly_goals && data.monthly_goals.ride) || null
-  const remain = g ? Math.max(0, (g.target || 0) - (g.count || 0)) : null
-  const goalTone = !g ? 't-untimed' : remain === 0 ? 't-green' : 't-yellow'
-  const goalVal = !g ? '—' : remain === 0 ? `+${(g.count || 0) - (g.target || 0)}` : remain
-  const goalNote = !g ? '無月度目標資料'
-    : remain === 0 ? `RIDES · ${g.count} ／ ${g.target} 已達標`
-    : `RIDES · ${g.count} ／ ${g.target}`
-
-  const power = latest.avg_watts ? `${latest.avg_watts} W` : '無功率資料'
-  const hr = latest.avg_heartrate ? ` · ${latest.avg_heartrate} BPM` : ''
-  const segCount = (data.segments || []).length
-  const monthCount = (data.monthly_history || []).length
-
-  window.__pitRail = [
-    { lbl: '與 PR 差距', val: gapText, tone: gapTone, sub: '' },
-    { lbl: '位置', val: 'P' + rank, tone: 't-chalk', sub: `／${byTime.length}` },
-    { lbl: '本月還差', val: goalVal, tone: goalTone, sub: 'RIDES' },
-  ]
-
-  return `
-  <section class="pitboard" aria-labelledby="pb-heading">
-    <div class="pitboard-tag">PIT BOARD · ${latest.date || '—'}</div>
-    <h2 class="pitboard-seg" id="pb-heading">${meta.nameZh || seg.name || '路段'} · ${seg.distance_km || '—'} km · ${meta.type || 'ITT'}</h2>
-
-    <div class="pb-slot">
-      <div class="pb-lbl">位置<b>Position</b></div>
-      <div class="pb-val t-chalk">P${rank}<small>／${byTime.length} ATTEMPTS</small></div>
-    </div>
-    <div class="pb-slot">
-      <div class="pb-lbl">與 PR 差距<b>Gap to PR</b></div>
-      <div class="pb-val ${gapTone}">${gapText}<small>${gapNote}</small></div>
-    </div>
-    <div class="pb-slot">
-      <div class="pb-lbl">本月還差<b>To Target</b></div>
-      <div class="pb-val ${goalTone}">${goalVal}<small>${goalNote}</small></div>
-    </div>
-
-    <div class="pitboard-foot">
-      <span>LAST TIMED ${latest.elapsed_str || '—'} · ${power}${hr}</span>
-      <a class="pitboard-cue" href="#pb-sheet">計時紙 · ${segCount} 個路段 · ${monthCount} 個月</a>
-    </div>
-  </section>`
+/* 面首：一行就講完這一面是什麼。站名已經在頂欄與底軌寫過，這裡不再重複中英雙寫。 */
+function scrHead(zh, meta) {
+  return `<div class="scr-head"><h2 class="zh">${zh}</h2>${meta ? `<span class="meta">${meta}</span>` : ''}</div>`
 }
 
-/* 板牌捲出畫面後，壓縮成頂部三格條 —— 滿版第一屏必須配常駐導引，
-   否則使用者只會看第一屏。用 IntersectionObserver 而非 scroll 監聽，避免每幀讀版面。 */
-function initPitRail() {
-  const rail = document.getElementById('pb-rail')
-  const row = document.getElementById('pb-rail-row')
-  const board = document.querySelector('.pitboard')
-  if (!rail || !row || !board || !window.__pitRail) return
-  row.innerHTML = window.__pitRail.map(c => `
-    <div class="pb-rail-cell">
-      <div class="pb-rail-lbl">${c.lbl}</div>
-      <div class="pb-rail-val ${c.tone}">${c.val}${c.sub ? `<small>${c.sub}</small>` : ''}</div>
+/* 面尾：明說下一面／下一席是什麼。滿版螢幕最大的風險是不知道還有東西。 */
+function scrCue(ci, ri) {
+  const stn = WALL[ci], below = stn.screens[ri + 1], next = WALL[ci + 1]
+  return `<div class="scr-cue">
+    ${below
+      ? `<button type="button" class="down" data-go="${ci}.${ri + 1}">↓ ${below.zh}</button>`
+      : '<span></span>'}
+    ${next
+      ? `<button type="button" data-go="${ci + 1}.0">${next.zh}</button>`
+      : `<button type="button" data-go="0.0">回到 ${WALL[0].zh}</button>`}
+  </div>`
+}
+
+function buildWall(bodies) {
+  const wall = document.getElementById('wall')
+  if (!wall) return
+  wall.innerHTML = WALL.map((stn, ci) => `
+    <div class="stn" id="stn-${stn.id}">
+      ${stn.screens.map((sc, ri) => `
+        <section class="scr" id="scr-${stn.id}-${sc.id}" aria-label="${stn.zh} · ${sc.zh}">
+          <div class="scr-in">${bodies[stn.id + '/' + sc.id] || ''}${scrCue(ci, ri)}</div>
+        </section>`).join('')}
     </div>`).join('')
-  // 頂欄是 sticky top:0，rail 必須貼在它下面而不是同一層，否則被蓋住
-  const topbar = document.querySelector('.topbar')
-  const measure = () => {
-    const h = topbar ? Math.round(topbar.getBoundingClientRect().height) : 58
-    document.documentElement.style.setProperty('--topbar-h', h + 'px')
-    return h
-  }
-  let topH = measure()
+  const rail = document.getElementById('rail')
+  if (rail) rail.innerHTML = WALL.map((s, i) => `
+    <button class="rail-btn" type="button" data-go="${i}.0">
+      <span class="rzh zh">${s.zh}</span><span class="ren">${s.en}</span>
+    </button>`).join('')
+  bindWall()
+  // 進站的 hash 要先讀起來：syncNav 會用 replaceState 寫入目前位置，
+  // 先呼叫它就會把使用者帶進來的深連結（#log/feed）覆寫成 #driver/id。
+  const entry = location.hash
+  syncNav(0, 0)
+  wallFromHash(entry)
+}
 
-  // rAF 節流：每幀最多算一次，捲動事件本身不做版面讀取以外的事
-  let ticking = false, last = null
-  const sync = () => {
-    ticking = false
-    const on = board.getBoundingClientRect().bottom <= topH
-    if (on === last) return
-    last = on
-    rail.classList.toggle('on', on)
-    rail.setAttribute('aria-hidden', on ? 'false' : 'true')
+function goTo(c, r, smooth) {
+  const wall = document.getElementById('wall')
+  if (!wall) return
+  c = Math.max(0, Math.min(WALL.length - 1, c))
+  r = Math.max(0, Math.min(WALL[c].screens.length - 1, r || 0))
+  const stn = wall.children[c]
+  if (!stn) return
+  const beh = (smooth === false || _reduceMo()) ? 'instant' : 'smooth'
+  // getBoundingClientRect 差值而不是 offsetLeft/offsetTop：offsetParent 是 #app 不是捲動容器
+  const wr = wall.getBoundingClientRect(), sr = stn.getBoundingClientRect()
+  wall.scrollTo({ left: sr.left - wr.left + wall.scrollLeft, behavior: beh })
+  const scr = stn.children[r]
+  if (scr) {
+    const tr = stn.getBoundingClientRect(), cr = scr.getBoundingClientRect()
+    stn.scrollTo({ top: cr.top - tr.top + stn.scrollTop, behavior: beh })
   }
-  const onScroll = () => { if (!ticking) { ticking = true; requestAnimationFrame(sync) } }
-  window.addEventListener('scroll', onScroll, { passive: true })
-  window.addEventListener('resize', () => { topH = measure(); last = null; onScroll() }, { passive: true })
-  sync()
+  syncNav(c, r)
+}
+
+function syncNav(c, r) {
+  const stn = WALL[c], sc = stn && stn.screens[r]
+  if (!sc) return
+  _pos = { c, r }
+  const zh = document.getElementById('w-zh'), pos = document.getElementById('w-pos')
+  if (zh) zh.textContent = stn.zh
+  if (pos) pos.textContent = stn.screens.length > 1
+    ? `${sc.zh} · ${r + 1}/${stn.screens.length}` : sc.zh
+  document.querySelectorAll('#rail .rail-btn').forEach((b, i) => {
+    b.classList.toggle('on', i === c)
+    b.setAttribute('aria-current', i === c ? 'true' : 'false')
+  })
+  const vd = document.getElementById('vdots')
+  if (vd) vd.innerHTML = stn.screens.length > 1
+    ? stn.screens.map((_, i) => `<i class="${i === r ? 'on' : ''}"></i>`).join('') : ''
+  const h = `#${stn.id}/${sc.id}`
+  if (location.hash !== h) history.replaceState(null, '', h)
+}
+
+/* 捲動位置 → 導航狀態。捲動事件本身只排一幀，量測全在 rAF 裡做。 */
+function wallSync() {
+  const wall = document.getElementById('wall')
+  if (!wall || !wall.children.length) return
+  const w = wall.clientWidth || 1
+  const c = Math.max(0, Math.min(WALL.length - 1, Math.round(wall.scrollLeft / w)))
+  const stn = wall.children[c]
+  let r = 0
+  if (stn) {
+    const top = stn.getBoundingClientRect().top
+    let best = Infinity
+    Array.prototype.forEach.call(stn.children, (s, i) => {
+      const d = Math.abs(s.getBoundingClientRect().top - top)
+      if (d < best) { best = d; r = i }
+    })
+  }
+  if (c !== _pos.c || r !== _pos.r) syncNav(c, r)
+}
+
+function bindWall() {
+  const wall = document.getElementById('wall')
+  if (!wall) return
+  let ticking = false
+  const onScroll = () => {
+    if (ticking) return
+    ticking = true
+    requestAnimationFrame(() => { ticking = false; wallSync() })
+  }
+  wall.addEventListener('scroll', onScroll, { passive: true })
+  Array.prototype.forEach.call(wall.children, s => s.addEventListener('scroll', onScroll, { passive: true }))
+  addEventListener('resize', onScroll, { passive: true })
+
+  document.addEventListener('click', e => {
+    const b = e.target.closest('[data-go]')
+    if (!b) return
+    const [c, r] = b.dataset.go.split('.').map(Number)
+    goTo(c, r)
+  })
+
+  // 外部改 hash（貼連結、開新分頁後才套上 hash）也要跟著走。
+  // syncNav 用的是 replaceState，不會觸發 hashchange，所以不會打回圈。
+  addEventListener('hashchange', () => wallFromHash())
+
+  addEventListener('keydown', e => {
+    if (e.metaKey || e.ctrlKey || e.altKey) return
+    const t = e.target
+    if (t && (t.matches && t.matches('input,textarea,select') || t.isContentEditable)) return
+    // 有彈窗開著就不接管方向鍵
+    if (document.querySelector('.seg-modal-overlay.open,.r3d-overlay.open,.pwr-modal-overlay.open,.itt-level-popup.open,.am-overlay.open')) return
+    if (e.key === 'ArrowRight')      { goTo(_pos.c + 1, 0); e.preventDefault() }
+    else if (e.key === 'ArrowLeft')  { goTo(_pos.c - 1, 0); e.preventDefault() }
+    else if (e.key === 'Home')       { goTo(0, 0);          e.preventDefault() }
+    else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      // 面內有自己的捲動區（活動流水、賽季表）時讓給它
+      if (t && t.closest && t.closest('.logwrap,.season-wrap,.seg-modal-body,.pm-body')) return
+      goTo(_pos.c, _pos.r + (e.key === 'ArrowDown' ? 1 : -1))
+      e.preventDefault()
+    }
+  })
+}
+
+function wallFromHash(hash) {
+  const m = /^#([a-z]+)(?:\/([a-z0-9]+))?/.exec(hash || location.hash || '')
+  if (!m) return
+  const c = WALL.findIndex(s => s.id === m[1])
+  if (c < 0) return
+  const ri = m[2] ? WALL[c].screens.findIndex(s => s.id === m[2]) : 0
+  goTo(c, Math.max(0, ri), false)
 }
 
 function render(data) {
@@ -4384,220 +4585,90 @@ function render(data) {
     return renderTimeline(t?.list, activeTab, showMore[activeTab] || false, ittMap)
   }
 
-  document.getElementById('content').innerHTML = `
-    ${buildPitBoard(data) || ''}
-
-    ${renderCredential(data)}
-    ${renderPowerCard(data.power_prs)}
-
-    ${renderQuoteSection()}
-
-    ${renderMonthlySummary(data.monthly_summary)}
-    ${renderMonthlyGoals(data.monthly_goals)}
-    ${renderWeeklyQuest(data.weekly_quest)}
-    ${renderSegments(data.segments)}
-
-    ${history.length ? `
-    <div class="monthly-chart">
-      <div class="section-title">月度訓練量 <span class="muted">· MONTHLY VOLUME</span></div>
-      <div class="chart-legend"><span><i class="dist"></i>里程 KM</span><span><i class="elev"></i>爬升 M</span><span><i class="hr"></i>時數 HR</span><span><b class="chart-pr">PR</b>當月刷新紀錄</span></div>
-      <div class="chart-rows" id="chart-rows">
-        ${(() => {
-          // group by year
-          const byYear = {}
-          history.forEach(h => {
-            const y = h.month.slice(0, 4)
-            if (!byYear[y]) byYear[y] = []
-            byYear[y].push(h)
-          })
-          const years = Object.keys(byYear).sort((a,b) => b.localeCompare(a)) // newest first
-          const currentYear = new Date().getFullYear().toString()
-          return years.map(year => {
-            const collapsed = year !== currentYear
-            const rows = byYear[year].map(h => {
-              const dist = monthDist(h)
-              const elev = monthElev(h)
-              const distPct = dist > 0 ? Math.max((dist / maxDist) * 100, 4) : 0
-              const elevPct = elev > 0 ? Math.max((elev / maxElev) * 100, 4) : 0
-              const agg = monthAgg[h.month] || {}
-              const hrVal = Math.round((agg.hr || 0) * 10) / 10
-              const hrPct = hrVal > 0 ? Math.max((hrVal / maxMonthHr) * 100, 4) : 0
-              const tss = Math.round(agg.tss || 0)
-              const prs = prMonths[h.month] || []
-              const prBadge = prs.length
-                ? `<span class="chart-pr" title="${prs.join('\n').replace(/"/g, '&quot;')}">PR${prs.length > 1 ? `<i>${prs.length}</i>` : ''}</span>` : ''
-              const prevDist = distByMonth[prevMonthKey(h.month)]
-              let trendChip = ''
-              if (prevDist > 0 && dist > 0) {
-                const pct = Math.round((dist - prevDist) / prevDist * 100)
-                const cls = pct > 2 ? 'up' : pct < -2 ? 'down' : 'flat'
-                const arrow = pct > 2 ? '▲' : pct < -2 ? '▼' : '─'
-                trendChip = `<span class="chart-trend ${cls}" title="里程 vs 上月">${arrow} ${Math.abs(pct)}%</span>`
-              }
-              return `
-                <div class="chart-row">
-                  <div class="chart-label">${fmtMonthLabel(h.month)}${prBadge}</div>
-                  <div class="chart-bar-wrap">
-                    <div class="chart-track dist">
-                      <div class="chart-bar dist" data-pct="${distPct}">
-                        <span class="chart-bar-val">${dist.toLocaleString()}<small>km</small></span>
-                      </div>
-                    </div>
-                    <div class="chart-track elev">
-                      <div class="chart-bar elev" data-pct="${elevPct}">
-                        <span class="chart-bar-val">${elev.toLocaleString()}<small>m</small></span>
-                      </div>
-                    </div>
-                    ${hrVal > 0 ? `
-                    <div class="chart-track hr">
-                      <div class="chart-bar hr" data-pct="${hrPct}">
-                        <span class="chart-bar-val">${hrVal}<small>hr</small></span>
-                      </div>
-                    </div>` : ''}
-                  </div>
-                  <div class="chart-side">
-                    ${trendChip}
-                    ${tss > 0 ? `<span class="chart-tss" title="當月 TSS 加總（有功率的騎乘）">TSS ${tss}</span>` : ''}
-                  </div>
-                </div>
-              `
-            }).join('')
-            const rowHeight = byYear[year].length * 50 // approx px per row
-            return `
-              <div class="chart-year-header" data-year="${year}">
-                <span class="chart-year-arrow" id="arrow-${year}">${collapsed ? '▶' : '▼'}</span>
-                ${year}
-              </div>
-              <div class="chart-year-rows" id="year-rows-${year}" style="max-height:${collapsed ? '0' : '9999px'}" data-collapsed="${collapsed ? '1' : ''}">
-                ${rows}
-              </div>
-            `
-          }).join('')
-        })()}
-      </div>
-    </div>
-    ` : ''}
-
-    <div class="section-title">活動紀錄 <span class="muted">· ACTIVITY LOG</span></div>
-    <div class="sport-tabs" id="sport-tabs">${tabHTML()}</div>
-    <div class="timeline" id="timeline">${timelineHTML()}</div>
-
-    <div class="totals-grid">
-      <div class="total-card">
-        <div class="total-val">${typeof s.all_time_distance_km==='number'?s.all_time_distance_km.toLocaleString():s.all_time_distance_km??'—'}</div>
-        <div class="total-label">Total KM</div>
-      </div>
-      <div class="total-card">
-        <div class="total-val">${typeof s.all_time_elevation_m==='number'?s.all_time_elevation_m.toLocaleString():s.all_time_elevation_m??'—'}</div>
-        <div class="total-label">Total Elev</div>
-      </div>
-      <div class="total-card">
-        <div class="total-val">${typeof s.all_time_rides==='number'?s.all_time_rides.toLocaleString():s.all_time_rides??'—'}</div>
-        <div class="total-label">Total Rides</div>
-      </div>
-    </div>
-
-    <a class="strava-cta" href="https://www.strava.com/athletes/161539959" target="_blank" rel="noopener">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/></svg>
-      原始資料 · Strava ↗
-    </a>
-  `
-
-  // animate chart bars (only visible ones)
-  requestAnimationFrame(() => {
-    document.querySelectorAll('.chart-bar').forEach(bar => {
-      const pct = bar.dataset.pct
-      bar.style.width = '0'
-      requestAnimationFrame(() => {
-        setTimeout(() => { bar.style.width = pct + '%' }, 80)
-      })
-    })
-    // animate consistency bars
-    document.querySelectorAll('.progress-fill').forEach(fill => {
-      const pct = fill.dataset.pct
-      fill.style.width = '0'
-      requestAnimationFrame(() => {
-        setTimeout(() => { fill.style.width = pct + '%' }, 120)
-      })
-    })
+  buildWall({
+    'driver/id':     renderCredential(data),
+    'driver/power':  renderPowerCard(data.power_prs),
+    'month/volume':  renderMonthlyVolume(data.monthly_summary, data.monthly_goals, thisMonth),
+    'month/quest':   renderWeeklyQuest(data.weekly_quest, thisWeekStart),
+    'sector/sheet':  renderSegSheet(data.segments),
+    'sector/seg':    renderSegDetail(data.segments),
+    'season/months': renderSeason(history, monthAgg, prMonths, distByMonth, prevMonthKey, maxDist),
+    'season/total':  renderGrandTotals(s),
+    'log/feed':      renderLogScreen(tabHTML(), timelineHTML(), allList.length),
+    'board/quote':   renderQuoteSection(),
   })
 
-  // year collapse toggle
-  const chartRows = document.getElementById('chart-rows')
-  if (chartRows) {
-    chartRows.addEventListener('click', e => {
-      const header = e.target.closest('.chart-year-header')
-      if (!header) return
-      const year = header.dataset.year
-      const rows = document.getElementById(`year-rows-${year}`)
-      const arrow = document.getElementById(`arrow-${year}`)
-      const isCollapsed = rows.dataset.collapsed === '1'
-      if (isCollapsed) {
-        rows.dataset.collapsed = ''
-        rows.style.maxHeight = rows.scrollHeight + 'px'
-        arrow.textContent = '▼'
-        // animate newly visible bars
-        rows.querySelectorAll('.chart-bar').forEach(bar => {
-          bar.style.width = '0'
-          requestAnimationFrame(() => {
-            setTimeout(() => { bar.style.width = bar.dataset.pct + '%' }, 60)
-          })
-        })
-        // after transition, set to unrestricted so content can grow
-        setTimeout(() => { if (rows.dataset.collapsed !== '1') rows.style.maxHeight = '9999px' }, 400)
-      } else {
-        // set explicit height first so transition has a from-value
-        rows.style.maxHeight = rows.scrollHeight + 'px'
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            rows.style.maxHeight = '0'
-            rows.dataset.collapsed = '1'
-            arrow.textContent = '▶'
-          })
-        })
-      }
+  // 長條的展開：所有 data-pct 的元素共用一次寫入。
+  // 隱藏分頁（document.hidden）裡 rAF 不派送，所以最終寬度也要在同一次寫進去。
+  const growBars = root => (root || document).querySelectorAll('[data-pct]').forEach(el => {
+    const pct = parseFloat(el.dataset.pct) || 0
+    el.style.transform = 'scaleX(0)'
+    requestAnimationFrame(() => { el.style.transform = 'scaleX(' + (pct / 100) + ')' })
+    // rAF 在背景分頁不派送，最終值一定要有第二條路寫進去
+    setTimeout(() => { el.style.transform = 'scaleX(' + (pct / 100) + ')' }, 90)
+  })
+  growBars()
+
+  // 功率曲線的 viewBox 跟容器比例走，所以要在版面成形之後畫，並跟著 resize 重畫
+  drawPowerCurve()
+  let pwrT
+  addEventListener('resize', () => { clearTimeout(pwrT); pwrT = setTimeout(drawPowerCurve, 160) }, { passive: true })
+
+  // 賽季表的年份收合：整年份的列直接 hidden，不做 max-height 動畫
+  const seasonTbl = document.getElementById('season-tbl')
+  if (seasonTbl) {
+    seasonTbl.addEventListener('click', e => {
+      const yr = e.target.closest('tr.yr')
+      if (!yr) return
+      const y = yr.dataset.yr
+      const rows = seasonTbl.querySelectorAll(`tr[data-in="${y}"]`)
+      const wasHidden = rows.length && rows[0].hidden
+      rows.forEach(r => { r.hidden = !wasHidden })
+      const arrow = document.getElementById('yarr-' + y)
+      if (arrow) arrow.textContent = wasHidden ? '▼' : '▶'
+      if (wasHidden) rows.forEach(r => growBars(r))
     })
   }
 
-  // seg row click → scroll to activity
+  // 計時紙／功率彈窗裡的日期列 → 跳到活動紀錄那一席的那一天
   document.addEventListener('click', e => {
     const tr = e.target.closest('tr[data-date]')
     if (!tr) return
     const date = tr.dataset.date
     const actId = tr.dataset.actid || ''
-    // make sure the right tab (all or ride) is showing, then scroll
-    const actEl = document.getElementById('act-' + date)
-    if (actEl) {
-      actEl.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      actEl.classList.add('act-highlight')
-      setTimeout(() => actEl.classList.remove('act-highlight'), 1500)
-    } else {
-      // not visible: switch to all + expand, then scroll after layout
-      activeTab = 'all'
-      showMore['all'] = true
-      document.querySelectorAll('.sport-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === 'all'))
-      document.getElementById('timeline').innerHTML = timelineHTML()
-      setTimeout(() => {
-        const el = document.getElementById('act-' + date)
-        if (el) {
-          el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-          el.classList.add('act-highlight')
-          setTimeout(() => el.classList.remove('act-highlight'), 1500)
-        } else {
-          // activity too old, not in recent data — show toast
-          const toast = document.createElement('div')
-          toast.className = 'pw-toast'
-          toast.innerHTML = actId
-            ? `${date} 不在最近記錄 &nbsp;<a href="https://www.strava.com/activities/${actId}" target="_blank" rel="noopener">前往 Strava ↗</a>`
-            : `${date} 的活動不在最近記錄內`
-          document.body.appendChild(toast)
-          setTimeout(() => toast.remove(), 3500)
-        }
-      }, 80)
+    const jump = () => {
+      const stn = document.getElementById('stn-log')
+      const el = document.getElementById('act-' + date)
+      if (!stn || !el) return false
+      goTo(4, 0, false)
+      const wrap = el.closest('.logwrap')
+      if (wrap) {
+        const top = el.getBoundingClientRect().top - wrap.getBoundingClientRect().top + wrap.scrollTop
+        wrap.scrollTo({ top: Math.max(0, top - 12), behavior: _reduceMo() ? 'instant' : 'smooth' })
+      }
+      el.classList.add('act-highlight')
+      setTimeout(() => el.classList.remove('act-highlight'), 1500)
+      return true
     }
+    if (jump()) return
+    // 不在目前分頁：切到「全部」並展開，再跳一次
+    activeTab = 'all'
+    showMore['all'] = true
+    document.querySelectorAll('.sport-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === 'all'))
+    document.getElementById('timeline').innerHTML = timelineHTML()
+    setTimeout(() => {
+      if (jump()) return
+      const toast = document.createElement('div')
+      toast.className = 'pw-toast'
+      toast.innerHTML = actId
+        ? `${date} 不在最近記錄 &nbsp;<a href="https://www.strava.com/activities/${actId}" target="_blank" rel="noopener">前往 Strava ↗</a>`
+        : `${date} 的活動不在最近記錄內`
+      document.body.appendChild(toast)
+      setTimeout(() => toast.remove(), 3500)
+    }, 80)
   })
 
-  // tab switching
+  // 運動分頁
   document.getElementById('sport-tabs').addEventListener('click', e => {
     const btn = e.target.closest('.sport-tab')
     if (!btn) return
@@ -4606,7 +4677,7 @@ function render(data) {
     document.getElementById('timeline').innerHTML = timelineHTML()
   })
 
-  // show more
+  // 顯示全部
   document.getElementById('timeline').addEventListener('click', e => {
     if (e.target.id === 'show-more-btn') {
       showMore[activeTab] = true
@@ -4614,7 +4685,6 @@ function render(data) {
     }
   })
 }
-
 /* ── power PR card + modal ── */
 const PWR_DURATIONS = [
   { sec:5,    label:'5秒'  },
@@ -4632,55 +4702,47 @@ function buildPwrMap(prs) {
   ;(prs || []).forEach(p => m.set(p.duration_sec, p))
   return m
 }
+/* ── 1.1 識別證 —— 證件，不是儀表板 ──
+   舊版是一張卡：頂條、人像列、底下三格等分統計，跟功率板／本月訓練量／底部總計
+   共用同一個「髮絲網格」。證件不長那樣：數值排在同一條右軸上，中間是空的。 */
 function renderCredential(data) {
   const s = data.summary || {}
   const prs = data.power_prs || []
   const num = v => typeof v === 'number' ? Math.round(v).toLocaleString() : (v ?? '—')
-  // FTP = 20分鐘功率 × 0.95（推估值，標籤上直接寫 EST，不假裝是實測）
+  // FTP = 20分鐘功率 × 0.95（推估值，標籤上直接寫「推估」，不假裝是實測）
   const p20 = prs.find(p => p.duration_sec === 1200)
   const ftp = p20 ? Math.round(p20.watts * 0.95) : null
-  const ytdKm = num(s.ytd_distance_km)
-  const ytdElev = num(s.ytd_elevation_m)
   const updated = (data.updated_at || '').slice(0, 10)
-  return `
-    <section class="cred" id="pb-sheet" aria-labelledby="cred-name">
-      <div class="cred-strip">
-        <span>車手識別證<span class="cred-strip-en"> · Rider Credential</span></span>
-        <span class="cred-strip-date">${updated ? 'Data ' + updated : ''}</span>
-      </div>
-      <div class="cred-body">
-        <div class="cred-photo">
-          <img src="docs/avatar.jpg" alt="Steve" width="78" height="78"
+  const row = (k, v, u) => `<div class="idc-row">
+      <span class="idc-k">${k}</span>
+      <span class="idc-v">${v}${u ? `<small>${u}</small>` : ''}</span>
+    </div>`
+  return scrHead('車手識別證', updated ? `DATA ${updated}` : '') + `
+    <div class="idc">
+      <div class="idc-top">
+        <div class="idc-photo">
+          <img src="docs/avatar.jpg" alt="Steve Chuang" width="112" height="112"
                onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
-          <span class="cred-ini" style="display:none">SC</span>
+          <span class="idc-ini" style="display:none">SC</span>
         </div>
-        <div class="cred-id">
-          <h2 class="cred-name" id="cred-name">STEVE</h2>
-          <div class="cred-role">Cyclist · Athlete</div>
+        <div class="idc-who">
+          <h1 class="idc-name" id="cred-name">STEVE</h1>
+          <div class="idc-role">Cyclist · Athlete</div>
         </div>
-        <div class="cred-emblem">
-          <div class="cred-helmet"><canvas id="cred-canvas" aria-hidden="true"></canvas></div>
-          <div class="cred-sign" id="cred-sign">Leo · 獅子座</div>
-          <button class="cred-reroll" id="cred-reroll" type="button">換星座</button>
-        </div>
-      </div>
-      <div class="cred-stats">
-        <div class="cred-stat">
-          <div class="cred-stat-lbl">FTP · EST</div>
-          <div class="cred-stat-val">${ftp ?? '—'}<small>W</small></div>
-        </div>
-        <div class="cred-stat">
-          <div class="cred-stat-lbl">YTD 里程</div>
-          <div class="cred-stat-val">${ytdKm}<small>KM</small></div>
-        </div>
-        <div class="cred-stat">
-          <div class="cred-stat-lbl">YTD 爬升</div>
-          <div class="cred-stat-val">${ytdElev}<small>M</small></div>
+        <div class="idc-emblem">
+          <div class="idc-helmet"><canvas id="cred-canvas" aria-hidden="true"></canvas></div>
+          <div class="idc-sign" id="cred-sign">Leo · 獅子座</div>
+          <button class="idc-reroll" id="cred-reroll" type="button">換星座</button>
         </div>
       </div>
-    </section>`
+      <div class="idc-list">
+        ${row('FTP · 推估', ftp ?? '—', ftp ? 'W' : '')}
+        ${row('本年里程', num(s.ytd_distance_km), 'KM')}
+        ${row('本年爬升', num(s.ytd_elevation_m), 'M')}
+        ${row('本年騎乘', num(s.ytd_rides), '次')}
+      </div>
+    </div>`
 }
-
 /* ── 頭盔徽記引擎：真實星座圖，逐線繪製。
    原本是滿版名片背景，所以配了流星、橘色光暈與主星的十字星芒。
    搬進 96px 的圓形徽記之後：流星退役（在這個尺寸下一幀就飛出圓外，
@@ -4865,31 +4927,163 @@ function bindCredential() {
   if (btn) btn.addEventListener('click', e => { e.stopPropagation(); reroll() })
 }
 
+/* ── 1.2 功率 —— 功率持續曲線，數字長在曲線上 ──
+   舊版是 3×2（手機）／6×1（桌機）的等分格，六個數字六個框，
+   而且刻意把 10/20/60 分藏進彈窗才塞得下。
+   功率最佳本來就是一條曲線：時長越長、瓦數越低，那個下墜的形狀才是資訊。
+   九段全部畫在同一張圖上，值標在點旁邊，FTP 推估畫成一條橫的參考線。
+
+   viewBox 依容器實際比例算，不是寫死 —— 寫死的話手機上一張 16:9 的圖
+   只填得滿三分之一屏，上下各留一大塊空。resize 會重畫。 */
 function renderPowerCard(prs) {
-  if (!prs || !prs.length) return ''
+  window.__pwrPrs = prs
+  const head = scrHead('功率最佳',
+    prs && prs.length ? `${PWR_DURATIONS.filter(d => buildPwrMap(prs).has(d.sec)).length} / ${PWR_DURATIONS.length} 段有紀錄` : '')
+  if (!prs || !prs.length) {
+    return head + `<div class="pwv"><div class="pwv-none">尚無功率紀錄</div></div>`
+  }
+  return head + `
+    <div class="pwv">
+      <div class="pwv-box" id="pwv-box"></div>
+      <button type="button" class="pwv-open" id="pwr-board" aria-haspopup="dialog">每一段的來源活動</button>
+    </div>`
+}
+
+function drawPowerCurve() {
+  const box = document.getElementById('pwv-box')
+  const prs = window.__pwrPrs
+  if (!box || !prs || !prs.length) return
   const map = buildPwrMap(prs)
-  const hero = map.get(5) || prs[0]
-  const heroLbl = (PWR_DURATIONS.find(d => d.sec === hero.duration_sec) || {}).label || `${hero.duration_sec}秒`
-  const top3 = (hero.top3 || []).map(t => t.watts).filter(w => w > 0)
-  const top3avg = top3.length ? Math.round(top3.reduce((a, b) => a + b, 0) / top3.length) : null
-  // 板面上放六個時長：5/10/30秒 · 1/2/5分。其餘三段（10/20/60分）在彈窗裡。
-  const miniDurs = [5, 10, 30, 60, 120, 300]
-  const cells = miniDurs.map(s => {
-    const p = map.get(s)
-    const lbl = PWR_DURATIONS.find(d => d.sec === s).label
-    if (!p) return `<span class="pwr-cell empty"><span class="pwr-cell-lbl">${lbl}</span><span class="pwr-cell-val">無紀錄</span></span>`
-    return `<span class="pwr-cell"><span class="pwr-cell-lbl">${lbl}</span><span class="pwr-cell-val">${p.watts}<small>W</small></span></span>`
+  const pts = PWR_DURATIONS.filter(d => map.has(d.sec))
+  if (!pts.length) { box.innerHTML = `<div class="pwv-none">尚無功率紀錄</div>`; return }
+
+  // 用容器的實際比例決定 viewBox，字級才不會被縮到讀不動
+  const cw = Math.max(280, Math.round(box.clientWidth || 720))
+  const ch = Math.max(220, Math.round(box.clientHeight || 400))
+  const W = 720, H = Math.round(W * ch / cw)
+  const narrow = cw < 620
+  const PL = narrow ? 66 : 58, PRr = 26, PT = 52, PB = 58
+  const base = H - PB
+  const vals = pts.map(d => map.get(d.sec).watts)
+  // 刻度取整齊的階（1／2／2.5／5 × 10ⁿ），上限剛好蓋過最大值 —— 不留多餘頂空，
+  // 曲線才填得滿整個框。最上面那條格線的數字不印（它會跟峰值的標籤撞在一起），
+  // 線本身留著，下面三條刻度已經把尺度說清楚了。
+  const maxV = Math.max.apply(null, vals)
+  const rough = maxV / 4
+  const mag  = Math.pow(10, Math.floor(Math.log10(rough)))
+  const step = [1, 2, 2.5, 5, 10].map(m => m * mag).find(v => v >= rough) || mag * 10
+  const top  = Math.max(step, Math.ceil(maxV / step) * step)
+  const n    = pts.length
+  const X = i => n === 1 ? (PL + (W - PL - PRr) / 2) : PL + i * (W - PL - PRr) / (n - 1)
+  const Y = w => PT + (1 - w / top) * (base - PT)
+  const fs = narrow ? 1.55 : 1   // 窄容器的 viewBox 較高，字級要跟著放大才等效
+
+  let grid = '', axis = ''
+  for (let v = 0; v <= top + 1; v += step) {
+    grid += `<line class="pwv-grid" x1="${PL}" y1="${Y(v).toFixed(1)}" x2="${W - PRr}" y2="${Y(v).toFixed(1)}"/>`
+    if (v < maxV) axis += `<text class="pwv-ax" x="${PL - 12}" y="${(Y(v) + 4 * fs).toFixed(1)}" text-anchor="end" style="font-size:${(12 * fs).toFixed(1)}px">${v}</text>`
+  }
+  const line = pts.map((d, i) => `${X(i).toFixed(1)},${Y(map.get(d.sec).watts).toFixed(1)}`).join(' ')
+  const area = `M ${X(0).toFixed(1)} ${base} L ` + line.split(' ').join(' L ') + ` L ${X(n - 1).toFixed(1)} ${base} Z`
+  const dots = pts.map((d, i) => {
+    const w = map.get(d.sec).watts
+    // 頭尾兩個值靠齊自己那一端，才不會壓到 Y 軸刻度或衝出右邊界
+    const anchor = i === 0 ? 'start' : i === n - 1 ? 'end' : 'middle'
+    return `<circle class="pwv-dot" cx="${X(i).toFixed(1)}" cy="${Y(w).toFixed(1)}" r="${(4.5 * fs).toFixed(1)}"/>
+      <text class="pwv-val" x="${X(i).toFixed(1)}" y="${(Y(w) - 15 * fs).toFixed(1)}" text-anchor="${anchor}" style="font-size:${(15 * fs).toFixed(1)}px">${w}</text>
+      <text class="pwv-dur" x="${X(i).toFixed(1)}" y="${(base + 26 * fs).toFixed(1)}" text-anchor="${anchor}" style="font-size:${(13 * fs).toFixed(1)}px">${d.label}</text>`
   }).join('')
-  const timed = PWR_DURATIONS.filter(d => map.has(d.sec)).length
-  return `
-    <div class="section-title">功率最佳 <span class="muted">· POWER BESTS</span></div>
-    <button type="button" class="pwr-board" id="pwr-board" aria-haspopup="dialog">
-      <span class="pwr-head">
-        <span>最佳 ${heroLbl}<b>${hero.watts}</b>W${top3avg ? ` · 前三均<b>${top3avg}</b>W` : ''}</span>
-        <span class="pwr-more">全部 ${timed} 段 ▸</span>
-      </span>
-      <span class="pwr-grid">${cells}</span>
-    </button>`
+
+  // FTP 推估線：20 分鐘功率 × 0.95。它是這張圖上唯一的推導值，所以寫明「推估」。
+  // 標籤靠左端 —— 靠右會壓到 60 分那個點的數值（實測 193 與 239 W 重疊）。
+  const p20 = map.get(1200)
+  const ftp = p20 ? Math.round(p20.watts * 0.95) : null
+  const ftpLine = (ftp && ftp < top) ? `
+    <line class="pwv-ftp" x1="${PL}" y1="${Y(ftp).toFixed(1)}" x2="${W - PRr}" y2="${Y(ftp).toFixed(1)}"/>
+    <text class="pwv-ax" x="${PL + 8}" y="${(Y(ftp) - 9 * fs).toFixed(1)}" style="font-size:${(12 * fs).toFixed(1)}px">FTP 推估 ${ftp} W</text>` : ''
+
+  box.innerHTML = `<svg class="pwv-chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img"
+      aria-label="功率持續曲線：${pts.map(d => `${d.label} ${map.get(d.sec).watts} 瓦`).join('、')}">
+      ${grid}${axis}
+      <path class="pwv-area" d="${area}"/>
+      <polyline class="pwv-line" points="${line}"/>
+      ${ftpLine}
+      ${dots}
+    </svg>`
+}
+/* ── 4.1 賽季 —— 十六個月的一張長表 ──
+   舊版每個月疊三根長條（里程／爬升／時數），十六列疊起來就是四十八根長條，
+   讀成一片灰。表比長條誠實：里程是主序列（長條畫在格子底下），
+   爬升／時數／TSS 是對齊的數字欄，趨勢與 PR 收在最後一欄。 */
+function renderSeason(history, monthAgg, prMonths, distByMonth, prevMonthKey, maxDist) {
+  if (!history || !history.length) return ''
+  const curYear = String(new Date().getFullYear())
+  let lastYear = null, body = ''
+  history.forEach(h => {
+    const y = h.month.slice(0, 4)
+    if (y !== lastYear) {
+      lastYear = y
+      body += `<tr class="yr" data-yr="${y}"><td colspan="6"><span id="yarr-${y}">${y === curYear ? '▼' : '▶'}</span> ${y}</td></tr>`
+    }
+    const dist = monthDist(h), elev = monthElev(h)
+    const agg  = monthAgg[h.month] || {}
+    const hrV  = Math.round((agg.hr || 0) * 10) / 10
+    const tss  = Math.round(agg.tss || 0)
+    const pct  = maxDist > 0 && dist > 0 ? Math.max(dist / maxDist * 100, 3) : 0
+    const prs  = prMonths[h.month] || []
+    const prev = distByMonth[prevMonthKey(h.month)]
+    let last = '—'
+    if (prev > 0 && dist > 0) {
+      const p = Math.round((dist - prev) / prev * 100)
+      last = `${p > 2 ? '▲' : p < -2 ? '▼' : '─'} ${Math.abs(p)}%`
+    }
+    if (prs.length) {
+      last = `<b title="${prs.join('\n').replace(/"/g, '&quot;')}">PR${prs.length > 1 ? ' ' + prs.length : ''}</b>`
+    }
+    body += `<tr data-in="${y}"${y === curYear ? '' : ' hidden'}>
+      <td>${fmtMonthLabel(h.month)}</td>
+      <td class="km"><i data-pct="${pct}"></i><span>${dist.toLocaleString()}</span></td>
+      <td>${elev.toLocaleString()}</td>
+      <td>${hrV || '—'}</td>
+      <td>${tss || '—'}</td>
+      <td class="pr">${last}</td>
+    </tr>`
+  })
+  return scrHead('月度訓練量', `${history.length} 個月`) + `
+    <div class="season-wrap">
+      <table class="season" id="season-tbl">
+        <thead><tr>
+          <th>月</th><th>里程 KM</th><th>爬升 M</th>
+          <th>時數 HR</th><th>TSS</th><th>對上月</th>
+        </tr></thead>
+        <tbody>${body}</tbody>
+      </table>
+    </div>`
+}
+
+/* ── 4.2 總計 —— 三個大數字，賽季這一席的收尾 ── */
+function renderGrandTotals(s) {
+  const n = v => typeof v === 'number' ? v.toLocaleString() : (v ?? '—')
+  const row = (k, v, u) => `<div class="grand-row">
+      <span class="grand-k">${k}</span><span class="grand-v">${v}<small>${u}</small></span>
+    </div>`
+  return scrHead('全時間總計', 'ALL TIME') + `
+    <div class="grand">
+      ${row('總里程', n(s.all_time_distance_km), 'KM')}
+      ${row('總爬升', n(s.all_time_elevation_m), 'M')}
+      ${row('總騎乘', n(s.all_time_rides), '次')}
+      <a class="strava-cta" href="https://www.strava.com/athletes/161539959" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/></svg>
+        原始資料 · Strava ↗
+      </a>
+    </div>`
+}
+
+/* ── 5.1 活動紀錄 —— 一條連續的流水帳，面內自己捲 ── */
+function renderLogScreen(tabsHtml, timelineHtml, total) {
+  return scrHead('活動紀錄', `${total} 筆`) + `
+    <div class="sport-tabs" id="sport-tabs">${tabsHtml}</div>
+    <div class="logwrap"><div class="timeline" id="timeline">${timelineHtml}</div></div>`
 }
 
 function renderPowerModal(prs) {
@@ -5110,7 +5304,6 @@ Promise.all([
       ...((movieQuotes?.quotes || []).map(q => ({ ...q, _src: 'movie' }))),
     ]
     render(data)
-    initPitRail()
     initQuoteWidget()
     initSeg3DWhenVisible()
     bindPowerCard(data.power_prs)
@@ -5118,10 +5311,10 @@ Promise.all([
     bindSegmentCards()
   })
   .catch(err => {
-    // 缺資料是灰不是紅 —— 這裡沒有東西壞掉，只是板牌還沒有數字可以寫上去
-    document.getElementById('content').innerHTML = `
+    // 缺資料是灰不是紅 —— 這裡沒有東西壞掉，只是牆上還沒有數字可以寫上去
+    document.getElementById('wall').innerHTML = `
       <div class="loading">
-        <b>板牌上沒有數字</b>
+        <b>牆上還沒有數字</b>
         ${err.message}
         <small>請先執行 GitHub Actions 產生 strava.json</small>
       </div>
@@ -5133,26 +5326,8 @@ Promise.all([
      從維修站牆裡開一扇門通過去，等於當場宣告「這頁只是換皮」——
      方向契約第一條就是要它有自己的世界。舊檔本身留著，直接開網址仍然到得了；
      三個 Strava 世界的入口統一收在 linkTreeIndex.html 的 STEVE 專用版那一列。 -->
-<script>
-/* ── 回到板牌（原「To Top」）──
-   樣式從 cssText 搬回 CSS（階段 7）：inline 樣式蓋不掉，先前得靠一條 !important
-   的 media query 才推得動位置。hover 也不再用兩個 JS 事件改背景。 */
-;(function(){
-  const b = document.createElement('button')
-  b.id = 'to-top-btn'
-  b.textContent = '▲'
-  b.title = '回到板牌'
-  b.setAttribute('aria-label', '回到板牌')
-  document.body.appendChild(b)
-  // 每次捲動都寫 style 會強制重算；只在跨過門檻的那一幀切 class
-  let on = false
-  addEventListener('scroll', () => {
-    const want = scrollY > 300
-    if (want !== on) { on = want; b.classList.toggle('on', on) }
-  }, { passive: true })
-  b.addEventListener('click', () => scrollTo({ top: 0, behavior: 'smooth' }))
-})()
-</script>
+<!-- 回頂鈕在此收掉：文件本身不再捲動（牆是二維的捲動容器），
+     「回到最上面」由底軌的第一席與 Home 鍵承接，一顆浮在角落的箭頭沒有意義了。 -->
 
 <!-- 跨主題共用：單車活動詳情彈窗 -->
 <link rel="stylesheet" href="activity-modal.css">
