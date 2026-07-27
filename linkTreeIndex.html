@@ -236,7 +236,9 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
    （會位移的東西應該是可以點的東西），真正可點的是下面那三顆 */
 .sp-btn-multi{flex-wrap:wrap;cursor:default}
 .sp-btn-multi:hover,.sp-btn-multi:active{transform:none}
-.btn-vers{flex:1 0 100%;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:11px}
+/* 欄數跟著 variants 的數量走，不要寫死 —— 寫死 3 欄的時候加第四個世界，
+   第四顆會掉到第二列去，看起來像壞掉。auto-fit 讓它自己排滿一列。 */
+.btn-vers{flex:1 0 100%;display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:6px;margin-top:11px}
 /* 每顆鈕帶自己那個世界的招牌色，點進去之前就先看到它長什麼調性 */
 .btn-ver{
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
@@ -325,7 +327,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
       </div>
       <div class="links">
         <template v-for="(link,i) in links" :key="link.label">
-          <!-- 有 variants 的那一列不是單一連結，是三選一：整列改成容器，三顆鈕各自是 <a> -->
+          <!-- 有 variants 的那一列不是單一連結，是多選一：整列改成容器，每顆鈕各自是 <a> -->
           <div v-if="link.variants" class="sp-btn sp-btn-vip sp-btn-multi"
             :style="{'--bc':'rgb('+link.rgb+')','--br':link.rgb,animationDelay:(0.28+i*0.07)+'s'}">
             <span class="btn-seq">{{ String(i+1).padStart(2,'0') }}</span>
@@ -451,14 +453,16 @@ createApp({
         icon:'M23.495 6.205a3.007 3.007 0 0 0-2.088-2.088c-1.87-.501-9.396-.501-9.396-.501s-7.507-.01-9.396.501A3.007 3.007 0 0 0 .527 6.205a31.247 31.247 0 0 0-.522 5.805 31.247 31.247 0 0 0 .522 5.783 3.007 3.007 0 0 0 2.088 2.088c1.868.502 9.396.502 9.396.502s7.506 0 9.396-.502a3.007 3.007 0 0 0 2.088-2.088 31.247 31.247 0 0 0 .5-5.783 31.247 31.247 0 0 0-.5-5.805zM9.609 15.601V8.408l6.264 3.602z' },
       { label:'Strava', url:'https://www.strava.com/athletes/161539959', rgb:'252,76,2',
         icon:'M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169' },
-      // 專用版有三種視覺世界，直接在這一列給三顆鈕讓人挑，不預設跳去哪一版。
-      // 每顆鈕帶自己世界的招牌色：橘＝深空觀測站、粉筆白＝維修站牆、青＝遙測 OPUS MAX
+      // 專用版有四種視覺世界，直接在這一列給四顆鈕讓人挑，不預設跳去哪一版。
+      // 每顆鈕帶自己世界的招牌色：橘＝深空觀測站、粉筆白＝維修站牆、青＝遙測 OPUS MAX、
+      // 鏽紅＝記震紙（取它負片沖印的墨色，正片的淡青灰在這片深色底上會糊掉）
       { label:'Strava · STEVE專用版', rgb:'255,140,50', badge:'STEVE',
         icon:'M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169',
         variants:[
-          { label:'深空觀測站', sub:'Classic',  url:'strava.html',           rgb:'252,76,2'    },
-          { label:'維修站牆',   sub:'Pit Wall', url:'strava_pitwall.html',   rgb:'237,234,227' },
-          { label:'遙測 MAX',   sub:'Opus Max', url:'strava_opus5_max.html', rgb:'37,224,255'  },
+          { label:'深空觀測站', sub:'Classic',    url:'strava.html',            rgb:'252,76,2'    },
+          { label:'維修站牆',   sub:'Pit Wall',   url:'strava_pitwall.html',    rgb:'237,234,227' },
+          { label:'遙測 MAX',   sub:'Opus Max',   url:'strava_opus5_max.html',  rgb:'37,224,255'  },
+          { label:'記震紙',     sub:'Helicorder', url:'strava_helicorder.html', rgb:'233,136,108' },
         ] },
       { label:'奶嘴', url:'motionworld/', rgb:'255,122,162', badge:'NEW',
         icon:'M12 2a5 5 0 0 0-5 5c0 2.051 1.238 3.632 3 4.461V14H8a2 2 0 0 0-2 2v1a3 3 0 0 0 3 3h1.586A2 2 0 0 0 12 22h0a2 2 0 0 0 1.414-.586H15a3 3 0 0 0 3-3v-1a2 2 0 0 0-2-2h-2v-2.539c1.762-.829 3-2.41 3-4.461a5 5 0 0 0-5-5zm0 2a3 3 0 1 1 0 6a3 3 0 0 1 0-6zm-3 13h6v1a1 1 0 0 1-1 1H10a1 1 0 0 1-1-1v-1z' },

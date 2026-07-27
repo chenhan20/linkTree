@@ -1,0 +1,1616 @@
+<!--
+════════════════════════════════════════════════════════════════════════════
+  DIRECTION CONTRACT — 記震紙 THE HELICORDER
+  seed 084721a6 · scope direction · mode operate · assigned index 6
+
+  THESIS      一年的訓練是一卷不間斷的紀錄，不是一疊卡片。本頁拒絕儀表板慣例的
+              三件事：卡片網格、發光遙測、大數字 hero。
+
+  OWN-WORLD   地震測報中心的記震紙。淡青灰製圖紙、鏽紅印格、墨跡線。四色逐列
+              輪替只為分列、不帶意義（記震紙原制）。語意墨只有四支：鏽紅＝最高
+              紀錄、普魯士藍＝90 天內最佳、橄欖綠＝達標、灰＝測站無資料。全頁
+              單一等寬字，零發光、零圓角、零陰影。夜間切換為負片（微縮膠捲）。
+
+  STORY       打開就看見自己一年的振幅；換通道時資料缺口會實體浮現；往下讀反應
+              譜、重複事件疊合、觀測班表、月報、事件目錄，最後知道下次該練什麼。
+
+  FIRST       報頭橫幅壓在頂端，其下整張記震紙 16 列（每列一個月）自左而右繪出，
+  VIEWPORT    右緣是振幅標尺，底緣露出通道選擇器與下一節探頭。
+
+  FORM        記震紙（我方排序清單第 6 項）。staging 取 light-table 的「釘選比對
+              條」融進重複事件疊合。挑戰者定向越野地圖 ISOM 於「產品清晰度」落敗
+              ——本站主體是時間序列不是空間。
+════════════════════════════════════════════════════════════════════════════
+-->
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>記震紙 · STEVE CHUANG 訓練連續紀錄</title>
+<meta name="description" content="把一年的騎乘、跑步、游泳與重訓畫成一卷記震紙。資料來自 data/strava.json，由 GitHub Actions 每日更新。">
+<link rel="icon" href="logo.ico">
+<style>
+/* ══ 1. TOKENS ═══════════════════════════════════════════════════════════
+   正片＝製圖紙原件。負片＝同一張紙的微縮膠捲存檔（墨與底互換）。
+   兩者是同一份紀錄的兩種沖印，不是兩套設計。 */
+:root{
+  --paper:#DCE2D5; --paper-lo:#D3DACB; --paper-hi:#E7EBE2;
+  --rule:#9EA997; --rule-soft:#B4BEAC;
+  --grid-1:rgba(150,62,40,.11); --grid-2:rgba(150,62,40,.24);
+  --ink:#14171A; --ink-2:#43494C; --ink-3:#585E62;
+  --sig-max:#9C2F1C;      /* 鏽紅 — 最高紀錄 / PR / 全期最佳 */
+  --sig-recent:#1B3F7A;   /* 普魯士藍 — 90 天內最佳 */
+  --sig-ok:#2F5218;       /* 橄欖綠 — 達標 */
+  --sig-none:#585E58;     /* 灰 — 測站無資料 */
+  /* 逐列輪替色。值刻意與上面四支語意墨相同（記震紙原本就用同一組印墨輪替），
+     但意思完全不同：這四個不帶任何意義，只是讓相鄰兩列的筆跡分得開。
+     安全的前提只有一條 —— 語意墨永遠不上記震紙，記震紙的事件標記一律靠形狀
+     （方＝PR、菱＝90 天內最佳、空心圈＝缺功率、實心圈＝一般）。
+     要在記震紙上表達意義時，加形狀，不要改這四個值。 */
+  --cyc-1:#14171A; --cyc-2:#9C2F1C; --cyc-3:#1B3F7A; --cyc-4:#2F5218;
+  --hatch:rgba(20,23,26,.16);
+  --sel:rgba(27,63,122,.16);
+
+  --f:ui-monospace,"SFMono-Regular",Menlo,Consolas,"Liberation Mono","Noto Sans Mono CJK TC","PingFang TC","Microsoft JhengHei",monospace;
+  --sheet:1180px;
+  --e:cubic-bezier(.16,1,.3,1);
+}
+html[data-film="neg"]{
+  --paper:#191C18; --paper-lo:#20241E; --paper-hi:#111310;
+  --rule:#4E564A; --rule-soft:#3B4238;
+  --grid-1:rgba(228,150,128,.09); --grid-2:rgba(228,150,128,.19);
+  --ink:#E9EEE3; --ink-2:#BAC2B4; --ink-3:#8E968A;
+  --sig-max:#E9886C; --sig-recent:#84ADE4; --sig-ok:#A2CE74; --sig-none:#868E82;
+  --cyc-1:#E9EEE3; --cyc-2:#E9886C; --cyc-3:#84ADE4; --cyc-4:#A2CE74;
+  --hatch:rgba(233,238,227,.16);
+  --sel:rgba(132,173,228,.14);
+}
+@media (prefers-color-scheme:dark){
+  html:not([data-film="pos"]){
+    --paper:#191C18; --paper-lo:#20241E; --paper-hi:#111310;
+    --rule:#4E564A; --rule-soft:#3B4238;
+    --grid-1:rgba(228,150,128,.09); --grid-2:rgba(228,150,128,.19);
+    --ink:#E9EEE3; --ink-2:#BAC2B4; --ink-3:#8E968A;
+    --sig-max:#E9886C; --sig-recent:#84ADE4; --sig-ok:#A2CE74; --sig-none:#868E82;
+    --cyc-1:#E9EEE3; --cyc-2:#E9886C; --cyc-3:#84ADE4; --cyc-4:#A2CE74;
+    --hatch:rgba(233,238,227,.16);
+    --sel:rgba(132,173,228,.14);
+  }
+}
+
+/* ══ 2. BASE ══════════════════════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font:400 13px/1.55 var(--f);
+  font-variant-numeric:tabular-nums; font-feature-settings:"tnum" 1,"zero" 1;
+  letter-spacing:.005em;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+/* 紙紋：程序生成的紙張顆粒，不是貼圖 */
+body::before{
+  content:""; position:fixed; inset:0; z-index:9999; pointer-events:none;
+  opacity:.45; mix-blend-mode:multiply;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='180' height='180' filter='url(%23n)' opacity='.5'/></svg>");
+}
+html[data-film="neg"] body::before{mix-blend-mode:screen; opacity:.16}
+@media (prefers-color-scheme:dark){html:not([data-film="pos"]) body::before{mix-blend-mode:screen; opacity:.16}}
+
+a{color:inherit}
+:focus-visible{outline:2px solid var(--sig-recent); outline-offset:2px}
+::selection{background:var(--sel)}
+button{font:inherit; color:inherit; background:none; border:0; cursor:pointer; font-variant-numeric:tabular-nums}
+
+.wrap{max-width:var(--sheet); margin:0 auto; padding:0 18px}
+.num{font-variant-numeric:tabular-nums}
+.dim{color:var(--ink-3)}
+.vh{position:absolute; width:1px; height:1px; margin:-1px; padding:0; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0}
+/* 跳至內容：鍵盤聚焦時要現身，不能永遠是 1px */
+.skip:focus{
+  position:fixed; top:0; left:0; z-index:200; width:auto; height:auto; margin:0; clip:auto;
+  display:flex; align-items:center; min-height:46px; padding:0 18px;
+  background:var(--ink); color:var(--paper-hi); text-decoration:none; font-size:12px; letter-spacing:.06em;
+}
+
+/* ══ 3. 報頭 MASTHEAD ══════════════════════════════════════════════════ */
+.mast{
+  position:sticky; top:0; z-index:60;
+  background:var(--paper-hi);
+  border-bottom:1px solid var(--ink);
+}
+.mast-in{
+  max-width:var(--sheet); margin:0 auto; padding:0 18px;
+  display:flex; align-items:stretch; gap:0; min-height:52px;
+}
+.mast-id{
+  display:flex; align-items:center; gap:10px; padding:8px 14px 8px 0;
+  border-right:1px solid var(--rule); flex:0 0 auto;
+}
+.mast-code{font-size:12px; font-weight:700; letter-spacing:.14em; white-space:nowrap}
+.mast-code b{color:var(--sig-max)}
+.mast-sub{font-size:10px; color:var(--ink-3); letter-spacing:.06em; white-space:nowrap}
+.mast-nav{
+  flex:1 1 auto; display:flex; align-items:stretch; overflow-x:auto;
+  scrollbar-width:none;
+}
+.mast-nav::-webkit-scrollbar{display:none}
+.mast-nav a{
+  display:flex; align-items:center; gap:6px; padding:0 12px; min-height:44px;
+  font-size:11px; text-decoration:none; color:var(--ink-2);
+  border-right:1px solid var(--rule-soft); white-space:nowrap;
+  transition:background .12s linear, color .12s linear;
+}
+.mast-nav a:first-child{border-left:1px solid var(--rule-soft)}
+.mast-nav a i{font-style:normal; font-size:9px; color:var(--ink-3); font-weight:700}
+.mast-nav a:hover{background:var(--paper-lo); color:var(--ink)}
+.mast-nav a[aria-current="true"]{background:var(--ink); color:var(--paper-hi)}
+.mast-nav a[aria-current="true"] i{color:var(--paper-lo)}
+.mast-film{
+  flex:0 0 auto; display:flex; align-items:center; gap:0;
+  border-left:1px solid var(--rule);
+}
+.film-btn{
+  min-height:44px; min-width:46px; padding:0 10px;
+  font-size:10px; letter-spacing:.08em; color:var(--ink-3);
+  border-left:1px solid var(--rule-soft);
+}
+.film-btn:first-child{border-left:0}
+.film-btn[aria-pressed="true"]{background:var(--ink); color:var(--paper-hi)}
+.film-btn:hover{background:var(--paper-lo)}
+.film-btn[aria-pressed="true"]:hover{background:var(--ink)}
+
+/* ══ 4. 節標 SECTION HEAD ═════════════════════════════════════════════
+   不是 eyebrow。這是圖紙的欄外標註帶：測站.通道代碼在左，量測範圍在右，
+   中間一條實線把它跟繪圖區分開。整份文件只有這一種節標。 */
+.sec{padding:0 0 6px}
+.sec-head{
+  display:grid; grid-template-columns:auto 1fr auto; align-items:end; gap:14px;
+  padding:34px 0 7px; border-bottom:1.5px solid var(--ink);
+}
+.sec-h{margin:0; font-size:19px; font-weight:700; letter-spacing:-.01em; line-height:1.1}
+.sec-h small{display:block; font-size:9.5px; font-weight:400; letter-spacing:.2em; color:var(--ink-3); margin-top:5px}
+.sec-ch{
+  font-size:10px; letter-spacing:.1em; color:var(--ink-3);
+  text-align:right; line-height:1.5; padding-bottom:3px;
+}
+.sec-ch b{color:var(--ink-2); font-weight:700}
+.sec-rule{height:0; border-bottom:1px solid var(--rule-soft); margin-top:2px}
+.sec-note{
+  font-size:11px; color:var(--ink-2); line-height:1.65;
+  padding:11px 0 0; max-width:64ch;
+}
+.sec-note b{color:var(--ink); font-weight:700}
+
+/* ══ 5. 記震紙 THE DRUM ═══════════════════════════════════════════════ */
+.drum-lede{padding:20px 0 11px; display:grid; grid-template-columns:1fr auto; gap:22px; align-items:end}
+.drum-title{margin:0; font-size:clamp(28px,5.6vw,52px); font-weight:700; line-height:.96; letter-spacing:-.035em}
+.drum-title span{display:block; font-size:clamp(10px,1.5vw,12px); font-weight:400; color:var(--ink-3); margin-top:9px; letter-spacing:.22em}
+.drum-meta{font-size:10.5px; color:var(--ink-2); text-align:right; line-height:1.75; white-space:nowrap}
+.drum-meta b{color:var(--ink); font-weight:700}
+.drum-meta em{font-style:normal; color:var(--sig-max)}
+
+.sheet{
+  position:relative; border:1px solid var(--ink); background:var(--paper-lo);
+  overflow-x:auto; overflow-y:hidden;
+}
+.sheet:focus-visible{outline:2px solid var(--sig-recent); outline-offset:-2px}
+/* min-width 必須貼近 viewBox 寬度，否則圖被縮小、圖內文字跟著縮。
+   780px 對 1200 的 viewBox 是 0.65 倍 —— 8.5 單位的日期刻度在手機上只剩 5.5px。
+   圖裡的字跟圖外的字一樣要能讀，寧可讓紙橫向捲遠一點。 */
+.sheet svg{display:block; width:100%; min-width:1180px; height:auto}
+/* 捲動提示：紙比螢幕寬是這種紙的本性，但得讓人知道右邊還有東西 */
+.sheet-hint{
+  display:none; align-items:center; justify-content:space-between; gap:10px;
+  border:1px solid var(--rule); border-top:0; padding:8px 12px;
+  font-size:10.5px; color:var(--ink-3); letter-spacing:.06em;
+}
+.sheet-hint b{color:var(--ink-2); font-weight:700}
+@media (max-width:900px){ .sheet-hint{display:flex} }
+
+/* 儀器控制列：增益與通道，就是記震儀真的有的兩個旋鈕 */
+.ctl{
+  display:flex; flex-wrap:wrap; align-items:stretch; gap:0;
+  border:1px solid var(--ink); border-top:0; background:var(--paper-hi);
+}
+.ctl-grp{display:flex; align-items:stretch; border-right:1px solid var(--rule); flex-wrap:wrap}
+.ctl-grp:last-child{border-right:0; margin-left:auto}
+.ctl-lb{
+  display:flex; align-items:center; padding:0 12px; font-size:9.5px;
+  letter-spacing:.14em; color:var(--ink-3); border-right:1px solid var(--rule-soft);
+  white-space:nowrap;
+}
+.ctl-b{
+  min-height:44px; padding:6px 14px; font-size:11px; letter-spacing:.03em;
+  border-right:1px solid var(--rule-soft); color:var(--ink-2);
+  display:flex; flex-direction:column; justify-content:center; gap:2px; text-align:left;
+  transition:background .12s linear;
+}
+.ctl-b:last-child{border-right:0}
+.ctl-b i{font-style:normal; font-size:9px; letter-spacing:.12em; color:var(--ink-3)}
+.ctl-b:hover{background:var(--paper-lo)}
+.ctl-b[aria-pressed="true"]{background:var(--ink); color:var(--paper-hi)}
+.ctl-b[aria-pressed="true"] i{color:var(--paper-lo)}
+.ctl-b[aria-pressed="true"]:hover{background:var(--ink)}
+
+.legend{
+  display:flex; flex-wrap:wrap; gap:0; border:1px solid var(--rule);
+  border-top:0; background:var(--paper);
+}
+.lg{
+  display:flex; align-items:center; gap:8px; padding:9px 13px;
+  font-size:10.5px; color:var(--ink-2); border-right:1px solid var(--rule-soft);
+  line-height:1.4;
+}
+.lg:last-child{border-right:0}
+.lg svg{flex:0 0 auto; display:block}
+.lg b{color:var(--ink); font-weight:700}
+
+/* 探頭：第一屏底部露出下一節，避免使用者只看第一屏 */
+.peek{
+  display:flex; align-items:center; gap:12px; padding:18px 0 0;
+  font-size:11px; color:var(--ink-3);
+}
+.peek hr{flex:1; height:0; border:0; border-top:1px dashed var(--rule); margin:0}
+.peek a{color:var(--ink-2); text-decoration:none; border-bottom:1px solid var(--rule)}
+.peek a:hover{color:var(--ink); border-color:var(--ink)}
+
+/* ══ 6. 觀測摘要 ═══════════════════════════════════════════════════════
+   不是 stat card grid。這是圖紙下緣的量測登錄格：一條連續的分隔欄，
+   每欄一個量，欄與欄之間只有 1px 印線。 */
+/* 測站登錄簿，不是統計卡網格。橫向是量、縱向是期間 —— 讀法是「今年這欄比全期這欄」，
+   而不是八張各自為政的卡片。數字靠右對齊在欄裡，單位印在欄頭，跟計量表一樣。 */
+.reg{border:1px solid var(--ink); margin-top:20px; overflow-x:auto; background:var(--paper-lo)}
+table.log{border-collapse:collapse; width:100%; min-width:600px}
+table.log th{
+  text-align:right; font-size:9.5px; letter-spacing:.13em; font-weight:700; color:var(--ink-3);
+  padding:10px 14px 8px; border-bottom:1px solid var(--ink); white-space:nowrap; vertical-align:bottom;
+}
+table.log thead th:first-child{text-align:left}
+table.log tbody th{
+  text-align:left; font-size:11px; font-weight:700; letter-spacing:.1em; color:var(--ink-2);
+  padding:11px 14px; border-bottom:1px solid var(--rule-soft); white-space:nowrap; vertical-align:top;
+}
+table.log tbody tr:last-child th{border-bottom:0}
+table.log tbody th u{text-decoration:none; display:block; font-size:9.5px; font-weight:400; letter-spacing:.04em; color:var(--ink-3); margin-top:4px}
+table.log th u{text-decoration:none; display:block; font-size:8.5px; font-weight:400; letter-spacing:.06em; margin-top:3px}
+table.log td{
+  padding:11px 14px; border-bottom:1px solid var(--rule-soft); text-align:right;
+  font-size:17px; font-weight:700; letter-spacing:-.02em; white-space:nowrap;
+}
+table.log tbody tr:last-child td{border-bottom:0}
+table.log td em{font-style:normal; display:block; font-size:9.5px; font-weight:400; color:var(--ink-3); margin-top:4px}
+
+/* ══ 7. 反應譜 RESPONSE SPECTRUM ══════════════════════════════════════ */
+.spec-grid{display:grid; grid-template-columns:minmax(0,1.55fr) minmax(0,1fr); gap:0; border:1px solid var(--ink); margin-top:18px}
+.spec-plot{border-right:1px solid var(--ink); background:var(--paper-lo); overflow-x:auto}
+.spec-plot svg{display:block; width:100%; min-width:700px; height:auto}
+.spec-list{background:var(--paper)}
+.spec-r{
+  display:grid; grid-template-columns:52px 1fr auto; gap:10px; align-items:baseline;
+  padding:9px 13px; border-bottom:1px solid var(--rule-soft); min-height:44px;
+}
+.spec-r:last-child{border-bottom:0}
+.spec-r:hover,.spec-r.on{background:var(--paper-lo)}
+.spec-d{font-size:11px; font-weight:700; letter-spacing:.05em; color:var(--ink-2)}
+.spec-w{font-size:17px; font-weight:700; letter-spacing:-.02em; line-height:1.1}
+.spec-w u{text-decoration:none; font-size:.58em; font-weight:400; color:var(--ink-3); margin-left:3px}
+.spec-w em{font-style:normal; display:block; font-size:9.5px; font-weight:400; color:var(--ink-3); letter-spacing:.02em; margin-top:3px}
+.spec-x{font-size:10px; color:var(--ink-2); text-align:right; line-height:1.5; white-space:nowrap}
+.spec-x b{display:block; color:var(--sig-max); font-weight:700}
+
+/* ══ 8. 重複事件 REPEATING EVENTS ═════════════════════════════════════ */
+/* 疊合比對條。分辨六條線靠的是「釘選」而不是六個色相 ——
+   語意墨已經佔滿色相的意思，再開六色就會有一條線同時回答兩個問題。
+   靜止的層是幽靈，被釘的層升到最上面、上滿墨，這是 light-table 的原制。 */
+.stack{border:1px solid var(--ink); margin-top:18px}
+.stack-plot{background:var(--paper-lo); overflow-x:auto; border-bottom:1px solid var(--rule)}
+.stack-plot svg{display:block; width:100%; min-width:1160px; height:auto}
+.stack-pins{display:flex; flex-wrap:wrap; border-bottom:1px solid var(--rule); background:var(--paper-hi)}
+.pin{
+  min-height:44px; padding:7px 13px; font-size:11.5px; text-align:left;
+  border-right:1px solid var(--rule-soft); color:var(--ink-3);
+  display:flex; flex-direction:column; justify-content:center; gap:2px;
+}
+.pin i{font-style:normal; font-size:9px; letter-spacing:.1em}
+.pin:hover{background:var(--paper-lo); color:var(--ink)}
+.pin[aria-pressed="true"]{background:var(--ink); color:var(--paper-hi)}
+.pin[aria-pressed="true"] i{color:var(--paper-lo)}
+.stack-note{margin:0; padding:11px 14px; font-size:11px; line-height:1.65; color:var(--ink-2)}
+.stack-note b{color:var(--ink); font-weight:700}
+
+.rep{border:1px solid var(--ink); margin-top:18px}
+.rep-r{border-bottom:1px solid var(--ink)}
+.rep-r:last-child{border-bottom:0}
+.rep-hd{
+  display:grid; grid-template-columns:1fr auto; gap:14px; align-items:center;
+  padding:12px 14px; background:var(--paper-hi); border-bottom:1px solid var(--rule);
+}
+.rep-nm{font-size:15px; font-weight:700; letter-spacing:-.01em; line-height:1.25}
+.rep-nm u{text-decoration:none; display:block; font-size:9.5px; font-weight:400; letter-spacing:.14em; color:var(--ink-3); margin-top:5px}
+.rep-st{text-align:right; font-size:11px; line-height:1.45; white-space:nowrap}
+.rep-st b{font-weight:700; letter-spacing:.06em; display:block; font-size:12px}
+.rep-st em{font-style:normal; font-size:9.5px; color:var(--ink-3); display:block; margin-top:3px}
+.rep-body{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,300px); gap:0}
+.rep-plot{overflow-x:auto; background:var(--paper-lo); border-right:1px solid var(--rule)}
+.rep-plot svg{display:block; width:100%; min-width:860px; height:auto}
+.rep-side{display:grid; grid-template-columns:1fr 1fr; align-content:start}
+.rep-cell{padding:10px 12px; border-bottom:1px solid var(--rule-soft); border-right:1px solid var(--rule-soft)}
+.rep-cell:nth-child(2n){border-right:0}
+.rep-k{font-size:9px; letter-spacing:.13em; color:var(--ink-3); margin-bottom:5px}
+.rep-v{font-size:15px; font-weight:700; line-height:1.1; letter-spacing:-.02em}
+.rep-v u{text-decoration:none; font-size:.6em; font-weight:400; color:var(--ink-3); margin-left:3px}
+.rep-prof{grid-column:1/-1; padding:10px 12px; border-bottom:0; border-right:0}
+.rep-prof svg{display:block; width:100%; height:auto}
+
+/* ══ 9. 觀測班表 COVERAGE ═════════════════════════════════════════════ */
+.cov{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0; border:1px solid var(--ink); margin-top:18px}
+.cov-col{border-right:1px solid var(--ink)}
+.cov-col:last-child{border-right:0}
+.cov-t{
+  padding:11px 14px; font-size:10px; letter-spacing:.14em; color:var(--ink-3);
+  background:var(--paper-hi); border-bottom:1px solid var(--rule);
+  display:flex; justify-content:space-between; gap:10px;
+}
+.cov-t b{color:var(--ink-2); font-weight:700; letter-spacing:.04em}
+.cov-r{padding:12px 14px; border-bottom:1px solid var(--rule-soft)}
+.cov-r:last-child{border-bottom:0}
+.cov-l{display:flex; justify-content:space-between; align-items:baseline; gap:10px; margin-bottom:9px}
+.cov-n{font-size:12.5px; font-weight:700}
+.cov-n u{text-decoration:none; font-size:9px; font-weight:400; letter-spacing:.12em; color:var(--ink-3); margin-left:7px}
+.cov-f{font-size:11px; color:var(--ink-2)}
+.cov-f b{font-size:14px; font-weight:700; color:var(--ink)}
+.cov-bar{display:flex; gap:2px; height:20px}
+.cov-u{flex:1; border:1px solid var(--rule); background:transparent; min-width:5px}
+.cov-u.f{background:var(--sig-ok); border-color:var(--sig-ok)}
+.cov-u.e{background:repeating-linear-gradient(45deg,transparent 0 3px,var(--hatch) 3px 4px)}
+.cov-s{font-size:10px; color:var(--ink-3); margin-top:7px; line-height:1.5}
+
+/* ══ 10. 月報 BULLETIN ════════════════════════════════════════════════ */
+.bul{border:1px solid var(--ink); margin-top:18px; overflow-x:auto; background:var(--paper-lo)}
+.bul svg{display:block; width:100%; min-width:1180px; height:auto}
+
+/* ══ 11. 事件目錄 CATALOG ═════════════════════════════════════════════ */
+.cat-ctl{display:flex; flex-wrap:wrap; border:1px solid var(--ink); border-bottom:0; background:var(--paper-hi); margin-top:18px}
+.cat-tab{
+  min-height:44px; padding:7px 15px; font-size:11.5px;
+  border-right:1px solid var(--rule); color:var(--ink-2);
+  display:flex; flex-direction:column; justify-content:center; gap:2px; text-align:left;
+}
+.cat-tab i{font-style:normal; font-size:9px; letter-spacing:.12em; color:var(--ink-3)}
+.cat-tab:hover{background:var(--paper-lo)}
+.cat-tab[aria-pressed="true"]{background:var(--ink); color:var(--paper-hi)}
+.cat-tab[aria-pressed="true"] i{color:var(--paper-lo)}
+.cat-wrap{border:1px solid var(--ink); overflow-x:auto; background:var(--paper)}
+.cat-wrap:focus-visible{outline:2px solid var(--sig-recent); outline-offset:-2px}
+table.cat{border-collapse:collapse; width:100%; min-width:760px; font-size:11.5px}
+table.cat caption{text-align:left; padding:10px 13px; font-size:10px; color:var(--ink-3); letter-spacing:.08em; border-bottom:1px solid var(--rule)}
+table.cat th{
+  background:var(--paper-hi);
+  text-align:right; font-size:9.5px; letter-spacing:.11em; font-weight:700; color:var(--ink-3);
+  padding:9px 11px; border-bottom:1.5px solid var(--ink); white-space:nowrap;
+}
+/* 每 20 列重印一次欄頭。position:sticky 在這個容器上沒有捲動區可黏（overflow-x:auto
+   在自動高度的盒子上不會產生 y 捲動區），而印刷的事件目錄本來就是這樣分頁重印欄頭的。 */
+table.cat tbody th{
+  text-align:right; border-top:1.5px solid var(--ink); border-bottom:1.5px solid var(--ink);
+}
+table.cat tbody th:first-child,table.cat tbody th:nth-child(2){text-align:left}
+table.cat th:first-child,table.cat th:nth-child(2){text-align:left}
+table.cat td{
+  padding:8px 11px; border-bottom:1px solid var(--rule-soft); text-align:right;
+  white-space:nowrap; vertical-align:top;
+}
+table.cat td:first-child,table.cat td:nth-child(2){text-align:left}
+table.cat tbody tr:hover{background:var(--paper-lo)}
+table.cat tbody tr:nth-child(10n) td{border-bottom-color:var(--rule)}
+.c-dt{color:var(--ink-2); font-size:11px}
+.c-dt u{text-decoration:none; display:block; color:var(--ink-3); font-size:9.5px; margin-top:2px}
+.c-nm{white-space:normal; max-width:34ch; line-height:1.4}
+.c-nm em{font-style:normal; display:block; color:var(--ink-3); font-size:10px; margin-top:3px}
+.c-mag{font-weight:700; font-size:13px}
+.c-nd{color:var(--sig-none); font-size:10px; letter-spacing:.06em}
+.c-pr{color:var(--sig-max); font-weight:700}
+.cat-more{
+  display:block; width:100%; min-height:48px; border:1px solid var(--ink); border-top:0;
+  font-size:11.5px; letter-spacing:.06em; background:var(--paper-hi); color:var(--ink-2);
+}
+.cat-more:hover{background:var(--paper-lo); color:var(--ink)}
+.cat-more[hidden]{display:none}
+
+/* ══ 12. 頁尾 ═════════════════════════════════════════════════════════ */
+.colo{margin-top:52px; border-top:1.5px solid var(--ink); padding:22px 0 60px}
+.colo-g{display:grid; grid-template-columns:repeat(3,1fr); gap:0; border:1px solid var(--rule)}
+.colo-c{padding:13px 14px; border-right:1px solid var(--rule-soft); font-size:10.5px; line-height:1.7; color:var(--ink-2)}
+.colo-c:last-child{border-right:0}
+.colo-c b{display:block; color:var(--ink); font-size:10px; letter-spacing:.13em; margin-bottom:7px; font-weight:700}
+.colo-c a{color:var(--sig-recent); text-decoration:none; border-bottom:1px solid currentColor}
+.colo-c a:hover{color:var(--ink)}
+.colo-end{margin-top:16px; font-size:10px; color:var(--ink-3); line-height:1.7}
+
+/* ══ 13. 載入 / 失敗 ══════════════════════════════════════════════════ */
+.boot{padding:60px 0; font-size:12px; color:var(--ink-2); line-height:2}
+.boot b{color:var(--ink)}
+.err{border:1px solid var(--sig-max); padding:16px; margin-top:18px; font-size:12px; line-height:1.8}
+.err b{color:var(--sig-max); display:block; margin-bottom:6px; letter-spacing:.08em}
+.err code{background:var(--paper-lo); padding:1px 5px}
+
+/* ══ 14. 動作 ═════════════════════════════════════════════════════════
+   全站唯一一段編排過的動作：載入時筆尖自左而右把 16 列繪出來。
+   終態就是 CSS 預設值，動畫只是加在上面 —— 動畫引擎不跑也看得見全部內容。 */
+.tr{stroke-dashoffset:0}
+@media (prefers-reduced-motion:no-preference){
+  .plot-in .tr{animation:pen 1s var(--e) backwards; animation-delay:var(--d,0s)}
+  @keyframes pen{from{stroke-dashoffset:var(--len)}}
+  .plot-in .fade{animation:fd .5s var(--e) backwards; animation-delay:var(--d,0s)}
+  @keyframes fd{from{opacity:0}}
+}
+
+/* ══ 15. 窄螢幕 ═══════════════════════════════════════════════════════ */
+@media (max-width:900px){
+  .spec-grid{grid-template-columns:1fr}
+  .spec-plot{border-right:0; border-bottom:1px solid var(--ink)}
+  .rep-body{grid-template-columns:1fr}
+  .rep-plot{border-right:0; border-bottom:1px solid var(--rule)}
+  .colo-g{grid-template-columns:1fr}
+  .colo-c{border-right:0; border-bottom:1px solid var(--rule-soft)}
+  .colo-c:last-child{border-bottom:0}
+}
+@media (max-width:680px){
+  .wrap{padding:0 12px}
+  /* 手機上把識別與沖印壓在同一列，導覽自己一列。原本沖印獨佔一列，
+     在 812px 高的螢幕上白白吃掉 70px，而這頁最重要的就是第一屏。 */
+  .mast-in{padding:0 12px; flex-wrap:wrap; min-height:0}
+  .mast-id{flex:1 1 auto; border-right:0; padding:0; align-items:center; min-height:46px}
+  .mast-film{flex:0 0 auto; border-left:1px solid var(--rule)}
+  .film-btn{min-height:46px; min-width:52px}
+  .mast-nav{order:3; width:100%; border-top:1px solid var(--rule)}
+  .mast-nav a{border-right:1px solid var(--rule-soft); padding:0 11px; min-height:46px}
+  .mast-nav a:first-child{border-left:0}
+  .mast-sub em{display:none}   /* 「連續紀錄 ·」收掉，「全 7 節」留著 —— 那是導引，不是裝飾 */
+  .drum-lede{grid-template-columns:1fr; gap:14px; align-items:start; padding:22px 0 14px}
+  .drum-meta{text-align:left}
+  .cov{grid-template-columns:1fr}
+  .cov-col{border-right:0; border-bottom:1px solid var(--ink)}
+  .cov-col:last-child{border-bottom:0}
+  .sec-head{grid-template-columns:1fr; gap:8px; padding:28px 0 7px}
+  .sec-ch{text-align:left; padding-bottom:0}
+}
+</style>
+</head>
+<body>
+
+<a class="vh skip" href="#drum">跳至記震紙</a>
+
+<header class="mast">
+  <div class="mast-in">
+    <div class="mast-id">
+      <span class="mast-code"><b>TW</b>.STEVE.<b>BIKE</b></span>
+      <span class="mast-sub"><em>連續紀錄 · </em>全 7 節</span>
+    </div>
+    <nav class="mast-nav" aria-label="全頁 7 節">
+      <a href="#drum"     data-s="drum"><i>01</i>記震紙</a>
+      <a href="#summary"  data-s="summary"><i>02</i>觀測摘要</a>
+      <a href="#spectrum" data-s="spectrum"><i>03</i>反應譜</a>
+      <a href="#repeat"   data-s="repeat"><i>04</i>重複事件</a>
+      <a href="#coverage" data-s="coverage"><i>05</i>觀測班表</a>
+      <a href="#bulletin" data-s="bulletin"><i>06</i>月報</a>
+      <a href="#catalog"  data-s="catalog"><i>07</i>事件目錄</a>
+    </nav>
+    <div class="mast-film" role="group" aria-label="沖印">
+      <button class="film-btn" id="film-pos" aria-pressed="true">正片</button>
+      <button class="film-btn" id="film-neg" aria-pressed="false">負片</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap" id="main">
+
+  <div class="boot" id="boot">
+    <b>TW.STEVE.BIKE</b> — 正在讀取紀錄…<br>
+    <span class="dim">來源 data/strava.json · data/itt-config.json · data/power-prs.json</span>
+  </div>
+
+  <div id="app" hidden>
+
+    <!-- 01 記震紙 ────────────────────────────────────────────────── -->
+    <section class="sec" id="drum" tabindex="-1">
+      <div class="drum-lede">
+        <h1 class="drum-title">記震紙<span>CONTINUOUS RECORD OF ONE BODY</span></h1>
+        <p class="drum-meta" id="drum-meta"></p>
+      </div>
+      <div class="sheet" id="sheet" tabindex="0" role="img" aria-label="記震紙：16 個月的連續運動紀錄，每列一個月">
+        <svg id="drum-svg" viewBox="0 0 1200 620" preserveAspectRatio="xMinYMin meet" aria-hidden="true"></svg>
+      </div>
+      <p class="sheet-hint"><span>◀ <b>左右捲動</b>看完整個月</span><span id="hint-span"></span></p>
+      <div class="ctl">
+        <div class="ctl-grp" role="group" aria-label="通道">
+          <span class="ctl-lb">通道</span>
+          <button class="ctl-b" data-ch="hr"   aria-pressed="true">時數<i>BHT · 小時</i></button>
+          <button class="ctl-b" data-ch="km"   aria-pressed="false">里程<i>BHD · 公里</i></button>
+          <button class="ctl-b" data-ch="load" aria-pressed="false">訓練負荷<i>BHL · TSS</i></button>
+        </div>
+        <div class="ctl-grp" role="group" aria-label="增益">
+          <span class="ctl-lb">增益</span>
+          <button class="ctl-b" data-g="1" aria-pressed="true">×1</button>
+          <button class="ctl-b" data-g="2" aria-pressed="false">×2</button>
+          <button class="ctl-b" data-g="4" aria-pressed="false">×4</button>
+        </div>
+      </div>
+      <div class="legend" id="legend"></div>
+      <p class="sec-note" id="drum-note"></p>
+      <div class="peek">
+        <span>接著是</span><a href="#summary">02 觀測摘要</a><hr><span>其後尚有 5 節</span>
+      </div>
+    </section>
+
+    <!-- 02 觀測摘要 ──────────────────────────────────────────────── -->
+    <section class="sec" id="summary" tabindex="-1">
+      <div class="sec-head">
+        <h2 class="sec-h">觀測摘要<small>STATION SUMMARY</small></h2>
+        <div class="sec-rule"></div>
+        <p class="sec-ch">TW.STEVE.BIKE · <b>SUM</b><br>今年 · 全期</p>
+      </div>
+      <div class="reg" id="reg"></div>
+      <p class="sec-note">上排為本年度累計，下排為建站以來全期累計。全期里程與爬升由 Strava 的生涯統計提供，涵蓋期間早於本頁記震紙所繪的 16 個月。</p>
+    </section>
+
+    <!-- 03 反應譜 ────────────────────────────────────────────────── -->
+    <section class="sec" id="spectrum" tabindex="-1">
+      <div class="sec-head">
+        <h2 class="sec-h">反應譜<small>RESPONSE SPECTRUM · POWER</small></h2>
+        <div class="sec-rule"></div>
+        <p class="sec-ch">通道 <b>PWR</b> · 對數時距軸<br>5 秒 – 60 分</p>
+      </div>
+      <div class="spec-grid">
+        <div class="spec-plot"><svg id="spec-svg" viewBox="0 0 720 430" aria-hidden="true"></svg></div>
+        <div class="spec-list" id="spec-list"></div>
+      </div>
+      <p class="sec-note"><b>反應譜</b>是地震工程用來描述「不同週期下的最大反應」的圖。功率 PR 是同一件事：每個時距上，這具身體有紀錄以來的最大輸出。曲線右降表示能維持的功率隨時間下降，這是常態；真正要看的是曲線的形狀有沒有在某一段塌下去。右欄括號內為該時距的第二、三名，用來判斷最佳值是不是孤例。</p>
+    </section>
+
+    <!-- 04 重複事件 ──────────────────────────────────────────────── -->
+    <section class="sec" id="repeat" tabindex="-1">
+      <div class="sec-head">
+        <h2 class="sec-h">重複事件<small>REPEATING EVENT SEQUENCES · ITT</small></h2>
+        <div class="sec-rule"></div>
+        <p class="sec-ch">通道 <b>SEG</b> · 同一路段反覆計時<br id="rep-ch-br">全部挑戰紀錄</p>
+      </div>
+      <!-- 疊合比對條：六個路段一起正規化到各自的 PR，堆在同一張圖上。
+           釘選一個，其餘退成幽靈層 —— 這是 light-table staging 的原制，
+           也正好就是重複地震的波形疊合。 -->
+      <div class="stack">
+        <div class="stack-plot"><svg id="stack-svg" viewBox="0 0 1180 280" aria-hidden="true"></svg></div>
+        <div class="stack-pins" id="stack-pins" role="group" aria-label="釘選路段以突顯其序列"></div>
+        <p class="stack-note" id="stack-note"></p>
+      </div>
+      <div class="rep" id="rep"></div>
+      <p class="sec-note"><b>重複地震</b>是同一塊斷層面反覆破裂產生的一組波形，把它們疊起來就能看出這塊斷層有沒有在變。ITT 路段是一樣的：同一段路、同樣的起訖點、反覆計時。上方的<b>疊合比對條</b>把六段各自除以自己的 PR，換算成「比自己最好的一次慢幾 %」後堆在同一張圖上：除掉絕對秒數，6 公里的爬坡才跟 2.6 公里的短坡放得進同一個比較。點任一段可釘選。下方每格左圖則是該路段的原始秒數序列，鏽紅是歷史最佳、普魯士藍是 90 天內最佳。狀態判定沿用既有的 <b>segScore = powerScore × 0.7 + timeScore × 0.3</b>，基準線取 90 天內功率前 5 名平均，不足 3 筆改用全期。</p>
+    </section>
+
+    <!-- 05 觀測班表 ──────────────────────────────────────────────── -->
+    <section class="sec" id="coverage" tabindex="-1">
+      <div class="sec-head">
+        <h2 class="sec-h">觀測班表<small>STATION UPTIME · GOALS &amp; QUEST</small></h2>
+        <div class="sec-rule"></div>
+        <p class="sec-ch">本月 · 本週<br>格＝一次觀測</p>
+      </div>
+      <div class="cov" id="cov"></div>
+      <p class="sec-note">測站的價值不在單次紀錄有多大，在於它有沒有一直在錄。空格用斜線填滿代表該次觀測未執行，跟記震紙上的資料缺口是同一種標記。</p>
+    </section>
+
+    <!-- 06 月報 ──────────────────────────────────────────────────── -->
+    <section class="sec" id="bulletin" tabindex="-1">
+      <div class="sec-head">
+        <h2 class="sec-h">月報<small>MONTHLY BULLETIN</small></h2>
+        <div class="sec-rule"></div>
+        <p class="sec-ch">通道 <b>MON</b> · 里程／爬升／次數<br>逐月</p>
+      </div>
+      <div class="bul"><svg id="bul-svg" viewBox="0 0 1200 340" aria-hidden="true"></svg></div>
+      <p class="sec-note" id="bul-note"></p>
+    </section>
+
+    <!-- 07 事件目錄 ──────────────────────────────────────────────── -->
+    <section class="sec" id="catalog" tabindex="-1">
+      <div class="sec-head">
+        <h2 class="sec-h">事件目錄<small>EVENT CATALOG</small></h2>
+        <div class="sec-rule"></div>
+        <p class="sec-ch">依起始時間逆序<br id="cat-ch-br">缺值一律標記，不補零</p>
+      </div>
+      <div class="cat-ctl" id="cat-tabs" role="group" aria-label="事件目錄通道"></div>
+      <div class="cat-wrap" id="cat-wrap" tabindex="0" role="region" aria-label="事件目錄表格，可左右捲動"></div>
+      <button class="cat-more" id="cat-more" hidden></button>
+      <p class="sec-note">規模欄的定義隨通道而變：騎乘為 TSS 訓練負荷，跑步為公里，游泳為公尺，重訓為分鐘。<b>ND</b>（No Data）代表該筆紀錄缺少該欄位。133 筆騎乘中有 24 筆無功率、29 筆無心率，這是器材與紀錄方式造成的，不是零。</p>
+    </section>
+
+  </div>
+</main>
+
+<footer class="colo wrap">
+  <div class="colo-g">
+    <div class="colo-c">
+      <b>資料來源</b>
+      本頁不呼叫 Strava API。GitHub Actions 每日三次（台北 10:00／18:00／22:00）以 refresh token 取資料、在 CI 內完成全部運算、把結果 commit 回 repo，本頁只讀那份已 commit 的 JSON。<br>
+      <span class="dim">資料新鮮度上限＝最近一次 cron，非即時。</span>
+    </div>
+    <div class="colo-c">
+      <b>本頁章節</b>
+      共 7 節：記震紙、觀測摘要、反應譜、重複事件、觀測班表、月報、事件目錄。<br>
+      <span class="dim">3D 軌跡回放、每日一句與對手 PK 面板不在本版，請見另外三版。</span>
+    </div>
+    <div class="colo-c">
+      <b>其他版本</b>
+      <a href="strava.html">深空觀測站</a> ·
+      <a href="strava_pitwall.html">維修站牆</a> ·
+      <a href="strava_opus5_max.html">遙測 OPUS MAX</a><br>
+      <a href="linkTreeIndex.html">← 回到 SteveChuang · Personal Hub</a>
+    </div>
+  </div>
+  <p class="colo-end" id="colo-end"></p>
+</footer>
+
+<script>
+'use strict';
+/* ════════════════════════════════════════════════════════════════════════
+   記震紙 — 繪圖引擎
+   資料一律來自 data/*.json。缺值一律顯示為缺值，不補零、不留白假裝正常。
+   ════════════════════════════════════════════════════════════════════════ */
+
+const NS = 'http://www.w3.org/2000/svg';
+const $  = (s, r) => (r || document).querySelector(s);
+const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+const el = (t, a, kids) => {
+  const n = document.createElementNS(NS, t);
+  if (a) for (const k in a) if (a[k] != null) n.setAttribute(k, a[k]);
+  if (kids) (Array.isArray(kids) ? kids : [kids]).forEach(c => n.appendChild(c));
+  return n;
+};
+const txt = (x, y, s, a) => { const n = el('text', Object.assign({ x, y }, a || {})); n.textContent = s; return n; };
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+const pad2 = n => String(n).padStart(2, '0');
+const fmtSec = s => { s = Math.round(s); const m = Math.floor(s / 60); return m + ':' + pad2(s % 60); };
+const fmtHM  = s => { s = Math.round(s); const h = Math.floor(s / 3600), m = Math.round((s % 3600) / 60); return h ? h + '時' + pad2(m) + '分' : m + '分'; };
+const daysIn = (y, m) => new Date(y, m, 0).getDate();
+const TPE = () => new Date(Date.now() + 8 * 3600 * 1000);
+const today = () => TPE().toISOString().slice(0, 10);
+const dayDiff = (a, b) => Math.round((Date.parse(b) - Date.parse(a)) / 86400000);
+
+/* 決定性亂數 — 同一顆種子永遠畫出同一條波形，重新整理不會變 */
+function rng(seed) {
+  let a = seed >>> 0;
+  return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+}
+
+const ST = { data:null, cfg:null, prs:null, ch:'hr', gain:1, cat:'ride', catN:40, pin:null };
+
+/* ── 讀資料 ───────────────────────────────────────────────────────── */
+const get = (p, req) => fetch(p, { cache:'no-cache' })
+  .then(r => { if (!r.ok) throw new Error(p + ' HTTP ' + r.status); return r.json(); })
+  .catch(e => { if (req) throw e; console.warn('[記震紙] 選用資料缺席：', p, e.message); return null; });
+
+Promise.all([
+  get('data/strava.json', true),
+  get('data/itt-config.json', false),
+  get('data/power-prs.json', false),
+]).then(([data, cfg, prs]) => {
+  ST.data = data;
+  ST.cfg  = cfg && Array.isArray(cfg.segments) ? Object.fromEntries(cfg.segments.map(s => [s.id, s])) : {};
+  ST.prs  = prs;
+  $('#boot').hidden = true;
+  $('#app').hidden  = false;
+  boot();
+}).catch(err => {
+  $('#boot').innerHTML =
+    '<div class="err"><b>紀錄讀取失敗</b>' +
+    '測站沒有回應。<code>' + esc(err.message) + '</code><br><br>' +
+    '若是在本機開啟，請用 HTTP 伺服器而不是 file://，例如 <code>python3 -m http.server 4173</code>，' +
+    '再開 <code>http://localhost:4173/strava_helicorder.html</code>。</div>';
+});
+
+/* ── 事件正規化 ───────────────────────────────────────────────────── */
+function events() {
+  const d = ST.data, out = [];
+  (d.recent_rides   || []).forEach(a => out.push({ k:'ride',   a }));
+  (d.recent_runs    || []).forEach(a => out.push({ k:'run',    a }));
+  (d.recent_swims   || []).forEach(a => out.push({ k:'swim',   a }));
+  (d.recent_weights || []).forEach(a => out.push({ k:'weight', a }));
+  return out.filter(e => e.a && e.a.date).sort((x, y) => x.a.date.localeCompare(y.a.date));
+}
+
+/* 通道定義。
+   兩種「沒有數字」必須分開，否則這張紙會說謊：
+     applies=false → 這個量對該類事件本來就不存在（重訓沒有里程）。不標記，不算缺值。
+     applies=true 但 v()=null → 該測的沒測到（沒有功率計的那趟騎乘算不出 TSS）。標記為缺讀數。
+   地震網也是這樣分的：沒裝那個通道，跟裝了但斷訊，是兩件事。 */
+const CH = {
+  hr:   { code:'BHT', unit:'小時', name:'時數', scope:'全部事件',
+          applies: () => true,
+          v: e => (e.a.moving_time_hr != null ? e.a.moving_time_hr : null),
+          f: v => v.toFixed(1) + ' 小時' },
+  km:   { code:'BHD', unit:'公里', name:'里程', scope:'騎乘・跑步・游泳',
+          applies: e => e.k !== 'weight',
+          v: e => (e.a.distance_km != null ? e.a.distance_km : null),
+          f: v => v.toFixed(1) + ' km' },
+  load: { code:'BHL', unit:'TSS', name:'訓練負荷', scope:'僅騎乘',
+          applies: e => e.k === 'ride',
+          v: e => (e.a.tss != null ? e.a.tss : null),
+          f: v => Math.round(v) + ' TSS' },
+};
+
+/* ════ 01 記震紙 ═══════════════════════════════════════════════════
+   一列一個月，橫軸是該月的日。振幅＝當日該通道的合計值。
+   波形是包絡繪法：包絡高度是真資料，載波是記震紙的記法（如同真實地震圖，
+   一次事件不會是一根針，是一段衰減震盪）。圖例會明說這件事。       */
+function drawDrum() {
+  const svg = $('#drum-svg');
+  svg.textContent = '';
+  const ch = CH[ST.ch], evs = events();
+  if (!evs.length) return;
+
+  const months = [];
+  for (const e of evs) { const m = e.a.date.slice(0, 7); if (!months.length || months[months.length - 1] !== m) if (!months.includes(m)) months.push(m); }
+  months.sort();
+
+  const W = 1200, L = 96, R = 62, TOP = 30, RH = 29, BOT = 34;
+  const H = TOP + months.length * RH + BOT;
+  svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+  const PW = W - L - R;
+
+  /* 斜線圖樣：該月不存在的日、以及所有「無讀數」遮罩共用 */
+  svg.appendChild(el('defs', null, [
+    el('pattern', { id:'hx', width:5, height:5, patternUnits:'userSpaceOnUse', patternTransform:'rotate(45)' },
+      el('line', { x1:0, y1:0, x2:0, y2:5, stroke:'var(--hatch)', 'stroke-width':1.4 })),
+  ]));
+
+  /* 每月每日累加 */
+  const byMonth = {};
+  months.forEach(m => { byMonth[m] = { day:{}, missDay:{}, n:0 }; });
+  let inScope = 0, missTot = 0;
+  for (const e of evs) {
+    const m = e.a.date.slice(0, 7); if (!byMonth[m]) continue;
+    const dd = +e.a.date.slice(8, 10);
+    byMonth[m].n++;
+    if (!ch.applies(e)) continue;          /* 本來就沒有這個量 —— 不是缺值 */
+    inScope++;
+    const v = ch.v(e);
+    /* 讀數 0 是讀數，不是缺值 —— 0.1 小時的騎乘 TSS 就是 0。只有 null 才算沒測到。
+       把 0 當缺值，就是這張紙自己在犯它最反對的那個錯。 */
+    if (v == null || !isFinite(v)) { byMonth[m].missDay[dd] = (byMonth[m].missDay[dd] || 0) + 1; missTot++; }
+    else if (v > 0) { byMonth[m].day[dd] = (byMonth[m].day[dd] || 0) + v; }
+  }
+  let peak = 0;
+  months.forEach(m => Object.values(byMonth[m].day).forEach(v => { if (v > peak) peak = v; }));
+  if (!peak) peak = 1;
+
+  const g = el('g');
+  svg.appendChild(g);
+
+  /* 印格：每 5 日一條細線，1／10／20／末日粗線（紙上先印好的格子） */
+  const grid = el('g');
+  for (let d = 1; d <= 31; d++) {
+    const x = L + (d - 1) / 30 * PW;
+    const major = (d === 1 || d === 10 || d === 20 || d === 31);
+    if (!major && d % 5 !== 0) continue;
+    grid.appendChild(el('line', { x1:x, y1:TOP - 8, x2:x, y2:TOP + months.length * RH,
+      stroke: major ? 'var(--grid-2)' : 'var(--grid-1)', 'stroke-width':1 }));
+    if (major || d % 10 === 0) grid.appendChild(txt(x, TOP - 15, String(d),
+      { 'font-size':11, fill:'var(--ink-3)', 'text-anchor':'middle', 'letter-spacing':'.06em' }));
+  }
+  grid.appendChild(txt(L - 6, TOP - 15, '日', { 'font-size':11, fill:'var(--ink-3)', 'text-anchor':'end' }));
+  g.appendChild(grid);
+
+  const CYC = ['var(--cyc-1)', 'var(--cyc-2)', 'var(--cyc-3)', 'var(--cyc-4)'];
+  const N = 620;                       /* 每列取樣點數 */
+  /* 最大偏擺刻意大於半個列高：真實記震紙上，夠大的事件本來就會壓過鄰列的基線。
+     這是這種紙的特徵，不是溢位 —— 也正是「那天很硬」一眼看得出來的原因。 */
+  const AMAX = RH * 0.86;
+
+  months.forEach((m, ri) => {
+    const [Y, Mo] = m.split('-').map(Number);
+    const dim = daysIn(Y, Mo);
+    const base = TOP + ri * RH + RH / 2;
+    const ink  = CYC[ri % 4];
+    const row  = el('g');
+
+    /* 列基線 */
+    row.appendChild(el('line', { x1:L, y1:base, x2:L + PW, y2:base, stroke:'var(--rule-soft)', 'stroke-width':.75 }));
+
+    /* 該月不存在的日 → 斜線遮罩（2 月只有 28 日，紙上那截根本沒有走過） */
+    if (dim < 31) {
+      const x0 = L + dim / 30 * PW;
+      row.appendChild(el('rect', { x:x0, y:base - RH / 2 + 1.5, width:(L + PW) - x0, height:RH - 3,
+        fill:'url(#hx)' }));
+    }
+
+    /* 月標籤 */
+    row.appendChild(txt(L - 12, base + 4, m, { 'font-size':11.5, fill:'var(--ink-2)', 'text-anchor':'end', 'letter-spacing':'.04em' }));
+    row.appendChild(txt(L + PW + 9, base + 4, byMonth[m].n + ' 筆',
+      { 'font-size':11, fill:'var(--ink-3)', 'letter-spacing':'.04em' }));
+
+    /* ── 波形合成 ── */
+    const rnd = rng((Y * 100 + Mo) * 2654435761 >>> 0);
+    const amp = new Float64Array(N + 1);
+    for (let i = 0; i <= N; i++) amp[i] = (rnd() - 0.5) * 0.9;   /* 背景噪訊 */
+
+    const days = Object.keys(byMonth[m].day).map(Number).sort((a, b) => a - b);
+    for (const d of days) {
+      const v  = byMonth[m].day[d];
+      const rel = Math.min(1, v / peak);
+      /* 0.55 次方：把中段的日子拉起來。線性的話 2 小時對 7.6 小時只有 26%，
+         在 30px 的列高上等於看不見 —— 而「有出門」本身就是要看得見的事。 */
+      const A  = Math.pow(rel, 0.55) * AMAX * ST.gain;
+      const i0 = Math.round((d - 1) / 30 * N);
+      const wN = Math.max(11, Math.round(N * 0.040 * (0.55 + 0.45 * rel)));
+      const ph = rnd() * 6.283, fq = 2.2 + rnd() * 1.3;
+      /* 先合成一段包絡震盪，再整段正規化到 A —— 這樣「最大的一天剛好滿格」
+         是保證的，不用去猜包絡與載波的相位會在哪裡相乘出峰值。 */
+      const pk = new Float64Array(wN + 1);
+      let mx = 0;
+      for (let j = 0; j <= wN; j++) {
+        const u = j / wN;
+        const env = Math.exp(-3.0 * u) * (1 - Math.exp(-18 * u));
+        const s = -env * Math.sin(u * wN * fq * 0.42 + ph);
+        pk[j] = s; if (Math.abs(s) > mx) mx = Math.abs(s);
+      }
+      if (!mx) continue;
+      for (let j = 0; j <= wN; j++) {
+        const i = i0 + j; if (i > N) break;
+        amp[i] += pk[j] / mx * A;
+      }
+    }
+    /* 缺值日：紙上打一個空心方框 + 斜線，代表「這天有事件但此通道無讀數」 */
+    const miss = Object.keys(byMonth[m].missDay).map(Number).sort((a, b) => a - b);
+
+    let dpath = '';
+    for (let i = 0; i <= N; i++) {
+      const x = L + i / N * PW;
+      const dd = Math.floor(i / N * 30) + 1;
+      const y = base + (dd > dim ? 0 : Math.max(-AMAX * 1.6, Math.min(AMAX * 1.6, amp[i])));
+      dpath += (i ? 'L' : 'M') + x.toFixed(2) + ' ' + y.toFixed(2);
+    }
+    const p = el('path', { d:dpath, fill:'none', stroke:ink, 'stroke-width':.95,
+      'stroke-linejoin':'round', 'stroke-linecap':'round', class:'tr' });
+    /* 動畫用：dasharray 設為路徑長，終態 offset 0（見 CSS §14） */
+    const len = Math.round(PW * 2.4);
+    p.setAttribute('stroke-dasharray', len);
+    p.style.setProperty('--len', len + 'px');
+    p.style.setProperty('--d', (ri * 0.055).toFixed(3) + 's');
+    row.appendChild(p);
+
+    for (const d of miss) {
+      const x = L + (d - 1) / 30 * PW;
+      const mk = el('g', { class:'fade' });
+      mk.style.setProperty('--d', (ri * 0.055 + 0.5).toFixed(3) + 's');
+      mk.appendChild(el('rect', { x:x - 3, y:base - 3, width:6, height:6, fill:'none',
+        stroke:'var(--sig-none)', 'stroke-width':1 }));
+      mk.appendChild(el('line', { x1:x - 3, y1:base + 3, x2:x + 3, y2:base - 3,
+        stroke:'var(--sig-none)', 'stroke-width':1 }));
+      row.appendChild(mk);
+    }
+    g.appendChild(row);
+  });
+
+  /* ── 下緣量測帶：記震紙原件角落一定有的那一條 ──
+     左邊測站與通道代碼，右邊振幅標尺（橫置，避免壓到每列右側的筆數） */
+  const by = TOP + months.length * RH + 17;
+  g.appendChild(el('line', { x1:L - 84, y1:by - 11, x2:L + PW + 42, y2:by - 11, stroke:'var(--rule)', 'stroke-width':.75 }));
+  g.appendChild(txt(L - 84, by + 3,
+    'TW.STEVE.BIKE.' + ch.code + '   增益 ×' + ST.gain + '   ' + months.length + ' 列 / ' + evs.length + ' 事件',
+    { 'font-size':11, fill:'var(--ink-3)', 'letter-spacing':'.06em' }));
+
+  /* 滿格值必須把增益與壓縮一起算進去，否則這頁唯一的儀器自己在讀錯：
+     偏擺 = rel^0.55 × gain，所以滿格發生在 rel = (1/gain)^(1/0.55)。
+     ×2 時滿格是尖峰的 28%，不是 50%。 */
+  const fullRel = Math.pow(1 / ST.gain, 1 / 0.55);
+  const sw = 62, sx1 = L + PW + 42 - sw, sy = by;
+  const sc = el('g');
+  sc.appendChild(el('line', { x1:sx1, y1:sy, x2:sx1 + sw, y2:sy, stroke:'var(--ink-2)', 'stroke-width':1 }));
+  [sx1, sx1 + sw].forEach(x => sc.appendChild(el('line', { x1:x, y1:sy - 4, x2:x, y2:sy + 4, stroke:'var(--ink-2)', 'stroke-width':1 })));
+  sc.appendChild(txt(sx1 + sw / 2, sy - 7, '滿格 ' + ch.f(peak * fullRel),
+    { 'font-size':11, fill:'var(--ink-2)', 'text-anchor':'middle' }));
+  g.appendChild(sc);
+
+  /* 重播那一次繪製動作 */
+  svg.classList.remove('plot-in'); void svg.getBoundingClientRect(); svg.classList.add('plot-in');
+
+  /* 無障礙：把圖說清楚給讀不到圖的人 */
+  $('#sheet').setAttribute('aria-label',
+    '記震紙。' + months.length + ' 列，每列一個月，' + months[0] + ' 至 ' + months[months.length - 1] +
+    '。通道為' + ch.name + '，涵蓋' + ch.scope + '，共 ' + inScope + ' 筆，其中 ' + missTot +
+    ' 筆沒測到。振幅滿格為 ' + ch.f(peak) + '。');
+
+  drawLegend(ch, peak, missTot, inScope, evs.length);
+}
+
+function drawLegend(ch, peak, missTot, inScope, total) {
+  const mk = (svgInner, label) =>
+    '<span class="lg">' + svgInner + '<span>' + label + '</span></span>';
+  const line = c => '<svg width="26" height="12" aria-hidden="true"><path d="M0 6 L5 6 L7 2 L9 10 L11 4 L13 8 L15 6 L26 6" fill="none" stroke="' + c + '" stroke-width="1.1"/></svg>';
+  const box  = '<svg width="12" height="12" aria-hidden="true"><rect x="2" y="2" width="8" height="8" fill="none" stroke="var(--sig-none)" stroke-width="1"/><line x1="2" y1="10" x2="10" y2="2" stroke="var(--sig-none)" stroke-width="1"/></svg>';
+  const hat  = '<svg width="14" height="12" aria-hidden="true"><rect x="1" y="1" width="12" height="10" fill="var(--hatch)"/></svg>';
+  $('#legend').innerHTML =
+    mk(line('var(--cyc-1)') , '振幅＝<b>當日' + ch.name + '</b>合計') +
+    mk('<svg width="26" height="12" aria-hidden="true"><path d="M0 6 L26 6" stroke="var(--cyc-2)" stroke-width="1.1"/><path d="M0 6 L26 6" stroke="var(--cyc-3)" stroke-width="1.1" transform="translate(0,-4)" opacity=".6"/></svg>',
+       '列色<b>僅供分列</b>，不帶意義') +
+    mk(box, '該測未測到：<b>' + missTot + '</b> / ' + inScope + ' 筆') +
+    mk('<svg width="12" height="12" aria-hidden="true"><line x1="1" y1="6" x2="11" y2="6" stroke="var(--ink-3)" stroke-width="1"/></svg>',
+       '本通道涵蓋 <b>' + ch.scope + '</b>，其餘 ' + (total - inScope) + ' 筆不適用') +
+    mk(hat, '該月不存在的日') +
+    mk('<svg width="26" height="12" aria-hidden="true"><path d="M0 10 L4 10 L6 3 L8 11 L10 5 L13 10 L26 10" fill="none" stroke="var(--ink-3)" stroke-width="1"/></svg>',
+       '波形為<b>包絡繪法</b>：高度是資料，震盪是記法') +
+    mk('<svg width="20" height="12" aria-hidden="true"><path d="M1 11 Q10 1 19 11" fill="none" stroke="var(--ink-3)" stroke-width="1"/></svg>',
+       '高度<b>非線性</b>（0.55 次方），小日子才看得見');
+}
+
+/* ════ 02 觀測摘要 ═══════════════════════════════════════════════ */
+function drawSummary() {
+  const s = ST.data.summary || {}, d = ST.data;
+  const evs = events();
+  const n = v => (v == null || !isFinite(v)) ? '<span class="c-nd">ND</span>' : (+v).toLocaleString('en-US');
+
+  /* 「次數」一律講清楚它數的是什麼。Strava 的年度統計不含重訓，
+     而上面那張記震紙的 306 筆是含的 —— 兩個數字不一樣是對的，但必須說出來，
+     否則就是這頁自己在製造一個對不起來的數字。 */
+  const ytdCnt = (s.ytd_rides || 0) + (s.ytd_runs || 0) + (s.ytd_swims || 0);
+  const sheetCnt = evs.length;
+  const sheetKm  = (d.recent_rides || []).reduce((a, r) => a + (r.distance_km || 0), 0)
+                 + (d.recent_runs  || []).reduce((a, r) => a + (r.distance_km || 0), 0);
+  const sheetEl  = (d.recent_rides || []).reduce((a, r) => a + (r.elevation_m || 0), 0);
+  const sheetHr  = evs.reduce((a, e) => a + (e.a.moving_time_hr || 0), 0);
+
+  $('#reg').innerHTML =
+    '<table class="log"><caption class="vh">觀測摘要：今年、全期與本頁記震紙三個期間的里程、爬升、時數與次數</caption>' +
+    '<thead><tr>' +
+      '<th scope="col">期間</th>' +
+      '<th scope="col">里程<u>km</u></th>' +
+      '<th scope="col">爬升<u>m</u></th>' +
+      '<th scope="col">時數<u>hr</u></th>' +
+      '<th scope="col">次數<u>次</u></th>' +
+    '</tr></thead><tbody>' +
+      '<tr>' +
+        '<th scope="row">今年<u>YEAR TO DATE</u></th>' +
+        '<td>' + n(s.ytd_distance_km) + '</td>' +
+        '<td>' + n(s.ytd_elevation_m) + '<em>約 ' + (s.ytd_elevation_m / 3952).toFixed(1) + ' 座玉山</em></td>' +
+        '<td>' + n(s.ytd_moving_time_hr) + '</td>' +
+        '<td>' + n(ytdCnt) + '<em>騎 ' + s.ytd_rides + ' · 跑 ' + s.ytd_runs + ' · 泳 ' + s.ytd_swims + '，不含重訓</em></td>' +
+      '</tr><tr>' +
+        '<th scope="row">全期<u>ALL TIME</u></th>' +
+        '<td>' + n(s.all_time_distance_km) + '</td>' +
+        '<td>' + n(s.all_time_elevation_m) + '<em>約 ' + (s.all_time_elevation_m / 8849).toFixed(2) + ' 座聖母峰</em></td>' +
+        '<td><span class="c-nd">ND</span><em>生涯統計未提供</em></td>' +
+        '<td>' + n(s.all_time_rides) + '<em>僅騎乘</em></td>' +
+      '</tr><tr>' +
+        '<th scope="row">本頁記震紙<u>ON THIS SHEET</u></th>' +
+        '<td>' + n(Math.round(sheetKm)) + '</td>' +
+        '<td>' + n(sheetEl) + '</td>' +
+        '<td>' + n(Math.round(sheetHr)) + '</td>' +
+        '<td>' + n(sheetCnt) + '<em>' + esc(evs[0].a.date) + ' 起，含重訓 ' + (d.recent_weights || []).length + ' 次</em></td>' +
+      '</tr>' +
+    '</tbody></table>';
+}
+
+/* ════ 03 反應譜 ═════════════════════════════════════════════════ */
+function drawSpectrum() {
+  const prs = (ST.data.power_prs || []).slice().sort((a, b) => a.duration_sec - b.duration_sec);
+  const svg = $('#spec-svg'); svg.textContent = '';
+  if (!prs.length) { $('#spec-list').innerHTML = '<div class="spec-r"><span class="c-nd">ND — 尚無功率紀錄</span></div>'; return; }
+
+  const W = 720, H = 430, L = 60, R = 22, T = 24, B = 50;
+  const PW = W - L - R, PH = H - T - B;
+  const lo = Math.log10(5), hi = Math.log10(3600);
+  const wmax = Math.ceil(Math.max(...prs.map(p => p.watts)) / 100) * 100;
+  const X = s => L + (Math.log10(s) - lo) / (hi - lo) * PW;
+  const Y = w => T + PH - (w / wmax) * PH;
+
+  /* 對數格 */
+  const ticks = [5, 10, 30, 60, 120, 300, 600, 1200, 3600];
+  const tlab  = { 5:'5秒', 10:'10秒', 30:'30秒', 60:'1分', 120:'2分', 300:'5分', 600:'10分', 1200:'20分', 3600:'60分' };
+  ticks.forEach(t => {
+    svg.appendChild(el('line', { x1:X(t), y1:T, x2:X(t), y2:T + PH, stroke:'var(--grid-1)', 'stroke-width':1 }));
+    svg.appendChild(txt(X(t), T + PH + 18, tlab[t], { 'font-size':11, fill:'var(--ink-3)', 'text-anchor':'middle' }));
+  });
+  for (let w = 0; w <= wmax; w += 100) {
+    svg.appendChild(el('line', { x1:L, y1:Y(w), x2:L + PW, y2:Y(w), stroke: w ? 'var(--grid-1)' : 'var(--grid-2)', 'stroke-width':1 }));
+    svg.appendChild(txt(L - 9, Y(w) + 4, String(w), { 'font-size':11, fill:'var(--ink-3)', 'text-anchor':'end' }));
+  }
+  svg.appendChild(txt(L - 9, T - 9, '瓦', { 'font-size':11, fill:'var(--ink-3)', 'text-anchor':'end' }));
+  svg.appendChild(txt(L + PW, T + PH + 38, '時距（對數）', { 'font-size':11, fill:'var(--ink-3)', 'text-anchor':'end' }));
+
+  /* 第 2、3 名的離散帶：判斷最佳值是不是孤例 */
+  prs.forEach(p => {
+    const t3 = (p.top3 || []).filter(x => x && x.watts);
+    if (t3.length < 2) return;
+    const ws = t3.map(x => x.watts);
+    svg.appendChild(el('line', { x1:X(p.duration_sec), y1:Y(Math.max(...ws)), x2:X(p.duration_sec), y2:Y(Math.min(...ws)),
+      stroke:'var(--ink-3)', 'stroke-width':4, opacity:.28 }));
+  });
+
+  /* 譜線 */
+  const dd = prs.map((p, i) => (i ? 'L' : 'M') + X(p.duration_sec).toFixed(1) + ' ' + Y(p.watts).toFixed(1)).join('');
+  const path = el('path', { d:dd, fill:'none', stroke:'var(--ink)', 'stroke-width':1.6, class:'tr' });
+  path.setAttribute('stroke-dasharray', 1600);
+  path.style.setProperty('--len', '1600px');
+  svg.appendChild(path);
+
+  prs.forEach((p, i) => {
+    const g = el('g', { class:'fade' });
+    g.style.setProperty('--d', (0.25 + i * 0.05).toFixed(2) + 's');
+    g.appendChild(el('rect', { x:X(p.duration_sec) - 3.5, y:Y(p.watts) - 3.5, width:7, height:7,
+      fill:'var(--sig-max)', stroke:'var(--paper-lo)', 'stroke-width':1 }));
+    g.appendChild(txt(X(p.duration_sec), Y(p.watts) - 11, String(p.watts),
+      { 'font-size':12, 'font-weight':700, fill:'var(--ink)', 'text-anchor':'middle' }));
+    svg.appendChild(g);
+  });
+  svg.appendChild(el('rect', { x:L, y:T, width:PW, height:PH, fill:'none', stroke:'var(--ink-2)', 'stroke-width':1 }));
+
+  const WT = 80;   /* athlete/基本資料.json latest_weight_kg，2026-04 量測 */
+  $('#spec-list').innerHTML = prs.slice().reverse().map(p => {
+    const t3 = (p.top3 || []).filter(x => x && x.watts && x.rank > 1);
+    return '<div class="spec-r">' +
+      '<span class="spec-d">' + esc(p.duration_label) + '</span>' +
+      '<span class="spec-w">' + p.watts + '<u>W</u>' +
+      '<em>' + (p.watts / WT).toFixed(1) + ' W/kg（以 ' + WT + ' kg 計・2026-04） · ' + esc(p.activity_name || '—') + '</em></span>' +
+      '<span class="spec-x"><b>' + esc(p.date) + '</b>' +
+      (t3.length ? '2／3 名 ' + t3.map(x => x.watts).join('／') : '<span class="c-nd">僅此一筆</span>') + '</span></div>';
+  }).join('');
+}
+
+/* ════ 04 重複事件 ═══════════════════════════════════════════════ */
+function segStatus(seg) {
+  /* 沿用既有 segScore 演算法，讓本頁的狀態與另外三版一致 */
+  const effs = (seg.efforts || []).filter(e => e && e.date);
+  const sorted = effs.slice().sort((a, b) => a.elapsed_sec - b.elapsed_sec);
+  const pr = effs.find(e => e.is_pr) || sorted[0];
+  const latest = effs.slice().sort((a, b) => b.date.localeCompare(a.date))[0];
+  const c90 = TPE(); c90.setDate(c90.getDate() - 90);
+  const c90s = c90.toISOString().slice(0, 10);
+
+  const withW  = effs.filter(e => e.avg_watts);
+  const rec90  = withW.filter(e => e.date >= c90s);
+  const top5   = rec90.slice().sort((a, b) => b.avg_watts - a.avg_watts).slice(0, 5);
+  const useRec = top5.length >= 3;
+  const allTop = !useRec ? withW.slice().sort((a, b) => b.avg_watts - a.avg_watts).slice(0, 5) : [];
+  const useAll = !useRec && allTop.length >= 3;
+  const has    = useRec || useAll;
+  const src    = useRec ? top5 : allTop;
+  const pAvg   = has ? src.reduce((s, e) => s + e.avg_watts, 0) / src.length : null;
+  const tAvg   = has ? src.reduce((s, e) => s + e.elapsed_sec, 0) / src.length : null;
+
+  let since = latest && latest.date ? Math.max(0, dayDiff(latest.date.slice(0, 10), today())) : null;
+  let score = null;
+  if (has && latest && latest.avg_watts && latest.elapsed_sec && pAvg && tAvg)
+    score = (latest.avg_watts / pAvg) * 0.7 + (tAvg / latest.elapsed_sec) * 0.3;
+  const pct = score !== null ? Math.round(score * 100) : null;
+
+  const asc = effs.slice().sort((a, b) => a.date.localeCompare(b.date));
+  const heat = asc.length >= 3 && asc.slice(-3)[0].elapsed_sec > asc.slice(-3)[1].elapsed_sec
+                               && asc.slice(-3)[1].elapsed_sec > asc.slice(-3)[2].elapsed_sec;
+
+  let en, zh, sub, col;
+  if (effs.length === 1)                                   { en='NEW';          zh='初次計時'; sub='FIRST ATTEMPT';    col='var(--ink)'; }
+  else if (latest && pr && latest.activity_id === pr.activity_id)
+                                                           { en='BREAKTHROUGH'; zh='刷新紀錄'; sub='NEW PEAK';         col='var(--sig-max)'; }
+  else if (heat && (score === null || score >= 0.88))      { en='HEATING UP';   zh='連三次進步'; sub='3 STREAK';       col='var(--sig-recent)'; }
+  else if (score === null || since === null)               { en='UNTOUCHED';    zh='無可比讀數'; sub='NO RECENT EFFORT'; col='var(--sig-none)'; }
+  else if (since > 45 || score < 0.88)                     { en='UNTOUCHED';    zh='該喚醒了';  sub='WAKE THIS SEGMENT'; col='var(--sig-none)'; }
+  else if (score >= 0.99)                                  { en='PEAK';         zh='巔峰狀態'; sub='AT YOUR BEST';     col='var(--sig-recent)'; }
+  else if (score >= 0.96)                                  { en='RISING';       zh='上升中';   sub='APPROACHING PEAK'; col='var(--ink)'; }
+  else if (score >= 0.92)                                  { en='HOLD';         zh='穩定中';   sub='STABLE OUTPUT';    col='var(--ink)'; }
+  else                                                     { en='DECLINING';    zh='表現下滑'; sub='BELOW TREND';      col='var(--ink)'; }
+
+  const best90 = effs.filter(e => e.date >= c90s).sort((a, b) => a.elapsed_sec - b.elapsed_sec)[0] || null;
+  return { pr, latest, since, pct, has, benchAll:useAll, en, zh, sub, col, best90, n:effs.length,
+           noWatt: effs.length - withW.length, effs:asc };
+}
+
+/* ── 疊合比對條 ──
+   把六個路段的挑戰序列各自除以自己的 PR，換成「比自己最好的一次慢幾 %」。
+   除掉絕對秒數之後，6 公里的爬坡跟 2.6 公里的短坡才放得進同一張圖比較。
+   100% 就是 PR，越上面越接近 PR。 */
+function drawStack() {
+  const segs = (ST.data.segments || []).filter(s => (s.efforts || []).length);
+  const svg = $('#stack-svg'); svg.textContent = '';
+  if (!segs.length) return;
+
+  const series = segs.map(sg => {
+    const effs = (sg.efforts || []).slice().sort((a, b) => a.date.localeCompare(b.date));
+    const pr = Math.min(...effs.map(e => e.elapsed_sec));
+    const st = segStatus(sg);
+    return { id:sg.id, name:(ST.cfg[sg.id] || {}).nameZh || sg.name, pr, st,
+             pts:effs.map(e => ({ d:e.date, pct:e.elapsed_sec / pr * 100, id:e.activity_id })) };
+  });
+
+  const W = 1180, H = 280, L = 66, R = 120, T = 26, B = 38;
+  const PW = W - L - R, PH = H - T - B;
+  const allD = series.flatMap(s => s.pts.map(p => Date.parse(p.d)));
+  const t0 = Math.min(...allD), t1 = Math.max(...allD), span = Math.max(1, t1 - t0);
+  const maxPct = Math.min(260, Math.ceil(Math.max(...series.flatMap(s => s.pts.map(p => p.pct))) / 10) * 10);
+  const X = d => L + (Date.parse(d) - t0) / span * PW;
+  const Y = p => T + (Math.min(p, maxPct) - 100) / (maxPct - 100) * PH;
+
+  for (let v = 100; v <= maxPct; v += (maxPct - 100) > 80 ? 40 : 20) {
+    svg.appendChild(el('line', { x1:L, y1:Y(v), x2:L + PW, y2:Y(v),
+      stroke: v === 100 ? 'var(--grid-2)' : 'var(--grid-1)', 'stroke-width':1 }));
+    svg.appendChild(txt(L - 9, Y(v) + 4, v + '%', { 'font-size':11, fill:'var(--ink-3)', 'text-anchor':'end' }));
+  }
+  svg.appendChild(txt(L - 9, T - 9, '慢', { 'font-size':11, fill:'var(--ink-3)', 'text-anchor':'end' }));
+  svg.appendChild(txt(L + PW / 2, T - 9, '100% ＝ 該路段的 PR',
+    { 'font-size':11, fill:'var(--ink-3)', 'text-anchor':'middle' }));
+
+  series.forEach(s => {
+    const on = ST.pin === s.id, ghost = ST.pin != null && !on;
+    const d = s.pts.map((p, i) => (i ? 'L' : 'M') + X(p.d).toFixed(1) + ' ' + Y(p.pct).toFixed(1)).join('');
+    svg.appendChild(el('path', { d, fill:'none', stroke:'var(--ink)',
+      'stroke-width': on ? 2 : 1, opacity: on ? 1 : ghost ? .13 : .3 }));
+    if (on) {
+      s.pts.forEach(p => {
+        const isPR = Math.round(p.pct) === 100;
+        svg.appendChild(el(isPR ? 'rect' : 'circle', isPR
+          ? { x:X(p.d) - 4, y:Y(p.pct) - 4, width:8, height:8, fill:'var(--sig-max)' }
+          : { cx:X(p.d), cy:Y(p.pct), r:3, fill:'var(--ink)' }));
+      });
+      const last = s.pts[s.pts.length - 1];
+      svg.appendChild(txt(Math.min(X(last.d) + 9, L + PW + 8), Y(last.pct) + 4, s.name,
+        { 'font-size':11, fill:'var(--ink)', 'font-weight':700 }));
+    }
+  });
+  svg.appendChild(el('rect', { x:L, y:T, width:PW, height:PH, fill:'none', stroke:'var(--ink-2)', 'stroke-width':1 }));
+  svg.appendChild(txt(L, H - 10, new Date(t0).toISOString().slice(0, 10), { 'font-size':11, fill:'var(--ink-3)' }));
+  svg.appendChild(txt(L + PW, H - 10, new Date(t1).toISOString().slice(0, 10),
+    { 'font-size':11, fill:'var(--ink-3)', 'text-anchor':'end' }));
+
+  $('#stack-pins').innerHTML = series.map(s =>
+    '<button class="pin" data-pin="' + s.id + '" aria-pressed="' + (ST.pin === s.id) + '">' +
+    esc(s.name) + '<i>' + s.pts.length + ' 次 · 最慢 ' + Math.round(Math.max(...s.pts.map(p => p.pct))) + '%</i></button>').join('') +
+    '<button class="pin" data-pin="none" aria-pressed="' + (ST.pin == null) + '">全部並列<i>不釘選</i></button>';
+
+  const p = ST.pin != null ? series.find(x => x.id === ST.pin) : null;
+  $('#stack-note').innerHTML = p
+    ? '已釘選 <b>' + esc(p.name) + '</b>：' + p.pts.length + ' 次挑戰，PR ' + fmtSec(p.pr) +
+      '（方塊），最近一次是 PR 的 <b>' + Math.round(p.pts[p.pts.length - 1].pct) + '%</b>。其餘五段退成幽靈層以供對照。'
+    : '六段全部並列。<b>點任一段釘選</b>，它會升到最上層上滿墨，其餘退成幽靈層，' +
+      '這樣看得出來是整體在退，還是只有某一段在退。';
+}
+
+function drawRepeat() {
+  const segs = ST.data.segments || [];
+  if (!segs.length) { $('#rep').innerHTML = '<div class="rep-hd"><span class="c-nd">ND — 尚無路段紀錄</span></div>'; return; }
+
+  $('#rep').innerHTML = segs.map(seg => {
+    const s = segStatus(seg), meta = ST.cfg[seg.id] || {};
+    const komS = seg.kom_elapsed_sec || null;
+    const gap  = (s.pr && komS) ? s.pr.elapsed_sec - komS : null;
+    const drift = (s.latest && s.pr) ? s.latest.elapsed_sec - s.pr.elapsed_sec : null;
+
+    return '<div class="rep-r">' +
+      '<div class="rep-hd">' +
+        '<div class="rep-nm">' + esc(meta.nameZh || seg.name) +
+          '<u>' + esc(meta.type || 'SEGMENT') + ' · ' + seg.distance_km + ' KM' +
+          (meta.avgGrade ? ' · 均坡 ' + meta.avgGrade + '%' : '') + ' · ' + s.n + ' 次挑戰</u></div>' +
+        '<div class="rep-st" style="color:' + s.col + '"><b>' + s.en + '</b>' +
+          '<em>' + esc(s.zh) + ' · ' + (s.pct !== null ? s.pct + '% OF PEAK' + (s.benchAll ? ' (ALL-TIME)' : '') : (s.has ? '—' : 'NO BENCHMARK')) + '</em></div>' +
+      '</div>' +
+      '<div class="rep-body">' +
+        '<div class="rep-plot">' + repPlot(seg, s) + '</div>' +
+        '<div class="rep-side">' +
+          cell('歷史最佳 PR', s.pr ? fmtSec(s.pr.elapsed_sec) : null, s.pr ? s.pr.date : '', 'var(--sig-max)') +
+          cell('90 天內最佳', s.best90 ? fmtSec(s.best90.elapsed_sec) : null, s.best90 ? s.best90.date : '近 90 天無挑戰', 'var(--sig-recent)') +
+          cell('最近一次', s.latest ? fmtSec(s.latest.elapsed_sec) : null,
+               (s.since != null ? s.since + ' 天前' : '') + (drift != null ? (drift > 0 ? ' · 慢 ' + fmtSec(drift) : drift < 0 ? ' · 快 ' + fmtSec(-drift) : ' · 追平') : ''), '') +
+          cell('離 KOM', gap != null ? (gap >= 0 ? '+' + fmtSec(gap) : '快 ' + fmtSec(-gap)) : null, komS ? 'KOM ' + esc(seg.kom_time_str) : 'KOM 未提供', '') +
+          cell('PR 功率', s.pr && s.pr.avg_watts ? s.pr.avg_watts + '<u>W</u>' : null,
+               s.pr && s.pr.avg_watts ? (s.pr.avg_watts / 80).toFixed(1) + ' W/kg' : '該次無功率計', '') +
+          cell('缺功率', s.noWatt ? s.noWatt + '<u>/' + s.n + '</u>' : '0<u>/' + s.n + '</u>',
+               s.noWatt ? '這幾次不計入基準線' : '全部有讀數', s.noWatt ? 'var(--sig-none)' : '') +
+          (meta.profile && meta.profile.length
+            ? '<div class="rep-cell rep-prof"><div class="rep-k">坡度剖面 · 最陡 ' + (meta.maxGrade != null ? meta.maxGrade + '%' : 'ND') + '</div>' + profileSvg(meta.profile) + '</div>'
+            : '<div class="rep-cell rep-prof"><div class="rep-k">坡度剖面</div><span class="c-nd">ND — 此路段尚無高度資料</span></div>') +
+        '</div>' +
+      '</div></div>';
+  }).join('');
+}
+function cell(k, v, note, col) {
+  return '<div class="rep-cell"><div class="rep-k">' + esc(k) + '</div>' +
+    '<div class="rep-v"' + (col ? ' style="color:' + col + '"' : '') + '>' +
+    (v == null ? '<span class="c-nd">ND</span>' : v) + '</div>' +
+    (note ? '<div class="rep-k" style="margin:5px 0 0">' + esc(note) + '</div>' : '') + '</div>';
+}
+
+/* 每個路段的挑戰序列：橫軸日期、縱軸完成秒數（越上面越快） */
+function repPlot(seg, s) {
+  const effs = s.effs; if (!effs.length) return '<svg viewBox="0 0 880 250"></svg>';
+  const W = 880, H = 250, L = 62, R = 22, T = 22, B = 36;
+  const PW = W - L - R, PH = H - T - B;
+  const t0 = Date.parse(effs[0].date), t1 = Date.parse(effs[effs.length - 1].date);
+  const span = Math.max(1, t1 - t0);
+  const secs = effs.map(e => e.elapsed_sec);
+  const kom  = seg.kom_elapsed_sec || null;
+  let lo = Math.min(...secs), hi = Math.max(...secs);
+  if (kom && kom < lo) lo = kom;
+  const padv = (hi - lo) * 0.12 || 10;
+  lo -= padv; hi += padv;
+  const X = d => L + (Date.parse(d) - t0) / span * PW;
+  const Y = v => T + (v - lo) / (hi - lo) * PH;
+
+  let o = '<svg viewBox="0 0 ' + W + ' ' + H + '" aria-hidden="true">';
+  /* 格線落在整分鐘上。用 lo/hi 直接均分會印出 13:29、23:28 這種沒有意義的刻度，
+     計時表的橫線本來就該落在讀得出來的數字上。 */
+  const STEPS = [30, 60, 120, 180, 300, 600, 900];
+  const step = STEPS.find(s => (hi - lo) / s <= 5) || 1800;
+  for (let v = Math.ceil(lo / step) * step; v <= hi; v += step) {
+    const y = Y(v);
+    o += '<line x1="' + L + '" y1="' + y.toFixed(1) + '" x2="' + (L + PW) + '" y2="' + y.toFixed(1) + '" stroke="var(--grid-1)" stroke-width="1"/>';
+    o += '<text x="' + (L - 9) + '" y="' + (y + 4).toFixed(1) + '" font-size="11" fill="var(--ink-3)" text-anchor="end">' + fmtSec(v) + '</text>';
+  }
+  if (kom && kom >= lo && kom <= hi)
+    o += '<line x1="' + L + '" y1="' + Y(kom).toFixed(1) + '" x2="' + (L + PW) + '" y2="' + Y(kom).toFixed(1) +
+         '" stroke="var(--ink-3)" stroke-width="1" stroke-dasharray="4 3"/>' +
+         '<text x="' + (L + PW) + '" y="' + (Y(kom) - 6).toFixed(1) + '" font-size="11" fill="var(--ink-3)" text-anchor="end">KOM ' + esc(seg.kom_time_str || '') + '</text>';
+
+  o += '<path d="' + effs.map((e, i) => (i ? 'L' : 'M') + X(e.date).toFixed(1) + ' ' + Y(e.elapsed_sec).toFixed(1)).join('') +
+       '" fill="none" stroke="var(--ink-2)" stroke-width="1" opacity=".55"/>';
+
+  effs.forEach(e => {
+    const isPR   = s.pr && e.activity_id === s.pr.activity_id;
+    const is90   = s.best90 && e.activity_id === s.best90.activity_id && !isPR;
+    const noW    = !e.avg_watts;
+    const c = isPR ? 'var(--sig-max)' : is90 ? 'var(--sig-recent)' : noW ? 'var(--sig-none)' : 'var(--ink)';
+    const x = X(e.date).toFixed(1), y = Y(e.elapsed_sec).toFixed(1);
+    /* 形狀是第二編碼：最佳＝方、90天內最佳＝菱、缺功率＝空心圈、其餘＝實心圈 */
+    if (isPR)      o += '<rect x="' + (x - 4) + '" y="' + (y - 4) + '" width="8" height="8" fill="' + c + '"/>';
+    else if (is90) o += '<path d="M' + x + ' ' + (y - 4.6) + 'L' + (+x + 4.6) + ' ' + y + 'L' + x + ' ' + (+y + 4.6) + 'L' + (x - 4.6) + ' ' + y + 'Z" fill="' + c + '"/>';
+    else if (noW)  o += '<circle cx="' + x + '" cy="' + y + '" r="3.2" fill="none" stroke="' + c + '" stroke-width="1.3"/>';
+    else           o += '<circle cx="' + x + '" cy="' + y + '" r="2.8" fill="' + c + '"/>';
+  });
+  o += '<text x="' + L + '" y="' + (H - 10) + '" font-size="11" fill="var(--ink-3)">' + esc(effs[0].date) + '</text>';
+  o += '<text x="' + (L + PW) + '" y="' + (H - 10) + '" font-size="11" fill="var(--ink-3)" text-anchor="end">' + esc(effs[effs.length - 1].date) + '</text>';
+  o += '<rect x="' + L + '" y="' + T + '" width="' + PW + '" height="' + PH + '" fill="none" stroke="var(--ink-2)" stroke-width="1"/>';
+  return o + '</svg>';
+}
+
+/* 坡度剖面：profile 的 y 是 0 最高 / 40 最低，要翻回來 */
+function profileSvg(prof) {
+  const W = 268, H = 46;
+  const pts = prof.map(p => [p[0] / 100 * W, (p[1] / 40) * (H - 8) + 4]);
+  const d = pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join('');
+  return '<svg viewBox="0 0 ' + W + ' ' + H + '" aria-hidden="true">' +
+    '<path d="' + d + 'L' + W + ' ' + H + 'L0 ' + H + 'Z" fill="var(--hatch)"/>' +
+    '<path d="' + d + '" fill="none" stroke="var(--ink)" stroke-width="1.4"/></svg>';
+}
+
+/* ════ 05 觀測班表 ═══════════════════════════════════════════════ */
+function drawCoverage() {
+  const g = ST.data.monthly_goals || {}, q = ST.data.weekly_quest || {}, ms = ST.data.monthly_summary || {};
+  const NAME = { ride:['騎乘','RIDE'], run:['跑步','RUN'], swim:['游泳','SWIM'], weight:['重訓','STRENGTH'] };
+  const now = TPE();
+  const monTag = now.getFullYear() + '-' + pad2(now.getMonth() + 1);
+
+  const goalRows = Object.keys(NAME).map(k => {
+    const it = g[k]; if (!it) return '';
+    const done = it.count || 0, tgt = it.target || 0;
+    const units = Math.max(tgt, done);
+    let bar = '';
+    for (let i = 0; i < units; i++) bar += '<span class="cov-u ' + (i < done ? 'f' : 'e') + '"></span>';
+    /* `ms.run_km` 這個月是 0。用真值判斷會讓真實的 0 掉進 null 分支，
+       印成灰色的「本月無紀錄」—— 灰是「測站無資料」的墨。做了零次跟不知道做幾次
+       是兩件事，這頁的立場就是這個。一律用 != null。 */
+    const extra = { ride:   ms.ride_km   != null ? ms.ride_km + ' km · ' + ms.ride_hr + ' hr' : null,
+                    run:    ms.run_km    != null ? ms.run_km  + ' km' : null,
+                    swim:   ms.swim_m    != null ? ms.swim_m  + ' m'  : null,
+                    weight: ms.weight_hr != null ? ms.weight_hr + ' hr' : null }[k];
+    const st = done >= tgt ? (done > tgt ? '超出目標 ' + (done - tgt) + ' 次' : '達標') : '尚缺 ' + (tgt - done) + ' 次';
+    return '<div class="cov-r"><div class="cov-l">' +
+      '<span class="cov-n">' + NAME[k][0] + '<u>' + NAME[k][1] + '</u></span>' +
+      '<span class="cov-f"><b style="color:' + (done >= tgt ? 'var(--sig-ok)' : 'var(--ink)') + '">' + done + '</b> / ' + tgt + ' 次</span></div>' +
+      '<div class="cov-bar" role="img" aria-label="' + NAME[k][0] + ' ' + done + ' / ' + tgt + ' 次">' + bar + '</div>' +
+      '<div class="cov-s">' + st + (extra != null ? ' · ' + extra : ' · <span class="c-nd">ND — 無彙總資料</span>') + '</div></div>';
+  }).join('');
+
+  const questRows = Object.keys(NAME).map(k => {
+    const it = q[k]; if (!it) return '';
+    let tgtTxt, curTxt, ratio;
+    if (k === 'ride')       { tgtTxt = it.target_km + ' km / ' + it.target_hr + ' hr'; curTxt = (it.distance_km || 0) + ' km · ' + (it.moving_time_hr || 0) + ' hr'; ratio = (it.distance_km || 0) / (it.target_km || 1); }
+    else if (k === 'run')   { tgtTxt = it.target_km + ' km / ' + it.target_hr + ' hr'; curTxt = (it.distance_km || 0) + ' km · ' + (it.moving_time_hr || 0) + ' hr'; ratio = (it.distance_km || 0) / (it.target_km || 1); }
+    else if (k === 'swim')  { tgtTxt = it.target_m + ' m / ' + it.target_hr + ' hr';   curTxt = (it.distance_m || 0) + ' m · ' + (it.moving_time_hr || 0) + ' hr'; ratio = (it.distance_m || 0) / (it.target_m || 1); }
+    else                    { tgtTxt = it.target + ' 次';                              curTxt = (it.count || 0) + ' 次'; ratio = (it.count || 0) / (it.target || 1); }
+    /* 本週的量是連續的（公里、公尺），不像本月是可數的次數。所以整條 10 格＝目標，
+       填到哪就是進度到哪；超標不再把整條染成鏽紅（那會讓 406% 讀起來像出事了），
+       超出的倍數改用文字說。鏽紅在本頁一律代表「最高紀錄」，不該被借去表示溢出。 */
+    const units = 10, filled = Math.min(units, Math.round(ratio * units));
+    let bar = '';
+    for (let i = 0; i < units; i++) bar += '<span class="cov-u ' + (i < filled ? 'f' : 'e') + '"></span>';
+    const pct = Math.round(ratio * 100);
+    return '<div class="cov-r"><div class="cov-l">' +
+      '<span class="cov-n">' + NAME[k][0] + '<u>' + (it.done ? 'CLEARED' : 'OPEN') + '</u></span>' +
+      '<span class="cov-f" style="color:' + (it.done ? 'var(--sig-ok)' : 'var(--ink-2)') + '">' + esc(curTxt) + '</span></div>' +
+      '<div class="cov-bar" role="img" aria-label="' + NAME[k][0] + '本週 ' + esc(curTxt) + '，目標 ' + esc(tgtTxt) + '，達成 ' + pct + '%">' + bar + '</div>' +
+      '<div class="cov-s">目標 ' + esc(tgtTxt) + ' · ' + (it.done ? '已完成' : '未完成') +
+      ' · 達成 ' + pct + '%' + (ratio > 1.05 ? '（超標 ' + (ratio).toFixed(1) + ' 倍）' : '') + '</div></div>';
+  }).join('');
+
+  $('#cov').innerHTML =
+    '<div class="cov-col"><div class="cov-t"><span>本月目標 · MONTHLY</span><b>' + monTag + '</b></div>' + goalRows + '</div>' +
+    '<div class="cov-col"><div class="cov-t"><span>本週任務 · WEEKLY QUEST</span><b>週一起算</b></div>' + questRows + '</div>';
+}
+
+/* ════ 06 月報 ═══════════════════════════════════════════════════ */
+function drawBulletin() {
+  const mh = (ST.data.monthly_history || []).slice();
+  const svg = $('#bul-svg'); svg.textContent = '';
+  if (!mh.length) return;
+
+  const W = 1200, L = 74, R = 66, T = 26, B = 54, LANE = 86, GAP = 14;
+  const lanes = [
+    { k:'里程', u:'km',  c:'var(--cyc-1)', v:m => m.ride.distance_km,  cnt:m => m.ride.count },
+    { k:'爬升', u:'m',   c:'var(--cyc-3)', v:m => m.ride.elevation_m,  cnt:null },
+    { k:'次數', u:'次',  c:'var(--cyc-4)', v:m => m.ride.count + (m.run.count || 0) + (m.swim.count || 0) + (m.weight_training.count || 0), cnt:null },
+  ];
+  const H = T + lanes.length * (LANE + GAP) + B;
+  svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+  const PW = W - L - R, bw = PW / mh.length;
+
+  lanes.forEach((ln, li) => {
+    const top = T + li * (LANE + GAP);
+    const max = Math.max(...mh.map(ln.v)) || 1;
+    const gp = el('g');
+    gp.appendChild(el('line', { x1:L, y1:top + LANE, x2:L + PW, y2:top + LANE, stroke:'var(--ink-2)', 'stroke-width':1 }));
+    for (let i = 1; i <= 2; i++)
+      gp.appendChild(el('line', { x1:L, y1:top + LANE - i / 2 * LANE, x2:L + PW, y2:top + LANE - i / 2 * LANE, stroke:'var(--grid-1)', 'stroke-width':1 }));
+    gp.appendChild(txt(L - 9, top + 11, ln.k, { 'font-size':11.5, 'font-weight':700, fill:'var(--ink-2)', 'text-anchor':'end' }));
+    gp.appendChild(txt(L - 9, top + 26, ln.u, { 'font-size':11, fill:'var(--ink-3)', 'text-anchor':'end' }));
+    gp.appendChild(txt(L - 9, top + LANE + 4, '0', { 'font-size':11, fill:'var(--ink-3)', 'text-anchor':'end' }));
+    gp.appendChild(txt(L + PW + 8, top + 11, String(Math.round(max)), { 'font-size':11, fill:'var(--ink-3)' }));
+
+    mh.forEach((m, i) => {
+      const v = ln.v(m), h = (v / max) * LANE;
+      const x = L + i * bw + bw * 0.2, w = bw * 0.6;
+      const g2 = el('g', { class:'fade' });
+      g2.style.setProperty('--d', (li * 0.1 + i * 0.022).toFixed(3) + 's');
+      if (v > 0) {
+        g2.appendChild(el('rect', { x, y:top + LANE - h, width:w, height:h, fill:ln.c }));
+        if (h > 20) g2.appendChild(txt(x + w / 2, top + LANE - h - 5, String(Math.round(v)),
+          { 'font-size':11, fill:'var(--ink-2)', 'text-anchor':'middle' }));
+      } else {
+        /* 零不是缺值，但也不是條 —— 用底線上的空框標記「這個月沒有」 */
+        g2.appendChild(el('rect', { x, y:top + LANE - 5, width:w, height:5, fill:'none', stroke:'var(--sig-none)', 'stroke-width':1, 'stroke-dasharray':'2 2' }));
+      }
+      gp.appendChild(g2);
+    });
+    svg.appendChild(gp);
+  });
+
+  mh.forEach((m, i) => {
+    const x = L + i * bw + bw / 2;
+    svg.appendChild(txt(x, H - B + 26, m.month.slice(5) + '月',
+      { 'font-size':11, fill:'var(--ink-3)', 'text-anchor':'middle' }));
+    if (m.month.slice(5) === '01' || i === 0)
+      svg.appendChild(txt(x, H - B + 40, m.month.slice(0, 4), { 'font-size':11, fill:'var(--ink-2)', 'text-anchor':'middle', 'font-weight':700 }));
+  });
+
+  /* 月增減：與前月比 */
+  const last = mh[mh.length - 1], prev = mh[mh.length - 2];
+  const dk = prev && prev.ride.distance_km ? ((last.ride.distance_km - prev.ride.distance_km) / prev.ride.distance_km * 100) : null;
+  $('#bul-note').innerHTML =
+    '共 ' + mh.length + ' 個月（' + esc(mh[0].month) + ' – ' + esc(last.month) + '）。' +
+    '最新月份 ' + esc(last.month) + ' 里程 <b>' + last.ride.distance_km + ' km</b>' +
+    (dk !== null ? '，較前月 <b style="color:' + (dk >= 0 ? 'var(--sig-ok)' : 'var(--ink)') + '">' + (dk >= 0 ? '+' : '') + dk.toFixed(0) + '%</b>' : '') +
+    '。虛線空框代表<b>該月該項為零</b> —— 這是真的沒有做，不是資料缺失；資料缺失在記震紙與事件目錄上另有標記。';
+}
+
+/* ════ 07 事件目錄 ═══════════════════════════════════════════════ */
+const CAT = {
+  ride:   { zh:'騎乘', code:'RIDE',  src:d => d.recent_rides   || [], magK:'TSS' },
+  run:    { zh:'跑步', code:'RUN',   src:d => d.recent_runs    || [], magK:'KM' },
+  swim:   { zh:'游泳', code:'SWIM',  src:d => d.recent_swims   || [], magK:'M' },
+  weight: { zh:'重訓', code:'LIFT',  src:d => d.recent_weights || [], magK:'MIN' },
+};
+function drawCatTabs() {
+  $('#cat-tabs').innerHTML = Object.keys(CAT).map(k =>
+    '<button class="cat-tab" data-cat="' + k + '" aria-pressed="' + (k === ST.cat) + '">' +
+    CAT[k].zh + '<i>' + CAT[k].code + ' · ' + CAT[k].src(ST.data).length + ' 筆</i></button>').join('');
+}
+function drawCatalog() {
+  const c = CAT[ST.cat];
+  const rows = c.src(ST.data).slice().sort((a, b) => (b.date + (b.time || '')).localeCompare(a.date + (a.time || '')));
+  const show = rows.slice(0, ST.catN);
+  const nd = '<span class="c-nd">ND</span>';
+  const prIds = new Set((ST.data.power_prs || []).map(p => p.activity_id));
+
+  let head, body;
+  if (ST.cat === 'ride') {
+    head = ['起始時間', '事件', '規模 TSS', '里程 km', '爬升 m', '均功率 W', 'NP W', '均心率 bpm', '時長'];
+    body = show.map(a =>
+      tr(a, [
+        num(a.tss, 0), num(a.distance_km, 2), num(a.elevation_m, 0),
+        a.avg_watts != null ? a.avg_watts : nd,
+        a.np_watts  != null ? a.np_watts  : nd,
+        a.avg_heartrate != null ? a.avg_heartrate : nd,
+        fmtHM(a.moving_time_sec || (a.moving_time_hr || 0) * 3600),
+      ], prIds.has(a.id) ? '功率 PR 來源' : null)).join('');
+  } else if (ST.cat === 'run') {
+    head = ['起始時間', '事件', '規模 km', '配速 /km', '爬升 m', '步頻 spm', '均心率 bpm', '時長'];
+    body = show.map(a => tr(a, [
+      num(a.distance_km, 2), a.avg_pace_km || nd, num(a.elevation_m, 0),
+      a.avg_cadence_spm != null ? a.avg_cadence_spm : nd,
+      a.avg_heartrate != null ? a.avg_heartrate : nd,
+      fmtHM(a.moving_time_sec || (a.moving_time_hr || 0) * 3600),
+    ])).join('');
+  } else if (ST.cat === 'swim') {
+    head = ['起始時間', '事件', '規模 m', '配速 /100m', '均心率 bpm', '最大心率 bpm', '時長'];
+    body = show.map(a => tr(a, [
+      num((a.distance_km || 0) * 1000, 0), a.pace_per_100m || nd,
+      a.avg_heartrate != null ? a.avg_heartrate : nd,
+      a.max_heartrate != null ? a.max_heartrate : nd,
+      fmtHM(a.moving_time_sec || (a.moving_time_hr || 0) * 3600),
+    ])).join('');
+  } else {
+    head = ['起始時間', '事件', '規模 min', '均心率 bpm', '最大心率 bpm', '時長'];
+    body = show.map(a => tr(a, [
+      num((a.moving_time_hr || 0) * 60, 0),
+      a.avg_heartrate != null ? a.avg_heartrate : nd,
+      a.max_heartrate != null ? a.max_heartrate : nd,
+      fmtHM((a.moving_time_hr || 0) * 3600),
+    ])).join('');
+  }
+
+  const headRow = '<tr>' + head.map(h => '<th scope="col">' + esc(h) + '</th>').join('') + '</tr>';
+  /* 每 20 列重印欄頭，讓 9 個數字欄在長表上不會失去標題 */
+  const parts = body.split('</tr>').filter(Boolean).map(x => x + '</tr>');
+  const withHeads = parts.map((r, i) => (i && i % 20 === 0 ? headRow : '') + r).join('');
+
+  $('#cat-wrap').innerHTML =
+    '<table class="cat"><caption>通道 ' + c.code + ' · 共 ' + rows.length + ' 筆，現示 ' + show.length + ' 筆 · 依起始時間逆序</caption>' +
+    '<thead>' + headRow + '</thead>' +
+    '<tbody>' + withHeads + '</tbody></table>';
+
+  const more = $('#cat-more');
+  if (rows.length > ST.catN) { more.hidden = false; more.textContent = '再展開 40 筆（尚有 ' + (rows.length - ST.catN) + ' 筆）'; }
+  else more.hidden = true;
+
+  function num(v, dp, hi) {
+    if (v == null || !isFinite(v)) return nd;
+    return '<span class="c-mag' + (hi ? ' c-pr' : '') + '">' + (+v).toFixed(dp) + '</span>';
+  }
+  function tr(a, cells, tag) {
+    return '<tr><td class="c-dt">' + esc(a.date) + '<u>' + esc(a.time || '') + '</u></td>' +
+      '<td class="c-nm">' + esc(a.name || '—') +
+      (a.description ? '<em>「' + esc(a.description) + '」</em>' : '') +
+      (tag ? '<em style="color:var(--sig-max)">' + esc(tag) + '</em>' : '') + '</td>' +
+      cells.map(v => '<td>' + v + '</td>').join('') + '</tr>';
+  }
+}
+
+/* ════ 啟動 ══════════════════════════════════════════════════════ */
+function boot() {
+  const d = ST.data, evs = events();
+  const up = d.updated_at ? new Date(d.updated_at) : null;
+  const upTPE = up ? new Date(up.getTime() + 8 * 3600 * 1000) : null;
+  const ago = up ? Math.max(0, Math.round((Date.now() - up.getTime()) / 3600000)) : null;
+
+  /* ── 值勤狀態：把「本月還缺幾次、上次 ITT 距 PR 多少、幾天沒騎」搬進第一屏 ──
+     這是主要使用者晚上打開這頁真正要的兩個答案，原本它們躺在 y≈2000 與 y≈4500。
+     測站代碼從這裡收掉 —— 報頭與記震紙下緣量測帶已經各講過一次。 */
+  const ZH = { ride:'騎', run:'跑', swim:'泳', weight:'重訓' };
+  const goals = d.monthly_goals || {};
+  const short = Object.keys(goals)
+    .filter(k => (goals[k].count || 0) < (goals[k].target || 0))
+    .map(k => ZH[k] + ' ' + ((goals[k].target || 0) - (goals[k].count || 0)));
+
+  const lastRide = (d.recent_rides || []).slice().sort((a, b) => b.date.localeCompare(a.date))[0];
+  const restDays = lastRide ? dayDiff(lastRide.date, today()) : null;
+
+  let ittLine = '';
+  const recent = (d.segments || [])
+    .map(sg => ({ sg, s: segStatus(sg) }))
+    .filter(x => x.s.latest && x.s.pr)
+    .sort((a, b) => b.s.latest.date.localeCompare(a.s.latest.date))[0];
+  if (recent) {
+    const meta = ST.cfg[recent.sg.id] || {};
+    const gap = recent.s.latest.elapsed_sec - recent.s.pr.elapsed_sec;
+    ittLine = '最近 ITT <b>' + esc(meta.nameZh || recent.sg.name) + '</b> 距 PR ' +
+      (gap > 0 ? '<b>慢 ' + fmtSec(gap) + '</b>' : gap < 0 ? '<b>快 ' + fmtSec(-gap) + '</b>' : '<b>追平</b>') +
+      ' · <b style="color:' + recent.s.col + '">' + recent.s.en + '</b><br>';
+  }
+
+  $('#drum-meta').innerHTML =
+    '本月尚缺 ' + (short.length
+      ? '<b>' + short.join(' · ') + '</b> 次'
+      : '<b style="color:var(--sig-ok)">無・四項全達標</b>') + '<br>' +
+    ittLine +
+    (restDays != null ? '距上次騎乘 <b>' + restDays + '</b> 天 · ' : '') +
+    '事件 <b>' + evs.length + '</b> 筆／' + esc(evs[0].a.date.slice(0, 7)) + ' 起<br>' +
+    (upTPE ? '最近校時 <em>' + upTPE.toISOString().slice(0, 16).replace('T', ' ') + '</em> (+08)' +
+             (ago != null ? ' · ' + ago + ' 小時前' : '') : '');
+
+  $('#drum-note').innerHTML =
+    '一列一個月，橫軸是該月的日，筆尖自左向右移動。<b>振幅是當日的合計讀數</b>，包絡高度即資料本身；' +
+    '震盪本身是記震紙的記法，不是額外的資料。<b>切換通道會讓資料缺口實體浮現</b> —— ' +
+    '換到「訓練負荷」，' + (ST.data.recent_rides || []).filter(r => r.tss == null).length +
+    ' 趟沒有功率計的騎乘會從波形塌成空心方框，因為 TSS 算不出來。' +
+    '重訓沒有里程、跑步沒有 TSS 則不算缺值 —— 那個量對它們本來就不存在，紙上不做記號。';
+
+  const nMon = new Set(evs.map(e => e.a.date.slice(0, 7))).size;
+  $('#hint-span').textContent = evs[0].a.date.slice(0, 7) + ' – ' + evs[evs.length - 1].a.date.slice(0, 7) + ' 共 ' + nMon + ' 列';
+
+  $('#colo-end').innerHTML =
+    '記震紙 · 第四版視覺世界 · 資料截至 ' + (upTPE ? esc(upTPE.toISOString().slice(0, 10)) : '—') +
+    ' · 全部數字取自 data/*.json，未經修飾、未補零。';
+
+  drawDrum(); drawSummary(); drawSpectrum(); drawStack(); drawRepeat();
+  drawCoverage(); drawBulletin(); drawCatTabs(); drawCatalog();
+  wire();
+}
+
+function wire() {
+  /* 通道 */
+  $$('.ctl-b[data-ch]').forEach(b => b.addEventListener('click', () => {
+    ST.ch = b.dataset.ch;
+    $$('.ctl-b[data-ch]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    drawDrum();
+  }));
+  /* 增益 */
+  $$('.ctl-b[data-g]').forEach(b => b.addEventListener('click', () => {
+    ST.gain = +b.dataset.g;
+    $$('.ctl-b[data-g]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    drawDrum();
+  }));
+  /* 事件目錄分頁 */
+  $('#cat-tabs').addEventListener('click', e => {
+    const b = e.target.closest('.cat-tab'); if (!b) return;
+    ST.cat = b.dataset.cat; ST.catN = 40;
+    $$('.cat-tab').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    drawCatalog();
+  });
+  $('#cat-more').addEventListener('click', () => { ST.catN += 40; drawCatalog(); });
+
+  /* 釘選：升到最上層上滿墨，其餘退成幽靈層 */
+  $('#stack-pins').addEventListener('click', e => {
+    const b = e.target.closest('.pin'); if (!b) return;
+    const v = b.dataset.pin;
+    ST.pin = (v === 'none' || String(ST.pin) === v) ? null : +v;
+    drawStack();
+  });
+
+  /* 正片／負片 */
+  const setFilm = v => {
+    document.documentElement.dataset.film = v;
+    $('#film-pos').setAttribute('aria-pressed', String(v === 'pos'));
+    $('#film-neg').setAttribute('aria-pressed', String(v === 'neg'));
+    try { localStorage.setItem('helicorder-film', v); } catch (e) {}
+  };
+  $('#film-pos').addEventListener('click', () => setFilm('pos'));
+  $('#film-neg').addEventListener('click', () => setFilm('neg'));
+  let saved = null;
+  try { saved = localStorage.getItem('helicorder-film'); } catch (e) {}
+  if (saved) setFilm(saved);
+  else {
+    const dark = window.matchMedia && window.matchMedia('(prefers-color-scheme:dark)').matches;
+    $('#film-pos').setAttribute('aria-pressed', String(!dark));
+    $('#film-neg').setAttribute('aria-pressed', String(dark));
+  }
+
+  /* 導覽列現在位置 */
+  const links = $$('.mast-nav a');
+  const secs  = links.map(a => document.getElementById(a.dataset.s)).filter(Boolean);
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver(ents => {
+      ents.forEach(en => {
+        if (!en.isIntersecting) return;
+        links.forEach(a => a.setAttribute('aria-current', String(a.dataset.s === en.target.id)));
+      });
+    }, { rootMargin: '-56px 0px -72% 0px' });
+    secs.forEach(s => io.observe(s));
+  }
+  links.forEach(a => a.addEventListener('click', () => {
+    links.forEach(x => x.setAttribute('aria-current', String(x === a)));
+  }));
+}
+
+/* 開發用：讓沒有 rAF 的環境（例如自動化窗格）也能驗證繪圖結果 */
+window.__helicorder = { ST, drawDrum, drawSpectrum, drawStack, drawRepeat, drawBulletin, drawCatalog, events };
+</script>
+</body>
+</html>

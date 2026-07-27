@@ -61,9 +61,6 @@ html,body{min-height:100%;font-family:var(--sans);background:var(--slate);color:
 /* 焦點指示：稽核發現全檔零個 outline 宣告，99 個可 Tab 元素只有瀏覽器預設環 */
 :focus-visible{outline:2px solid var(--chalk);outline-offset:2px;border-radius:2px}
 
-/* 太空背景已隨主題退役。保留選擇器讓既有 DOM 節點安靜地不佔位。 */
-#space-bg,#star-canvas{display:none}
-
 #app{position:relative;z-index:2;min-height:100vh;max-width:var(--maxw);margin:0 auto;padding:0 var(--pad) 5rem}
 
 /* ══ 板牌 PIT BOARD — 第一屏 ══
@@ -725,99 +722,123 @@ html,body{min-height:100%;font-family:var(--sans);background:var(--slate);color:
 }
 .r3d-trigger-btn:hover{background:var(--panel-2);color:var(--chalk);border-color:var(--chalk-dim);box-shadow:none}
 .r3d-trigger-btn:active{transform:translateY(1px)}
+/* 階段 6：儀器層改成工程師桌上的計時紙 —— 石板底、髮絲框、方角、粉筆字。
+   Three.js 場景本身（暖橘管子、格線、桁架、星點）依方向契約凍結，不在本階段動；
+   凍結的是「地形」，改的是疊在上面的「儀器」。 */
 .r3d-overlay{
   position:fixed;inset:0;z-index:9999;
-  background:radial-gradient(ellipse at center,rgba(10,6,4,.9) 0%,rgba(2,1,1,.97) 70%);
-  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  background:rgba(8,9,11,.94);
   display:flex;align-items:center;justify-content:center;
-  opacity:0;pointer-events:none;transition:opacity .3s ease;
+  opacity:0;pointer-events:none;transition:opacity .2s ease;
 }
 .r3d-overlay.open{opacity:1;pointer-events:auto}
 .r3d-box{
   position:relative;width:100%;height:100%;max-width:1000px;max-height:820px;
-  margin:16px;border-radius:18px;overflow:hidden;
-  background:#0a0603;border:1px solid rgba(255,255,255,.14);
-  box-shadow:0 24px 70px -20px rgba(0,0,0,.8),0 0 50px -16px rgba(252,76,2,.5);
-  opacity:0;transform:translateY(16px) scale(.97);
-  transition:opacity .35s ease,transform .35s cubic-bezier(.2,.9,.25,1.05);
+  margin:16px;border-radius:0;overflow:hidden;
+  background:var(--slate);border:1px solid var(--rule-strong);
+  box-shadow:none;
+  opacity:0;transform:translateY(10px);
+  transition:opacity .2s ease,transform .2s var(--ease);
 }
-.r3d-overlay.open .r3d-box{opacity:1;transform:translateY(0) scale(1)}
+.r3d-overlay.open .r3d-box{opacity:1;transform:translateY(0)}
 #r3dCanvasWrap{position:absolute;inset:0}
 #r3dCanvas{width:100%;height:100%;display:block;touch-action:none}
-.r3d-close{
-  position:absolute;top:12px;right:12px;z-index:3;width:32px;height:32px;border-radius:50%;
-  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);color:#fff;
-  font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;
-  transition:background .15s,transform .25s,border-color .15s;
+/* 頂上兩顆控制鈕：方牌，44px 觸控靶（原本 32px 圓鈕在手機上不到門檻） */
+.r3d-close,.r3d-compass{
+  position:absolute;top:10px;z-index:3;width:44px;height:44px;border-radius:0;padding:0;
+  background:var(--slate);border:1px solid var(--rule-strong);color:var(--chalk-dim);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:background .15s ease,color .15s ease,border-color .15s ease;
 }
-.r3d-close:hover{background:#FC4C02;border-color:#FC4C02;color:#000;transform:rotate(90deg)}
-.r3d-compass{
-  position:absolute;top:12px;left:12px;z-index:3;width:42px;height:42px;border-radius:50%;
-  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);
-  display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer;
-  transition:background .15s,border-color .15s;
-  backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
-}
-.r3d-compass:hover{background:rgba(252,76,2,.2);border-color:rgba(252,76,2,.6)}
-.r3d-compass-inner{display:flex;flex-direction:column;align-items:center;line-height:1;gap:1px;will-change:transform}
-.r3d-compass-arrow{color:#FC4C02;font-size:11px;text-shadow:0 0 6px rgba(252,76,2,.6)}
-.r3d-compass-n{color:rgba(255,255,255,.85);font-size:9px;font-weight:800}
+.r3d-close{right:10px;font-size:15px}
+.r3d-close:hover,.r3d-compass:hover{background:var(--panel);color:var(--chalk);border-color:var(--chalk-dim)}
+.r3d-compass{left:10px}
+.r3d-compass-inner{display:flex;flex-direction:column;align-items:center;line-height:1;gap:2px;will-change:transform}
+.r3d-compass-arrow{color:currentColor;font-size:10px}
+.r3d-compass-n{color:var(--chalk);font-size:9px;font-weight:800;letter-spacing:1px}
 .r3d-minimap{
-  position:absolute;top:60px;left:12px;z-index:3;width:164px;height:164px;border-radius:12px;
-  background:linear-gradient(160deg,rgba(18,26,42,.62),rgba(6,9,16,.72));
-  border:1px solid rgba(255,255,255,.18);
-  box-shadow:0 6px 22px rgba(0,0,0,.5),inset 0 0 0 1px rgba(255,255,255,.04);
-  overflow:hidden;pointer-events:none;
-  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  position:absolute;top:62px;left:10px;z-index:3;width:164px;height:164px;border-radius:0;
+  background:var(--slate);border:1px solid var(--rule);
+  box-shadow:none;overflow:hidden;pointer-events:none;
 }
 .r3d-minimap canvas{position:absolute;inset:0;display:block;width:100%;height:100%}
 @media(max-width:640px){.r3d-minimap{width:116px;height:116px}}
+/* 浮標：藥丸改方牌。海拔與坡度都是量測值，不是狀態 —— 一律粉筆白，
+   四個功能色（紫綠黃灰）在這裡一個都不出現，才不會被讀成「這段比 PR 慢」。 */
 .r3d-tag{
   position:absolute;z-index:2;pointer-events:none;white-space:nowrap;
-  font-size:11px;font-weight:700;padding:3px 9px;border-radius:10px;
-  background:rgba(12,7,3,.78);border:1px solid rgba(255,255,255,.15);
+  font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.5px;
+  padding:3px 7px;border-radius:0;
+  background:var(--slate);border:1px solid var(--rule-strong);
   transform:translate(-50%,-150%);
 }
-.r3d-tag.peak{color:#ffe9cf}
-.r3d-tag.steep{color:#ffd24d;transform:translate(-50%,50%)}
+.r3d-tag.peak{color:var(--chalk)}
+.r3d-tag.steep{color:var(--chalk);transform:translate(-50%,50%)}
 .r3d-tag.landmark{
-  background:none;border:none;padding:0 0 0 9px;font-size:10px;font-weight:500;
-  color:rgba(255,255,255,.65);text-shadow:0 1px 3px rgba(0,0,0,.85);
+  background:none;border:none;padding:0 0 0 9px;font-family:var(--sans);font-size:10px;font-weight:500;
+  letter-spacing:0;color:var(--chalk-dim);text-shadow:0 1px 3px rgba(8,9,11,.9);
   transform:translate(0,-50%);
 }
 .r3d-tag.landmark::before{
   content:'';position:absolute;left:-1px;top:50%;transform:translate(-50%,-50%);
-  width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.6);
-  box-shadow:0 0 5px rgba(255,255,255,.5);
+  width:5px;height:5px;border-radius:0;background:var(--chalk-dim);box-shadow:none;
 }
-/* 被其他標籤壓到時只收起文字、留下錨點圓點：位置線索還在，畫面不打結 */
+/* 被其他標籤壓到時只收起文字、留下錨點方點：位置線索還在，畫面不打結 */
 .r3d-tag.dot-only .r3d-tag-txt{display:none}
 .r3d-tag.dot-only{background:none;border:none;padding:0 0 0 9px}
 .r3d-hud{
   position:absolute;left:0;right:0;bottom:0;z-index:2;padding:16px 18px 14px;
-  background:linear-gradient(0deg,rgba(6,3,1,.92) 0%,rgba(6,3,1,.55) 60%,transparent 100%);
+  background:linear-gradient(0deg,rgba(16,18,21,.96) 0%,rgba(16,18,21,.72) 62%,transparent 100%);
   pointer-events:none;
 }
 /* 只在開窗時才收點擊。沒有 .open 限定的話，遮罩雖然 opacity:0 但仍在命中測試樹裡，
    HUD 子元素會把視窗底部一整條的點擊吃掉（手機 y617-801、桌機 y427-560，17 種控制項點不到）。 */
 .r3d-overlay.open .r3d-hud > *{pointer-events:auto}
-.r3d-title{font-size:14px;font-weight:700;color:#fff;margin-bottom:9px;letter-spacing:.5px;text-shadow:0 0 10px rgba(252,76,2,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.r3d-flat-tag{font-size:9px;color:#f2c14e;margin-left:8px;letter-spacing:.5px;white-space:nowrap;font-weight:600}
-.r3d-stats{display:flex;gap:20px;margin-bottom:10px}
-.r3d-stats div{display:flex;align-items:baseline;gap:3px}
-.r3d-stats span{font-size:17px;font-weight:800;color:#ff8a3d;text-shadow:0 0 10px rgba(252,76,2,.4);font-variant-numeric:tabular-nums}
-.r3d-stats small{font-size:9px;color:rgba(255,255,255,.45)}
-#r3dScrub{width:100%;margin-bottom:10px;accent-color:#FC4C02;height:18px}
-.r3d-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.r3d-controls button{font-size:11.5px;padding:7px 13px;border-radius:8px;background:rgba(252,76,2,.1);border:1px solid rgba(252,76,2,.35);color:#ff8a3d;cursor:pointer;font-family:inherit;transition:background .15s,border-color .15s}
-.r3d-controls button.active{background:rgba(252,76,2,.32);border-color:#FC4C02;color:#fff}
-.r3d-controls button:hover{background:rgba(252,76,2,.22)}
-.r3d-hint{font-size:9px;color:rgba(255,255,255,.35);margin-top:9px;letter-spacing:.5px}
-.r3d-error{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.5);font-size:12px;padding:2.4rem;text-align:center;line-height:1.8}
-.r3d-loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.5);font-size:11px;letter-spacing:2px}
+.r3d-title{font-size:14px;font-weight:700;color:var(--chalk);margin-bottom:10px;letter-spacing:.5px;
+  text-shadow:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* 缺資料是灰，跟分段計時四色的「尚未計時 / 缺資料」同一層 */
+.r3d-flat-tag{font-family:var(--mono);font-size:9px;color:var(--chalk-faint);margin-left:8px;
+  letter-spacing:1px;white-space:nowrap;font-weight:600}
+/* 遙測讀數：一格一個量，髮絲線分欄，單位是大寫代碼（跟區段卡的遙測條同一套） */
+.r3d-stats{display:flex;gap:1px;margin-bottom:12px;background:var(--rule);border:1px solid var(--rule)}
+.r3d-stats div{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;
+  background:var(--slate);padding:7px 9px 8px}
+.r3d-stats span{font-family:var(--mono);font-size:17px;font-weight:800;color:var(--chalk);
+  text-shadow:none;font-variant-numeric:tabular-nums;line-height:1;letter-spacing:-.5px}
+.r3d-stats small{font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:2px;
+  text-transform:uppercase;color:var(--chalk-faint);line-height:1}
+/* 刻度條：瀏覽器預設是亮灰圓軌 + 大圓鈕，在石板上像一根霓虹管。
+   改成髮絲軌 + 粉筆方塊滑鈕（Chromium／Safari 走 -webkit，Firefox 走 -moz）。 */
+#r3dScrub{width:100%;margin:0 0 12px;height:18px;display:block;
+  -webkit-appearance:none;appearance:none;background:transparent;cursor:pointer}
+#r3dScrub::-webkit-slider-runnable-track{height:2px;background:var(--rule-strong);border-radius:0}
+#r3dScrub::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
+  width:10px;height:16px;margin-top:-7px;border:none;border-radius:0;background:var(--chalk)}
+#r3dScrub::-moz-range-track{height:2px;background:var(--rule-strong);border-radius:0}
+#r3dScrub::-moz-range-thumb{width:10px;height:16px;border:none;border-radius:0;background:var(--chalk)}
+/* 容器不上底色 —— 上底色 + 1px gap 的做法在換行時，最後一列的空白處
+   會露出一整塊 rule 色（實測「自轉」右邊多一個灰方塊）。改成鈕自己帶底、gap 當髮絲線。 */
+.r3d-controls{display:flex;gap:1px;align-items:stretch;flex-wrap:wrap;background:transparent}
+.r3d-controls button{
+  min-height:38px;padding:0 14px;border-radius:0;background:var(--panel);
+  border:none;color:var(--chalk-dim);cursor:pointer;
+  font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1.5px;
+  transition:background .15s ease,color .15s ease;
+}
+.r3d-controls button:hover{background:var(--panel-2);color:var(--chalk)}
+/* 選中態不靠顏色：底線是形狀編碼，色盲也讀得到 */
+.r3d-controls button.active{background:var(--panel-2);color:var(--chalk);
+  box-shadow:inset 0 -2px 0 var(--chalk)}
+.r3d-hint{font-size:9px;color:var(--chalk-faint);margin-top:11px;letter-spacing:.5px;line-height:1.7}
+.r3d-error,.r3d-loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);color:var(--chalk-dim);text-align:center}
+.r3d-error{font-size:12px;padding:2.4rem;line-height:1.8}
+.r3d-loading{font-size:10px;letter-spacing:3px;text-transform:uppercase}
 @media (max-width:640px){
-  .r3d-box{margin:0;border-radius:0;max-width:none;max-height:none}
-  .r3d-stats{gap:14px}
+  .r3d-box{margin:0;max-width:none;max-height:none;border:none}
+  .r3d-stats{flex-wrap:wrap}
+  .r3d-stats div{flex:1 1 33%}
+  .r3d-stats span{font-size:15px}
 }
 @media (prefers-reduced-motion:reduce){
   .r3d-overlay,.r3d-box{transition:none}
@@ -1013,19 +1034,44 @@ html,body{min-height:100%;font-family:var(--sans);background:var(--slate);color:
 .total-val{font-size:24px;font-weight:800;color:var(--chalk);line-height:1;letter-spacing:-1px}
 .total-label{font-size:9px;color:var(--chalk-dim);letter-spacing:2.5px;text-transform:uppercase;margin-top:6px}
 
-/* ── CTA button ── */
+/* ── 出站連結 —— 頁尾唯一的離站動作，語域跟區段卡的 .seg-detail-btn 對齊 ──
+   原本是橘色藥丸。這頁沒有主色調的按鈕，最後一列不該憑空長出一個。 */
 .strava-cta{
-  display:flex;align-items:center;justify-content:center;gap:8px;
-  width:100%;padding:14px;border-radius:10px;
-  background:rgba(252,76,2,.1);border:1px solid rgba(252,76,2,.4);
-  color:#FC4C02;font-size:14px;font-weight:500;
-  text-decoration:none;transition:background .2s,border-color .2s;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  width:100%;min-height:48px;padding:14px;border-radius:0;
+  background:transparent;border:1px solid var(--rule);
+  color:var(--chalk-dim);font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:2.5px;
+  text-transform:uppercase;text-decoration:none;
+  transition:background .15s ease,color .15s ease,border-color .15s ease;
 }
-.strava-cta:hover{background:rgba(252,76,2,.2);border-color:#FC4C02}
-.strava-cta svg{width:16px;height:16px;fill:#FC4C02;flex-shrink:0}
+.strava-cta:hover{background:var(--panel);color:var(--chalk);border-color:var(--rule-strong)}
+.strava-cta svg{width:15px;height:15px;fill:currentColor;flex-shrink:0}
+
+/* ── 回到板牌 ── 方牌，跟頂欄同一套石板／髮絲語彙 */
+#to-top-btn{
+  position:fixed;bottom:22px;right:20px;z-index:9998;
+  width:44px;height:44px;border-radius:0;
+  background:var(--slate);border:1px solid var(--rule-strong);color:var(--chalk-dim);
+  font-size:13px;cursor:pointer;display:none;align-items:center;justify-content:center;
+  transition:background .15s ease,color .15s ease,border-color .15s ease;
+}
+#to-top-btn.on{display:flex}
+#to-top-btn:hover{background:var(--panel);color:var(--chalk);border-color:var(--chalk-dim)}
 
 /* ── loading / error ── */
-.loading{text-align:center;padding:4rem 0;color:#555;font-size:14px}
+.loading{text-align:center;padding:4rem 0;color:var(--chalk-dim);font-size:14px;
+  font-family:var(--mono);letter-spacing:1px}
+.loading b{display:block;color:var(--chalk);font-weight:700;margin-bottom:10px}
+.loading small{display:block;color:var(--chalk-faint);font-size:11px;margin-top:12px}
+
+/* ── toast：一條計時紙的便條，不是發光藥丸 ── */
+.pw-toast{
+  position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:9999;
+  background:var(--panel);border:1px solid var(--rule-strong);border-radius:0;
+  padding:10px 16px;color:var(--chalk-dim);
+  font-family:var(--mono);font-size:11px;letter-spacing:1px;
+}
+.pw-toast a{color:var(--chalk);font-weight:700;text-decoration:underline;text-underline-offset:3px}
 
 @media(max-width:520px){
   #app{padding:0 .9rem 5rem}
@@ -1066,10 +1112,9 @@ html,body{min-height:100%;font-family:var(--sans);background:var(--slate);color:
   .totals-grid{grid-template-columns:1fr}
   .total-card{padding:12px 13px;display:flex;align-items:baseline;justify-content:space-between;gap:10px}
   .total-label{margin-top:0}
-  #theme-switcher{right:12px;bottom:18px}
-  #ts-toggle{width:38px;height:38px}
-  #ts-panel{max-width:calc(100vw - 24px)}
-  #to-top-btn{right:14px!important;bottom:74px!important}
+  /* 主題切換器已收掉（階段 7），它原本佔的右下角讓回頂鈕自己用；
+     !important 也一併移除 —— 那是為了蓋掉 JS 寫的 inline 樣式，現在樣式在 CSS 裡了 */
+  #to-top-btn{right:14px;bottom:18px}
 }
 
 /* ── 功率板 POWER BESTS ──
@@ -1319,9 +1364,6 @@ html,body{min-height:100%;font-family:var(--sans);background:var(--slate);color:
 </head>
 <body>
 
-<div id="space-bg"></div>
-<canvas id="star-canvas"></canvas>
-
 <!-- ITT level explainer popup -->
 <div id="itt-level-popup" class="itt-level-popup">
   <button class="itt-level-popup-close" onclick="closeIttLevel()">✕</button>
@@ -1487,12 +1529,12 @@ html,body{min-height:100%;font-family:var(--sans);background:var(--slate);color:
         <div id="r3dHrWrap" style="display:none"><span id="r3dHr">0</span><small>bpm</small></div>
         <div id="r3dWattsWrap" style="display:none"><span id="r3dWatts">0</span><small>w</small></div>
       </div>
-      <input type="range" id="r3dScrub" min="0" max="1000" value="0">
+      <input type="range" id="r3dScrub" min="0" max="1000" value="0" aria-label="回放進度">
       <div class="r3d-controls">
         <button id="r3dPlayBtn" onclick="r3dTogglePlay()">▶ 播放</button>
-        <button data-speed="1" onclick="r3dSetSpeed(1,this)" class="active">1x</button>
-        <button data-speed="2" onclick="r3dSetSpeed(2,this)">2x</button>
-        <button data-speed="4" onclick="r3dSetSpeed(4,this)">4x</button>
+        <button data-speed="1" onclick="r3dSetSpeed(1,this)" class="active">1×</button>
+        <button data-speed="2" onclick="r3dSetSpeed(2,this)">2×</button>
+        <button data-speed="4" onclick="r3dSetSpeed(4,this)">4×</button>
         <button onclick="r3dReset()">↺ 重來</button>
         <button id="r3dSpinBtn" onclick="r3dToggleSpin()">⟳ 自轉</button>
       </div>
@@ -1508,86 +1550,10 @@ html,body{min-height:100%;font-family:var(--sans);background:var(--slate);color:
   </div>
   <!-- 板牌捲動後壓縮成固定三格條 -->
   <div class="pb-rail" id="pb-rail" aria-hidden="true"><div class="pb-rail-row" id="pb-rail-row"></div></div>
-  <div id="content"><div class="loading">Loading athlete data…</div></div>
+  <div id="content"><div class="loading">讀取計時紙…</div></div>
 </div>
 
 <script>
-/* ── deep-space starfield: parallax depth · 3-tone stars · orange meteors ── */
-;(function(){
-  const c=document.getElementById('star-canvas'),ctx=c.getContext('2d')
-  const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches
-  let W,H,DPR,stars=[],meteors=[],parallax=0,frame=0
-  // warm strava · cream · pale blue · white
-  const COLORS=[[255,170,110],[255,210,170],[200,220,255],[255,255,255]]
-  function resize(){
-    DPR=Math.min(devicePixelRatio||1,2)
-    W=innerWidth;H=innerHeight
-    c.width=W*DPR;c.height=H*DPR
-    c.style.width=W+'px';c.style.height=H+'px'
-    ctx.setTransform(DPR,0,0,DPR,0,0)
-  }
-  function init(){
-    stars=[]
-    const n=Math.floor(W*H/2600)
-    for(let i=0;i<n;i++){
-      const depth=Math.random()                 // 0 far … 1 near
-      stars.push({
-        x:Math.random()*W,y:Math.random()*H,
-        r:depth*1.4+.2,
-        a:Math.random(),da:(Math.random()-.5)*.012,
-        speed:depth*.18+.02,
-        depth,col:COLORS[Math.random()*COLORS.length|0]
-      })
-    }
-  }
-  function spawnMeteor(){
-    meteors.push({
-      x:W*(.35+Math.random()*.7),y:-30,
-      vx:-(3+Math.random()*2.5),vy:(3.5+Math.random()*3),
-      len:120+Math.random()*120,life:0,ttl:55+Math.random()*30
-    })
-  }
-  function draw(){
-    ctx.clearRect(0,0,W,H)
-    for(const s of stars){
-      s.a+=s.da;if(s.a<.1||s.a>1)s.da*=-1
-      s.y-=s.speed;if(s.y<-2)s.y=H+2
-      const px=s.x+parallax*s.depth*40
-      ctx.beginPath();ctx.arc(px,s.y,s.r,0,Math.PI*2)
-      ctx.fillStyle=`rgba(${s.col[0]},${s.col[1]},${s.col[2]},${s.a*(.4+s.depth*.5)})`
-      ctx.fill()
-      if(s.depth>.85&&s.a>.6){                   // bright near-stars halo
-        ctx.beginPath();ctx.arc(px,s.y,s.r*3,0,Math.PI*2)
-        ctx.fillStyle=`rgba(${s.col[0]},${s.col[1]},${s.col[2]},${s.a*.08})`
-        ctx.fill()
-      }
-    }
-    for(let i=meteors.length-1;i>=0;i--){
-      const m=meteors[i];m.x+=m.vx;m.y+=m.vy;m.life++
-      const k=m.life/m.ttl,fade=k<.15?k/.15:1-k
-      const inv=1/Math.hypot(m.vx,m.vy)
-      const tx=m.x-m.vx*inv*m.len,ty=m.y-m.vy*inv*m.len
-      const g=ctx.createLinearGradient(m.x,m.y,tx,ty)
-      g.addColorStop(0,`rgba(255,205,155,${.9*fade})`)
-      g.addColorStop(.3,`rgba(252,76,2,${.5*fade})`)
-      g.addColorStop(1,'rgba(252,76,2,0)')
-      ctx.strokeStyle=g;ctx.lineWidth=2;ctx.lineCap='round'
-      ctx.beginPath();ctx.moveTo(m.x,m.y);ctx.lineTo(tx,ty);ctx.stroke()
-      ctx.beginPath();ctx.arc(m.x,m.y,2.2,0,Math.PI*2)
-      ctx.fillStyle=`rgba(255,230,200,${fade})`;ctx.fill()
-      if(m.life>m.ttl||m.x<-60||m.y>H+60)meteors.splice(i,1)
-    }
-    if(++frame%150===0&&Math.random()<.6&&meteors.length<3)spawnMeteor()
-    requestAnimationFrame(draw)
-  }
-  addEventListener('scroll',()=>{parallax=Math.sin(scrollY/600)},{passive:true})
-  resize();init()
-  if(reduce){
-    for(const s of stars){ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fillStyle=`rgba(${s.col[0]},${s.col[1]},${s.col[2]},.5)`;ctx.fill()}
-  }else draw()
-  addEventListener('resize',()=>{resize();init()})
-})()
-
 /* ── SVG icons ── */
 const ICONS = {
   ride:   '<path d="M5 20.5A3.5 3.5 0 0 1 1.5 17 3.5 3.5 0 0 1 5 13.5 3.5 3.5 0 0 1 8.5 17 3.5 3.5 0 0 1 5 20.5M5 12A5 5 0 0 0 0 17a5 5 0 0 0 5 5 5 5 0 0 0 5-5 5 5 0 0 0-5-5m8.8-5.4L11 9.5l1.5 1.5H16v2h-4.5l-2.5-2.5L11.5 8H9.8l-1.5 4.5 2.2 2.2A5 5 0 0 0 14 17a5 5 0 0 0 5 5 5 5 0 0 0 5-5 5 5 0 0 0-5-5l-1.1.1-2.7-2.6.8-2H18V6h-3.2l-.9 2.6M14.5 5a1.5 1.5 0 0 0 1.5-1.5A1.5 1.5 0 0 0 14.5 2 1.5 1.5 0 0 0 13 3.5 1.5 1.5 0 0 0 14.5 5m4.5 7a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5A3.5 3.5 0 0 1 15.5 17 3.5 3.5 0 0 1 19 13.5z"/>',
@@ -2621,13 +2587,15 @@ function init3D(a, model) {
     starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3))
     scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xffe3c2, size: Math.max(2, model.horizExtent * 0.0025), sizeAttenuation: true, transparent: true, opacity: .65 })))
 
+    // 目前位置：這顆是儀器不是地形（它讀的是刻度條的值），所以跟著 HUD 走粉筆白。
+    // 外圈原本是 signal-orange #FC4C02 —— 全站唯一剩下的那顆舊世界橘，階段 6 收掉。
     const marker = new THREE.Mesh(
       new THREE.SphereGeometry(Math.max(radius * 2.2, 4), 16, 16),
-      new THREE.MeshBasicMaterial({ color: 0xffffff })
+      new THREE.MeshBasicMaterial({ color: 0xedeae3 })
     )
     marker.add(new THREE.Mesh(
       new THREE.SphereGeometry(Math.max(radius * 4.2, 8), 16, 16),
-      new THREE.MeshBasicMaterial({ color: 0xfc4c02, transparent: true, opacity: .3 })
+      new THREE.MeshBasicMaterial({ color: 0xedeae3, transparent: true, opacity: .22 })
     ))
     scene.add(marker)
 
@@ -2865,19 +2833,21 @@ function buildTaipeiMiniMap(outline) {
   const xs = boundary.map(p => p.x), ys = boundary.map(p => p.y)
   return { lat0, lng0, mLat, mLng, boundary, rivers, minX: Math.min(...xs), maxX: Math.max(...xs), minY: Math.min(...ys), maxY: Math.max(...ys) }
 }
+/* ══ 儀器層墨水（階段 6）══
+   canvas 讀不到 CSS 變數，所以鏡一份純值。改 :root 的 token 時這裡要跟著改。
+   規則：疊在 3D 場景上的東西全是「儀器」→ 石板底、髮絲框、粉筆字、方角。
+   場景本身（暖橘管子、格線、桁架、起訖定位球）依方向契約凍結，這裡不碰。
+   四個功能色只在真的代表狀態時出現（自我對戰的初次／最佳／近期、落後秒數）。 */
+const INK = {
+  slate:'#101215', panel:'#191C20',
+  plate:'rgba(16,18,21,.92)',            // 疊在場景上的牌面：石板色但透一點，底下的路線還看得見
+  rule:'rgba(69,75,84,.9)', ruleSoft:'rgba(155,160,166,.28)',
+  chalk:'#EDEAE3', dim:'#9BA0A6', faint:'#6B7178',
+  green:'#3FD98A', yellow:'#F5C542', purple:'#A97BFF', untimed:'#6B7178',
+}
 // 小地圖畫完後把投影函式存起來，讓游標層（回放位置）能用同一套座標，
 // 不必為了畫一顆點就重畫整張底圖
 let MM_VIEW = null
-// 圓角矩形（Safari 舊版沒有 ctx.roundRect，自己畫）
-function mmRoundRect(ctx, x, y, w, h, r) {
-  ctx.beginPath()
-  ctx.moveTo(x + r, y)
-  ctx.arcTo(x + w, y, x + w, y + h, r)
-  ctx.arcTo(x + w, y + h, x, y + h, r)
-  ctx.arcTo(x, y + h, x, y, r)
-  ctx.arcTo(x, y, x + w, y, r)
-  ctx.closePath()
-}
 function drawTaipeiMiniMap(canvas, mm, rideStream) {
   if (!canvas) return
   const cursorCv = document.getElementById('r3dMiniMapCursor')
@@ -2945,7 +2915,7 @@ function drawTaipeiMiniMap(canvas, mm, rideStream) {
     dot(llToPx(rideStream[0][0], rideStream[0][1]), '#ffd27a')
   }
 
-  // ── 4. 標籤：圓角深底 pill（canvas 沒有 backdrop-filter，深底 + 細邊等效） ──
+  // ── 4. 標籤：方牌（階段 6 —— 儀器層一律方角、髮絲框、粉筆字，藥丸退役） ──
   // 已畫的標籤存進 placed，重疊就跳過，小地圖上不會糊成一團
   const placed = []
   const pill = (text, ax, ay, preferRight, fg) => {
@@ -2960,9 +2930,8 @@ function drawTaipeiMiniMap(canvas, mm, rideStream) {
     if (placed.some(p => box.x < p.x + p.w + 2 * dpr && box.x + box.w + 2 * dpr > p.x &&
                          box.y < p.y + p.h + 2 * dpr && box.y + box.h + 2 * dpr > p.y)) return false
     placed.push(box)
-    mmRoundRect(ctx, x, y, w, h, h / 2)
-    ctx.fillStyle = 'rgba(8,14,26,.78)'; ctx.fill()
-    ctx.strokeStyle = 'rgba(255,255,255,.14)'; ctx.lineWidth = dpr; ctx.stroke()
+    ctx.fillStyle = INK.plate; ctx.fillRect(x, y, w, h)
+    ctx.strokeStyle = INK.rule; ctx.lineWidth = dpr; ctx.strokeRect(x, y, w, h)
     ctx.fillStyle = fg; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'
     ctx.fillText(text, x + padX, y + h / 2 + .5 * dpr)
     return true
@@ -2974,20 +2943,20 @@ function drawTaipeiMiniMap(canvas, mm, rideStream) {
     let best = r.pts[0], bestD = Infinity
     r.pts.forEach(p => { const d = Math.hypot(p.x - frameCx, p.y - frameCy); if (d < bestD) { bestD = d; best = p } })
     const q = toPx(best)
-    pill(r.name, q.x, q.y, q.x < size * 0.55, 'rgba(198,226,255,.95)')
+    pill(r.name, q.x, q.y, q.x < size * 0.55, INK.dim)
   })
 
   // ── 5. 比例尺：一眼知道這張圖多大，也才看得出這趟騎了城市的幾分之幾 ──
   const targetM = (size * 0.34) / scale
   const nice = [1000, 2000, 5000, 10000, 20000].reduce((a, b) => Math.abs(b - targetM) < Math.abs(a - targetM) ? b : a)
   const barW = nice * scale, bx = 8 * dpr, by = size - 9 * dpr
-  ctx.strokeStyle = 'rgba(255,255,255,.5)'; ctx.lineWidth = Math.max(1, dpr)
+  ctx.strokeStyle = INK.dim; ctx.lineWidth = Math.max(1, dpr)
   ctx.beginPath()
   ctx.moveTo(bx, by - 3 * dpr); ctx.lineTo(bx, by); ctx.lineTo(bx + barW, by); ctx.lineTo(bx + barW, by - 3 * dpr)
   ctx.stroke()
-  ctx.font = `600 ${8 * dpr}px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif`
-  ctx.fillStyle = 'rgba(255,255,255,.55)'; ctx.textAlign = 'left'; ctx.textBaseline = 'bottom'
-  ctx.fillText(`${nice / 1000} km`, bx + 2 * dpr, by - 4 * dpr)
+  ctx.font = `700 ${8 * dpr}px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace`
+  ctx.fillStyle = INK.dim; ctx.textAlign = 'left'; ctx.textBaseline = 'bottom'
+  ctx.fillText(`${nice / 1000} KM`, bx + 2 * dpr, by - 4 * dpr)
 
   MM_VIEW = { cv: cursorCv, dpr, size, llToPx, stream: rideStream }
 }
@@ -3006,17 +2975,14 @@ function drawMiniMapCursor(u) {
       const q = V.llToPx(V.stream[i][0], V.stream[i][1])
       i === 0 ? ctx.moveTo(q.x, q.y) : ctx.lineTo(q.x, q.y)
     }
-    ctx.save()
-    ctx.shadowColor = 'rgba(255,214,138,.8)'; ctx.shadowBlur = 4 * dpr
-    ctx.strokeStyle = '#ffd88a'; ctx.lineWidth = Math.max(1.8, dpr * 1.7); ctx.stroke()
-    ctx.restore()
+    // 走過的部分＝儀器讀數，粉筆白蓋在暖橘底線上（發光退役，靠明度差就分得開）
+    ctx.strokeStyle = INK.chalk; ctx.lineWidth = Math.max(1.8, dpr * 1.7); ctx.stroke()
   }
+  // 目前位置：跟 3D 場景那顆標記同一組值 —— 粉筆白方點，外圈石板色描邊撐開對比
   const p = V.llToPx(V.stream[idx][0], V.stream[idx][1])
-  ctx.beginPath(); ctx.arc(p.x, p.y, 5.5 * dpr, 0, Math.PI * 2)
-  ctx.fillStyle = 'rgba(255,255,255,.16)'; ctx.fill()
-  ctx.beginPath(); ctx.arc(p.x, p.y, 2.8 * dpr, 0, Math.PI * 2)
-  ctx.fillStyle = '#fff'; ctx.fill()
-  ctx.lineWidth = Math.max(1, dpr); ctx.strokeStyle = 'rgba(252,76,2,.95)'; ctx.stroke()
+  const r = 3 * dpr
+  ctx.fillStyle = INK.slate; ctx.fillRect(p.x - r - dpr, p.y - r - dpr, (r + dpr) * 2, (r + dpr) * 2)
+  ctx.fillStyle = INK.chalk; ctx.fillRect(p.x - r, p.y - r, r * 2, r * 2)
 }
 function buildSegSlopes(model) {
   const pts = model.pts, n = pts.length, slopes = new Array(n)
@@ -3098,10 +3064,11 @@ function buildSegScene(model, officialMaxGrade, landmarks, flat) {
       if (slopes[i] > slopes[si]) si = i
     })
     const mk = i => new THREE.Vector3(model.pts[i].x - cx, model.pts[i].elevRaw * model.exaggeration, model.pts[i].z - cz)
-    tags.push({ v: mk(pi), text: `▲ ${Math.round(model.minElev + model.pts[pi].elevRaw)}m`, color: '#ffe9cf', below: false })
+    tags.push({ v: mk(pi), text: `▲ ${Math.round(model.minElev + model.pts[pi].elevRaw)}m`, color: INK.chalk, below: false })
     // % 數字以官方 maxGrade 為準（與卡片下緣的「最陡」一致），stream 只拿來定位最陡的位置
+    // 原本這顆是 #ffd24d —— 跟 --t-yellow(#F5C542)「比自己慢」幾乎同色，會把量測值讀成狀態
     const steepPct = officialMaxGrade != null ? Math.round(officialMaxGrade) : Math.round(slopes[si] * 100)
-    if (slopes[si] > 0.02 && si !== pi) tags.push({ v: mk(si), text: `最陡 ${steepPct}%`, color: '#ffd24d', below: true })
+    if (slopes[si] > 0.02 && si !== pi) tags.push({ v: mk(si), text: `最陡 ${steepPct}%`, color: INK.chalk, below: true })
   }
   // 地標：純視覺提示，錨點用 v 存 pivot 座標系位置（跟 tags 同一套投影邏輯）
   const landmarkTags = findNearbyLandmarks(model, landmarks, SEGMENT_LANDMARK_MAX_DIST_M).map(lm => ({
@@ -3126,8 +3093,10 @@ function buildSegScene(model, officialMaxGrade, landmarks, flat) {
            curve, cx, cz, climbRot }
 }
 // 2D 浮標：錨點圓點 + 細連接線 + 圓角 pill，畫在 drawImage 之後的同一顆 canvas
+// 海拔／坡度浮標：方牌 + 髮絲框 + 粉筆字。原本是圓角藥丸 + 暖色字。
+// 這兩個都是量測值不是狀態，所以一律粉筆白 —— 用黃色會被讀成「這段比 PR 慢」。
 function drawSegTag(ctx, x, y, text, color, dpr, below) {
-  ctx.font = `600 ${9.5 * dpr}px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif`
+  ctx.font = `700 ${9.5 * dpr}px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace`
   const tw = ctx.measureText(text).width
   const padX = 6 * dpr, pillH = 16 * dpr, gap = 10 * dpr
   const cw = ctx.canvas.width, ch = ctx.canvas.height
@@ -3142,8 +3111,9 @@ function drawSegTag(ctx, x, y, text, color, dpr, below) {
     by = Math.max(edge, Math.min(ch - pillH - edge, y - pillH / 2))
     bx = x < cw / 2 ? Math.min(cw - bw - edge, x + gap) : Math.max(edge, x - gap - bw)
   }
-  ctx.beginPath(); ctx.arc(x, y, 2 * dpr, 0, Math.PI * 2)
-  ctx.fillStyle = color; ctx.fill()
+  // 錨點：方點，跟 DOM 那邊的 .pkb-dots / .pk-dot（border-radius:0）同一個形狀語彙
+  const ar = 2 * dpr
+  ctx.fillStyle = color; ctx.fillRect(x - ar, y - ar, ar * 2, ar * 2)
   ctx.beginPath()
   if (sideways) {
     const toRight = bx > x
@@ -3153,31 +3123,23 @@ function drawSegTag(ctx, x, y, text, color, dpr, below) {
     ctx.moveTo(x, below ? y + 3 * dpr : y - 3 * dpr)
     ctx.lineTo(x, below ? by : by + pillH)
   }
-  ctx.strokeStyle = 'rgba(255,255,255,.22)'; ctx.lineWidth = dpr; ctx.stroke()
-  const r = pillH / 2
-  ctx.beginPath()
-  ctx.moveTo(bx + r, by)
-  ctx.arcTo(bx + bw, by, bx + bw, by + pillH, r)
-  ctx.arcTo(bx + bw, by + pillH, bx, by + pillH, r)
-  ctx.arcTo(bx, by + pillH, bx, by, r)
-  ctx.arcTo(bx, by, bx + bw, by, r)
-  ctx.closePath()
-  ctx.fillStyle = 'rgba(12,7,3,.78)'; ctx.fill()
-  ctx.strokeStyle = 'rgba(255,255,255,.15)'; ctx.stroke()
+  ctx.strokeStyle = INK.ruleSoft; ctx.lineWidth = dpr; ctx.stroke()
+  ctx.fillStyle = INK.plate; ctx.fillRect(bx, by, bw, pillH)
+  ctx.strokeStyle = INK.rule; ctx.strokeRect(bx, by, bw, pillH)
   ctx.fillStyle = color
   ctx.textBaseline = 'middle'; ctx.textAlign = 'left'
   ctx.fillText(text, bx + padX, by + pillH / 2 + 0.5 * dpr)
 }
-// 地標標籤：純視覺、不搶戲——只有小白點 + 淡字，沒有 pill 底色，跟海拔/坡度標籤明顯區隔
+// 地標標籤：純視覺、不搶戲——只有小方點 + 淡字，沒有牌面底色，跟海拔/坡度標籤明顯區隔
 function drawSegLandmark(ctx, x, y, text, dpr) {
   const cw = ctx.canvas.width, ch = ctx.canvas.height
   x = Math.max(6 * dpr, Math.min(cw - 6 * dpr, x))
   y = Math.max(6 * dpr, Math.min(ch - 6 * dpr, y))
-  ctx.beginPath(); ctx.arc(x, y, 2.2 * dpr, 0, Math.PI * 2)
-  ctx.fillStyle = 'rgba(255,255,255,.55)'; ctx.fill()
+  const r = 2.2 * dpr
+  ctx.fillStyle = INK.dim; ctx.fillRect(x - r, y - r, r * 2, r * 2)
   const alignRight = x > cw * 0.62
   ctx.font = `500 ${8.5 * dpr}px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif`
-  ctx.fillStyle = 'rgba(255,255,255,.6)'
+  ctx.fillStyle = INK.dim
   ctx.textBaseline = 'middle'; ctx.textAlign = alignRight ? 'right' : 'left'
   ctx.fillText(text, x + (alignRight ? -5 : 5) * dpr, y)
 }
@@ -3288,10 +3250,21 @@ function segUpdateCamera(it, dt) {
 const SEG_PLAY_MS = 12000   // 一趟跑完的實際毫秒（不是成績時間，成績只用來顯示計時器）
 const SEG_LIGHTS_MS = 1800  // F1 起跑燈：五顆依序亮起 → 全滅 = 開跑（只有多人對戰才跑）
 const SEG_FINISH_MS = 2600  // 全員完賽後停留，秀最終名次
-// 回放標記＝F1 直播那種「圓點 + LOGO + 名字」。
-// 之後要把同事的數據一起放進來，就是這裡多加幾筆（各自 name / color），
+/* ══ 車手識別（階段 6 決定，這是階段 4 掛帳留下來的那一筆）══
+   維修站牆只有四個彩色（紫綠黃灰）而且只表功能。識別如果也用色相，
+   同一顆點就同時要回答「這是誰」與「這趟跑得如何」，兩個問題會互相蓋掉。
+   板牌本來的做法就不是配色 —— 車手是代號：標記上永遠有字母（S / T / M），
+   PK 面板上永遠有全名。所以顏色只回答一個問題：這是不是我。
+     你   = 粉筆白（整面牆是寫給你看的）
+     同事 = 暗一階的粉筆
+   rivals.json 的 color 欄位不再讀 —— 那份資料 strava.html 與 strava_opus5_max.html
+   也在用，改它會動到另外兩個世界。識別色在這一頁自己決定。 */
+const RIDER_INK_SELF = '#EDEAE3'   // --chalk
+const RIDER_INK_FOE = '#9BA0A6'    // --chalk-dim
+// 回放標記＝「方點 + 代號 + 名字」。
+// 之後要把同事的數據一起放進來，就是這裡多加幾筆（各自 name / short），
 // 再讓每張卡帶自己的 rider 清單、每人一條 curve 各跑各的。
-const SEG_SELF = { id: 'steve', name: 'STEVE', fullName: 'STEVE CHUANG', short: 'S', color: '#FC4C02', self: true }
+const SEG_SELF = { id: 'steve', name: 'STEVE', fullName: 'STEVE CHUANG', short: 'S', color: RIDER_INK_SELF, self: true }
 /* ── 配速模型：把「總時間」攤到路段上，決定每個時刻標記在哪裡 ──
    用平地等效距離 effort = 距離 + CLIMB_FACTOR × 爬升，時間按 effort 均分。
    為什麼是這個：
@@ -3340,7 +3313,7 @@ function segRidersFor(segId, selfSec, selfEffort) {
   if (selfSec) out.push({ ...SEG_SELF, sec: selfSec, effort: selfEffort || null })
   for (const r of (window._rivals || [])) {
     const e = (r.efforts || {})[String(segId)]
-    if (e && e.elapsed_sec > 0) out.push({ id: r.id, name: r.name, short: r.short || r.name.charAt(0), color: r.color, sec: e.elapsed_sec, effort: e })
+    if (e && e.elapsed_sec > 0) out.push({ id: r.id, name: r.name, short: r.short || r.name.charAt(0), color: RIDER_INK_FOE, sec: e.elapsed_sec, effort: e })
   }
   return out.sort((a, b) => a.sec - b.sec)
 }
@@ -3373,10 +3346,16 @@ function selfHistoryFor(segId) {
   }
   add(first, '初次'); add(pr, '最佳'); add(latest, latestLabel)
   if (seen.size < 2) return null   // 只有一趟（或三個標籤都指向同一趟）就沒得比
+  /* 自我對戰是唯一一個「識別即狀態」的場合：三台車就是三個分段計時狀態，
+     所以這裡反過來用功能色，而且是契約上那三個意思，不是另開一套。
+       最佳 = 歷史 PR        → 綠
+       近期 = 90 天內最佳    → 紫
+       初次 = 沒有更早的紀錄 → 灰
+     代號同時改成看得懂的字（★／1 看不出是什麼），顏色永遠不是唯一編碼。 */
   const style = labels =>
-    labels.includes('最佳') ? { short: '★', color: '#ffd24d' }
-      : (labels.includes('近期') || labels.includes('最近')) ? { short: '今', color: '#FC4C02' }
-        : { short: '1', color: '#8b8f96' }
+    labels.includes('最佳') ? { short: '最', color: INK.green }
+      : (labels.includes('近期') || labels.includes('最近')) ? { short: '今', color: INK.purple }
+        : { short: '初', color: INK.untimed }
   return [...seen.values()].map(v => {
     const st = style(v.labels)
     return {
@@ -3426,9 +3405,9 @@ function segAvatarTile(px, ring) {
   _segAv.tiles[key] = c
   return c
 }
-// 圓點 + 深色圓角底 + 名字。
+// 方點 + 石板牌面 + 代號。
 // F1 原版沒有底色，但它的背景是平面深色賽道圖；我們的背景是亮橘管子＋桁架＋格線，
-// 白字只靠描邊會跟線條打架，所以這裡加一層低調的底。
+// 粉筆字只靠描邊會跟線條打架，所以這裡加一層低調的底。
 function drawSegRiderMarker(ctx, x, y, rider, dpr, labelDy) {
   const cw = ctx.canvas.width, ch = ctx.canvas.height
   const dotR = 5 * dpr, gap = 5 * dpr, edge = 3 * dpr
@@ -3443,7 +3422,8 @@ function drawSegRiderMarker(ctx, x, y, rider, dpr, labelDy) {
   const gapTxt = rider.gapTxt || ''
   let gapW = 0
   if (gapTxt) {
-    ctx.font = `700 ${10 * dpr}px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif`
+    // 量測字體要跟實際畫的一致（秒數走等寬），不然牌面寬度會短一截、把數字切掉
+    ctx.font = `700 ${10 * dpr}px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace`
     gapW = ctx.measureText(gapTxt).width + 4 * dpr
     ctx.font = `800 ${13 * dpr}px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif`
   }
@@ -3456,7 +3436,7 @@ function drawSegRiderMarker(ctx, x, y, rider, dpr, labelDy) {
   }
   // 頭像直徑略小於 pill 高度，上下各留一點餘裕
   const avPx = pillH - 5 * dpr
-  const avTile = rider.self ? segAvatarTile(avPx, 'rgba(255,255,255,.45)') : null
+  const avTile = rider.self ? segAvatarTile(avPx, 'rgba(237,234,227,.55)') : null
   const avW = avTile ? avTile.width : 0
   const pillW = barW + padX + (avTile ? avW + 5 * dpr : 0) + (badge ? badgeW + 5 * dpr : 0) + tw + gapW + padX
   // 靠右邊界就把標籤翻到圓點左側，名字不會被切掉
@@ -3468,21 +3448,16 @@ function drawSegRiderMarker(ctx, x, y, rider, dpr, labelDy) {
   const ly = Math.max(pillH / 2 + edge, Math.min(ch - pillH / 2 - edge, y + (labelDy || 0)))
   const px = toLeft ? x - dotR - gap - pillW : x + dotR + gap
   const py = ly - pillH / 2
-  // 引線：圓點與標籤錯開時斜著連過去，才看得出是同一個標記
+  // 引線：方點與標籤錯開時斜著連過去，才看得出是同一個標記
   ctx.beginPath()
   ctx.moveTo(toLeft ? x - dotR : x + dotR, y)
   ctx.lineTo(toLeft ? px + pillW : px, ly)
-  ctx.strokeStyle = 'rgba(255,255,255,.35)'; ctx.lineWidth = dpr; ctx.stroke()
-  // 深色圓角底 + 左側車色條（圓點被路線擋住時，顏色線索還在）
-  mmRoundRect(ctx, px, py, pillW, pillH, 4 * dpr)
-  ctx.fillStyle = 'rgba(8,4,2,.86)'; ctx.fill()
-  ctx.strokeStyle = 'rgba(255,255,255,.18)'; ctx.lineWidth = dpr; ctx.stroke()
-  ctx.save()
-  mmRoundRect(ctx, px, py, pillW, pillH, 4 * dpr)
-  ctx.clip()
+  ctx.strokeStyle = INK.ruleSoft; ctx.lineWidth = dpr; ctx.stroke()
+  // 石板牌面 + 左側識別條（方點被路線擋住時，線索還在）
+  ctx.fillStyle = INK.plate; ctx.fillRect(px, py, pillW, pillH)
+  ctx.strokeStyle = INK.rule; ctx.lineWidth = dpr; ctx.strokeRect(px, py, pillW, pillH)
   ctx.fillStyle = rider.color
   ctx.fillRect(px, py, barW, pillH)
-  ctx.restore()
   let tx = px + barW + padX
   if (avTile) {
     ctx.drawImage(avTile, tx, ly - avTile.height / 2)
@@ -3490,29 +3465,28 @@ function drawSegRiderMarker(ctx, x, y, rider, dpr, labelDy) {
   }
   if (badge) {
     const bh = 13 * dpr, by = ly - bh / 2
-    mmRoundRect(ctx, tx, by, badgeW, bh, 3 * dpr)
-    ctx.fillStyle = rider.color; ctx.fill()
+    ctx.fillStyle = rider.color; ctx.fillRect(tx, by, badgeW, bh)
     ctx.font = `800 ${9.5 * dpr}px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif`
-    ctx.fillStyle = '#1a0c03'
+    ctx.fillStyle = INK.slate
     ctx.textBaseline = 'middle'; ctx.textAlign = 'center'
     ctx.fillText(badge, tx + badgeW / 2, ly + .5 * dpr)
     tx += badgeW + 5 * dpr
     ctx.font = `800 ${13 * dpr}px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif`
   }
-  ctx.fillStyle = '#fff'
+  // 代號用車手自己的墨色 —— 你是粉筆白、同事暗一階，跟左邊那條識別條同一個值
+  ctx.fillStyle = rider.color
   ctx.textBaseline = 'middle'; ctx.textAlign = 'left'
   ctx.fillText(label, tx, ly + .5 * dpr)
   if (gapTxt) {
-    ctx.font = `700 ${10 * dpr}px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif`
-    ctx.fillStyle = 'rgba(255,150,150,.95)'
+    // 落後秒數＝比人家慢 → 黃，跟 PK 面板的 .pk-gap 同一個語意層
+    ctx.font = `700 ${10 * dpr}px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace`
+    ctx.fillStyle = INK.yellow
     ctx.fillText(gapTxt, tx + tw + 4 * dpr, ly + .5 * dpr)
   }
-  // 圓點畫在最後 → 疊在連接線上，邊緣乾淨
-  ctx.beginPath(); ctx.arc(x, y, dotR + 1.6 * dpr, 0, Math.PI * 2)
-  ctx.fillStyle = 'rgba(6,3,1,.85)'; ctx.fill()
-  ctx.beginPath(); ctx.arc(x, y, dotR, 0, Math.PI * 2)
-  ctx.fillStyle = rider.color; ctx.fill()
-  ctx.strokeStyle = 'rgba(255,255,255,.7)'; ctx.lineWidth = 1.3 * dpr; ctx.stroke()
+  // 方點畫在最後 → 疊在連接線上，邊緣乾淨
+  const oR = dotR + 1.6 * dpr
+  ctx.fillStyle = INK.slate; ctx.fillRect(x - oR, y - oR, oR * 2, oR * 2)
+  ctx.fillStyle = rider.color; ctx.fillRect(x - dotR, y - dotR, dotR * 2, dotR * 2)
 }
 // F1 起跑燈改用 DOM，掛在 canvas 上緣之外 —— 畫在 3D 裡會壓到終點的「▲ xxx m」海拔浮標。
 function segLightsEl(segId) { return document.getElementById('lights-' + segId) }
@@ -3531,8 +3505,9 @@ function segHideLights(it) {
   const el = segLightsEl(it.cv.dataset.seg3d)
   if (el) { el.classList.remove('show', 'go'); el.querySelector('.fc-light-cap').textContent = '' }
 }
-/* ── F1 轉播風排行條（畫面最左）：名次方塊 + 車色 + 名字 + Interval ──
-   照 F1 的規則：第一名寫 Interval，其餘寫「與前一名」的差距，不是與第一名。 */
+/* ── 排行條（畫面最左）：名次方塊 + 識別條 + 名字 + Interval ──
+   照 F1 的規則：第一名寫 Interval，其餘寫「與前一名」的差距，不是與第一名。
+   階段 6：圓角與白字改成石板牌面 + 粉筆階，P1 的名次格改成反白（牌面翻黑白＝板牌的做法）。 */
 function drawF1Board(ctx, field, prog, dpr) {
   const ch = ctx.canvas.height
   const rowH = 19 * dpr, posW = 18 * dpr
@@ -3546,32 +3521,27 @@ function drawF1Board(ctx, field, prog, dpr) {
   // 目前的實際完成秒數（用來算即時 interval）
   const nowSec = prog * slowest
   ctx.save()
-  mmRoundRect(ctx, bx, by, w, h, 4 * dpr)
-  ctx.fillStyle = 'rgba(9,10,14,.88)'; ctx.fill()
-  ctx.strokeStyle = 'rgba(255,255,255,.14)'; ctx.lineWidth = dpr; ctx.stroke()
+  ctx.fillStyle = INK.plate; ctx.fillRect(bx, by, w, h)
+  ctx.strokeStyle = INK.rule; ctx.lineWidth = dpr; ctx.strokeRect(bx, by, w, h)
   field.forEach((r, i) => {
     const y = by + rowH * i
     if (i > 0) {
       ctx.beginPath(); ctx.moveTo(bx, y); ctx.lineTo(bx + w, y)
-      ctx.strokeStyle = 'rgba(255,255,255,.08)'; ctx.lineWidth = dpr; ctx.stroke()
+      ctx.strokeStyle = INK.rule; ctx.lineWidth = dpr; ctx.stroke()
     }
-    // 名次方塊：P1 用車色實心（F1 是紅底白字）
-    ctx.save()
-    mmRoundRect(ctx, bx, y, posW, rowH, i === 0 ? 4 * dpr : 0)
-    ctx.clip()
-    ctx.fillStyle = i === 0 ? r.color : 'rgba(255,255,255,.06)'
+    // 名次格：P1 反白（粉筆底、石板字），其餘留白面 —— 名次靠形狀不靠色相
+    ctx.fillStyle = i === 0 ? INK.chalk : INK.panel
     ctx.fillRect(bx, y, posW, rowH)
-    ctx.restore()
-    ctx.font = `800 ${10.5 * dpr}px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif`
+    ctx.font = `800 ${10.5 * dpr}px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace`
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
-    ctx.fillStyle = i === 0 ? '#0a0603' : 'rgba(255,255,255,.85)'
+    ctx.fillStyle = i === 0 ? INK.slate : INK.dim
     ctx.fillText(String(i + 1), bx + posW / 2, y + rowH / 2 + .5 * dpr)
-    // 車色短條（等同 F1 的隊徽位）
+    // 識別短條（等同 F1 的隊徽位）
     ctx.fillStyle = r.color
     ctx.fillRect(bx + posW + 5 * dpr, y + rowH / 2 - 5 * dpr, 3 * dpr, 10 * dpr)
     ctx.textAlign = 'left'
     ctx.font = `800 ${11 * dpr}px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif`
-    ctx.fillStyle = r.self ? '#ffd9b0' : '#fff'
+    ctx.fillStyle = r.self ? INK.chalk : INK.dim
     ctx.fillText(r.name, bx + posW + 12 * dpr, y + rowH / 2 + .5 * dpr)
     // 與「第一名」的即時差距。F1 轉播是跟前一台比（Interval），但我們同一個畫面上
     // 還有車手標記與完賽名次條，那兩處都是跟第一名比 —— 三處不一致時
@@ -3584,9 +3554,9 @@ function drawF1Board(ctx, field, prog, dpr) {
       txt = '+' + (iv < 60 ? iv.toFixed(1) : fcFmtElapsed(Math.round(iv), 2))
     }
     ctx.textAlign = 'right'
-    ctx.font = `${i === 0 ? 600 : 700} ${i === 0 ? 8.5 : 10}px -apple-system,sans-serif`
-    ctx.font = `${i === 0 ? 600 : 700} ${(i === 0 ? 8.5 : 10) * dpr}px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif`
-    ctx.fillStyle = i === 0 ? 'rgba(255,255,255,.45)' : 'rgba(255,255,255,.8)'
+    ctx.font = `${i === 0 ? 600 : 700} ${(i === 0 ? 8.5 : 10) * dpr}px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace`
+    // 領先／落後跟 PK 面板的 .pk-lead／.pk-gap 同一層語意：綠＝最佳、黃＝比人家慢
+    ctx.fillStyle = i === 0 ? INK.green : INK.yellow
     ctx.fillText(txt, bx + w - 7 * dpr, y + rowH / 2 + .5 * dpr)
   })
   ctx.restore()
@@ -3642,27 +3612,28 @@ function drawF1Telemetry(ctx, rider, opts, dpr) {
   const lastW = ctx.measureText(last).width
   ctx.font = `600 ${8 * dpr}px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif`
   const nameW = Math.max(lastW, first ? ctx.measureText(first).width : 0)
+  // 量測字體要跟畫出來的一致（等寬），而且下排一定會多一個 EST／AVG 標記 —— 一起量進去
   const cellW = v => {
-    ctx.font = `800 ${16 * dpr}px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif`
+    ctx.font = `800 ${16 * dpr}px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace`
     const a = ctx.measureText(v[0]).width
-    ctx.font = `700 ${7 * dpr}px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif`
-    return Math.max(a, ctx.measureText(v[1]).width) + 14 * dpr
+    ctx.font = `700 ${7 * dpr}px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace`
+    return Math.max(a, ctx.measureText(v[1] + ' EST').width) + 14 * dpr
   }
   const liveW = live.reduce((a, v) => a + cellW(v), 0)
   const avgW = avg.reduce((a, v) => a + cellW(v), 0)
   const padX = 8 * dpr, h = 32 * dpr
   const w = padX + nameW + 10 * dpr + liveW + (avgW ? avgW + 8 * dpr : 0) + padX
   const bx = cw - w - 6 * dpr, by = ch - h - 12 * dpr
-  mmRoundRect(ctx, bx, by, w, h, 3 * dpr)
-  ctx.fillStyle = 'rgba(9,10,14,.92)'; ctx.fill()
-  ctx.strokeStyle = 'rgba(255,255,255,.14)'; ctx.lineWidth = dpr; ctx.stroke()
+  ctx.fillStyle = INK.plate; ctx.fillRect(bx, by, w, h)
+  ctx.strokeStyle = INK.rule; ctx.lineWidth = dpr; ctx.strokeRect(bx, by, w, h)
+  // 下緣識別條：這條的顏色就是「這是誰的遙測」，不是裝飾
   ctx.fillStyle = rider.color
-  ctx.fillRect(bx + 2 * dpr, by + h - 2.5 * dpr, w - 4 * dpr, 2 * dpr)
+  ctx.fillRect(bx + dpr, by + h - 2.5 * dpr, w - 2 * dpr, 2 * dpr)
   ctx.textBaseline = 'middle'; ctx.textAlign = 'left'
   let tx = bx + padX
   if (first) {
     ctx.font = `600 ${8 * dpr}px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif`
-    ctx.fillStyle = 'rgba(255,255,255,.62)'
+    ctx.fillStyle = INK.faint
     ctx.fillText(first, tx, by + 10 * dpr)
     ctx.font = `800 ${12 * dpr}px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif`
     ctx.fillStyle = rider.color
@@ -3675,24 +3646,26 @@ function drawF1Telemetry(ctx, rider, opts, dpr) {
   tx += nameW + 10 * dpr
   const divider = x => {
     ctx.beginPath(); ctx.moveTo(x, by + 5 * dpr); ctx.lineTo(x, by + h - 5 * dpr)
-    ctx.strokeStyle = 'rgba(255,255,255,.16)'; ctx.lineWidth = dpr; ctx.stroke()
+    ctx.strokeStyle = INK.rule; ctx.lineWidth = dpr; ctx.stroke()
   }
   divider(tx - 5 * dpr)
   const cell = (v, colour, tag) => {
     const wCell = cellW(v)
-    ctx.font = `800 ${16 * dpr}px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif`
+    ctx.font = `800 ${16 * dpr}px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace`
     ctx.fillStyle = colour
     ctx.fillText(v[0], tx, by + 13 * dpr)
-    ctx.font = `700 ${7 * dpr}px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif`
-    ctx.fillStyle = 'rgba(255,255,255,.48)'
+    ctx.font = `700 ${7 * dpr}px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace`
+    ctx.fillStyle = INK.faint
     ctx.fillText(v[1] + (tag ? ' ' + tag : ''), tx, by + 24 * dpr)
     tx += wCell
   }
-  live.forEach(v => cell(v, '#ff3b30', 'EST'))
+  // 即時值原本是 #ff3b30 —— 一個純警示紅，但這裡沒有任何東西出錯。
+  // 即時＝粉筆白（最亮＝最該看），平均值暗一階，兩者靠 EST／AVG 的字說清楚差別。
+  live.forEach(v => cell(v, INK.chalk, 'EST'))
   if (avgW) {
     divider(tx - 3 * dpr)
     tx += 5 * dpr
-    avg.forEach(v => cell(v, 'rgba(255,233,207,.92)', 'AVG'))
+    avg.forEach(v => cell(v, INK.dim, 'AVG'))
   }
 }
 // 完賽名次條：跑完停留時秀 1/2/3 與最終差距
@@ -3704,6 +3677,8 @@ function drawSegFinish(ctx, riders, alpha, dpr) {
   // MARTIN 的名字會直接壓到時間上（實測重疊 11px）
   ctx.font = `800 ${10 * dpr}px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif`
   const nameW = riders.reduce((a, r) => Math.max(a, ctx.measureText(r.name).width), 0)
+  // 秒數欄改走等寬（計時表本來就得對齊），量測字體要跟著換，否則欄寬會短一截
+  ctx.font = `800 ${10 * dpr}px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace`
   const timeW = riders.reduce((a, r) => Math.max(a, ctx.measureText(fcFmtElapsed(r.sec, 2)).width), 0)
   const gapW = riders.reduce((a, r, i) =>
     Math.max(a, ctx.measureText(i === 0 ? 'WIN' : '+' + fcFmtElapsed(r.sec - best, 2)).width), 0)
@@ -3712,23 +3687,24 @@ function drawSegFinish(ctx, riders, alpha, dpr) {
   const bx = (cw - w) / 2, by = 12 * dpr
   ctx.save()
   ctx.globalAlpha = alpha
-  mmRoundRect(ctx, bx, by, w, h, 6 * dpr)
-  ctx.fillStyle = 'rgba(8,4,2,.9)'; ctx.fill()
-  ctx.strokeStyle = 'rgba(255,255,255,.2)'; ctx.lineWidth = dpr; ctx.stroke()
+  ctx.fillStyle = INK.plate; ctx.fillRect(bx, by, w, h)
+  ctx.strokeStyle = INK.rule; ctx.lineWidth = dpr; ctx.strokeRect(bx, by, w, h)
   riders.forEach((r, i) => {
     const y = by + 5 * dpr + rowH * i + rowH / 2
     ctx.font = `800 ${10 * dpr}px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif`
     ctx.textBaseline = 'middle'; ctx.textAlign = 'left'
-    ctx.fillStyle = i === 0 ? '#ffd24d' : 'rgba(255,255,255,.45)'
+    ctx.fillStyle = i === 0 ? INK.chalk : INK.faint
     ctx.fillText(String(i + 1), bx + 8 * dpr, y)
-    ctx.beginPath(); ctx.arc(bx + 22 * dpr, y, 3.5 * dpr, 0, Math.PI * 2)
-    ctx.fillStyle = r.color; ctx.fill()
-    ctx.fillStyle = '#fff'
+    const dr = 3.5 * dpr
+    ctx.fillStyle = r.color; ctx.fillRect(bx + 22 * dpr - dr, y - dr, dr * 2, dr * 2)
+    ctx.fillStyle = r.self ? INK.chalk : INK.dim
     ctx.fillText(r.name, bx + 30 * dpr, y)
     ctx.textAlign = 'right'
-    ctx.fillStyle = '#ffe9cf'
+    ctx.font = `800 ${10 * dpr}px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace`
+    ctx.fillStyle = INK.chalk
     ctx.fillText(fcFmtElapsed(r.sec, 2), bx + 30 * dpr + nameW + 10 * dpr + timeW, y)
-    ctx.fillStyle = i === 0 ? '#ffd24d' : 'rgba(255,150,150,.9)'
+    // 原本是金色 WIN + 粉紅落後 —— 換成跟 PK 面板一致的綠／黃
+    ctx.fillStyle = i === 0 ? INK.green : INK.yellow
     ctx.fillText(i === 0 ? 'WIN' : '+' + fcFmtElapsed(r.sec - best, 2), bx + w - 8 * dpr, y)
   })
   ctx.restore()
@@ -3795,12 +3771,12 @@ function segPlayStep(it, dt) {
   }
   return prog
 }
-// 回放 HUD：底部細進度條（每位騎士一格自己的進度）+ 左下計時 pill
+// 回放 HUD：底部細進度條（每位騎士一格自己的進度）+ 左下計時牌
 function drawSegPlayHud(ctx, prog, riders, dpr) {
   const cw = ctx.canvas.width, ch = ctx.canvas.height
   const barH = 2.5 * dpr
   const slowest = riders[riders.length - 1].sec
-  ctx.fillStyle = 'rgba(255,255,255,.1)'
+  ctx.fillStyle = 'rgba(237,234,227,.12)'
   ctx.fillRect(0, ch - barH, cw, barH)
   // 多人時每人一條細條疊著畫（領先的在最上面），一眼看到誰跑在前面
   riders.forEach((r, i) => {
@@ -3811,13 +3787,13 @@ function drawSegPlayHud(ctx, prog, riders, dpr) {
   const lead = riders[0]
   const elapsed = Math.round(prog * slowest)
   const text = `▶ ${fcFmtElapsed(Math.min(elapsed, slowest), 2)} / ${fcFmtElapsed(slowest, 2)}`
-  ctx.font = `700 ${9.5 * dpr}px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif`
+  ctx.font = `700 ${9.5 * dpr}px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace`
   const padX = 6 * dpr, pillH = 15 * dpr, bw = ctx.measureText(text).width + padX * 2
   const bx = 5 * dpr, by = ch - barH * riders.length - pillH - 6 * dpr
-  mmRoundRect(ctx, bx, by, bw, pillH, pillH / 2)
-  ctx.fillStyle = 'rgba(12,7,3,.8)'; ctx.fill()
-  ctx.strokeStyle = 'rgba(255,255,255,.15)'; ctx.lineWidth = dpr; ctx.stroke()
-  ctx.fillStyle = lead.done ? '#ffd27a' : '#ffe9cf'
+  ctx.fillStyle = INK.plate; ctx.fillRect(bx, by, bw, pillH)
+  ctx.strokeStyle = INK.rule; ctx.lineWidth = dpr; ctx.strokeRect(bx, by, bw, pillH)
+  // 跑完了就把計時牌收暗一階 —— 靠明度而不是換成金色
+  ctx.fillStyle = lead.done ? INK.dim : INK.chalk
   ctx.textBaseline = 'middle'; ctx.textAlign = 'left'
   ctx.fillText(text, bx + padX, by + pillH / 2 + .5 * dpr)
 }
@@ -4521,9 +4497,9 @@ function render(data) {
       </div>
     </div>
 
-    <a class="strava-cta" href="https://www.strava.com/athletes/161539959" target="_blank">
-      <svg viewBox="0 0 24 24"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/></svg>
-      View full profile on Strava
+    <a class="strava-cta" href="https://www.strava.com/athletes/161539959" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/></svg>
+      原始資料 · Strava ↗
     </a>
   `
 
@@ -4610,10 +4586,10 @@ function render(data) {
         } else {
           // activity too old, not in recent data — show toast
           const toast = document.createElement('div')
+          toast.className = 'pw-toast'
           toast.innerHTML = actId
-            ? `📅 ${date} 不在最近記錄 &nbsp;<a href="https://www.strava.com/activities/${actId}" target="_blank" style="color:#FC4C02;font-weight:700;text-decoration:underline">前往 Strava ↗</a>`
-            : `📅 ${date} 的活動不在最近記錄內`
-          toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(30,10,0,.9);color:#FC4C02;border:1px solid rgba(252,76,2,.4);padding:8px 18px;border-radius:8px;font-size:12px;letter-spacing:1px;z-index:9999'
+            ? `${date} 不在最近記錄 &nbsp;<a href="https://www.strava.com/activities/${actId}" target="_blank" rel="noopener">前往 Strava ↗</a>`
+            : `${date} 的活動不在最近記錄內`
           document.body.appendChild(toast)
           setTimeout(() => toast.remove(), 3500)
         }
@@ -5142,89 +5118,39 @@ Promise.all([
     bindSegmentCards()
   })
   .catch(err => {
+    // 缺資料是灰不是紅 —— 這裡沒有東西壞掉，只是板牌還沒有數字可以寫上去
     document.getElementById('content').innerHTML = `
-      <div class="loading" style="color:#FC4C02">
-        載入失敗：${err.message}<br><br>
-        <span style="color:#555;font-size:12px">請先執行 GitHub Actions 產生 strava.json</span>
+      <div class="loading">
+        <b>板牌上沒有數字</b>
+        ${err.message}
+        <small>請先執行 GitHub Actions 產生 strava.json</small>
       </div>
     `
   })
 </script>
-<!-- ── Theme Switcher ── -->
-<div id="theme-switcher">
-  <button id="ts-toggle" title="切換主題">◈</button>
-  <div id="ts-panel">
-    <div class="ts-label">THEME</div>
-    <a href="strava.html"      class="ts-item"><span class="ts-icon">🔥</span><span class="ts-name">Orange</span><span class="ts-sub">Classic</span></a>
-    <a href="strava_aespa.html" class="ts-item"><span class="ts-icon">💜</span><span class="ts-name">Purple</span><span class="ts-sub">Aespa</span></a>
-    <a href="strava_maple.html" class="ts-item"><span class="ts-icon">🍁</span><span class="ts-name">Maple</span><span class="ts-sub">Pixel</span></a>
-    <a href="strava_cs.html"   class="ts-item"><span class="ts-icon">🎯</span><span class="ts-name">CS</span><span class="ts-sub">Tactical</span></a>
-    <a href="strava_lol.html"  class="ts-item"><span class="ts-icon">⚔️</span><span class="ts-name">LoL</span><span class="ts-sub">Summoner</span></a>
-    <a href="strava_halo.html" class="ts-item"><span class="ts-icon">🛡️</span><span class="ts-name">HALO</span><span class="ts-sub">Spartan</span></a>
-  </div>
-</div>
-<style>
-#theme-switcher{position:fixed;bottom:24px;right:20px;z-index:9999;display:flex;flex-direction:column;align-items:flex-end;gap:8px}
-#ts-toggle{
-  width:42px;height:42px;border-radius:50%;
-  background:rgba(252,76,2,.15);border:1.5px solid rgba(252,76,2,.5);
-  color:#FC4C02;font-size:18px;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
-  transition:all .2s;backdrop-filter:blur(8px);
-  box-shadow:0 2px 12px rgba(252,76,2,.2);
-}
-#ts-toggle:hover,#ts-toggle.open{background:rgba(252,76,2,.28);border-color:#FC4C02}
-#ts-panel{
-  display:none;flex-direction:column;gap:6px;
-  background:rgba(8,4,0,.92);border:1px solid rgba(252,76,2,.25);
-  border-radius:10px;padding:10px 10px 8px;
-  backdrop-filter:blur(12px);
-  box-shadow:0 4px 24px rgba(0,0,0,.6);
-  min-width:140px;
-}
-#ts-panel.open{display:flex}
-.ts-label{font-size:8px;letter-spacing:3px;color:rgba(252,76,2,.4);text-transform:uppercase;padding:0 4px 4px;border-bottom:1px solid rgba(252,76,2,.1);margin-bottom:2px}
-.ts-item{
-  display:flex;align-items:center;gap:8px;
-  padding:7px 10px;border-radius:7px;
-  text-decoration:none;transition:background .15s;
-  color:#aaa;
-}
-.ts-item:hover{background:rgba(255,255,255,.06)}
-.ts-item.active{background:rgba(252,76,2,.1);border:1px solid rgba(252,76,2,.25)}
-.ts-icon{font-size:16px;width:22px;text-align:center;flex-shrink:0}
-.ts-name{font-size:13px;font-weight:600;color:#ddd;flex:1}
-.ts-sub{font-size:9px;color:#555;letter-spacing:1px}
-.ts-item.active .ts-name{color:#FC4C02}
-</style>
+<!-- 主題切換器在此收掉（階段 7）：
+     五個舊主題（aespa / maple / cs / lol / halo）與深空觀測站是另外幾個世界，
+     從維修站牆裡開一扇門通過去，等於當場宣告「這頁只是換皮」——
+     方向契約第一條就是要它有自己的世界。舊檔本身留著，直接開網址仍然到得了；
+     三個 Strava 世界的入口統一收在 linkTreeIndex.html 的 STEVE 專用版那一列。 -->
 <script>
-;(function(){
-  const btn = document.getElementById('ts-toggle')
-  const panel = document.getElementById('ts-panel')
-  btn.addEventListener('click', () => {
-    const open = panel.classList.toggle('open')
-    btn.classList.toggle('open', open)
-  })
-  document.addEventListener('click', e => {
-    if (!document.getElementById('theme-switcher').contains(e.target)) {
-      panel.classList.remove('open')
-      btn.classList.remove('open')
-    }
-  })
-})();
-
-/* ── To Top ── */
+/* ── 回到板牌（原「To Top」）──
+   樣式從 cssText 搬回 CSS（階段 7）：inline 樣式蓋不掉，先前得靠一條 !important
+   的 media query 才推得動位置。hover 也不再用兩個 JS 事件改背景。 */
 ;(function(){
   const b = document.createElement('button')
   b.id = 'to-top-btn'
   b.textContent = '▲'
-  b.title = '回到頂部'
-  b.style.cssText = 'position:fixed;bottom:90px;right:22px;z-index:9998;width:38px;height:38px;border-radius:50%;border:1px solid rgba(252,76,2,.5);background:rgba(10,4,0,.8);color:#FC4C02;font-size:14px;cursor:pointer;display:none;align-items:center;justify-content:center;backdrop-filter:blur(6px);transition:opacity .2s,background .2s;box-shadow:0 0 10px rgba(252,76,2,.2)'
+  b.title = '回到板牌'
+  b.setAttribute('aria-label', '回到板牌')
   document.body.appendChild(b)
-  window.addEventListener('scroll', () => { b.style.display = window.scrollY > 300 ? 'flex' : 'none' })
-  b.addEventListener('click', () => window.scrollTo({top:0,behavior:'smooth'}))
-  b.addEventListener('mouseenter', () => b.style.background='rgba(252,76,2,.25)')
-  b.addEventListener('mouseleave', () => b.style.background='rgba(10,4,0,.8)')
+  // 每次捲動都寫 style 會強制重算；只在跨過門檻的那一幀切 class
+  let on = false
+  addEventListener('scroll', () => {
+    const want = scrollY > 300
+    if (want !== on) { on = want; b.classList.toggle('on', on) }
+  }, { passive: true })
+  b.addEventListener('click', () => scrollTo({ top: 0, behavior: 'smooth' }))
 })()
 </script>
 
@@ -5236,7 +5162,60 @@ Promise.all([
      後者往卡片裡塞四角閃爍框、旋轉獎盃與閃爍 CTA 條。
      兩個檔案本身留著，五個舊主題頁還在用；只是這一頁不再載入。
      （鍵盤入口原本掛在那條 CTA 上，已由 .pwr-board 改成真的 button 承接。） -->
-<style>:root{--am-accent:#FC4C02;--am-accent-soft:rgba(252,76,2,.18);--am-panel:#14100c;--am-panel-2:#1c160f}</style>
+<!-- 活動詳情彈窗改殼（階段 7 —— 階段 2 的註解記著「彈窗本體另階段處理」，就是這裡）。
+     activity-modal.css 五個舊主題共用，不能改；它整份走 --am-* 變數，
+     所以換一組值就能把彈窗拉進維修站牆。變數換不掉的（圓角、毛玻璃、漸層、
+     以及那顆會呼吸／掃光／眨眼的「詳情」鈕）在下面逐條蓋掉 —— 那些正是
+     階段 4、5 已經在本頁其他地方退役過的東西，留在彈窗裡就會前後不一致。 -->
+<style>
+:root{
+  /* accent 取 --chalk-dim 而不是 --chalk：原檔把 accent 同時用在框線、標籤與數值上，
+     取最亮的一階會讓彈窗到處都是白框。跟活動卡內那組覆寫（第 923 行）同一個值。 */
+  --am-accent:#9BA0A6;
+  --am-accent-soft:rgba(155,160,166,.14);
+  --am-bg:rgba(8,9,11,.92);
+  --am-panel:#191C20; --am-panel-2:#191C20;
+  --am-border:#31363D;
+  --am-text:#EDEAE3; --am-text-dim:#9BA0A6;
+  --am-hr:#9BA0A6;                  /* 心率原本是警示紅；心率不是警報 */
+}
+/* 方角 —— 這一頁全站 border-radius:0 */
+.am-panel,.am-icon,.am-tag,.am-strava,.am-close,.am-cell,.am-lap,.am-lap-tag,
+.am-itt-item,.am-desc,.act-detail-btn,.act-strava-link{border-radius:0!important}
+/* 無毛玻璃、無漸層、無外暈 */
+.am-overlay{backdrop-filter:none;-webkit-backdrop-filter:none}
+.am-panel{background:var(--am-panel);box-shadow:none}
+.am-head{background:var(--am-panel);backdrop-filter:none;-webkit-backdrop-filter:none}
+.am-cell,.am-lap,.am-itt-item{background:#101215}
+.am-close:hover{transform:none;background:#22262B;color:#EDEAE3}
+/* 數值是主角，拉到粉筆白 */
+.am-cell.accent .val,.am-itt-time{color:#EDEAE3}
+/* PR 那列改用左側綠邊條標記（綠＝歷史 PR），而不是整塊染色 */
+.am-itt-item.pr{background:#101215;border-color:#454B54;box-shadow:inset 2px 0 0 #3FD98A}
+/* 路線星座那張大圖的外殼：14px 圓角 + 藍紫徑向漸層 + 橘暈，是另一個世界的卡片。
+   收成石板方牌，格線留著（方格紙正好是計時紙的底），只把藍調換成粉筆。
+   內容物不動 —— 心率區間那組五色（Z1–Z5）是生理量表，跟分段計時四色不衝突，
+   它就是轉速表的紅線區；改成粉筆反而會把區間的意思弄丟。 */
+.am-route{border-radius:0!important;background:#101215;border-color:#31363D}
+.am-route::before{background-image:
+  linear-gradient(rgba(237,234,227,.045) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(237,234,227,.045) 1px,transparent 1px)}
+.am-route-brand{color:#6B7178;opacity:1;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.am-replay-btn{color:#9BA0A6;opacity:1;border:1px solid #454B54;border-radius:0;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.am-replay-btn:hover{opacity:1;border-color:#9BA0A6;background:#22262B;color:#EDEAE3}
+.am-route-svg .am-link{stroke:#9BA0A6}          /* 無 HR 資料時的後備星座線，原本是藍紫 */
+.am-gauge-spd{color:#6B7178}
+.am-gauge-spd-val{color:#EDEAE3}
+/* 「詳情」鈕：呼吸、掃光、彈跳、眨眼全停。段落順序刻意排在最後，蓋得過原檔。 */
+.act-detail-btn{background:none;border:1px solid #454B54;color:#9BA0A6;
+  animation:none!important;box-shadow:none!important;transition:background .15s ease,color .15s ease}
+.act-detail-btn::after{display:none}
+.act-detail-btn:hover{background:#22262B;color:#EDEAE3;transform:none;box-shadow:none!important}
+.act-detail-btn:active{transform:none}
+.act-detail-btn .am-eye,.act-detail-btn .am-eye *{animation:none!important}
+.act-strava-link:hover{transform:none;box-shadow:none}
+</style>
 <script src="activity-modal.js" defer></script>
 </body>
 </html>
