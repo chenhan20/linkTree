@@ -1,0 +1,851 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ITT 回放標記 · 5 種腳踏車</title>
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;padding:26px 20px 60px;background:#070403;color:#f4ece4;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans TC',sans-serif;
+  background-image:radial-gradient(ellipse 80% 50% at 50% -10%,rgba(252,76,2,.14),transparent 70%);
+}
+h1{font-size:17px;letter-spacing:.5px;margin:0 0 6px}
+.sub{font-size:12px;color:rgba(255,255,255,.45);margin:0 0 14px;line-height:1.7}
+.sub b{color:#ff9d52;font-weight:600}
+.ctl{
+  display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin:0 0 22px;padding:12px 14px;
+  border:1px solid rgba(255,255,255,.1);border-radius:12px;background:rgba(255,255,255,.03);
+  font-size:11.5px;color:rgba(255,255,255,.6);
+}
+.ctl label{display:flex;align-items:center;gap:7px;white-space:nowrap}
+.ctl input[type=range]{width:112px;accent-color:#FC4C02}
+.ctl .val{color:#ff9d52;font-weight:700;min-width:32px;font-variant-numeric:tabular-nums}
+.ctl button{
+  padding:5px 13px;font-size:11.5px;font-family:inherit;background:transparent;
+  border:1px solid rgba(252,76,2,.32);border-radius:13px;color:rgba(255,255,255,.65);cursor:pointer;
+}
+.ctl button:hover{border-color:rgba(252,76,2,.7);color:#fff}
+.ctl button.active{background:rgba(252,76,2,.18);border-color:#FC4C02;color:#FC4C02}
+
+.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(470px,1fr));max-width:1500px}
+@media(max-width:530px){.grid{grid-template-columns:1fr}body{padding:18px 12px 40px}}
+.panel{
+  border:1px solid rgba(255,255,255,.1);border-radius:14px;overflow:hidden;
+  background:linear-gradient(165deg,rgba(28,20,14,.9),rgba(10,6,3,.95));
+  box-shadow:0 10px 34px rgba(0,0,0,.5);
+}
+.phead{display:flex;align-items:baseline;gap:9px;padding:12px 14px 9px}
+.pnum{font-size:10px;font-weight:800;color:#070403;background:#FC4C02;border-radius:5px;padding:2px 6px;letter-spacing:.5px;flex:none}
+.pname{font-size:13.5px;font-weight:700;letter-spacing:.3px}
+.pen{font-size:10px;color:rgba(255,255,255,.32);letter-spacing:1px;text-transform:uppercase}
+.ptag{margin-left:auto;font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:9px;letter-spacing:.5px}
+.ptag.bb{color:#7ec8ff;background:rgba(126,200,255,.12)}
+.ptag.hd{color:#ffb066;background:rgba(255,176,102,.13)}
+/* 250px 高、約 2.9:1 —— 跟 strava.html 的 .fc-3d 卡片同尺寸，才看得準小不小 */
+canvas.stage{display:block;width:100%;height:250px;background:#0a0603}
+.pfoot{padding:11px 14px 13px;font-size:11.5px;line-height:1.65;color:rgba(255,255,255,.6)}
+.pfoot .row{display:flex;gap:7px;margin-top:5px}
+.pfoot .k{flex:none;font-weight:700;font-size:10px;padding:1px 5px;border-radius:4px;height:16px;line-height:14px}
+.k.up{color:#7ce6a0;background:rgba(124,230,160,.12)}
+.k.dn{color:#ff8f8f;background:rgba(255,143,143,.12)}
+.k.use{color:#ffd24d;background:rgba(255,210,77,.12)}
+.err{padding:40px 16px;text-align:center;color:#ff8f8f;font-size:12px}
+.legend{font-size:11px;color:rgba(255,255,255,.35);margin:20px 0 0;max-width:1500px;line-height:1.75}
+.legend b{color:rgba(255,255,255,.6);font-weight:600}
+.zoom{margin:22px 0 0;max-width:1500px}
+.zoom h2{font-size:12.5px;margin:0 0 8px;color:rgba(255,255,255,.6);letter-spacing:.5px}
+.zoomrow{display:flex;gap:12px;flex-wrap:wrap}
+.zoomcell{border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:8px;background:rgba(255,255,255,.03);text-align:center}
+.zoomcell canvas{display:block;width:120px;height:120px;background:#0a0603;border-radius:6px}
+.zoomcell span{display:block;font-size:10px;color:rgba(255,255,255,.45);margin-top:5px}
+</style>
+</head>
+<body>
+<h1>ITT 回放標記 · 5 種腳踏車</h1>
+<p class="sub">
+  取代原本那顆白色圓點。<b>路線本身的顏色（= 坡度）完全不動</b>，只有這台車在動。<br>
+  騎士是<b>通用剪影</b>（戴安全帽、沒有臉），不是任何特定人。<b>可以整排開關</b>，直接比「有人 / 沒人」。
+  腿是兩節式 IK 解的，曲柄轉速跟輪速同步 —— 真的在踩，不是上下平移。<br>
+  畫布刻意設成 250px 高、約 2.9:1 —— 跟 <code>strava.html</code> 的 ITT 卡一模一樣，才看得準「小到那樣還認不認得出是腳踏車」。
+</p>
+<div class="ctl">
+  <label>大小 <input type="range" id="sc" min="4" max="30" value="13"><span class="val" id="scv">13</span></label>
+  <label>速度 <input type="range" id="sp" min="1" max="12" value="5"><span class="val" id="spv">5</span></label>
+  <button id="btn-rider" class="active">🚴 騎士</button>
+  <button id="btn-pose" class="active">姿勢：趴低</button>
+  <button id="btn-pause">⏸ 暫停</button>
+  <button id="btn-dot">◦ 疊回原本的圓點對照</button>
+  <button id="btn-spin" class="active">⟳ 鏡頭環繞</button>
+  <span style="margin-left:auto;font-size:11px;color:rgba(255,255,255,.3)" id="srclbl">—</span>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<div class="zoom">
+  <h2>造型本身（正側面、放大看細節）</h2>
+  <div class="zoomrow" id="zoomrow"></div>
+</div>
+
+<p class="legend">
+  <b>朝向策略是這題真正的取捨。</b>
+  <span style="color:#ffb066">沿路線</span>＝車頭朝實際行進方向，最寫實，但轉到正面／背面時整台車會壓成一條線，瞬間看不出是車。
+  <span style="color:#7ec8ff">永遠側面</span>＝強制把側面轉向鏡頭，任何角度都認得出是腳踏車，代價是車頭方向不再代表真實行進方向（爬升傾角仍然真實）。
+  五種裡 1、5 是「永遠側面」，2、3、4 是「沿路線」。
+  <br><br>
+  <b>加上騎士的取捨。</b>
+  好處是「這是在騎車」變得毫無疑問 —— 空車在 3D 空間裡飄，人一放上去就變成一個正在移動的騎士，
+  而且人形比車架高、輪廓更集中，遠看反而更容易被眼睛抓到。
+  代價是像素預算：ITT 卡上這台大概只有 30–40px 高，車架＋人形塞在裡面容易糊成一團橘色 —— 這就是為什麼「極簡雙圈」的騎士只給軀幹和頭、不給腿，給了也看不到。
+  「貼圖剪影」是靜態貼圖，所以它的腿不會踩（踏板固定停在 3 點／9 點鐘方向）。
+  <b>建議先把大小拉到 8–10（接近實際卡片上的視覺大小）再按騎士開關，那個尺寸下的差別才是真的要決定的事。</b>
+</p>
+
+<script src="../vendor-three-r128.js"></script>
+<script>
+/* ══════════ 腳踏車造型：側視，車頭朝 +X、上為 +Y、車身厚度在 Z ══════════
+   輪半徑 1、地面在 y=-1，整台車再依 scale 縮放到路線尺度。
+   座標抄實車比例：軸距 2.6、五通略低於輪心、頭管比座管前傾。 */
+const BIKE = {
+  rearHub:  [-1.30,  0.00],
+  frontHub: [ 1.30,  0.00],
+  bb:       [-0.10, -0.34],   // 五通
+  saddle:   [-0.62,  0.78],
+  headTop:  [ 0.86,  0.62],
+  barL:     [ 0.62,  0.70],   // 把手兩端
+  barR:     [ 1.06,  0.66],
+  seatL:    [-0.82,  0.80],   // 座墊兩端
+  seatR:    [-0.40,  0.76],
+}
+// 車架桿件（不含輪圈）
+const BIKE_TUBES = [
+  ['bb','headTop'],    // 下管
+  ['bb','saddle'],     // 座管
+  ['saddle','headTop'],// 上管
+  ['bb','rearHub'],    // 後下叉
+  ['saddle','rearHub'],// 後上叉
+  ['headTop','frontHub'], // 前叉
+  ['barL','barR'],     // 把手
+  ['seatL','seatR'],   // 座墊
+]
+const V2 = k => BIKE[k]
+
+// 圓（輪圈）取樣點
+function circlePts(cx, cy, r, n) {
+  const out = []
+  for (let i = 0; i <= n; i++) {
+    const a = i / n * Math.PI * 2
+    out.push([cx + Math.cos(a) * r, cy + Math.sin(a) * r])
+  }
+  return out
+}
+
+/* ══════════ 騎士：通用剪影（戴安全帽、沒有臉，不是特定人） ══════════
+   兩種姿勢：趴低（下把、衝刺）／直立（上把、巡航）。座標沿用腳踏車的 local 系。 */
+const RIDER = {
+  aero:    { hip:[-0.55,0.92], shoulder:[0.30,1.32], head:[0.60,1.42], headR:0.19, hand:[0.86,0.72] },
+  upright: { hip:[-0.58,0.98], shoulder:[0.06,1.62], head:[0.28,1.82], headR:0.19, hand:[0.82,0.76] },
+}
+// 大腿／小腿長度配合座高：最低點時腿接近伸直（真實的座高設定就是這樣）
+const LEG_L1 = 0.84, LEG_L2 = 0.86, CRANK_R = 0.34
+const _YAX = new THREE.Vector3(0, 1, 0)
+// 兩節式 IK：給髖與踏板位置，解出膝蓋（往前 +X 彎）
+function ikKnee(h, f, l1, l2) {
+  const dx = f[0] - h[0], dy = f[1] - h[1]
+  const dist = Math.hypot(dx, dy) || 1e-6
+  const ux = dx / dist, uy = dy / dist
+  const d = Math.min(dist, l1 + l2 - 1e-3)
+  const a = (l1 * l1 - l2 * l2 + d * d) / (2 * d)
+  const hh = Math.sqrt(Math.max(0, l1 * l1 - a * a))
+  let px = -uy, py = ux
+  if (px < 0) { px = uy; py = -ux }   // 膝蓋往前，不要反折
+  return [h[0] + ux * a + px * hh, h[1] + uy * a + py * hh]
+}
+function pedalPos(angle) {
+  return [BIKE.bb[0] + Math.cos(angle) * CRANK_R, BIKE.bb[1] + Math.sin(angle) * CRANK_R]
+}
+// 線條騎士：軀幹／手臂／安全帽固定，兩條腿逐幀更新
+function riderWire(color, opacity, pose) {
+  const P = RIDER[pose]
+  const g = new THREE.Group()
+  const mat = new THREE.LineBasicMaterial({ color, transparent: true, opacity })
+  const fixed = [P.hip, P.shoulder, P.shoulder, P.hand]
+  const fg = new THREE.BufferGeometry()
+  fg.setAttribute('position', new THREE.Float32BufferAttribute(fixed.flatMap(p => [p[0], p[1], 0]), 3))
+  g.add(new THREE.LineSegments(fg, mat))
+  const head = circlePts(P.head[0], P.head[1], P.headR, 14).map(p => new THREE.Vector3(p[0], p[1], 0))
+  g.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(head), mat))
+  const legGeo = new THREE.BufferGeometry()   // 2 腿 × 2 骨 × 2 點
+  legGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(2 * 2 * 2 * 3), 3))
+  g.add(new THREE.LineSegments(legGeo, mat))
+  g.userData = { kind: 'wire', pose, legGeo }
+  return g
+}
+// 立體騎士：圓柱四肢 + 球形安全帽
+function riderSolid(color, pose) {
+  const P = RIDER[pose]
+  const g = new THREE.Group()
+  const mat = new THREE.MeshBasicMaterial({ color })
+  g.add(cyl(P.hip, P.shoulder, .105, mat))     // 軀幹
+  g.add(cyl(P.shoulder, P.hand, .062, mat))    // 手臂
+  const helmet = new THREE.Mesh(new THREE.SphereGeometry(P.headR, 8, 8), mat)
+  helmet.position.set(P.head[0], P.head[1], 0)
+  g.add(helmet)
+  const bones = []
+  for (let i = 0; i < 2; i++) {
+    const thigh = new THREE.Mesh(new THREE.CylinderGeometry(.075, .075, LEG_L1, 5), mat)
+    const shin  = new THREE.Mesh(new THREE.CylinderGeometry(.058, .058, LEG_L2, 5), mat)
+    g.add(thigh, shin); bones.push(thigh, shin)
+  }
+  g.userData = { kind: 'solid', pose, bones }
+  return g
+}
+// 極簡騎士：一根軀幹 + 一顆頭，沒有腿（配合「極簡雙圈」的抽象程度）
+function riderMinimal(color, pose) {
+  const P = RIDER[pose]
+  const g = new THREE.Group()
+  const mat = new THREE.MeshBasicMaterial({ color })
+  g.add(cyl(P.hip, P.shoulder, .1, mat))
+  const h = new THREE.Mesh(new THREE.SphereGeometry(P.headR, 8, 8), mat)
+  h.position.set(P.head[0], P.head[1], 0)
+  g.add(h)
+  g.userData = { kind: 'none', pose }
+  return g
+}
+const _bv1 = new THREE.Vector3(), _bv2 = new THREE.Vector3()
+function setBone(mesh, a, b) {
+  _bv1.set(a[0], a[1], 0); _bv2.set(b[0], b[1], 0)
+  mesh.position.copy(_bv1).add(_bv2).multiplyScalar(.5)
+  mesh.quaternion.setFromUnitVectors(_YAX, _bv2.sub(_bv1).normalize())
+}
+// 踩踏：兩腿相位差 180°，膝蓋由 IK 解出 → 真的在踩，不是上下平移
+function updateRiderLegs(rider, crank) {
+  const P = RIDER[rider.userData.pose]
+  const phases = [crank, crank + Math.PI]
+  if (rider.userData.kind === 'wire') {
+    const arr = rider.userData.legGeo.attributes.position.array
+    let o = 0
+    for (const ph of phases) {
+      const f = pedalPos(ph), k = ikKnee(P.hip, f, LEG_L1, LEG_L2)
+      arr[o++] = P.hip[0]; arr[o++] = P.hip[1]; arr[o++] = 0
+      arr[o++] = k[0];     arr[o++] = k[1];     arr[o++] = 0
+      arr[o++] = k[0];     arr[o++] = k[1];     arr[o++] = 0
+      arr[o++] = f[0];     arr[o++] = f[1];     arr[o++] = 0
+    }
+    rider.userData.legGeo.attributes.position.needsUpdate = true
+  } else if (rider.userData.kind === 'solid') {
+    const bones = rider.userData.bones
+    for (let i = 0; i < 2; i++) {
+      const f = pedalPos(phases[i]), k = ikKnee(P.hip, f, LEG_L1, LEG_L2)
+      setBone(bones[i * 2], P.hip, k)
+      setBone(bones[i * 2 + 1], k, f)
+    }
+  }
+}
+
+/* ── 造型 A：線框（LineSegments）。輪子是獨立 group，可以真的轉 ── */
+function bikeWireframe(color, opacity, lineW) {
+  const g = new THREE.Group()
+  const seg = []
+  BIKE_TUBES.forEach(([a, b]) => {
+    const p = V2(a), q = V2(b)
+    seg.push(p[0], p[1], 0, q[0], q[1], 0)
+  })
+  const frameGeo = new THREE.BufferGeometry()
+  frameGeo.setAttribute('position', new THREE.Float32BufferAttribute(seg, 3))
+  const mat = new THREE.LineBasicMaterial({ color, transparent: true, opacity })
+  g.add(new THREE.LineSegments(frameGeo, mat))
+  const wheels = []
+  ;[['rearHub'], ['frontHub']].forEach(([k]) => {
+    const c = V2(k)
+    const pts = circlePts(0, 0, 1, 18).map(p => new THREE.Vector3(p[0], p[1], 0))
+    const w = new THREE.Group()
+    w.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), mat))
+    // 四根輻條：小尺寸下輪子「有東西在轉」比輪圈本身更容易被看到
+    const sp = []
+    for (let i = 0; i < 4; i++) {
+      const a = i / 4 * Math.PI
+      sp.push(-Math.cos(a), -Math.sin(a), 0, Math.cos(a), Math.sin(a), 0)
+    }
+    const spGeo = new THREE.BufferGeometry()
+    spGeo.setAttribute('position', new THREE.Float32BufferAttribute(sp, 3))
+    w.add(new THREE.LineSegments(spGeo, mat))
+    w.position.set(c[0], c[1], 0)
+    g.add(w); wheels.push(w)
+  })
+  g.userData.wheels = wheels
+  return g
+}
+
+/* ── 造型 B：立體管件（圓柱 + 甜甜圈輪） ── */
+function cyl(a, b, r, mat) {
+  const va = new THREE.Vector3(a[0], a[1], 0), vb = new THREE.Vector3(b[0], b[1], 0)
+  const len = va.distanceTo(vb)
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, len, 5), mat)
+  m.position.copy(va).add(vb).multiplyScalar(.5)
+  // CylinderGeometry 預設沿 +Y，轉去對齊 a→b
+  m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), vb.clone().sub(va).normalize())
+  return m
+}
+function bikeSolid(frameColor, wheelColor) {
+  const g = new THREE.Group()
+  const fm = new THREE.MeshBasicMaterial({ color: frameColor })
+  const wm = new THREE.MeshBasicMaterial({ color: wheelColor })
+  BIKE_TUBES.forEach(([a, b]) => g.add(cyl(V2(a), V2(b), .075, fm)))
+  const wheels = []
+  ;['rearHub', 'frontHub'].forEach(k => {
+    const c = V2(k)
+    const w = new THREE.Group()
+    // Torus 預設就躺在 XY 平面、法線朝 +Z，正好是側視方向，不用再轉
+    w.add(new THREE.Mesh(new THREE.TorusGeometry(1, .075, 4, 20), wm))
+    const sm = new THREE.Mesh(new THREE.BoxGeometry(1.94, .045, .045), fm)
+    const sm2 = sm.clone(); sm2.rotation.z = Math.PI / 2
+    w.add(sm, sm2)
+    w.position.set(c[0], c[1], 0)
+    g.add(w); wheels.push(w)
+  })
+  g.userData.wheels = wheels
+  return g
+}
+
+/* ── 造型 C：極簡雙圈（只有兩個環 + 一根桿） ── */
+function bikeTwoRings(color) {
+  const g = new THREE.Group()
+  const m = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: .95 })
+  const wheels = []
+  ;['rearHub', 'frontHub'].forEach(k => {
+    const c = V2(k)
+    const w = new THREE.Group()
+    w.add(new THREE.Mesh(new THREE.TorusGeometry(1, .12, 4, 18), m))
+    const bar = new THREE.Mesh(new THREE.BoxGeometry(1.9, .07, .07), m)
+    w.add(bar)
+    w.position.set(c[0], c[1], 0)
+    g.add(w); wheels.push(w)
+  })
+  g.add(cyl(V2('rearHub'), V2('frontHub'), .085, m))
+  g.add(cyl([0, 0], [0, .95], .085, m))   // 一根往上的桿子暗示車身
+  g.userData.wheels = wheels
+  return g
+}
+
+/* ── 造型 D：canvas 貼圖 Sprite（永遠正面朝鏡頭、字面上最銳利） ──
+   回傳貼圖 + 它涵蓋的 local 座標範圍，呼叫端才算得出正確的縮放與「輪子貼地」偏移。
+   Sprite 是靜態貼圖，所以這一種的腿不會踩（踏板停在固定角度）。 */
+function bikeSpriteTexture(color, glow, withRider, pose) {
+  const halfW = 2.45
+  const loY = -1.25, hiY = withRider ? 2.15 : 1.25
+  const halfH = (hiY - loY) / 2, cy = (hiY + loY) / 2
+  const PAD = 14, W = 256
+  const k = (W - PAD * 2) / (halfW * 2)
+  const H = Math.round(halfH * 2 * k + PAD * 2)
+  const cv = document.createElement('canvas')
+  cv.width = W; cv.height = H
+  const c = cv.getContext('2d')
+  const X = x => W / 2 + x * k
+  const Y = y => H / 2 - (y - cy) * k
+  c.lineCap = 'round'; c.lineJoin = 'round'
+  if (glow) { c.shadowColor = glow; c.shadowBlur = 11 }
+  c.strokeStyle = color
+  c.lineWidth = 7
+  ;['rearHub', 'frontHub'].forEach(kk => {
+    const p = V2(kk)
+    c.beginPath(); c.arc(X(p[0]), Y(p[1]), 1 * k, 0, Math.PI * 2); c.stroke()
+  })
+  c.lineWidth = 8
+  BIKE_TUBES.forEach(([a, b]) => {
+    const p = V2(a), q = V2(b)
+    c.beginPath(); c.moveTo(X(p[0]), Y(p[1])); c.lineTo(X(q[0]), Y(q[1])); c.stroke()
+  })
+  if (withRider) {
+    const P = RIDER[pose]
+    c.lineWidth = 13   // 騎士畫粗一點，小尺寸下才不會被車架吃掉
+    const seg = (a, b) => { c.beginPath(); c.moveTo(X(a[0]), Y(a[1])); c.lineTo(X(b[0]), Y(b[1])); c.stroke() }
+    seg(P.hip, P.shoulder)
+    c.lineWidth = 9
+    seg(P.shoulder, P.hand)
+    // 踏板停在 3 點 / 9 點鐘，靜態畫面看起來也像在踩
+    ;[0.6, 0.6 + Math.PI].forEach(ph => {
+      const f = pedalPos(ph), kn = ikKnee(P.hip, f, LEG_L1, LEG_L2)
+      c.lineWidth = 11; seg(P.hip, kn)
+      c.lineWidth = 8;  seg(kn, f)
+    })
+    c.fillStyle = color
+    c.beginPath(); c.arc(X(P.head[0]), Y(P.head[1]), P.headR * k, 0, Math.PI * 2); c.fill()
+  }
+  const tex = new THREE.CanvasTexture(cv)
+  tex.minFilter = THREE.LinearFilter
+  return { tex, halfW, halfH, cy }
+}
+
+/* ══════════ 朝向 ══════════ */
+const UP = new THREE.Vector3(0, 1, 0)
+const _fwd = new THREE.Vector3(), _side = new THREE.Vector3(), _up2 = new THREE.Vector3()
+const _m4 = new THREE.Matrix4(), _camDir = new THREE.Vector3()
+// 沿路線：車頭指向實際切線
+function orientHeading(obj, tan) {
+  _fwd.copy(tan).normalize()
+  _side.crossVectors(_fwd, UP)
+  if (_side.lengthSq() < 1e-8) return
+  _side.normalize()
+  _up2.crossVectors(_side, _fwd).normalize()
+  obj.quaternion.setFromRotationMatrix(_m4.makeBasis(_fwd, _up2, _side))
+}
+// 永遠側面：水平朝向強制垂直於鏡頭視線，但保留真實的爬升傾角
+function orientBillboard(obj, tan, camera) {
+  camera.getWorldDirection(_camDir)
+  _camDir.y = 0
+  if (_camDir.lengthSq() < 1e-8) return
+  _camDir.normalize()
+  _fwd.crossVectors(UP, _camDir).normalize()          // 鏡頭的水平右方
+  const horiz = Math.hypot(tan.x, tan.z) || 1e-6
+  if (_fwd.x * tan.x + _fwd.z * tan.z < 0) _fwd.negate()  // 不要倒著騎
+  _fwd.y = (tan.y / horiz) * 0.9                      // 爬升傾角（略收斂，免得翹太誇張）
+  _fwd.normalize()
+  _side.crossVectors(_fwd, UP)
+  if (_side.lengthSq() < 1e-8) return
+  _side.normalize()
+  _up2.crossVectors(_side, _fwd).normalize()
+  obj.quaternion.setFromRotationMatrix(_m4.makeBasis(_fwd, _up2, _side))
+}
+
+/* ══════════ 五種提案 ══════════ */
+const STYLES = [
+  {
+    n: '發光線框', en: 'Neon Wireframe', mode: 'bb', riderKind: 'wire',
+    make: () => bikeWireframe(0xffd9a8, .95),
+    up: '線條稀疏所以縮到 20px 還看得出輪廓；輻條在轉，小尺寸下「有東西在動」比細節更能被注意到。跟整站的太空調性最合。',
+    dn: 'WebGL 的線寬固定 1px，放大後顯得單薄、沒有實體感；線框疊在同色系的路線上時對比不夠。',
+    use: '預設首選。ITT 卡就是小尺寸，這種最務實。',
+  },
+  {
+    n: '立體管件', en: 'Solid Frame', mode: 'hd', riderKind: 'solid',
+    make: () => bikeSolid(0xfff1dc, 0xffc888),
+    up: '最像一台真的車，放大看得到車架三角與輪圈厚度；朝向真實，能一起讀出「正在往哪騎」。',
+    dn: '沿路線朝向 → 轉到正面／背面會壓成一條線；縮到卡片尺寸時管件糊成一團橘色。頂點數也是五種裡最多的。',
+    use: '大尺寸的 3D 回放視窗（那顆 overlay），不適合小卡。',
+  },
+  {
+    n: '極簡雙圈', en: 'Two Rings', mode: 'hd', riderKind: 'minimal',
+    make: () => bikeTwoRings(0xffe0b0),
+    up: '抽象到極限，12px 也還讀得出「兩個輪子」；量體乾淨，完全不會蓋住路線。',
+    dn: '不太像腳踏車，更像一副眼鏡或滑板；少了車架就少了個性，跟「這是我的 TCR」那種情感連結無關。',
+    use: '極小尺寸、或同時要放很多台車（例如多趟成績一起比）。',
+  },
+  {
+    n: '貼圖剪影', en: 'Sprite Silhouette', mode: 'bb',
+    make: null,   // Sprite 走另一條路徑
+    sprite: true,
+    up: '2D canvas 畫的貼圖，任何距離都不會失真、線寬可以自由加粗，五種裡小尺寸下最清楚；成本也最低（一個 Sprite）。',
+    dn: '永遠正面朝鏡頭，完全沒有立體感也讀不出爬升傾角，鏡頭環繞時它「不參與」場景，會有貼紙感。',
+    use: '效能吃緊、或只想要一個乾淨的位置指示，不在乎立體。',
+  },
+  {
+    n: '立體側掛', en: 'Solid Billboard', mode: 'bb', riderKind: 'solid',
+    make: () => bikeSolid(0xfff1dc, 0xffc888),
+    up: '立體管件的實體感 ＋ 強制側面朝鏡頭，所以任何角度都認得出是腳踏車；爬升傾角仍然真實，上坡會翹頭。',
+    dn: '車頭方向不代表真實行進方向（轉彎時會怪）；仍然是頂點數最多的那組。',
+    use: '想要「看起來像車」又不想被角度背叛的折衷 —— 我的推薦。',
+  },
+]
+
+/* ══════════ 路線 ══════════ */
+function haversineM(la1, lo1, la2, lo2) {
+  const R = 6371000, rad = x => x * Math.PI / 180
+  const dLa = rad(la2 - la1), dLo = rad(lo2 - lo1)
+  const a = Math.sin(dLa / 2) ** 2 + Math.cos(rad(la1)) * Math.cos(rad(la2)) * Math.sin(dLo / 2) ** 2
+  return 2 * R * Math.asin(Math.sqrt(a))
+}
+function speedColor(t) {
+  const s = [[0.55,0.12,0.05],[0.99,0.30,0.01],[1.0,0.82,0.35]]
+  t = Math.max(0, Math.min(1, t))
+  const a = t < .5 ? s[0] : s[1], b = t < .5 ? s[1] : s[2], f = t < .5 ? t / .5 : (t - .5) / .5
+  return new THREE.Color(a[0]+(b[0]-a[0])*f, a[1]+(b[1]-a[1])*f, a[2]+(b[2]-a[2])*f)
+}
+function buildModel(pts3) {
+  const lat0 = pts3.reduce((s,p) => s+p[0], 0) / pts3.length
+  const lng0 = pts3.reduce((s,p) => s+p[1], 0) / pts3.length
+  const mLat = 110540, mLng = 111320 * Math.cos(lat0 * Math.PI / 180)
+  const elevs = pts3.map(p => p[2])
+  const minElev = Math.min(...elevs), maxElev = Math.max(...elevs)
+  let cum = 0
+  const pts = pts3.map((p, i) => {
+    if (i > 0) cum += haversineM(pts3[i-1][0], pts3[i-1][1], p[0], p[1])
+    return { x:(p[1]-lng0)*mLng, z:(lat0-p[0])*mLat, elevRaw: p[2]-minElev, dist: cum }
+  })
+  const xs = pts.map(p=>p.x), zs = pts.map(p=>p.z)
+  const cx = (Math.min(...xs)+Math.max(...xs))/2, cz = (Math.min(...zs)+Math.max(...zs))/2
+  pts.forEach(p => { p.x -= cx; p.z -= cz })
+  const horizExtent = Math.max(Math.max(...xs)-Math.min(...xs), Math.max(...zs)-Math.min(...zs), 10)
+  const elevRange = maxElev - minElev
+  const exaggeration = Math.min(8, Math.max(4, 0.22*horizExtent/Math.max(1,elevRange)))
+  return { pts, horizExtent, elevRange, minElev, maxElev, exaggeration, totalDist: cum }
+}
+function slopesOf(m) {
+  const p = m.pts, n = p.length, out = new Array(n), W = 25
+  for (let i=0;i<n;i++){
+    let a=i,b=i
+    while (a>0 && p[i].dist-p[a].dist<W) a--
+    while (b<n-1 && p[b].dist-p[i].dist<W) b++
+    const run = p[b].dist-p[a].dist
+    out[i] = run>0 ? (p[b].elevRaw-p[a].elevRaw)/run : 0
+  }
+  return out
+}
+// 跟 strava.html 的 ITT 卡同一套：坡度上色的管子 + 桁架 + 格線
+function buildRouteScene(m) {
+  const scene = new THREE.Scene()
+  const sl = slopesOf(m)
+  const v = m.pts.map(p => new THREE.Vector3(p.x, p.elevRaw*m.exaggeration, p.z))
+  const curve = new THREE.CatmullRomCurve3(v)
+  const segs = Math.min(400, Math.max(60, m.pts.length*2))
+  const radius = Math.max(m.horizExtent*0.013, 2.5)
+  const geo = new THREE.TubeGeometry(curve, segs, radius, 6, false)
+  const perRow = 7, rows = segs+1, n = m.pts.length
+  const col = new Float32Array(rows*perRow*3)
+  for (let i=0;i<rows;i++){
+    const c = speedColor(Math.max(0, sl[Math.round((i/segs)*(n-1))])/0.12)
+    for (let j=0;j<perRow;j++){ const o=(i*perRow+j)*3; col[o]=c.r; col[o+1]=c.g; col[o+2]=c.b }
+  }
+  geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3))
+  scene.add(new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ vertexColors:true })))
+  const grid = new THREE.GridHelper(m.horizExtent*1.7, 12, 0x8a4a20, 0x33200f)
+  grid.material.transparent = true; grid.material.opacity = .4
+  scene.add(grid)
+  scene.add(new THREE.Line(
+    new THREE.BufferGeometry().setFromPoints(m.pts.map(p => new THREE.Vector3(p.x, .4, p.z))),
+    new THREE.LineBasicMaterial({ color:0xffb066, transparent:true, opacity:.38 })))
+  // 桁架
+  const gap = Math.max(m.totalDist/42, 30), pos = []
+  let nextAt = 0, flip = false, prev = null
+  for (const p of m.pts) {
+    if (p.dist < nextAt) continue
+    nextAt = p.dist + gap
+    const y = p.elevRaw*m.exaggeration
+    pos.push(p.x,0,p.z, p.x,y,p.z)
+    if (prev) {
+      if (flip) pos.push(prev.x,prev.y,prev.z, p.x,0,p.z)
+      else      pos.push(prev.x,0,prev.z, p.x,y,p.z)
+      flip = !flip
+    }
+    prev = { x:p.x, y, z:p.z }
+  }
+  const tg = new THREE.BufferGeometry()
+  tg.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3))
+  scene.add(new THREE.LineSegments(tg, new THREE.LineBasicMaterial({ color:0xffa860, transparent:true, opacity:.42 })))
+  const capR = Math.max(radius*1.6, 3)
+  const s0 = new THREE.Mesh(new THREE.SphereGeometry(capR,10,10), new THREE.MeshBasicMaterial({color:0xffd27a}))
+  const s1 = new THREE.Mesh(new THREE.SphereGeometry(capR,10,10), new THREE.MeshBasicMaterial({color:0x8c1d0a}))
+  s0.position.copy(v[0]); s1.position.copy(v[v.length-1])
+  scene.add(s0, s1)
+  return { scene, curve, radius }
+}
+// 量測式取景（跟 strava.html 的 segFitCamera 同一套邏輯，固定方位角）
+function fitCamera(cam, fitPts, tilt) {
+  const ty = Math.tan(cam.fov*Math.PI/360), tx = ty*cam.aspect
+  const s = Math.sin(tilt), c = Math.cos(tilt)
+  let cy = 0, d = 1
+  for (let it=0; it<6; it++){
+    let need = 0
+    for (const p of fitPts){
+      const dy = p.y - cy
+      for (let k=0;k<24;k++){
+        const a = k/24*Math.PI*2, ca = Math.cos(a), sa = Math.sin(a)
+        const px = p.x*ca + p.z*sa, pz = -p.x*sa + p.z*ca
+        const req = dy*s + pz*c + Math.max(Math.abs(px)/tx, Math.abs(dy*c-pz*s)/ty)
+        if (req > need) need = req
+      }
+    }
+    d = Math.max(need*1.06, 1)
+    let lo=Infinity, hi=-Infinity
+    for (const p of fitPts){
+      const dy = p.y - cy
+      for (let k=0;k<24;k++){
+        const a = k/24*Math.PI*2, ca=Math.cos(a), sa=Math.sin(a)
+        const pz = -p.x*sa + p.z*ca, w = d-(dy*s+pz*c)
+        if (w < 1e-3) continue
+        const val = (dy*c-pz*s)/(w*ty)
+        if (val<lo) lo=val; if (val>hi) hi=val
+      }
+    }
+    if (!isFinite(lo)) break
+    const off = (lo+hi)/2
+    if (Math.abs(off) < .004) break
+    cy += off*d*ty/c*0.9
+  }
+  return { d, cy }
+}
+
+/* ══════════ 啟動 ══════════ */
+const SYNTH = (() => {
+  const out = []
+  for (let i=0;i<130;i++){
+    const t = i/129
+    out.push([25.10 + Math.sin(t*4.2)*0.011 + t*0.019,
+              121.58 + Math.cos(t*3.1)*0.009 + t*0.005,
+              120 + 430*Math.sin(Math.min(1,t*1.2)*Math.PI*0.7)**1.3])
+  }
+  return out
+})()
+
+fetch('../data/segment-streams.json', { cache:'no-store' }).then(r => r.ok ? r.json() : null).catch(() => null)
+  .then(data => {
+    let pts = SYNTH, label = '合成示範路段（讀不到 data/segment-streams.json）'
+    if (data) {
+      // 挑落差最大的 ITT 段，車子爬升／傾角的差異才明顯
+      const best = Object.values(data)
+        .filter(s => s && Array.isArray(s.pts) && s.pts.length > 20)
+        .map(s => { const e = s.pts.map(p => p[2]); return { s, gain: Math.max(...e)-Math.min(...e) } })
+        .sort((a,b) => b.gain-a.gain)[0]
+      if (best) { pts = best.s.pts; label = best.s.name || '(未命名路段)' }
+    }
+    start(pts, label)
+  })
+
+let PAUSED = false, SHOW_DOT = false, SPIN = true, SCALE_K = 13, SPEED = 5
+let RIDER_ON = true, POSE = 'aero'
+
+function start(pts3, label) {
+  const m = buildModel(pts3)
+  document.getElementById('srclbl').textContent =
+    `路段：${label} · ${(m.totalDist/1000).toFixed(1)} km · 落差 ${Math.round(m.elevRange)} m`
+
+  const grid = document.getElementById('grid')
+  let renderer
+  try { renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true }) }
+  catch (e) {
+    grid.innerHTML = `<div class="panel"><div class="err">這台裝置無法建立 WebGL：${e.message}</div></div>`
+    return
+  }
+  renderer.setClearColor(0x000000, 0)
+
+  const fitPts = m.pts.map(p => ({ x:p.x, y:p.elevRaw*m.exaggeration, z:p.z }))
+  const TILT = 0.42
+  const items = []
+
+  STYLES.forEach((st, i) => {
+    const panel = document.createElement('div')
+    panel.className = 'panel'
+    panel.innerHTML =
+      `<div class="phead"><span class="pnum">${String(i+1).padStart(2,'0')}</span>` +
+      `<span class="pname">${st.n}</span><span class="pen">${st.en}</span>` +
+      `<span class="ptag ${st.mode}">${st.mode === 'bb' ? '永遠側面' : '沿路線'}</span></div>` +
+      `<canvas class="stage"></canvas>` +
+      `<div class="pfoot">` +
+        `<div class="row"><span class="k up">好</span><span>${st.up}</span></div>` +
+        `<div class="row"><span class="k dn">壞</span><span>${st.dn}</span></div>` +
+        `<div class="row"><span class="k use">用</span><span>${st.use}</span></div>` +
+      `</div>`
+    grid.appendChild(panel)
+
+    const cv = panel.querySelector('canvas.stage')
+    const built = buildRouteScene(m)
+    const cam = new THREE.PerspectiveCamera(45, 2.86, .1, 100000)
+    cam.aspect = (cv.clientWidth || 460) / (cv.clientHeight || 250)
+    const fit = fitCamera(cam, fitPts, TILT)
+
+    // 車體（+ 騎士）
+    let bike, isSprite = false, rider = null, spriteTex = null
+    if (st.sprite) {
+      isSprite = true
+      // 四種組合（有/無騎士 × 兩種姿勢）先建好，切換時只換貼圖不重建物件
+      spriteTex = {
+        off:            bikeSpriteTexture('#ffe0b8', 'rgba(252,76,2,.9)', false),
+        'on:aero':      bikeSpriteTexture('#ffe0b8', 'rgba(252,76,2,.9)', true, 'aero'),
+        'on:upright':   bikeSpriteTexture('#ffe0b8', 'rgba(252,76,2,.9)', true, 'upright'),
+      }
+      bike = new THREE.Sprite(new THREE.SpriteMaterial({ map: spriteTex.off.tex, transparent:true, depthWrite:false }))
+    } else {
+      bike = st.make()
+      // 姿勢是烘進幾何的，所以兩種都先建好、切換時換 visible（比重建物件穩）
+      rider = {}
+      for (const pz of ['aero', 'upright']) {
+        rider[pz] = st.riderKind === 'minimal' ? riderMinimal(0xffb877, pz)
+                  : st.riderKind === 'solid'   ? riderSolid(0xffb877, pz)
+                  :                              riderWire(0xffc590, .95, pz)
+        bike.add(rider[pz])
+      }
+    }
+    built.scene.add(bike)
+    // 原本的白色圓點，開關對照用
+    const dot = new THREE.Mesh(new THREE.SphereGeometry(built.radius*1.8, 10, 10),
+      new THREE.MeshBasicMaterial({ color:0xffffff }))
+    dot.visible = false
+    built.scene.add(dot)
+
+    items.push({ cv, ctx: cv.getContext('2d'), ...built, cam, bike, dot, isSprite, rider, spriteTex,
+                 riderKind: st.riderKind, mode: st.mode, fit, az: i * 0.5, u: 0, crank: i * 0.9 })
+  })
+
+  // 只畫看得到的 panel
+  const io = new IntersectionObserver(es => es.forEach(e => {
+    const it = items.find(x => x.cv === e.target)
+    if (it) it.vis = e.isIntersecting
+  }), { rootMargin:'80px' })
+  items.forEach(it => { it.vis = true; io.observe(it.cv) })
+
+  // 造型放大預覽（正側面、無透視干擾）
+  const zoomRow = document.getElementById('zoomrow')
+  const zItems = []
+  STYLES.forEach(st => {
+    const cell = document.createElement('div')
+    cell.className = 'zoomcell'
+    cell.innerHTML = `<canvas></canvas><span>${st.n}</span>`
+    zoomRow.appendChild(cell)
+    const cv = cell.querySelector('canvas')
+    const sc = new THREE.Scene()
+    let b, r = null, stx = null
+    if (st.sprite) {
+      stx = {
+        off:          bikeSpriteTexture('#ffe0b8', 'rgba(252,76,2,.9)', false),
+        'on:aero':    bikeSpriteTexture('#ffe0b8', 'rgba(252,76,2,.9)', true, 'aero'),
+        'on:upright': bikeSpriteTexture('#ffe0b8', 'rgba(252,76,2,.9)', true, 'upright'),
+      }
+      b = new THREE.Sprite(new THREE.SpriteMaterial({ map: stx.off.tex, transparent:true }))
+    } else {
+      b = st.make()
+      r = {}
+      for (const pz of ['aero', 'upright']) {
+        r[pz] = st.riderKind === 'minimal' ? riderMinimal(0xffb877, pz)
+              : st.riderKind === 'solid'   ? riderSolid(0xffb877, pz)
+              :                              riderWire(0xffc590, .95, pz)
+        b.add(r[pz])
+      }
+    }
+    sc.add(b)
+    // 正交鏡頭：範圍要容得下騎士（local y 最高約 2.15），中心稍微上移
+    const cam = new THREE.OrthographicCamera(-3.3, 3.3, 3.3, -3.3, .1, 100)
+    cam.position.set(0, .55, 10); cam.lookAt(0, .55, 0)
+    zItems.push({ cv, ctx: cv.getContext('2d'), sc, cam, bike: b, rider: r, spriteTex: stx,
+                  sprite: !!st.sprite, crank: 0 })
+  })
+
+  const tanV = new THREE.Vector3(), posV = new THREE.Vector3(), size = new THREE.Vector2()
+  let last = null
+  function tick(t) {
+    requestAnimationFrame(tick)
+    const dt = last == null ? 16 : Math.min(100, t - last)
+    last = t
+    const dpr = Math.min(2, window.devicePixelRatio || 1)
+
+    for (const it of items) {
+      if (!it.vis) continue
+      const w = it.cv.clientWidth, h = it.cv.clientHeight
+      if (!w || !h) continue
+      const pw = Math.round(w*dpr), ph = Math.round(h*dpr)
+      if (it.cv.width !== pw || it.cv.height !== ph) { it.cv.width = pw; it.cv.height = ph }
+      renderer.getSize(size)
+      if (size.x !== pw || size.y !== ph) renderer.setSize(pw, ph, false)
+      if (Math.abs(it.cam.aspect - w/h) > .01) {
+        it.cam.aspect = w/h
+        it.fit = fitCamera(it.cam, fitPts, TILT)
+      }
+      // 鏡頭環繞（轉相機而不是轉場景，車子的 billboard 計算才單純）
+      if (SPIN) it.az += dt * 0.00016
+      const d = it.fit.d, cy = it.fit.cy
+      it.cam.position.set(Math.sin(it.az)*d*Math.cos(TILT), cy + d*Math.sin(TILT), Math.cos(it.az)*d*Math.cos(TILT))
+      it.cam.lookAt(0, cy, 0)
+
+      if (!PAUSED) {
+        it.u += dt / (14000 / SPEED)
+        if (it.u > 1.06) it.u = 0        // 到終點稍停一下再回頭
+      }
+      const u = Math.min(1, it.u)
+      it.curve.getPointAt(u, posV)
+      it.curve.getTangentAt(u, tanV)
+      it.bike.position.copy(posV)
+      // 車體尺度綁在路線水平幅度上，換路段也不會忽大忽小
+      const s = m.horizExtent * SCALE_K / 1000
+      if (it.isSprite) {
+        const sp = it.spriteTex[RIDER_ON ? 'on:' + POSE : 'off']
+        if (it.bike.material.map !== sp.tex) { it.bike.material.map = sp.tex; it.bike.material.needsUpdate = true }
+        it.bike.scale.set(s * sp.halfW * 2, s * sp.halfH * 2, 1)
+        // 貼圖中心對應 local y = cy，把 local y=-1（地面）放到路線上
+        it.bike.position.y += s * (sp.cy + 1)
+      } else {
+        it.bike.scale.setScalar(s)
+        it.bike.position.y += s          // 輪子貼在路面上（車體原點在輪心高度）
+        if (it.mode === 'bb') orientBillboard(it.bike, tanV, it.cam)
+        else orientHeading(it.bike, tanV)
+        if (it.rider) {
+          it.rider.aero.visible = RIDER_ON && POSE === 'aero'
+          it.rider.upright.visible = RIDER_ON && POSE === 'upright'
+          // 曲柄轉速跟輪子同步（同一個前進速度），腿才不會像在空踩
+          if (RIDER_ON && !PAUSED) {
+            it.crank -= (dt / 1000) * SPEED * 1.9
+            updateRiderLegs(it.rider[POSE], it.crank)
+          }
+        }
+        // 輪子轉動：角速度 ∝ 前進速度 / 輪半徑
+        const wheels = it.bike.userData.wheels
+        if (wheels && !PAUSED) {
+          const spin = (dt / 1000) * SPEED * 2.6
+          wheels.forEach(wl => { wl.rotation.z -= spin })
+        }
+      }
+      it.dot.visible = SHOW_DOT
+      it.dot.position.copy(posV)
+
+      renderer.render(it.scene, it.cam)
+      it.ctx.clearRect(0, 0, pw, ph)
+      it.ctx.drawImage(renderer.domElement, 0, 0, pw, ph)
+    }
+
+    // 放大預覽
+    for (const z of zItems) {
+      const w = z.cv.clientWidth, h = z.cv.clientHeight
+      if (!w || !h) continue
+      const pw = Math.round(w*dpr), ph = Math.round(h*dpr)
+      if (z.cv.width !== pw || z.cv.height !== ph) { z.cv.width = pw; z.cv.height = ph }
+      renderer.getSize(size)
+      if (size.x !== pw || size.y !== ph) renderer.setSize(pw, ph, false)
+      if (z.sprite) {
+        const sp = z.spriteTex[RIDER_ON ? 'on:' + POSE : 'off']
+        if (z.bike.material.map !== sp.tex) { z.bike.material.map = sp.tex; z.bike.material.needsUpdate = true }
+        z.bike.scale.set(sp.halfW * 2, sp.halfH * 2, 1)
+        z.bike.position.y = sp.cy
+      }
+      if (z.rider) {
+        z.rider.aero.visible = RIDER_ON && POSE === 'aero'
+        z.rider.upright.visible = RIDER_ON && POSE === 'upright'
+        if (RIDER_ON && !PAUSED) { z.crank -= (dt/1000)*1.7; updateRiderLegs(z.rider[POSE], z.crank) }
+      }
+      const wheels = z.bike.userData && z.bike.userData.wheels
+      if (wheels && !PAUSED) wheels.forEach(wl => { wl.rotation.z -= (dt/1000)*2.2 })
+      renderer.render(z.sc, z.cam)
+      z.ctx.clearRect(0, 0, pw, ph)
+      z.ctx.drawImage(renderer.domElement, 0, 0, pw, ph)
+    }
+  }
+  tick()
+}
+
+/* 控制列 */
+const sc = document.getElementById('sc'), sp = document.getElementById('sp')
+sc.oninput = () => { SCALE_K = +sc.value; document.getElementById('scv').textContent = sc.value }
+sp.oninput = () => { SPEED = +sp.value; document.getElementById('spv').textContent = sp.value }
+document.getElementById('btn-pause').onclick = e => {
+  PAUSED = !PAUSED
+  e.target.textContent = PAUSED ? '▶ 播放' : '⏸ 暫停'
+  e.target.classList.toggle('active', PAUSED)
+}
+document.getElementById('btn-dot').onclick = e => {
+  SHOW_DOT = !SHOW_DOT
+  e.target.classList.toggle('active', SHOW_DOT)
+}
+document.getElementById('btn-spin').onclick = e => {
+  SPIN = !SPIN
+  e.target.classList.toggle('active', SPIN)
+}
+document.getElementById('btn-rider').onclick = e => {
+  RIDER_ON = !RIDER_ON
+  e.target.classList.toggle('active', RIDER_ON)
+  document.getElementById('btn-pose').disabled = !RIDER_ON
+}
+document.getElementById('btn-pose').onclick = e => {
+  POSE = POSE === 'aero' ? 'upright' : 'aero'
+  e.target.textContent = POSE === 'aero' ? '姿勢：趴低' : '姿勢：直立'
+}
+</script>
+</body>
+</html>

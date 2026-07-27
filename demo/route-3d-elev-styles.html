@@ -1,0 +1,526 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>3D 爬升表現方式 · 5 種提案</title>
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;padding:26px 20px 60px;background:#070403;color:#f4ece4;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans TC',sans-serif;
+  background-image:radial-gradient(ellipse 80% 50% at 50% -10%,rgba(252,76,2,.14),transparent 70%);
+}
+h1{font-size:17px;letter-spacing:.5px;margin:0 0 6px}
+.sub{font-size:12px;color:rgba(255,255,255,.45);margin:0 0 4px;line-height:1.6}
+.src{font-size:11px;color:rgba(255,255,255,.3);margin:0 0 22px}
+.src b{color:#ff9d52;font-weight:600}
+.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(460px,1fr));max-width:1500px}
+@media(max-width:520px){.grid{grid-template-columns:1fr}body{padding:18px 12px 40px}}
+.panel{
+  border:1px solid rgba(255,255,255,.1);border-radius:14px;overflow:hidden;
+  background:linear-gradient(165deg,rgba(28,20,14,.9),rgba(10,6,3,.95));
+  box-shadow:0 10px 34px rgba(0,0,0,.5);
+}
+.phead{display:flex;align-items:baseline;gap:9px;padding:12px 14px 9px}
+.pnum{
+  font-size:10px;font-weight:800;color:#070403;background:#FC4C02;
+  border-radius:5px;padding:2px 6px;letter-spacing:.5px;flex:none;
+}
+.pname{font-size:13.5px;font-weight:700;letter-spacing:.3px}
+.pen{font-size:10px;color:rgba(255,255,255,.32);letter-spacing:1px;text-transform:uppercase}
+canvas.stage{display:block;width:100%;height:280px;cursor:grab;touch-action:pan-y;background:#0a0603}
+canvas.stage:active{cursor:grabbing}
+.pfoot{padding:11px 14px 13px;font-size:11.5px;line-height:1.65;color:rgba(255,255,255,.6)}
+.pfoot .row{display:flex;gap:7px;margin-top:5px}
+.pfoot .k{flex:none;font-weight:700;font-size:10px;padding:1px 5px;border-radius:4px;height:16px;line-height:14px}
+.k.up{color:#7ce6a0;background:rgba(124,230,160,.12)}
+.k.dn{color:#ff8f8f;background:rgba(255,143,143,.12)}
+.k.use{color:#ffd24d;background:rgba(255,210,77,.12)}
+.err{padding:40px 16px;text-align:center;color:#ff8f8f;font-size:12px}
+.legend{font-size:11px;color:rgba(255,255,255,.35);margin:20px 0 0;max-width:1500px;line-height:1.7}
+.legend b{color:rgba(255,255,255,.6);font-weight:600}
+</style>
+</head>
+<body>
+<h1>3D 爬升的 5 種表現方式</h1>
+<p class="sub">
+  同一條路線、同一組海拔資料，換 5 種「把高度講清楚」的畫法。可拖曳旋轉比較。<br>
+  第 <b style="color:#ff9d52">5 種「桁架」已採用</b>為 strava.html 的正式做法（3D 回放與 ITT 卡皆是）；
+  第 1 種是它之前的舊做法，其餘 3 種留作備選。
+</p>
+<p class="src" id="src">載入路線資料…</p>
+
+<div class="grid" id="grid"></div>
+
+<p class="legend">
+  <b>共通設定</b>：海拔一律放大 <span id="exagLbl">—</span>×（不放大的話 500m 爬升在幾十公里的水平尺度上幾乎看不出來），
+  格線 = 路線最低點的水平面，路線本體顏色 = 沿途速度（餘燼紅 → Strava 橘 → 熾金）。
+  五個 panel 共用一顆 WebGL renderer，逐一畫進各自的 2D canvas，跟 strava.html 的 ITT 卡同一套做法。
+</p>
+
+<script src="../vendor-three-r128.js"></script>
+<script>
+/* ────────── 資料：抓一趟真實有爬升的騎乘，抓不到就用合成路線 ────────── */
+const STYLES = [
+  {
+    n: '簾幕', en: 'Curtain', build: buildCurtain,
+    up: '爬升輪廓一眼可讀，任何角度都成立；面積小、不搶路線本體的戲。',
+    dn: '只給「相對高低」，讀不出實際海拔數字；平路段的簾幕接近零高度會消失。',
+    use: '預設值。要的是氛圍與整體起伏，不是精確讀數。',
+  },
+  {
+    n: '等高線色帶', en: 'Contour Bands', build: buildContour,
+    up: '簾幕上疊等距水平帶，等於自帶刻度尺，可以數「爬過幾層」；海拔變成可量化的。',
+    dn: '帶數要隨爬升量調整，不然要嘛太密要嘛只有一條；旋轉時帶子會有摩爾紋。',
+    use: '爬坡段（風櫃嘴、五指山）這種要比較「爬到第幾層」的卡片。',
+  },
+  {
+    n: '柱狀森林', en: 'Column Forest', build: buildColumns,
+    up: '離散柱體像等化器，密度本身就是資訊（陡的地方柱子擠、快的地方疏）；視覺上最有科技感。',
+    dn: '柱子會互相遮擋，密集路段變成一片牆；取樣間距選錯就毀了。',
+    use: '想要動態、想被記住的主視覺（首頁 hero、回放開場）。',
+  },
+  {
+    n: '梯田分層', en: 'Elevation Tiers', build: buildTiers,
+    up: '半透明水平面 = 真實海拔分層，路線穿過第幾層就是爬到幾百米，帶數字標籤最直觀。',
+    dn: '多層透明面很吃疊加混色，層數一多畫面就濁；側視角度下層與層容易疊在一起。',
+    use: '需要精確海拔溝通的場合（爬坡卡、賽段簡報）。',
+  },
+  {
+    n: '桁架', en: 'Truss', build: buildTruss,
+    up: '斜撐格線讓路線像架在橋樑上，結構感強；線條稀疏所以不會糊掉，行動裝置上最清楚。',
+    dn: '偏工程製圖風格，跟太空／賽博的視覺調性不一定合；斜撐密度也要隨長度調。',
+    use: '小尺寸卡片、低效能裝置，或想走藍圖／製圖風格的主題。',
+  },
+]
+
+const ACCENT = 0xfc4c02
+function speedColor(t) {
+  const stops = [[0.55,0.12,0.05],[0.99,0.30,0.01],[1.0,0.82,0.35]]
+  t = Math.max(0, Math.min(1, t))
+  const a = t < .5 ? stops[0] : stops[1], b = t < .5 ? stops[1] : stops[2]
+  const f = t < .5 ? t / .5 : (t - .5) / .5
+  return new THREE.Color(a[0]+(b[0]-a[0])*f, a[1]+(b[1]-a[1])*f, a[2]+(b[2]-a[2])*f)
+}
+function haversineM(la1, lo1, la2, lo2) {
+  const R = 6371000, rad = x => x * Math.PI / 180
+  const dLa = rad(la2-la1), dLo = rad(lo2-lo1)
+  const a = Math.sin(dLa/2)**2 + Math.cos(rad(la1))*Math.cos(rad(la2))*Math.sin(dLo/2)**2
+  return 2 * R * Math.asin(Math.sqrt(a))
+}
+// 與 strava.html 的 buildRouteModel 同一套投影／誇張倍率，樣式才有可比性
+function buildModel(stream) {
+  const lat0 = stream.reduce((s,p)=>s+p[0],0)/stream.length
+  const lng0 = stream.reduce((s,p)=>s+p[1],0)/stream.length
+  const mLat = 110540, mLng = 111320*Math.cos(lat0*Math.PI/180)
+  let last = stream.find(p=>p[4]!=null)?.[4] ?? 0
+  const elevs = stream.map(p => { if (p[4]!=null) last = p[4]; return last })
+  const minElev = Math.min(...elevs), maxElev = Math.max(...elevs)
+  let cum = 0
+  const pts = stream.map((p,i) => {
+    if (i>0) cum += haversineM(stream[i-1][0], stream[i-1][1], p[0], p[1])
+    return { x:(p[1]-lng0)*mLng, z:(lat0-p[0])*mLat, elevRaw: elevs[i]-minElev, speed: p[3]||0, dist: cum }
+  })
+  const xs = pts.map(p=>p.x), zs = pts.map(p=>p.z)
+  const cx = (Math.min(...xs)+Math.max(...xs))/2, cz = (Math.min(...zs)+Math.max(...zs))/2
+  pts.forEach(p => { p.x -= cx; p.z -= cz })
+  const horizExtent = Math.max(Math.max(...xs)-Math.min(...xs), Math.max(...zs)-Math.min(...zs), 10)
+  const elevRange = maxElev - minElev
+  const exaggeration = Math.min(28, Math.max(4, 0.22*horizExtent/Math.max(1,elevRange)))
+  return { pts, horizExtent, elevRange, minElev, maxElev, exaggeration,
+           maxSpeed: Math.max(1, ...pts.map(p=>p.speed)), totalDist: cum }
+}
+// 半窗 25m 的坡度，跟 strava.html 的 buildSegSlopes 一致（太短會被 GPS 雜訊放大）
+function slopesOf(m) {
+  const p = m.pts, n = p.length, out = new Array(n), W = 25
+  for (let i=0;i<n;i++){
+    let a=i,b=i
+    while (a>0 && p[i].dist-p[a].dist<W) a--
+    while (b<n-1 && p[b].dist-p[i].dist<W) b++
+    const run = p[b].dist-p[a].dist
+    out[i] = run>0 ? (p[b].elevRaw-p[a].elevRaw)/run : 0
+  }
+  return out
+}
+
+/* ────────── 共用零件 ────────── */
+function routeTube(m) {
+  const v = m.pts.map(p => new THREE.Vector3(p.x, p.elevRaw*m.exaggeration, p.z))
+  const curve = new THREE.CatmullRomCurve3(v)
+  const seg = Math.min(500, Math.max(80, m.pts.length*3)), rad = 8
+  const r = Math.max(m.horizExtent*0.006, 3)
+  const g = new THREE.TubeGeometry(curve, seg, r, rad, false)
+  const perRow = rad+1, rows = seg+1, n = m.pts.length
+  const col = new Float32Array(rows*perRow*3)
+  for (let i=0;i<rows;i++){
+    const idx = (i/seg)*(n-1), i0 = Math.floor(idx), i1 = Math.min(n-1,i0+1), f = idx-i0
+    const sp = m.pts[i0].speed + (m.pts[i1].speed-m.pts[i0].speed)*f
+    const c = speedColor(sp/m.maxSpeed)
+    for (let j=0;j<perRow;j++){ const o=(i*perRow+j)*3; col[o]=c.r; col[o+1]=c.g; col[o+2]=c.b }
+  }
+  g.setAttribute('color', new THREE.Float32BufferAttribute(col,3))
+  return new THREE.Mesh(g, new THREE.MeshBasicMaterial({ vertexColors:true }))
+}
+function groundGrid(m, div) {
+  const g = new THREE.GridHelper(m.horizExtent*1.8, div||16, 0x8a4a20, 0x33200f)
+  g.material.transparent = true; g.material.opacity = .4
+  return g
+}
+function caps(m) {
+  const r = Math.max(m.horizExtent*0.009, 4)
+  const p = m.pts, y = i => p[i].elevRaw*m.exaggeration
+  const s = new THREE.Mesh(new THREE.SphereGeometry(r,12,12), new THREE.MeshBasicMaterial({color:0xffd27a}))
+  const e = new THREE.Mesh(new THREE.SphereGeometry(r,12,12), new THREE.MeshBasicMaterial({color:0x8c1d0a}))
+  s.position.set(p[0].x, y(0), p[0].z)
+  e.position.set(p[p.length-1].x, y(p.length-1), p[p.length-1].z)
+  return [s, e]
+}
+// 文字標籤做成貼圖 sprite（3D 內文字用 canvas 貼圖，避免 DOM 疊層；
+// 正式產品建議照 HTML overlay 那套投影 2D 座標，字才會銳利）
+function textSprite(txt, m, color) {
+  const dpr = 2, fs = 22
+  const cv = document.createElement('canvas')
+  const c = cv.getContext('2d')
+  c.font = `700 ${fs*dpr}px -apple-system,sans-serif`
+  cv.width = Math.ceil(c.measureText(txt).width) + 16*dpr
+  cv.height = (fs+10)*dpr
+  const c2 = cv.getContext('2d')
+  c2.font = `700 ${fs*dpr}px -apple-system,sans-serif`
+  c2.fillStyle = 'rgba(10,6,3,.72)'
+  c2.fillRect(0,0,cv.width,cv.height)
+  c2.fillStyle = color || 'rgba(255,233,207,.95)'
+  c2.textBaseline = 'middle'
+  c2.fillText(txt, 8*dpr, cv.height/2)
+  const tex = new THREE.CanvasTexture(cv)
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map:tex, transparent:true, depthWrite:false }))
+  const h = m.horizExtent*0.035
+  sp.scale.set(h*cv.width/cv.height, h, 1)
+  return sp
+}
+
+/* ────────── 樣式 1：簾幕（現行做法） ────────── */
+function buildCurtain(m) {
+  const s = new THREE.Scene()
+  s.add(groundGrid(m), routeTube(m), ...caps(m))
+  const n = m.pts.length
+  const pos = new Float32Array(n*6), col = new Float32Array(n*6)
+  const sl = slopesOf(m)
+  m.pts.forEach((p,i) => {
+    const y = p.elevRaw*m.exaggeration
+    pos.set([p.x,y,p.z, p.x,0,p.z], i*6)
+    // 上緣依坡度上色、下緣沉進地面 → 陡的地方簾幕明顯偏亮
+    const c = speedColor(Math.max(0,sl[i])/0.12)
+    col.set([c.r,c.g,c.b, c.r*.25,c.g*.25,c.b*.25], i*6)
+  })
+  const idx = []
+  for (let i=0;i<n-1;i++) idx.push(i*2, i*2+1, i*2+2, i*2+1, i*2+3, i*2+2)
+  const g = new THREE.BufferGeometry()
+  g.setAttribute('position', new THREE.BufferAttribute(pos,3))
+  g.setAttribute('color', new THREE.BufferAttribute(col,3))
+  g.setIndex(idx)
+  s.add(new THREE.Mesh(g, new THREE.MeshBasicMaterial({
+    vertexColors:true, transparent:true, opacity:.28, side:THREE.DoubleSide, depthWrite:false })))
+  return s
+}
+
+/* ────────── 樣式 2：等高線色帶 ────────── */
+function buildContour(m) {
+  const s = buildCurtain(m)
+  // 帶距取「讓總帶數落在 4~9 條」的整數級距，短爬升也不會只剩一條
+  const nice = [10,20,25,50,100,200,250,500]
+  const step = nice.find(v => m.elevRange/v <= 9) || 500
+  for (let e = step; e < m.elevRange; e += step) {
+    const y = e*m.exaggeration
+    const pts = []
+    // 只沿著路線畫（不是整片平面），帶子就會跟著地形彎曲
+    for (let i=0;i<m.pts.length;i++) pts.push(new THREE.Vector3(m.pts[i].x, y, m.pts[i].z))
+    const g = new THREE.BufferGeometry().setFromPoints(pts)
+    const t = e/m.elevRange
+    s.add(new THREE.Line(g, new THREE.LineBasicMaterial({
+      color: speedColor(.35+t*.65), transparent:true, opacity:.18+t*.32 })))
+  }
+  // 最高點掛一張實際海拔數字
+  let pi = 0
+  m.pts.forEach((p,i) => { if (p.elevRaw > m.pts[pi].elevRaw) pi = i })
+  const lab = textSprite(`▲ ${Math.round(m.maxElev)}m`, m)
+  lab.position.set(m.pts[pi].x, m.pts[pi].elevRaw*m.exaggeration + m.horizExtent*0.05, m.pts[pi].z)
+  s.add(lab)
+  return s
+}
+
+/* ────────── 樣式 3：柱狀森林 ────────── */
+function buildColumns(m) {
+  const s = new THREE.Scene()
+  s.add(groundGrid(m), routeTube(m), ...caps(m))
+  const sl = slopesOf(m)
+  // 取樣間距用「總距離 / 目標柱數」而不是固定公尺數，短路線才不會只剩幾根
+  const TARGET = 110
+  const gap = Math.max(m.totalDist/TARGET, 25)
+  const w = Math.max(m.horizExtent*0.004, 2.2)
+  const pos = [], col = []
+  let nextAt = 0
+  m.pts.forEach((p,i) => {
+    if (p.dist < nextAt) return
+    nextAt = p.dist + gap
+    const y = p.elevRaw*m.exaggeration
+    if (y <= 0.5) return
+    const c = speedColor(Math.max(0,sl[i])/0.12)
+    // 每根柱子 = 兩片十字交叉的薄片（沿 X 與 Z 各一片）。
+    // 單片的話轉到側面會變成一條線整根消失；十字任何角度都至少有一片近正面，
+    // 頂點數又只有 BoxGeometry 的一半。上緣依坡度上色、下緣壓暗 → 柱子自帶漸層。
+    const quad = (ux, uz) => {
+      const v = [
+        [p.x-ux,0,p.z-uz],[p.x+ux,0,p.z+uz],[p.x+ux,y,p.z+uz],
+        [p.x-ux,0,p.z-uz],[p.x+ux,y,p.z+uz],[p.x-ux,y,p.z-uz],
+      ]
+      v.forEach(q => {
+        pos.push(q[0],q[1],q[2])
+        const k = q[1] > 0.5 ? 1 : .15
+        col.push(c.r*k, c.g*k, c.b*k)
+      })
+    }
+    quad(w, 0); quad(0, w)
+  })
+  const g = new THREE.BufferGeometry()
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos,3))
+  g.setAttribute('color', new THREE.Float32BufferAttribute(col,3))
+  s.add(new THREE.Mesh(g, new THREE.MeshBasicMaterial({
+    vertexColors:true, transparent:true, opacity:.72, side:THREE.DoubleSide, depthWrite:false })))
+  return s
+}
+
+/* ────────── 樣式 4：梯田分層 ────────── */
+function buildTiers(m) {
+  const s = new THREE.Scene()
+  s.add(groundGrid(m, 10), routeTube(m), ...caps(m))
+  const nice = [50,100,200,250,500]
+  const step = nice.find(v => m.elevRange/v <= 5) || 500
+  const half = m.horizExtent*0.62
+  // 用「真實海拔」的整數級距（100m、200m…）而不是相對高度，標籤才有意義
+  const firstAbs = Math.ceil(m.minElev/step)*step
+  for (let abs = firstAbs; abs <= m.maxElev; abs += step) {
+    const y = (abs - m.minElev)*m.exaggeration
+    const pl = new THREE.Mesh(
+      new THREE.PlaneGeometry(half*2, half*2),
+      new THREE.MeshBasicMaterial({ color:ACCENT, transparent:true, opacity:.045,
+        side:THREE.DoubleSide, depthWrite:false })
+    )
+    pl.rotation.x = -Math.PI/2
+    pl.position.y = y
+    s.add(pl)
+    // 平面邊框：只有填色的話從側面看會完全消失
+    const e = new THREE.LineLoop(
+      new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(-half,y,-half), new THREE.Vector3(half,y,-half),
+        new THREE.Vector3(half,y,half), new THREE.Vector3(-half,y,half)]),
+      new THREE.LineBasicMaterial({ color:0xff9d52, transparent:true, opacity:.3 })
+    )
+    s.add(e)
+    const lab = textSprite(`${abs}m`, m, 'rgba(255,210,140,.9)')
+    lab.position.set(half*1.02 + lab.scale.x/2, y, -half)
+    s.add(lab)
+  }
+  return s
+}
+
+/* ────────── 樣式 5：桁架 ────────── */
+function buildTruss(m) {
+  const s = new THREE.Scene()
+  s.add(groundGrid(m), routeTube(m), ...caps(m))
+  const pos = [], n = m.pts.length
+  // 地面投影線：桁架的「下弦」，沒有它整組斜撐會像飄在空中
+  const gp = []
+  for (let i=0;i<n;i++) gp.push(new THREE.Vector3(m.pts[i].x, 0.4, m.pts[i].z))
+  s.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(gp),
+    new THREE.LineBasicMaterial({ color:0xffb066, transparent:true, opacity:.5 })))
+  const TARGET = 70
+  const gap = Math.max(m.totalDist/TARGET, 40)
+  let nextAt = 0, flip = false, prev = null
+  m.pts.forEach(p => {
+    if (p.dist < nextAt) return
+    nextAt = p.dist + gap
+    const y = p.elevRaw*m.exaggeration
+    pos.push(p.x,0,p.z, p.x,y,p.z)                       // 垂直腹桿
+    if (prev) {
+      // 斜撐左右交錯 → 標準 Warren truss 的 W 字形，比全部同向更有結構感
+      if (flip) pos.push(prev.x,prev.y,prev.z, p.x,0,p.z)
+      else      pos.push(prev.x,0,prev.z, p.x,y,p.z)
+      flip = !flip
+    }
+    prev = { x:p.x, y, z:p.z }
+  })
+  const g = new THREE.BufferGeometry()
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos,3))
+  s.add(new THREE.LineSegments(g, new THREE.LineBasicMaterial({
+    color:0xffa860, transparent:true, opacity:.42 })))
+  return s
+}
+
+/* ────────── 取景（把 strava.html 的量測式 fit 搬過來） ────────── */
+function fitCamera(cam, fitPts, elevY) {
+  const ty = Math.tan(cam.fov*Math.PI/360), tx = ty*cam.aspect
+  const tilt = 0.42, s = Math.sin(tilt), c = Math.cos(tilt)
+  const A = []
+  for (let k=0;k<24;k++){ const a=k/24*Math.PI*2; A.push({ca:Math.cos(a),sa:Math.sin(a)}) }
+  let cy = elevY*0.5, d = elevY+1
+  for (let it=0; it<6; it++){
+    let need = 0
+    for (const p of fitPts){ const dy = p.y-cy
+      for (const r of A){
+        const px = p.x*r.ca + p.z*r.sa, pz = -p.x*r.sa + p.z*r.ca
+        const req = dy*s + pz*c + Math.max(Math.abs(px)/tx, Math.abs(dy*c-pz*s)/ty)
+        if (req > need) need = req
+      } }
+    d = Math.max(need*1.06, 1)
+    let lo = Infinity, hi = -Infinity
+    for (const p of fitPts){ const dy = p.y-cy
+      for (const r of A){
+        const pz = -p.x*r.sa + p.z*r.ca, w = d-(dy*s+pz*c)
+        if (w < 1e-3) continue
+        const v = (dy*c-pz*s)/(w*ty)
+        if (v<lo) lo=v; if (v>hi) hi=v
+      } }
+    if (!isFinite(lo)) break
+    const off = (lo+hi)/2
+    if (Math.abs(off) < .004) break
+    cy += off*d*ty/c*0.9
+  }
+  cam.position.set(0, cy+d*s, d*c)
+  cam.lookAt(0, cy, 0)
+  cam.updateProjectionMatrix()
+}
+
+/* ────────── 組裝 ────────── */
+const SYNTH = (() => {
+  // 沒抓到真實資料時的備援：一段爬到 520m 再下滑的假路線
+  const out = []
+  for (let i=0;i<160;i++){
+    const t = i/159
+    out.push([
+      25.09 + Math.sin(t*5.0)*0.016 + t*0.028,
+      121.58 + Math.cos(t*3.4)*0.013 + t*0.006,
+      null,
+      12 + Math.cos(t*6)*9,
+      12 + 520*Math.sin(Math.min(1,t*1.25)*Math.PI*0.72)**1.4,
+      null,
+    ])
+  }
+  return out
+})()
+
+fetch('../data/strava.json').then(r => r.ok ? r.json() : null).catch(() => null).then(data => {
+  let stream = SYNTH, label = '合成示範路線（讀不到 data/strava.json）'
+  const rides = ((data||{}).recent_rides || []).filter(a => {
+    // 只收戶外實騎：VirtualRide（ROUVY 等）的 GPS 不是真實地形，比較起來沒意義
+    if (a.trainer || a.sport_type !== 'Ride' || !a.route_stream || a.route_stream.length < 20) return false
+    const e = a.route_stream.filter(p => p[4] != null).map(p => p[4])
+    return e.length > 10 && Math.max(...e) - Math.min(...e) > 200
+  })
+  if (rides.length) {
+    // 挑爬升最多的一趟，五種畫法的差異才看得出來
+    const best = rides.map(a => {
+      const e = a.route_stream.filter(p => p[4]!=null).map(p => p[4])
+      return { a, gain: Math.max(...e)-Math.min(...e) }
+    }).sort((x,y) => y.gain-x.gain)[0]
+    stream = best.a.route_stream
+    label = best.a.name
+  }
+  start(stream, label)
+})
+
+function start(stream, label) {
+  const m = buildModel(stream)
+  document.getElementById('src').innerHTML =
+    `資料來源：<b>${label}</b> · ${m.pts.length} 點 · ` +
+    `${(m.totalDist/1000).toFixed(1)} km · 海拔 ${Math.round(m.minElev)}–${Math.round(m.maxElev)} m ` +
+    `（落差 ${Math.round(m.elevRange)} m）`
+  document.getElementById('exagLbl').textContent = m.exaggeration.toFixed(1)
+
+  const grid = document.getElementById('grid')
+  let renderer
+  try {
+    renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true })
+  } catch (e) {
+    grid.innerHTML = `<div class="panel"><div class="err">這台裝置無法建立 WebGL：${e.message}</div></div>`
+    return
+  }
+  renderer.setClearColor(0x000000, 0)
+
+  const fitPts = m.pts.filter((_,i) => i % Math.max(1, Math.ceil(m.pts.length/160)) === 0)
+    .map(p => ({ x:p.x, y:p.elevRaw*m.exaggeration, z:p.z }))
+  const elevY = m.elevRange*m.exaggeration
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches
+  const items = []
+
+  STYLES.forEach((st, i) => {
+    const panel = document.createElement('div')
+    panel.className = 'panel'
+    panel.innerHTML =
+      `<div class="phead"><span class="pnum">${String(i+1).padStart(2,'0')}</span>` +
+      `<span class="pname">${st.n}</span><span class="pen">${st.en}</span></div>` +
+      `<canvas class="stage"></canvas>` +
+      `<div class="pfoot">` +
+        `<div class="row"><span class="k up">好</span><span>${st.up}</span></div>` +
+        `<div class="row"><span class="k dn">壞</span><span>${st.dn}</span></div>` +
+        `<div class="row"><span class="k use">用</span><span>${st.use}</span></div>` +
+      `</div>`
+    grid.appendChild(panel)
+
+    const cv = panel.querySelector('canvas.stage')
+    const scene = st.build(m)
+    // 整個場景掛進 pivot，轉模型比轉相機省事（相機取景只算一次）
+    const pivot = new THREE.Group()
+    while (scene.children.length) pivot.add(scene.children[0])
+    scene.add(pivot)
+    const cam = new THREE.PerspectiveCamera(45, 2, 0.1, 100000)
+    const it = { cv, ctx: cv.getContext('2d'), scene, pivot, cam, rot: i*0.35, drag:false, lastX:0, vis:true }
+    cam.aspect = (cv.clientWidth||460)/(cv.clientHeight||280)
+    fitCamera(cam, fitPts, elevY)
+    cv.addEventListener('pointerdown', e => { it.drag = true; it.lastX = e.clientX; cv.setPointerCapture(e.pointerId) })
+    cv.addEventListener('pointermove', e => {
+      if (!it.drag) return
+      it.rot += (e.clientX - it.lastX)*0.009
+      it.lastX = e.clientX
+    })
+    const stop = () => { it.drag = false }
+    cv.addEventListener('pointerup', stop)
+    cv.addEventListener('pointercancel', stop)
+    items.push(it)
+  })
+
+  // 只畫進可見的 panel，五顆場景同時轉會白燒 GPU
+  const io = new IntersectionObserver(es => es.forEach(e => {
+    const it = items.find(x => x.cv === e.target)
+    if (it) it.vis = e.isIntersecting
+  }), { rootMargin:'80px' })
+  items.forEach(it => io.observe(it.cv))
+
+  let last = null
+  const size = new THREE.Vector2()
+  function tick(t) {
+    requestAnimationFrame(tick)
+    const dt = last == null ? 16 : Math.min(100, t-last)
+    last = t
+    const dpr = Math.min(2, window.devicePixelRatio || 1)
+    for (const it of items) {
+      if (!it.vis) continue
+      if (!reduce && !it.drag) it.rot += dt*0.00019
+      const w = it.cv.clientWidth, h = it.cv.clientHeight
+      if (!w || !h) continue
+      const pw = Math.round(w*dpr), ph = Math.round(h*dpr)
+      if (it.cv.width !== pw || it.cv.height !== ph) { it.cv.width = pw; it.cv.height = ph }
+      renderer.getSize(size)
+      if (size.x !== pw || size.y !== ph) renderer.setSize(pw, ph, false)
+      if (Math.abs(it.cam.aspect - w/h) > 0.01) { it.cam.aspect = w/h; fitCamera(it.cam, fitPts, elevY) }
+      it.pivot.rotation.y = it.rot
+      renderer.render(it.scene, it.cam)
+      it.ctx.clearRect(0,0,pw,ph)
+      it.ctx.drawImage(renderer.domElement, 0, 0, pw, ph)
+    }
+  }
+  tick()
+}
+</script>
+</body>
+</html>

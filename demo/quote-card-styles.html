@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>每日一句 · 5 種顯示方式</title>
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;padding:26px 20px 60px;background:#070403;color:#f4ece4;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans TC',sans-serif;
+  background-image:radial-gradient(ellipse 80% 50% at 50% -10%,rgba(252,76,2,.14),transparent 70%);
+}
+h1{font-size:17px;letter-spacing:.5px;margin:0 0 6px}
+.sub{font-size:12px;color:rgba(255,255,255,.45);margin:0 0 14px;line-height:1.7}
+.sub b{color:#ff9d52;font-weight:600}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 24px}
+.bar button{
+  padding:6px 14px;font-size:11.5px;letter-spacing:.5px;font-family:inherit;
+  background:transparent;border:1px solid rgba(252,76,2,.3);border-radius:14px;
+  color:rgba(255,255,255,.6);cursor:pointer;transition:all .15s;
+}
+.bar button:hover{border-color:rgba(252,76,2,.6);color:#fff}
+.bar button.active{background:rgba(252,76,2,.18);border-color:#FC4C02;color:#FC4C02}
+.bar .spacer{flex:1}
+.bar .note{font-size:11px;color:rgba(255,255,255,.3)}
+
+.wrap{max-width:1080px}
+.block{margin-bottom:30px}
+.bhead{display:flex;align-items:baseline;gap:9px;margin-bottom:10px}
+.bnum{font-size:10px;font-weight:800;color:#070403;background:#FC4C02;border-radius:5px;padding:2px 6px;letter-spacing:.5px}
+.bname{font-size:13.5px;font-weight:700;letter-spacing:.3px}
+.ben{font-size:10px;color:rgba(255,255,255,.32);letter-spacing:1px;text-transform:uppercase}
+.bfoot{margin-top:9px;font-size:11.5px;line-height:1.65;color:rgba(255,255,255,.55)}
+.bfoot .row{display:flex;gap:7px;margin-top:4px}
+.bfoot .k{flex:none;font-weight:700;font-size:10px;padding:1px 5px;border-radius:4px;height:16px;line-height:14px}
+.k.up{color:#7ce6a0;background:rgba(124,230,160,.12)}
+.k.dn{color:#ff8f8f;background:rgba(255,143,143,.12)}
+.k.use{color:#ffd24d;background:rgba(255,210,77,.12)}
+
+/* 共用：中譯主文用襯線、原文用另一種字級與色階拉開層次 */
+.q-zh{font-family:'Noto Serif TC','Songti TC',serif;font-weight:700;color:#f2ece4;word-break:break-word}
+.q-orig{color:rgba(255,220,190,.62);word-break:break-word}
+.q-orig.jp{font-family:'Hiragino Sans','Yu Gothic',sans-serif}
+.q-orig.en{font-family:'Iowan Old Style','Palatino Linotype',Georgia,serif;font-style:italic}
+.lbl{font-size:9.5px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:rgba(252,76,2,.75)}
+.meta{font-size:12px;color:rgba(255,255,255,.45)}
+.meta b{color:rgba(252,76,2,.75);font-weight:600}
+.hidden-note{font-size:11px;line-height:1.6;color:rgba(255,255,255,.72)}
+.hidden-note .ht{font-size:9.5px;font-weight:800;letter-spacing:1px;color:#FC4C02;display:block;margin-bottom:3px}
+
+/* ══ 1. 對頁 Spread ══ */
+.s1{
+  position:relative;border-radius:16px;overflow:hidden;
+  background:linear-gradient(160deg,rgba(28,14,6,.9),rgba(10,5,2,.94));
+  border:1px solid rgba(252,76,2,.25);box-shadow:0 16px 40px rgba(0,0,0,.5);
+}
+.s1-head{padding:16px 22px 0;font-size:12px;font-weight:700;color:#FC4C02;letter-spacing:.5px}
+.s1-cols{display:grid;grid-template-columns:1fr 1fr;gap:0;padding:14px 0 18px}
+.s1-col{padding:0 22px}
+.s1-col+.s1-col{border-left:1px dashed rgba(252,76,2,.22)}
+.s1-col .lbl{margin-bottom:8px;display:block}
+.s1 .q-orig{font-size:15px;line-height:1.85}
+.s1 .q-zh{font-size:19px;line-height:1.8}
+.s1-foot{padding:0 22px 18px;display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
+.s1-drawer{
+  position:absolute;left:0;right:0;bottom:0;padding:14px 22px 16px;
+  display:grid;grid-template-columns:1fr 1fr;gap:16px;
+  background:linear-gradient(0deg,rgba(6,3,1,.97),rgba(20,10,4,.95));
+  border-top:1px solid rgba(252,76,2,.3);
+  transform:translateY(101%);transition:transform .3s cubic-bezier(.2,.8,.3,1);
+}
+.s1:hover .s1-drawer,.s1.open .s1-drawer{transform:translateY(0)}
+.s1-hint{font-size:10px;color:rgba(255,255,255,.28);letter-spacing:.5px}
+
+/* ══ 2. 疊層 Watermark ══ */
+.s2{
+  position:relative;border-radius:16px;overflow:hidden;min-height:210px;
+  background:linear-gradient(150deg,rgba(30,15,6,.9),rgba(8,4,2,.95));
+  border:1px solid rgba(252,76,2,.22);box-shadow:0 16px 40px rgba(0,0,0,.5);
+  display:flex;align-items:center;
+}
+.s2-wm{
+  position:absolute;left:20px;right:20px;top:50%;transform:translateY(-50%) rotate(-2.5deg);
+  font-size:30px;line-height:1.5;color:rgba(255,190,140,.09);pointer-events:none;
+  transition:color .3s,font-size .3s;text-align:center;
+}
+.s2:hover .s2-wm,.s2.open .s2-wm{color:rgba(255,200,150,.2)}
+.s2-body{position:relative;padding:30px 26px;flex:1;min-width:0}
+.s2 .q-zh{font-size:23px;line-height:1.8;margin-bottom:14px;text-shadow:0 2px 18px rgba(0,0,0,.85)}
+.s2-panel{
+  position:relative;flex:none;width:0;overflow:hidden;align-self:stretch;
+  background:rgba(0,0,0,.4);border-left:1px dashed rgba(252,76,2,0);
+  transition:width .32s cubic-bezier(.2,.8,.3,1),border-color .32s;
+}
+.s2:hover .s2-panel,.s2.open .s2-panel{width:230px;border-left-color:rgba(252,76,2,.28)}
+.s2-panel-in{padding:22px 18px;display:flex;flex-direction:column;gap:14px;width:230px}
+@media(max-width:640px){
+  .s2{display:block}
+  .s2-panel{width:auto;height:0;border-left:none;border-top:1px dashed rgba(252,76,2,0)}
+  .s2:hover .s2-panel,.s2.open .s2-panel{width:auto;height:auto;border-top-color:rgba(252,76,2,.28)}
+  .s2-panel-in{width:auto}
+}
+
+/* ══ 3. 打字機 Typewriter ══ */
+.s3{
+  border-radius:14px;overflow:hidden;padding:20px 22px 18px;
+  background:#0b0705;border:1px solid rgba(252,76,2,.28);
+  box-shadow:0 16px 40px rgba(0,0,0,.5),inset 0 0 60px rgba(252,76,2,.04);
+  font-family:'SF Mono',Menlo,Consolas,monospace;
+}
+.s3-bar{display:flex;align-items:center;gap:6px;margin-bottom:16px}
+.s3-dot{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.16)}
+.s3-dot:first-child{background:rgba(252,76,2,.75)}
+.s3-title{margin-left:6px;font-size:10.5px;color:rgba(255,255,255,.35);letter-spacing:1px}
+.s3-line{display:flex;gap:9px;margin-bottom:11px;align-items:flex-start}
+.s3-pr{flex:none;color:rgba(252,76,2,.7);font-size:12px;line-height:1.7;user-select:none}
+.s3-out{min-width:0;flex:1}
+.s3 .q-orig{font-family:inherit;font-style:normal;font-size:13px;line-height:1.7}
+.s3 .q-zh{font-family:inherit;font-size:16px;line-height:1.75;font-weight:600}
+.s3-caret{display:inline-block;width:7px;height:15px;background:#FC4C02;vertical-align:-2px;animation:blink 1s step-end infinite}
+@keyframes blink{50%{opacity:0}}
+.s3-more{margin-top:14px;border-top:1px dashed rgba(252,76,2,.2);padding-top:11px}
+.s3-more-btn{
+  font-family:inherit;font-size:11px;color:rgba(255,255,255,.4);background:none;border:none;
+  padding:0;cursor:pointer;letter-spacing:.5px;
+}
+.s3-more-btn:hover{color:#FC4C02}
+.s3-body{display:none;gap:12px;flex-direction:column;margin-top:11px;font-family:-apple-system,sans-serif}
+.s3:hover .s3-body,.s3.open .s3-body{display:flex}
+
+/* ══ 4. 票根 Ticket（翻面） ══ */
+.s4{perspective:1400px}
+.s4-in{
+  position:relative;width:100%;transform-style:preserve-3d;
+  transition:transform .55s cubic-bezier(.3,.7,.2,1);
+}
+.s4:hover .s4-in,.s4.open .s4-in{transform:rotateY(180deg)}
+.s4-face{
+  backface-visibility:hidden;border-radius:14px;overflow:hidden;
+  display:grid;grid-template-columns:1fr 118px;
+  background:linear-gradient(140deg,rgba(34,17,7,.95),rgba(10,5,2,.96));
+  border:1px solid rgba(252,76,2,.3);box-shadow:0 16px 40px rgba(0,0,0,.5);
+}
+/* 正面留在正常流內來決定高度 —— 兩面都 absolute 的話卡片只能寫死高度，
+   187 字的英文原文會被 overflow:hidden 無聲切掉 */
+.s4-front{position:relative;min-height:230px}
+.s4-back{position:absolute;inset:0;transform:rotateY(180deg);grid-template-columns:1fr}
+.s4-main{padding:22px 22px 18px;display:flex;flex-direction:column;min-width:0}
+.s4 .q-zh{font-size:19px;line-height:1.75}
+.s4-orig{
+  margin-top:auto;padding-top:12px;border-top:1px dashed rgba(255,255,255,.14);
+}
+.s4 .q-orig{font-size:12px;line-height:1.65}
+.s4-stub{
+  border-left:2px dashed rgba(252,76,2,.4);background:rgba(0,0,0,.3);
+  padding:16px 12px;display:flex;flex-direction:column;align-items:center;
+  justify-content:space-between;text-align:center;gap:8px;
+}
+.s4-stub-no{font-size:9px;letter-spacing:1.5px;color:rgba(252,76,2,.7);font-weight:800}
+.s4-stub-ch{font-family:'Noto Serif TC','Songti TC',serif;font-size:13px;color:rgba(255,255,255,.75);line-height:1.4}
+.s4-stub-flip{font-size:9.5px;color:rgba(255,255,255,.3);letter-spacing:.5px;line-height:1.5}
+.s4-back-in{padding:22px 24px;display:flex;flex-direction:column;gap:16px;justify-content:center}
+
+/* ══ 5. 引號牌 Plaque（chip + tooltip） ══ */
+.s5{
+  position:relative;border-radius:16px;padding:34px 30px 22px;text-align:center;
+  background:linear-gradient(170deg,rgba(24,12,5,.85),rgba(8,4,2,.92));
+  border:1px solid rgba(255,255,255,.08);box-shadow:0 16px 40px rgba(0,0,0,.45);
+}
+.s5-mark{
+  font-family:'Noto Serif TC','Songti TC',serif;font-size:64px;line-height:.6;
+  color:rgba(252,76,2,.22);user-select:none;
+}
+.s5 .q-zh{font-size:22px;line-height:1.8;margin:6px auto 12px;max-width:640px}
+.s5 .q-orig{font-size:13.5px;line-height:1.75;margin:0 auto 18px;max-width:600px}
+.s5-meta{font-size:12px;color:rgba(255,255,255,.42);margin-bottom:16px}
+.s5-chips{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.s5-chip{position:relative}
+.s5-chip>span{
+  display:inline-flex;align-items:center;gap:4px;padding:4px 11px;border-radius:12px;
+  font-size:10.5px;font-weight:700;letter-spacing:.5px;cursor:help;
+  background:rgba(252,76,2,.1);border:1px solid rgba(252,76,2,.28);color:rgba(255,190,140,.9);
+  transition:background .15s,border-color .15s;
+}
+.s5-chip:hover>span{background:rgba(252,76,2,.22);border-color:#FC4C02}
+.s5-tip{
+  position:absolute;bottom:calc(100% + 9px);left:50%;transform:translate(-50%,4px);
+  width:min(310px,78vw);padding:11px 13px;border-radius:10px;text-align:left;
+  background:rgba(10,6,3,.97);border:1px solid rgba(252,76,2,.35);
+  box-shadow:0 10px 26px rgba(0,0,0,.6);
+  opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;z-index:5;
+}
+.s5-chip:hover .s5-tip,.s5.open .s5-tip{opacity:1;transform:translate(-50%,0)}
+.s5-tip::after{
+  content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);
+  border:6px solid transparent;border-top-color:rgba(252,76,2,.35);
+}
+</style>
+</head>
+<body>
+<h1>每日一句 · 5 種顯示方式</h1>
+<p class="sub">
+  五種都<b>一定顯示原文</b>；<b>場景</b>與<b>帶回生活</b>一律收起來，滑鼠移上去才出現。<br>
+  每一張都額外綁了點擊切換（<code>.open</code>），因為觸控裝置沒有 hover — 這是必須的，不是加值。
+</p>
+<div class="bar">
+  <button id="btn-anime" class="active">🎴 動畫（日文原文）</button>
+  <button id="btn-movie">🎬 影劇（英文原文）</button>
+  <button id="btn-long">📏 抓最長的原文</button>
+  <button id="btn-shuffle">🎲 換一句</button>
+  <span class="spacer"></span>
+  <button id="btn-force">👁 全部強制展開</button>
+</div>
+
+<div class="wrap" id="wrap"></div>
+
+<script>
+const SRC = { anime: [], movie: [] }
+let mode = 'anime', current = null, forced = false
+
+function esc(s) {
+  return (s || '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]))
+}
+// 原文語言決定字體：日文用黑體、英文用義大利襯線，跟中譯的襯線體拉開層次
+const origCls = () => mode === 'movie' ? 'en' : 'jp'
+const work = q => q.anime || q.movie || ''
+const stampCh = q => (q.character || work(q) || '?').trim().charAt(0)
+
+/* ────────── 五種樣式 ────────── */
+const STYLES = [
+  {
+    n: '對頁', en: 'Spread',
+    up: '原文與中譯左右對開、地位對等，想核對用字一眼就對得起來；抽屜從下緣滑出不會擠動版面。',
+    dn: '兩欄各自變窄，英文長句（最長 187 字）會把卡片拉得很高；窄螢幕必須改成上下堆疊。',
+    use: '原文本身就是重點、你會想比對翻譯的情境。最接近現在的雙欄版面，改動最小。',
+    html: q => `
+      <div class="s1" data-card>
+        <div class="s1-head">${mode === 'movie' ? '🎬' : '🎴'} ${esc(work(q))}${q.theme ? '．' + esc(q.theme) : ''}</div>
+        <div class="s1-cols">
+          <div class="s1-col"><span class="lbl">原文</span><div class="q-orig ${origCls()}">${esc(q.originalQuote)}</div></div>
+          <div class="s1-col"><span class="lbl">中譯</span><div class="q-zh">${esc(q.adaptedQuote)}</div></div>
+        </div>
+        <div class="s1-foot">
+          <div class="meta">—— ${esc(q.character || '')}<br><b>${esc(q.source || '')}</b></div>
+          <div class="s1-hint">↑ 滑鼠移入看場景與心得</div>
+        </div>
+        <div class="s1-drawer">
+          ${noteBlock('場景', q.scene)}
+          ${noteBlock('帶回生活', q.reflection)}
+        </div>
+      </div>`,
+  },
+  {
+    n: '疊層', en: 'Watermark',
+    up: '原文當浮水印鋪在背後，資訊都在但完全不搶戲；中譯是唯一的視覺主角，掃讀最快。',
+    dn: '浮水印壓在文字後面，原文的可讀性最差（要移上去才變清楚）；長英文原文會溢出容器。',
+    use: '首頁那種「一句就好」的位置。原文的角色是氣氛與存證，不是拿來讀的。',
+    html: q => `
+      <div class="s2" data-card>
+        <div class="s2-wm ${origCls()}">${esc(q.originalQuote)}</div>
+        <div class="s2-body">
+          <div class="q-zh">${esc(q.adaptedQuote)}</div>
+          <div class="meta">—— ${esc(q.character || '')} · <b>${esc(work(q))}</b></div>
+        </div>
+        <div class="s2-panel"><div class="s2-panel-in">
+          ${noteBlock('場景', q.scene)}
+          ${noteBlock('帶回生活', q.reflection)}
+        </div></div>
+      </div>`,
+  },
+  {
+    n: '打字機', en: 'Typewriter',
+    up: '原文先打、中譯後打，等待本身讓人真的讀進去；跟整站的太空／終端機調性最合。',
+    dn: '每次換句都要重播動畫，看第三遍就開始煩；動畫期間文字會逐字重排，且必須尊重 reduced-motion。',
+    use: '一天只看一次的位置。想要儀式感、不想要效率。',
+    html: q => `
+      <div class="s3" data-card>
+        <div class="s3-bar">
+          <span class="s3-dot"></span><span class="s3-dot"></span><span class="s3-dot"></span>
+          <span class="s3-title">quote —— ${esc(work(q))}</span>
+        </div>
+        <div class="s3-line"><span class="s3-pr">$</span><div class="s3-out"><span class="q-orig ${origCls()}" data-type="orig"></span></div></div>
+        <div class="s3-line"><span class="s3-pr">&gt;</span><div class="s3-out"><span class="q-zh" data-type="zh"></span><span class="s3-caret" data-caret></span></div></div>
+        <div class="s3-more">
+          <button class="s3-more-btn">▸ 場景 / 帶回生活（移入展開）</button>
+          <div class="s3-body">
+            ${noteBlock('場景', q.scene)}
+            ${noteBlock('帶回生活', q.reflection)}
+            <div class="meta">—— ${esc(q.character || '')} · <b>${esc(q.source || '')}</b></div>
+          </div>
+        </div>
+      </div>`,
+    after: (el, q) => typeIn(el, q),
+  },
+  {
+    n: '票根', en: 'Ticket',
+    up: '一張票的隱喻很好懂，票根區天生就是放收藏／複製的地方；翻面把背面資訊藏得乾淨徹底。',
+    dn: '翻面時正面完全看不到，沒辦法同時對照句子與場景；高度由正面決定，背面若比正面長會被裁掉。',
+    use: '收藏牆／清單。一張一張看、會想留下來的那種呈現。',
+    html: q => `
+      <div class="s4" data-card>
+        <div class="s4-in">
+          <div class="s4-face s4-front">
+            <div class="s4-main">
+              <span class="lbl">${esc(q.theme || '每日一句')}</span>
+              <div class="q-zh" style="margin-top:10px">${esc(q.adaptedQuote)}</div>
+              <div class="s4-orig"><span class="lbl">原文</span>
+                <div class="q-orig ${origCls()}" style="margin-top:5px">${esc(q.originalQuote)}</div>
+              </div>
+            </div>
+            <div class="s4-stub">
+              <div class="s4-stub-no">NO.${String(Math.floor(Math.random()*89)+10)}</div>
+              <div class="s4-stub-ch">${esc(stampCh(q))}</div>
+              <div class="s4-stub-flip">移入<br>翻面 ↻</div>
+            </div>
+          </div>
+          <div class="s4-face s4-back"><div class="s4-back-in">
+            ${noteBlock('場景', q.scene)}
+            ${noteBlock('帶回生活', q.reflection)}
+            <div class="meta">—— ${esc(q.character || '')} · <b>${esc(q.source || '')}</b></div>
+          </div></div>
+        </div>
+      </div>`,
+  },
+  {
+    n: '引號牌', en: 'Plaque',
+    up: '最安靜的一種：原文就排在中譯下方、永遠讀得到，沒有任何遮擋或動畫；長原文只會往下長，不會爆版。',
+    dn: '沒有記憶點，看起來就是一段引文；tooltip 在手機上只能靠點擊，且靠邊時要處理溢出。',
+    use: '想讓內容自己說話、不想再加特效的時候。也是五種裡最耐看、最不會膩的。',
+    html: q => `
+      <div class="s5" data-card>
+        <div class="s5-mark">&ldquo;</div>
+        <div class="q-zh">${esc(q.adaptedQuote)}</div>
+        <div class="q-orig ${origCls()}">${esc(q.originalQuote)}</div>
+        <div class="s5-meta">—— ${esc(q.character || '')} · ${esc(q.source || '')}</div>
+        <div class="s5-chips">
+          ${chip('場景', q.scene)}
+          ${chip('帶回生活', q.reflection)}
+        </div>
+      </div>`,
+  },
+]
+
+function noteBlock(title, text) {
+  if (!text) return ''
+  return `<div class="hidden-note"><span class="ht">${title}</span>${esc(text)}</div>`
+}
+function chip(title, text) {
+  if (!text) return ''
+  return `<div class="s5-chip"><span>${title} ⓘ</span><div class="s5-tip"><div class="hidden-note">${esc(text)}</div></div></div>`
+}
+
+// 打字機：原文打完再打中譯。reduced-motion 直接給完整文字，不播動畫
+function typeIn(el, q) {
+  const oEl = el.querySelector('[data-type="orig"]')
+  const zEl = el.querySelector('[data-type="zh"]')
+  const caret = el.querySelector('[data-caret]')
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    oEl.textContent = q.originalQuote || ''
+    zEl.textContent = q.adaptedQuote || ''
+    return
+  }
+  const seq = [[oEl, q.originalQuote || '', 26], [zEl, q.adaptedQuote || '', 46]]
+  let si = 0, ci = 0, acc = 0, last = null
+  function step(t) {
+    if (!el.isConnected) return           // 換句後舊卡片被移除，動畫自己收工
+    if (last == null) last = t
+    acc += t - last; last = t
+    while (si < seq.length && acc >= seq[si][2]) {
+      acc -= seq[si][2]
+      const [target, text] = seq[si]
+      target.textContent = text.slice(0, ++ci)
+      if (ci >= text.length) { si++; ci = 0 }
+    }
+    if (si < seq.length) requestAnimationFrame(step)
+    else caret.style.animationPlayState = 'running'
+  }
+  requestAnimationFrame(step)
+}
+
+/* ────────── 組裝 ────────── */
+function render() {
+  const q = current
+  const wrap = document.getElementById('wrap')
+  wrap.innerHTML = STYLES.map((st, i) => `
+    <div class="block">
+      <div class="bhead"><span class="bnum">${String(i+1).padStart(2,'0')}</span>
+        <span class="bname">${st.n}</span><span class="ben">${st.en}</span></div>
+      <div data-slot="${i}"></div>
+      <div class="bfoot">
+        <div class="row"><span class="k up">好</span><span>${st.up}</span></div>
+        <div class="row"><span class="k dn">壞</span><span>${st.dn}</span></div>
+        <div class="row"><span class="k use">用</span><span>${st.use}</span></div>
+      </div>
+    </div>`).join('')
+  STYLES.forEach((st, i) => {
+    const slot = wrap.querySelector(`[data-slot="${i}"]`)
+    slot.innerHTML = st.html(q)
+    const card = slot.querySelector('[data-card]')
+    // 觸控沒有 hover → 點一下切換 .open，五種樣式共用同一個開關
+    card.addEventListener('click', () => card.classList.toggle('open'))
+    if (forced) card.classList.add('open')
+    if (st.after) st.after(card, q)
+  })
+}
+function pick(longest) {
+  const pool = SRC[mode]
+  if (!pool.length) return null
+  if (longest) return pool.slice().sort((a,b) => (b.originalQuote||'').length - (a.originalQuote||'').length)[0]
+  return pool[Math.floor(Math.random() * pool.length)]
+}
+function setMode(m) {
+  mode = m
+  document.getElementById('btn-anime').classList.toggle('active', m === 'anime')
+  document.getElementById('btn-movie').classList.toggle('active', m === 'movie')
+  current = pick(false)
+  render()
+}
+
+// no-store：originalQuote 是後來才加的欄位，瀏覽器若還快取著舊 JSON 會整頁看不到原文
+const getJSON = p => fetch(p, { cache: 'no-store' }).then(r => r.ok ? r.json() : null).catch(() => null)
+Promise.all([
+  getJSON('../data/life-quotes.json'),
+  getJSON('../data/movie-life-quotes.json'),
+]).then(([a, m]) => {
+  SRC.anime = ((a || {}).quotes || []).filter(q => q.originalQuote)
+  SRC.movie = ((m || {}).quotes || []).filter(q => q.originalQuote)
+  if (!SRC.anime.length && !SRC.movie.length) {
+    document.getElementById('wrap').innerHTML =
+      `<p class="sub" style="color:#ff8f8f">讀不到 data/*-life-quotes.json —— 這頁需要用 http server 開（file:// 會被 CORS 擋）。</p>`
+    return
+  }
+  if (!SRC.anime.length) mode = 'movie'
+  document.getElementById('btn-anime').onclick = () => setMode('anime')
+  document.getElementById('btn-movie').onclick = () => setMode('movie')
+  document.getElementById('btn-shuffle').onclick = () => { current = pick(false); render() }
+  document.getElementById('btn-long').onclick = () => { current = pick(true); render() }
+  document.getElementById('btn-force').onclick = e => {
+    forced = !forced
+    e.target.classList.toggle('active', forced)
+    document.querySelectorAll('[data-card]').forEach(c => c.classList.toggle('open', forced))
+  }
+  setMode(mode)
+})
+</script>
+</body>
+</html>

@@ -1,0 +1,159 @@
+{
+  "_comment": "同事對戰名單。ITT 卡回放時每位騎士一個標記，可按卡片上的 PK 鈕看成績對照。",
+  "_howToAdd": [
+    "1. riders 陣列加一筆：id 唯一、name 是 PK 面板顯示的全名、color 要跟其他人分得開。",
+    "2. short 是標記上顯示的單一字母（畫面小，全名會擠）；PK 面板與 F1 排行條用 name。",
+    "3. efforts 用 segment id 當 key（見 data/itt-config.json 的 segments[].id）。",
+    "4. elapsed_sec 是唯一必填的成績欄位 —— 標記位置只靠它推算。其餘欄位只出現在 PK 面板與遙測條。",
+    "5. 沒有某個路段的成績就不要放那個 key，那張卡自然只會少一位。",
+    "6. 這站是公開頁面，名字與成績會公開可見；想低調就用縮寫或代號，程式不在意。"
+  ],
+  "_note_colors": "配色照 itt-config.json 的規則：暖橘主題只留一個冷色點綴（#4ab4ff），所以是 橘/藍/金/骨白，不再加青與紫。四個顏色在 10px 圓點上仍分得開。",
+  "_note_selfIsElsewhere": "本人（STEVE CHUANG）的成績直接取 data/itt-segments.json 的 PR，不寫在這裡，避免兩份資料打架。",
+  "riders": [
+    {
+      "id": "tony",
+      "name": "TONY",
+      "short": "T",
+      "color": "#4ab4ff",
+      "efforts": {
+        "1761462": {
+          "date": "2026-06-02",
+          "elapsed_sec": 967,
+          "avg_watts": 297,
+          "max_watts": 518,
+          "avg_speed_kmh": 14.7,
+          "max_speed_kmh": 26.1,
+          "avg_cadence_rpm": 75,
+          "max_cadence_rpm": 103,
+          "vam": 912
+        },
+        "641218": {
+          "date": "2025-09-19",
+          "elapsed_sec": 1788,
+          "avg_watts": 263,
+          "max_watts": 877,
+          "avg_speed_kmh": 12.3,
+          "max_speed_kmh": 35.5,
+          "avg_cadence_rpm": 70,
+          "max_cadence_rpm": 107,
+          "vam": 812
+        },
+        "7032136": {
+          "elapsed_sec": 1638,
+          "avg_watts": 210,
+          "max_watts": 1167,
+          "avg_speed_kmh": 35.9,
+          "max_speed_kmh": 47.4,
+          "avg_cadence_rpm": 75,
+          "max_cadence_rpm": 111
+        },
+        "8607609": {
+          "elapsed_sec": 953,
+          "avg_watts": 229,
+          "max_watts": 478,
+          "avg_speed_kmh": 13.0,
+          "max_speed_kmh": 23.5,
+          "avg_cadence_rpm": 78,
+          "max_cadence_rpm": 109,
+          "vam": 768
+        },
+        "956558": {
+          "elapsed_sec": 485,
+          "avg_watts": 298,
+          "max_watts": 934,
+          "avg_speed_kmh": 19.4,
+          "max_speed_kmh": 38.7,
+          "avg_cadence_rpm": 67,
+          "max_cadence_rpm": 91,
+          "vam": 861
+        }
+      }
+    },
+    {
+      "id": "jerry",
+      "name": "JERRY",
+      "short": "J",
+      "color": "#ffd24d",
+      "efforts": {
+        "7032136": {
+          "elapsed_sec": 1675,
+          "avg_watts": 247,
+          "max_watts": 716,
+          "avg_speed_kmh": 35.1,
+          "max_speed_kmh": 43.9,
+          "avg_cadence_rpm": 86,
+          "max_cadence_rpm": 105,
+          "avg_heartrate": 138,
+          "max_heartrate": 155
+        }
+      }
+    },
+    {
+      "id": "martin",
+      "name": "MARTIN",
+      "short": "M",
+      "color": "#e8e4dc",
+      "efforts": {
+        "1761462": {
+          "date": "2025-12-16",
+          "elapsed_sec": 1008,
+          "avg_watts": 258,
+          "max_watts": 556,
+          "avg_speed_kmh": 14.1,
+          "max_speed_kmh": 26.4,
+          "avg_cadence_rpm": 68,
+          "max_cadence_rpm": 97,
+          "avg_heartrate": 140,
+          "max_heartrate": 157,
+          "vam": 875
+        },
+        "641218": {
+          "date": "2025-10-15",
+          "elapsed_sec": 1768,
+          "avg_watts": 244,
+          "max_watts": 560,
+          "avg_speed_kmh": 12.5,
+          "max_speed_kmh": 39.4,
+          "avg_cadence_rpm": 67,
+          "max_cadence_rpm": 103,
+          "avg_heartrate": 149,
+          "max_heartrate": 162,
+          "vam": 821
+        },
+        "7032136": {
+          "elapsed_sec": 1753,
+          "avg_watts": 208,
+          "max_watts": 726,
+          "avg_speed_kmh": 33.5,
+          "max_speed_kmh": 39.4,
+          "avg_cadence_rpm": 83,
+          "max_cadence_rpm": 102,
+          "avg_heartrate": 119,
+          "max_heartrate": 152
+        },
+        "8607609": {
+          "elapsed_sec": 946,
+          "avg_watts": 223,
+          "watts_estimated": true,
+          "avg_speed_kmh": 13.1,
+          "max_speed_kmh": 26.1,
+          "avg_heartrate": 140,
+          "max_heartrate": 154,
+          "vam": 774
+        },
+        "956558": {
+          "elapsed_sec": 515,
+          "avg_watts": 238,
+          "watts_estimated": true,
+          "avg_speed_kmh": 18.3,
+          "max_speed_kmh": 43.7,
+          "avg_heartrate": 143,
+          "max_heartrate": 163,
+          "vam": 811
+        }
+      }
+    }
+  ],
+  "_note_estimatedWatts": "watts_estimated:true 代表該筆功率是 Strava 推估（無功率計），PK 面板會標示 ~ 以免跟實測混為一談。"
+}

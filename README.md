@@ -1,7 +1,10 @@
 # SteveChuang · Personal Hub
 
-> 太空主題個人入口網站，整合線上履歷與 Strava 運動儀表板。
+> 個人入口網站，整合線上履歷與 Strava 運動儀表板。
 > 部署於 GitHub Pages，每天透過 GitHub Actions 自動同步 Strava 資料（台灣時間 10:00 / 18:00 / 22:00）。
+>
+> Strava 儀表板同一份資料有三個並存的視覺世界，從首頁的 STEVE 專用版那一列三選一進入：
+> **深空觀測站**（`strava.html`）、**維修站牆**（`strava_pitwall.html`）、**遙測 OPUS MAX**（`strava_opus5_max.html`）。
 
 🔗 **Live：** https://chenhan20.github.io/linkTree/linkTreeIndex.html
 
@@ -15,7 +18,8 @@
 
 ## 🚴 Strava 儀表板 · 重點功能
 
-> 太空主題運動儀表板，資料每天自動同步。以下為桌面版實際畫面。
+> 資料每天自動同步。以下截圖為**深空觀測站**（`strava.html`）的桌面版畫面；
+> 功能與資料三個世界共通，只有視覺語言不同。
 
 ### 星座名片 + 功率排行榜
 即時星座動畫名片（FTP / 里程 / 爬升），下方為最佳功率 PR（5s ~ 60m）排行。
@@ -54,13 +58,25 @@
 - 技能進度條動畫
 - 學歷、興趣標籤
 
-### 🚴 Strava 儀表板（strava.html）
+### 🚴 Strava 儀表板（三個世界共用同一份資料）
+
+共通內容：
 - 年度總覽：里程、爬升、次數、時數
 - 功率 PR 紀錄（最佳 5s / 10s / 30s / 1m / 2m / 5m / 10m / 20m / 60m）
 - 月度里程長條圖
 - 活動紀錄：單車 / 跑步 / 游泳 / 重訓分頁
+- ITT 區間：路段狀態評分、3D 路線回放、同事 PK 與自我對戰
 - All Time 累計數據
 - 每天 10:00 / 18:00 / 22:00（台灣時間）自動更新
+
+| 檔案 | 世界 | 視覺語言 |
+|------|------|----------|
+| `strava.html` | 深空觀測站 | 星空背景、signal-orange、液態玻璃 + 全息傾斜 + Bento 卡片 |
+| `strava_pitwall.html` | 維修站牆 | 消光石板黑 + 粉筆白，板牌（極大字）與計時紙（密集分段秒數）兩個語域；分段計時四色（紫＝90 天內最佳／綠＝歷史 PR／黃＝比自己慢／灰＝尚未計時）是唯一彩色，且只表功能。無發光、無毛玻璃、無 webfont |
+| `strava_opus5_max.html` | 遙測 OPUS MAX | 青色遙測 |
+
+`strava_aespa.html` / `strava_maple.html` / `strava_cs.html` / `strava_lol.html` / `strava_halo.html`
+是更早的五個主題頁，檔案保留、直接開網址仍可用，但不再出現在任何導覽裡。
 
 ---
 

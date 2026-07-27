@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>COMP A · 板牌主導</title>
+<style>
+:root{
+  --slate:#101215; --panel:#191C20; --panel-2:#22262B; --rule:#31363D;
+  --chalk:#EDEAE3; --chalk-dim:#9BA0A6; --chalk-faint:#6B7178;
+  --purple:#A97BFF; --green:#3FD98A; --yellow:#F5C542; --untimed:#5A6068;
+  --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--slate);color:var(--chalk);font-family:var(--sans);
+  font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
+.wrap{max-width:860px;margin:0 auto;padding:0 20px 80px}
+
+/* ── 板牌：第一屏 ── */
+.board{min-height:100svh;display:flex;flex-direction:column;justify-content:center;
+  padding:32px 0;position:relative}
+.board::before{content:'';position:absolute;inset:16px 0;border:1px solid var(--rule);
+  border-left:none;border-right:none;pointer-events:none}
+
+.board-tag{font-size:11px;letter-spacing:4px;color:var(--chalk-faint);
+  text-transform:uppercase;margin-bottom:6px}
+.board-seg{font-size:15px;letter-spacing:1px;color:var(--chalk-dim);margin-bottom:40px}
+
+/* 三行巨大事實 */
+.slot{border-top:1px solid var(--rule);padding:26px 0 22px;display:grid;
+  grid-template-columns:1fr auto;align-items:baseline;gap:16px}
+.slot:last-of-type{border-bottom:1px solid var(--rule)}
+.slot-lbl{font-size:12px;letter-spacing:3px;color:var(--chalk-faint);text-transform:uppercase}
+.slot-val{font-size:clamp(56px,13vw,104px);font-weight:800;line-height:.82;
+  letter-spacing:-3px}
+.slot-val small{font-size:.26em;font-weight:600;letter-spacing:2px;
+  color:var(--chalk-dim);margin-left:10px;letter-spacing:1px}
+.v-yellow{color:var(--yellow)} .v-green{color:var(--green)}
+.v-purple{color:var(--purple)} .v-chalk{color:var(--chalk)}
+
+.board-foot{margin-top:34px;display:flex;justify-content:space-between;
+  align-items:center;font-size:11px;letter-spacing:2px;color:var(--chalk-faint);
+  text-transform:uppercase}
+.scroll-cue{display:flex;align-items:center;gap:8px}
+.scroll-cue::after{content:'';width:30px;height:1px;background:var(--chalk-faint)}
+
+/* ── 計時紙：第二屏 ── */
+.sheet{padding-top:64px}
+.sheet-head{display:flex;align-items:baseline;justify-content:space-between;
+  border-bottom:2px solid var(--chalk);padding-bottom:8px;margin-bottom:0}
+.sheet-title{font-size:12px;letter-spacing:4px;text-transform:uppercase;font-weight:700}
+.sheet-meta{font-size:11px;color:var(--chalk-faint);letter-spacing:1px;font-family:var(--mono)}
+
+table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12.5px}
+thead th{text-align:left;padding:9px 10px;font-size:10px;letter-spacing:2px;
+  color:var(--chalk-faint);text-transform:uppercase;font-weight:600;
+  border-bottom:1px solid var(--rule)}
+thead th:not(:first-child){text-align:right}
+tbody td{padding:9px 10px;border-bottom:1px solid var(--rule);color:var(--chalk-dim)}
+tbody td:not(:first-child){text-align:right}
+tbody tr:hover td{background:var(--panel);color:var(--chalk)}
+td.t-purple{color:var(--purple);font-weight:700}
+td.t-green{color:var(--green);font-weight:700}
+td.t-yellow{color:var(--yellow)}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:8px;
+  vertical-align:1px}
+.d-purple{background:var(--purple)} .d-green{background:var(--green)}
+.d-yellow{background:var(--yellow)} .d-untimed{background:var(--untimed)}
+
+/* 圖例 */
+.legend{display:flex;gap:20px;flex-wrap:wrap;margin:26px 0 0;
+  padding-top:16px;border-top:1px solid var(--rule);
+  font-size:10.5px;letter-spacing:1.5px;color:var(--chalk-faint);text-transform:uppercase}
+.legend span{display:flex;align-items:center}
+
+/* 月度目標：板牌插槽的重複使用 */
+.goals{margin-top:56px;display:grid;grid-template-columns:repeat(4,1fr);gap:1px;
+  background:var(--rule);border:1px solid var(--rule)}
+.goal{background:var(--slate);padding:18px 14px}
+.goal-lbl{font-size:10px;letter-spacing:2.5px;color:var(--chalk-faint);
+  text-transform:uppercase;margin-bottom:10px}
+.goal-val{font-size:32px;font-weight:800;line-height:1;letter-spacing:-1px}
+.goal-val em{font-style:normal;font-size:.44em;color:var(--chalk-faint);font-weight:600}
+.goal-bar{height:3px;background:var(--panel-2);margin-top:12px;position:relative;overflow:hidden}
+.goal-bar i{position:absolute;inset:0 auto 0 0;display:block}
+
+@media(max-width:600px){
+  .slot{grid-template-columns:1fr;gap:4px}
+  .slot-val{letter-spacing:-2px}
+  .goals{grid-template-columns:repeat(2,1fr)}
+  table{font-size:11.5px} thead th,tbody td{padding:8px 6px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- 第一屏：板牌 -->
+  <section class="board">
+    <div class="board-tag">PIT BOARD · 2026-07-23</div>
+    <div class="board-seg">風櫃嘴 ITT · 6.13 km · CLIMB</div>
+
+    <div class="slot">
+      <div class="slot-lbl">位置<br>Position</div>
+      <div class="slot-val v-chalk">P8<small>／11 ATTEMPTS</small></div>
+    </div>
+
+    <div class="slot">
+      <div class="slot-lbl">與 PR 差距<br>Gap to PR</div>
+      <div class="slot-val v-yellow">+12:03<small>PR 28:29</small></div>
+    </div>
+
+    <div class="slot">
+      <div class="slot-lbl">本月還差<br>To Target</div>
+      <div class="slot-val v-green">+2<small>RIDES · 6 ／ 4 DONE</small></div>
+    </div>
+
+    <div class="board-foot">
+      <span>LAST TIMED 40:32 · 183 W · 153 BPM</span>
+      <span class="scroll-cue">TIMING SHEET</span>
+    </div>
+  </section>
+
+  <!-- 第二屏：計時紙 -->
+  <section class="sheet">
+    <div class="sheet-head">
+      <div class="sheet-title">計時紙 · TIMING SHEET</div>
+      <div class="sheet-meta">風櫃嘴 ITT / 11 EFFORTS</div>
+    </div>
+    <table>
+      <thead><tr><th>日期</th><th>時間</th><th>差距</th><th>功率</th><th>心率</th></tr></thead>
+      <tbody>
+        <tr><td><span class="dot d-green"></span>2025-11-02</td><td class="t-green">28:29</td><td class="t-green">PR</td><td>251</td><td>168</td></tr>
+        <tr><td><span class="dot d-yellow"></span>2026-06-23</td><td>34:36</td><td class="t-yellow">+6:07</td><td>220</td><td>166</td></tr>
+        <tr><td><span class="dot d-yellow"></span>2026-05-24</td><td>32:49</td><td class="t-yellow">+4:20</td><td>233</td><td>161</td></tr>
+        <tr><td><span class="dot d-yellow"></span>2026-07-21</td><td>40:32</td><td class="t-yellow">+12:03</td><td>185</td><td>143</td></tr>
+        <tr><td><span class="dot d-yellow"></span>2026-07-23</td><td>40:32</td><td class="t-yellow">+12:03</td><td>183</td><td>153</td></tr>
+        <tr><td><span class="dot d-untimed"></span>2026-03-15</td><td>36:11</td><td class="t-yellow">+7:42</td><td>—</td><td>—</td></tr>
+      </tbody>
+    </table>
+    <div class="legend">
+      <span><i class="dot d-purple"></i>全場最速</span>
+      <span><i class="dot d-green"></i>個人最佳</span>
+      <span><i class="dot d-yellow"></i>比自己慢</span>
+      <span><i class="dot d-untimed"></i>尚未計時</span>
+    </div>
+
+    <div class="goals">
+      <div class="goal"><div class="goal-lbl">單車</div><div class="goal-val">6<em>／4</em></div>
+        <div class="goal-bar"><i style="width:100%;background:var(--green)"></i></div></div>
+      <div class="goal"><div class="goal-lbl">跑步</div><div class="goal-val">0<em>／4</em></div>
+        <div class="goal-bar"><i style="width:2%;background:var(--yellow)"></i></div></div>
+      <div class="goal"><div class="goal-lbl">游泳</div><div class="goal-val">0<em>／4</em></div>
+        <div class="goal-bar"><i style="width:2%;background:var(--yellow)"></i></div></div>
+      <div class="goal"><div class="goal-lbl">重訓</div><div class="goal-val">2<em>／10</em></div>
+        <div class="goal-bar"><i style="width:20%;background:var(--yellow)"></i></div></div>
+    </div>
+  </section>
+
+</div>
+</body>
+</html>
