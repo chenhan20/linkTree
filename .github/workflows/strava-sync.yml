@@ -57,12 +57,18 @@ jobs:
           POWER_ONLY:           ${{ inputs.power_only == true && '1' || '0' }}
         run: node scripts/fetch-strava.js
 
-      # 4. 如果 strava.json / power-prs.json 有變動，commit 並 push 回 repo
+      # 4. 補齊 ITT 路段的地形高程（只抓還沒有資料的路段；山不會動，抓過就不再抓）
+      #    來源：Tilezen / AWS Open Data terrain tiles，無需金鑰
+      - name: Fetch segment terrain (new segments only)
+        continue-on-error: true
+        run: node scripts/fetch-segment-terrain.js
+
+      # 5. 如果資料檔有變動，commit 並 push 回 repo
       - name: Commit and push data files
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/strava.json data/power-prs.json
+          git add data/strava.json data/power-prs.json data/segment-terrain.json
           # 如果沒有變動就不 commit（避免空 commit）
           git diff --staged --quiet || git commit -m "chore: update strava data $(date -u '+%Y-%m-%d')"
           git push
