@@ -220,6 +220,69 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 .section-title .muted{color:rgba(252,76,2,.4)}
 .section-title{display:flex;align-items:center;gap:0}
 .section-title-text{flex:1}
+/* ── 節奏 · 訓練日曆 ── */
+.tcal{
+  margin-bottom:2.4rem;padding:12px 0 10px;border-radius:16px;
+  border:1px solid rgba(252,76,2,.14);
+  background:radial-gradient(120% 90% at 50% 0%,rgba(252,76,2,.05),transparent 60%),rgba(6,3,2,.3);
+}
+.tcal-head{
+  display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;
+  padding:0 14px 10px;font-size:9px;letter-spacing:1.4px;color:rgba(255,255,255,.42);
+}
+.tcal-stat{color:#ff9142;font-variant-numeric:tabular-nums;white-space:nowrap}
+/* 檢視區：左右各一顆箭頭 + 邊緣淡出，捲到底那側的箭頭自動收起 */
+.tcal-view{position:relative}
+.tcal-view::before,.tcal-view::after{
+  content:'';position:absolute;top:0;bottom:0;width:34px;z-index:2;pointer-events:none;
+  opacity:0;transition:opacity .2s;
+}
+.tcal-view::before{left:0;background:linear-gradient(90deg,rgba(8,4,2,.92),transparent)}
+.tcal-view::after{right:0;background:linear-gradient(270deg,rgba(8,4,2,.92),transparent)}
+.tcal-view.can-prev::before,.tcal-view.can-next::after{opacity:1}
+.tcal-nav{
+  position:absolute;top:50%;transform:translateY(-50%);z-index:3;
+  width:26px;height:26px;border-radius:50%;cursor:pointer;padding:0;
+  display:flex;align-items:center;justify-content:center;
+  font-family:inherit;font-size:14px;line-height:1;
+  background:rgba(10,4,0,.72);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border:1px solid rgba(252,76,2,.32);color:rgba(255,255,255,.8);
+  transition:opacity .2s,background .15s,border-color .15s,transform .15s;
+}
+.tcal-nav:hover{background:rgba(252,76,2,.28);border-color:#FC4C02;color:#fff}
+.tcal-nav:active{transform:translateY(-50%) scale(.92)}
+.tcal-nav.prev{left:5px}
+.tcal-nav.next{right:5px}
+.tcal-nav[disabled]{opacity:0;pointer-events:none}
+.tcal-scroll{
+  overflow-x:auto;overflow-y:hidden;padding:0 14px 8px;
+  scrollbar-width:thin;scrollbar-color:rgba(252,76,2,.45) transparent;
+  scroll-behavior:smooth;
+}
+.tcal-scroll::-webkit-scrollbar{height:6px}
+.tcal-scroll::-webkit-scrollbar-track{background:rgba(255,255,255,.05);border-radius:99px;margin:0 14px}
+.tcal-scroll::-webkit-scrollbar-thumb{
+  background:linear-gradient(90deg,rgba(252,76,2,.75),rgba(255,160,90,.55));
+  border-radius:99px;
+}
+.tcal-scroll::-webkit-scrollbar-thumb:hover{background:linear-gradient(90deg,#FC4C02,rgba(255,180,110,.8))}
+@media (prefers-reduced-motion:reduce){.tcal-scroll{scroll-behavior:auto}}
+.tcal-svg{display:block;max-width:none}
+.tcal-ax{fill:rgba(255,255,255,.32);font-size:8px;letter-spacing:1.2px;font-family:inherit}
+.tcal-day{cursor:help;transition:opacity .15s}
+.tcal-day:hover{opacity:.75}
+.tcal-legend{
+  display:flex;align-items:center;gap:4px;flex-wrap:wrap;
+  padding:10px 14px 0;font-size:8px;letter-spacing:1.6px;color:rgba(255,255,255,.38);
+}
+.tcal-legend i{width:11px;height:11px;border-radius:3px;display:block}
+.tcal-legend span{margin-right:2px}
+.tcal-legend span+i{margin-left:2px}
+.tcal-legend .tcal-max{margin-left:auto;margin-right:0;opacity:.65}
+@media(max-width:600px){
+  .tcal-head{font-size:8px;letter-spacing:1px}
+  .tcal-legend{font-size:7px}
+}
 /* ── ITT level info button ── */
 .itt-info-btn{
   display:inline-flex;align-items:center;justify-content:center;
@@ -432,7 +495,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 .fc-board .fc.fc-sz-md,
 .fc-board .fc.fc-sz-sm{min-height:0;height:auto}
 .fc-board .fc{
-  position:absolute;top:0;left:0;width:214px;
+  position:absolute;top:0;left:0;width:272px;
   --x:0px;--y:0px;--rot:0deg;
   transform:translate3d(var(--x),var(--y),0) rotate(var(--rot));
   cursor:grab;touch-action:none;
@@ -453,35 +516,38 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 .fc-board .fc:not(.fc-open) .fc-stats,
 .fc-board .fc:not(.fc-open) .fc-foot,
 .fc-board .fc:not(.fc-open) .fc-kom{display:none}
-.fc-board .fc:not(.fc-open) .fc-inner{padding:12px 13px 12px}
+.fc-board .fc:not(.fc-open) .fc-inner{padding:12px 13px 18px}
 .fc-board .fc:not(.fc-open) .fc-name{font-size:15px;margin-bottom:5px}
 .fc-board .fc:not(.fc-open) .fc-status{font-size:9px;margin-bottom:8px}
 .fc-board .fc:not(.fc-open) .fc-time{font-size:26px}
 .fc-board .fc:not(.fc-open) .fc-attempts{font-size:8px;padding:3px 7px}
+/* 戰情室區塊：收起態也要看得到（曲線 + 同事對戰就是這張卡的重點） */
+.fc-war{
+  margin-top:9px;padding-top:8px;border-top:1px solid rgba(255,255,255,.08);
+  display:flex;flex-direction:column;gap:5px;
+}
+.fc-war-h{
+  display:flex;align-items:baseline;justify-content:space-between;gap:6px;
+  font-size:7.5px;letter-spacing:1.8px;text-transform:uppercase;
+  color:rgba(255,255,255,.34);font-variant-numeric:tabular-nums;
+}
+.fc-war-h em{font-style:normal;letter-spacing:1px;color:rgba(255,255,255,.4)}
+.fc-war-svg{width:100%;height:54px;display:block;overflow:visible}
+.fc-h2h{display:flex;flex-direction:column;gap:3px}
+.h2h-row{display:grid;grid-template-columns:46px 1fr 40px;align-items:center;gap:6px}
+.h2h-row s{
+  text-decoration:none;font-size:8.5px;letter-spacing:.4px;color:rgba(255,255,255,.5);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.h2h-row.me s{color:#fff}
+.h2h-bar{height:5px;border-radius:3px;background:rgba(255,255,255,.07);overflow:hidden}
+.h2h-bar i{display:block;height:100%;border-radius:3px;transition:width .5s cubic-bezier(.2,.9,.25,1)}
+.h2h-row b{font-size:9px;text-align:right;font-variant-numeric:tabular-nums;color:rgba(255,255,255,.55)}
+.h2h-row.me b{color:var(--fc-accent)}
 .fc-board .fc:not(.fc-open)::after{
   content:'⤢';position:absolute;right:9px;bottom:8px;z-index:4;
   font-size:11px;color:rgba(255,255,255,.32);pointer-events:none;
 }
-.fc-board .fc.fc-dealt{animation:fcDeal .42s cubic-bezier(.2,.9,.25,1)}
-@keyframes fcDeal{
-  from{opacity:0;transform:translate3d(var(--dx),var(--dy),0) rotate(-8deg) scale(.86)}
-  to  {opacity:1;transform:translate3d(var(--x),var(--y),0) rotate(var(--rot))}
-}
-/* 牌堆 */
-.fc-deck{
-  position:absolute;left:14px;top:16px;z-index:15;width:96px;height:132px;
-  border-radius:12px;cursor:pointer;padding:0;
-  background:linear-gradient(160deg,rgba(252,76,2,.16),rgba(8,4,2,.7));
-  border:1px solid rgba(252,76,2,.42);color:#FC4C02;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
-  box-shadow:0 14px 34px -14px rgba(0,0,0,.9),3px -3px 0 -1px rgba(252,76,2,.16),6px -6px 0 -2px rgba(252,76,2,.1);
-  transition:transform .18s,box-shadow .2s,border-color .15s;
-}
-.fc-deck:hover{transform:translateY(-3px);border-color:#FC4C02;box-shadow:0 20px 40px -14px rgba(0,0,0,.95),3px -3px 0 -1px rgba(252,76,2,.3),6px -6px 0 -2px rgba(252,76,2,.18)}
-.fc-deck:active{transform:translateY(-1px) scale(.98)}
-.fc-deck[disabled]{opacity:0;pointer-events:none}
-.fc-deck-n{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums;color:#ffd05a}
-.fc-deck-l{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.55)}
 .fc-board-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:8px}
 .fc-board-reset{
   appearance:none;background:transparent;border:1px solid rgba(255,255,255,.16);
@@ -494,11 +560,9 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 .fc-carousel.is-board .fc-nav,
 .fc-carousel.is-board .fc-dots,
 .fc-carousel.is-board > .fc-hint{display:none}
-.fc-carousel:not(.is-board) .fc-deck,
 .fc-carousel:not(.is-board) .fc-board-bar{display:none}
 @media (prefers-reduced-motion:reduce){
   .fc-board .fc{transition:width .01s,box-shadow .01s!important}
-  .fc-board .fc.fc-dealt{animation:none}
 }
 
 .fc{
@@ -1173,20 +1237,26 @@ html.lg-refract .fc-refract{display:block}
 .hero-power-card::before{top:5px;left:5px;border-right:none;border-bottom:none}
 .hero-power-card::after{bottom:5px;right:5px;border-left:none;border-top:none}
 .hero-power-card:hover{transform:translateY(-1px);border-color:#FC4C02;box-shadow:0 0 22px rgba(252,76,2,.25)}
-.hpc-head{display:flex;align-items:baseline;justify-content:space-between;gap:6px 8px;margin-bottom:12px;flex-wrap:wrap}
+.hpc-head{display:flex;align-items:baseline;gap:6px 10px;margin-bottom:4px;flex-wrap:wrap}
 .hpc-head-l{display:flex;align-items:baseline;gap:6px;flex-shrink:0;white-space:nowrap}
 .hpc-title{font-size:12px;color:#FC4C02;font-weight:700;letter-spacing:1.5px;white-space:nowrap}
 .hpc-title-en{font-size:8px;color:rgba(252,76,2,.55);letter-spacing:2px;white-space:nowrap}
-.hpc-hero-tag{font-size:9px;color:rgba(255,255,255,.5);letter-spacing:1.2px;font-variant-numeric:tabular-nums;min-width:0}
-.hpc-hero-tag b{color:#FC4C02;font-size:13px;font-weight:700;margin:0 2px}
-.hpc-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:9px}
-.hpc-mini{min-width:0;padding:9px 4px;text-align:center;border:1px solid rgba(252,76,2,.18);border-radius:7px;background:rgba(252,76,2,.04)}
-.hpc-mini-lbl{font-size:9px;color:rgba(255,255,255,.45);letter-spacing:.3px;white-space:nowrap}
-.hpc-mini-val{font-size:15px;color:#FC4C02;font-weight:700;margin-top:3px;line-height:1.1;font-variant-numeric:tabular-nums;white-space:nowrap}
-.hpc-mini-val small{font-size:7px;color:rgba(252,76,2,.6);margin-left:1px;font-weight:500}
-.hpc-mini.empty .hpc-mini-val{color:rgba(252,76,2,.3);font-size:13px}
-.hpc-mini.more{background:rgba(252,76,2,.10);border-color:rgba(252,76,2,.4)}
-.hpc-mini.more .hpc-mini-val{font-size:13px;color:#FC4C02;letter-spacing:1px}
+.hpc-readout{margin-left:auto;font-size:10px;color:rgba(255,255,255,.5);letter-spacing:1.2px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.hpc-readout b{color:#FC4C02;font-size:16px;font-weight:800;margin:0 3px;text-shadow:0 0 12px rgba(252,76,2,.5)}
+.hpc-readout .d{color:rgba(255,255,255,.3);font-size:8.5px;margin-left:4px;letter-spacing:1px}
+.hpc-curve{display:block;width:100%;height:auto;cursor:crosshair;touch-action:pan-y}
+.hpc-mob{display:none}
+@media(max-width:600px){.hpc-desk{display:none}.hpc-mob{display:block}}
+.hpc-line{stroke-dasharray:1;stroke-dashoffset:1;animation:hpcDraw 1.6s cubic-bezier(.4,0,.2,1) .3s forwards}
+@keyframes hpcDraw{to{stroke-dashoffset:0}}
+.hpc-area,.hpc-comet{opacity:0;animation:hpcFadeIn .9s ease 1.4s forwards}
+@keyframes hpcFadeIn{to{opacity:1}}
+.hpc-cross{opacity:0;transition:opacity .18s}
+.hpc-cross.on{opacity:1}
+@media (prefers-reduced-motion:reduce){
+  .hpc-line{animation:none;stroke-dashoffset:0}
+  .hpc-area,.hpc-comet{animation:none;opacity:1}
+}
 .hero-power-card.opening{animation:hpcOpen .45s cubic-bezier(.5,0,.4,1.4) forwards}
 @keyframes hpcOpen{
   0%{transform:scale(1);box-shadow:0 0 14px rgba(252,76,2,.1)}
@@ -1279,8 +1349,9 @@ html.lg-refract .fc-refract{display:block}
   .nc-stats{margin-left:0;width:100%;justify-content:space-between;border-top:1px solid rgba(252,76,2,.18);margin-top:14px;padding-top:14px}
 }
 @media(max-width:480px){
-  .hpc-grid{grid-template-columns:repeat(3,1fr)}
   .hpc-head-l .hpc-title-en{display:none}
+  .hpc-readout{font-size:9px}
+  .hpc-readout b{font-size:14px}
   .pm-table .h-act,.pm-table td.act{display:none}
   .pwr-modal{padding:14px 12px 10px}
 }
@@ -1366,12 +1437,603 @@ html.lg-refract .fc-refract{display:block}
   .qb-text{font-size:19px}
   .qb-orig{font-size:12.5px}
 }
+
+/* ══════════════════════════════════════════════════════════
+   STARSHIP SIDE PADS — 20s 接續時間軸
+   0–10s 左側發射　│　10–20s 右側筷子回收
+   ══════════════════════════════════════════════════════════ */
+.ss-pad{position:fixed;top:0;bottom:0;z-index:1;pointer-events:none;display:none;
+  width:clamp(170px, calc((100vw - 858px)/2), 320px);
+  align-items:flex-end;justify-content:center}
+.ss-pad svg{width:100%;height:100%;display:block}
+#ss-pad-left{left:0}
+#ss-pad-right{right:0}
+.ss-pad-tag{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);
+  font-size:9px;letter-spacing:3px;color:rgba(252,76,2,.55);text-transform:uppercase;white-space:nowrap}
+@media(min-width:1240px){.ss-pad{display:flex}}
+
+/* ── 左側：發射（動作集中在 0–10s） ── */
+#ss-sceneL{animation:ssCamL 20s linear infinite}
+@keyframes ssCamL{
+  0%,6.9%{transform:translate(0,0)}
+  7.8%{transform:translate(0,1.4px)}9%{transform:translate(-1px,.6px)}
+  10.2%{transform:translate(.9px,1px)}11.4%{transform:translate(-.6px,.4px)}
+  12.6%{transform:translate(.5px,.8px)}13.8%{transform:translate(-.4px,.2px)}
+  15.6%,100%{transform:translate(0,0)}
+}
+#ss-riseL{transform-origin:140px 845px;animation:ssRiseL 20s linear infinite}
+@keyframes ssRiseL{
+  0%,12%{transform:translateY(0) translateX(0) rotate(0deg) scale(1);animation-timing-function:cubic-bezier(.62,0,.92,.5)}
+  37.5%{transform:translateY(-1150px) translateX(-46px) rotate(-9deg) scale(.8)}
+  100%{transform:translateY(-1150px) translateX(-46px) rotate(-9deg) scale(.8)}
+}
+#ss-rumbleL{animation:ssRumbleL 20s linear infinite}
+@keyframes ssRumbleL{
+  0%,6.6%{transform:translate(0,0)}
+  7.2%{transform:translate(-1.2px,.6px)}8.4%{transform:translate(1.2px,-.5px)}
+  9.6%{transform:translate(-1px,.4px)}10.8%{transform:translate(1.1px,.5px)}
+  12%{transform:translate(-.8px,0)}13.2%{transform:translate(.8px,.3px)}
+  14.4%,100%{transform:translate(0,0)}
+}
+#ss-flameGrpL{opacity:0;transform-box:fill-box;transform-origin:50% 0;animation:ssFlameL 20s linear infinite}
+@keyframes ssFlameL{
+  0%,7.5%{opacity:0;transform:scaleY(.25)}
+  8.4%{opacity:1;transform:scaleY(.55)}
+  12%{transform:scaleY(1)}
+  37.8%{opacity:1}
+  39.6%,100%{opacity:0}
+}
+#ss-flashL{opacity:0;animation:ssFlashL 20s linear infinite}
+@keyframes ssFlashL{0%,7.2%{opacity:0}8.1%{opacity:1}10.8%{opacity:0}100%{opacity:0}}
+#ss-gGlowL{opacity:0;animation:ssGGlowL 20s linear infinite}
+@keyframes ssGGlowL{0%,7.2%{opacity:0}8.4%{opacity:1}14.4%{opacity:.8}24%,100%{opacity:0}}
+.ss-bodyLitL{opacity:0;animation:ssBodyLitL 20s linear infinite}
+@keyframes ssBodyLitL{0%,7.5%{opacity:0}8.4%{opacity:.95}37.8%{opacity:.85}39.6%,100%{opacity:0}}
+#ss-shadowL{transform-box:fill-box;transform-origin:center;animation:ssShadowL 20s linear infinite}
+@keyframes ssShadowL{0%,12%{opacity:.55;transform:scale(1)}25.2%{opacity:0;transform:scale(.22)}100%{opacity:0}}
+#ss-trailL{opacity:0;transform-box:fill-box;transform-origin:50% 100%;animation:ssTrailL 20s linear infinite}
+@keyframes ssTrailL{
+  0%,12.6%{opacity:0;transform:scaleY(.06)}
+  18%{opacity:.5;transform:scaleY(.45)}
+  37.2%{opacity:.45;transform:scaleY(1)}
+  48%,100%{opacity:0;transform:scaleY(1)}
+}
+.ss-dlg{opacity:0;transform-box:fill-box;animation:ssDlgL 20s linear infinite}
+.ss-dlg.ss-rgt{transform-origin:0% 60%}
+.ss-dlg.ss-lft{transform-origin:100% 60%}
+@keyframes ssDlgL{
+  0%,7.2%{opacity:0;transform:scale(.4)}
+  8.7%{opacity:.65;transform:scale(1)}
+  13.2%{opacity:.5;transform:scale(1.05)}
+  18%,100%{opacity:0;transform:scale(1.18)}
+}
+.ss-vw{opacity:0;transform-box:fill-box}
+.ss-vw1L{animation:ssVw1L 20s linear infinite}
+@keyframes ssVw1L{0%,0.6%{opacity:0;transform:translate(0,0) scale(.7)}2.1%{opacity:.5}4.8%{opacity:0;transform:translate(16px,-11px) scale(1.4)}100%{opacity:0}}
+.ss-vw2L{animation:ssVw2L 20s linear infinite}
+@keyframes ssVw2L{0%,2.7%{opacity:0;transform:translate(0,0) scale(.7)}4.2%{opacity:.45}6.6%{opacity:0;transform:translate(13px,-14px) scale(1.5)}100%{opacity:0}}
+.ss-smk{transform-box:fill-box;transform-origin:center;opacity:0}
+.ss-s1{animation:ssSmk1 20s linear infinite}
+.ss-s2{animation:ssSmk2 20s linear infinite}
+.ss-s3{animation:ssSmk3 20s linear infinite}
+.ss-s4{animation:ssSmk4 20s linear infinite}
+.ss-s5{animation:ssSmk5 20s linear infinite}
+.ss-s6{animation:ssSmk6 20s linear infinite}
+@keyframes ssSmk1{0%,7.2%{opacity:0;transform:scale(.2)}11.4%{opacity:.8}25.2%{transform:translate(-66px,-8px) scale(2.6)}33.6%{opacity:0;transform:translate(-88px,-12px) scale(3.1)}100%{opacity:0}}
+@keyframes ssSmk2{0%,7.5%{opacity:0;transform:scale(.25)}12%{opacity:.75}26.4%{transform:translate(60px,-6px) scale(2.4)}34.8%{opacity:0;transform:translate(82px,-10px) scale(2.9)}100%{opacity:0}}
+@keyframes ssSmk3{0%,8.1%{opacity:0;transform:scale(.2)}12.6%{opacity:.55}27.6%{transform:translate(-40px,-16px) scale(2.9)}36%{opacity:0;transform:translate(-56px,-22px) scale(3.4)}100%{opacity:0}}
+@keyframes ssSmk4{0%,8.4%{opacity:0;transform:scale(.2)}13.2%{opacity:.55}28.8%{transform:translate(44px,-14px) scale(2.7)}37.2%{opacity:0;transform:translate(60px,-20px) scale(3.2)}100%{opacity:0}}
+@keyframes ssSmk5{0%,7.8%{opacity:0;transform:scale(.3)}13.2%{opacity:.5}30%{transform:translate(-26px,-70px) scale(2.2)}38.4%{opacity:0;transform:translate(-34px,-96px) scale(2.6)}100%{opacity:0}}
+@keyframes ssSmk6{0%,8.7%{opacity:0;transform:scale(.3)}13.8%{opacity:.45}31.2%{transform:translate(30px,-60px) scale(2.1)}39.6%{opacity:0;transform:translate(40px,-84px) scale(2.5)}100%{opacity:0}}
+#ss-qdArm{transform-origin:206px 600px;animation:ssQdArm 20s linear infinite}
+@keyframes ssQdArm{0%,6%{transform:rotate(0)}8.4%,80%{transform:rotate(-26deg)}85%,100%{transform:rotate(0)}}
+
+/* ── 右側：回收捕捉（動作集中在 10–20s） ── */
+#ss-sceneR{animation:ssCamR 20s linear infinite}
+@keyframes ssCamR{
+  0%,75.5%{transform:translate(0,0)}
+  76.3%{transform:translate(0,1.6px)}77%{transform:translate(-.9px,.8px)}
+  77.8%{transform:translate(.6px,.4px)}79%,100%{transform:translate(0,0)}
+}
+#ss-boostR{transform-origin:135px 505px;animation:ssBoostR 20s linear infinite}
+@keyframes ssBoostR{
+  0%,49%{transform:translateY(-880px) scale(.68);opacity:0}
+  50%{transform:translateY(-880px) scale(.68);opacity:1;animation-timing-function:cubic-bezier(.2,.65,.3,1)}
+  70%{transform:translateY(0) scale(1);opacity:1}
+  76%{transform:translateY(0) scale(1)}
+  77.5%{transform:translateY(4px) scale(1)}
+  79%,93%{transform:translateY(3px) scale(1);opacity:1}
+  96%{opacity:0;transform:translateY(3px) scale(1)}
+  97%,100%{opacity:0;transform:translateY(-880px) scale(.68)}
+}
+#ss-tiltR{transform-box:fill-box;transform-origin:center;animation:ssTiltR 20s linear infinite}
+@keyframes ssTiltR{
+  0%,53%{transform:translateX(22px) rotate(-7deg)}
+  62%{transform:translateX(8px) rotate(-2.5deg)}
+  70%{transform:translateX(0) rotate(0)}
+  72%{transform:rotate(.8deg)}
+  74%,100%{transform:rotate(0)}
+}
+#ss-flameGrpR{opacity:0;transform-box:fill-box;transform-origin:50% 0;animation:ssFlameR 20s linear infinite}
+@keyframes ssFlameR{
+  0%,53%{opacity:0;transform:scaleY(.4)}
+  54.5%{opacity:1;transform:scaleY(1.3)}
+  60%{transform:scaleY(1.05)}
+  68%{transform:scaleY(.8)}
+  76%{opacity:1;transform:scaleY(.55)}
+  78%,100%{opacity:0;transform:scaleY(.3)}
+}
+#ss-armUR{transform-origin:240px 410px;animation:ssArmU 20s linear infinite}
+@keyframes ssArmU{
+  0%,70%{transform:rotate(-8deg)}
+  74%{transform:rotate(-.4deg)}
+  75.5%{transform:rotate(.7deg)}
+  77%{transform:rotate(-.2deg)}
+  78%,92%{transform:rotate(0deg)}
+  96%,100%{transform:rotate(-8deg)}
+}
+#ss-armDR{transform-origin:240px 435px;animation:ssArmD 20s linear infinite}
+@keyframes ssArmD{
+  0%,70%{transform:rotate(8deg)}
+  74%{transform:rotate(1.1deg)}
+  75.5%{transform:rotate(2.4deg)}
+  77%{transform:rotate(1.3deg)}
+  78%,92%{transform:rotate(1.6deg)}
+  96%,100%{transform:rotate(8deg)}
+}
+#ss-glowR{opacity:0;animation:ssGlowR 20s linear infinite}
+@keyframes ssGlowR{0%,76%{opacity:0}78%{opacity:.85}87%,100%{opacity:0}}
+.ss-bodyLitR{opacity:0;animation:ssBodyLitR 20s linear infinite}
+@keyframes ssBodyLitR{0%,53%{opacity:0}54.5%{opacity:.95}76%{opacity:.8}78%,100%{opacity:0}}
+#ss-hoverGlowR{opacity:0;animation:ssHoverGlowR 20s linear infinite}
+@keyframes ssHoverGlowR{0%,54%{opacity:0}60%{opacity:.32}74%{opacity:.38}79%,100%{opacity:0}}
+#ss-shadowR{transform-box:fill-box;transform-origin:center;animation:ssShadowR 20s linear infinite}
+@keyframes ssShadowR{0%,52%{opacity:0;transform:scale(.2)}70%{opacity:.38;transform:scale(1)}93%{opacity:.38;transform:scale(1)}96%,100%{opacity:0}}
+.ss-finHotR{animation:ssFinHotR 20s linear infinite}
+@keyframes ssFinHotR{0%,50%{opacity:.85}64%{opacity:.55}80%,100%{opacity:0}}
+.ss-stkR{opacity:0;animation:ssStkR 20s linear infinite}
+@keyframes ssStkR{0%,51%{opacity:0}53%{opacity:.7}58%{opacity:.35}63%,100%{opacity:0}}
+#ss-sparksR{opacity:0;transform-box:fill-box;transform-origin:center;animation:ssSparksR 20s linear infinite}
+@keyframes ssSparksR{
+  0%,75.5%{opacity:0;transform:scale(.3)}
+  76.5%{opacity:1;transform:scale(1)}
+  79%,100%{opacity:0;transform:scale(1.5)}
+}
+.ss-vw1R{animation:ssVw1R 20s linear infinite}
+@keyframes ssVw1R{0%,80%{opacity:0;transform:translate(0,0) scale(.7)}82%{opacity:.45}88%{opacity:0;transform:translate(11px,-13px) scale(1.5)}100%{opacity:0}}
+.ss-vw2R{animation:ssVw2R 20s linear infinite}
+@keyframes ssVw2R{0%,84%{opacity:0;transform:translate(0,0) scale(.7)}86%{opacity:.4}92%{opacity:0;transform:translate(9px,-15px) scale(1.5)}100%{opacity:0}}
+#ss-starlinkR{animation:ssSlkR 20s linear infinite}
+@keyframes ssSlkR{
+  0%{transform:translate(-70px,0);opacity:0}
+  4%{opacity:.55}
+  28%{opacity:.55}
+  38%{transform:translate(300px,-38px);opacity:0}
+  100%{transform:translate(300px,-38px);opacity:0}
+}
+
+/* 共用 */
+.ss-flick{transform-box:fill-box;transform-origin:50% 0;animation:ssFlick .14s ease-in-out infinite alternate}
+.ss-flick2{transform-box:fill-box;transform-origin:50% 0;animation:ssFlick .11s ease-in-out infinite alternate-reverse}
+@keyframes ssFlick{from{transform:scaleY(1) scaleX(1)}to{transform:scaleY(1.12) scaleX(.9)}}
+.ss-beacon{animation:ssBeacon 2.2s ease-in-out infinite}
+@keyframes ssBeacon{0%,100%{opacity:.15}50%{opacity:1}}
+.ss-twkA{animation:ssTwk 2.8s ease-in-out infinite alternate}
+.ss-twkB{animation:ssTwk 3.6s ease-in-out -1s infinite alternate}
+.ss-twkC{animation:ssTwk 4.4s ease-in-out -2.2s infinite alternate}
+@keyframes ssTwk{from{opacity:.12}to{opacity:.85}}
+
+@media (prefers-reduced-motion: reduce){
+  .ss-pad *{animation-play-state:paused !important}
+}
 </style>
 </head>
 <body>
 
 <div id="space-bg"></div>
 <canvas id="star-canvas"></canvas>
+
+<!-- ═══════════ 左側：星艦全箭發射 ═══════════ -->
+<div class="ss-pad" id="ss-pad-left">
+<svg viewBox="0 0 320 900" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+<defs>
+  <linearGradient id="ssSteelL" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#33373d"/><stop offset=".1" stop-color="#5f656c"/>
+    <stop offset=".28" stop-color="#eef2f5"/><stop offset=".46" stop-color="#a8aeb4"/>
+    <stop offset=".72" stop-color="#565c63"/><stop offset=".9" stop-color="#2c3036"/>
+    <stop offset=".97" stop-color="#4b5057"/><stop offset="1" stop-color="#24282d"/>
+  </linearGradient>
+  <linearGradient id="ssTileL" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#191d22"/><stop offset=".1" stop-color="#31373e"/>
+    <stop offset=".28" stop-color="#6d757e"/><stop offset=".46" stop-color="#454c54"/>
+    <stop offset=".72" stop-color="#272c32"/><stop offset=".9" stop-color="#14171b"/>
+    <stop offset=".97" stop-color="#262b31"/><stop offset="1" stop-color="#101317"/>
+  </linearGradient>
+  <linearGradient id="ssFlmL" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#fff7d0"/><stop offset=".35" stop-color="#ffb347"/>
+    <stop offset=".7" stop-color="#fc4c02"/><stop offset="1" stop-color="#fc4c02" stop-opacity="0"/>
+  </linearGradient>
+  <radialGradient id="ssFlmGlowL">
+    <stop offset="0" stop-color="#ff9040" stop-opacity=".5"/><stop offset="1" stop-color="#ff9040" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="ssSmkLitL" fx=".5" fy=".82">
+    <stop offset="0" stop-color="#ffd0a0" stop-opacity=".85"/>
+    <stop offset=".4" stop-color="#c4b4a8" stop-opacity=".55"/>
+    <stop offset="1" stop-color="#b8aca2" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="ssSmkL">
+    <stop offset="0" stop-color="#cfc4bc" stop-opacity=".7"/>
+    <stop offset="1" stop-color="#cfc4bc" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="ssVaporL">
+    <stop offset="0" stop-color="#e8ecf0" stop-opacity=".7"/>
+    <stop offset="1" stop-color="#e8ecf0" stop-opacity="0"/>
+  </radialGradient>
+  <linearGradient id="ssLitL" x1="0" y1="1" x2="0" y2="0">
+    <stop offset="0" stop-color="#ffb347" stop-opacity=".7"/>
+    <stop offset=".45" stop-color="#fc4c02" stop-opacity=".22"/>
+    <stop offset="1" stop-color="#fc4c02" stop-opacity="0"/>
+  </linearGradient>
+  <radialGradient id="ssGGlowGradL">
+    <stop offset="0" stop-color="#ffb347" stop-opacity=".55"/>
+    <stop offset=".5" stop-color="#fc4c02" stop-opacity=".28"/>
+    <stop offset="1" stop-color="#fc4c02" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="ssFlashGradL">
+    <stop offset="0" stop-color="#fff" stop-opacity=".95"/>
+    <stop offset=".4" stop-color="#ffd9a0" stop-opacity=".6"/>
+    <stop offset="1" stop-color="#ff9040" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="ssShadowGL">
+    <stop offset="0" stop-color="#000" stop-opacity=".6"/>
+    <stop offset="1" stop-color="#000" stop-opacity="0"/>
+  </radialGradient>
+  <linearGradient id="ssHazeL" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#fc5a14" stop-opacity="0"/>
+    <stop offset="1" stop-color="#fc5a14" stop-opacity=".08"/>
+  </linearGradient>
+  <linearGradient id="ssOlmBandL" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#3a2a1c"/><stop offset="1" stop-color="#170e08"/>
+  </linearGradient>
+  <linearGradient id="ssTrailGradL" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#cfc4bc" stop-opacity="0"/>
+    <stop offset=".55" stop-color="#cfc4bc" stop-opacity=".3"/>
+    <stop offset="1" stop-color="#d8cfc8" stop-opacity=".55"/>
+  </linearGradient>
+  <radialGradient id="ssSprayL" fx=".85" fy=".5">
+    <stop offset="0" stop-color="#eef2f5" stop-opacity=".8"/>
+    <stop offset="1" stop-color="#eef2f5" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="ssSprayL2" fx=".15" fy=".5">
+    <stop offset="0" stop-color="#eef2f5" stop-opacity=".8"/>
+    <stop offset="1" stop-color="#eef2f5" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="ssMoonL">
+    <stop offset="0" stop-color="#ddd4c8"/><stop offset=".75" stop-color="#b0a698"/><stop offset="1" stop-color="#8a8072"/>
+  </radialGradient>
+  <radialGradient id="ssMoonGlowL">
+    <stop offset="0" stop-color="#d8cfc0" stop-opacity=".28"/><stop offset="1" stop-color="#d8cfc0" stop-opacity="0"/>
+  </radialGradient>
+  <pattern id="ssTrussL" width="13" height="13" patternUnits="userSpaceOnUse">
+    <path d="M0 13 L13 0 M0 0 L13 13" stroke="rgba(252,120,40,.26)" stroke-width="1"/>
+  </pattern>
+  <filter id="ssBlurL" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.4"/></filter>
+</defs>
+
+<g id="ss-sceneL">
+<!-- 天空 -->
+<g>
+  <circle cx="62" cy="148" r="52" fill="url(#ssMoonGlowL)"/>
+  <circle cx="62" cy="148" r="24" fill="url(#ssMoonL)"/>
+  <circle cx="54" cy="140" r="4.2" fill="rgba(0,0,0,.16)"/>
+  <circle cx="70" cy="155" r="3" fill="rgba(0,0,0,.14)"/>
+  <circle cx="59" cy="161" r="2.2" fill="rgba(0,0,0,.12)"/>
+  <circle cx="71" cy="141" r="24" fill="#0a0408" opacity=".4" transform="translate(2,-3)"/>
+</g>
+<circle class="ss-twkA" cx="150" cy="90"  r="1.4" fill="#fff"/>
+<circle class="ss-twkB" cx="230" cy="180" r="1.2" fill="#ffe0c0"/>
+<circle class="ss-twkC" cx="40"  cy="300" r="1.3" fill="#fff"/>
+<circle class="ss-twkB" cx="280" cy="70"  r="1.1" fill="#fff"/>
+<circle class="ss-twkA" cx="190" cy="260" r="1"   fill="#ffe0c0"/>
+
+<!-- 遠景 -->
+<rect x="0" y="834" width="320" height="32" fill="url(#ssHazeL)"/>
+<g fill="#0e0906">
+  <rect x="22" y="846" width="15" height="20" rx="3"/>
+  <path d="M22 849 a7.5 5 0 0 1 15 0 Z"/>
+  <rect x="44" y="850" width="12" height="16" rx="2.5"/>
+  <path d="M44 852 a6 4 0 0 1 12 0 Z"/>
+  <circle cx="72" cy="860" r="7"/>
+</g>
+
+<!-- 地面 -->
+<rect x="0" y="866" width="320" height="34" fill="#140a06"/>
+<line x1="0" y1="866" x2="320" y2="866" stroke="rgba(252,76,2,.18)"/>
+<ellipse cx="140" cy="868" rx="126" ry="8" fill="#1d100a"/>
+<ellipse cx="140" cy="866" rx="92" ry="5.5" fill="#241409"/>
+
+<ellipse id="ss-gGlowL" cx="140" cy="861" rx="100" ry="17" fill="url(#ssGGlowGradL)"/>
+<g id="ss-shadowL">
+  <ellipse cx="140" cy="864" rx="44" ry="7" fill="url(#ssShadowGL)"/>
+  <ellipse cx="140" cy="843" rx="15" ry="2.4" fill="rgba(0,0,0,.4)"/>
+</g>
+<circle id="ss-flashL" cx="140" cy="850" r="42" fill="url(#ssFlashGradL)"/>
+
+<!-- 排氣尾跡柱 -->
+<path id="ss-trailL" d="M134 848 C133 700 128 520 114 330 L122 326 C136 520 141 700 146 848 Z" fill="url(#ssTrailGradL)"/>
+
+<!-- 發射塔 -->
+<g>
+  <path d="M228 352 L241 344 L241 860 L228 868 Z" fill="#0f0a07" stroke="rgba(252,76,2,.2)"/>
+  <rect x="206" y="352" width="22" height="516" fill="#221610" stroke="rgba(252,76,2,.4)"/>
+  <rect x="206" y="352" width="22" height="516" fill="url(#ssTrussL)"/>
+  <g stroke="rgba(0,0,0,.4)"><path d="M206 416 h22 M206 480 h22 M206 544 h22 M206 608 h22 M206 672 h22 M206 736 h22 M206 800 h22"/></g>
+  <line x1="206.8" y1="352" x2="206.8" y2="868" stroke="rgba(255,140,60,.3)" stroke-width="1.4"/>
+  <path d="M206 358 L176 350" stroke="#2a1c12" stroke-width="3.5" stroke-linecap="round"/>
+  <line x1="178" y1="350" x2="178" y2="378" stroke="rgba(200,160,120,.35)" stroke-width="1"/>
+  <circle cx="178" cy="380" r="2" fill="#3a2a1c"/>
+  <line x1="217" y1="352" x2="217" y2="318" stroke="rgba(252,76,2,.5)" stroke-width="2"/>
+  <circle class="ss-beacon" cx="217" cy="314" r="3" fill="#fc4c02"/>
+  <path d="M152 448 L210 448 L216 444 L158 444 Z" fill="#6b4a2c"/>
+  <rect x="152" y="448" width="58" height="7" rx="2" fill="#33241a" stroke="rgba(252,76,2,.3)"/>
+  <path d="M152 464 L210 464 L216 460 L158 460 Z" fill="#5d4026"/>
+  <rect x="152" y="464" width="58" height="8" rx="2" fill="#2e2017" stroke="rgba(252,76,2,.3)"/>
+  <g id="ss-qdArm">
+    <path d="M158 596 L206 596 L212 592 L164 592 Z" fill="#6b4a2c"/>
+    <rect x="158" y="596" width="48" height="8" rx="2" fill="#33241a" stroke="rgba(252,76,2,.35)"/>
+  </g>
+</g>
+
+<!-- OLM 發射架 -->
+<g>
+  <rect x="108" y="842" width="64" height="12" fill="url(#ssOlmBandL)" stroke="rgba(252,76,2,.25)"/>
+  <ellipse cx="140" cy="842" rx="32" ry="6.5" fill="#3d2c1c" stroke="rgba(252,76,2,.4)"/>
+  <ellipse cx="140" cy="842" rx="21" ry="4" fill="#0d0805"/>
+  <path d="M112 852 L104 868 M129 854 L127 868 M151 854 L153 868 M168 852 L176 868" stroke="#241609" stroke-width="5" stroke-linecap="round"/>
+</g>
+
+<!-- 灑水系統 -->
+<path class="ss-dlg ss-lft" d="M112 846 Q92 832 70 830 Q88 843 96 852 Q104 857 112 852 Z" fill="url(#ssSprayL)"/>
+<path class="ss-dlg ss-rgt" d="M168 846 Q188 832 210 830 Q192 843 184 852 Q176 857 168 852 Z" fill="url(#ssSprayL2)"/>
+
+<!-- 蒸氣煙雲 -->
+<g>
+  <ellipse class="ss-smk ss-s1" cx="100" cy="854" rx="28" ry="15" fill="url(#ssSmkLitL)"/>
+  <ellipse class="ss-smk ss-s2" cx="180" cy="854" rx="31" ry="16" fill="url(#ssSmkLitL)"/>
+  <ellipse class="ss-smk ss-s3" cx="66"  cy="858" rx="23" ry="12" fill="url(#ssSmkL)"/>
+  <ellipse class="ss-smk ss-s4" cx="214" cy="858" rx="25" ry="13" fill="url(#ssSmkL)"/>
+  <ellipse class="ss-smk ss-s5" cx="118" cy="846" rx="20" ry="14" fill="url(#ssSmkL)"/>
+  <ellipse class="ss-smk ss-s6" cx="164" cy="846" rx="19" ry="13" fill="url(#ssSmkL)"/>
+</g>
+
+<!-- 星艦全箭 -->
+<g id="ss-riseL"><g id="ss-rumbleL">
+  <g id="ss-flameGrpL">
+    <ellipse cx="140" cy="892" rx="30" ry="52" fill="url(#ssFlmGlowL)"/>
+    <path class="ss-flick"  d="M127 846 C127 880 133 918 140 942 C147 918 153 880 153 846 Z" fill="url(#ssFlmL)" filter="url(#ssBlurL)"/>
+    <path class="ss-flick2" d="M133 846 C133 872 137 896 140 910 C143 896 147 872 147 846 Z" fill="#fff3c4" opacity=".9"/>
+    <ellipse cx="140" cy="880" rx="3.5" ry="6" fill="#fff" opacity=".55"/>
+    <ellipse cx="140" cy="902" rx="2.6" ry="5" fill="#fff" opacity=".35"/>
+  </g>
+  <rect x="123" y="620" width="34" height="222" fill="url(#ssSteelL)"/>
+  <g fill="none" stroke="rgba(0,0,0,.3)" stroke-width=".9">
+    <path d="M123 648 a17 2.6 0 0 0 34 0"/><path d="M123 676 a17 2.6 0 0 0 34 0"/>
+    <path d="M123 704 a17 2.6 0 0 0 34 0"/><path d="M123 732 a17 2.6 0 0 0 34 0"/>
+    <path d="M123 760 a17 2.6 0 0 0 34 0"/><path d="M123 788 a17 2.6 0 0 0 34 0"/>
+    <path d="M123 816 a17 2.6 0 0 0 34 0"/>
+  </g>
+  <rect x="123" y="828" width="34" height="14" fill="#2b2e33"/>
+  <ellipse cx="140" cy="842" rx="17" ry="3.2" fill="#17191d"/>
+  <rect x="126" y="843" width="8" height="8" rx="2.5" fill="#101317" stroke="#3a3e44" stroke-width=".7"/>
+  <rect x="136" y="844.5" width="8" height="8" rx="2.5" fill="#14171b" stroke="#454a50" stroke-width=".7"/>
+  <rect x="146" y="843" width="8" height="8" rx="2.5" fill="#101317" stroke="#3a3e44" stroke-width=".7"/>
+  <rect x="123" y="613" width="34" height="8" fill="#1f2327"/>
+  <path d="M123 621 a17 2.4 0 0 0 34 0" fill="none" stroke="rgba(0,0,0,.4)" stroke-width=".9"/>
+  <rect x="123" y="486" width="34" height="127" fill="url(#ssTileL)"/>
+  <g fill="none" stroke="rgba(0,0,0,.35)" stroke-width=".9">
+    <path d="M123 508 a17 2.4 0 0 0 34 0"/><path d="M123 544 a17 2.4 0 0 0 34 0"/>
+    <path d="M123 580 a17 2.4 0 0 0 34 0"/>
+  </g>
+  <path d="M123 486 C123 452 131 436 140 428 C149 436 157 452 157 486 Z" fill="url(#ssTileL)"/>
+  <ellipse cx="133.5" cy="454" rx="3" ry="14" fill="rgba(255,255,255,.16)" transform="rotate(-9 133.5 454)"/>
+  <rect x="130" y="440" width="2.6" height="396" rx="1.3" fill="rgba(255,255,255,.18)"/>
+  <rect x="151" y="440" width="2.2" height="396" rx="1.1" fill="rgba(252,100,30,.16)"/>
+  <path d="M123 462 L111 478 L111 489 L123 484 Z" fill="#3a3f45"/>
+  <path d="M123 462 L111 478 L113 480 L123 468 Z" fill="#565c63"/>
+  <path d="M157 462 L169 478 L169 489 L157 484 Z" fill="#101317"/>
+  <path d="M123 588 L106 611 L106 626 L123 617 Z" fill="#3a3f45"/>
+  <path d="M123 588 L106 611 L108 614 L123 596 Z" fill="#565c63"/>
+  <path d="M157 588 L174 611 L174 626 L157 617 Z" fill="#101317"/>
+  <path d="M114 626 L123 626 L126 622 L117 622 Z" fill="#8a9096"/>
+  <rect x="114" y="626" width="9" height="18" rx="2" fill="#61666c" stroke="#3c4046" stroke-width=".8"/>
+  <path d="M114 630 h9 M114 635 h9 M114 640 h9" stroke="rgba(0,0,0,.35)" stroke-width=".8"/>
+  <path d="M157 626 L166 626 L163 622 L154 622 Z" fill="#4a4e54"/>
+  <rect x="157" y="626" width="9" height="18" rx="2" fill="#3c4046" stroke="#26292e" stroke-width=".8"/>
+  <path d="M157 630 h9 M157 635 h9 M157 640 h9" stroke="rgba(0,0,0,.4)" stroke-width=".8"/>
+  <ellipse class="ss-vw ss-vw1L" cx="160" cy="617" rx="8" ry="5" fill="url(#ssVaporL)"/>
+  <ellipse class="ss-vw ss-vw2L" cx="159" cy="640" rx="7" ry="4.5" fill="url(#ssVaporL)"/>
+  <g class="ss-bodyLitL">
+    <rect x="123" y="690" width="34" height="152" fill="url(#ssLitL)"/>
+    <ellipse cx="140" cy="842" rx="15" ry="2.8" fill="#ffb347" opacity=".85"/>
+  </g>
+</g></g>
+</g>
+</svg>
+<div class="ss-pad-tag">SITE A · T-0 LIFT-OFF</div>
+</div>
+
+<!-- ═══════════ 右側：Super Heavy 回收捕捉 ═══════════ -->
+<div class="ss-pad" id="ss-pad-right">
+<svg viewBox="0 0 320 900" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+<defs>
+  <linearGradient id="ssSteelR" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#33373d"/><stop offset=".1" stop-color="#5f656c"/>
+    <stop offset=".28" stop-color="#eef2f5"/><stop offset=".46" stop-color="#a8aeb4"/>
+    <stop offset=".72" stop-color="#565c63"/><stop offset=".9" stop-color="#2c3036"/>
+    <stop offset=".97" stop-color="#4b5057"/><stop offset="1" stop-color="#24282d"/>
+  </linearGradient>
+  <linearGradient id="ssFlmR" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#fff7d0"/><stop offset=".35" stop-color="#ffb347"/>
+    <stop offset=".7" stop-color="#fc4c02"/><stop offset="1" stop-color="#fc4c02" stop-opacity="0"/>
+  </linearGradient>
+  <radialGradient id="ssFlmGlowR">
+    <stop offset="0" stop-color="#ff9040" stop-opacity=".5"/><stop offset="1" stop-color="#ff9040" stop-opacity="0"/>
+  </radialGradient>
+  <linearGradient id="ssLitR" x1="0" y1="1" x2="0" y2="0">
+    <stop offset="0" stop-color="#ffb347" stop-opacity=".7"/>
+    <stop offset=".45" stop-color="#fc4c02" stop-opacity=".22"/>
+    <stop offset="1" stop-color="#fc4c02" stop-opacity="0"/>
+  </linearGradient>
+  <radialGradient id="ssGlowGradR">
+    <stop offset="0" stop-color="#ffb347" stop-opacity=".9"/>
+    <stop offset="1" stop-color="#fc4c02" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="ssHoverGradR">
+    <stop offset="0" stop-color="#ff9040" stop-opacity=".55"/>
+    <stop offset="1" stop-color="#ff9040" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="ssShadowGR">
+    <stop offset="0" stop-color="#000" stop-opacity=".6"/>
+    <stop offset="1" stop-color="#000" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="ssVaporR">
+    <stop offset="0" stop-color="#e8ecf0" stop-opacity=".7"/>
+    <stop offset="1" stop-color="#e8ecf0" stop-opacity="0"/>
+  </radialGradient>
+  <linearGradient id="ssHazeR" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#fc5a14" stop-opacity="0"/>
+    <stop offset="1" stop-color="#fc5a14" stop-opacity=".08"/>
+  </linearGradient>
+  <linearGradient id="ssStkGradR" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#ff8a3c" stop-opacity="0"/>
+    <stop offset="1" stop-color="#ff8a3c" stop-opacity=".8"/>
+  </linearGradient>
+  <radialGradient id="ssMarsR">
+    <stop offset="0" stop-color="#d98a66"/><stop offset="1" stop-color="#9c4f34"/>
+  </radialGradient>
+  <pattern id="ssTrussR" width="13" height="13" patternUnits="userSpaceOnUse">
+    <path d="M0 13 L13 0 M0 0 L13 13" stroke="rgba(252,120,40,.26)" stroke-width="1"/>
+  </pattern>
+  <filter id="ssBlurR" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.6"/></filter>
+</defs>
+
+<g id="ss-sceneR">
+<!-- 天空：火星 + Starlink 列車 -->
+<circle cx="48" cy="118" r="3.6" fill="url(#ssMarsR)"/>
+<circle cx="48" cy="118" r="7" fill="rgba(217,138,102,.15)"/>
+<g id="ss-starlinkR" fill="#cfd8e2">
+  <circle cx="20" cy="212" r="1.3"/>
+  <circle cx="33" cy="207" r="1.3"/>
+  <circle cx="46" cy="202" r="1.3"/>
+  <circle cx="59" cy="197" r="1.3"/>
+</g>
+<circle class="ss-twkB" cx="140" cy="80"  r="1.4" fill="#fff"/>
+<circle class="ss-twkC" cx="90"  cy="250" r="1.2" fill="#ffe0c0"/>
+<circle class="ss-twkA" cx="270" cy="150" r="1.3" fill="#fff"/>
+<circle class="ss-twkC" cx="200" cy="60"  r="1.1" fill="#fff"/>
+<circle class="ss-twkB" cx="30"  cy="330" r="1"   fill="#ffe0c0"/>
+
+<!-- 遠景 -->
+<rect x="0" y="834" width="320" height="32" fill="url(#ssHazeR)"/>
+<g fill="#0e0906">
+  <path d="M20 866 Q50 850 84 866 Z"/>
+  <rect x="52" y="852" width="18" height="14" rx="2"/>
+  <rect x="57" y="846" width="8" height="7" rx="1.5"/>
+</g>
+
+<!-- 地面 -->
+<rect x="0" y="866" width="320" height="34" fill="#140a06"/>
+<line x1="0" y1="866" x2="320" y2="866" stroke="rgba(252,76,2,.18)"/>
+<ellipse cx="175" cy="868" rx="132" ry="8" fill="#1d100a"/>
+
+<ellipse id="ss-shadowR" cx="135" cy="864" rx="40" ry="6.5" fill="url(#ssShadowGR)"/>
+
+<!-- Mechazilla 塔 -->
+<g>
+  <path d="M248 322 L261 314 L261 860 L248 868 Z" fill="#0f0a07" stroke="rgba(252,76,2,.2)"/>
+  <rect x="226" y="322" width="22" height="546" fill="#221610" stroke="rgba(252,76,2,.4)"/>
+  <rect x="226" y="322" width="22" height="546" fill="url(#ssTrussR)"/>
+  <g stroke="rgba(0,0,0,.4)"><path d="M226 386 h22 M226 450 h22 M226 514 h22 M226 578 h22 M226 642 h22 M226 706 h22 M226 770 h22 M226 834 h22"/></g>
+  <line x1="226.8" y1="322" x2="226.8" y2="868" stroke="rgba(255,140,60,.3)" stroke-width="1.4"/>
+  <line x1="237" y1="322" x2="237" y2="288" stroke="rgba(252,76,2,.5)" stroke-width="2"/>
+  <circle class="ss-beacon" cx="237" cy="284" r="3" fill="#fc4c02"/>
+</g>
+
+<ellipse id="ss-hoverGlowR" cx="182" cy="590" rx="80" ry="110" fill="url(#ssHoverGradR)"/>
+
+<!-- 上筷子臂 -->
+<g id="ss-armUR">
+  <path d="M92 404 L240 404 L247 399 L99 399 Z" fill="#6b4a2c"/>
+  <rect x="92" y="404" width="148" height="9" rx="3" fill="#33241a" stroke="rgba(252,76,2,.4)"/>
+  <rect x="92" y="411" width="10" height="8" rx="2" fill="#43301f"/>
+</g>
+
+<!-- Super Heavy -->
+<g id="ss-boostR"><g id="ss-tiltR">
+  <g stroke-linecap="round">
+    <line class="ss-stkR" x1="127" y1="305" x2="127" y2="386" stroke="url(#ssStkGradR)" stroke-width="2.5"/>
+    <line class="ss-stkR" x1="135" y1="290" x2="135" y2="388" stroke="url(#ssStkGradR)" stroke-width="3.5"/>
+    <line class="ss-stkR" x1="143" y1="308" x2="143" y2="386" stroke="url(#ssStkGradR)" stroke-width="2.5"/>
+  </g>
+  <g id="ss-flameGrpR">
+    <ellipse cx="135" cy="672" rx="34" ry="60" fill="url(#ssFlmGlowR)"/>
+    <path class="ss-flick"  d="M119 618 C119 662 127 714 135 746 C143 714 151 662 151 618 Z" fill="url(#ssFlmR)" filter="url(#ssBlurR)"/>
+    <path class="ss-flick2" d="M127 618 C127 650 131 678 135 696 C139 678 143 650 143 618 Z" fill="#fff3c4" opacity=".9"/>
+    <ellipse cx="135" cy="660" rx="3.4" ry="6" fill="#fff" opacity=".5"/>
+  </g>
+  <rect x="118" y="394" width="34" height="222" fill="url(#ssSteelR)"/>
+  <g fill="none" stroke="rgba(0,0,0,.3)" stroke-width=".9">
+    <path d="M118 430 a17 2.6 0 0 0 34 0"/><path d="M118 466 a17 2.6 0 0 0 34 0"/>
+    <path d="M118 502 a17 2.6 0 0 0 34 0"/><path d="M118 538 a17 2.6 0 0 0 34 0"/>
+    <path d="M118 574 a17 2.6 0 0 0 34 0"/>
+  </g>
+  <rect x="118" y="602" width="34" height="14" fill="#2b2e33"/>
+  <ellipse cx="135" cy="616" rx="17" ry="3.2" fill="#17191d"/>
+  <rect x="121" y="617" width="8" height="8" rx="2.5" fill="#101317" stroke="#3a3e44" stroke-width=".7"/>
+  <rect x="131" y="618.5" width="8" height="8" rx="2.5" fill="#14171b" stroke="#454a50" stroke-width=".7"/>
+  <rect x="141" y="617" width="8" height="8" rx="2.5" fill="#101317" stroke="#3a3e44" stroke-width=".7"/>
+  <rect x="125" y="398" width="2.6" height="214" rx="1.3" fill="rgba(255,255,255,.18)"/>
+  <rect x="146" y="398" width="2.2" height="214" rx="1.1" fill="rgba(252,100,30,.16)"/>
+  <path d="M108 398 L118 398 L121 393 L111 393 Z" fill="#8a9096"/>
+  <rect x="108" y="398" width="10" height="19" rx="2" fill="#61666c" stroke="#3c4046" stroke-width=".8"/>
+  <path d="M108 403 h10 M108 408 h10 M108 413 h10" stroke="rgba(0,0,0,.35)" stroke-width=".8"/>
+  <rect class="ss-finHotR" x="108" y="398" width="10" height="19" rx="2" fill="#ff6a1e" opacity="0"/>
+  <path d="M152 398 L162 398 L159 393 L149 393 Z" fill="#4a4e54"/>
+  <rect x="152" y="398" width="10" height="19" rx="2" fill="#3c4046" stroke="#26292e" stroke-width=".8"/>
+  <path d="M152 403 h10 M152 408 h10 M152 413 h10" stroke="rgba(0,0,0,.4)" stroke-width=".8"/>
+  <rect class="ss-finHotR" x="152" y="398" width="10" height="19" rx="2" fill="#e85a14" opacity="0"/>
+  <rect x="111" y="420" width="7" height="7" rx="2" fill="#5a5f66"/>
+  <rect x="152" y="420" width="7" height="7" rx="2" fill="#33363b"/>
+  <ellipse class="ss-vw ss-vw1R" cx="155" cy="400" rx="8" ry="5" fill="url(#ssVaporR)"/>
+  <ellipse class="ss-vw ss-vw2R" cx="153" cy="425" rx="7" ry="4.5" fill="url(#ssVaporR)"/>
+  <g class="ss-bodyLitR">
+    <rect x="118" y="470" width="34" height="146" fill="url(#ssLitR)"/>
+    <ellipse cx="135" cy="616" rx="15" ry="2.8" fill="#ffb347" opacity=".85"/>
+  </g>
+</g></g>
+
+<!-- 下筷子臂 -->
+<g id="ss-armDR">
+  <path d="M92 430 L240 430 L247 425 L99 425 Z" fill="#7d5530"/>
+  <rect x="92" y="430" width="148" height="11" rx="3" fill="#3a2a1c" stroke="rgba(252,76,2,.45)"/>
+  <rect x="92" y="424" width="10" height="8" rx="2" fill="#43301f"/>
+</g>
+
+<!-- 捕捉火花 -->
+<g id="ss-sparksR" stroke="#ffcf8a" stroke-width="1.2" stroke-linecap="round">
+  <line x1="114" y1="427" x2="106" y2="419"/>
+  <line x1="114" y1="427" x2="112" y2="416"/>
+  <line x1="114" y1="427" x2="122" y2="420"/>
+  <line x1="156" y1="427" x2="164" y2="419"/>
+  <line x1="156" y1="427" x2="158" y2="416"/>
+  <line x1="156" y1="427" x2="148" y2="420"/>
+</g>
+
+<ellipse id="ss-glowR" cx="135" cy="622" rx="42" ry="26" fill="url(#ssGlowGradR)"/>
+</g>
+</svg>
+<div class="ss-pad-tag">SITE B · T+10 CATCH</div>
+</div>
 
 <!-- ITT level explainer popup -->
 <div id="itt-level-popup" class="itt-level-popup">
@@ -1912,6 +2574,130 @@ function renderWeeklyQuest(wq) {
     <div class="section-title">本週任務 <span class="muted">· WEEKLY QUEST</span></div>
     <div class="quest-grid">${tiles}</div>`
 }
+/* ── 節奏 RHYTHM：一天一格的訓練日曆 ────────────────────────────
+   顏色深淺 = 那天的訓練負荷（TSS）。騎乘走橘、其他運動走藍，
+   一眼看得出「這段時間到底有沒有在動」。
+   單車有 tss 直接用，沒有的用 IF²·hr·100 推；跑游重訓用心率法近似
+   （相對 LTHR 的強度平方 × 時數 × 100），沒心率的以 38 TSS/hr 保底。 */
+const TCAL_DAY_MS = 86400000
+const tcalDayN = s => Math.floor(Date.parse(String(s).slice(0, 10) + 'T00:00:00Z') / TCAL_DAY_MS)
+const tcalISO = n => new Date(n * TCAL_DAY_MS).toISOString().slice(0, 10)
+function tcalRamp(stops) {
+  return t => {
+    t = Math.max(0, Math.min(1, t))
+    for (let i = 1; i < stops.length; i++) {
+      if (t <= stops[i][0]) {
+        const [p0, c0] = stops[i - 1], [p1, c1] = stops[i]
+        const f = (t - p0) / ((p1 - p0) || 1)
+        return `rgb(${c0.map((v, j) => Math.round(v + (c1[j] - v) * f)).join(',')})`
+      }
+    }
+    return `rgb(${stops[stops.length - 1][1].join(',')})`
+  }
+}
+const TCAL_RIDE  = tcalRamp([[0,[42,24,14]],[.18,[96,34,6]],[.45,[214,66,4]],[.72,[252,124,26]],[1,[255,214,150]]])
+const TCAL_CROSS = tcalRamp([[0,[18,30,40]],[.30,[14,80,112]],[.65,[36,172,220]],[1,[186,240,255]]])
+function renderTrainingCalendar(data) {
+  const daily = new Map()
+  const put = (date, tss, kind, item) => {
+    if (!date || !isFinite(tss) || tss <= 0) return
+    const k = tcalDayN(date)
+    if (!isFinite(k)) return
+    if (!daily.has(k)) daily.set(k, { tss: 0, kinds: new Set(), items: [] })
+    const o = daily.get(k)
+    o.tss += tss; o.kinds.add(kind); o.items.push(item)
+  }
+  const hrTss = (a, lthr) => {
+    const h = a.moving_time_hr || (a.moving_time_sec || 0) / 3600
+    if (!h) return 0
+    if (!a.avg_heartrate) return h * 38
+    const i = Math.max(.4, Math.min(1.15, a.avg_heartrate / lthr))
+    return h * i * i * 100
+  }
+  ;(data.recent_rides || []).forEach(r => {
+    const h = r.moving_time_hr || (r.moving_time_sec || 0) / 3600
+    const t = r.tss || (r.if_score ? r.if_score * r.if_score * h * 100 : hrTss(r, 168))
+    put(r.date, t, 'ride', { i: '🚴', n: r.name, v: (r.distance_km || 0).toFixed(1) + ' km', t: Math.round(t) })
+  })
+  const cross = [
+    { list: data.recent_runs,    lthr: 167, icon: '🏃', v: a => (a.distance_km || 0).toFixed(1) + ' km' },
+    { list: data.recent_swims,   lthr: 160, icon: '🏊', v: a => Math.round((a.distance_km || 0) * 1000) + ' m' },
+    { list: data.recent_weights, lthr: 165, icon: '🏋️', v: a => (a.moving_time_hr || 0).toFixed(1) + ' hr' },
+  ]
+  cross.forEach(c => (c.list || []).forEach(a => {
+    const t = hrTss(a, c.lthr)
+    put(a.date, t, 'cross', { i: c.icon, n: a.name, v: c.v(a), t: Math.round(t) })
+  }))
+
+  const keys = [...daily.keys()].sort((a, b) => a - b)
+  if (!keys.length) return ''
+  const first = keys[0]
+  const last  = Math.max(keys[keys.length - 1], tcalDayN(new Date(Date.now() + 8 * 3600 * 1000).toISOString()))
+  const gridStart = first - new Date(first * TCAL_DAY_MS).getUTCDay()   // 對齊到週日那一欄
+  const cols = Math.ceil((last - gridStart + 1) / 7)
+  const C = 12, G = 3, STEP = C + G, PADL = 26, PADT = 18
+  const w = PADL + cols * STEP + 6, h = PADT + 7 * STEP + 4
+  const maxT = Math.max(...keys.map(k => daily.get(k).tss))
+
+  const MON = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC']
+  let labels = '', lastM = '', lastX = -99
+  for (let c = 0; c < cols; c++) {
+    const iso = tcalISO(gridStart + c * 7), m = iso.slice(0, 7)
+    if (m === lastM) continue
+    lastM = m
+    const x = PADL + c * STEP
+    if (x - lastX < 32) continue      // 月份太窄就跳過標籤，避免疊在一起
+    lastX = x
+    labels += `<text x="${x}" y="${PADT - 6}" class="tcal-ax">${iso.slice(5,7) === '01' ? iso.slice(0,4) + ' ' : ''}${MON[+iso.slice(5,7) - 1]}</text>`
+  }
+  ;['','MON','','WED','','FRI',''].forEach((d, i) => {
+    if (d) labels += `<text x="${PADL - 6}" y="${PADT + i * STEP + C - 2.5}" text-anchor="end" class="tcal-ax">${d}</text>`
+  })
+
+  let cells = ''
+  for (let d = gridStart; d <= last; d++) {
+    if (d < first) continue
+    const c = Math.floor((d - gridStart) / 7), r = (d - gridStart) % 7
+    const day = daily.get(d)
+    const x = PADL + c * STEP, y = PADT + r * STEP
+    if (!day) {
+      cells += `<rect x="${x}" y="${y}" width="${C}" height="${C}" rx="3" fill="rgba(255,255,255,.035)"/>`
+      continue
+    }
+    const t = Math.pow(Math.min(1, day.tss / maxT), .62)
+    const fill = day.kinds.has('ride') ? TCAL_RIDE(t) : TCAL_CROSS(t)
+    const tip = `${tcalISO(d)} · ${Math.round(day.tss)} TSS\n` +
+      day.items.map(i => `${i.i} ${i.n} · ${i.v} · ${i.t} TSS`).join('\n')
+    cells += `<rect class="tcal-day" x="${x}" y="${y}" width="${C}" height="${C}" rx="3" fill="${fill}"` +
+      `${t > .55 ? ` style="filter:drop-shadow(0 0 ${(t * 4).toFixed(1)}px ${fill})"` : ''}>` +
+      `<title>${tip.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</title></rect>`
+  }
+
+  let best = 0, cur = 0
+  for (let d = first; d <= last; d++) { if (daily.has(d)) { cur++; if (cur > best) best = cur } else cur = 0 }
+  const span = last - first + 1
+  const legend = (ramp, n) => Array.from({ length: n }, (_, i) => `<i style="background:${ramp(i / (n - 1))}"></i>`).join('')
+
+  return `
+    <div class="section-title">節奏 <span class="muted">· TRAINING CALENDAR</span></div>
+    <div class="tcal">
+      <div class="tcal-head">
+        <span>▍ 每一格是一天，顏色深淺是當天訓練負荷</span>
+        <span class="tcal-stat">${keys.length}/${span} ACTIVE DAYS · ${Math.round(keys.length / span * 100)}% · BEST STREAK ${best}D</span>
+      </div>
+      <div class="tcal-view">
+        <button class="tcal-nav prev" type="button" aria-label="往前一段時間" disabled>‹</button>
+        <div class="tcal-scroll" id="tcal-scroll">
+          <svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" class="tcal-svg">${labels}${cells}</svg>
+        </div>
+        <button class="tcal-nav next" type="button" aria-label="往後一段時間" disabled>›</button>
+      </div>
+      <div class="tcal-legend">
+        <span>LOAD</span>${legend(TCAL_RIDE, 6)}<span>RIDE</span>${legend(TCAL_CROSS, 4)}<span>CROSS-TRAIN</span>
+        <span class="tcal-max">MAX ${Math.round(maxT)} TSS / DAY</span>
+      </div>
+    </div>`
+}
 function smoothPath(pts) {
   let d = `M ${pts[0][0]} ${pts[0][1]}`
   for (let i = 0; i < pts.length - 1; i++) {
@@ -1925,6 +2711,106 @@ function smoothPath(pts) {
 function smoothAreaPath(pts) {
   return `${smoothPath(pts)} L ${pts[pts.length - 1][0]} 40 L ${pts[0][0]} 40 Z`
 }
+/* ── 訓練日曆的左右翻頁 ──────────────────────────────────────
+   一按翻一「頁」（可視寬度的 8 成，對齊到整週），到底的那側箭頭自己收起來。
+   進來時停在最右邊 = 最近這幾週，跟 GitHub 貢獻圖一樣。 */
+function initTrainingCalendarNav() {
+  const sc = document.getElementById('tcal-scroll')
+  if (!sc) return
+  const view = sc.closest('.tcal-view')
+  const prev = view.querySelector('.tcal-nav.prev')
+  const next = view.querySelector('.tcal-nav.next')
+  const WEEK = 15   // 一週一欄 = 12px 格 + 3px 間距
+  const sync = () => {
+    const max = sc.scrollWidth - sc.clientWidth
+    const x = Math.round(sc.scrollLeft)
+    prev.disabled = x <= 1
+    next.disabled = x >= max - 1
+    view.classList.toggle('can-prev', !prev.disabled)
+    view.classList.toggle('can-next', !next.disabled)
+  }
+  const page = dir => {
+    const step = Math.max(WEEK * 4, Math.round(sc.clientWidth * .8 / WEEK) * WEEK)
+    sc.scrollLeft += dir * step
+    // smooth 捲動不會馬上改 scrollLeft，scroll 事件也要幾幀後才來，多補幾次校正箭頭
+    ;[60, 200, 450].forEach(t => setTimeout(sync, t))
+  }
+  prev.addEventListener('click', () => page(-1))
+  next.addEventListener('click', () => page(1))
+  sc.addEventListener('scroll', sync, { passive: true })
+  addEventListener('resize', sync)
+  // 版面還在算的時候捲不到底，所以下一幀再補一次
+  const toEnd = () => {
+    const behavior = sc.style.scrollBehavior
+    sc.style.scrollBehavior = 'auto'      // 開場不要看到它自己滑過去
+    sc.scrollLeft = sc.scrollWidth
+    sc.style.scrollBehavior = behavior
+    sync()
+  }
+  requestAnimationFrame(() => { toEnd(); requestAnimationFrame(toEnd) })
+  setTimeout(toEnd, 300)
+}
+
+/* ── 戰情室：每張 ITT 卡直接帶「每次挑戰的時間曲線」+「我 vs 同事」 ──
+   收起態也看得到，不用點開；KOM 不列（追不到的東西不佔版面）。
+   曲線縱軸是單趟時間，最快的那趟貼在頂端的虛線上（= PR 基準線）。 */
+function fcWarHTML(seg, pr, accent) {
+  const eff = (seg.efforts || []).filter(e => e && e.elapsed_sec > 0)
+    .sort((a, b) => String(a.date).localeCompare(String(b.date)))
+  let prog = ''
+  if (eff.length > 1) {
+    const W = 250, H = 54, P = 6
+    const t0 = Math.min(...eff.map(e => e.elapsed_sec))
+    const t1 = Math.max(...eff.map(e => e.elapsed_sec))
+    const pts = eff.map((e, i) => [
+      P + i / (eff.length - 1) * (W - P * 2),
+      P + (e.elapsed_sec - t0) / ((t1 - t0) || 1) * (H - P * 2),
+    ])
+    const line = smoothPath(pts)
+    const area = `${line} L ${pts[pts.length - 1][0].toFixed(1)} ${H} L ${pts[0][0].toFixed(1)} ${H} Z`
+    const gid = `fcw-${seg.id}`
+    const dots = pts.map((p, i) => {
+      const isPr = eff[i].elapsed_sec === t0
+      return `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${isPr ? 3.2 : 1.9}"
+        fill="${isPr ? '#fff' : accent}" opacity="${isPr ? 1 : .7}"><title>${eff[i].date || ''} · ${fcFmtElapsed(eff[i].elapsed_sec, 2)}${eff[i].avg_watts ? ' · ' + eff[i].avg_watts + 'W' : ''}</title></circle>`
+    }).join('')
+    const latest = eff[eff.length - 1]
+    const diff = latest.elapsed_sec - t0
+    const trend = diff <= 0
+      ? `<em style="color:${accent}">PR ✓</em>`
+      : `<em style="color:#f0c040">▲ ${fcFmtElapsed(diff, 2)} vs PR</em>`
+    prog = `
+      <div class="fc-war-h"><span>PROGRESSION · ${eff.length}×</span>${trend}</div>
+      <svg class="fc-war-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+        <defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="${accent}" stop-opacity=".34"/>
+          <stop offset="100%" stop-color="${accent}" stop-opacity="0"/>
+        </linearGradient></defs>
+        <line x1="0" y1="${P}" x2="${W}" y2="${P}" stroke="rgba(255,255,255,.16)" stroke-width=".8" stroke-dasharray="2 4"/>
+        <path d="${area}" fill="url(#${gid})"/>
+        <path d="${line}" fill="none" stroke="${accent}" stroke-width="1.6" stroke-linejoin="round" opacity=".9"/>
+        ${dots}
+      </svg>`
+  }
+
+  const field = pkFieldFor(seg.id, pr)
+  let h2h = ''
+  if (field && field.length > 1) {
+    const tMin = field[0].sec
+    h2h = `<div class="fc-war-h"><span>HEAD TO HEAD</span><em>我 vs 同事</em></div>
+      <div class="fc-h2h">${field.map(r => `
+        <div class="h2h-row${r.self ? ' me' : ''}">
+          <s title="${r.name}">${r.self ? '▍' : ''}${r.name}</s>
+          <div class="h2h-bar"><i style="width:${(tMin / r.sec * 100).toFixed(1)}%;background:linear-gradient(90deg,${r.color},${r.color}44)"></i></div>
+          <b>${fcFmtElapsed(r.sec, 2)}</b>
+        </div>`).join('')}</div>`
+  } else {
+    h2h = `<div class="fc-war-h"><span>HEAD TO HEAD</span><em style="opacity:.5">單人紀錄</em></div>`
+  }
+  if (!prog && !field) return ''
+  return `<div class="fc-war">${prog}${h2h}</div>`
+}
+
 /* ── PK：同事對戰面板。成績全是真實資料（rivals.json + 本人 PR），不含任何估算 ── */
 function pkFieldFor(segId, pr) {
   const selfSec = pr && pr.elapsed_sec ? pr.elapsed_sec : null
@@ -2286,6 +3172,7 @@ function renderSegments(segs) {
         ` : ''}
         <div class="fc-time${timeClass ? ' fc-time-new' : ''}" data-countto="${prTimeStr}">${prTimeStr}</div>
         <div class="fc-timelbl">BEST TIME</div>
+        ${fcWarHTML(seg, pr, accent)}
         <div class="fc-stats">
           <div class="fc-stat"><b style="color:${accent}">${prWatts || '—'}<small>${prWatts ? 'W' : ''}</small></b><span>Avg Power</span></div>
           <div class="fc-stat"><b>${wkg}<small>${wkg !== '—' ? 'W/KG' : ''}</small></b><span>W / KG</span></div>
@@ -2455,26 +3342,23 @@ function applyIttMode() {
     grid.scrollLeft = 0
     if (grid.__boardLayout) grid.__boardLayout()
   } else {
-    // 回到輪播：所有卡都要看得見，展開態收掉
+    // 回到輪播：所有卡都要看得見，展開態收掉；檯面撐開的行高也要還原
+    grid.style.height = ''
+    grid.classList.remove('has-open')
     grid.querySelectorAll('.fc').forEach(c => { c.style.display = ''; c.classList.remove('fc-open', 'fc-drag'); c.style.zIndex = '' })
     if (grid.__carouselSync) grid.__carouselSync()
   }
   if (typeof THREE !== 'undefined') setupSeg3D()
 }
 
-/* ── ITT 抽卡桌面 ──────────────────────────────────────────────
-   六段疊成牌堆，預設發三張到檯面上；每張都能任意拖放、點開原地長大。
-   位置與已發的牌記在 localStorage，下次進來還是你擺的樣子。
+/* ── ITT 檯面 ──────────────────────────────────────────────────
+   一進來六段就整齊排好（置中的網格），之後每張都能任意拖放、點開原地長大。
+   位置記在 localStorage，下次進來還是你擺的樣子；「重新排列」歸位。
    只有「展開中」的卡才會建 three.js 場景 —— 收起的卡不燒 GPU。 */
-const ITT_BOARD_KEY = 'itt-board-v1'
-const ITT_BOARD_DEAL = 3
-const ITT_CARD_W = 214, ITT_CARD_OPEN_W = 560
-// 檯面槽位（板寬 770 為基準的比例 + 一點角度，像隨手擺上去的）
-const ITT_SLOTS = [
-  { fx: 0.20, fy: 0.04, rot: -2.4 }, { fx: 0.58, fy: 0.23, rot: 1.9 },
-  { fx: 0.23, fy: 0.55, rot: -1.1 }, { fx: 0.66, fy: 0.60, rot: 2.5 },
-  { fx: 0.06, fy: 0.93, rot: -2.8 }, { fx: 0.36, fy: 0.99, rot: 1.2 },
-]
+// v3：卡片變寬（214→272）＋加了戰情室區塊，舊的座標會互相疊到，直接換 key 重排
+const ITT_BOARD_KEY = 'itt-board-v3'
+const ITT_CARD_W = 272, ITT_CARD_OPEN_W = 560
+const ITT_BOARD_GAP = 16, ITT_BOARD_PAD = 16
 const ittBoardMode = () => matchMedia('(min-width:641px)').matches
 function ittBoardState() {
   try { const s = JSON.parse(localStorage.getItem(ITT_BOARD_KEY)); return (s && s.pos) ? s : null } catch (e) { return null }
@@ -2493,14 +3377,15 @@ function initIttBoard(reduce) {
   const saved = ittBoardState()
   const state = {
     pos: (saved && saved.pos) || {},
-    dealt: (saved && Array.isArray(saved.dealt)) ? saved.dealt.filter(id => cards.some(c => idOf(c) === id)) : [],
     open: (saved && saved.open) || null,
   }
-  if (!state.dealt.length) state.dealt = cards.slice(0, ITT_BOARD_DEAL).map(idOf)
   const save = () => { try { localStorage.setItem(ITT_BOARD_KEY, JSON.stringify(state)) } catch (e) {} }
 
   const boardW = () => grid.clientWidth
-  const boardH = () => grid.clientHeight
+  // 檯面高度會做 .38s 的 transition，動畫途中量 clientHeight 會拿到中間值 →
+  // 夾邊界要用「目標高度」，不然展開／歸位那一下卡片會被壓上來
+  let targetH = 560
+  const boardH = () => targetH
   const cardH = c => c.offsetHeight || 150
   const clamp = (c, x, y) => {
     const w = c.classList.contains('fc-open') ? ITT_CARD_OPEN_W : ITT_CARD_W
@@ -2513,32 +3398,28 @@ function initIttBoard(reduce) {
     c.style.setProperty('--y', cy + 'px')
     c.style.setProperty('--rot', state.pos[idOf(c)].rot + 'deg')
   }
-  const slotFor = i => {
-    const s = ITT_SLOTS[i % ITT_SLOTS.length]
-    return { x: s.fx * boardW(), y: s.fy * (boardH() - 150), rot: s.rot }
-  }
-
-  // 牌堆
-  const deck = document.createElement('button')
-  deck.className = 'fc-deck'
-  deck.innerHTML = '<span class="fc-deck-n"></span><span class="fc-deck-l">抽一張</span>'
-  grid.appendChild(deck)
-
-  function syncDeck() {
-    const left = cards.length - state.dealt.length
-    deck.querySelector('.fc-deck-n').textContent = left
-    deck.disabled = left <= 0
+  // 置中的網格：欄數看檯面塞得下幾張，列高取最高那張，整體垂直置中
+  const tidy = () => {
+    const W = boardW(), G = ITT_BOARD_GAP, P = ITT_BOARD_PAD
+    const cols = Math.max(1, Math.min(cards.length, Math.floor((W - P * 2 + G) / (ITT_CARD_W + G))))
+    const rows = Math.ceil(cards.length / cols)
+    // 列高只看收起態的卡：展開中的那張有六百多，拿它算會把檯面撐成兩倍高
+    const ch = cards.reduce((m, c) => c.classList.contains('fc-open') ? m : Math.max(m, cardH(c)), 0) || 150
+    const x0 = Math.max(P, (W - (cols * ITT_CARD_W + (cols - 1) * G)) / 2)
+    return {
+      height: rows * ch + (rows - 1) * G + P * 2,
+      at: i => ({ x: x0 + (i % cols) * (ITT_CARD_W + G), y: P + Math.floor(i / cols) * (ch + G), rot: 0 }),
+    }
   }
   function layout() {
+    const t = tidy()
+    targetH = t.height
+    if (!grid.classList.contains('has-open')) grid.style.height = targetH + 'px'
     cards.forEach((c, i) => {
-      const id = idOf(c)
-      const dealt = state.dealt.includes(id)
-      c.style.display = dealt ? '' : 'none'
-      if (!dealt) return
-      const p = state.pos[id] || slotFor(state.dealt.indexOf(id))
+      c.style.display = ''
+      const p = state.pos[idOf(c)] || t.at(i)
       place(c, p.x, p.y, p.rot)
     })
-    syncDeck()
   }
 
   function setOpen(card, on) {
@@ -2553,8 +3434,9 @@ function initIttBoard(reduce) {
       // 寬高在 .38s 的 transition 裡才長到最終值，當下量到的還是收起態的高度 →
       // 夾不住下緣。等 transition 結束再夾一次，卡片才真的留在檯面內。
       const reclamp = () => {
-        // 展開卡比預設檯面高 → 把檯面撐開，卡片才留得住（不然永遠夾不進邊界）
-        grid.style.height = Math.max(560, card.offsetHeight + 24) + 'px'
+        // 展開卡比排好的檯面高 → 把檯面撐開，卡片才留得住（不然永遠夾不進邊界）
+        targetH = Math.max(tidy().height, card.offsetHeight + 24)
+        grid.style.height = targetH + 'px'
         const q = state.pos[idOf(card)]; place(card, q.x, q.y, 0); save()
       }
       card.addEventListener('transitionend', reclamp, { once: true })
@@ -2564,7 +3446,8 @@ function initIttBoard(reduce) {
       grid.classList.remove('has-open')
       card.style.zIndex = ''
       state.open = null
-      grid.style.height = ''
+      targetH = tidy().height
+      grid.style.height = targetH + 'px'
     }
     save()
     // 只有展開中的卡需要 3D
@@ -2572,33 +3455,15 @@ function initIttBoard(reduce) {
     else if (on) loadThreeJS().then(setupSeg3D).catch(() => {})
   }
 
-  deck.addEventListener('click', () => {
-    const next = cards.find(c => !state.dealt.includes(idOf(c)))
-    if (!next) return
-    const i = state.dealt.length
-    state.dealt.push(idOf(next))
-    const s = slotFor(i)
-    next.style.display = ''
-    place(next, s.x, s.y, s.rot)
-    if (!reduce) {
-      const dr = deck.getBoundingClientRect(), gr = grid.getBoundingClientRect()
-      next.style.setProperty('--dx', (dr.left - gr.left) + 'px')
-      next.style.setProperty('--dy', (dr.top - gr.top) + 'px')
-      next.classList.add('fc-dealt')
-      next.addEventListener('animationend', () => next.classList.remove('fc-dealt'), { once: true })
-    }
-    syncDeck(); save()
-  })
-
-  // 重新發牌
+  // 歸位
   const bar = document.createElement('div')
   bar.className = 'fc-board-bar'
   bar.innerHTML = `<span class="fc-hint" style="margin:0;justify-content:flex-start">拖曳擺放 · 點卡片展開 3D</span>
-                   <button class="fc-board-reset" type="button">重新發牌</button>`
+                   <button class="fc-board-reset" type="button">重新排列</button>`
   wrap.appendChild(bar)
   bar.querySelector('.fc-board-reset').addEventListener('click', () => {
-    state.pos = {}; state.dealt = cards.slice(0, ITT_BOARD_DEAL).map(idOf); state.open = null
-    grid.style.height = ''; grid.classList.remove('has-open')
+    state.pos = {}; state.open = null
+    grid.classList.remove('has-open')
     cards.forEach(c => { c.classList.remove('fc-open'); c.style.zIndex = '' })
     layout(); save()
     if (typeof THREE !== 'undefined') setupSeg3D()
@@ -5243,6 +6108,7 @@ function render(data) {
     ${renderMonthlySummary(data.monthly_summary)}
     ${renderMonthlyGoals(data.monthly_goals)}
     ${renderWeeklyQuest(data.weekly_quest)}
+    ${renderTrainingCalendar(data)}
     ${renderSegments(data.segments)}
 
     ${history.length ? `
@@ -5350,6 +6216,8 @@ function render(data) {
       View full profile on Strava
     </a>
   `
+
+  initTrainingCalendarNav()
 
   // animate chart bars (only visible ones)
   requestAnimationFrame(() => {
@@ -5755,21 +6623,104 @@ function bindNameCard() {
   if (btn) btn.addEventListener('click', e => { e.stopPropagation(); reroll() })
 }
 
+/* 單調三次插值（Fritsch–Carlson）：平滑通過所有 PR 點且不過衝 */
+function hpcMonoPath(p) {
+  if (p.length < 2) return ''
+  const n = p.length, dx = [], m = []
+  for (let i = 0; i < n - 1; i++) { dx.push(p[i+1].x - p[i].x); m.push((p[i+1].y - p[i].y) / (p[i+1].x - p[i].x)) }
+  const c = [m[0]]
+  for (let i = 1; i < n - 1; i++) {
+    if (m[i-1] * m[i] <= 0) c.push(0)
+    else c.push(3 * (dx[i-1] + dx[i]) / ((2*dx[i] + dx[i-1]) / m[i-1] + (dx[i] + 2*dx[i-1]) / m[i]))
+  }
+  c.push(m[n-2])
+  let d = `M${p[0].x.toFixed(1)},${p[0].y.toFixed(1)}`
+  for (let i = 0; i < n - 1; i++) {
+    const x1 = p[i].x + dx[i]/3,   y1 = p[i].y + c[i]   * dx[i]/3
+    const x2 = p[i+1].x - dx[i]/3, y2 = p[i+1].y - c[i+1] * dx[i]/3
+    d += ` C${x1.toFixed(1)},${y1.toFixed(1)} ${x2.toFixed(1)},${y2.toFixed(1)} ${p[i+1].x.toFixed(1)},${p[i+1].y.toFixed(1)}`
+  }
+  return d
+}
+
+function hpcBuildSvg(sorted, map, o) {
+  const iw = o.W - o.padL - o.padR, ih = o.H - o.padT - o.padB
+  const t0 = sorted[0].sec, t1 = sorted[sorted.length - 1].sec
+  const maxW = Math.max(...sorted.map(d => map.get(d.sec).watts))
+  const yMax = Math.ceil(maxW / 100) * 100
+  const pts = sorted.map(d => {
+    const p = map.get(d.sec)
+    return {
+      x: +(o.padL + Math.log(d.sec / t0) / Math.log(t1 / t0) * iw).toFixed(1),
+      y: +(o.padT + ih - (p.watts / yMax) * ih).toFixed(1),
+      sec: d.sec, label: d.label, w: p.watts, date: p.date || ''
+    }
+  })
+  const line = hpcMonoPath(pts)
+  const base = (o.padT + ih).toFixed(1)
+  const area = `${line} L${pts[pts.length-1].x},${base} L${pts[0].x},${base} Z`
+  const yGrid = [Math.round(yMax*.25), Math.round(yMax*.5), Math.round(yMax*.75)].map(v => {
+    const y = (o.padT + ih - (v / yMax) * ih).toFixed(1)
+    return `<line x1="${o.padL}" y1="${y}" x2="${o.W-o.padR}" y2="${y}" stroke="rgba(252,76,2,.08)"/>
+            <text x="${o.padL-6}" y="${+y+o.fontY*.33}" fill="rgba(255,255,255,.28)" font-size="${o.fontY}" text-anchor="end">${v}</text>`
+  }).join('')
+  // 縱向 log 刻度線 + 時距標（手機只標部分時距）
+  const labeled = o.xSubset ? pts.filter(p => o.xSubset.includes(p.sec)) : pts
+  const xGrid = labeled.map(p => `
+    <line x1="${p.x}" y1="${o.padT}" x2="${p.x}" y2="${base}" stroke="rgba(255,255,255,.045)"/>
+    <text x="${p.x}" y="${o.H-o.fontX}" fill="rgba(255,255,255,.38)" font-size="${o.fontX}" text-anchor="middle">${p.label}</text>`).join('')
+  const dots = pts.map(p => `<circle cx="${p.x}" cy="${p.y}" r="${o.dotR}" fill="#140a06" stroke="#FC4C02" stroke-width="1.6"/>`).join('')
+  const s = o.sfx
+  return `
+    <svg class="hpc-curve ${o.cls}" viewBox="0 0 ${o.W} ${o.H}" preserveAspectRatio="xMidYMid meet"
+         data-pts='${JSON.stringify(pts)}' data-w="${o.W}">
+      <defs>
+        <linearGradient id="hpcStroke${s}" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#ffe9b0"/><stop offset=".35" stop-color="#ffb347"/><stop offset="1" stop-color="#FC4C02"/>
+        </linearGradient>
+        <linearGradient id="hpcArea${s}" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#FC4C02" stop-opacity=".30"/>
+          <stop offset=".7" stop-color="#FC4C02" stop-opacity=".05"/>
+          <stop offset="1" stop-color="#FC4C02" stop-opacity="0"/>
+        </linearGradient>
+        <radialGradient id="hpcComet${s}">
+          <stop offset="0" stop-color="#fff"/><stop offset=".4" stop-color="#ffd9a0" stop-opacity=".8"/>
+          <stop offset="1" stop-color="#ffb347" stop-opacity="0"/>
+        </radialGradient>
+        <filter id="hpcGlow${s}" x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur stdDeviation="2.2" result="b"/>
+          <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+      ${yGrid}${xGrid}
+      <line x1="${o.padL}" y1="${base}" x2="${o.W-o.padR}" y2="${base}" stroke="rgba(252,76,2,.25)"/>
+      <path class="hpc-area" d="${area}" fill="url(#hpcArea${s})"/>
+      <path class="hpc-line" d="${line}" pathLength="1" fill="none" stroke="url(#hpcStroke${s})" stroke-width="${o.lineW}"
+            stroke-linecap="round" filter="url(#hpcGlow${s})"/>
+      ${dots}
+      <g class="hpc-comet"><circle r="${o.cometR}" fill="url(#hpcComet${s})">
+        <animateMotion dur="8s" repeatCount="indefinite" path="${line}"/>
+      </circle></g>
+      <g class="hpc-cross">
+        <line class="hpc-cross-line" x1="0" y1="${o.padT}" x2="0" y2="${base}" stroke="rgba(255,255,255,.28)" stroke-dasharray="2 3"/>
+        <circle class="hpc-cross-dot" r="${o.dotR+1.8}" fill="none" stroke="#fff" stroke-width="1.4"/>
+      </g>
+    </svg>`
+}
+
 function renderPowerCard(prs) {
   if (!prs || !prs.length) return ''
   const map = buildPwrMap(prs)
-  const hero = map.get(5) || prs[0]
+  const sorted = PWR_DURATIONS.filter(d => map.has(d.sec))
+  if (sorted.length < 2) return ''
+  const hero = map.get(5) || map.get(sorted[0].sec)
   const heroLbl = (PWR_DURATIONS.find(d => d.sec === hero.duration_sec) || {}).label || `${hero.duration_sec}秒`
-  const top3 = (hero.top3 || []).map(t => t.watts).filter(w => w > 0)
-  const top3avg = top3.length ? Math.round(top3.reduce((a, b) => a + b, 0) / top3.length) : null
-  // 6 mini cells: 5/10/30/1m/2m/5m
-  const miniDurs = [5, 10, 30, 60, 120, 300]
-  const miniCells = miniDurs.map(s => {
-    const p = map.get(s)
-    const lbl = PWR_DURATIONS.find(d => d.sec === s).label
-    if (!p) return `<div class="hpc-mini empty"><div class="hpc-mini-lbl">${lbl}</div><div class="hpc-mini-val">—</div></div>`
-    return `<div class="hpc-mini"><div class="hpc-mini-lbl">${lbl}</div><div class="hpc-mini-val">${p.watts}<small>W</small></div></div>`
-  }).join('')
+  // 桌面 + 手機兩個變體：手機用窄 viewBox（字才夠大）、精簡 x 刻度
+  const desk = hpcBuildSvg(sorted, map, { W:760, H:186, padL:36, padR:16, padT:16, padB:24,
+    fontX:8, fontY:7.5, dotR:2.8, lineW:2.2, cometR:5, cls:'hpc-desk', sfx:'D' })
+  const mob = hpcBuildSvg(sorted, map, { W:360, H:200, padL:30, padR:12, padT:14, padB:26,
+    fontX:10, fontY:9, dotR:3.2, lineW:2.4, cometR:5.5, cls:'hpc-mob', sfx:'M',
+    xSubset:[5, 30, 120, 600, 3600] })
   return `
     <div class="hero-power-card" id="hero-power-card">
       <div class="hpc-head">
@@ -5777,9 +6728,9 @@ function renderPowerCard(prs) {
           <span class="hpc-title">⚡ 功率排行榜</span>
           <span class="hpc-title-en">POWER PR</span>
         </div>
-        <div class="hpc-hero-tag">最佳 ${heroLbl}<b>${hero.watts}</b>W${top3avg ? ` · 前三均<b>${top3avg}</b>W` : ''} · 點擊展開 ▸</div>
+        <div class="hpc-readout" id="hpc-readout">最佳 ${heroLbl}<b>${hero.watts}</b>W</div>
       </div>
-      <div class="hpc-grid">${miniCells}</div>
+      ${desk}${mob}
     </div>`
 }
 
@@ -5955,6 +6906,32 @@ function bindPowerCard(prs) {
       card.classList.remove('opening')
       openPowerModal(prs)
     }, 320)
+  })
+  // 曲線 hover / 觸控滑動：吸附最近的 PR 點，讀值顯示在標題列（桌面/手機兩個 svg 各綁一份）
+  const readout = document.getElementById('hpc-readout')
+  if (!readout) return
+  const idle = readout.innerHTML
+  card.querySelectorAll('.hpc-curve').forEach(svg => {
+    const cross = svg.querySelector('.hpc-cross')
+    const line = svg.querySelector('.hpc-cross-line')
+    const dot = svg.querySelector('.hpc-cross-dot')
+    if (!cross) return
+    const pts = JSON.parse(svg.dataset.pts)
+    const vbW = +svg.dataset.w
+    svg.addEventListener('pointermove', e => {
+      const r = svg.getBoundingClientRect()
+      const x = (e.clientX - r.left) / r.width * vbW
+      let best = pts[0]
+      for (const p of pts) if (Math.abs(p.x - x) < Math.abs(best.x - x)) best = p
+      line.setAttribute('x1', best.x); line.setAttribute('x2', best.x)
+      dot.setAttribute('cx', best.x); dot.setAttribute('cy', best.y)
+      cross.classList.add('on')
+      readout.innerHTML = `${best.label}<b>${best.w}</b>W<span class="d">${best.date}</span>`
+    })
+    svg.addEventListener('pointerleave', () => {
+      cross.classList.remove('on')
+      readout.innerHTML = idle
+    })
   })
 }
 

@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Starship 起降動畫 · 概念稿 V4</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#ddd;overflow-x:hidden}
+body{background:
+  radial-gradient(ellipse at 25% 80%, rgba(252,76,2,.16), transparent 55%),
+  radial-gradient(ellipse at 75% 20%, rgba(255,120,40,.09), transparent 60%),
+  #0a0408}
+
+.demo-col{position:relative;z-index:2;max-width:800px;margin:0 auto;padding:40px 1.2rem 60px;min-height:100vh}
+.demo-card{border:1px solid rgba(252,76,2,.3);border-radius:16px;
+  background:linear-gradient(135deg,rgba(26,14,6,.85),rgba(10,6,4,.85));
+  padding:24px 28px;margin-bottom:16px;box-shadow:0 16px 46px rgba(0,0,0,.55)}
+.demo-card h1{font-size:22px;color:#fff;margin-bottom:6px}
+.demo-card h2{font-size:14px;color:#FC4C02;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px}
+.demo-card p,.demo-card li{font-size:13.5px;line-height:1.75;color:#c9beb4}
+.demo-card ul{padding-left:1.2em}
+.demo-card b{color:#ffb347}
+.tl{display:grid;grid-template-columns:70px 1fr;gap:4px 12px;font-size:13px;line-height:1.7}
+.tl dt{color:#ffb347;font-variant-numeric:tabular-nums}
+.tl dd{color:#c9beb4}
+.chip{display:inline-block;font-size:10px;letter-spacing:2px;color:#FC4C02;
+  border:1px solid rgba(252,76,2,.4);border-radius:12px;padding:2px 10px;margin:0 6px 6px 0}
+
+/* ══════════════════════════════════════════════════════════
+   STARSHIP SIDE PADS — 20s 接續時間軸
+   0–10s 左側發射　│　10–20s 右側筷子回收
+   ══════════════════════════════════════════════════════════ */
+.ss-pad{position:fixed;top:0;bottom:0;z-index:1;pointer-events:none;display:none;
+  width:clamp(170px, calc((100vw - 858px)/2), 320px);
+  align-items:flex-end;justify-content:center}
+.ss-pad svg{width:100%;height:100%;display:block}
+#ss-pad-left{left:0}
+#ss-pad-right{right:0}
+.ss-pad-tag{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);
+  font-size:9px;letter-spacing:3px;color:rgba(252,76,2,.55);text-transform:uppercase;white-space:nowrap}
+@media(min-width:1240px){.ss-pad{display:flex}}
+
+/* ── 左側：發射（動作集中在 0–10s） ── */
+#ss-sceneL{animation:ssCamL 20s linear infinite}
+@keyframes ssCamL{
+  0%,6.9%{transform:translate(0,0)}
+  7.8%{transform:translate(0,1.4px)}9%{transform:translate(-1px,.6px)}
+  10.2%{transform:translate(.9px,1px)}11.4%{transform:translate(-.6px,.4px)}
+  12.6%{transform:translate(.5px,.8px)}13.8%{transform:translate(-.4px,.2px)}
+  15.6%,100%{transform:translate(0,0)}
+}
+#ss-riseL{transform-origin:140px 845px;animation:ssRiseL 20s linear infinite}
+@keyframes ssRiseL{
+  0%,12%{transform:translateY(0) translateX(0) rotate(0deg) scale(1);animation-timing-function:cubic-bezier(.62,0,.92,.5)}
+  37.5%{transform:translateY(-1150px) translateX(-46px) rotate(-9deg) scale(.8)}
+  100%{transform:translateY(-1150px) translateX(-46px) rotate(-9deg) scale(.8)}
+}
+#ss-rumbleL{animation:ssRumbleL 20s linear infinite}
+@keyframes ssRumbleL{
+  0%,6.6%{transform:translate(0,0)}
+  7.2%{transform:translate(-1.2px,.6px)}8.4%{transform:translate(1.2px,-.5px)}
+  9.6%{transform:translate(-1px,.4px)}10.8%{transform:translate(1.1px,.5px)}
+  12%{transform:translate(-.8px,0)}13.2%{transform:translate(.8px,.3px)}
+  14.4%,100%{transform:translate(0,0)}
+}
+#ss-flameGrpL{opacity:0;transform-box:fill-box;transform-origin:50% 0;animation:ssFlameL 20s linear infinite}
+@keyframes ssFlameL{
+  0%,7.5%{opacity:0;transform:scaleY(.25)}
+  8.4%{opacity:1;transform:scaleY(.55)}
+  12%{transform:scaleY(1)}
+  37.8%{opacity:1}
+  39.6%,100%{opacity:0}
+}
+#ss-flashL{opacity:0;animation:ssFlashL 20s linear infinite}
+@keyframes ssFlashL{0%,7.2%{opacity:0}8.1%{opacity:1}10.8%{opacity:0}100%{opacity:0}}
+#ss-gGlowL{opacity:0;animation:ssGGlowL 20s linear infinite}
+@keyframes ssGGlowL{0%,7.2%{opacity:0}8.4%{opacity:1}14.4%{opacity:.8}24%,100%{opacity:0}}
+.ss-bodyLitL{opacity:0;animation:ssBodyLitL 20s linear infinite}
+@keyframes ssBodyLitL{0%,7.5%{opacity:0}8.4%{opacity:.95}37.8%{opacity:.85}39.6%,100%{opacity:0}}
+#ss-shadowL{transform-box:fill-box;transform-origin:center;animation:ssShadowL 20s linear infinite}
+@keyframes ssShadowL{0%,12%{opacity:.55;transform:scale(1)}25.2%{opacity:0;transform:scale(.22)}100%{opacity:0}}
+#ss-trailL{opacity:0;transform-box:fill-box;transform-origin:50% 100%;animation:ssTrailL 20s linear infinite}
+@keyframes ssTrailL{
+  0%,12.6%{opacity:0;transform:scaleY(.06)}
+  18%{opacity:.5;transform:scaleY(.45)}
+  37.2%{opacity:.45;transform:scaleY(1)}
+  48%,100%{opacity:0;transform:scaleY(1)}
+}
+.ss-dlg{opacity:0;transform-box:fill-box;animation:ssDlgL 20s linear infinite}
+.ss-dlg.ss-rgt{transform-origin:0% 60%}
+.ss-dlg.ss-lft{transform-origin:100% 60%}
+@keyframes ssDlgL{
+  0%,7.2%{opacity:0;transform:scale(.4)}
+  8.7%{opacity:.65;transform:scale(1)}
+  13.2%{opacity:.5;transform:scale(1.05)}
+  18%,100%{opacity:0;transform:scale(1.18)}
+}
+.ss-vw{opacity:0;transform-box:fill-box}
+.ss-vw1L{animation:ssVw1L 20s linear infinite}
+@keyframes ssVw1L{0%,0.6%{opacity:0;transform:translate(0,0) scale(.7)}2.1%{opacity:.5}4.8%{opacity:0;transform:translate(16px,-11px) scale(1.4)}100%{opacity:0}}
+.ss-vw2L{animation:ssVw2L 20s linear infinite}
+@keyframes ssVw2L{0%,2.7%{opacity:0;transform:translate(0,0) scale(.7)}4.2%{opacity:.45}6.6%{opacity:0;transform:translate(13px,-14px) scale(1.5)}100%{opacity:0}}
+.ss-smk{transform-box:fill-box;transform-origin:center;opacity:0}
+.ss-s1{animation:ssSmk1 20s linear infinite}
+.ss-s2{animation:ssSmk2 20s linear infinite}
+.ss-s3{animation:ssSmk3 20s linear infinite}
+.ss-s4{animation:ssSmk4 20s linear infinite}
+.ss-s5{animation:ssSmk5 20s linear infinite}
+.ss-s6{animation:ssSmk6 20s linear infinite}
+@keyframes ssSmk1{0%,7.2%{opacity:0;transform:scale(.2)}11.4%{opacity:.8}25.2%{transform:translate(-66px,-8px) scale(2.6)}33.6%{opacity:0;transform:translate(-88px,-12px) scale(3.1)}100%{opacity:0}}
+@keyframes ssSmk2{0%,7.5%{opacity:0;transform:scale(.25)}12%{opacity:.75}26.4%{transform:translate(60px,-6px) scale(2.4)}34.8%{opacity:0;transform:translate(82px,-10px) scale(2.9)}100%{opacity:0}}
+@keyframes ssSmk3{0%,8.1%{opacity:0;transform:scale(.2)}12.6%{opacity:.55}27.6%{transform:translate(-40px,-16px) scale(2.9)}36%{opacity:0;transform:translate(-56px,-22px) scale(3.4)}100%{opacity:0}}
+@keyframes ssSmk4{0%,8.4%{opacity:0;transform:scale(.2)}13.2%{opacity:.55}28.8%{transform:translate(44px,-14px) scale(2.7)}37.2%{opacity:0;transform:translate(60px,-20px) scale(3.2)}100%{opacity:0}}
+@keyframes ssSmk5{0%,7.8%{opacity:0;transform:scale(.3)}13.2%{opacity:.5}30%{transform:translate(-26px,-70px) scale(2.2)}38.4%{opacity:0;transform:translate(-34px,-96px) scale(2.6)}100%{opacity:0}}
+@keyframes ssSmk6{0%,8.7%{opacity:0;transform:scale(.3)}13.8%{opacity:.45}31.2%{transform:translate(30px,-60px) scale(2.1)}39.6%{opacity:0;transform:translate(40px,-84px) scale(2.5)}100%{opacity:0}}
+#ss-qdArm{transform-origin:206px 600px;animation:ssQdArm 20s linear infinite}
+@keyframes ssQdArm{0%,6%{transform:rotate(0)}8.4%,80%{transform:rotate(-26deg)}85%,100%{transform:rotate(0)}}
+
+/* ── 右側：回收捕捉（動作集中在 10–20s） ── */
+#ss-sceneR{animation:ssCamR 20s linear infinite}
+@keyframes ssCamR{
+  0%,75.5%{transform:translate(0,0)}
+  76.3%{transform:translate(0,1.6px)}77%{transform:translate(-.9px,.8px)}
+  77.8%{transform:translate(.6px,.4px)}79%,100%{transform:translate(0,0)}
+}
+#ss-boostR{transform-origin:135px 505px;animation:ssBoostR 20s linear infinite}
+@keyframes ssBoostR{
+  0%,49%{transform:translateY(-880px) scale(.68);opacity:0}
+  50%{transform:translateY(-880px) scale(.68);opacity:1;animation-timing-function:cubic-bezier(.2,.65,.3,1)}
+  70%{transform:translateY(0) scale(1);opacity:1}
+  76%{transform:translateY(0) scale(1)}
+  77.5%{transform:translateY(4px) scale(1)}
+  79%,93%{transform:translateY(3px) scale(1);opacity:1}
+  96%{opacity:0;transform:translateY(3px) scale(1)}
+  97%,100%{opacity:0;transform:translateY(-880px) scale(.68)}
+}
+#ss-tiltR{transform-box:fill-box;transform-origin:center;animation:ssTiltR 20s linear infinite}
+@keyframes ssTiltR{
+  0%,53%{transform:translateX(22px) rotate(-7deg)}
+  62%{transform:translateX(8px) rotate(-2.5deg)}
+  70%{transform:translateX(0) rotate(0)}
+  72%{transform:rotate(.8deg)}
+  74%,100%{transform:rotate(0)}
+}
+#ss-flameGrpR{opacity:0;transform-box:fill-box;transform-origin:50% 0;animation:ssFlameR 20s linear infinite}
+@keyframes ssFlameR{
+  0%,53%{opacity:0;transform:scaleY(.4)}
+  54.5%{opacity:1;transform:scaleY(1.3)}
+  60%{transform:scaleY(1.05)}
+  68%{transform:scaleY(.8)}
+  76%{opacity:1;transform:scaleY(.55)}
+  78%,100%{opacity:0;transform:scaleY(.3)}
+}
+#ss-armUR{transform-origin:240px 410px;animation:ssArmU 20s linear infinite}
+@keyframes ssArmU{
+  0%,70%{transform:rotate(-8deg)}
+  74%{transform:rotate(-.4deg)}
+  75.5%{transform:rotate(.7deg)}
+  77%{transform:rotate(-.2deg)}
+  78%,92%{transform:rotate(0deg)}
+  96%,100%{transform:rotate(-8deg)}
+}
+#ss-armDR{transform-origin:240px 435px;animation:ssArmD 20s linear infinite}
+@keyframes ssArmD{
+  0%,70%{transform:rotate(8deg)}
+  74%{transform:rotate(1.1deg)}
+  75.5%{transform:rotate(2.4deg)}
+  77%{transform:rotate(1.3deg)}
+  78%,92%{transform:rotate(1.6deg)}
+  96%,100%{transform:rotate(8deg)}
+}
+#ss-glowR{opacity:0;animation:ssGlowR 20s linear infinite}
+@keyframes ssGlowR{0%,76%{opacity:0}78%{opacity:.85}87%,100%{opacity:0}}
+.ss-bodyLitR{opacity:0;animation:ssBodyLitR 20s linear infinite}
+@keyframes ssBodyLitR{0%,53%{opacity:0}54.5%{opacity:.95}76%{opacity:.8}78%,100%{opacity:0}}
+#ss-hoverGlowR{opacity:0;animation:ssHoverGlowR 20s linear infinite}
+@keyframes ssHoverGlowR{0%,54%{opacity:0}60%{opacity:.32}74%{opacity:.38}79%,100%{opacity:0}}
+#ss-shadowR{transform-box:fill-box;transform-origin:center;animation:ssShadowR 20s linear infinite}
+@keyframes ssShadowR{0%,52%{opacity:0;transform:scale(.2)}70%{opacity:.38;transform:scale(1)}93%{opacity:.38;transform:scale(1)}96%,100%{opacity:0}}
+.ss-finHotR{animation:ssFinHotR 20s linear infinite}
+@keyframes ssFinHotR{0%,50%{opacity:.85}64%{opacity:.55}80%,100%{opacity:0}}
+.ss-stkR{opacity:0;animation:ssStkR 20s linear infinite}
+@keyframes ssStkR{0%,51%{opacity:0}53%{opacity:.7}58%{opacity:.35}63%,100%{opacity:0}}
+#ss-sparksR{opacity:0;transform-box:fill-box;transform-origin:center;animation:ssSparksR 20s linear infinite}
+@keyframes ssSparksR{
+  0%,75.5%{opacity:0;transform:scale(.3)}
+  76.5%{opacity:1;transform:scale(1)}
+  79%,100%{opacity:0;transform:scale(1.5)}
+}
+.ss-vw1R{animation:ssVw1R 20s linear infinite}
+@keyframes ssVw1R{0%,80%{opacity:0;transform:translate(0,0) scale(.7)}82%{opacity:.45}88%{opacity:0;transform:translate(11px,-13px) scale(1.5)}100%{opacity:0}}
+.ss-vw2R{animation:ssVw2R 20s linear infinite}
+@keyframes ssVw2R{0%,84%{opacity:0;transform:translate(0,0) scale(.7)}86%{opacity:.4}92%{opacity:0;transform:translate(9px,-15px) scale(1.5)}100%{opacity:0}}
+#ss-starlinkR{animation:ssSlkR 20s linear infinite}
+@keyframes ssSlkR{
+  0%{transform:translate(-70px,0);opacity:0}
+  4%{opacity:.55}
+  28%{opacity:.55}
+  38%{transform:translate(300px,-38px);opacity:0}
+  100%{transform:translate(300px,-38px);opacity:0}
+}
+
+/* 共用 */
+.ss-flick{transform-box:fill-box;transform-origin:50% 0;animation:ssFlick .14s ease-in-out infinite alternate}
+.ss-flick2{transform-box:fill-box;transform-origin:50% 0;animation:ssFlick .11s ease-in-out infinite alternate-reverse}
+@keyframes ssFlick{from{transform:scaleY(1) scaleX(1)}to{transform:scaleY(1.12) scaleX(.9)}}
+.ss-beacon{animation:ssBeacon 2.2s ease-in-out infinite}
+@keyframes ssBeacon{0%,100%{opacity:.15}50%{opacity:1}}
+.ss-twkA{animation:ssTwk 2.8s ease-in-out infinite alternate}
+.ss-twkB{animation:ssTwk 3.6s ease-in-out -1s infinite alternate}
+.ss-twkC{animation:ssTwk 4.4s ease-in-out -2.2s infinite alternate}
+@keyframes ssTwk{from{opacity:.12}to{opacity:.85}}
+
+@media (prefers-reduced-motion: reduce){
+  .ss-pad *{animation-play-state:paused !important}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════ 左側：星艦全箭發射 ═══════════ -->
+<div class="ss-pad" id="ss-pad-left">
+<svg viewBox="0 0 320 900" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+<defs>
+  <linearGradient id="ssSteelL" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#33373d"/><stop offset=".1" stop-color="#5f656c"/>
+    <stop offset=".28" stop-color="#eef2f5"/><stop offset=".46" stop-color="#a8aeb4"/>
+    <stop offset=".72" stop-color="#565c63"/><stop offset=".9" stop-color="#2c3036"/>
+    <stop offset=".97" stop-color="#4b5057"/><stop offset="1" stop-color="#24282d"/>
+  </linearGradient>
+  <linearGradient id="ssTileL" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#191d22"/><stop offset=".1" stop-color="#31373e"/>
+    <stop offset=".28" stop-color="#6d757e"/><stop offset=".46" stop-color="#454c54"/>
+    <stop offset=".72" stop-color="#272c32"/><stop offset=".9" stop-color="#14171b"/>
+    <stop offset=".97" stop-color="#262b31"/><stop offset="1" stop-color="#101317"/>
+  </linearGradient>
+  <linearGradient id="ssFlmL" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#fff7d0"/><stop offset=".35" stop-color="#ffb347"/>
+    <stop offset=".7" stop-color="#fc4c02"/><stop offset="1" stop-color="#fc4c02" stop-opacity="0"/>
+  </linearGradient>
+  <radialGradient id="ssFlmGlowL">
+    <stop offset="0" stop-color="#ff9040" stop-opacity=".5"/><stop offset="1" stop-color="#ff9040" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="ssSmkLitL" fx=".5" fy=".82">
+    <stop offset="0" stop-color="#ffd0a0" stop-opacity=".85"/>
+    <stop offset=".4" stop-color="#c4b4a8" stop-opacity=".55"/>
+    <stop offset="1" stop-color="#b8aca2" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="ssSmkL">
+    <stop offset="0" stop-color="#cfc4bc" stop-opacity=".7"/>
+    <stop offset="1" stop-color="#cfc4bc" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="ssVaporL">
+    <stop offset="0" stop-color="#e8ecf0" stop-opacity=".7"/>
+    <stop offset="1" stop-color="#e8ecf0" stop-opacity="0"/>
+  </radialGradient>
+  <linearGradient id="ssLitL" x1="0" y1="1" x2="0" y2="0">
+    <stop offset="0" stop-color="#ffb347" stop-opacity=".7"/>
+    <stop offset=".45" stop-color="#fc4c02" stop-opacity=".22"/>
+    <stop offset="1" stop-color="#fc4c02" stop-opacity="0"/>
+  </linearGradient>
+  <radialGradient id="ssGGlowGradL">
+    <stop offset="0" stop-color="#ffb347" stop-opacity=".55"/>
+    <stop offset=".5" stop-color="#fc4c02" stop-opacity=".28"/>
+    <stop offset="1" stop-color="#fc4c02" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="ssFlashGradL">
+    <stop offset="0" stop-color="#fff" stop-opacity=".95"/>
+    <stop offset=".4" stop-color="#ffd9a0" stop-opacity=".6"/>
+    <stop offset="1" stop-color="#ff9040" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="ssShadowGL">
+    <stop offset="0" stop-color="#000" stop-opacity=".6"/>
+    <stop offset="1" stop-color="#000" stop-opacity="0"/>
+  </radialGradient>
+  <linearGradient id="ssHazeL" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#fc5a14" stop-opacity="0"/>
+    <stop offset="1" stop-color="#fc5a14" stop-opacity=".08"/>
+  </linearGradient>
+  <linearGradient id="ssOlmBandL" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#3a2a1c"/><stop offset="1" stop-color="#170e08"/>
+  </linearGradient>
+  <linearGradient id="ssTrailGradL" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#cfc4bc" stop-opacity="0"/>
+    <stop offset=".55" stop-color="#cfc4bc" stop-opacity=".3"/>
+    <stop offset="1" stop-color="#d8cfc8" stop-opacity=".55"/>
+  </linearGradient>
+  <radialGradient id="ssSprayL" fx=".85" fy=".5">
+    <stop offset="0" stop-color="#eef2f5" stop-opacity=".8"/>
+    <stop offset="1" stop-color="#eef2f5" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="ssSprayL2" fx=".15" fy=".5">
+    <stop offset="0" stop-color="#eef2f5" stop-opacity=".8"/>
+    <stop offset="1" stop-color="#eef2f5" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="ssMoonL">
+    <stop offset="0" stop-color="#ddd4c8"/><stop offset=".75" stop-color="#b0a698"/><stop offset="1" stop-color="#8a8072"/>
+  </radialGradient>
+  <radialGradient id="ssMoonGlowL">
+    <stop offset="0" stop-color="#d8cfc0" stop-opacity=".28"/><stop offset="1" stop-color="#d8cfc0" stop-opacity="0"/>
+  </radialGradient>
+  <pattern id="ssTrussL" width="13" height="13" patternUnits="userSpaceOnUse">
+    <path d="M0 13 L13 0 M0 0 L13 13" stroke="rgba(252,120,40,.26)" stroke-width="1"/>
+  </pattern>
+  <filter id="ssBlurL" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.4"/></filter>
+</defs>
+
+<g id="ss-sceneL">
+<!-- 天空 -->
+<g>
+  <circle cx="62" cy="148" r="52" fill="url(#ssMoonGlowL)"/>
+  <circle cx="62" cy="148" r="24" fill="url(#ssMoonL)"/>
+  <circle cx="54" cy="140" r="4.2" fill="rgba(0,0,0,.16)"/>
+  <circle cx="70" cy="155" r="3" fill="rgba(0,0,0,.14)"/>
+  <circle cx="59" cy="161" r="2.2" fill="rgba(0,0,0,.12)"/>
+  <circle cx="71" cy="141" r="24" fill="#0a0408" opacity=".4" transform="translate(2,-3)"/>
+</g>
+<circle class="ss-twkA" cx="150" cy="90"  r="1.4" fill="#fff"/>
+<circle class="ss-twkB" cx="230" cy="180" r="1.2" fill="#ffe0c0"/>
+<circle class="ss-twkC" cx="40"  cy="300" r="1.3" fill="#fff"/>
+<circle class="ss-twkB" cx="280" cy="70"  r="1.1" fill="#fff"/>
+<circle class="ss-twkA" cx="190" cy="260" r="1"   fill="#ffe0c0"/>
+
+<!-- 遠景 -->
+<rect x="0" y="834" width="320" height="32" fill="url(#ssHazeL)"/>
+<g fill="#0e0906">
+  <rect x="22" y="846" width="15" height="20" rx="3"/>
+  <path d="M22 849 a7.5 5 0 0 1 15 0 Z"/>
+  <rect x="44" y="850" width="12" height="16" rx="2.5"/>
+  <path d="M44 852 a6 4 0 0 1 12 0 Z"/>
+  <circle cx="72" cy="860" r="7"/>
+</g>
+
+<!-- 地面 -->
+<rect x="0" y="866" width="320" height="34" fill="#140a06"/>
+<line x1="0" y1="866" x2="320" y2="866" stroke="rgba(252,76,2,.18)"/>
+<ellipse cx="140" cy="868" rx="126" ry="8" fill="#1d100a"/>
+<ellipse cx="140" cy="866" rx="92" ry="5.5" fill="#241409"/>
+
+<ellipse id="ss-gGlowL" cx="140" cy="861" rx="100" ry="17" fill="url(#ssGGlowGradL)"/>
+<g id="ss-shadowL">
+  <ellipse cx="140" cy="864" rx="44" ry="7" fill="url(#ssShadowGL)"/>
+  <ellipse cx="140" cy="843" rx="15" ry="2.4" fill="rgba(0,0,0,.4)"/>
+</g>
+<circle id="ss-flashL" cx="140" cy="850" r="42" fill="url(#ssFlashGradL)"/>
+
+<!-- 排氣尾跡柱 -->
+<path id="ss-trailL" d="M134 848 C133 700 128 520 114 330 L122 326 C136 520 141 700 146 848 Z" fill="url(#ssTrailGradL)"/>
+
+<!-- 發射塔 -->
+<g>
+  <path d="M228 352 L241 344 L241 860 L228 868 Z" fill="#0f0a07" stroke="rgba(252,76,2,.2)"/>
+  <rect x="206" y="352" width="22" height="516" fill="#221610" stroke="rgba(252,76,2,.4)"/>
+  <rect x="206" y="352" width="22" height="516" fill="url(#ssTrussL)"/>
+  <g stroke="rgba(0,0,0,.4)"><path d="M206 416 h22 M206 480 h22 M206 544 h22 M206 608 h22 M206 672 h22 M206 736 h22 M206 800 h22"/></g>
+  <line x1="206.8" y1="352" x2="206.8" y2="868" stroke="rgba(255,140,60,.3)" stroke-width="1.4"/>
+  <path d="M206 358 L176 350" stroke="#2a1c12" stroke-width="3.5" stroke-linecap="round"/>
+  <line x1="178" y1="350" x2="178" y2="378" stroke="rgba(200,160,120,.35)" stroke-width="1"/>
+  <circle cx="178" cy="380" r="2" fill="#3a2a1c"/>
+  <line x1="217" y1="352" x2="217" y2="318" stroke="rgba(252,76,2,.5)" stroke-width="2"/>
+  <circle class="ss-beacon" cx="217" cy="314" r="3" fill="#fc4c02"/>
+  <path d="M152 448 L210 448 L216 444 L158 444 Z" fill="#6b4a2c"/>
+  <rect x="152" y="448" width="58" height="7" rx="2" fill="#33241a" stroke="rgba(252,76,2,.3)"/>
+  <path d="M152 464 L210 464 L216 460 L158 460 Z" fill="#5d4026"/>
+  <rect x="152" y="464" width="58" height="8" rx="2" fill="#2e2017" stroke="rgba(252,76,2,.3)"/>
+  <g id="ss-qdArm">
+    <path d="M158 596 L206 596 L212 592 L164 592 Z" fill="#6b4a2c"/>
+    <rect x="158" y="596" width="48" height="8" rx="2" fill="#33241a" stroke="rgba(252,76,2,.35)"/>
+  </g>
+</g>
+
+<!-- OLM 發射架 -->
+<g>
+  <rect x="108" y="842" width="64" height="12" fill="url(#ssOlmBandL)" stroke="rgba(252,76,2,.25)"/>
+  <ellipse cx="140" cy="842" rx="32" ry="6.5" fill="#3d2c1c" stroke="rgba(252,76,2,.4)"/>
+  <ellipse cx="140" cy="842" rx="21" ry="4" fill="#0d0805"/>
+  <path d="M112 852 L104 868 M129 854 L127 868 M151 854 L153 868 M168 852 L176 868" stroke="#241609" stroke-width="5" stroke-linecap="round"/>
+</g>
+
+<!-- 灑水系統 -->
+<path class="ss-dlg ss-lft" d="M112 846 Q92 832 70 830 Q88 843 96 852 Q104 857 112 852 Z" fill="url(#ssSprayL)"/>
+<path class="ss-dlg ss-rgt" d="M168 846 Q188 832 210 830 Q192 843 184 852 Q176 857 168 852 Z" fill="url(#ssSprayL2)"/>
+
+<!-- 蒸氣煙雲 -->
+<g>
+  <ellipse class="ss-smk ss-s1" cx="100" cy="854" rx="28" ry="15" fill="url(#ssSmkLitL)"/>
+  <ellipse class="ss-smk ss-s2" cx="180" cy="854" rx="31" ry="16" fill="url(#ssSmkLitL)"/>
+  <ellipse class="ss-smk ss-s3" cx="66"  cy="858" rx="23" ry="12" fill="url(#ssSmkL)"/>
+  <ellipse class="ss-smk ss-s4" cx="214" cy="858" rx="25" ry="13" fill="url(#ssSmkL)"/>
+  <ellipse class="ss-smk ss-s5" cx="118" cy="846" rx="20" ry="14" fill="url(#ssSmkL)"/>
+  <ellipse class="ss-smk ss-s6" cx="164" cy="846" rx="19" ry="13" fill="url(#ssSmkL)"/>
+</g>
+
+<!-- 星艦全箭 -->
+<g id="ss-riseL"><g id="ss-rumbleL">
+  <g id="ss-flameGrpL">
+    <ellipse cx="140" cy="892" rx="30" ry="52" fill="url(#ssFlmGlowL)"/>
+    <path class="ss-flick"  d="M127 846 C127 880 133 918 140 942 C147 918 153 880 153 846 Z" fill="url(#ssFlmL)" filter="url(#ssBlurL)"/>
+    <path class="ss-flick2" d="M133 846 C133 872 137 896 140 910 C143 896 147 872 147 846 Z" fill="#fff3c4" opacity=".9"/>
+    <ellipse cx="140" cy="880" rx="3.5" ry="6" fill="#fff" opacity=".55"/>
+    <ellipse cx="140" cy="902" rx="2.6" ry="5" fill="#fff" opacity=".35"/>
+  </g>
+  <rect x="123" y="620" width="34" height="222" fill="url(#ssSteelL)"/>
+  <g fill="none" stroke="rgba(0,0,0,.3)" stroke-width=".9">
+    <path d="M123 648 a17 2.6 0 0 0 34 0"/><path d="M123 676 a17 2.6 0 0 0 34 0"/>
+    <path d="M123 704 a17 2.6 0 0 0 34 0"/><path d="M123 732 a17 2.6 0 0 0 34 0"/>
+    <path d="M123 760 a17 2.6 0 0 0 34 0"/><path d="M123 788 a17 2.6 0 0 0 34 0"/>
+    <path d="M123 816 a17 2.6 0 0 0 34 0"/>
+  </g>
+  <rect x="123" y="828" width="34" height="14" fill="#2b2e33"/>
+  <ellipse cx="140" cy="842" rx="17" ry="3.2" fill="#17191d"/>
+  <rect x="126" y="843" width="8" height="8" rx="2.5" fill="#101317" stroke="#3a3e44" stroke-width=".7"/>
+  <rect x="136" y="844.5" width="8" height="8" rx="2.5" fill="#14171b" stroke="#454a50" stroke-width=".7"/>
+  <rect x="146" y="843" width="8" height="8" rx="2.5" fill="#101317" stroke="#3a3e44" stroke-width=".7"/>
+  <rect x="123" y="613" width="34" height="8" fill="#1f2327"/>
+  <path d="M123 621 a17 2.4 0 0 0 34 0" fill="none" stroke="rgba(0,0,0,.4)" stroke-width=".9"/>
+  <rect x="123" y="486" width="34" height="127" fill="url(#ssTileL)"/>
+  <g fill="none" stroke="rgba(0,0,0,.35)" stroke-width=".9">
+    <path d="M123 508 a17 2.4 0 0 0 34 0"/><path d="M123 544 a17 2.4 0 0 0 34 0"/>
+    <path d="M123 580 a17 2.4 0 0 0 34 0"/>
+  </g>
+  <path d="M123 486 C123 452 131 436 140 428 C149 436 157 452 157 486 Z" fill="url(#ssTileL)"/>
+  <ellipse cx="133.5" cy="454" rx="3" ry="14" fill="rgba(255,255,255,.16)" transform="rotate(-9 133.5 454)"/>
+  <rect x="130" y="440" width="2.6" height="396" rx="1.3" fill="rgba(255,255,255,.18)"/>
+  <rect x="151" y="440" width="2.2" height="396" rx="1.1" fill="rgba(252,100,30,.16)"/>
+  <path d="M123 462 L111 478 L111 489 L123 484 Z" fill="#3a3f45"/>
+  <path d="M123 462 L111 478 L113 480 L123 468 Z" fill="#565c63"/>
+  <path d="M157 462 L169 478 L169 489 L157 484 Z" fill="#101317"/>
+  <path d="M123 588 L106 611 L106 626 L123 617 Z" fill="#3a3f45"/>
+  <path d="M123 588 L106 611 L108 614 L123 596 Z" fill="#565c63"/>
+  <path d="M157 588 L174 611 L174 626 L157 617 Z" fill="#101317"/>
+  <path d="M114 626 L123 626 L126 622 L117 622 Z" fill="#8a9096"/>
+  <rect x="114" y="626" width="9" height="18" rx="2" fill="#61666c" stroke="#3c4046" stroke-width=".8"/>
+  <path d="M114 630 h9 M114 635 h9 M114 640 h9" stroke="rgba(0,0,0,.35)" stroke-width=".8"/>
+  <path d="M157 626 L166 626 L163 622 L154 622 Z" fill="#4a4e54"/>
+  <rect x="157" y="626" width="9" height="18" rx="2" fill="#3c4046" stroke="#26292e" stroke-width=".8"/>
+  <path d="M157 630 h9 M157 635 h9 M157 640 h9" stroke="rgba(0,0,0,.4)" stroke-width=".8"/>
+  <ellipse class="ss-vw ss-vw1L" cx="160" cy="617" rx="8" ry="5" fill="url(#ssVaporL)"/>
+  <ellipse class="ss-vw ss-vw2L" cx="159" cy="640" rx="7" ry="4.5" fill="url(#ssVaporL)"/>
+  <g class="ss-bodyLitL">
+    <rect x="123" y="690" width="34" height="152" fill="url(#ssLitL)"/>
+    <ellipse cx="140" cy="842" rx="15" ry="2.8" fill="#ffb347" opacity=".85"/>
+  </g>
+</g></g>
+</g>
+</svg>
+<div class="ss-pad-tag">SITE A · T-0 LIFT-OFF</div>
+</div>
+
+<!-- ═══════════ 右側：Super Heavy 回收捕捉 ═══════════ -->
+<div class="ss-pad" id="ss-pad-right">
+<svg viewBox="0 0 320 900" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+<defs>
+  <linearGradient id="ssSteelR" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#33373d"/><stop offset=".1" stop-color="#5f656c"/>
+    <stop offset=".28" stop-color="#eef2f5"/><stop offset=".46" stop-color="#a8aeb4"/>
+    <stop offset=".72" stop-color="#565c63"/><stop offset=".9" stop-color="#2c3036"/>
+    <stop offset=".97" stop-color="#4b5057"/><stop offset="1" stop-color="#24282d"/>
+  </linearGradient>
+  <linearGradient id="ssFlmR" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#fff7d0"/><stop offset=".35" stop-color="#ffb347"/>
+    <stop offset=".7" stop-color="#fc4c02"/><stop offset="1" stop-color="#fc4c02" stop-opacity="0"/>
+  </linearGradient>
+  <radialGradient id="ssFlmGlowR">
+    <stop offset="0" stop-color="#ff9040" stop-opacity=".5"/><stop offset="1" stop-color="#ff9040" stop-opacity="0"/>
+  </radialGradient>
+  <linearGradient id="ssLitR" x1="0" y1="1" x2="0" y2="0">
+    <stop offset="0" stop-color="#ffb347" stop-opacity=".7"/>
+    <stop offset=".45" stop-color="#fc4c02" stop-opacity=".22"/>
+    <stop offset="1" stop-color="#fc4c02" stop-opacity="0"/>
+  </linearGradient>
+  <radialGradient id="ssGlowGradR">
+    <stop offset="0" stop-color="#ffb347" stop-opacity=".9"/>
+    <stop offset="1" stop-color="#fc4c02" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="ssHoverGradR">
+    <stop offset="0" stop-color="#ff9040" stop-opacity=".55"/>
+    <stop offset="1" stop-color="#ff9040" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="ssShadowGR">
+    <stop offset="0" stop-color="#000" stop-opacity=".6"/>
+    <stop offset="1" stop-color="#000" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="ssVaporR">
+    <stop offset="0" stop-color="#e8ecf0" stop-opacity=".7"/>
+    <stop offset="1" stop-color="#e8ecf0" stop-opacity="0"/>
+  </radialGradient>
+  <linearGradient id="ssHazeR" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#fc5a14" stop-opacity="0"/>
+    <stop offset="1" stop-color="#fc5a14" stop-opacity=".08"/>
+  </linearGradient>
+  <linearGradient id="ssStkGradR" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#ff8a3c" stop-opacity="0"/>
+    <stop offset="1" stop-color="#ff8a3c" stop-opacity=".8"/>
+  </linearGradient>
+  <radialGradient id="ssMarsR">
+    <stop offset="0" stop-color="#d98a66"/><stop offset="1" stop-color="#9c4f34"/>
+  </radialGradient>
+  <pattern id="ssTrussR" width="13" height="13" patternUnits="userSpaceOnUse">
+    <path d="M0 13 L13 0 M0 0 L13 13" stroke="rgba(252,120,40,.26)" stroke-width="1"/>
+  </pattern>
+  <filter id="ssBlurR" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.6"/></filter>
+</defs>
+
+<g id="ss-sceneR">
+<!-- 天空：火星 + Starlink 列車 -->
+<circle cx="48" cy="118" r="3.6" fill="url(#ssMarsR)"/>
+<circle cx="48" cy="118" r="7" fill="rgba(217,138,102,.15)"/>
+<g id="ss-starlinkR" fill="#cfd8e2">
+  <circle cx="20" cy="212" r="1.3"/>
+  <circle cx="33" cy="207" r="1.3"/>
+  <circle cx="46" cy="202" r="1.3"/>
+  <circle cx="59" cy="197" r="1.3"/>
+</g>
+<circle class="ss-twkB" cx="140" cy="80"  r="1.4" fill="#fff"/>
+<circle class="ss-twkC" cx="90"  cy="250" r="1.2" fill="#ffe0c0"/>
+<circle class="ss-twkA" cx="270" cy="150" r="1.3" fill="#fff"/>
+<circle class="ss-twkC" cx="200" cy="60"  r="1.1" fill="#fff"/>
+<circle class="ss-twkB" cx="30"  cy="330" r="1"   fill="#ffe0c0"/>
+
+<!-- 遠景 -->
+<rect x="0" y="834" width="320" height="32" fill="url(#ssHazeR)"/>
+<g fill="#0e0906">
+  <path d="M20 866 Q50 850 84 866 Z"/>
+  <rect x="52" y="852" width="18" height="14" rx="2"/>
+  <rect x="57" y="846" width="8" height="7" rx="1.5"/>
+</g>
+
+<!-- 地面 -->
+<rect x="0" y="866" width="320" height="34" fill="#140a06"/>
+<line x1="0" y1="866" x2="320" y2="866" stroke="rgba(252,76,2,.18)"/>
+<ellipse cx="175" cy="868" rx="132" ry="8" fill="#1d100a"/>
+
+<ellipse id="ss-shadowR" cx="135" cy="864" rx="40" ry="6.5" fill="url(#ssShadowGR)"/>
+
+<!-- Mechazilla 塔 -->
+<g>
+  <path d="M248 322 L261 314 L261 860 L248 868 Z" fill="#0f0a07" stroke="rgba(252,76,2,.2)"/>
+  <rect x="226" y="322" width="22" height="546" fill="#221610" stroke="rgba(252,76,2,.4)"/>
+  <rect x="226" y="322" width="22" height="546" fill="url(#ssTrussR)"/>
+  <g stroke="rgba(0,0,0,.4)"><path d="M226 386 h22 M226 450 h22 M226 514 h22 M226 578 h22 M226 642 h22 M226 706 h22 M226 770 h22 M226 834 h22"/></g>
+  <line x1="226.8" y1="322" x2="226.8" y2="868" stroke="rgba(255,140,60,.3)" stroke-width="1.4"/>
+  <line x1="237" y1="322" x2="237" y2="288" stroke="rgba(252,76,2,.5)" stroke-width="2"/>
+  <circle class="ss-beacon" cx="237" cy="284" r="3" fill="#fc4c02"/>
+</g>
+
+<ellipse id="ss-hoverGlowR" cx="182" cy="590" rx="80" ry="110" fill="url(#ssHoverGradR)"/>
+
+<!-- 上筷子臂 -->
+<g id="ss-armUR">
+  <path d="M92 404 L240 404 L247 399 L99 399 Z" fill="#6b4a2c"/>
+  <rect x="92" y="404" width="148" height="9" rx="3" fill="#33241a" stroke="rgba(252,76,2,.4)"/>
+  <rect x="92" y="411" width="10" height="8" rx="2" fill="#43301f"/>
+</g>
+
+<!-- Super Heavy -->
+<g id="ss-boostR"><g id="ss-tiltR">
+  <g stroke-linecap="round">
+    <line class="ss-stkR" x1="127" y1="305" x2="127" y2="386" stroke="url(#ssStkGradR)" stroke-width="2.5"/>
+    <line class="ss-stkR" x1="135" y1="290" x2="135" y2="388" stroke="url(#ssStkGradR)" stroke-width="3.5"/>
+    <line class="ss-stkR" x1="143" y1="308" x2="143" y2="386" stroke="url(#ssStkGradR)" stroke-width="2.5"/>
+  </g>
+  <g id="ss-flameGrpR">
+    <ellipse cx="135" cy="672" rx="34" ry="60" fill="url(#ssFlmGlowR)"/>
+    <path class="ss-flick"  d="M119 618 C119 662 127 714 135 746 C143 714 151 662 151 618 Z" fill="url(#ssFlmR)" filter="url(#ssBlurR)"/>
+    <path class="ss-flick2" d="M127 618 C127 650 131 678 135 696 C139 678 143 650 143 618 Z" fill="#fff3c4" opacity=".9"/>
+    <ellipse cx="135" cy="660" rx="3.4" ry="6" fill="#fff" opacity=".5"/>
+  </g>
+  <rect x="118" y="394" width="34" height="222" fill="url(#ssSteelR)"/>
+  <g fill="none" stroke="rgba(0,0,0,.3)" stroke-width=".9">
+    <path d="M118 430 a17 2.6 0 0 0 34 0"/><path d="M118 466 a17 2.6 0 0 0 34 0"/>
+    <path d="M118 502 a17 2.6 0 0 0 34 0"/><path d="M118 538 a17 2.6 0 0 0 34 0"/>
+    <path d="M118 574 a17 2.6 0 0 0 34 0"/>
+  </g>
+  <rect x="118" y="602" width="34" height="14" fill="#2b2e33"/>
+  <ellipse cx="135" cy="616" rx="17" ry="3.2" fill="#17191d"/>
+  <rect x="121" y="617" width="8" height="8" rx="2.5" fill="#101317" stroke="#3a3e44" stroke-width=".7"/>
+  <rect x="131" y="618.5" width="8" height="8" rx="2.5" fill="#14171b" stroke="#454a50" stroke-width=".7"/>
+  <rect x="141" y="617" width="8" height="8" rx="2.5" fill="#101317" stroke="#3a3e44" stroke-width=".7"/>
+  <rect x="125" y="398" width="2.6" height="214" rx="1.3" fill="rgba(255,255,255,.18)"/>
+  <rect x="146" y="398" width="2.2" height="214" rx="1.1" fill="rgba(252,100,30,.16)"/>
+  <path d="M108 398 L118 398 L121 393 L111 393 Z" fill="#8a9096"/>
+  <rect x="108" y="398" width="10" height="19" rx="2" fill="#61666c" stroke="#3c4046" stroke-width=".8"/>
+  <path d="M108 403 h10 M108 408 h10 M108 413 h10" stroke="rgba(0,0,0,.35)" stroke-width=".8"/>
+  <rect class="ss-finHotR" x="108" y="398" width="10" height="19" rx="2" fill="#ff6a1e" opacity="0"/>
+  <path d="M152 398 L162 398 L159 393 L149 393 Z" fill="#4a4e54"/>
+  <rect x="152" y="398" width="10" height="19" rx="2" fill="#3c4046" stroke="#26292e" stroke-width=".8"/>
+  <path d="M152 403 h10 M152 408 h10 M152 413 h10" stroke="rgba(0,0,0,.4)" stroke-width=".8"/>
+  <rect class="ss-finHotR" x="152" y="398" width="10" height="19" rx="2" fill="#e85a14" opacity="0"/>
+  <rect x="111" y="420" width="7" height="7" rx="2" fill="#5a5f66"/>
+  <rect x="152" y="420" width="7" height="7" rx="2" fill="#33363b"/>
+  <ellipse class="ss-vw ss-vw1R" cx="155" cy="400" rx="8" ry="5" fill="url(#ssVaporR)"/>
+  <ellipse class="ss-vw ss-vw2R" cx="153" cy="425" rx="7" ry="4.5" fill="url(#ssVaporR)"/>
+  <g class="ss-bodyLitR">
+    <rect x="118" y="470" width="34" height="146" fill="url(#ssLitR)"/>
+    <ellipse cx="135" cy="616" rx="15" ry="2.8" fill="#ffb347" opacity=".85"/>
+  </g>
+</g></g>
+
+<!-- 下筷子臂 -->
+<g id="ss-armDR">
+  <path d="M92 430 L240 430 L247 425 L99 425 Z" fill="#7d5530"/>
+  <rect x="92" y="430" width="148" height="11" rx="3" fill="#3a2a1c" stroke="rgba(252,76,2,.45)"/>
+  <rect x="92" y="424" width="10" height="8" rx="2" fill="#43301f"/>
+</g>
+
+<!-- 捕捉火花 -->
+<g id="ss-sparksR" stroke="#ffcf8a" stroke-width="1.2" stroke-linecap="round">
+  <line x1="114" y1="427" x2="106" y2="419"/>
+  <line x1="114" y1="427" x2="112" y2="416"/>
+  <line x1="114" y1="427" x2="122" y2="420"/>
+  <line x1="156" y1="427" x2="164" y2="419"/>
+  <line x1="156" y1="427" x2="158" y2="416"/>
+  <line x1="156" y1="427" x2="148" y2="420"/>
+</g>
+
+<ellipse id="ss-glowR" cx="135" cy="622" rx="42" ry="26" fill="url(#ssGlowGradR)"/>
+</g>
+</svg>
+<div class="ss-pad-tag">SITE B · T+10 CATCH</div>
+</div>
+
+<!-- ═══════════ 中央：說明 ═══════════ -->
+<div class="demo-col">
+  <div class="demo-card">
+    <h1>🚀 Starship 起降動畫 · 概念稿 V4</h1>
+    <p>時間軸改成<b>接續敘事</b>：不再左右同時演，而是「先看它從左邊升空 → 十秒後同一枚助推器回到右邊被筷子夾住」。整個循環 20 秒。</p>
+  </div>
+
+  <div class="demo-card">
+    <h2>接續時間軸 · 20 秒一輪</h2>
+    <dl class="tl">
+      <dt>0.0s</dt><dd>左：全箭待命，LOX 白霧排氣</dd>
+      <dt>1.2s</dt><dd>左：加註臂脫離收回</dd>
+      <dt>1.4s</dt><dd>左：<b>點火</b> — 閃光、水幕、煙雲、鏡頭震動</dd>
+      <dt>2.4s</dt><dd>左：離架升空</dd>
+      <dt>7.5s</dt><dd>左：重力轉彎縮小，飛出畫面</dd>
+      <dt>9.6s</dt><dd>左：尾跡柱消散、發射台淨空</dd>
+      <dt>10.0s</dt><dd>右：<b>助推器出現在高空</b>（小尺寸、帶熱流光帶）</dd>
+      <dt>10.7s</dt><dd>右：降落燃燒點火減速</dd>
+      <dt>14.0s</dt><dd>右：進入捕捉高度，姿態修正垂直</dd>
+      <dt>15.2s</dt><dd>右：<b>筷子夾住</b> — 火花、鏡頭震動</dd>
+      <dt>15.5s</dt><dd>右：熄火下沉坐定、餘溫光暈</dd>
+      <dt>16.4s</dt><dd>右：箭體排氣洩壓，掛在塔上</dd>
+      <dt>19.4s</dt><dd>淡出重置，下一輪</dd>
+    </dl>
+    <p style="margin-top:12px">左邊尾跡在 9.6s 散盡、右邊 10.0s 接手，中間留了一個乾淨的交棒點——視覺上就是同一枚箭「去了又回」。</p>
+  </div>
+
+  <div class="demo-card">
+    <h2>整合狀態</h2>
+    <p>
+      <span class="chip">已移入 strava.html</span>
+      <span class="chip">ss- 前綴防撞名</span>
+      <span class="chip">≥1240px 才顯示</span>
+      <span class="chip">純 SVG + CSS</span>
+      <span class="chip">零套件</span>
+    </p>
+    <p>所有 class / id / 漸層都加了 <b>ss-</b> 前綴，不會和 strava.html 既有樣式衝突。側板寬度用 <b>clamp</b> 綁定視窗寬度，永遠不會壓到中央 800px 內容區；視窗小於 1240px 自動隱藏。</p>
+  </div>
+</div>
+</body>
+</html>
