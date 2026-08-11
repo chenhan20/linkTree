@@ -9,6 +9,9 @@
 //   REFRESH_LAPS=1    —— 忽略 lap 快取重抓
 //   LAP_FETCH_MAX=N   —— 單次執行最多打多少次 detail API 補 lap（預設 30）避免撞 Strava 限流
 //   POWER_ONLY=1      —— 只做功率 PR 更新，跳過 laps/segments enrichment（省 read quota）
+//   RESCAN_SEG_DAYS=N —— 無視快取重掃最近 N 天騎乘的 segment efforts。
+//                        同一趟活動刷同一段多次（「劍 中 中 中 劍」）時要用它補齊，
+//                        因為那些活動已被標記「掃過」，預設不會再打 detail API。
 //
 // 首次全量範例 (PowerShell)：
 //   $env:FETCH_ALL="1"; $env:SCAN_SEGMENTS="1"; node scripts/fetch-strava.js
@@ -157,6 +160,36 @@ function fmtElapsed(seconds) {
   const sec = s % 60
   return `${h}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
 }
+
+// ── 單筆 segment effort → 內部格式 ─────────────────────────────────
+// 一次活動可以刷同一段很多次（「劍 中中中中 劍」= 一趟裡四次中社），所以 effort
+// 的身分不能是 activity_id。這裡用 activity_id + start_time 當自然鍵：
+// 同一段不可能在同一分鐘內起跑兩次，所以它唯一，而且精確、看得懂。
+//
+// 刻意不存 Strava 的 segment_effort.id：新制 effort id 約 3.5e18，超過 JS 的
+// Number.MAX_SAFE_INTEGER (9.0e15)，JSON.parse 當場就把尾數算掉了（會看到 ...656000
+// 這種假尾巴）。存下去等於在公開資料裡放一個打 API 會 404 的假 ID。
+function mapSegEffort(se, activityId, date) {
+  const startLocal = se.start_date_local || se.start_date || ''
+  return {
+    activity_id:   activityId,
+    date,
+    start_time:    startLocal.length >= 16 ? startLocal.slice(11, 16) : null,
+    elapsed_sec:   se.elapsed_time,
+    elapsed_str:   fmtElapsed(se.elapsed_time),
+    avg_watts:     se.average_watts     ? Math.round(se.average_watts)     : null,
+    avg_heartrate: se.average_heartrate ? Math.round(se.average_heartrate) : null,
+    pr_rank:       se.pr_rank           || null,
+  }
+}
+
+// effort 身分（精確鍵）：同一趟裡的第 n 次靠 start_time 分辨
+const segEffortKey = e => `${e.activity_id}|${e.start_time}`
+// 舊格式鍵：2026-08-11 之前寫入的紀錄沒有 start_time，重掃時要靠這個鍵認出
+// 「同一筆」並就地補欄位，而不是變成重複列。
+const segEffortLegacyKey = e => `${e.activity_id}|${e.elapsed_sec}`
+// 日期降冪；同一天用開始時間排（沒有 start_time 的舊紀錄排在同日最後）
+const segEffortSortKey = e => `${e.date} ${e.start_time || '00:00'}`
 
 async function fetchSegmentInfo(token, segmentId) {
   const data = await request({
@@ -541,6 +574,15 @@ async function enrichRideLaps(token, recentRides, existingRides, existingSegment
       : (existingSegScanIds || []).map(String)
   )
 
+  // RESCAN_SEG_DAYS=N：無視兩層快取，強制重掃最近 N 天的騎乘。
+  // 2026-08-11 之前的掃描用 activity_id 去重，同一趟活動裡的第 2..n 次 effort 被吃掉，
+  // 所以補齊歷史必須能重掃「已經有 effort、也標記掃過」的活動。
+  const RESCAN_SEG_DAYS = parseInt(process.env.RESCAN_SEG_DAYS || '0', 10)
+  const rescanCutoff = RESCAN_SEG_DAYS > 0
+    ? new Date(Date.now() + 8 * 3600 * 1000 - RESCAN_SEG_DAYS * 86400000).toISOString().slice(0, 10)
+    : null
+  if (rescanCutoff) console.log(`🔁 RESCAN_SEG_DAYS=${RESCAN_SEG_DAYS}：${rescanCutoff} 之後的騎乘一律重掃 segment efforts`)
+
   // 新收集的 segment efforts：{ [segId]: [...] }
   const newSegEfforts = {}
 
@@ -551,8 +593,9 @@ async function enrichRideLaps(token, recentRides, existingRides, existingSegment
     const key = String(ride.id)
     const needsLaps = !(key in cache)
     const needsDesc = !(key in descCache)
-    // needsSegs：沒有 ITT effort 且沒被掃描過
-    const needsSegs = !knownActivityIds.has(key) && !segScanIds.has(key)
+    // needsSegs：沒有 ITT effort 且沒被掃描過（或落在 RESCAN_SEG_DAYS 視窗內）
+    const forceSegRescan = rescanCutoff != null && String(ride.date || '') >= rescanCutoff
+    const needsSegs = forceSegRescan || (!knownActivityIds.has(key) && !segScanIds.has(key))
 
     if (!needsLaps && !needsSegs && !needsDesc) {
       ride.top_laps    = cache[key] || []
@@ -584,21 +627,16 @@ async function enrichRideLaps(token, recentRides, existingRides, existingSegment
       if (needsSegs) {
         segScanIds.add(key)  // 無論有無 ITT 都記錄「已掃描」
         if (Array.isArray(detail.segment_efforts)) {
+          let hitCount = 0
           for (const se of detail.segment_efforts) {
             if (se.segment && SEGMENT_IDS.has(se.segment.id)) {
               const sid = se.segment.id
               if (!newSegEfforts[sid]) newSegEfforts[sid] = []
-              newSegEfforts[sid].push({
-                activity_id:   ride.id,
-                date:          ride.date,
-                elapsed_sec:   se.elapsed_time,
-                elapsed_str:   fmtElapsed(se.elapsed_time),
-                avg_watts:     se.average_watts     ? Math.round(se.average_watts)     : null,
-                avg_heartrate: se.average_heartrate ? Math.round(se.average_heartrate) : null,
-                pr_rank:       se.pr_rank           || null,
-              })
+              newSegEfforts[sid].push(mapSegEffort(se, ride.id, ride.date))
+              hitCount++
             }
           }
+          if (hitCount > 1) console.log(`  🔁 ${ride.name}：同一趟命中 ${hitCount} 段 ITT effort`)
         }
       }
     } catch (e) {
@@ -652,25 +690,46 @@ async function buildSegmentsData(token, newSegEfforts, existingSegments) {
     // 永遠套用自訂名稱
     existing.name = SEGMENT_CUSTOM_NAMES[segId] || existing.name
 
-    // 合併新 efforts（去重）
+    // ── 合併新 efforts ──
+    // 去重鍵是 activity_id + start_time（同一趟刷四次中社 = 四個不同起跑時間），
+    // 不是 activity_id —— 用 activity_id 去重會吃掉同一趟裡的第 2..n 次。
+    // 舊紀錄沒有 start_time，用 activity_id|elapsed_sec 認出同一筆並就地補欄位，
+    // 這樣重掃既有活動只會「升級」原本那筆，不會把它變成兩列。
     const existingEfforts = existing.efforts || []
-    const knownIds = new Set(existingEfforts.map(e => String(e.activity_id)))
+    const byKey    = new Map()
+    const byLegacy = new Map()
+    for (const e of existingEfforts) {
+      if (e.start_time) byKey.set(segEffortKey(e), e)
+      if (!byLegacy.has(segEffortLegacyKey(e))) byLegacy.set(segEffortLegacyKey(e), e)
+    }
+    let added = 0
     for (const e of (newSegEfforts[segId] || [])) {
-      if (!knownIds.has(String(e.activity_id))) {
-        existingEfforts.push(e)
-        knownIds.add(String(e.activity_id))
+      const hit = e.start_time ? byKey.get(segEffortKey(e)) : null
+      if (hit) { Object.assign(hit, e); continue }
+      const legacy = byLegacy.get(segEffortLegacyKey(e))
+      if (legacy && !legacy.start_time) {
+        Object.assign(legacy, e)                 // 舊紀錄升級：補上 start_time
+        if (legacy.start_time) byKey.set(segEffortKey(legacy), legacy)
+        continue
       }
+      existingEfforts.push(e)
+      added++
+      if (e.start_time) byKey.set(segEffortKey(e), e)
+      if (!byLegacy.has(segEffortLegacyKey(e))) byLegacy.set(segEffortLegacyKey(e), e)
     }
 
-    // 日期降冪排序
-    existingEfforts.sort((a, b) => b.date.localeCompare(a.date))
+    // 日期降冪；同一天照開始時間由晚到早
+    existingEfforts.sort((a, b) => segEffortSortKey(b).localeCompare(segEffortSortKey(a)))
 
-    // PR 標記
+    // PR 標記：同秒數並列時只標最早達成的那一筆，避免出現兩頂皇冠
     const prTime = existingEfforts.length > 0
       ? Math.min(...existingEfforts.map(e => e.elapsed_sec))
       : null
+    const prHolder = prTime === null ? null : existingEfforts
+      .filter(e => e.elapsed_sec === prTime)
+      .sort((a, b) => segEffortSortKey(a).localeCompare(segEffortSortKey(b)))[0]
 
-    const efforts = existingEfforts.map(e => ({ ...e, is_pr: e.elapsed_sec === prTime }))
+    const efforts = existingEfforts.map(e => ({ ...e, is_pr: e === prHolder }))
 
     result.push({
       id:               segId,
@@ -685,7 +744,7 @@ async function buildSegmentsData(token, newSegEfforts, existingSegments) {
       kom_elapsed_sec:  existing.kom_elapsed_sec  || null,
       efforts,
     })
-    console.log(`✅ Segment ${segId} (${existing.name})：共 ${efforts.length} 次`)
+    console.log(`✅ Segment ${segId} (${existing.name})：共 ${efforts.length} 次${added ? `（新增 ${added}）` : ''}`)
   }
   return result
 }
@@ -704,7 +763,17 @@ async function scanSegmentsHistory(token, activities, existingSegments) {
     }
   }
 
-  const unknownRides = allRides.filter(a => !knownActivityIds.has(String(a.id)))
+  // 已有 effort 的活動預設跳過，但 RESCAN_SEG_DAYS 視窗內的一律重掃 ——
+  // 舊資料每趟活動最多只留一筆 effort，不重掃就補不回同一趟裡的第 2..n 次。
+  const RESCAN_SEG_DAYS = parseInt(process.env.RESCAN_SEG_DAYS || '0', 10)
+  const rescanCutoff = RESCAN_SEG_DAYS > 0
+    ? new Date(Date.now() + 8 * 3600 * 1000 - RESCAN_SEG_DAYS * 86400000).toISOString().slice(0, 10)
+    : null
+  const unknownRides = allRides.filter(a => {
+    const date = (a.start_date_local || a.start_date || '').slice(0, 10)
+    if (rescanCutoff && date >= rescanCutoff) return true
+    return !knownActivityIds.has(String(a.id))
+  })
   console.log(`🔍 SCAN_SEGMENTS：全史 ${allRides.length} 筆騎乘，待掃描 ${unknownRides.length} 筆`)
 
   const newSegEfforts = {}
@@ -719,14 +788,7 @@ async function scanSegmentsHistory(token, activities, existingSegments) {
           if (se.segment && SEGMENT_IDS.has(se.segment.id)) {
             const sid = se.segment.id
             if (!newSegEfforts[sid]) newSegEfforts[sid] = []
-            newSegEfforts[sid].push({
-              activity_id:   a.id,
-              date,
-              elapsed_sec:   se.elapsed_time,
-              elapsed_str:   fmtElapsed(se.elapsed_time),
-              avg_watts:     se.average_watts     ? Math.round(se.average_watts)     : null,
-              avg_heartrate: se.average_heartrate ? Math.round(se.average_heartrate) : null,
-            })
+            newSegEfforts[sid].push(mapSegEffort(se, a.id, date))
           }
         }
       }

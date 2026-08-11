@@ -2409,6 +2409,21 @@ function toggleLaps(btn, gid) {
   els.forEach(e => { e.style.display = show ? '' : 'none' })
   btn.textContent = show ? '▲ 收起' : '▼ +' + els.length + ' 分段'
 }
+/* ── ITT effort 的身分 ────────────────────────────────────────────
+   一趟活動可以刷同一段很多次（「劍 中中中中 劍」就是一趟裡四次中社），
+   所以 effort 的身分是 activity_id + 起跑時間，不是 activity_id。
+   舊資料沒有 start_time（一趟只留了一筆），退回秒數仍足以區分。 */
+function effortKey(e) {
+  if (!e) return ''
+  return `a${e.activity_id}|${e.start_time || ''}|${e.elapsed_sec}`
+}
+/* 時間軸排序鍵：同一天的多趟靠 start_time 分先後 */
+function effortTimeKey(e) {
+  return `${(e && e.date) || ''} ${(e && e.start_time) || '00:00'}`
+}
+function sameEffort(a, b) {
+  return !!a && !!b && effortKey(a) === effortKey(b)
+}
 function fmtMovingTime(hr) {
   // PRD FR-4: 避免 "1:00" 歧義，改為 "45 分" / "1 小時" / "1 小時 30 分"
   const totalMin = Math.max(0, Math.round((hr || 0) * 60))
@@ -3076,7 +3091,7 @@ function renderSegments(segs) {
     const meta   = SEG_META[seg.id] || {}
     const sorted = (seg.efforts || []).slice().sort((a,b) => a.elapsed_sec - b.elapsed_sec)
     const pr     = seg.efforts.find(e => e.is_pr) || sorted[0]
-    const latest = (seg.efforts || []).slice().sort((a,b) => b.date.localeCompare(a.date))[0]
+    const latest = (seg.efforts || []).slice().sort((a,b) => effortTimeKey(b).localeCompare(effortTimeKey(a)))[0]
 
     const prWatts  = pr && pr.avg_watts ? pr.avg_watts : null
     const wkg      = prWatts ? (prWatts / ATHLETE_WT).toFixed(1) : '—'
@@ -3118,7 +3133,7 @@ function renderSegments(segs) {
 
     // ── Special states ──
     const isFirst         = attempts === 1
-    const isBreakthrough  = attempts > 1 && latest && pr && latest.activity_id === pr.activity_id
+    const isBreakthrough  = attempts > 1 && sameEffort(latest, pr)
     const byDateAsc       = (seg.efforts||[]).slice().sort((a,b) => a.date.localeCompare(b.date))
     const isHeatingUp     = byDateAsc.length >= 3 &&
       byDateAsc.slice(-3)[0].elapsed_sec > byDateAsc.slice(-3)[1].elapsed_sec &&
@@ -3149,7 +3164,7 @@ function renderSegments(segs) {
 
     const benchTag      = useAllTime ? ' (ALL-TIME)' : ''
     const scoreDisplay  = scorePct !== null ? `${scorePct}% OF PEAK${benchTag}` : (hasBench ? '—' : 'NO BENCHMARK')
-    const isNewRecord   = pr && latest && pr.activity_id === latest.activity_id
+    const isNewRecord   = sameEffort(pr, latest)
     const timeClass     = isNewRecord ? 'is-new' : ''
 
     // ── GAP TO KOM ──
@@ -3181,7 +3196,7 @@ function renderSegments(segs) {
     let lastGapTxt, lastGapColor, lastGapLabel
     if (!latest || !pr) {
       lastGapTxt = '—'; lastGapColor = 'rgba(255,255,255,.25)'; lastGapLabel = 'LAST vs PR'
-    } else if (latest.activity_id === pr.activity_id) {
+    } else if (sameEffort(latest, pr)) {
       lastGapTxt = 'PR ✓'; lastGapColor = accent; lastGapLabel = 'LAST EFFORT'
     } else {
       const gapSec = latest.elapsed_sec - pr.elapsed_sec
@@ -3880,13 +3895,19 @@ function openSegModal(id) {
     `${seg.distance_km} km · PR ${seg.pr_time_str || '—'} · ${seg.efforts.length} attempts`
   document.getElementById('seg-modal-link').href = `https://www.strava.com/segments/${id}`
   const tbody = document.getElementById('seg-modal-tbody')
+  // 同一天可能刷了好幾趟；只有這種日子才在日期後補開始時間，
+  // 否則單趟的日子會多出一串沒有資訊量的 00:00
+  const dayCount = {}
+  seg.efforts.forEach(e => { const d = e.date || ''; dayCount[d] = (dayCount[d] || 0) + 1 })
   tbody.innerHTML = seg.efforts.map(e => {
     const crown = e.is_pr ? '👑 ' : ''
     const watts = e.avg_watts ? e.avg_watts + 'w' : '—'
     const hr    = e.avg_heartrate || '—'
     const date  = e.date ? e.date.replace(/-/g,'/') : '—'
+    const rep   = dayCount[e.date || ''] > 1 && e.start_time
+      ? ` <small style="color:rgba(255,255,255,.55)">${e.start_time}</small>` : ''
     return `<tr class="${e.is_pr ? 's2-epr' : ''}" data-date="${e.date||''}" data-actid="${e.activity_id||''}" style="cursor:pointer" title="跳至活動紀錄">
-      <td>${date}</td><td>${crown}${e.elapsed_str}</td><td>${watts}</td><td>${hr}</td>
+      <td>${date}${rep}</td><td>${crown}${e.elapsed_str}</td><td>${watts}</td><td>${hr}</td>
     </tr>`
   }).join('')
   // bind row click to scroll to activity
@@ -5195,7 +5216,7 @@ function selfHistoryFor(segId) {
   const seen = new Map()
   const add = (e, label) => {
     if (!e) return
-    const k = e.activity_id != null ? 'a' + e.activity_id : e.date + '_' + e.elapsed_sec
+    const k = effortKey(e)
     if (!seen.has(k)) seen.set(k, { effort: e, labels: [] })
     seen.get(k).labels.push(label)
   }
@@ -5208,7 +5229,7 @@ function selfHistoryFor(segId) {
   return [...seen.values()].map(v => {
     const st = style(v.labels)
     return {
-      id: 'self_' + (v.effort.activity_id || v.effort.date),
+      id: 'self_' + effortKey(v.effort),
       name: v.labels.join('＝'),
       short: st.short, color: st.color,
       fullName: 'STEVE CHUANG',
@@ -6167,15 +6188,16 @@ function render(data) {
   const pwrAchv = buildPowerAchvMap(data.power_prs)
 
   // ── ITT date → efforts map ──
+  // 名次以 effort 為單位（同一趟活動刷四次就是四個名次），不能用 activity_id 當鍵
   const ittMap = {}
   ;(data.segments || []).forEach(seg => {
-    const sorted = seg.efforts.slice().sort((a, b) => (a.date || '').localeCompare(b.date || ''))
+    const sorted = seg.efforts.slice().sort((a, b) => effortTimeKey(a).localeCompare(effortTimeKey(b)))
     const byTime = seg.efforts.slice().sort((a, b) => (a.elapsed_sec || 0) - (b.elapsed_sec || 0))
-    const rankOf = {}; byTime.forEach((e, i) => { rankOf[e.activity_id] = i + 1 })
+    const rankOf = new Map(); byTime.forEach((e, i) => rankOf.set(effortKey(e), i + 1))
     sorted.forEach((e, idx) => {
       const d = (e.date || '').slice(0, 10)
       if (!ittMap[d]) ittMap[d] = []
-      ittMap[d].push({ segName: seg.name, elapsed_str: e.elapsed_str, is_pr: e.is_pr, attemptNum: idx + 1, total: sorted.length, rank: rankOf[e.activity_id], activityId: e.activity_id })
+      ittMap[d].push({ segName: seg.name, elapsed_str: e.elapsed_str, is_pr: e.is_pr, attemptNum: idx + 1, total: sorted.length, rank: rankOf.get(effortKey(e)), activityId: e.activity_id, startTime: e.start_time || null })
     })
   })
 
