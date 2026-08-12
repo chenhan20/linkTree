@@ -12,6 +12,7 @@ analyze_tcx.py — TCX 訓練檔解析器
 沒有 --ftp 時會以 20 分鐘最佳功率 x 0.95 估算並標記 estimated=true。
 """
 import argparse
+import bisect
 import json
 import math
 import os
@@ -96,6 +97,185 @@ def parse_tcx(path):
         laps.append(li)
     return meta, laps, points
 
+
+
+# ---------------------------------------------------------------- FIT
+# TCX 是 Garmin 的簡化交換格式，每點只有 8 個欄位；FIT 才是完整的那份。
+# 實測同一趟（activity 23929795272）FIT 多出來的：左右功率平衡、裝置上真正設定的
+# 心率／功率區間邊界、Garmin 訓練效果、HRV、呼吸速率、站立時間。
+# 這個函式回傳與 parse_tcx 完全相同的 (meta, laps, points) 三元組，
+# 下游 24 處用到 laps／points 的程式碼一行都不必改；FIT 專屬的東西放在 meta["fit"]。
+SEMI = 180.0 / (2 ** 31)          # semicircles → 度
+_MFR = {"garmin": "Garmin", "giant_manufacturing_co": "Giant", "wahoo_fitness": "Wahoo",
+        "stages_cycling": "Stages", "sram": "SRAM", "shimano": "Shimano", "favero_electronics": "Favero"}
+
+
+def _mfr(name):
+    return _MFR.get(str(name), str(name).replace("_", " ").title())
+
+
+def _lrb_right_pct(v):
+    """FIT 的左右平衡是帶旗標的整數；record 層遮罩 0x7F、session/lap 層 0x3FFF（單位 1/100 %）。
+    fitdecode 偶爾會把純旗標值解成字串，所以非數字一律當沒有。"""
+    if isinstance(v, str) or v is None:
+        return None
+    if v > 255:                    # session / lap：left_right_balance_100
+        return (v & 0x3FFF) / 100.0
+    return float(v & 0x7F)         # record
+
+
+def parse_fit(path):
+    """回傳 (activity_meta, laps, points)，形狀與 parse_tcx 一致。"""
+    try:
+        import fitdecode
+    except ImportError:
+        raise SystemExit(
+            "讀 FIT 需要 fitdecode，請先安裝：\n"
+            "  python3 -m pip install fitdecode\n"
+            "（或改丟 .tcx，那條路徑只用標準函式庫）"
+        )
+
+    recs, fit_laps, sess, tiz, devices = [], [], None, None, []
+    with fitdecode.FitReader(path) as fr:
+        for frame in fr:
+            if not isinstance(frame, fitdecode.FitDataMessage):
+                continue
+            d = {f.name: f.value for f in frame.fields}
+            if frame.name == "record":
+                recs.append(d)
+            elif frame.name == "lap":
+                fit_laps.append(d)
+            elif frame.name == "session" and sess is None:
+                sess = d
+            elif frame.name == "time_in_zone" and tiz is None:
+                tiz = d
+            elif frame.name == "device_info":
+                if d.get("manufacturer"):
+                    devices.append(d)
+    if not recs:
+        raise SystemExit("FIT 裡沒有 record 訊息，這可能不是活動檔。")
+    sess = sess or {}
+
+    points = []
+    for d in recs:
+        ts = d.get("timestamp")
+        if ts is None:
+            continue
+        lat, lon = d.get("position_lat"), d.get("position_long")
+        cad = d.get("cadence")
+        if cad is not None and d.get("fractional_cadence"):
+            cad = cad + d["fractional_cadence"]
+        points.append({
+            "t":    ts if ts.tzinfo else ts.replace(tzinfo=timezone.utc),
+            "lat":  lat * SEMI if lat is not None else None,
+            "lon":  lon * SEMI if lon is not None else None,
+            "alt":  d.get("enhanced_altitude", d.get("altitude")),
+            "dist": d.get("distance"),
+            "hr":   d.get("heart_rate"),
+            "cad":  int(cad) if cad is not None else None,
+            "spd":  d.get("enhanced_speed", d.get("speed")),
+            "w":    d.get("power"),
+            "lrb":  _lrb_right_pct(d.get("left_right_balance")),
+        })
+    points.sort(key=lambda p: p["t"])
+
+    # lap 的起訖用時間戳對回 points，避免依賴訊息順序
+    ptimes = [p["t"] for p in points]
+    laps = []
+    for d in sorted(fit_laps, key=lambda x: x.get("start_time") or ptimes[0]):
+        st = d.get("start_time")
+        if st is not None and st.tzinfo is None:
+            st = st.replace(tzinfo=timezone.utc)
+        # TCX 的 TotalTimeSeconds 對應的是計時時間，不是流逝時間
+        sec = d.get("total_timer_time") or d.get("total_elapsed_time") or 0.0
+        i0 = bisect.bisect_left(ptimes, st) if st else 0
+        end = st + timedelta(seconds=sec) if st else None
+        i1 = bisect.bisect_right(ptimes, end) if end else len(points)
+        laps.append({
+            "start":      st.isoformat().replace("+00:00", "Z") if st else None,
+            "sec":        float(sec),
+            "dist_m":     float(d.get("total_distance") or 0.0),
+            "max_speed":  d.get("enhanced_max_speed", d.get("max_speed")),
+            "kcal":       d.get("total_calories"),
+            "avg_hr":     d.get("avg_heart_rate"),
+            "max_hr":     d.get("max_heart_rate"),
+            "cadence":    d.get("avg_cadence"),
+            "intensity":  d.get("intensity"),
+            "trigger":    d.get("lap_trigger"),
+            "avg_watts":  d.get("avg_power"),
+            "max_watts":  d.get("max_power"),
+            "i0":         i0,
+            "i1":         max(i1, i0),
+        })
+    if not laps:
+        laps = [{"start": points[0]["t"].isoformat(), "sec": (points[-1]["t"] - points[0]["t"]).total_seconds(),
+                 "dist_m": (points[-1]["dist"] or 0) - (points[0]["dist"] or 0),
+                 "max_speed": None, "kcal": None, "avg_hr": None, "max_hr": None, "cadence": None,
+                 "intensity": None, "trigger": None, "avg_watts": None, "max_watts": None,
+                 "i0": 0, "i1": len(points)}]
+
+    dev = None
+    for d in devices:
+        if d.get("product_name") or d.get("garmin_product"):
+            dev = str(d.get("product_name") or d.get("garmin_product"))
+            break
+    meta = {
+        "sport": (sess.get("sport") or "").title() or None,
+        "id": str(sess.get("start_time") or points[0]["t"]),
+        "device": dev,
+        "fit": _fit_extras(sess, tiz, points, devices),
+    }
+    return meta, laps, points
+
+
+def _fit_extras(sess, tiz, points, devices):
+    """只有 FIT 有、TCX 與 Strava API 都拿不到的東西。"""
+    tiz = tiz or {}
+    lrb = _lrb_right_pct(sess.get("left_right_balance"))
+    if lrb is None:                       # session 沒寫就從逐點用功率加權自己算
+        num = den = 0.0
+        for p in points:
+            if p.get("lrb") is not None and p.get("w"):
+                num += p["lrb"] * p["w"]; den += p["w"]
+        lrb = round(num / den, 1) if den else None
+    zone_edges = lambda hi: [int(x) for x in hi] if hi else None
+    ex = {
+        "lr_balance_right_pct": round(lrb, 1) if lrb is not None else None,
+        "threshold_power":      sess.get("threshold_power") or tiz.get("functional_threshold_power"),
+        "training_effect":      sess.get("total_training_effect"),
+        "anaerobic_effect":     sess.get("total_anaerobic_training_effect"),
+        "garmin_np":            sess.get("normalized_power"),
+        "garmin_tss":           sess.get("training_stress_score"),
+        "garmin_if":            sess.get("intensity_factor"),
+        "total_ascent":         sess.get("total_ascent"),
+        "total_descent":        sess.get("total_descent"),
+        "max_hr_setting":       tiz.get("max_heart_rate"),
+        "resting_hr":           tiz.get("resting_heart_rate"),
+        "threshold_hr":         tiz.get("threshold_heart_rate"),
+        "hr_zone_high":         zone_edges(tiz.get("hr_zone_high_boundary")),
+        "power_zone_high":      zone_edges(tiz.get("power_zone_high_boundary")),
+        "time_in_hr_zone":      [round(x, 1) for x in tiz["time_in_hr_zone"]] if tiz.get("time_in_hr_zone") else None,
+        "time_in_power_zone":   [round(x, 1) for x in tiz["time_in_power_zone"]] if tiz.get("time_in_power_zone") else None,
+        "hrv_rmssd":            sess.get("rmssd_hrv"),
+        "hrv_sdrr":             sess.get("sdrr_hrv"),
+        "resp_avg":             sess.get("enhanced_avg_respiration_rate"),
+        "resp_max":             sess.get("enhanced_max_respiration_rate"),
+        "avg_stress":           sess.get("avg_stress"),
+        "avg_spo2":             sess.get("avg_spo2"),
+        "time_standing":        sess.get("time_standing"),
+        "stand_count":          sess.get("stand_count"),
+        "grit":                 sess.get("total_grit"),
+        "flow":                 sess.get("avg_flow"),
+        "training_load_peak":   sess.get("training_load_peak"),
+        "min_temperature":      sess.get("min_temperature"),
+        "devices":              sorted({_mfr(d.get("manufacturer")) for d in devices if d.get("manufacturer")}),
+    }
+    return {k: v for k, v in ex.items() if v not in (None, [], ())}
+
+
+def parse_ride(path):
+    """依副檔名分派：.fit 走 FIT、其餘當 TCX。"""
+    return parse_fit(path) if str(path).lower().endswith(".fit") else parse_tcx(path)
 
 def _iso(s):
     s = s.strip().replace("Z", "+00:00")
@@ -371,7 +551,7 @@ def strava_context(sv, date_str, sport="Ride"):
 # ---------------------------------------------------------------- 主流程
 def analyze(path, ftp=None, weight=None, height=None, age=None, maxhr=None,
             resthr=None, strava=None):
-    meta, laps, raw = parse_tcx(path)
+    meta, laps, raw = parse_ride(path)
     pts = resample_1hz(raw)
     if not pts:
         raise SystemExit("TCX 內沒有可用的 trackpoint。")
@@ -417,14 +597,23 @@ def analyze(path, ftp=None, weight=None, height=None, age=None, maxhr=None,
     max_w = round(max(w_clean)) if have_pw else None
     kj = round(sum(w_clean) / 1000) if have_pw else None
 
+    # FIT 帶著錶上真正設定的 FTP／最大心率／靜息心率。這些以前只能猜（年齡公式、
+    # 20 分 ×0.95、本次觀測最高心率），區間圖因此是估算值。有原始檔就別再猜。
+    fitx = (meta.get("fit") or {}) if isinstance(meta, dict) else {}
+    ftp_src = "使用者提供" if ftp else None
+
     ftp_est = False
     curve_secs = [5, 10, 30, 60, 120, 300, 480, 600, 1200, 1800, 3600, 5400]
     curve = rolling_best(mw, curve_secs) if have_pw else {}
+    if not ftp and fitx.get("threshold_power"):
+        ftp = float(fitx["threshold_power"])
+        ftp_src = "裝置設定值"
     if not ftp:
         b20 = curve.get(1200)
         if b20:
             ftp = round(b20 * 0.95)
             ftp_est = True
+            ftp_src = "20 分功率 × 0.95 推估"
 
     iff = round(np_w / ftp, 3) if (np_w and ftp) else None
     tss = round(moving * np_w * iff / (ftp * 3600) * 100) if (np_w and iff and ftp) else None
@@ -434,10 +623,15 @@ def analyze(path, ftp=None, weight=None, height=None, age=None, maxhr=None,
     avg_hr = round(sum(hr_vals) / len(hr_vals)) if hr_vals else None
     max_hr_obs = max(hr_vals) if hr_vals else None
     maxhr_src = "使用者提供"
+    if not maxhr and fitx.get("max_hr_setting"):
+        maxhr = fitx["max_hr_setting"]
+        maxhr_src = "裝置設定值"
     if not maxhr:
         est = round(211 - 0.64 * age) if age else 0
         maxhr = max(max_hr_obs or 0, est) or None
         maxhr_src = "年齡公式推估" if est and est >= (max_hr_obs or 0) else "本次觀測最高值（可能低估）"
+    if not resthr and fitx.get("resting_hr"):
+        resthr = fitx["resting_hr"]
 
     cad_vals = [c for c in cads if c and c > 0]
     avg_cad = round(sum(cad_vals) / len(cad_vals)) if cad_vals else None
@@ -478,7 +672,7 @@ def analyze(path, ftp=None, weight=None, height=None, age=None, maxhr=None,
         "file": os.path.basename(path),
         "meta": meta,
         "athlete": {"height_cm": height, "weight_kg": weight, "age": age, "bmi": bmi,
-                    "ftp": ftp, "ftp_estimated": ftp_est, "ftp_wkg": ftp_wkg,
+                    "ftp": ftp, "ftp_estimated": ftp_est, "ftp_source": ftp_src, "ftp_wkg": ftp_wkg,
                     "max_hr": maxhr, "max_hr_source": maxhr_src, "rest_hr": resthr},
         "when": {
             "start_utc": t0.isoformat(),
@@ -765,7 +959,7 @@ def chart_series(path, target_points=480):
 
     功率／心率先做 45 秒平滑，否則逐秒噪訊會讓折線變成一團毛球。
     """
-    meta, laps, raw = parse_tcx(path)
+    meta, laps, raw = parse_ride(path)
     pts = resample_1hz(raw)
     remap_laps(laps, pts)
     n = len(pts)

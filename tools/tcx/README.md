@@ -1,6 +1,31 @@
-# TCX 訓練報告產生器
+# 訓練報告產生器
 
-把 Garmin 匯出的 `.tcx` 變成一頁自包含 HTML 報告，放在 `rides/` 下由 GitHub Pages 直接服務。
+把 Garmin 匯出的 `.fit`（建議）或 `.tcx` 變成一頁自包含 HTML 報告，
+放在 `rides/` 下由 GitHub Pages 直接服務。
+
+## 為什麼建議用 .fit
+
+TCX 是 Garmin 的簡化交換格式，每個點只有 8 個欄位
+（時間／座標／高度／距離／心率／迴轉／速度／功率），**Strava API 的 stream 是它的超集**。
+FIT 才是完整的原始檔，實測同一趟活動多出來的東西：
+
+| 只有 FIT 有 | 這趟的值 |
+|---|---|
+| 左右功率平衡 | 左 43.5% / 右 56.5% |
+| 錶上設定的 FTP | 234 W |
+| 錶上設定的最大／靜息／閾值心率 | 188 / 70 / 163 bpm |
+| 真實的心率與功率區間邊界 | 不必再用年齡公式與 ×0.95 推估 |
+| Garmin 訓練效果、訓練負荷 | 4.6（有氧）/ 0.7（無氧）/ 224 |
+
+差別不只是多幾個數字：**沒有 FIT 時，區間圖是用推估的邊界畫的**。
+給 `.fit` 之後，`--ftp` 與 `--maxhr` 都可以不用給，腳本會直接讀錶上的設定值
+（CLI 參數仍然優先）。實測這樣算出來的 TSS 190 / IF 0.835 與 Garmin 自己寫的
+189.9 / 0.835 一致。
+
+HRV、呼吸速率、血氧、站立時間這些欄位 FIT 也支援，但**要手錶才會錄**；
+用 Edge 車錶騎車的檔案裡是空的，報告會自動略過。
+
+安裝：`python3 -m pip install -r tools/tcx/requirements.txt`（只有讀 .fit 需要）。
 
 ## 目錄
 
@@ -18,9 +43,9 @@ tools/tcx/
 ## 產一份新報告
 
 ```bash
-# 1) 解析（只用 Python 標準函式庫，不必裝任何套件）
-python3 tools/tcx/analyze_tcx.py ~/Downloads/activity_123.tcx \
-  --ftp 239 --weight 80 --height 173 \
+# 1) 解析（.fit 或 .tcx 都吃，副檔名自動分派）
+python3 tools/tcx/analyze_tcx.py ~/Downloads/12345_ACTIVITY.fit \
+  --weight 80 --height 173 \
   --strava https://raw.githubusercontent.com/chenhan20/linkTree/master/data/strava.json \
   --json /tmp/ride.json --charts /tmp/chart.json
 

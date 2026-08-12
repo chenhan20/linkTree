@@ -63,6 +63,15 @@ h1{font-size:30px;font-weight:800;letter-spacing:-.02em;margin:6px 0 12px}
 .lede{font-size:17px;color:var(--ink-2);max-width:720px}
 .lede b{color:var(--ink-1)}
 .card{background:var(--surface-1);border:1px solid var(--ring);border-radius:12px;padding:20px 22px;margin:18px 0}
+.fit-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(122px,1fr));gap:10px;margin-bottom:20px}
+.fit-tile{background:var(--surface-2,rgba(255,255,255,.03));border:1px solid var(--ring);border-radius:9px;padding:11px 13px}
+.fit-tile .k{font-size:11px;color:var(--ink-3);letter-spacing:.4px}
+.fit-tile .v{font-size:22px;font-weight:800;color:var(--ink-1);line-height:1.15;margin-top:4px;font-variant-numeric:tabular-nums}
+.fit-tile .v small{font-size:11px;font-weight:700;color:var(--ink-3);margin-left:3px}
+.fit-tile .n{font-size:10.5px;color:var(--ink-3);margin-top:3px}
+.lr-bar{display:flex;height:34px;border-radius:7px;overflow:hidden;margin:8px 0 6px;background:var(--surface-1)}
+.lr-bar i{display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:800;color:#fff;font-style:normal}
+.lr-note{font-size:12px;color:var(--ink-2);line-height:1.7}
 h2{font-size:16px;font-weight:750;margin:0 0 4px}
 .sub{font-size:13px;color:var(--ink-3);margin-bottom:14px}
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1px;background:var(--ring);
@@ -159,6 +168,14 @@ a{color:inherit}
   <h2>強度分布</h2>
   <div class="sub" id="z-sub"></div>
   <div id="zones"></div>
+</div>
+
+<div class="card" id="card-fit" hidden>
+  <h2>裝置原始數據</h2>
+  <div class="sub" id="fit-sub"></div>
+  <div id="fit-tiles" class="fit-tiles"></div>
+  <div id="fit-lr"></div>
+  <div id="fit-zones"></div>
 </div>
 
 <div class="card" id="card-acts" hidden>
@@ -409,6 +426,65 @@ if(REPS){
   s.appendChild(txt(X(k)+9,Y(pts[k].b)-4,'PR '+pts[k].b,{fs:11.5,fill:C('ink-2'),fw:600}));
   s.appendChild(txt(X(k)+9,Y(pts[k].a)+13,'本次 '+pts[k].a,{fs:11.5,fill:C('ink-2'),fw:600}));
   s.appendChild(txt(0,12,'瓦',{fs:12.5,fill:C('ink-2'),fw:700}));
+})();
+
+/* ---------- 裝置原始數據（只有 FIT 來源才有）---------- */
+(function(){
+  const F = R.meta && R.meta.fit;
+  if(!F) return;                       // TCX／API 來源就整張卡不出現
+  document.getElementById('card-fit').hidden = false;
+  document.getElementById('fit-sub').textContent =
+    '直接從 ' + ((F.devices||['裝置']).join(' + ')) + ' 的原始檔讀出來的，不是推算值。';
+
+  const tiles=[];
+  const T=(k,v,unit,note)=>{ if(v===undefined||v===null) return;
+    tiles.push(`<div class="fit-tile"><div class="k">${k}</div><div class="v">${v}${unit?`<small>${unit}</small>`:''}</div>${note?`<div class="n">${note}</div>`:''}</div>`)}
+  T('裝置 FTP', F.threshold_power, 'W', '錶上設定值');
+  T('訓練效果', F.training_effect, '', '有氧 · 上限 5.0');
+  T('無氧效果', F.anaerobic_effect, '', '上限 5.0');
+  T('訓練負荷', F.training_load_peak!=null?Math.round(F.training_load_peak):null, '', '');
+  T('最大心率', F.max_hr_setting, 'bpm', '錶上設定值');
+  T('靜息心率', F.resting_hr, 'bpm', '');
+  T('閾值心率', F.threshold_hr, 'bpm', '');
+  T('裝置爬升', F.total_ascent, 'm', '氣壓計');
+  document.getElementById('fit-tiles').innerHTML = tiles.join('');
+
+  // 左右功率平衡
+  if(F.lr_balance_right_pct!=null){
+    const r=F.lr_balance_right_pct, l=+(100-r).toFixed(1);
+    const gap=Math.abs(r-50)*2;
+    const verdict = gap<4 ? '在一般範圍內（左右差 4% 以內）'
+      : gap<10 ? '略偏一側，值得留意但不必緊張'
+      : '明顯偏一側，建議檢查坐墊高度／前後位置，或請人看踩踏';
+    document.getElementById('fit-lr').innerHTML =
+      `<div style="font-size:12.5px;margin-bottom:2px"><b style="color:var(--ink-1)">左右功率平衡</b></div>
+       <div class="lr-bar">
+         <i style="flex:0 0 ${l}%;background:var(--q2)">左 ${l}%</i>
+         <i style="flex:0 0 ${r}%;background:var(--q4)">右 ${r}%</i>
+       </div>
+       <div class="lr-note">${verdict}。這個數字只有雙邊功率計的原始檔有，Strava 匯出與 TCX 都拿不到。</div>`;
+  }
+
+  // Garmin 自己算的區間時間（用錶上真正設定的邊界，不是這份腳本推的）
+  const mmss=s=>{const r=Math.round(s);return Math.floor(r/60)+':'+String(r%60).padStart(2,'0')};
+  const zrow=(title, secs, edges, unit)=>{
+    if(!secs || !edges) return '';
+    const tot=secs.reduce((a,b)=>a+b,0)||1;
+    const bins=secs.map((s,i)=>({s, lo:i===0?0:edges[i-1], hi:edges[i], i}))
+                   .filter(b=>b.s>0 && b.hi>0);
+    if(!bins.length) return '';
+    const seg=bins.map(b=>`<i style="flex:0 0 ${b.s/tot*100}%;background:var(--q${Math.min(5,Math.max(1,b.i))})"></i>`).join('');
+    const lg=bins.map(b=>{
+      const hi = b.hi>=3000 ? '+' : '–'+b.hi;
+      return `<span><span class="sw" style="background:var(--q${Math.min(5,Math.max(1,b.i))})"></span>${b.lo}${hi} ${unit} <b style="color:var(--ink-1)">${(b.s/tot*100).toFixed(1)}%</b> <span style="color:var(--ink-3)">${mmss(b.s)}</span></span>`;
+    }).join('');
+    return `<div style="font-size:12.5px;margin:16px 0 2px"><b style="color:var(--ink-1)">${title}</b></div>
+      <div class="lr-bar" style="height:22px">${seg}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:8px;font-size:12px;color:var(--ink-2)">${lg}</div>`;
+  };
+  document.getElementById('fit-zones').innerHTML =
+    zrow('心率區間（裝置設定）', F.time_in_hr_zone, F.hr_zone_high, 'bpm') +
+    zrow('功率區間（裝置設定）', F.time_in_power_zone, F.power_zone_high, 'W');
 })();
 
 /* ---------- 區間 ---------- */
