@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>訓練報告 · Steve Chuang</title>
+<style>
+:root{color-scheme:light;--surface-1:#fcfcfb;--page:#f9f9f7;--ink-1:#0b0b0b;--ink-2:#52514e;
+ --ink-3:#898781;--ring:rgba(11,11,11,.10);--s1:#2a78d6;--s2:#eb6834;--dim:#d6d5cf}
+@media (prefers-color-scheme:dark){:root{color-scheme:dark;--surface-1:#1a1a19;--page:#0d0d0d;
+ --ink-1:#fff;--ink-2:#c3c2b7;--ink-3:#898781;--ring:rgba(255,255,255,.10);--s1:#3987e5;--s2:#d95926;--dim:#3d3d3a}}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--page);color:var(--ink-1);font-family:system-ui,-apple-system,"Noto Sans TC",sans-serif;
+ line-height:1.6;font-size:15px;padding:0 0 64px}
+.wrap{max-width:820px;margin:0 auto;padding:0 18px}
+header{padding:44px 0 18px}
+.eyebrow{color:var(--ink-3);font-size:12px;letter-spacing:.18em;text-transform:uppercase;font-weight:700}
+h1{font-size:30px;font-weight:800;letter-spacing:-.02em;margin:6px 0 10px}
+p.lede{color:var(--ink-2);max-width:620px}
+.row{display:block;text-decoration:none;color:inherit;background:var(--surface-1);
+ border:1px solid var(--ring);border-radius:12px;padding:16px 18px;margin:12px 0;transition:.12s}
+.row:hover{border-color:var(--s2);transform:translateY(-1px)}
+.d{display:flex;gap:10px;align-items:baseline;font-size:12.5px;color:var(--ink-3)}
+.d b{color:var(--ink-1);font-size:14px;font-variant-numeric:tabular-nums}
+.t{font-size:19px;font-weight:750;margin:3px 0 8px}
+.m{display:flex;flex-wrap:wrap;gap:14px;font-size:13px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.eff{color:var(--s2);font-weight:700}
+footer{color:var(--ink-3);font-size:12px;margin-top:32px;text-align:center}
+a.back{color:var(--ink-3);font-size:13px;text-decoration:none}
+</style>
+</head>
+<body><div class="wrap">
+<header>
+  <div class="eyebrow">Training Reports</div>
+  <h1>訓練報告</h1>
+  <p class="lede">每一趟 TCX 自動產生的分析頁：分圈、區間、爬坡、停等判讀與教練評語。點日期進去看細節。</p>
+</header>
+    <a class="row" href="rides/2026-08-11.html">
+      <div class="d"><b>2026-08-11</b><span>週二 05:54</span></div>
+      <div class="t">劍 中中中中 劍</div>
+      <div class="m"><span>47.36 km</span><span>↑1,239 m</span><span>2:43</span>
+        <span>NP 195</span><span>TSS 182</span>
+        <span class="eff" style="--p:63.7">有效 63.7%</span></div>
+    </a>
+    <a class="row" href="rides/2026-08-06.html">
+      <div class="d"><b>2026-08-06</b><span>週四 04:47</span></div>
+      <div class="t">劍 中 露</div>
+      <div class="m"><span>39.48 km</span><span>↑756 m</span><span>2:24</span>
+        <span>NP 177</span><span>TSS 133</span>
+        <span class="eff" style="--p:35.5">有效 35.5%</span></div>
+    </a>
+<footer>由 <code>tcx-training-report</code> 產生 · <a class="back" href="../strava.html">← 回 Strava 總覽</a></footer>
+</div></body></html>
