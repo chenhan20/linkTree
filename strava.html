@@ -5,9 +5,31 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Steve Chuang · Strava</title>
 <link rel="icon" type="image/png" href="docs/strava_icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Saira+Condensed:wght@600;700;800&display=swap">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0a0408;color:#ddd}
+
+/* ══ 計時板 · THE SPLIT BOARD ═══════════════════════════════════════
+   這頁是一份計時賽的遙測紀錄，字體就取自賽道邊的分段計時板：
+   窄長的讀數字體，收筆帶圓角，壓在一條髮絲標籤之上。
+   --f-num 只給數字（≥26px），--f-ui 給拉丁字標籤，中文一律交還系統字。
+   窄體拉丁與正常寬度的中文不可同行混排，所以兩者永遠分屬不同元素。 */
+:root{
+  --f-num:'Saira Condensed','Oswald','Arial Narrow',sans-serif;
+  --f-ui:'Archivo',-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang TC','Noto Sans TC','Microsoft JhengHei',sans-serif;
+  --f-mono:ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+  /* 中性墨階：讓橘色回到「訊號」的位置，不再兼任預設文字色 */
+  --ink-1:#f4f0ea;--ink-2:rgba(244,240,234,.66);--ink-3:rgba(244,240,234,.38);
+  --sig:#FC4C02;
+}
+html,body{height:100%;font-family:var(--f-ui);background:#0a0408;color:#ddd}
+/* 數字是這頁的主角：一律走計時板字體，並鎖等寬數字避免滾動時抖寬 */
+.ds-num,.board-num,.total-val,.fc-time,.pm-dial-val,.stat-val{
+  font-family:var(--f-num);font-variant-numeric:tabular-nums;
+  font-feature-settings:"tnum" 1;font-weight:800;
+}
 
 /* procedural deep-space backdrop — no image payload; every layer is alive.
    雙星雲核交替呼吸、極光慢旋、暗角保住讀數對比 */
@@ -74,20 +96,45 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 .back-btn:hover{background:rgba(252,76,2,.2)}
 .topbar-title{font-size:12px;color:rgba(252,76,2,.55);letter-spacing:2.5px;text-transform:uppercase;flex:1;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 
-/* ── chapter scroll system: snap · reveal · watermark · wayfinding ── */
+/* ── chapter scroll system: 一次手勢＝一章 ──────────────────────────
+   滾輪／觸控滑一下就落到下一章，靠的是原生 scroll-snap，不劫持滾輪事件：
+   `mandatory` 讓每章都是停靠點，`scroll-snap-stop:always` 保證快滑也不會一次跳過兩章。
+   高過一屏的章節（ITT、活動紀錄）由 JS 掛上 .ch-tall —— 規格允許「停靠區大於視窗時，
+   視窗可停在區內任一處」，所以那兩章仍可自由捲讀，不會被 snap 卡在開頭。 */
+/* snap 用 proximity 不用 mandatory：mandatory 會把「不到半屏」的手勢整個彈回原點，
+   而滑鼠滾輪一格只有 ~120px，撥一兩下頁面完全不動 —— 那就是「卡」的來源（實測 300px 手勢：0→0）。
+   翻章交給下面的 initChapterPager 接管 wheel；proximity 只負責觸控甩動與收尾對齊。 */
 html{scroll-behavior:smooth;scroll-snap-type:y proximity}
-.chapter{position:relative;scroll-snap-align:start;scroll-margin-top:64px}
-.chapter:not(.hero-deck){padding-top:26px}
-/* 巨大章節編號浮水印（HUD 語彙；同時是右側導覽軌的座標） */
-.chapter::after{
-  content:attr(data-ch);position:absolute;top:2px;right:0;z-index:0;
-  pointer-events:none;user-select:none;
-  font-size:clamp(64px,10vw,112px);font-weight:900;line-height:.8;letter-spacing:-3px;
-  color:rgba(252,76,2,.055);font-variant-numeric:tabular-nums;
-  opacity:0;transform:translateX(26px);
-  transition:opacity 1.1s cubic-bezier(.16,1,.3,1) .15s,transform 1.1s cubic-bezier(.16,1,.3,1) .15s;
+.chapter{
+  position:relative;scroll-snap-align:start;scroll-snap-stop:always;scroll-margin-top:64px;
+  /* 每章一屏，內容垂直置中 —— 沿用甲板本來就有的作法，短章節才不會頂在上緣留一片空 */
+  min-height:100svh;
+  display:flex;flex-direction:column;justify-content:center;
+  justify-content:safe center;   /* 內容比視窗高時不要把上緣推出可捲範圍 */
+  padding-block:clamp(40px,7svh,84px);
 }
-.chapter.in::after{opacity:1;transform:none}
+/* 高過一屏的章節：改回上對齊，留白也收緊 —— 它們是拿來讀的，不是一屏一格的 story。
+   停靠點保留（捲得到），但不強制 stop：卡在邊界上的章節（例如月度量只多出一百多 px）
+   若也 always，使用者會覺得最後一段被黏住捲不完。 */
+.chapter.ch-tall{
+  justify-content:flex-start;
+  scroll-snap-stop:normal;
+  padding-block:clamp(24px,4svh,48px);
+}
+@supports not (min-height:100svh){.chapter{min-height:100vh}}
+
+/* 量測窗口：每章開頭先說清楚「這段數字涵蓋多長的時間」。
+   從絕對定位的 ::after 改成真正的流內元素，否則內容垂直置中後它會孤零零留在上緣。 */
+.ch-win{
+  flex:0 0 auto;margin-bottom:14px;
+  pointer-events:none;user-select:none;white-space:nowrap;
+  font-size:10px;font-weight:600;letter-spacing:3.4px;line-height:1;
+  color:var(--ink-3);text-transform:uppercase;
+}
+@media(max-width:520px){
+  .chapter{padding-block:clamp(32px,6svh,64px)}
+  .ch-win{font-size:9px;letter-spacing:2.4px;margin-bottom:11px}
+}
 .chapter>*{position:relative;z-index:1}
 /* 章節進場：expo-out 上升，子元素階梯錯拍 */
 .chapter:not(.hero-deck)>*{
@@ -99,11 +146,33 @@ html{scroll-behavior:smooth;scroll-snap-type:y proximity}
 .chapter>*:nth-child(4){transition-delay:.27s}
 .chapter>*:nth-child(n+5){transition-delay:.36s}
 .chapter.in>*{opacity:1;transform:none}
-/* 標題底線在章節抵達時掃過 */
+
+/* Apple 式平移：進出場都由捲動位置直接驅動（跑在合成緒上，不經 rAF／IntersectionObserver）。
+   終態就是 CSS 預設值，所以不支援 view() 的瀏覽器直接看到完整內容 —— 動畫純屬疊加。 */
+@supports (animation-timeline: view()){
+  @media (prefers-reduced-motion: no-preference){
+    /* 交給捲動時間軸，就不要再讓 IO 的 transition 插手同一批屬性 */
+    .chapter:not(.hero-deck)>*{opacity:1;transform:none;transition:none}
+    .chapter:not(.hero-deck):not(.ch-tall)>*{
+      animation:chPan linear both;
+      animation-timeline:view();
+      animation-range:cover 0% cover 100%;
+    }
+    @keyframes chPan{
+      0%  {opacity:0;transform:translateY(64px) scale(.975)}
+      26% {opacity:1;transform:none}
+      74% {opacity:1;transform:none}
+      100%{opacity:.16;transform:translateY(-46px) scale(.985)}
+    }
+  }
+}
+/* 標題底線在章節抵達時掃過 —— 畫成一條有刻度的量尺，呼應計時板的主題 */
 .chapter .section-title{position:relative;border-bottom-color:rgba(252,76,2,.07)}
 .chapter .section-title::after{
-  content:'';position:absolute;left:0;bottom:-1px;height:1px;width:100%;
-  background:linear-gradient(90deg,#FC4C02,rgba(252,76,2,.05));
+  content:'';position:absolute;left:0;bottom:-1px;height:4px;width:100%;
+  background:
+    linear-gradient(90deg,#FC4C02,rgba(252,76,2,.05)) left bottom/100% 1px no-repeat,
+    repeating-linear-gradient(90deg,rgba(252,76,2,.5) 0 1px,transparent 1px 12px) left bottom/100% 4px no-repeat;
   transform:scaleX(0);transform-origin:left center;
   transition:transform 1s cubic-bezier(.16,1,.3,1) .2s;
 }
@@ -116,38 +185,61 @@ html{scroll-behavior:smooth;scroll-snap-type:y proximity}
   display:flex;flex-direction:column;justify-content:center;gap:20px;
   padding:18px 0 12px;
 }
-.hero-deck .namecard{flex:0 0 auto}
+.hero-deck .rider-card{flex:0 0 auto}
+
+/* ── 分段計時板讀數（住在出發名單卡裡）──
+   原本四格等寬的甲板讓四個數字互相抵消，誰都不是重點。
+   計時板只讓「今年騎了多遠」佔版面，其它三項降一階當儀表列。
+   讀數靠左、單位釘在右緣，中間留白就是計分板本來的樣子；
+   置中或並排都會在右側留下一塊沒有意義的空洞。 */
+.board-hero{
+  display:flex;align-items:flex-end;justify-content:space-between;gap:12px;
+  padding:0;margin:2px 0 0;
+  background:transparent;border:none;color:inherit;text-align:left;
+}
+.board-num{
+  display:block;font-size:clamp(84px,18.5vw,195px);line-height:.82;
+  letter-spacing:-1.5px;color:#fff;margin-left:-.03em;
+  text-shadow:0 0 34px rgba(252,76,2,.22);
+  transition:text-shadow .6s ease;
+}
+.board-hero.lit .board-num{text-shadow:0 0 40px rgba(252,76,2,.45)}
+.board-unit{
+  flex:none;text-align:right;padding-bottom:6px;
+  font-family:var(--f-num);font-weight:700;letter-spacing:1px;
+  font-size:clamp(30px,5vw,48px);line-height:.9;color:var(--sig);
+}
+.board-unit small{
+  display:block;font-family:var(--f-ui);font-size:9px;font-weight:600;
+  letter-spacing:2.4px;color:var(--ink-3);margin-top:5px;
+}
+/* 計時板下緣的量尺：讀數與儀表列之間的分界 */
+.board-tape{
+  height:5px;margin:14px -20px 0;
+  background:
+    linear-gradient(90deg,rgba(252,76,2,.55),rgba(252,76,2,.08)) left top/100% 1px no-repeat,
+    repeating-linear-gradient(90deg,rgba(252,76,2,.32) 0 1px,transparent 1px 14px) left top/100% 5px no-repeat;
+}
+
 .deck-strip{
-  position:relative;display:grid;grid-template-columns:repeat(4,1fr);
-  border:1px solid rgba(252,76,2,.22);border-radius:16px;overflow:hidden;
-  background:linear-gradient(160deg,rgba(252,76,2,.07),rgba(10,4,0,.5) 55%);
+  position:relative;display:grid;grid-template-columns:repeat(3,1fr);
+  margin:0 -20px;
 }
-.deck-strip::before,.deck-strip::after{
-  content:'';position:absolute;width:14px;height:14px;
-  border:1.5px solid rgba(252,76,2,.75);pointer-events:none;z-index:2;
-}
-.deck-strip::before{top:6px;left:6px;border-right:none;border-bottom:none}
-.deck-strip::after{bottom:6px;right:6px;border-left:none;border-top:none}
 .deck-stat{
-  position:relative;padding:22px 18px 20px;text-align:left;
+  position:relative;padding:14px 18px 16px;text-align:left;
   background:transparent;border:none;font-family:inherit;color:inherit;
 }
 .deck-stat+.deck-stat{border-left:1px solid rgba(252,76,2,.14)}
-.ds-label{font-size:11px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:#FC4C02;display:block;white-space:nowrap}
-.ds-label small{display:block;font-size:8px;letter-spacing:2px;color:rgba(252,76,2,.45);margin-top:2px}
-.ds-val{display:block;margin-top:10px;font-size:clamp(28px,4.6vw,44px);font-weight:800;line-height:1;color:#fff;font-variant-numeric:tabular-nums;letter-spacing:-.5px}
-.ds-val small{font-size:12px;font-weight:700;color:rgba(252,76,2,.8);margin-left:4px;letter-spacing:1px}
+.ds-label{font-size:10px;font-weight:600;letter-spacing:2.4px;color:var(--ink-2);display:block;white-space:nowrap}
+.ds-label small{display:block;font-size:8px;letter-spacing:2px;color:rgba(252,76,2,.5);margin-top:3px;text-transform:uppercase}
+.ds-val{display:block;margin-top:8px;font-size:clamp(30px,4.5vw,43px);font-weight:800;line-height:1;color:var(--ink-1);font-variant-numeric:tabular-nums;letter-spacing:-.5px}
+.ds-val small{font-family:var(--f-ui);font-size:11px;font-weight:700;color:rgba(252,76,2,.8);margin-left:5px;letter-spacing:1px}
 .deck-stat.lit .ds-val{text-shadow:0 0 18px rgba(252,76,2,.45)}
 button.deck-stat{cursor:pointer;transition:background .2s}
 button.deck-stat:hover{background:rgba(252,76,2,.1)}
 button.deck-stat:focus-visible{outline:2px solid #FC4C02;outline-offset:-2px;border-radius:0}
-.ds-hint{position:absolute;right:10px;bottom:8px;font-size:8px;letter-spacing:1.5px;color:rgba(252,76,2,.6);transition:color .2s;text-transform:uppercase}
+.ds-hint{position:absolute;right:10px;bottom:7px;font-size:8px;letter-spacing:1.5px;color:rgba(252,76,2,.6);transition:color .2s;text-transform:uppercase}
 button.deck-stat:hover .ds-hint{color:#FC4C02}
-.deck-sub{
-  display:flex;justify-content:space-between;gap:8px 16px;flex-wrap:wrap;
-  font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.42);
-}
-.deck-sub b{color:rgba(252,76,2,.8);font-weight:700}
 .deck-cue{
   align-self:center;margin-top:2px;background:transparent;border:none;cursor:pointer;font-family:inherit;
   font-size:10px;letter-spacing:3px;color:rgba(252,76,2,.85);text-transform:uppercase;
@@ -170,10 +262,14 @@ button.deck-stat:hover .ds-hint{color:#FC4C02}
 }
 @media(max-height:640px){.deck-cue i{height:18px}}
 @media(max-width:640px){
-  .deck-strip{grid-template-columns:1fr 1fr}
-  .deck-stat{padding:16px 14px}
-  .deck-stat:nth-child(3){border-left:none}
-  .deck-stat:nth-child(n+3){border-top:1px solid rgba(252,76,2,.14)}
+  .board-tape{margin:12px -14px 0}
+  .deck-strip{margin:0 -14px}
+  .deck-stat{padding:12px 11px 13px}
+  .ds-label{font-size:9px;letter-spacing:1.6px}
+  .ds-label small{font-size:7px;letter-spacing:1.4px}
+  .ds-val{font-size:27px;margin-top:6px}
+  .ds-val small{font-size:9px;margin-left:3px}
+  .ds-hint{font-size:7px;right:7px;bottom:5px;letter-spacing:1px}
 }
 
 /* ── scroll progress + chapter rail ── */
@@ -204,29 +300,86 @@ button.deck-stat:hover .ds-hint{color:#FC4C02}
 
 .verified{width:20px;height:20px;fill:#FC4C02;flex-shrink:0}
 
-/* ── name card (boarding pass) ── */
-/* ── name card (V13 Live Constellation) ── */
-.namecard{flex:1 1 100%;position:relative;display:flex;align-items:center;gap:22px;border-radius:16px;overflow:hidden;min-height:150px;padding:20px 26px;cursor:pointer;
-  background:linear-gradient(135deg,#1a0e06,#0a0604);border:1px solid rgba(252,76,2,.3);box-shadow:0 16px 46px rgba(0,0,0,.55)}
-.nc-canvas{position:absolute;inset:0;width:100%;height:100%;z-index:1}
-.nc-scrim{position:absolute;inset:0;z-index:2;pointer-events:none;background:
-  radial-gradient(80% 120% at 12% 50%,rgba(10,6,4,.92),rgba(10,6,4,.3) 36%,transparent 52%),
-  linear-gradient(90deg,transparent 48%,rgba(10,6,4,.55) 62%,rgba(10,6,4,.9) 78%,rgba(10,6,4,.95))}
-.nc-row{position:relative;z-index:3;display:flex;align-items:center;gap:22px;width:100%}
-.nc-badge{flex-shrink:0;width:96px;height:96px;position:relative;display:grid;place-items:center}
-.nc-ring{position:absolute;inset:0;border-radius:50%;border:1px solid rgba(252,76,2,.4);box-shadow:inset 0 0 20px rgba(252,76,2,.3)}
-.nc-ring.r2{inset:8px;border-style:dashed;border-color:rgba(252,76,2,.3);animation:nc-spin 22s linear infinite}
-@keyframes nc-spin{to{transform:rotate(360deg)}}
-.nc-av{width:64px;height:64px;flex-shrink:0;border-radius:50%;overflow:hidden;border:2px solid #FC4C02;box-shadow:0 0 18px rgba(252,76,2,.5);background:linear-gradient(135deg,#FC4C02,#ff7a3c);display:grid;place-items:center;color:#fff;font-weight:800;font-size:20px}
+/* ── 出發名單卡 ────────────────────────────────────────────────
+   原本是「名片」＋「甲板」兩個同等重量的圓角框上下疊：
+   上面那框佔掉首屏四成，卻只裝三個字；兩框邊框粗細相同，誰都不是主角。
+   計時賽報到時每位選手只拿一張卡 —— 身分與整年的數字本來就是同一件事，所以併成一張。
+   身分退成頂端的一條細列，版面留給數字。 */
+.rider-card{
+  flex:1 1 100%;position:relative;overflow:hidden;
+  border:1px solid rgba(252,76,2,.24);border-radius:18px;
+  background:linear-gradient(158deg,rgba(252,76,2,.08),rgba(12,5,2,.62) 46%,rgba(6,3,2,.78));
+  box-shadow:0 18px 52px rgba(0,0,0,.5);
+}
+/* HUD 取景框角標 —— 這頁既有的簽名幾何，整張卡只留這一組 */
+.rider-card::before,.rider-card::after{
+  content:'';position:absolute;width:14px;height:14px;z-index:4;
+  border:1.5px solid rgba(252,76,2,.75);pointer-events:none;
+}
+.rider-card::before{top:7px;left:7px;border-right:none;border-bottom:none}
+.rider-card::after{bottom:7px;right:7px;border-left:none;border-top:none}
+.nc-canvas{position:absolute;inset:0;width:100%;height:100%;z-index:0}
+.rc-scrim{
+  position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:linear-gradient(180deg,rgba(8,4,2,.42),rgba(8,4,2,.86) 42%,rgba(6,3,2,.94));
+}
+.rc-body{position:relative;z-index:2;padding:14px 20px 12px}
+
+/* 身分列 */
+.rc-id{display:flex;align-items:center;gap:13px;padding-bottom:12px}
+.nc-av{
+  width:42px;height:42px;flex:none;border-radius:50%;overflow:hidden;
+  border:1px solid rgba(252,76,2,.65);box-shadow:0 0 0 3px rgba(252,76,2,.1);
+  background:linear-gradient(135deg,#FC4C02,#ff7a3c);
+  display:grid;place-items:center;color:#fff;font-weight:800;font-size:15px;
+}
 .nc-av img{width:100%;height:100%;object-fit:cover;display:block}
-.nc-id{min-width:0}
-.nc-sign{font-size:9px;letter-spacing:3px;color:rgba(252,76,2,.85);text-transform:uppercase}
-.nc-id h2{margin:4px 0 0;font-size:24px;font-weight:800;letter-spacing:1px;color:#fff;display:flex;align-items:center;gap:8px;text-shadow:0 0 14px rgba(252,76,2,.4)}
-.nc-vbadge{width:17px;height:17px;fill:#FC4C02}
-.nc-role{color:rgba(252,76,2,.85);font-size:10px;letter-spacing:2px;text-transform:uppercase;margin-top:4px;font-weight:600}
-.nc-reroll{position:absolute;left:50%;bottom:10px;top:auto;right:auto;transform:translateX(-50%);z-index:4;font-size:10px;letter-spacing:1px;color:rgba(252,76,2,.85);background:rgba(10,6,4,.55);border:1px solid rgba(252,76,2,.4);border-radius:14px;padding:4px 12px;cursor:pointer;font-family:inherit;transition:all .15s;backdrop-filter:blur(2px)}
-.nc-reroll:hover{background:rgba(252,76,2,.28);color:#fff}
-@media (prefers-reduced-motion: reduce){.nc-ring.r2{animation:none}}
+.rc-who{min-width:0}
+.rc-who h2{
+  margin:0;font-size:17px;font-weight:700;letter-spacing:1.6px;color:var(--ink-1);
+  display:flex;align-items:center;gap:7px;white-space:nowrap;
+}
+.nc-vbadge{width:14px;height:14px;fill:var(--sig);flex:none}
+.rc-role{
+  color:var(--ink-3);font-size:9px;letter-spacing:2.6px;text-transform:uppercase;
+  margin-top:3px;font-weight:600;
+}
+/* 星座退成右上角一顆安靜的籌碼，點它就換一個 —— 不再是首屏最大聲的東西 */
+.nc-reroll{
+  margin-left:auto;flex:none;position:relative;z-index:4;
+  font-family:inherit;font-size:8.5px;letter-spacing:1.8px;
+  color:rgba(252,76,2,.7);background:rgba(252,76,2,.07);
+  border:1px solid rgba(252,76,2,.24);border-radius:100px;padding:4px 11px;
+  cursor:pointer;transition:background .15s,color .15s,border-color .15s;white-space:nowrap;
+}
+.nc-reroll:hover{background:rgba(252,76,2,.2);color:#fff;border-color:rgba(252,76,2,.55)}
+.nc-reroll:focus-visible{outline:2px solid var(--sig);outline-offset:2px}
+@media(max-width:520px){.nc-reroll{display:none}}
+
+/* 讀數區 */
+.rc-rule{height:1px;background:linear-gradient(90deg,rgba(252,76,2,.34),rgba(252,76,2,.04));margin:0 -20px}
+.rc-head{display:flex;align-items:baseline;gap:9px;padding-top:13px}
+.rc-head-zh{font-size:11.5px;font-weight:700;letter-spacing:2px;color:var(--ink-2)}
+.rc-head-en{font-size:8.5px;font-weight:600;letter-spacing:2.8px;text-transform:uppercase;color:rgba(252,76,2,.55)}
+.rc-year{
+  margin-left:auto;font-family:var(--f-num);font-size:22px;font-weight:700;
+  letter-spacing:1px;color:rgba(252,76,2,.5);line-height:1;
+}
+/* 卡片頁尾 */
+.rc-foot{
+  display:flex;justify-content:space-between;gap:8px 16px;flex-wrap:wrap;
+  padding-top:11px;margin-top:2px;
+  border-top:1px solid rgba(252,76,2,.12);
+  font-size:9.5px;letter-spacing:1.8px;text-transform:uppercase;color:var(--ink-3);
+}
+.rc-foot b{color:rgba(252,76,2,.85);font-weight:700;font-variant-numeric:tabular-nums}
+@media(max-width:520px){
+  .rc-body{padding:12px 14px 10px}
+  .rc-rule{margin:0 -14px}
+  .rc-who h2{font-size:15px;letter-spacing:1.2px}
+  .rc-year{font-size:18px}
+  .rc-foot{font-size:8.5px;letter-spacing:1.2px}
+}
 
 /* ── stats grid ── */
 .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:2.2rem}
@@ -234,7 +387,7 @@ button.deck-stat:hover .ds-hint{color:#FC4C02}
   padding:1rem 1rem 1.1rem;border-radius:10px;
   border:1px solid rgba(252,76,2,.2);background:rgba(252,76,2,.05);
 }
-.stat-val{font-size:26px;font-weight:700;color:#FF6B35;line-height:1}
+.stat-val{font-size:34px;color:#FF6B35;line-height:.9;letter-spacing:-.5px}
 .stat-unit{font-size:10px;color:rgba(252,76,2,.55);margin-top:3px}
 .stat-label{font-size:12px;color:#bbb;margin-bottom:9px;letter-spacing:.5px}
 .stat-metrics{display:flex;align-items:flex-start;gap:0}
@@ -262,6 +415,82 @@ button.deck-stat:hover .ds-hint{color:#FC4C02}
 .status-badge.warning{background:rgba(224,160,32,.12);color:#e0b040;border:1px solid rgba(224,160,32,.3)}
 .status-badge.done   {background:rgba(63,204,74,.12);color:#5fd060;border:1px solid rgba(63,204,74,.3)}
 .status-badge.over   {background:rgba(252,76,2,.15);color:#ff7040;border:1px solid rgba(252,76,2,.4);font-size:13px;font-weight:700;letter-spacing:0}
+
+/* ── 訓練現況：本月訓練量 × 月度紀律 × 本週任務 合併 ──────────────
+   這三章原本各佔一屏，但迭代的是同一組四個運動 —— 等於同一張表被拆成三個畫面，
+   想回答「跑步這週到底夠不夠」得捲過三屏。改成矩陣：一列一個運動，欄位是時間窗口。
+   直的能比運動，橫的能比週與月。 */
+.tb{margin-bottom:2rem}
+.tb-head,.tb-row{
+  display:grid;grid-template-columns:96px minmax(0,1.35fr) minmax(0,.8fr) minmax(0,1.1fr);
+  gap:16px;align-items:center;
+}
+.tb-head{
+  padding:0 4px 8px;font-size:8.5px;letter-spacing:2.4px;text-transform:uppercase;
+  color:var(--ink-3);border-bottom:1px solid rgba(252,76,2,.14);
+}
+.tb-head i{font-style:normal;color:rgba(252,76,2,.5);margin-left:5px}
+.tb-row{padding:13px 4px;border-bottom:1px solid rgba(255,255,255,.055)}
+.tb-row:last-child{border-bottom:none}
+.tb-sport{display:flex;align-items:center;gap:8px;min-width:0}
+.tb-sport em{font-size:19px;font-style:normal;line-height:1;filter:grayscale(.5);opacity:.75}
+.tb-row.wk-done .tb-sport em,.tb-row.wk-super .tb-sport em{filter:none;opacity:1}
+.tb-sport b{font-size:13px;font-weight:700;color:var(--ink-1);white-space:nowrap}
+.tb-sport i{display:none}
+
+/* 本週格 */
+.tb-week{display:flex;align-items:center;gap:10px;min-width:0}
+.tb-flag{
+  flex:none;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;
+  font-size:11px;font-weight:800;
+  border:1px solid rgba(255,255,255,.14);color:rgba(255,255,255,.28);background:rgba(255,255,255,.04);
+}
+.tb-week.is-done .tb-flag{border-color:rgba(63,204,74,.5);color:#5fd060;background:rgba(63,204,74,.12)}
+.tb-week.is-super .tb-flag{border-color:rgba(255,196,0,.6);color:#ffd24d;background:rgba(255,196,0,.14);box-shadow:0 0 12px rgba(255,196,0,.25)}
+.tb-bars{display:flex;align-items:center;gap:7px;flex:1;min-width:0}
+.tb-or{flex:none;font-size:8.5px;font-weight:700;letter-spacing:1px;color:rgba(255,255,255,.4);align-self:center;margin-top:8px}
+.mb{flex:1;min-width:0}
+.mb-t{display:block;font-size:7.5px;letter-spacing:1.4px;color:rgba(255,255,255,.3);margin-bottom:3px}
+.mb.met .mb-t{color:rgba(63,204,74,.8)}
+.mb-bar{height:4px;border-radius:3px;background:rgba(252,76,2,.16);overflow:hidden}
+.mb-bar i{display:block;height:100%;border-radius:3px;background:rgba(252,76,2,.7)}
+.mb.met .mb-bar{background:rgba(63,204,74,.18)}
+.mb.met .mb-bar i{background:rgba(63,204,74,.8)}
+.mb-v{display:block;font-size:9px;margin-top:4px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.mb.met .mb-v{color:rgba(63,204,74,.75)}
+
+/* 本月訓練量 */
+.tb-vol{min-width:0;text-align:right;font-variant-numeric:tabular-nums}
+.tb-vol b{font-family:var(--f-num);font-size:26px;font-weight:800;color:var(--ink-1);line-height:.9;letter-spacing:-.3px}
+.tb-vol small{font-size:9px;color:rgba(252,76,2,.7);margin-left:3px;letter-spacing:.5px}
+.tb-vol span{display:block;font-size:9px;color:var(--ink-3);margin-top:4px;letter-spacing:.6px}
+/* 零不是數據，是「還沒做」—— 不該和 155.3 一樣重 */
+.tb-vol.is-zero b{color:rgba(244,240,234,.3)}
+.tb-vol.is-zero small{color:rgba(252,76,2,.3)}
+.tb-vol.is-zero span{color:rgba(244,240,234,.22)}
+
+/* 本月次數 */
+.tb-month{min-width:0}
+.tb-month .progress-bar{margin-bottom:6px}
+.tb-month-meta{display:flex;align-items:center;gap:8px;font-size:10px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.tb-month-meta b{color:var(--ink-1);font-weight:700;font-size:12px}
+.tb-month-meta .status-badge{margin-left:auto;font-size:9px;padding:2px 7px}
+.tb-parts{display:flex;gap:3px;margin-top:5px;flex-wrap:wrap}
+
+@media(max-width:720px){
+  .tb-head{display:none}
+  .tb-row{
+    grid-template-columns:1fr auto;
+    grid-template-areas:'sport vol' 'week week' 'month month';
+    gap:9px 12px;padding:14px 2px;
+  }
+  .tb-sport{grid-area:sport}
+  .tb-week{grid-area:week}
+  .tb-vol{grid-area:vol}
+  .tb-month{grid-area:month}
+  .tb-vol b{font-size:22px}
+  .tb-sport i{display:block;font-size:7.5px;letter-spacing:1.6px;color:var(--ink-3)}
+}
 
 /* ── weekly quest tiles ── */
 .quest-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:2.4rem}
@@ -312,15 +541,24 @@ button.deck-stat:hover .ds-hint{color:#FC4C02}
 .lap-toggle{background:transparent;border:none;color:rgba(252,76,2,.6);font-size:10px;cursor:pointer;padding:2px 4px;letter-spacing:.5px;display:inline-block}
 .lap-toggle:hover{color:#FC4C02}
 
-/* ── section title ── */
+/* ── section title ──
+   中文標題拿回應有的份量（原本 11px 全大寫，跟旁邊的標籤分不出層級）；
+   拉丁副標退成髮絲字，橘色只留給它，中文走中性墨色。 */
 .section-title{
-  font-size:11px;font-weight:600;color:#FC4C02;letter-spacing:3px;text-transform:uppercase;
-  margin-bottom:1rem;padding-bottom:.5rem;
+  display:flex;align-items:baseline;gap:0;flex-wrap:wrap;
+  font-size:17px;font-weight:700;color:var(--ink-1);letter-spacing:.6px;text-transform:none;
+  margin-bottom:1rem;padding-bottom:.55rem;
   border-bottom:1px solid rgba(252,76,2,.15);
 }
-.section-title .muted{color:rgba(252,76,2,.4)}
-.section-title{display:flex;align-items:center;gap:0}
+.section-title .muted{
+  font-size:9.5px;font-weight:600;color:rgba(252,76,2,.62);
+  letter-spacing:2.6px;text-transform:uppercase;white-space:nowrap;
+}
 .section-title-text{flex:1}
+@media(max-width:520px){
+  .section-title{font-size:15px}
+  .section-title .muted{font-size:8.5px;letter-spacing:1.8px}
+}
 /* ── 節奏 · 訓練日曆 ── */
 .tcal{
   margin-bottom:2.4rem;padding:12px 0 10px;border-radius:16px;
@@ -356,7 +594,7 @@ button.deck-stat:hover .ds-hint{color:#FC4C02}
 .tcal-nav.next{right:5px}
 .tcal-nav[disabled]{opacity:0;pointer-events:none}
 .tcal-scroll{
-  overflow-x:auto;overflow-y:hidden;padding:0 14px 8px;
+  overflow-x:auto;overflow-y:hidden;overscroll-behavior:contain;padding:0 14px 8px;
   scrollbar-width:thin;scrollbar-color:rgba(252,76,2,.45) transparent;
   scroll-behavior:smooth;
 }
@@ -389,7 +627,7 @@ button.deck-stat:hover .ds-hint{color:#FC4C02}
   display:inline-flex;align-items:center;justify-content:center;
   width:18px;height:18px;border-radius:50%;flex-shrink:0;
   border:1px solid rgba(232,124,26,.45);color:rgba(232,124,26,.75);
-  font-size:10px;font-weight:900;font-family:monospace;
+  font-size:10px;font-weight:900;font-family:var(--f-mono);
   cursor:pointer;background:transparent;transition:all .2s;
   margin-left:10px;line-height:1;letter-spacing:0;
   -webkit-tap-highlight-color:transparent;
@@ -417,8 +655,8 @@ button.deck-stat:hover .ds-hint{color:#FC4C02}
 }
 .itt-level-popup-close:hover{color:#e87c1a}
 /* ── ITT popup inner ── */
-.ilp{font-family:system-ui,sans-serif;color:#ccc;padding:0 2px 12px;max-width:660px}
-.ilp-title{font-family:monospace;font-size:14px;font-weight:700;color:#e87c1a;letter-spacing:2px;margin-bottom:2px}
+.ilp{font-family:var(--f-ui);color:#ccc;padding:0 2px 12px;max-width:660px}
+.ilp-title{font-family:var(--f-mono);font-size:14px;font-weight:700;color:#e87c1a;letter-spacing:2px;margin-bottom:2px}
 .ilp-sub{font-size:9px;letter-spacing:3px;color:rgba(232,124,26,.45);text-transform:uppercase;margin-bottom:14px}
 .ilp-sec{margin-bottom:16px}
 .ilp-sh{font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:#e87c1a;border-bottom:1px solid rgba(232,124,26,.2);padding-bottom:5px;margin-bottom:10px}
@@ -426,18 +664,18 @@ button.deck-stat:hover .ds-hint{color:#FC4C02}
 .ilp-tbl th{font-size:8px;letter-spacing:1px;text-transform:uppercase;color:#555;padding:3px 5px;border-bottom:1px solid rgba(255,255,255,.07);text-align:left;white-space:nowrap}
 .ilp-tbl td{padding:5px 5px;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:middle;line-height:1.4}
 .ilp-tbl tr:hover td{background:rgba(255,255,255,.03)}
-.ilp-pri{font-family:monospace;font-size:9px;color:#666;text-align:center}
+.ilp-pri{font-family:var(--f-mono);font-size:9px;color:#666;text-align:center}
 .ilp-cond{font-size:10px;color:#888}
 .ilp-ex{font-size:11px;font-weight:700;white-space:nowrap;color:#fff}
 .ilp-notes{font-size:10px;color:#777;line-height:1.75;padding:8px 10px;background:rgba(255,255,255,.03);border-radius:5px;border-left:2px solid rgba(232,124,26,.3);margin-top:8px}
 .ilp-notes b{color:rgba(232,124,26,.8)}
 .ilp-step{background:rgba(232,124,26,.04);border:1px solid rgba(232,124,26,.15);border-radius:6px;padding:11px 13px;margin-bottom:10px}
-.ilp-step-n{font-family:monospace;font-size:8px;color:#e87c1a;letter-spacing:2px;margin-bottom:3px}
+.ilp-step-n{font-family:var(--f-mono);font-size:8px;color:#e87c1a;letter-spacing:2px;margin-bottom:3px}
 .ilp-step-t{font-size:13px;font-weight:700;color:#fff;margin-bottom:7px}
 .ilp-b{font-size:11px;color:#aaa;line-height:1.85;padding-left:2px}
 .ilp-b b{color:#e87c1a}.ilp-b em{color:#fff;font-style:normal}
 .ilp-formula{background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.08);border-radius:5px;padding:10px 13px;margin:7px 0 4px;font-size:11px;line-height:2}
-.ilp-formula .fn{font-family:monospace;color:#e87c1a;font-size:10px}
+.ilp-formula .fn{font-family:var(--f-mono);color:#e87c1a;font-size:10px}
 .ilp-formula .fv{color:#aaa;font-size:10px}
 .ilp-formula .fr{color:#fff;font-weight:700}
 .ilp-bench{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}
@@ -460,8 +698,8 @@ button.deck-stat:hover .ds-hint{color:#FC4C02}
 .ilp-result-s{font-size:18px;font-weight:800;color:#e87c1a;letter-spacing:2px}
 .ilp-result-p{font-size:11px;color:rgba(232,124,26,.7);letter-spacing:1.5px;margin-top:2px}
 .ilp-result-r{font-size:10px;color:#666;margin-top:3px}
-.ilp-panel{font-family:system-ui,sans-serif;color:#ccc;padding:0 2px 8px;display:none}
-.ilp-panel-title{font-family:monospace;font-size:11px;color:#e87c1a;letter-spacing:2px;margin-bottom:12px;padding-bottom:7px;border-bottom:1px solid rgba(232,124,26,.22)}
+.ilp-panel{font-family:var(--f-ui);color:#ccc;padding:0 2px 8px;display:none}
+.ilp-panel-title{font-family:var(--f-mono);font-size:11px;color:#e87c1a;letter-spacing:2px;margin-bottom:12px;padding-bottom:7px;border-bottom:1px solid rgba(232,124,26,.22)}
 /* ── ITT popup RWD (≤ 600px phone) ── */
 @media(max-width:600px){
   .itt-level-popup{padding:8px 6px}
@@ -515,7 +753,7 @@ button.deck-stat:hover .ds-hint{color:#FC4C02}
 .itt-tab-btn{
   display:flex;align-items:center;gap:7px;
   padding:10px 18px;border-radius:22px;
-  font-family:system-ui,sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;
+  font-family:var(--f-ui);font-size:14px;font-weight:700;letter-spacing:1px;
   border:1px solid rgba(232,124,26,.35);color:rgba(232,124,26,.8);
   background:rgba(232,124,26,.06);cursor:pointer;
   transition:all .2s;-webkit-tap-highlight-color:transparent;
@@ -620,7 +858,7 @@ button.deck-stat:hover .ds-hint{color:#FC4C02}
 .fc-board .fc:not(.fc-open) .fc-inner{padding:12px 13px 18px}
 .fc-board .fc:not(.fc-open) .fc-name{font-size:15px;margin-bottom:5px}
 .fc-board .fc:not(.fc-open) .fc-status{font-size:9px;margin-bottom:8px}
-.fc-board .fc:not(.fc-open) .fc-time{font-size:26px}
+.fc-board .fc:not(.fc-open) .fc-time{font-size:39px}
 .fc-board .fc:not(.fc-open) .fc-attempts{font-size:8px;padding:3px 7px}
 /* 戰情室區塊：收起態也要看得到（曲線 + 同事對戰就是這張卡的重點） */
 .fc-war{
@@ -724,15 +962,15 @@ html.lg-refract .fc-refract{display:block}
 
 .fc-inner{position:relative;z-index:3;padding:20px 22px 22px;display:flex;flex-direction:column;height:100%;transform:translateZ(26px)}
 .fc-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}
-.fc-type{font-family:system-ui,sans-serif;font-size:9px;font-weight:800;letter-spacing:2px;color:var(--fc-accent);text-transform:uppercase}
+.fc-type{font-family:var(--f-ui);font-size:9px;font-weight:800;letter-spacing:2px;color:var(--fc-accent);text-transform:uppercase}
 .fc-attempts{font-size:9px;font-weight:700;letter-spacing:.5px;color:rgba(255,255,255,.6);background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.1);padding:4px 9px;border-radius:100px;white-space:nowrap}
-.fc-name{font-family:system-ui,sans-serif;font-weight:800;margin-bottom:3px;text-shadow:0 2px 14px rgba(0,0,0,.5)}
+.fc-name{font-family:var(--f-ui);font-weight:800;margin-bottom:3px;text-shadow:0 2px 14px rgba(0,0,0,.5)}
 .fc-sz-lg .fc-name{font-size:22px}
 .fc-sz-md .fc-name{font-size:19px}
 .fc-sz-sm .fc-name{font-size:16px}
-.fc-kom{font-family:system-ui,sans-serif;font-size:10px;color:rgba(255,255,255,.4);margin-bottom:10px}
+.fc-kom{font-family:var(--f-ui);font-size:10px;color:rgba(255,255,255,.4);margin-bottom:10px}
 .fc-kom b{color:#4ab4ff;font-variant-numeric:tabular-nums}
-.fc-status{font-family:system-ui,sans-serif;font-size:10px;font-weight:800;letter-spacing:1px;color:var(--fc-status);margin-bottom:12px}
+.fc-status{font-family:var(--f-ui);font-size:10px;font-weight:800;letter-spacing:1px;color:var(--fc-status);margin-bottom:12px}
 
 .fc-spark-block{display:block;text-decoration:none;color:inherit;cursor:pointer;position:relative}
 /* F1 起跑燈：脫離 3D canvas，掛在它上緣之外，才不會壓到終點的海拔浮標 */
@@ -846,12 +1084,12 @@ html.lg-refract .fc-refract{display:block}
 .fc-spark-block:hover .fc-spark-grade{color:var(--fc-accent)}
 .fc-spark-block:hover .fc-spark-linkicon{opacity:1;transform:translate(1px,-1px)}
 
-.fc-time{font-family:monospace;font-variant-numeric:tabular-nums;font-weight:800;letter-spacing:-1px;line-height:.95;color:#fff;margin-bottom:2px}
-.fc-sz-lg .fc-time{font-size:48px}
-.fc-sz-md .fc-time{font-size:38px}
-.fc-sz-sm .fc-time{font-size:30px}
+.fc-time{font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-weight:800;letter-spacing:-1px;line-height:.95;color:#fff;margin-bottom:2px}
+.fc-sz-lg .fc-time{font-size:68px}
+.fc-sz-md .fc-time{font-size:55px}
+.fc-sz-sm .fc-time{font-size:43px}
 .fc-time.fc-time-new{color:var(--fc-accent);text-shadow:0 0 24px var(--fc-accent)}
-.fc-timelbl{font-family:system-ui,sans-serif;font-size:9px;letter-spacing:2px;color:rgba(255,255,255,.38);text-transform:uppercase;margin-bottom:auto}
+.fc-timelbl{font-family:var(--f-ui);font-size:9px;letter-spacing:2px;color:rgba(255,255,255,.38);text-transform:uppercase;margin-bottom:auto}
 
 .fc-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding-top:13px;margin-top:14px;border-top:1px solid rgba(255,255,255,.13)}
 .fc-sz-sm .fc-stats{grid-template-columns:repeat(2,1fr)}
@@ -864,7 +1102,7 @@ html.lg-refract .fc-refract{display:block}
   position:relative;overflow:hidden;width:100%;
   display:flex;align-items:center;justify-content:center;gap:7px;
   padding:10px 0;
-  font-family:system-ui,sans-serif;font-size:12px;font-weight:800;letter-spacing:1.5px;
+  font-family:var(--f-ui);font-size:12px;font-weight:800;letter-spacing:1.5px;
   color:#fff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);
   border-radius:100px;cursor:pointer;backdrop-filter:blur(6px);
   transition:background .2s,border-color .2s,transform .15s;
@@ -934,12 +1172,12 @@ html.lg-refract .fc-refract{display:block}
 }
 .seg-modal-close:hover{background:var(--modal-accent);border-color:var(--modal-accent);color:#000;transform:rotate(90deg)}
 .seg-modal-head{margin-bottom:14px;padding-right:36px;border-bottom:1px solid rgba(255,255,255,.12);padding-bottom:12px}
-.seg-modal-name{font-size:21px;font-weight:800;color:#fff;letter-spacing:1px;font-family:system-ui,sans-serif;line-height:1.1}
+.seg-modal-name{font-size:21px;font-weight:800;color:#fff;letter-spacing:1px;font-family:var(--f-ui);line-height:1.1}
 .seg-modal-sub{font-size:10px;color:var(--modal-accent);letter-spacing:1.5px;text-transform:uppercase;margin-top:6px;opacity:.85}
 .seg-modal-link{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;letter-spacing:.5px;
   color:rgba(255,255,255,.55);text-decoration:none;margin-top:8px;transition:color .15s}
 .seg-modal-link:hover{color:var(--modal-accent)}
-.seg-modal-body{flex:1;overflow-y:auto;padding-right:2px}
+.seg-modal-body{flex:1;overflow-y:auto;overscroll-behavior:contain;padding-right:2px}
 .seg-modal-body::-webkit-scrollbar{width:4px}
 .seg-modal-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border-radius:2px}
 /* effort table (shared, also used in modal) */
@@ -1163,7 +1401,7 @@ html.lg-refract .fc-refract{display:block}
   color:#b05030;font-size:12px;white-space:nowrap;
 }
 .activity-meta .tag.hr{border-color:rgba(220,60,60,.2);background:rgba(220,60,60,.06);color:#c04040}
-.activity-dist{font-size:18px;font-weight:700;color:#FC4C02;flex-shrink:0;white-space:nowrap;padding-top:2px;line-height:1}
+.activity-dist{font-size:18px;font-weight:700;color:#FC4C02;font-variant-numeric:tabular-nums;flex-shrink:0;white-space:nowrap;padding-top:2px;line-height:1}
 /* lap strip */
 .lap-strip{
   margin-top:4px;padding:4px 8px;border-radius:5px;
@@ -1270,7 +1508,7 @@ html.lg-refract .fc-refract{display:block}
   padding:1rem;border-radius:10px;
   border:1px solid rgba(252,76,2,.12);background:rgba(10,4,0,.3);text-align:center;
 }
-.total-val{font-size:20px;font-weight:600;color:#FF6B35}
+.total-val{font-size:46px;line-height:.88;color:#FF6B35;letter-spacing:-1px}
 .total-label{font-size:10px;color:#555;letter-spacing:2px;text-transform:uppercase;margin-top:5px}
 
 /* ── CTA button ── */
@@ -1291,9 +1529,9 @@ html.lg-refract .fc-refract{display:block}
   #app{padding:0 .9rem 5rem}
   .topbar{padding:12px .9rem;margin:0 -.9rem;gap:8px}
   .stats-grid{grid-template-columns:repeat(2,1fr)}
-  .stat-val{font-size:18px}
+  .stat-val{font-size:26px}
   .totals-grid{grid-template-columns:repeat(3,1fr)}
-  .total-val{font-size:16px}
+  .total-val{font-size:35px}
   .consistency-row{grid-template-columns:auto 1fr;row-gap:8px}
   .consistency-row .status-badge{grid-column:1 / -1;justify-self:start}
   .activity-name-wrap{flex-wrap:wrap;gap:6px}
@@ -1337,7 +1575,7 @@ html.lg-refract .fc-refract{display:block}
 .pwr-modal::before,.pwr-modal::after{content:'';position:absolute;width:18px;height:18px;border:2px solid #FC4C02;pointer-events:none}
 .pwr-modal::before{top:6px;left:6px;border-right:none;border-bottom:none}
 .pwr-modal::after{bottom:6px;right:6px;border-left:none;border-top:none}
-.pm-body{flex:1;overflow-y:auto;padding-right:4px}
+.pm-body{flex:1;overflow-y:auto;overscroll-behavior:contain;padding-right:4px}
 .pm-body::-webkit-scrollbar{width:4px}
 .pm-body::-webkit-scrollbar-thumb{background:rgba(252,76,2,.4);border-radius:2px}
 .pm-close{
@@ -1363,7 +1601,7 @@ html.lg-refract .fc-refract{display:block}
 .pm-dial .dial-tick{stroke:rgba(252,76,2,.4);stroke-width:1.2}
 .pm-dial-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;pointer-events:none}
 .pm-dial-lbl{font-size:10px;color:rgba(255,255,255,.55);letter-spacing:1.5px;margin-bottom:1px}
-.pm-dial-val{font-size:42px;line-height:1;font-weight:800;color:#FC4C02;text-shadow:0 0 14px rgba(252,76,2,.6);font-variant-numeric:tabular-nums}
+.pm-dial-val{font-size:62px;line-height:.92;color:#FC4C02;text-shadow:0 0 14px rgba(252,76,2,.6);font-variant-numeric:tabular-nums}
 .pm-dial-unit{font-size:11px;color:rgba(252,76,2,.7);margin-top:3px;letter-spacing:1.5px}
 .pm-act-card{padding:12px 14px;border:1px solid rgba(252,76,2,.3);border-radius:8px;background:linear-gradient(135deg,rgba(252,76,2,.08),rgba(0,0,0,.4));font-size:12px;color:rgba(255,255,255,.85)}
 .pm-act-card .pmc-tag{display:inline-flex;align-items:center;gap:5px;font-size:9px;color:#FC4C02;letter-spacing:1.5px;margin-bottom:8px;padding:2px 7px;border:1px solid rgba(252,76,2,.4);border-radius:3px}
@@ -1391,11 +1629,7 @@ html.lg-refract .fc-refract{display:block}
 @media(max-width:760px){
   .pm-hero{grid-template-columns:1fr;gap:10px}
   .pm-dial{width:140px;height:140px}
-  .pm-dial-val{font-size:36px}
-  .namecard{padding:18px}
-  .nc-row{flex-wrap:wrap}
-  .nc-badge{width:80px;height:80px}
-  .nc-av{width:56px;height:56px}
+  .pm-dial-val{font-size:52px}
 }
 @media(max-width:480px){
   .pm-table .h-act,.pm-table td.act{display:none}
@@ -2553,40 +2787,6 @@ function initQuoteWidget() {
     qbRenderCard(qbPick(activeSrc))
   })
 }
-function renderMonthlySummary(ms) {
-  if (!ms) return ''
-  const m = (v, u) => `<div class="stat-metric"><div class="stat-val">${v}</div><div class="stat-unit">${u}</div></div>`
-  const div = '<div class="stat-vdiv"></div>'
-  const hr = v => v != null ? v : '—'
-  return `
-    <div class="section-title">本月訓練量 <span class="muted">· MONTHLY SUMMARY</span></div>
-    <div class="stats-grid">
-      <div class="stat-card"><div class="stat-label">🚴 單車</div><div class="stat-metrics">${m((+(ms.ride_km??0)).toFixed(1),'km')}${div}${m(hr(ms.ride_hr),'hr')}</div></div>
-      <div class="stat-card"><div class="stat-label">🏃 跑步</div><div class="stat-metrics">${m((+(ms.run_km??0)).toFixed(1),'km')}${div}${m(hr(ms.run_hr),'hr')}</div></div>
-      <div class="stat-card"><div class="stat-label">🏔️ 游泳</div><div class="stat-metrics">${m(ms.swim_m??0,'m')}${div}${m(hr(ms.swim_hr),'hr')}</div></div>
-      <div class="stat-card"><div class="stat-label">🏋️ 重訓</div><div class="stat-metrics">${m(ms.weight_count??0,'次')}${div}${m(hr(ms.weight_hr),'hr')}</div></div>
-    </div>`
-}
-function renderMonthlyGoals(mg) {
-  if (!mg) return ''
-  const order = ['ride','run','swim','weight']
-  const rows = order.map(k => {
-    const g = mg[k]; if (!g) return ''
-    const meta = SPORT_META[k]
-    const sm = STATUS_META[g.status] || STATUS_META.danger
-    const pct = Math.min(100, g.target > 0 ? (g.count / g.target) * 100 : 0)
-    const badgeLabel = g.status === 'over' ? `+${g.count - g.target}` : `${sm.emoji} ${sm.text}`
-    return `
-      <div class="consistency-row">
-        <div class="consistency-name">${meta.icon} ${meta.label}<span class="count"><b>${g.count}</b> / ${g.target}</span></div>
-        <div class="progress-bar"><div class="progress-fill ${g.status}" data-pct="${pct}"></div></div>
-        <div class="status-badge ${g.status}">${badgeLabel}</div>
-      </div>`
-  }).join('')
-  return `
-    <div class="section-title">月度紀律 <span class="muted">· MONTHLY CONSISTENCY</span></div>
-    <div class="consistency-list">${rows}</div>`
-}
 const TRAIN_PART_IMAGE_MAP = {
   chest: 'docs/chest.png',
   back: 'docs/back.png',
@@ -2619,68 +2819,6 @@ function renderTrainPartIcons(parts) {
   if (!matched.length) return ''
   return `<div style="margin-top:8px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">${matched.map(k => `<img src="${TRAIN_PART_IMAGE_MAP[k]}" alt="${k}" title="${k}" style="width:42px;height:42px;object-fit:contain;padding:4px;border-radius:10px;background:rgba(255,255,255,.08);border:1px solid rgba(252,76,2,.35);box-shadow:0 0 0 1px rgba(255,255,255,.04) inset,0 4px 10px rgba(0,0,0,.25);">`).join('')}</div>`
 }
-function renderWeeklyQuest(wq) {
-  if (!wq) return ''
-  const wqSports = [
-    { key:'ride',   icon:'🚴', label:'RIDE',  isOr:true,  tKm:'30KM', tHr:'1HR' },
-    { key:'run',    icon:'🏃', label:'RUN',   isOr:true,  tKm:'10KM', tHr:'1HR' },
-    { key:'swim',   icon:'🏊', label:'SWIM',  isOr:true,  tKm:'1000M', tHr:'1HR', unit:'m' },
-    { key:'weight', icon:'🏋️', label:'TRAIN', isOr:false, targetLabel:'1 次'   },
-  ]
-  function isDone(v)  { return typeof v === 'object' ? v.done  : !!v }
-  function isSuper(v) { return typeof v === 'object' && !!v.super }
-  const tiles = wqSports.map(sp => {
-    const val = wq[sp.key]
-    const on = isDone(val), sup = isSuper(val)
-    const cls = `quest-tile${sup ? ' on super' : on ? ' on' : ''}`
-    if (sp.isOr && typeof val === 'object') {
-      const isM = sp.unit === 'm'
-      const d = isM ? (val.distance_m || 0) : (val.distance_km || 0)
-      const tD = isM ? val.target_m : val.target_km
-      const dStr = isM ? `${d}m` : `${d}km`
-      const h = val.moving_time_hr || 0
-      const dPct = Math.min(100, Math.round(d / tD * 100))
-      const hPct = Math.min(100, Math.round(h / val.target_hr * 100))
-      const dMet = dPct >= 100, hMet = hPct >= 100
-      const body = (on || sup)
-        ? `<div class="qcheck">${sup ? '⚡' : '✓'}</div>
-          <div class="qpct" style="margin-top:5px;color:${sup ? 'rgba(255,210,0,.85)' : 'rgba(63,204,74,.65)'}">${dStr} · ${h}hr</div>`
-        : `<div class="qcheck"><span style="font-size:7px;letter-spacing:2px;color:rgba(252,76,2,.28)">OR</span></div>
-          <div class="qprog-or">
-            <div class="qprog-or-slot${dMet ? ' met' : ''}">
-              <div class="qprog-or-lbl${dMet ? ' met' : ''}">${sp.tKm}</div>
-              <div class="qprog-or-bar"><div class="qprog-or-fill" style="width:${dPct}%"></div></div>
-              <div class="qprog-or-val">${dStr}</div>
-            </div>
-            <div class="qprog-or-slot${hMet ? ' met' : ''}">
-              <div class="qprog-or-lbl${hMet ? ' met' : ''}">${sp.tHr}</div>
-              <div class="qprog-or-bar"><div class="qprog-or-fill" style="width:${hPct}%"></div></div>
-              <div class="qprog-or-val">${h}hr</div>
-            </div>
-          </div>`
-      return `<div class="${cls}"><span class="qico">${sp.icon}</span><div class="qlabel">${sp.label}</div>${body}</div>`
-    }
-    const pct = (() => {
-      if (typeof val !== 'object') return val ? 100 : 0
-      if (sp.key === 'swim') return Math.min(100, Math.round((val.distance_m||0)/val.target_m*100))
-      return val.count >= val.target ? 100 : 0
-    })()
-    const detail = typeof val === 'object' ? (sp.key==='swim' ? `${val.distance_m||0}m` : `${val.count||0} 次`) : ''
-    const progHtml = !on ? `
-      <div class="qprog-wrap"><div class="qprog-fill" style="width:${pct}%"></div></div>
-      <div class="qpct">${detail ? `${detail} · ` : ''}${pct}%</div>` : ''
-    return `<div class="${cls}">
-      <span class="qico">${sp.icon}</span>
-      <div class="qlabel">${sp.label}</div>
-      <div class="qcheck">${on ? '✓' : `<span style="font-size:9px;color:rgba(252,76,2,.3)">${sp.targetLabel}</span>`}</div>
-      ${progHtml}
-      ${sp.key === 'weight' ? renderTrainPartIcons(val?.parts) : ''}
-    </div>`
-  }).join('')
-  return `
-    <div class="section-title">本週任務 <span class="muted">· WEEKLY QUEST</span></div>
-    <div class="quest-grid">${tiles}</div>`
-}
 /* ── 節奏 RHYTHM：一天一格的訓練日曆 ────────────────────────────
    顏色深淺 = 那天的訓練負荷（TSS）。騎乘走橘、其他運動走藍，
    一眼看得出「這段時間到底有沒有在動」。
@@ -2704,6 +2842,93 @@ function tcalRamp(stops) {
 }
 const TCAL_RIDE  = tcalRamp([[0,[42,24,14]],[.18,[96,34,6]],[.45,[214,66,4]],[.72,[252,124,26]],[1,[255,214,150]]])
 const TCAL_CROSS = tcalRamp([[0,[18,30,40]],[.30,[14,80,112]],[.65,[36,172,220]],[1,[186,240,255]]])
+function renderTrainingBlock(data) {
+  const ms = data.monthly_summary, mg = data.monthly_goals, wq = data.weekly_quest
+  if (!ms && !mg && !wq) return ''
+  const M = ms || {}, G = mg || {}, W = wq || {}
+
+  const n1  = v => (+(v ?? 0)).toFixed(1)
+  const pct = (a, b) => b > 0 ? Math.min(100, Math.round(a / b * 100)) : 0
+  const mb  = (target, value, p) => `
+    <div class="mb${p >= 100 ? ' met' : ''}">
+      <span class="mb-t">${target}</span>
+      <div class="mb-bar"><i style="width:${p}%"></i></div>
+      <span class="mb-v">${value}</span>
+    </div>`
+
+  // 四個運動的差異只有三件事：本月量怎麼算、本週的達標條件、以及重訓多一排部位圖示
+  const SPORTS = [
+    { k:'ride',   en:'RIDE',  vol:() => [n1(M.ride_km), 'km'] },
+    { k:'run',    en:'RUN',   vol:() => [n1(M.run_km),  'km'] },
+    { k:'swim',   en:'SWIM',  vol:() => [String(M.swim_m ?? 0), 'm'] },
+    { k:'weight', en:'TRAIN', vol:() => [String(M.weight_count ?? 0), '次'] },
+  ]
+
+  const rows = SPORTS.map(sp => {
+    const meta = SPORT_META[sp.k]
+    const w = W[sp.k], g = G[sp.k]
+    const [volVal, volUnit] = sp.vol()
+    const volHr = M[sp.k + '_hr']
+
+    // ── 本週 ──
+    let weekCls = '', flag = '·', bars = '<span class="mb-v">—</span>'
+    if (w) {
+      const done = typeof w === 'object' ? w.done : !!w
+      const sup  = typeof w === 'object' && !!w.super
+      weekCls = sup ? ' is-super' : done ? ' is-done' : ''
+      flag = sup ? '⚡' : done ? '✓' : '·'
+      if (sp.k === 'ride' || sp.k === 'run') {
+        // 距離「或」時數，任一達標即可 —— 兩條並列的意義就在那個「或」
+        const d = w.distance_km || 0, h = w.moving_time_hr || 0
+        bars = mb(`${w.target_km}KM`, `${d}km`, pct(d, w.target_km)) +
+               '<span class="tb-or">或</span>' +
+               mb(`${w.target_hr}HR`, `${n1(h)}hr`, pct(h, w.target_hr))
+      } else if (sp.k === 'swim') {
+        const d = w.distance_m || 0
+        bars = mb(`${w.target_m}M`, `${d}m`, pct(d, w.target_m))
+      } else {
+        const c = w.count || 0
+        bars = mb(`${w.target} 次`, `${c} 次`, pct(c, w.target))
+      }
+    }
+
+    // ── 本月次數 ──
+    let monthHtml = '<div class="tb-month-meta">—</div>'
+    if (g) {
+      const sm = STATUS_META[g.status] || STATUS_META.danger
+      const badge = g.status === 'over' ? `+${g.count - g.target}` : `${sm.emoji} ${sm.text}`
+      monthHtml = `
+        <div class="progress-bar"><div class="progress-fill ${g.status}" data-pct="${pct(g.count, g.target)}"></div></div>
+        <div class="tb-month-meta"><span><b>${g.count}</b> / ${g.target} 次</span>
+          <span class="status-badge ${g.status}">${badge}</span></div>`
+    }
+
+    return `
+      <div class="tb-row${weekCls ? ' wk-' + weekCls.trim().replace('is-', '') : ''}">
+        <div class="tb-sport"><em>${meta.icon}</em><div><b>${meta.label}</b><i>${sp.en}</i></div></div>
+        <div class="tb-week${weekCls}">
+          <div class="tb-flag">${flag}</div>
+          <div class="tb-bars">${bars}</div>
+        </div>
+        <div class="tb-vol${parseFloat(volVal) > 0 ? '' : ' is-zero'}"><b>${volVal}</b><small>${volUnit}</small>${volHr != null ? `<span>${n1(volHr)} hr</span>` : ''}</div>
+        <div class="tb-month">${monthHtml}
+          ${sp.k === 'weight' && w?.parts ? `<div class="tb-parts">${renderTrainPartIcons(w.parts)}</div>` : ''}</div>
+      </div>`
+  }).join('')
+
+  return `
+    <div class="section-title">訓練現況 <span class="muted">· TRAINING BLOCK</span></div>
+    <div class="tb">
+      <div class="tb-head">
+        <span></span>
+        <span>本週<i>THIS WEEK</i></span>
+        <span>訓練量<i>VOLUME</i></span>
+        <span>次數<i>SESSIONS</i></span>
+      </div>
+      ${rows}
+    </div>`
+}
+
 function renderTrainingCalendar(data) {
   const daily = new Map()
   const put = (date, tss, kind, item) => {
@@ -3294,7 +3519,7 @@ function renderSegments(segs) {
   }).join('')
 
   return `
-    <div class="section-title" style="font-size:9px"><span>ITT 區間 <span class="muted">· SEGMENT EFFORTS · ${segs.length} 段</span></span></div>
+    <div class="section-title"><span>ITT 區間 <span class="muted">· SEGMENT EFFORTS · ${segs.length} 段</span></span></div>
     <div class="itt-tabs">
       <button class="itt-tab-btn" onclick="toggleIttLevel(this,'status')">📋 狀態一覽</button>
       <button class="itt-tab-btn" onclick="toggleIttLevel(this,'calc')">⚙️ 計算方式</button>
@@ -6320,19 +6545,20 @@ function render(data) {
     </a>`
 
   // ── 組裝章節（編號進浮水印與右側導覽軌） ──
+  // 每章開頭標出量測窗口 —— 這頁的九個章節其實是九個不同長度的時間尺度，
+  // 說清楚「這段數字涵蓋多久」比標一個序號有用得多。
   const chapterDefs = [
-    ['每日一句', renderQuoteSection()],
-    ['本月訓練', renderMonthlySummary(data.monthly_summary)],
-    ['月度紀律', renderMonthlyGoals(data.monthly_goals)],
-    ['本週任務', renderWeeklyQuest(data.weekly_quest)],
-    ['節奏', renderTrainingCalendar(data)],
-    ['ITT 區間', renderSegments(data.segments)],
-    ['月度量', volumeHtml],
-    ['活動紀錄', activityHtml],
-    ['生涯總量', totalsHtml],
-  ].filter(cd => cd[1] && cd[1].trim())
-  const chapterHtml = chapterDefs.map(([nav, body], i) =>
-    `<section class="chapter" id="ch-${i + 1}" data-ch="${String(i + 1).padStart(2, '0')}" data-nav="${nav}">${body}</section>`
+    ['每日一句', '今天 · TODAY',              renderQuoteSection()],
+    ['訓練現況', '本週 × 本月 · CURRENT BLOCK', renderTrainingBlock(data)],
+    ['節奏',     '每一天 · DAY BY DAY',        renderTrainingCalendar(data)],
+    ['ITT 區間', '歷來最佳 · ALL-TIME BEST',   renderSegments(data.segments)],
+    ['月度量',   '逐月 · MONTH BY MONTH',      volumeHtml],
+    ['活動紀錄', '近期 · RECENT',              activityHtml],
+    ['生涯總量', '生涯 · SINCE DAY ONE',       totalsHtml],
+  ].filter(cd => cd[2] && cd[2].trim())
+  const chapterHtml = chapterDefs.map(([nav, win, body], i) =>
+    `<section class="chapter" id="ch-${i + 1}" data-ch="${String(i + 1).padStart(2, '0')}" data-win="${win}" data-nav="${nav}">` +
+    `<div class="ch-win">${win}</div>${body}</section>`
   ).join('')
 
   // ── 章節 00：觀測甲板（首屏就是數字） ──
@@ -6349,21 +6575,37 @@ function render(data) {
         </div>`
   const deckHtml = `
     <section class="chapter hero-deck in" id="ch-deck" data-nav="甲板">
-      ${renderNameCard(data)}
-      <div class="deck-strip">
-        ${deckStat('今年里程', 'YTD DISTANCE', Math.round(s.ytd_distance_km ?? 0), 0, 'KM')}
-        ${deckStat('今年爬升', 'YTD ELEVATION', s.ytd_elevation_m ?? 0, 0, 'M')}
-        ${deckStat('今年時數', 'YTD HOURS', s.ytd_moving_time_hr ?? 0, 1, 'HR')}
-        ${deckFtp != null ? `
-        <button class="deck-stat" id="deck-ftp" type="button" title="開啟功率排行榜">
-          <span class="ds-label">⚡ FTP<small>20MIN × 0.95</small></span>
-          <span class="ds-val"><span class="ds-num" data-count="${deckFtp}" data-dec="0">0</span><small>W</small></span>
-          <span class="ds-hint">功率排行 ↗</span>
-        </button>` : deckStat('今年騎乘', 'YTD RIDES', s.ytd_rides ?? 0, 0, '次')}
-      </div>
-      <div class="deck-sub">
-        <span>今年 <b>${s.ytd_rides ?? 0}</b> 騎 · <b>${s.ytd_runs ?? 0}</b> 跑 · <b>${s.ytd_swims ?? 0}</b> 游</span>
-        ${updatedStr ? `<span>資料更新 ${updatedStr} TPE</span>` : ''}
+      <div class="rider-card">
+        <canvas class="nc-canvas" id="nc-canvas"></canvas>
+        <div class="rc-scrim"></div>
+        <div class="rc-body">
+          ${renderNameCard(data)}
+          <div class="rc-rule"></div>
+          <div class="rc-head">
+            <span class="rc-head-zh">今年至今</span>
+            <span class="rc-head-en">Year to date</span>
+            <span class="rc-year">${tY}</span>
+          </div>
+          <div class="deck-stat board-hero">
+            <span class="ds-num board-num" data-count="${Math.round(s.ytd_distance_km ?? 0)}" data-dec="0">0</span>
+            <span class="board-unit">KM<small>總里程</small></span>
+          </div>
+          <div class="board-tape" aria-hidden="true"></div>
+          <div class="deck-strip">
+            ${deckStat('爬升', 'ELEVATION', s.ytd_elevation_m ?? 0, 0, 'M')}
+            ${deckStat('時數', 'MOVING HOURS', s.ytd_moving_time_hr ?? 0, 1, 'HR')}
+            ${deckFtp != null ? `
+            <button class="deck-stat" id="deck-ftp" type="button" title="開啟功率排行榜">
+              <span class="ds-label">⚡ FTP<small>20min × 0.95</small></span>
+              <span class="ds-val"><span class="ds-num" data-count="${deckFtp}" data-dec="0">0</span><small>W</small></span>
+              <span class="ds-hint">功率排行 ↗</span>
+            </button>` : deckStat('騎乘', 'RIDES', s.ytd_rides ?? 0, 0, '次')}
+          </div>
+          <div class="rc-foot">
+            <span><b>${s.ytd_rides ?? 0}</b> 騎 · <b>${s.ytd_runs ?? 0}</b> 跑 · <b>${s.ytd_swims ?? 0}</b> 游</span>
+            ${updatedStr ? `<span>更新 ${updatedStr} TPE</span>` : ''}
+          </div>
+        </div>
       </div>
       <button class="deck-cue" id="deck-cue" type="button">往下 · ${chapterDefs.length} 章<i></i></button>
     </section>`
@@ -6541,32 +6783,22 @@ function powerAchvHTML(achvs) {
   </div>`
 }
 function renderNameCard(data) {
-  // 數字已移到甲板大字強調列（deck-strip），名片只承載身分：
-  // 頭盔徽記（星座）＋姓名 —— 星座 canvas 因此有整個右半邊可以呼吸
+  // 身分列：併進出發名單卡的頂端，不再是獨立一塊。
+  // #nc-canvas / #nc-sign / #nc-reroll 三個 id 是 bindNameCard() 的星座繪製與換星座依賴，務必保留。
   return `
-    <div class="namecard" id="namecard">
-      <canvas class="nc-canvas" id="nc-canvas"></canvas>
-      <div class="nc-scrim"></div>
-      <button class="nc-reroll" id="nc-reroll" type="button" title="換一個星座">✦ 換星座</button>
-      <div class="nc-row">
-        <div class="nc-badge">
-          <div class="nc-ring"></div><div class="nc-ring r2"></div>
-          <div class="nc-av">
-            <img src="docs/avatar.jpg" alt="SC" onerror="this.style.display='none';this.nextElementSibling.style.display='grid'">
-            <span class="nc-ini" style="display:none">SC</span>
-          </div>
-        </div>
-        <div class="nc-id">
-          <div class="nc-sign" id="nc-sign">✦ Leo · 獅子座 ✦</div>
-          <h2>STEVE <svg class="nc-vbadge" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg></h2>
-          <div class="nc-role">Cyclist · Athlete</div>
-        </div>
+    <div class="rc-id">
+      <div class="nc-av">
+        <img src="docs/avatar.jpg" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='grid'">
+        <span class="nc-ini" style="display:none">SC</span>
       </div>
+      <div class="rc-who">
+        <h2>STEVE CHUANG <svg class="nc-vbadge" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg></h2>
+        <div class="rc-role">Cyclist · Taipei</div>
+      </div>
+      <button class="nc-reroll" id="nc-reroll" type="button" title="換一個星座"><span id="nc-sign">✦ Leo · 獅子座 ✦</span></button>
     </div>`
 }
 
-/* ── 星座名片引擎：真實星座圖（先獅子座），逐線繪製 · 亮點脈動 · 流星 ── */
-// 每個星座以 0~1 正規化座標定義，b = 亮度權重（Regulus 之類主星較亮），bright:true 為特亮單點
 const NC_CONSTELLATIONS = [
   {
     name: '✦ Leo · 獅子座 ✦',
@@ -6946,9 +7178,80 @@ function bindDeck(data) {
   })
 }
 
+/* ── 翻章器：一次滾輪手勢＝一章 ──────────────────────────────────
+   為什麼非攔 wheel 不可：滑鼠滾輪一格約 120px，而一章是一整屏。
+   沒有任何 CSS 能把 120px 的意圖放大成 900px 的翻頁 —— scroll-snap 只能在
+   手勢「已經」跨過半屏時把你對齊過去，跨不過就整個彈回，那正是卡住的手感。
+   所以這裡接管 wheel，但只在該接管的時候： */
+function initChapterPager() {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return
+  let busy = false
+  addEventListener('wheel', e => {
+    if (e.ctrlKey) return                                   // 縮放手勢不碰
+    // 彈窗開著就整個放行（彈窗有自己的捲軸）
+    if (document.querySelector('.pwr-modal-overlay.open,.seg-modal-overlay.open,.r3d-overlay.open,.itt-level-popup.open')) return
+    const dir = Math.sign(e.deltaY)
+    if (!dir) return
+
+    // 巢狀捲動容器：只有「真的能吃下這個方向的垂直捲動」才讓給它。
+    // ITT 輪播與抽卡桌面是純橫向容器 —— 早期版本無條件讓行，結果滑鼠停在卡片上時
+    // 垂直滾輪被交給一個不會垂直捲的容器，整頁就此卡死（實測連撥四下 scrollY 動也不動）。
+    const sc = e.target.closest && e.target.closest('.fc-grid,.fc-board,.tcal-scroll,.pm-body,.seg-modal-body,.itt-level-popup')
+    if (sc && sc.scrollHeight > sc.clientHeight + 1) {
+      const atTop = sc.scrollTop <= 0
+      const atBot = sc.scrollTop >= sc.scrollHeight - sc.clientHeight - 1
+      if (!((dir > 0 && atBot) || (dir < 0 && atTop))) return
+    }
+    const list = [...document.querySelectorAll('#content .chapter')]
+    if (!list.length) return
+
+    const y = scrollY
+    let i = 0
+    list.forEach((s, k) => { if (s.offsetTop - 80 <= y) i = k })
+    const cur = list[i]
+
+    // 比一屏高的章節：還沒讀到底就放行原生捲動，不要把人鎖在一屏裡。
+    // 這裡刻意看實際幾何而不是 .ch-tall class —— class 有 1.06 屏的門檻，
+    // 卡在門檻下緣的章節（月度量 1.069 屏，實測沒被標記）底部會有幾十 px 永遠捲不到。
+    // 幾何判斷對任何高度都成立，class 只留給樣式用。
+    const top = cur.offsetTop - 64
+    const bot = top + cur.offsetHeight - innerHeight
+    if (bot > top + 4) {
+      if (dir > 0 && y < bot - 4) return
+      if (dir < 0 && y > top + 4) return
+    }
+    const next = i + dir
+    if (next < 0 || next >= list.length) return             // 頭尾交還原生（含橡皮筋回彈）
+
+    e.preventDefault()
+    if (busy) return                                        // 冷卻期內的連續 tick 併成同一次手勢
+    busy = true
+    list[next].scrollIntoView({ behavior: 'smooth', block: 'start' })
+    setTimeout(() => { busy = false }, 620)
+  }, { passive: false })
+}
+
 function initChapters() {
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches
   const secs = [...document.querySelectorAll('#content .chapter')]
+
+  /* 高過一屏的章節（ITT、活動紀錄）標記 .ch-tall：
+     內容改回上對齊，並且不套進出場平移 —— 那兩章是拿來「讀」的，不是一屏一格的 story。
+     停靠點本身保留：規格明訂停靠區大於視窗時視窗可停在區內任一處，所以捲讀不會被 snap 拉回開頭。 */
+  const tagTall = () => {
+    const vh = innerHeight
+    // 門檻抓 1.06 屏而不是剛好一屏：差幾十 px 的章節左右搖擺會讓 .ch-tall 在 resize 時抖動，
+    // 而 .ch-tall 會同時改變對齊與留白 —— 抖動就是版面跳動。
+    secs.forEach(s => s.classList.toggle('ch-tall', s.getBoundingClientRect().height > vh * 1.06))
+  }
+  tagTall()
+  let rt
+  addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(tagTall, 150) }, { passive: true })
+  // 章節內容會長高（展開年份、載入更多活動、切換運動分頁），高度一變就要重判
+  if ('ResizeObserver' in window) {
+    const ro = new ResizeObserver(() => { clearTimeout(rt); rt = setTimeout(tagTall, 150) })
+    secs.forEach(s => ro.observe(s))
+  }
   const revealed = new Set()
   const show = sec => {
     if (revealed.has(sec)) return
@@ -7057,6 +7360,7 @@ Promise.all([
     initSeg3DWhenVisible()
     bindDeck(data)
     initChapters()
+    initChapterPager()
     bindNameCard()
     bindSegmentCards()
   })

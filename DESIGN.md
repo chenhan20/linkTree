@@ -16,39 +16,53 @@ colors:
   ink-primary: "#DDDDDD"
   ink-secondary: "#AAAAAA"
   ink-muted: "#888888"
+# 兩支字體：窄長讀數字體只給數字（≥26px），中性 grotesque 給拉丁標籤，
+# 中文一律交還系統字（PingFang / JhengHei）—— 窄體拉丁不與正常寬度中文同行混排。
 typography:
-  display:
-    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-    fontSize: "26px"
-    fontWeight: 600
+  readout:            # 首屏分段計時板的大讀數
+    fontFamily: "'Saira Condensed', 'Oswald', 'Arial Narrow', sans-serif"
+    fontSize: "clamp(84px, 18.5vw, 195px)"
+    fontWeight: 800
+    lineHeight: 0.82
+    letterSpacing: "-1.5px"
+  numeral:            # 生涯 / ITT / 功率盤等一般數字
+    fontFamily: "'Saira Condensed', 'Oswald', 'Arial Narrow', sans-serif"
+    fontSize: "46px"
+    fontWeight: 800
+    lineHeight: 0.88
+    letterSpacing: "-1px"
+  display:            # 章節標題（中文）
+    fontFamily: "'Archivo', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang TC', 'Microsoft JhengHei', sans-serif"
+    fontSize: "17px"
+    fontWeight: 700
     lineHeight: 1.2
-    letterSpacing: "normal"
+    letterSpacing: "0.6px"
   headline:
-    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+    fontFamily: "'Archivo', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang TC', 'Microsoft JhengHei', sans-serif"
     fontSize: "18px"
     fontWeight: 700
     lineHeight: 1.3
     letterSpacing: "normal"
   title:
-    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+    fontFamily: "'Archivo', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang TC', 'Microsoft JhengHei', sans-serif"
     fontSize: "15px"
     fontWeight: 800
     lineHeight: 1.2
     letterSpacing: "normal"
   body:
-    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+    fontFamily: "'Archivo', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang TC', 'Microsoft JhengHei', sans-serif"
     fontSize: "12px"
     fontWeight: 400
     lineHeight: 1.5
     letterSpacing: "normal"
-  label:
-    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-    fontSize: "11px"
+  label:              # 章節量測窗口、拉丁副標
+    fontFamily: "'Archivo', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang TC', 'Microsoft JhengHei', sans-serif"
+    fontSize: "10px"
     fontWeight: 600
     lineHeight: 1.4
     letterSpacing: "3px"
   micro:
-    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+    fontFamily: "'Archivo', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang TC', 'Microsoft JhengHei', sans-serif"
     fontSize: "9px"
     fontWeight: 700
     lineHeight: 1.3
