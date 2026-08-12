@@ -9,8 +9,10 @@
   'use strict'
 
   const STRAVA_JSON = 'data/strava.json'
+  const RIDES_INDEX = 'rides/index.json'   // 由 tools/tcx/build_index.py 產生；沒有這個檔就不顯示報告鈕
   const ICON_RIDE = '🚴'
   let dataPromise = null
+  let reportMap = null   // date -> href，只有這天有訓練報告時才注入「報告」鈕
   let rideMap = null
   let ittByDate = null
   let _routeStream = null   // 目前彈窗的 route_stream（供動畫 + 重播）
@@ -564,11 +566,38 @@
         openRide(id)
       })
       link.parentNode.insertBefore(btn, link)
+
+      // 這天有訓練報告的話，再補一顆連過去的鈕
+      const rep = reportMap && reportMap.get(ride.date)
+      if (rep) {
+        const a = document.createElement('a')
+        a.className = 'act-report-link'
+        a.href = 'rides/' + rep.href
+        a.title = `${rep.date} 訓練報告：分圈、區間、爬坡與教練評語`
+        a.innerHTML = `
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M8 16v-5"/><path d="M13 16V7"/><path d="M18 16v-3"/>
+          </svg>
+          <span>報告</span>`
+        a.addEventListener('click', e => e.stopPropagation())
+        link.parentNode.insertBefore(a, link)
+      }
     })
   }
 
+  /* ── 載入訓練報告清單；檔案不存在就靜靜跳過，不影響原本功能 ── */
+  function loadReports() {
+    return fetch(RIDES_INDEX, { cache: 'no-cache' })
+      .then(r => (r.ok ? r.json() : null))
+      .then(j => {
+        reportMap = new Map()
+        ;(j && j.rides ? j.rides : []).forEach(r => reportMap.set(r.date, r))
+      })
+      .catch(() => { reportMap = new Map() })
+  }
+
   function init() {
-    loadData().then(() => {
+    Promise.all([loadData(), loadReports()]).then(() => {
       injectButtons()
       const obs = new MutationObserver(() => injectButtons())
       obs.observe(document.body, { childList: true, subtree: true })

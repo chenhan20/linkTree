@@ -485,3 +485,30 @@
   .am-route-canvas{height:200px}
   .am-route-stats .v{font-size:18px}
 }
+
+
+/* ── 訓練報告連結鈕：跟「詳情」同一排，但降一級（外框而非實心、不閃爍） ── */
+.act-report-link{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:6px 12px;margin-right:8px;
+  font-size:12.5px;font-weight:700;letter-spacing:.6px;
+  color:var(--am-accent);
+  background:transparent;
+  border:1.5px solid color-mix(in srgb, var(--am-accent) 55%, transparent);
+  border-radius:6px;
+  text-decoration:none;
+  font-family:inherit;line-height:1.4;
+  vertical-align:middle;
+  transition:background .15s ease, border-color .15s ease, transform .15s ease;
+}
+.act-report-link svg{width:14px;height:14px;flex-shrink:0}
+.act-report-link:hover{
+  background:color-mix(in srgb, var(--am-accent) 14%, transparent);
+  border-color:var(--am-accent);
+  transform:translateY(-1px);
+}
+.act-report-link:active{transform:translateY(0) scale(.98)}
+@media (prefers-reduced-motion: reduce){
+  .act-report-link{transition:none}
+  .act-report-link:hover{transform:none}
+}
