@@ -592,6 +592,9 @@ def slim(ride):
     return out
 
 
+SPORT_LABEL = {"Cycling": "Biking", "Biking": "Biking", "Running": "Running", "Swimming": "Swimming"}
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("ride_json")
@@ -619,6 +622,25 @@ def main():
             .replace("__RIDE__", json.dumps(slim(ride), ensure_ascii=False, separators=(",", ":")))
             .replace("__CHART__", json.dumps(chart, ensure_ascii=False, separators=(",", ":")))
             .replace("__NOTES__", json.dumps(notes, ensure_ascii=False, separators=(",", ":"))))
+
+    # build_index.py 靠這行註解建清單頁。以前這行是手動補的，於是重生任何一頁
+    # 都會讓它從索引裡消失（2026-08-12 踩過）—— 改由這裡輸出，來源唯一。
+    w, tt, pw = ride.get("when", {}), ride.get("totals", {}), ride.get("power", {})
+    tq = ride.get("training_quality") or {}
+    meta_line = json.dumps({
+        "date":       w.get("date"),
+        "weekday":    w.get("weekday"),
+        "time":       (w.get("start_local") or " ").split(" ")[-1],
+        "title":      title,
+        "km":         tt.get("distance_km"),
+        "elev":       tt.get("elev_gain_m"),
+        "moving_sec": tt.get("moving_sec"),
+        "np":         pw.get("np_w"),
+        "tss":        pw.get("tss"),
+        "eff":        tq.get("effective_pct"),
+        "sport":      SPORT_LABEL.get(str(ride.get("meta", {}).get("sport") or ""), "Biking"),
+    }, ensure_ascii=False, separators=(",", ":"))
+    html = html.replace("<!DOCTYPE html>", f"<!DOCTYPE html>\n<!-- ride-meta {meta_line} -->", 1)
     with open(a.out, "w", encoding="utf-8") as f:
         f.write(html)
     print(f"已寫出 {a.out}（{os.path.getsize(a.out)//1024} KB）")
