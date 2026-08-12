@@ -1,0 +1,96 @@
+# .github/workflows/fit-sync.yml
+#
+# 從 intervals.icu 抓 Garmin 原始 FIT，產出 rides/<date>.html。
+#
+# 這條路跟 strava-sync.yml 完全獨立，兩者不互相影響：
+#   strava-sync.yml → data/strava.json（前端總覽頁）      ← 不要動
+#   fit-sync.yml    → data/fit/*.fit + rides/*.html       ← 這支
+#
+# 為什麼能放進 Action（推翻 docs/ride-report-pipeline.md 第四節的結論）：
+# intervals.icu 是 Garmin 官方核准的 partner，Garmin 走官方 webhook 主動 push 給它。
+# 所以這裡沒有 Garmin 帳密、沒有 MFA、沒有 Cloudflare、不挑 IP。
+# 詳見 docs/fit-pipeline.md。
+
+name: FIT Sync (intervals.icu)
+
+on:
+  schedule:
+    - cron: '30 14 * * *'      # 台灣時間 22:30，排在 strava-sync 最後一班之後
+  workflow_dispatch:
+    inputs:
+      backfill:
+        description: '回補過去 N 天（留空 = 日常增量，只掃最近 14 天）'
+        required: false
+        default: ''
+      min_tss:
+        description: '產報告的 TSS 門檻'
+        required: false
+        default: '100'
+      rebuild:
+        description: '重生所有報告（會用現有的 notes，不會洗掉評語）'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fit-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: 安裝相依套件
+        run: pip install --quiet -r tools/tcx/requirements.txt
+
+      - name: 檢查 API key
+        env:
+          INTERVALS_API_KEY: ${{ secrets.INTERVALS_API_KEY }}
+        run: |
+          if [ -z "$INTERVALS_API_KEY" ]; then
+            echo "::error::沒有設定 INTERVALS_API_KEY。Settings → Secrets and variables → Actions 新增。"
+            exit 1
+          fi
+          python scripts/sync-intervals.py --status
+
+      - name: 從 intervals.icu 抓 FIT
+        env:
+          INTERVALS_API_KEY: ${{ secrets.INTERVALS_API_KEY }}
+          FIT_DIR: data/fit
+        run: |
+          if [ -n "${{ inputs.backfill }}" ]; then
+            python scripts/sync-intervals.py --backfill "${{ inputs.backfill }}"
+          else
+            python scripts/sync-intervals.py
+          fi
+
+      - name: 產生訓練報告
+        env:
+          FIT_DIR: data/fit
+          ATHLETE_WEIGHT: ${{ vars.ATHLETE_WEIGHT || '80' }}
+          ATHLETE_HEIGHT: ${{ vars.ATHLETE_HEIGHT || '173' }}
+        run: |
+          ARGS="--min-tss ${{ inputs.min_tss || '100' }}"
+          [ "${{ inputs.rebuild }}" = "true" ] && ARGS="$ARGS --overwrite"
+          python scripts/build-ride-reports.py $ARGS
+
+      - name: 存檔
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          mkdir -p data/fit rides
+          git add data/fit rides
+          if git diff --staged --quiet; then
+            echo "沒有變更。"
+          else
+            git commit -m "chore: fit sync $(date -u '+%Y-%m-%d')"
+            git push
+          fi

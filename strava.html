@@ -197,17 +197,20 @@ html{scroll-behavior:smooth;scroll-snap-type:y proximity}
   padding:0;margin:2px 0 0;
   background:transparent;border:none;color:inherit;text-align:left;
 }
+/* 讀數尺寸是跟每日一句共用甲板高度預算的 —— 原本 195px 上限吃掉太多，
+   句子被壓成兩行還要藏原文。縮到 132px 之後計時板仍是首屏最大的字，
+   但空出來的高度讓句子讀得完整（三行 + 原文），這是刻意的取捨。 */
 .board-num{
-  display:block;font-size:clamp(84px,18.5vw,195px);line-height:.82;
+  display:block;font-size:clamp(62px,12vw,132px);line-height:.82;
   letter-spacing:-1.5px;color:#fff;margin-left:-.03em;
   text-shadow:0 0 34px rgba(252,76,2,.22);
   transition:text-shadow .6s ease;
 }
 .board-hero.lit .board-num{text-shadow:0 0 40px rgba(252,76,2,.45)}
 .board-unit{
-  flex:none;text-align:right;padding-bottom:6px;
+  flex:none;text-align:right;padding-bottom:5px;
   font-family:var(--f-num);font-weight:700;letter-spacing:1px;
-  font-size:clamp(30px,5vw,48px);line-height:.9;color:var(--sig);
+  font-size:clamp(24px,3.4vw,36px);line-height:.9;color:var(--sig);
 }
 .board-unit small{
   display:block;font-family:var(--f-ui);font-size:9px;font-weight:600;
@@ -492,6 +495,174 @@ button.deck-stat:hover .ds-hint{color:#FC4C02}
   .tb-sport i{display:block;font-size:7.5px;letter-spacing:1.6px;color:var(--ink-3)}
 }
 
+/* ── 章節儀表盤 (Chapter Console) ─────────────────────────────
+   「週期」與「節奏」共用的框。之所以要抽成共用元件，是因為節奏章原本一半是
+   有框的卡（.tcal 自帶 16px 圓角＋橘邊＋徑向漸層）、另一半是裸表格直接躺在
+   背景上（.tb 只有列底線）—— 一張卡配一張裸表，讀起來就不像同一頁。
+   改成兩半住同一個框、用甲板的量尺當分隔之後，兩章才像同一台儀器上的兩個錶。
+
+   刻意不給投影：DESIGN.md 把投影保留給名片／功率卡／路段卡三張主卡，
+   儀表盤靠發絲邊框與半透明面分層，不靠浮起。 */
+.console{
+  position:relative;padding:18px 18px 16px;margin-bottom:2rem;
+  border-radius:16px;border:1px solid rgba(252,76,2,.22);
+  background:radial-gradient(120% 90% at 50% 0%,rgba(252,76,2,.05),transparent 60%),rgba(6,3,2,.3);
+}
+.console::before,.console::after{
+  content:'';position:absolute;width:14px;height:14px;
+  border:1.5px solid rgba(252,76,2,.5);pointer-events:none;
+}
+.console::before{top:-1px;left:-1px;border-right:0;border-bottom:0;border-radius:16px 0 0 0}
+.console::after{bottom:-1px;right:-1px;border-left:0;border-top:0;border-radius:0 0 16px 0}
+/* 分隔用甲板的量尺，不用素線 —— 素線只是「這裡斷了」，量尺是「同一台儀器換一個刻度」 */
+.console-tape{
+  height:5px;margin:17px -18px 15px;
+  background:
+    linear-gradient(90deg,rgba(252,76,2,.55),rgba(252,76,2,.08)) left top/100% 1px no-repeat,
+    repeating-linear-gradient(90deg,rgba(252,76,2,.32) 0 1px,transparent 1px 14px) left top/100% 5px no-repeat;
+}
+/* 節奏章：日曆在儀表盤裡不再是一張卡，交出自己的框 */
+.rh .tcal{margin:0;padding:0;border:none;background:none;border-radius:0}
+.rh .tcal-head{padding:0 0 10px}
+.rh .tcal-view{margin:0 -18px}
+.rh .tcal-scroll{padding:0 18px 8px}
+.rh .tcal-nav.prev{left:8px}
+.rh .tcal-nav.next{right:8px}
+.rh .tcal-legend{padding:10px 0 0}
+.rh .tb{margin-bottom:0}
+.sub-label{
+  display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;
+  font-size:12px;font-weight:700;color:var(--ink-1);letter-spacing:.6px;margin-bottom:.9rem;
+}
+.sub-label span{
+  font-family:var(--f-ui);font-size:8.5px;font-weight:600;letter-spacing:2.4px;
+  text-transform:uppercase;color:rgba(252,76,2,.62);white-space:nowrap;
+}
+
+/* ── 週期：課表 vs 實際 ─────────────────────────────────────────
+   主卡規格（16px 圓角 + 角標記 + 浮起投影），因為它是全頁唯一講未來的區塊。
+   顏色全部沿用既有語意鎖，沒有新增色：綠=達標、紅=沒中、橘=下一堂、
+   弱灰=未執行、皇冠金=後測超越前測。光暈只出現在「下一堂」與 PR，符合 Glow-Is-State。 */
+/* 框與角標記都來自 .console（週期與節奏共用），這裡只放週期專屬的東西 */
+.mc.is-over{opacity:.9}
+
+.mc-hd{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.mc-ttl{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;min-width:0}
+.mc-ttl b{font-size:18px;font-weight:700;color:var(--ink-1);letter-spacing:.5px}
+.mc-ttl i{
+  font-family:var(--f-ui);font-style:normal;font-size:9px;font-weight:600;
+  letter-spacing:2.6px;color:rgba(252,76,2,.62);white-space:nowrap;
+}
+.mc-flag{
+  font-family:var(--f-ui);font-size:8.5px;font-weight:700;letter-spacing:2px;
+  color:var(--ink-3);border:1px solid rgba(255,255,255,.16);border-radius:4px;padding:2px 6px;
+}
+.mc-ftp{
+  margin-left:auto;display:flex;align-items:baseline;gap:5px;
+  font-family:var(--f-ui);font-size:9px;font-weight:600;letter-spacing:2.4px;
+  text-transform:uppercase;color:rgba(252,76,2,.62);
+}
+.mc-ftp b{
+  font-family:var(--f-num);font-size:26px;font-weight:800;line-height:.9;
+  letter-spacing:-.5px;color:var(--ink-1);font-variant-numeric:tabular-nums;
+}
+.mc-ftp small{font-size:9px;letter-spacing:.5px;color:rgba(252,76,2,.7)}
+.mc-goal{font-size:11px;line-height:1.55;color:var(--ink-2);margin-top:9px}
+
+.mc-track{display:flex;gap:4px;margin:15px 0 7px}
+.mc-tk{flex:1;height:6px;border-radius:3px;background:rgba(255,255,255,.07)}
+.mc-tk.is-ok{background:#5FD060}
+.mc-tk.is-over{background:#5FD060;box-shadow:0 0 8px rgba(95,208,96,.45)}
+.mc-tk.is-under{background:#FF6A6A}
+.mc-tk.is-next{background:#FC4C02;box-shadow:0 0 8px rgba(252,76,2,.5)}
+.mc-tk.is-missed{background:rgba(255,106,106,.25)}
+.mc-meta{font-size:9.5px;letter-spacing:1.2px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+
+/* 前後測：整個週期的結論就這一個數字，所以它比任何一堂課都大 */
+.mc-test{
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  padding:14px 16px;margin:14px 0 16px;border-radius:10px;
+  border:1px solid rgba(252,76,2,.2);background:rgba(252,76,2,.05);
+}
+.mc-test-l{display:flex;flex-direction:column;gap:5px;font-size:11px;color:var(--ink-2)}
+.mc-test-l small{
+  font-family:var(--f-ui);font-size:8.5px;font-weight:600;letter-spacing:2.4px;
+  color:rgba(252,76,2,.62);
+}
+.mc-test-v{
+  display:flex;align-items:baseline;gap:8px;
+  font-family:var(--f-num);font-size:34px;font-weight:800;line-height:.9;
+  letter-spacing:-.5px;color:var(--ink-1);font-variant-numeric:tabular-nums;
+}
+.mc-test-v i{font-family:var(--f-ui);font-style:normal;font-size:15px;color:var(--ink-3)}
+.mc-test-v .is-na{font-family:var(--f-ui);font-size:19px;font-weight:700;letter-spacing:1px;color:var(--ink-3)}
+.mc-test-v small{font-family:var(--f-ui);font-size:10px;font-weight:600;letter-spacing:.5px;color:rgba(252,76,2,.7)}
+.mc-test-s{margin-left:auto;font-size:10px;letter-spacing:.6px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.mc-test.is-pr{border-color:rgba(255,215,0,.45);background:rgba(255,215,0,.06)}
+.mc-test.is-pr .mc-test-v b,.mc-test.is-pr .mc-test-s{color:#FFD700}
+
+.mc-list{display:flex;flex-direction:column;gap:7px}
+.mc-s{
+  display:block;padding:12px 13px;border-radius:10px;text-decoration:none;color:inherit;
+  border:1px solid rgba(255,255,255,.12);background:rgba(10,4,0,.45);
+  transition:background .15s ease,border-color .15s ease;
+}
+.mc-s.is-ok,.mc-s.is-over{border-color:rgba(95,208,96,.3)}
+.mc-s.is-under{border-color:rgba(255,106,106,.3)}
+.mc-s.is-sched,.mc-s.is-missed{opacity:.72}
+.mc-s.is-next{
+  border-color:rgba(252,76,2,.55);
+  box-shadow:0 0 8px rgba(252,76,2,.18),inset 0 0 0 1px rgba(252,76,2,.18);
+}
+.mc-s.has-link{cursor:pointer}
+.mc-s.has-link:hover{background:rgba(252,76,2,.08)}
+
+.mc-s-top{display:flex;align-items:baseline;gap:8px}
+.mc-wk{
+  flex:none;font-family:var(--f-ui);font-size:9px;font-weight:700;letter-spacing:1.6px;
+  color:#FC4C02;border:1px solid rgba(252,76,2,.3);border-radius:4px;padding:2px 6px;
+}
+.mc-nm{font-size:13px;font-weight:700;color:var(--ink-1);min-width:0}
+.mc-dt{
+  margin-left:auto;flex:none;font-size:10px;letter-spacing:1px;
+  color:var(--ink-3);font-variant-numeric:tabular-nums;
+}
+.mc-dt i{font-style:normal;color:#FC4C02;margin-left:2px}
+.mc-plan{font-size:11px;line-height:1.5;color:var(--ink-2);margin:6px 0 9px}
+.mc-res{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.mc-sub{font-size:9px;letter-spacing:.4px;color:var(--ink-3)}
+.mc-nums{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+.mc-m{
+  font-size:10px;letter-spacing:.6px;color:var(--ink-3);
+  border:1px solid rgba(255,255,255,.14);border-radius:4px;padding:2px 6px;
+  font-variant-numeric:tabular-nums;
+}
+.mc-m b{font-weight:700;font-size:12px;margin-left:2px}
+.mc-m i{font-style:normal;margin-left:4px}
+.mc-m.ok{color:#5FD060;border-color:rgba(95,208,96,.35);background:rgba(95,208,96,.08)}
+.mc-m.no{color:#FF6A6A;border-color:rgba(255,106,106,.35);background:rgba(255,106,106,.08)}
+.mc-tgt{margin-left:auto;font-size:10px;letter-spacing:.6px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+
+.status-badge.mc-b-ok{background:rgba(95,208,96,.12);color:#5FD060;border:1px solid rgba(95,208,96,.3)}
+.status-badge.mc-b-over{background:rgba(95,208,96,.14);color:#5FD060;border:1px solid rgba(95,208,96,.45);box-shadow:0 0 8px rgba(95,208,96,.2)}
+.status-badge.mc-b-under{background:rgba(255,106,106,.12);color:#FF6A6A;border:1px solid rgba(255,106,106,.3)}
+.status-badge.mc-b-next{background:rgba(252,76,2,.15);color:#FC4C02;border:1px solid rgba(252,76,2,.45);box-shadow:0 0 8px rgba(252,76,2,.18)}
+.status-badge.mc-b-sched{background:transparent;color:var(--ink-3);border:1px solid rgba(255,255,255,.14)}
+.status-badge.mc-b-missed{background:transparent;color:var(--ink-3);border:1px solid rgba(255,106,106,.2)}
+
+@media(max-width:520px){
+  .console{padding:15px 14px 14px}
+  .console-tape{margin:14px -14px 12px}
+  .rh .tcal-view{margin:0 -14px}
+  .rh .tcal-scroll{padding:0 14px 8px}
+  .mc-ttl b{font-size:16px}
+  .mc-ftp{margin-left:0}   /* 不縮 .mc-ftp b —— 窄體只給 ≥26px 數字 */
+  .mc-test{gap:10px;padding:13px 14px}
+  .mc-test-v{font-size:28px}
+  .mc-test-s{margin-left:0;width:100%}
+  .mc-nums,.mc-tgt{margin-left:0;width:100%}
+}
+
 /* ── weekly quest tiles ── */
 .quest-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:2.4rem}
 @media(max-width:360px){.quest-grid{grid-template-columns:1fr}}
@@ -569,7 +740,7 @@ button.deck-stat:hover .ds-hint{color:#FC4C02}
   display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;
   padding:0 14px 10px;font-size:9px;letter-spacing:1.4px;color:rgba(255,255,255,.42);
 }
-.tcal-stat{color:#ff9142;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tcal-stat{color:var(--sig);font-variant-numeric:tabular-nums;white-space:nowrap}
 /* 檢視區：左右各一顆箭頭 + 邊緣淡出，捲到底那側的箭頭自動收起 */
 .tcal-view{position:relative}
 .tcal-view::before,.tcal-view::after{
@@ -1636,8 +1807,106 @@ html.lg-refract .fc-refract{display:block}
   .pwr-modal{padding:14px 12px 10px}
 }
 
+/* ── 每日一句（甲板版）：名片底下的一條窄帶 ─────────────────────
+   實測甲板在 1280×800 與 375×667 只剩 ~85px 可用，完整的引號牌是 448–487px，
+   所以這裡把它壓成三行：標籤列／句子／出處列。壓縮只在 .rc-quote 底下生效，
+   .quote-book 本體的樣式一行都沒改 —— 之後若要把完整版放回內文仍然可用。
+   放不下的部分按重要性依序退場：原文 → 收藏/複製 → 句子收成一行。 */
+.rc-quote{margin-top:15px;padding-top:14px;border-top:1px solid rgba(252,76,2,.16)}
+.rcq-hd{display:flex;align-items:center;gap:8px;margin-bottom:9px}
+.rcq-lab{
+  display:flex;align-items:baseline;gap:6px;flex:1;min-width:0;
+  font-size:10.5px;font-weight:700;color:var(--ink-2);letter-spacing:.4px;
+}
+.rcq-lab small{
+  font-family:var(--f-ui);font-size:8px;font-weight:600;letter-spacing:2.2px;
+  color:rgba(252,76,2,.62);
+}
+.rc-quote .qb-tabs{margin-bottom:0;gap:4px}
+.rc-quote .qb-tab{padding:2px 7px;font-size:10px;border-radius:100px;line-height:1.4}
+.rc-quote .qb-shuffle{
+  flex:none;margin:0;padding:2px 8px;font-size:10px;line-height:1.4;font-family:inherit;cursor:pointer;
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);
+  border-radius:100px;color:var(--ink-1);transition:background .15s ease;
+}
+.rc-quote .qb-shuffle:hover{background:rgba(252,76,2,.22)}
+/* 引號牌在甲板裡不再是一張卡：拿掉底、投影、邊框與置中，讓它變成名片的一部分 */
+.rc-quote .quote-book{
+  padding:0;border:none;box-shadow:none;background:transparent;text-align:left;border-radius:0;
+}
+.rc-quote .qb-mark{display:none}
+.rc-quote .qb-tag{font-size:11px;margin-bottom:4px;letter-spacing:.3px}
+.rc-quote .qb-text{
+  font-size:clamp(16px,1.75vw,22px);line-height:1.6;margin:0 0 7px;max-width:none;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
+}
+.rc-quote .qb-orig{
+  font-size:12px;line-height:1.6;margin:0 0 7px;max-width:none;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+}
+/* 出處、場景 chip、收藏/複製擠成一列，靠 flex 而不是各佔一行 */
+.rc-quote .qb-src{
+  font-size:10.5px;margin:0;display:inline;color:rgba(244,240,234,.42);
+}
+.rc-quote .qb-chips{display:inline-flex;gap:5px;margin:0 0 0 8px;vertical-align:middle}
+.rc-quote .qb-chip>span{padding:2px 8px;font-size:9.5px;border-radius:100px}
+.rc-quote .qb-actions{display:inline-flex;gap:5px;margin:0 0 0 8px;vertical-align:middle}
+.rc-quote .qb-btn{padding:2px 9px;font-size:9.5px;border-radius:100px}
+
+/* 矮螢幕分級退場 —— 甲板永遠不該超過一屏，超過就破壞一手勢一章的捲動。
+   關鍵：句子是隨機抽的，同一個尺寸下 1 行是 30px、2 行是 61px，
+   所以每一階都要按「抽到最長的那句」抓，按平均抓會在某次重整突然爆版。
+   退場順序 = 重要性反序：原文 → 收藏/複製 → 句子收成一行。 */
+@media(max-height:880px){
+  .hero-deck{gap:12px;padding:10px 0 8px}
+  .board-num{font-size:clamp(56px,10.5vw,104px)}
+  .board-unit{font-size:clamp(22px,3vw,30px)}
+  .rc-quote{margin-top:12px;padding-top:11px}
+  .rc-quote .qb-text{-webkit-line-clamp:2;font-size:clamp(15px,1.55vw,19px)}
+  .rc-quote .qb-orig{-webkit-line-clamp:1}
+}
+@media(max-height:820px){
+  .hero-deck{gap:10px;padding:8px 0 6px}
+  .board-num{font-size:clamp(52px,9.5vw,88px)}
+  .board-unit{font-size:clamp(20px,2.8vw,26px)}
+  .rc-quote .qb-text{font-size:clamp(14px,1.4vw,17px)}
+  .rc-quote .qb-orig{display:none}
+}
+@media(max-height:740px){
+  .board-num{font-size:clamp(46px,8.5vw,76px)}
+  .rc-quote{margin-top:9px;padding-top:8px}
+  .rc-quote .qb-text{-webkit-line-clamp:1}
+  .rc-quote .qb-actions{display:none}
+}
+/* 640/568 這種老手機：名片本身就吃掉大半屏，句子只留「一行 + 出處」。
+   作品名（.qb-tag）拿掉不會失去歸屬 —— .qb-src 的「角色《作品》」還在。 */
+@media(max-height:660px){
+  .hero-deck{gap:8px;padding:6px 0 4px}
+  .rc-head{padding-top:8px}
+  .board-num{font-size:clamp(36px,7vw,52px)}
+  .board-unit{font-size:clamp(17px,2.4vw,22px)}
+  .rc-quote{margin-top:8px;padding-top:7px}
+  .rcq-hd{margin-bottom:5px}
+  .rc-quote .qb-tag,.rc-quote .qb-chips{display:none}
+  .rc-quote .qb-text{font-size:13.5px;margin-bottom:5px}
+}
+/* 極矮（縮小的桌機視窗、568 高的老 iPhone）：實測名片本身就吃掉 367–418px，
+   留給句子的只剩 54–73px，而標籤列自己就要 20px。
+   把控制項改成絕對定位釘在右上角 —— 不佔任何一行，🎲 仍然點得到；
+   三個來源分頁是這裡唯一犧牲掉的功能（版面放不下，且它是選配不是內容）。 */
+@media(max-height:620px){
+  .board-num{font-size:clamp(30px,5vw,40px)}
+  .board-unit{font-size:clamp(15px,2vw,18px)}
+  .rc-quote{position:relative;margin-top:6px;padding-top:6px}
+  .rcq-lab,.rc-quote .qb-tabs{display:none}
+  /* .quote-book 本身是 position:relative 且 DOM 在後面，不給 z-index 會蓋掉 🎲 */
+  .rcq-hd{position:absolute;top:5px;right:0;margin:0;z-index:2}
+  .rc-quote .quote-book{padding-right:38px}
+  .rc-quote .qb-text{font-size:12.5px;margin-bottom:4px}
+  .rc-quote .qb-src{font-size:10px}
+}
+
 /* ── 每日一句 quote book ── */
-.quote-section{margin-bottom:2.4rem}
 .qb-tabs{display:flex;gap:8px;margin-bottom:12px}
 .qb-tab{
   padding:6px 14px;font-size:11px;letter-spacing:1px;font-family:inherit;
@@ -2680,17 +2949,25 @@ const STATUS_META = {
   over:    { emoji: '🔥', text: '超標' },
 }
 /* ── 每日一句：quote book widget ── */
-function renderQuoteSection() {
+/* ── 每日一句（甲板版）─────────────────────────────────────────
+   原本是獨立一章，但它跟出發名單卡講的是同一件事：今天的我。拆成兩章的結果是
+   首屏看完名片還要再捲一屏才看得到句子，而那一屏有九成是空的。
+   併進名片底下之後首屏就是完整的「今天」，代價是空間只剩 ~85px（實測 1280×800
+   與 375×667 是最緊的兩個尺寸），所以這裡只出結構，壓縮全部交給 .rc-quote 的 CSS。
+   id 沿用 quote-book / qb-tabs / qb-shuffle —— initQuoteWidget 與 qbRenderCard 完全不用改。 */
+function renderDeckQuote() {
   return `
-    <div class="quote-section">
-      <div class="section-title">每日一句 <span class="muted">· LIFE QUOTES</span></div>
-      <div class="qb-tabs" id="qb-tabs">
-        <button class="qb-tab active" data-src="all">✨ 全部</button>
-        <button class="qb-tab" data-src="anime">🎴 動畫</button>
-        <button class="qb-tab" data-src="movie">🎬 影劇</button>
+    <div class="rc-quote">
+      <div class="rcq-hd">
+        <span class="rcq-lab">每日一句<small>DAILY</small></span>
+        <div class="qb-tabs" id="qb-tabs">
+          <button class="qb-tab active" data-src="all" title="全部">✨</button>
+          <button class="qb-tab" data-src="anime" title="動畫">🎴</button>
+          <button class="qb-tab" data-src="movie" title="影劇">🎬</button>
+        </div>
+        <button class="qb-shuffle" id="qb-shuffle" title="換一句">🎲</button>
       </div>
       <div class="quote-book" id="quote-book"></div>
-      <button class="qb-shuffle" id="qb-shuffle">🎲 換一句</button>
     </div>
   `
 }
@@ -2916,8 +3193,8 @@ function renderTrainingBlock(data) {
       </div>`
   }).join('')
 
+  // 標題交給 renderRhythm —— 這半段是「節奏」章的下半，不是獨立章節
   return `
-    <div class="section-title">訓練現況 <span class="muted">· TRAINING BLOCK</span></div>
     <div class="tb">
       <div class="tb-head">
         <span></span>
@@ -2926,6 +3203,145 @@ function renderTrainingBlock(data) {
         <span>次數<i>SESSIONS</i></span>
       </div>
       ${rows}
+    </div>`
+}
+
+/* ── 節奏：日曆熱圖（每一天）＋ 本週/本月矩陣，合成一章 ─────────────
+   這兩塊原本是兩章，但它們是同一個問題的兩種放大倍率：日曆答「哪幾天有練」，
+   矩陣答「這週這個月夠不夠」。拆兩章等於把同一段時間切兩刀，捲兩屏才看得完。
+   由粗到細擺不對 —— 先看每一天的分布，再收斂到本週本月的達標，才是自然的閱讀順序。 */
+function renderRhythm(data) {
+  const cal = renderTrainingCalendar(data)
+  const tb  = renderTrainingBlock(data)
+  if (!cal && !tb) return ''
+  const parts = []
+  if (cal) parts.push(cal)
+  if (cal && tb) parts.push('<div class="console-tape"></div>')
+  if (tb) parts.push('<div class="sub-label">本週 × 本月 <span>THIS WEEK × MONTH</span></div>' + tb)
+  return '<div class="section-title">節奏 <span class="muted">· RHYTHM</span></div>' +
+    `<div class="rh console">${parts.join('')}</div>`
+}
+
+/* ── 週期：手寫課表 vs FIT 實際值 ──────────────────────────────────
+   全頁唯一講「未來」的章節。其餘六章都在報告已經發生的事，這章報告的是
+   接下來四週要做什麼、以及做完之後有沒有中。資料來自 data/training-block.json，
+   那支是手寫的，不由 cron 產生 —— 放進 strava.json 會被每日更新蓋掉。
+
+   顏色一律沿用既有語意鎖：綠=達標、紅=沒中、橘=下一堂（需要被優先讀到的）、
+   弱灰=未執行、皇冠金=後測超越前測（歷史最佳）。沒有新增任何顏色。 */
+// 待測時的占位：窄體 800 字重的破折號會變成一條粗黑條，看起來像塗掉的數字，
+// 所以未測的格子交回 UI 字體、降一階字級與亮度 —— 它要看起來像「還沒有」，不是「零」
+const mcNum = v => v == null
+  ? '<b class="is-na">--</b>'
+  : `<b>${v}</b>`
+const MC_PASS = (a, t) => ({
+  if:  a.if  != null && t.if  != null ? a.if  >= t.if - 0.02      : null,
+  tss: a.tss != null && t.tss != null ? a.tss >= t.tss * 0.9      : null,
+  vi:  a.vi  != null && t.vi  != null ? a.vi  <= t.vi             : null,
+})
+function renderMesocycle(block) {
+  if (!block || !Array.isArray(block.sessions) || !block.sessions.length) return ''
+  const S = block.sessions.slice().sort((a, b) => a.date.localeCompare(b.date))
+
+  // 今天以台北時間為準，跟頁面其他地方一致
+  const today = new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10)
+  const WD = ['日', '一', '二', '三', '四', '五', '六']
+  const md = d => `${d.slice(5, 7)}/${d.slice(8, 10)}`
+  const wd = d => WD[new Date(d + 'T00:00:00Z').getUTCDay()]
+  const n2 = v => v == null ? '—' : (+v).toFixed(2).replace(/^0/, '')
+  const done = S.filter(s => s.actual)
+
+  // 下一堂 = 今天或之後、還沒有實際值的第一堂
+  const nextIdx = S.findIndex(s => !s.actual && s.date >= today)
+
+  const state = (s, i) => {
+    if (s.actual) {
+      const p = MC_PASS(s.actual, s.target || {})
+      const hits = ['if', 'tss', 'vi'].filter(k => p[k] === true).length
+      const graded = ['if', 'tss', 'vi'].filter(k => p[k] != null).length
+      if (graded && hits === graded) {
+        const over = s.actual.if != null && s.target?.if != null && s.actual.if >= s.target.if + 0.03
+        return over
+          ? { cls: 'over',  badge: '⚡ EXCEEDED',  sub: '三項全中 · 強度超出目標' }
+          : { cls: 'ok',    badge: '✓ ON TARGET', sub: '三項全中' }
+      }
+      return { cls: 'under', badge: '📉 UNDER', sub: `${hits}/${graded || 3} 項達標` }
+    }
+    if (s.date < today)  return { cls: 'missed', badge: '💀 MISSED',    sub: '未執行 · 已過期' }
+    if (s.date === today) return { cls: 'next',  badge: '⚡ TODAY',      sub: '就是今天' }
+    if (i === nextIdx)   return { cls: 'next',   badge: '➖ NEXT UP',    sub: `還有 ${Math.round((Date.parse(s.date) - Date.parse(today)) / 86400000)} 天` }
+    return { cls: 'sched', badge: '➖ SCHEDULED', sub: `${md(s.date)} 週${wd(s.date)}` }
+  }
+
+  const rows = S.map((s, i) => {
+    const st = state(s, i)
+    const t = s.target || {}
+    let nums
+    if (s.actual) {
+      const p = MC_PASS(s.actual, t)
+      const m = (k, label, val) => p[k] == null
+        ? ''
+        : `<span class="mc-m ${p[k] ? 'ok' : 'no'}">${label} <b>${val}</b><i>${p[k] ? '✓' : '✗'}</i></span>`
+      nums = m('if', 'IF', n2(s.actual.if)) + m('tss', 'TSS', Math.round(s.actual.tss ?? 0)) + m('vi', 'VI', n2(s.actual.vi))
+    } else {
+      nums = `<span class="mc-tgt">目標 IF ${n2(t.if)} · TSS ${t.tss ?? '—'} · VI ≤${n2(t.vi)}</span>`
+    }
+    const href = s.actual?.ride ? `rides/${s.actual.ride}.html` : null
+    const inner = `
+      <div class="mc-s-top">
+        <span class="mc-wk">${s.wk || ''}</span>
+        <span class="mc-nm">${s.name || ''}</span>
+        <span class="mc-dt">${md(s.date)} ${wd(s.date)}${href ? ' <i>↗</i>' : ''}</span>
+      </div>
+      <div class="mc-plan">${s.plan || ''}</div>
+      <div class="mc-res">
+        <span class="status-badge mc-b-${st.cls}">${st.badge}</span>
+        <span class="mc-sub">${s.actual?.note || st.sub}</span>
+        <span class="mc-nums">${nums}</span>
+      </div>`
+    return href
+      ? `<a class="mc-s is-${st.cls} has-link" href="${href}">${inner}</a>`
+      : `<div class="mc-s is-${st.cls}">${inner}</div>`
+  }).join('')
+
+  const track = S.map((s, i) => `<span class="mc-tk is-${state(s, i).cls}" title="${md(s.date)} ${s.name || ''}"></span>`).join('')
+
+  // 前後測：從 CAL / POST 兩堂的 actual.test 取值，兩個都有才算出差值
+  const pre  = S.find(s => s.code === 'CAL')?.actual?.test  ?? block.test?.pre  ?? null
+  const post = S.find(s => s.code === 'POST')?.actual?.test ?? block.test?.post ?? null
+  const unit = block.test?.unit || 'W'
+  const gain = (pre != null && post != null) ? post - pre : null
+  const testCls = gain == null ? '' : gain > 0 ? ' is-pr' : ' is-flat'
+  const testSub = pre == null  ? `待 ${md(S[0].date)} 建立`
+                : post == null ? `待 ${md(S[S.length - 1].date)} 驗收`
+                : `${gain >= 0 ? '+' : ''}${gain} ${unit}${gain > 0 ? ' · 斷崖填平中' : ''}`
+
+  const over = block.end && today > block.end
+  const meta = over
+    ? `週期結束 · ${done.length} / ${S.length} 完成`
+    : `${done.length} / ${S.length} 完成` +
+      (nextIdx >= 0 ? ` · 下一堂 ${md(S[nextIdx].date)} 週${wd(S[nextIdx].date)}` : '')
+
+  return `
+    <div class="section-title">週期 <span class="muted">· MESOCYCLE</span></div>
+    <div class="mc console${over ? ' is-over' : ''}">
+      <div class="mc-hd">
+        <div class="mc-ttl">
+          <b>${block.title || ''}</b><i>${block.title_en || ''}</i>
+          ${over ? '<span class="mc-flag">COMPLETED</span>' : ''}
+        </div>
+        ${block.ftp ? `<div class="mc-ftp">FTP <b>${block.ftp}</b><small>W</small></div>` : ''}
+      </div>
+      ${block.goal ? `<div class="mc-goal">▍${block.goal}</div>` : ''}
+      <div class="mc-track">${track}</div>
+      <div class="mc-meta">${meta}</div>
+      <div class="mc-test${testCls}">
+        <span class="mc-test-l">${block.test?.metric || '前後測'}<small>PRE → POST</small></span>
+        <span class="mc-test-v">${mcNum(pre)}<i>→</i>${mcNum(post)}<small>${unit}</small></span>
+        <span class="mc-test-s">${testSub}</span>
+      </div>
+      <div class="mc-list">${rows}</div>
+      ${block.note ? `<div class="mc-note">${block.note}</div>` : ''}
     </div>`
 }
 
@@ -3010,8 +3426,8 @@ function renderTrainingCalendar(data) {
   const span = last - first + 1
   const legend = (ramp, n) => Array.from({ length: n }, (_, i) => `<i style="background:${ramp(i / (n - 1))}"></i>`).join('')
 
+  // 標題與外框交給 renderRhythm —— 日曆是儀表盤的上半，不是獨立一張卡
   return `
-    <div class="section-title">節奏 <span class="muted">· TRAINING CALENDAR</span></div>
     <div class="tcal">
       <div class="tcal-head">
         <span>▍ 每一格是一天，顏色深淺是當天訓練負荷</span>
@@ -6547,14 +6963,18 @@ function render(data) {
   // ── 組裝章節（編號進浮水印與右側導覽軌） ──
   // 每章開頭標出量測窗口 —— 這頁的九個章節其實是九個不同長度的時間尺度，
   // 說清楚「這段數字涵蓋多久」比標一個序號有用得多。
+  // 週期章的量測窗口就是週期本身的起訖日，沒有週期資料時整章會被下面的 filter 濾掉
+  const blk = window._trainingBlock
+  const blkWin = blk?.start && blk?.end
+    ? `${blk.start.slice(5).replace('-', '/')} – ${blk.end.slice(5).replace('-', '/')} · THE BLOCK`
+    : '進行中 · THE BLOCK'
   const chapterDefs = [
-    ['每日一句', '今天 · TODAY',              renderQuoteSection()],
-    ['訓練現況', '本週 × 本月 · CURRENT BLOCK', renderTrainingBlock(data)],
-    ['節奏',     '每一天 · DAY BY DAY',        renderTrainingCalendar(data)],
-    ['ITT 區間', '歷來最佳 · ALL-TIME BEST',   renderSegments(data.segments)],
-    ['月度量',   '逐月 · MONTH BY MONTH',      volumeHtml],
-    ['活動紀錄', '近期 · RECENT',              activityHtml],
-    ['生涯總量', '生涯 · SINCE DAY ONE',       totalsHtml],
+    ['週期',     blkWin,                              renderMesocycle(blk)],
+    ['節奏',     '每一天 × 本週 × 本月 · DAY BY DAY', renderRhythm(data)],
+    ['ITT 區間', '歷來最佳 · ALL-TIME BEST',          renderSegments(data.segments)],
+    ['月度量',   '逐月 · MONTH BY MONTH',             volumeHtml],
+    ['活動紀錄', '近期 · RECENT',                     activityHtml],
+    ['生涯總量', '生涯 · SINCE DAY ONE',              totalsHtml],
   ].filter(cd => cd[2] && cd[2].trim())
   const chapterHtml = chapterDefs.map(([nav, win, body], i) =>
     `<section class="chapter" id="ch-${i + 1}" data-ch="${String(i + 1).padStart(2, '0')}" data-win="${win}" data-nav="${nav}">` +
@@ -6605,6 +7025,7 @@ function render(data) {
             <span><b>${s.ytd_rides ?? 0}</b> 騎 · <b>${s.ytd_runs ?? 0}</b> 跑 · <b>${s.ytd_swims ?? 0}</b> 游</span>
             ${updatedStr ? `<span>更新 ${updatedStr} TPE</span>` : ''}
           </div>
+          ${renderDeckQuote()}
         </div>
       </div>
       <button class="deck-cue" id="deck-cue" type="button">往下 · ${chapterDefs.length} 章<i></i></button>
@@ -7334,8 +7755,10 @@ Promise.all([
   // 每日一句：動畫 + 影劇語錄（缺檔就不顯示該來源）
   fetchData('data/life-quotes.json').then(r => r.ok ? r.json() : null).catch(() => null),
   fetchData('data/movie-life-quotes.json').then(r => r.ok ? r.json() : null).catch(() => null),
+  // 手寫的訓練週期計畫（見 data/training-block.json 的 _howToUse）；缺檔就不顯示週期章
+  fetchData('data/training-block.json').then(r => r.ok ? r.json() : null).catch(() => null),
 ])
-  .then(([data, ittConfig, segStreams, segTerrain, landmarks, rivals, taipeiOutline, animeQuotes, movieQuotes]) => {
+  .then(([data, ittConfig, segStreams, segTerrain, landmarks, rivals, taipeiOutline, animeQuotes, movieQuotes, trainingBlock]) => {
     // 建立 SEG_META lookup，下面 renderSegments 用
     window._ittSegMeta = Object.fromEntries(ittConfig.segments.map(s => [s.id, s]))
     window.__rideFeed = data.recent_rides || []
@@ -7350,6 +7773,7 @@ Promise.all([
       const pr = list.find(e => e.is_pr) || list.sort((a, b) => a.elapsed_sec - b.elapsed_sec)[0]
       return [String(s.id), pr || null]
     }))
+    window._trainingBlock = trainingBlock || null
     window._taipeiMiniMap = buildTaipeiMiniMap(taipeiOutline)
     window._quotePool = [
       ...((animeQuotes?.quotes || []).map(q => ({ ...q, _src: 'anime' }))),
