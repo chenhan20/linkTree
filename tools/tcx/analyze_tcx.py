@@ -238,7 +238,9 @@ def _fit_extras(sess, tiz, points, devices):
             if p.get("lrb") is not None and p.get("w"):
                 num += p["lrb"] * p["w"]; den += p["w"]
         lrb = round(num / den, 1) if den else None
-    zone_edges = lambda hi: [int(x) for x in hi] if hi else None
+    # 陣列可能「非空但元素是 None」—— 跑步的 FIT 沒有功率區間邊界時就是這樣，
+    # 直接 int(None) 會整個 analyze 掛掉（4 個跑步檔每次執行都吐 traceback）。
+    zone_edges = lambda hi: ([int(x) for x in hi if x is not None] or None) if hi else None
     ex = {
         "lr_balance_right_pct": round(lrb, 1) if lrb is not None else None,
         "threshold_power":      sess.get("threshold_power") or tiz.get("functional_threshold_power"),

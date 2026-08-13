@@ -82,6 +82,51 @@ def date_of(fit: Path) -> str | None:
     return m.group(1) if m else None
 
 
+AID_RE = re.compile(r"^\d{4}-\d{2}-\d{2}_([^_]+)_")
+
+
+def aid_of(fit: Path) -> str:
+    """從檔名取 intervals.icu 的活動 id。"""
+    m = AID_RE.match(fit.name)
+    return m.group(1) if m else ""
+
+
+def activity_names() -> dict[str, str]:
+    """
+    _activities.json 是 sync-intervals.py 存的活動 metadata。
+    **FIT 格式沒有活動名稱欄位**，所以這是 Strava 以外唯一的標題來源。
+    檔案不在（還沒跑過新版 sync）時回空 dict，標題就沿用舊行為。
+    """
+    path = FIT_DIR / "_activities.json"
+    if not path.exists():
+        return {}
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        log("⚠️ _activities.json 解析失敗，標題退回預設")
+        return {}
+    return {aid: (v or {}).get("name") or "" for aid, v in data.items()}
+
+
+def desired_title(date: str, fit: Path, names: dict[str, str]) -> str | None:
+    """
+    要傳給 render_dashboard 的 --title，None = 不傳（讓它用 notes 或日期預設）。
+
+    優先序：教練評語的標題 > intervals.icu 活動名稱 > render 自己的日期預設。
+    render_dashboard.py:612 是 `a.title or notes.get("title") or 預設`，
+    --title 會壓過 notes，所以評語有標題時這裡必須回 None，
+    否則「劍 中中中中 劍」會被「內湖區 公路車」蓋掉。
+    """
+    note = NOTES / f"{date}.json"
+    if note.exists():
+        try:
+            if (json.loads(note.read_text(encoding="utf-8")) or {}).get("title"):
+                return None
+        except json.JSONDecodeError:
+            pass
+    return (names.get(aid_of(fit)) or "").strip() or None
+
+
 def analyze(fit: Path, tmp: Path) -> tuple[Path, Path, dict]:
     rj, cj = tmp / "ride.json", tmp / "chart.json"
     cmd = [sys.executable, str(TOOLS / "analyze_tcx.py"), str(fit),
@@ -147,6 +192,9 @@ def main() -> int:
     itt = itt_dates()
     if itt:
         log(f"ITT 日期 {len(itt)} 天")
+    names = activity_names()
+    if names:
+        log(f"活動名稱 {len(names)} 筆")
 
     done_file = FIT_DIR / "_reports.json"
     done = {}
@@ -170,7 +218,12 @@ def main() -> int:
     made_dates: dict[str, bool] = {}
     for fit in fits:
         prev = done.get(fit.name)
-        if prev and not (args.overwrite or args.force or args.dry_run):
+        # 標題變了就要重做 —— 你在 Garmin / intervals.icu 改了活動名稱之後，
+        # 沒有這條的話 _reports.json 會讓這支檔案永遠被跳過，報告停在舊標題。
+        want_title = desired_title((prev or {}).get("date") or date_of(fit) or "",
+                                   fit, names)
+        title_stale = bool(prev) and prev.get("title") != want_title
+        if prev and not (args.overwrite or args.force or args.dry_run or title_stale):
             # 之前處理過了。只有當它產出的報告被刪掉時才重做。
             if prev.get("skipped") or (RIDES / f"{prev['date']}.html").exists():
                 skipped += 1
@@ -200,14 +253,21 @@ def main() -> int:
                                           "why": "同日報告已由另一檔產出"}
                         skipped += 1
                         continue
+                # analyze 算出的日期才是最終的，用它重算一次標題
+                # （prev 不存在、或跨午夜導致檔名日期與 when.date 差一天時會不同）。
+                want_title = desired_title(date, fit, names)
+                title_stale = bool(prev) and prev.get("title") != want_title
                 out = RIDES / f"{date}.html"
-                if out.exists() and not (args.overwrite or args.force or replacing):
+                if out.exists() and not (args.overwrite or args.force
+                                         or replacing or title_stale):
                     # skipped:False＝「不是不合格，只是這次沒重生」——
                     # 報告被刪掉時（見上面的 prev 判斷）仍會重做。
                     done[fit.name] = {"date": date, "skipped": False,
-                                      "why": "already-exists"}
+                                      "why": "already-exists", "title": want_title}
                     skipped += 1
                     continue
+                if title_stale and out.exists():
+                    log(f"[改名] {date}：標題改為「{want_title or '(預設)'}」，重生報告")
                 ok, why = qualifies(summary, date, args, itt)
                 if not ok:
                     log(f"[門檻] {date} 不產出：{why}")
@@ -225,11 +285,13 @@ def main() -> int:
                 note = NOTES / f"{date}.json"
                 if note.exists():
                     cmd += ["--notes", str(note)]      # 評語不會被洗掉
+                if want_title:
+                    cmd += ["--title", want_title]     # intervals.icu 的活動名稱
                 r = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
                 if r.returncode != 0:
                     raise RuntimeError((r.stderr or r.stdout or "").strip()[:400])
             log(f"[產出] {date}.html（{why}{'，含評語' if note.exists() else ''}）")
-            done[fit.name] = {"date": date, "skipped": False}
+            done[fit.name] = {"date": date, "skipped": False, "title": want_title}
             made += 1
             made_dates[date] = cur_power
         except Exception as e:  # noqa: BLE001 — 單一檔案失敗不該中斷整批

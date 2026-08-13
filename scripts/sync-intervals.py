@@ -151,6 +151,49 @@ def load_state() -> dict:
     return {"downloaded": []}
 
 
+def save_activities(acts: list[dict]) -> None:
+    """
+    把活動的 metadata 存成 _activities.json。
+
+    為什麼要這個檔:**FIT 格式裡沒有「活動名稱」這個欄位**,名稱只存在於
+    intervals.icu 的活動物件。以前它只被 safe_name() 拿去組檔名,產報告時就
+    拿不到了,所以標題唯一來源是 Strava(docs/fit-pipeline.md 問題 B)。
+
+    刻意對「查詢區間內的全部活動」更新,而不是只對這次新下載的 ——
+    已下載的活動在 sync() 迴圈裡會被 continue 掉,只寫新下載的話,
+    你在 Garmin 或 intervals.icu 改了名字就永遠傳不進來。
+    """
+    path = OUT_DIR / "_activities.json"
+    data = {}
+    if path.exists():
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            log.warning("_activities.json 壞掉,重建")
+    renamed = 0
+    for a in acts:
+        aid = str(a.get("id") or "")
+        if not aid:
+            continue
+        name = a.get("name") or ""
+        prev = (data.get(aid) or {}).get("name")
+        if prev and name and prev != name:
+            log.info("  改名: %s 「%s」→「%s」", aid, prev, name)
+            renamed += 1
+        data[aid] = {
+            "name": name,
+            "type": a.get("type") or "",
+            "start_date_local": a.get("start_date_local") or "",
+        }
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(".tmp")
+    tmp.write_text(json.dumps(data, ensure_ascii=False, indent=1, sort_keys=True),
+                   encoding="utf-8")
+    tmp.replace(path)
+    log.info("活動 metadata %d 筆 → %s%s", len(data), path.name,
+             f"(其中 {renamed} 筆改名)" if renamed else "")
+
+
 def save_state(state: dict) -> None:
     STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
     state["downloaded"] = state.get("downloaded", [])[-5000:]
@@ -196,6 +239,9 @@ def sync(backfill_days: int | None = None) -> int:
     except ApiError as e:
         log.error("列出活動失敗: %s", e)
         return 2
+
+    # 先存 metadata：這一步跟「有沒有新檔要下載」無關，改名也要能傳進來。
+    save_activities(acts)
 
     state = load_state()
     seen = set(state.get("downloaded", []))

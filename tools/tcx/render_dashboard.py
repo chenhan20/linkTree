@@ -614,8 +614,11 @@ def main():
                f"{ride['totals']['distance_km']} km · 爬升 {ride['totals']['elev_gain_m']:,} m")
     lede = notes.get("lede") or auto_lede(ride)
 
+    # 標題退回預設時本身就含日期，再前綴一次會變「2026-08-13 2026-08-13 訓練報告」
+    page_title = title if title.startswith(w["date"]) else f"{w['date']} {title}"
+
     html = (TEMPLATE
-            .replace("__TITLE__", f"{w['date']} {title}")
+            .replace("__TITLE__", page_title)
             .replace("__EYEBROW__", eyebrow)
             .replace("__H1__", title)
             .replace("__LEDE__", lede)
