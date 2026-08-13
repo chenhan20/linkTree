@@ -27,6 +27,10 @@ on:
         description: '只做功率 PR 更新，跳過 laps/segments enrichment（建議重掃功率時開啟）'
         type: boolean
         default: true
+      scan_segments:
+        description: '新增 ITT 路段後用這個：對全史騎乘重掃 segment efforts（會自動改用全量並關掉 power_only）'
+        type: boolean
+        default: false
 
 jobs:
   sync:
@@ -52,9 +56,13 @@ jobs:
           STRAVA_CLIENT_SECRET: ${{ secrets.STRAVA_CLIENT_SECRET }}
           STRAVA_REFRESH_TOKEN: ${{ secrets.STRAVA_REFRESH_TOKEN }}
           STRAVA_ATHLETE_ID:    ${{ secrets.STRAVA_ATHLETE_ID }}
-          FETCH_ALL:            ${{ (inputs.fetch_all == true || inputs.scan_power == true) && '1' || '0' }}
+          # scan_segments 也要吃全量活動，不然只掃最近 100 筆，舊的 effort 補不齊
+          FETCH_ALL:            ${{ (inputs.fetch_all == true || inputs.scan_power == true || inputs.scan_segments == true) && '1' || '0' }}
           SCAN_POWER:           ${{ inputs.scan_power == true && '1' || '0' }}
-          POWER_ONLY:           ${{ inputs.power_only == true && '1' || '0' }}
+          # scan_segments 時強制關掉 power_only（它預設是 true，開著會跳過
+          # segments enrichment，等於白按一次全量掃描）
+          POWER_ONLY:           ${{ (inputs.power_only == true && inputs.scan_segments != true) && '1' || '0' }}
+          SCAN_SEGMENTS:        ${{ inputs.scan_segments == true && '1' || '0' }}
         run: node scripts/fetch-strava.js
 
       # 4. 補齊 ITT 路段的地形高程（只抓還沒有資料的路段；山不會動，抓過就不再抓）
