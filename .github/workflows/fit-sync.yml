@@ -29,7 +29,7 @@ on:
         required: false
         default: '100'
       rebuild:
-        description: '重生所有報告（會用現有的 notes，不會洗掉評語）'
+        description: '重生所有報告（會用現有的 notes，不會洗掉評語；同日多檔只產第一個合格者，肌力訓練不會蓋掉騎乘）'
         type: boolean
         default: false
 

@@ -4,10 +4,16 @@ build-ride-reports.py — 掃 data/fit/，把夠格的活動產成 rides/<date>.
 
 回答 docs/ride-report-pipeline.md 第七節第 3 點「自動產報告的門檻」：
 一年 150+ 趟全出會讓 rides/ 變垃圾場，所以預設門檻是
-**有功率 且 TSS ≥ 100**，另外三種情況無條件放行：
-  ‧ 這天已經有 rides/notes/<date>.json（你花時間寫了評語，就是想要這頁）
+**有功率 且 TSS ≥ 100**。例外的範圍（2026-08-13 修過，見 docs/fit-pipeline.md 問題 A）：
+  ‧ 這天已經有 rides/notes/<date>.json（你花時間寫了評語，就是想要這頁）→ 完全豁免
   ‧ 這天有 ITT 成績（data/itt-segments.json 裡有該日期的 effort）
-  ‧ --force
+    → **只豁免 TSS 門檻，沒有功率資料仍然不合格**
+  ‧ --force → 全豁免
+
+另外同一次執行內做**同日去重**：同一天有多個 FIT（例：騎乘＋肌力訓練共用
+rides/<date>.html）時，第一個產出（或 dry-run 判定會產出）的檔案勝出，
+其餘同日檔案一律跳過並標 [同日]。這連 --overwrite / --force（workflow 的
+rebuild:true）下「排序在後的肌力訓練覆蓋掉騎乘報告」的事故一起堵掉。
 
 第七節第 2 點「評語留在哪」的答案：**在 repo 裡**，rides/notes/<date>.json。
 2026-08-06 和 08-11 兩份都在。所以重生不會洗掉評語 —— 這支會自動帶 --notes。
@@ -105,12 +111,17 @@ def qualifies(summary: dict, date: str, args, itt: set[str]) -> tuple[bool, str]
         return True, "--force"
     if (NOTES / f"{date}.json").exists():
         return True, "有教練評語"
-    if date in itt:
-        return True, "當天有 ITT 成績"
 
+    # 沒有功率資料一律不合格 —— ITT 例外只豁免 TSS，不豁免這條。
+    # 不然同一天的肌力訓練（無功率、0 km）會因為那天有 ITT 成績而「合格」，
+    # 在 --overwrite 下覆蓋掉真正的騎乘報告（docs/fit-pipeline.md 問題 A）。
     pw = summary.get("power") or {}
     if not pw.get("has_power"):
         return False, "沒有功率資料"
+
+    if date in itt:
+        return True, "當天有 ITT 成績"
+
     tss = pw.get("tss")
     if not isinstance(tss, (int, float)):
         return False, "算不出 TSS"
@@ -153,6 +164,10 @@ def main() -> int:
         return 0
 
     made = skipped = failed = 0
+    # 本次執行已產出（或 dry-run 判定會產出）的日期 → 勝出檔是否有功率。
+    # 記 has_power 是因為 --force / notes 豁免下無功率檔（肌力訓練）可能先搶到
+    # 當日，後到的騎乘檔必須能取代它 —— 騎乘優先於肌力，與檔名排序無關。
+    made_dates: dict[str, bool] = {}
     for fit in fits:
         prev = done.get(fit.name)
         if prev and not (args.overwrite or args.force or args.dry_run):
@@ -170,9 +185,27 @@ def main() -> int:
                     log(f"[跳過] {fit.name}：判斷不出日期")
                     skipped += 1
                     continue
+                cur_power = bool((summary.get("power") or {}).get("has_power"))
+                replacing = False
+                if date in made_dates:
+                    # 同日去重：一天只有一份 rides/<date>.html。原則上先產出者勝，
+                    # 唯一例外是「有功率的檔取代無功率的先到者」—— 不然 --force 下
+                    # 肌力訓練檔名排序在前時（如 07-30、08-05）會搶走騎乘的報告。
+                    if cur_power and not made_dates[date]:
+                        replacing = True
+                        log(f"[同日] {fit.name}：以功率版取代先前的無功率版")
+                    else:
+                        log(f"[同日] {fit.name}：當日報告已由另一檔產出")
+                        done[fit.name] = {"date": date, "skipped": True,
+                                          "why": "同日報告已由另一檔產出"}
+                        skipped += 1
+                        continue
                 out = RIDES / f"{date}.html"
-                if out.exists() and not (args.overwrite or args.force):
-                    done[fit.name] = {"date": date, "skipped": False}
+                if out.exists() and not (args.overwrite or args.force or replacing):
+                    # skipped:False＝「不是不合格，只是這次沒重生」——
+                    # 報告被刪掉時（見上面的 prev 判斷）仍會重做。
+                    done[fit.name] = {"date": date, "skipped": False,
+                                      "why": "already-exists"}
                     skipped += 1
                     continue
                 ok, why = qualifies(summary, date, args, itt)
@@ -184,6 +217,7 @@ def main() -> int:
                 if args.dry_run:
                     log(f"[dry-run] {date} 會產出（{why}）")
                     made += 1
+                    made_dates[date] = cur_power
                     continue
 
                 cmd = [sys.executable, str(TOOLS / "render_dashboard.py"),
@@ -197,6 +231,7 @@ def main() -> int:
             log(f"[產出] {date}.html（{why}{'，含評語' if note.exists() else ''}）")
             done[fit.name] = {"date": date, "skipped": False}
             made += 1
+            made_dates[date] = cur_power
         except Exception as e:  # noqa: BLE001 — 單一檔案失敗不該中斷整批
             # 用 fit.name 而不是 date：analyze() 就拋例外時 date 還沒賦值
             log(f"[失敗] {fit.name}: {e}")

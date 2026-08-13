@@ -202,17 +202,14 @@ python.org 的 Python 3.12 framework build 沒有 CA bundle
 
 ---
 
-### 兩個尚未處理的問題（實測才浮出來，不屬於本次範圍）
+### 兩個問題（實測才浮出來；A 已於 2026-08-13 修掉）
 
-**A. 門檻幾乎沒有在發揮作用，而且例外會繞過 `has_power`**
+**A. ~~門檻幾乎沒有在發揮作用，而且例外會繞過 `has_power`~~ ✅ 已修（2026-08-13）**
 
-`data/itt-segments.json` 有 **54 天**有 ITT 成績，所以「當天有 ITT 成績」這條例外
-放行了**全部 8 筆**通過的活動，**`TSS ≥ 100` 一次都沒有真正決定過任何事**。
-原文件想解決的「一年 150 趟會變垃圾場」其實沒被這個門檻擋住。
-
-更具體的問題在 `build-ride-reports.py:103-119` 的 `qualifies()`：
-`--force` → notes → ITT 三條例外都排在 `has_power` 檢查**之前**。
-所以 2026-07-22 的**肌力訓練**（`sport=Training`、`has_power=False`、`distance 0.0 km`）
+當時的問題：`qualifies()` 裡 `--force` → notes → ITT 三條例外都排在 `has_power`
+檢查**之前**，而 `data/itt-segments.json` 有 **54 天**有 ITT 成績，所以
+「當天有 ITT 成績」放行了全部 8 筆通過的活動，`TSS ≥ 100` 一次都沒有真正決定過任何事。
+更糟的是 2026-07-22 的**肌力訓練**（`sport=Training`、`has_power=False`、`distance 0.0 km`）
 也「合格」了，而它跟同一天的騎乘共用 `rides/2026-07-22.html`：
 
 ```
@@ -220,13 +217,34 @@ python.org 的 Python 3.12 framework build 沒有 CA bundle
 2026-07-22_i175154485_肌力訓練.fit        ← 排序在後
 ```
 
-- **平常跑安全**：第二個檔會被 `:174` 的「HTML 已存在就跳過」擋掉，騎乘那份勝出
-  （dry-run 顯示 8 筆、實跑 7 筆，差的就是這筆）
-- **`--overwrite` 會出事**：`:174` 被繞過，**肌力訓練會覆蓋掉騎乘的報告**，
-  變成一份 0 km、沒有功率的「訓練報告」。而 workflow 的 `rebuild: true` 走的正是這條
+平常跑靠「HTML 已存在就跳過」讓騎乘勝出，但 `--overwrite` / `--force`
+（workflow 的 `rebuild: true`）會繞過那條，肌力訓練會覆蓋掉騎乘的報告。
 
-建議修法是把 `has_power` 檢查移到三條例外之前（notes 那條可能要保留豁免）。
-**本次沒有動它** —— 這會改變產出政策，該由你決定。
+**已採用的修法**（`scripts/build-ride-reports.py`）：
+
+1. `qualifies()` 新順序：`--force` → notes（有教練評語）→ **沒有功率資料直接不合格**
+   → ITT 例外 → TSS 門檻。即 **ITT 只豁免 TSS、不豁免 `has_power`**；
+   notes 維持完全豁免；`--force` 維持全豁免。
+2. 主迴圈加**同日去重**：同一次執行內某日期已產出（或 dry-run 判定會產出）後，
+   後續同日期的檔案一律跳過並 log `[同日]`。連 `--overwrite` / `--force` 下的
+   同日互蓋一起堵掉 —— `rebuild: true` 從此安全。
+   去重有一條唯一例外：**有功率的檔可以取代無功率的先到者**（log
+   `以功率版取代先前的無功率版`）。這是因為 `--force` 全豁免 `has_power`，
+   而 07-30、08-05 兩天的肌力檔 intervals id 排序在騎乘**之前** ——
+   沒有這條例外，手動 `--force` 會讓肌力版先到先贏。騎乘優先於肌力，
+   與檔名排序無關（對抗驗證抓到的回歸，2026-08-13 補修）。
+3. 「HTML 已存在就跳過」寫入 `_reports.json` 的紀錄補上 `why:"already-exists"`，
+   跟 `skipped:false` 搭配表示「不是不合格，只是這次沒重生」（行為不變，只是去掉語意混亂）。
+
+驗證（2026-08-13 本機）：`--dry-run --overwrite` 下 07-22 肌力訓練被 `[同日]` 擋下、
+07-22 騎乘（TSS 91 但當日有 ITT）仍產出、08-06 / 08-11 仍走「有教練評語」、
+07-15 / 07-30 / 08-05 低 TSS 騎乘仍被擋；實跑 `--overwrite --only 2026-07-22`
+產物仍是騎乘版（36.66 km / NP 174.4）且與已 commit 版 byte-identical。
+`--dry-run --force` 下 07-30 / 08-05 肌力版先搶到、騎乘版隨即以功率例外取代，
+07-15 / 07-22（騎乘排序在前）肌力版被 `[同日]` 擋下 —— 四天結局都是騎乘勝出。
+
+注意：TSS 門檻對「有功率的騎乘」仍然幾乎不決定事情（ITT 天數太多），
+「一年 150 趟變垃圾場」的疑慮只擋掉了無功率活動這一半。
 
 **B. 沒有 notes 的日期，報告標題是通用的**
 
@@ -252,3 +270,27 @@ FIT 本身沒有活動名稱欄位，intervals.icu 給的是地點式命名（`�
 **仍未驗證**：GitHub Actions 上的實際執行。本機已經把 API、金鑰、資料正確性都驗掉了，
 CI 那邊剩下的風險是 runner 的對外連線與 secret 設定。workflow 第一步就是 `--status`，
 會立刻紅燈，不會靜默失敗。
+
+---
+
+## Phase B：自建 ITT 路段計時偵測器（2026-08-13 落地並驗證 ✅）
+
+`tools/tcx/segments.py`（可 import 也可 CLI：`python3 tools/tcx/segments.py <fit|tcx>`）。
+路段定義吃 `data/segment-streams.json` 的六條 ITT，端點即官方閘門。
+
+演算法照原計畫：垂直閘門線（半寬 30 m）＋相鄰兩點線段相交＋時間線性插值，
+吃原始 points（不過 `resample_1hz()`），起點方位角同向判斷＋折線 50% 中途檢查點，
+一趟多次通過各自成一筆，`analyze_tcx.py` 零改動。
+
+驗證結果：
+- 回歸：`docs/activity_22683798222.tcx` → 中社路 1129.4 s（官方 1129）、
+  劍南路回程 513.4 s（官方 512），去程反向穿越被方向判斷排除。
+- 全量：`data/fit/` 17 檔（12 騎乘 + 5 肌力）偵測出 19 筆 effort，與
+  `data/itt-segments.json` 官方 efforts（FIT 涵蓋範圍 2026-07-14 起）**19/19 一對一
+  全數對上，最大 |差值| 2.0 s**，無單邊多出或漏抓；肌力檔無 GPS、輸出空、不炸。
+- 差值多在 ±2 s：官方 elapsed 取整數秒、自建插值到 0.1 s，參考折線端點與官方閘門
+  另有約 6 m 系統位移。**Strava 訂閱斷掉後這條管線可獨立產出 ITT 秒數。**
+
+已知限制（對抗驗證記錄，未觸發）：終點穿越因 GPS 缺口漏抓時貪婪配對可能吞掉下一圈；
+途中長停留超過「路段長 / 1 m/s（下限 1800 s）」上限會整筆丟棄；
+`kom_time_str` / `athlete_count` / `effort_count` / `pr_rank` 是 Strava 全站數據，拿不回來。
