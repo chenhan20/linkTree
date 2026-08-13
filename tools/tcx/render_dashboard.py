@@ -310,7 +310,9 @@ function bar(x,y,w,h,r){r=Math.min(r||4,w/2,h);return `M${x} ${y+h} L${x} ${y+r}
       const ok=h.held===true, col=h.held==null?'var(--ink-2)':(ok?'var(--good-ink)':'var(--critical)');
       t.push(`<div class="fit-tile"><div class="k">校準產出 ① · ${h.planned_min} 分 @${h.target_w}W 撐不撐得住</div>`+
         `<div class="v" style="color:${col}">${h.held==null?'無法判定':(ok?'撐得住':'沒撐住')}</div>`+
-        `<div class="n">${h.avg_w?`實際 ${h.actual_min} 分（${h.completion_pct}%）· 平均 ${w(h.avg_w)}W · 前半 ${w(h.first_half_w)}W → 後半 ${w(h.second_half_w)}W<br>`:''}${esc(h.verdict)}</div></div>`);
+        `<div class="n">${h.avg_w?`實際 ${h.actual_min} 分（${h.completion_pct}%）· 平均 ${w(h.avg_w)}W · 前半 ${w(h.first_half_w)}W → 後半 ${w(h.second_half_w)}W<br>`:''}${esc(h.verdict)}`+
+        /* 這個判定的後果是「四週表全部 -10W」，擦邊過關一定要講出來，不能只給紅綠燈 */
+        `${h.caveat?`<br><span style="color:var(--warn-ink,var(--critical))">⚠️ ${esc(h.caveat)}</span>`:''}</div></div>`);
     }
     if(f.watts_20min){
       const v0=(f.vs_fresh||[])[0];

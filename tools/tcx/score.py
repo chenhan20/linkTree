@@ -53,9 +53,25 @@ DEFAULT_PARAMS = {
     "below_k": 3.0,              # min_power_hold：違規秒數佔比每 1% 扣 3 分
     "fade_k": 8.0,               # no_fade_last：最後 N 分鐘每掉 1% 扣 8 分
     "durability_k": 6.0,         # 續航：後半比前半每掉 1% 扣 6 分
+    "slow_start_k": 4.0,         # 續航：負分割但前半欠處方時，每欠 1% 扣 4 分
     "cadence_near_rpm": 5,       # 迴轉區間外 5 rpm 內給半分
     "cadence_near_credit": 0.5,
     "twenty_min_decay_exponent": 0.06,   # 全力段不足 20 分時的外推指數
+    # ── 離散度（執行度的第二個因子）──
+    # 只看段平均會被「坡上 300W、坡下滑行」平均成剛好達標。實測 2026-08-11 的爬坡日
+    # 硬套 09-08 減量日的「Z2 70 分 @160-175W」：段平均 168W 正中紅心拿 100 分，
+    # 但只有 7.5% 的秒數真的落在區間內、18.2% 的秒數功率低於 20W。
+    # 這正是課表要修的「坡會替你踩」，評分器不能反過來獎勵它。
+    "band_tol": 0.10,            # 判定「在區間內」時，處方上下限各放寬 10%
+    "band_smooth_sec": 30,       # 先做 30 秒平滑，濾掉踏頻造成的單秒噪音
+    "steady_target_pct": 75.0,   # 移動秒數有 75% 落在區間內就算完全穩定
+    "steady_floor": 0.35,        # 離散度因子的地板（再散也不會整段歸零）
+    # ── 全力段 ──
+    # 舊版全力段一律 100 分，地板只有 FTP×0.6＝142.8W，等於「有踩就滿分」。
+    # 改成跟「全趟同長度的最佳窗口」比：真的全力，那一段本身就會是全趟最佳窗口。
+    # 這個基準完全從檔案內部長出來，不需要新鮮 FTP 模型，也不會重複懲罰已知的疲勞斷崖。
+    "allout_full_ratio": 0.95,   # 達到全趟同長度最佳窗口的 95% 就算全力
+    "allout_shortfall_k": 2.0,   # 每差 1%（相對最佳窗口）扣 2 分
 }
 DEFAULT_ALIGN = {
     "grid_sec": 10,          # DP 網格解析度，之後再用 1 秒微調邊界
@@ -500,11 +516,70 @@ def _target_text(tw):
 
 
 # ---------------------------------------------------------------- 維度一：執行度
+def _band_bounds(tw, tol):
+    """把處方換成一組放寬後的上下界；沒有處方瓦數就回 None。"""
+    lo, hi, about = tw.get("lo"), tw.get("hi"), tw.get("about")
+    if lo is None and hi is None:
+        if about is None:
+            return None
+        lo = hi = about
+    return (lo * (1 - tol) if lo is not None else -INF,
+            hi * (1 + tol) if hi is not None else INF)
+
+
+def _steadiness(S, sm, a, b, tw, P):
+    """段內「移動秒數落在處方區間內」的佔比，以及由它換算出的執行度折扣因子。
+
+    只算移動中的秒數：路口紅燈停下來不是沒在執行課表，滑行下坡才是。
+    """
+    bounds = _band_bounds(tw or {}, P["band_tol"])
+    if bounds is None:
+        return None
+    lo, hi = bounds
+    idx = [i for i in range(a, b) if S["moving"][i]]
+    if len(idx) < 60:                       # 太短的段統計不出離散度，不折扣
+        return None
+    inb = sum(1 for i in idx if lo <= sm[i] <= hi)
+    pct = inb / len(idx) * 100.0
+    factor = max(P["steady_floor"], min(1.0, pct / P["steady_target_pct"]))
+    return {"in_band_pct": round(pct, 1),
+            "moving_sec": len(idx),
+            "coast_pct": round(sum(1 for i in idx if S["w"][i] < 20) / len(idx) * 100, 1),
+            "band_w": [None if lo == -INF else round(lo), None if hi == INF else round(hi)],
+            "smooth_sec": P["band_smooth_sec"],
+            "target_pct": P["steady_target_pct"],
+            "factor": round(factor, 3)}
+
+
+def _best_window_mean(S, length):
+    """全趟同長度的最佳滾動平均功率。wpre 是前綴和，這裡是 O(n)。"""
+    if length <= 0 or S["n"] < length:
+        return None
+    return max(_mean_w(S, i, i + length) for i in range(0, S["n"] - length + 1))
+
+
+def _allout_power_score(S, a, b, P):
+    """全力段：跟全趟同長度的最佳窗口比。真的全力，這段就會是全趟最佳窗口。"""
+    n = b - a
+    mean = _mean_w(S, a, b)
+    best = _best_window_mean(S, n)
+    if not best:
+        return 100.0, "全趟長度不足以取同長度窗口，全力段不另外扣分", None
+    ratio = mean / best
+    full = P["allout_full_ratio"]
+    if ratio >= full:
+        return 100.0, "平均 %.0fW 就是全趟最佳的 %d 秒窗口（%.0fW）" % (mean, n, best), \
+            {"mean_w": round(mean, 1), "best_window_w": round(best, 1), "ratio": round(ratio, 3)}
+    d = (full - ratio) * 100.0
+    sc = max(0.0, 100.0 - d * P["allout_shortfall_k"])
+    return sc, "平均 %.0fW，全趟最佳同長度窗口有 %.0fW（只有 %.0f%%）＝ 這段沒有真的全力" \
+        % (mean, best, ratio * 100), \
+        {"mean_w": round(mean, 1), "best_window_w": round(best, 1), "ratio": round(ratio, 3)}
+
+
 def _power_score(mean, tw, P):
     """在區間內 100 分；低於下限依比例扣（每低 1% 扣 deficit_k 分）；高於上限輕罰。"""
     tw = tw or {}
-    if tw.get("allout"):
-        return 100.0, "全力段沒有處方瓦數，執行度只看有沒有做滿時間"
     lo, hi = tw.get("lo"), tw.get("hi")
     if lo is None and hi is None:
         return None, "這段沒有處方瓦數"
@@ -518,7 +593,9 @@ def _power_score(mean, tw, P):
     return 100.0, "平均 %.0fW 在處方區間內" % mean
 
 
-def compliance_dim(segreps, P):
+def compliance_dim(segreps, S, P):
+    # 平滑一次全趟就好：切段再平滑會在每段邊界各留一段暖機，長段沒差、短段會歪。
+    sm = _smooth_centered(S["w"], P["band_smooth_sec"])
     ent = []
     for r in segreps:
         if r["role"] not in WORK_ROLES:
@@ -528,18 +605,37 @@ def compliance_dim(segreps, P):
             ent.append({"name": r["name"], "planned_sec": pres, "power_score": None,
                         "duration_factor": 0.0, "score": 0.0, "why": "這段沒對到（matched:false）"})
             continue
-        ps, why = _power_score(r["actual"]["avg_w"], r["target_w"], P)
-        ps = 100.0 if ps is None else ps
+        a, b = r["matched_start_sec"], r["matched_start_sec"] + r["matched_sec"]
+        tw = r["target_w"] or {}
+        e = {"name": r["name"], "planned_sec": pres}
+        if tw.get("allout"):
+            ps, why, ao = _allout_power_score(S, a, b, P)
+            if ao:
+                e["allout"] = ao
+            steady = None
+        else:
+            ps, why = _power_score(r["actual"]["avg_w"], tw, P)
+            ps = 100.0 if ps is None else ps
+            # 段平均達標不代表照著處方踩。離散度是第二個因子，跟平均相乘。
+            steady = _steadiness(S, sm, a, b, tw, P)
+            if steady:
+                e["steadiness"] = steady
+                if steady["factor"] < 1.0:
+                    why += "；但只有 %.1f%% 的移動秒數落在區間內（滑行 %.1f%%），離散度打 %.2f 折" % (
+                        steady["in_band_pct"], steady["coast_pct"], steady["factor"])
+                ps *= steady["factor"]
         df = min(1.0, r["matched_sec"] / (pres * P["duration_grace"]))
-        ent.append({"name": r["name"], "planned_sec": pres, "power_score": round(ps, 1),
-                    "duration_factor": round(df, 3), "score": round(ps * df, 1),
-                    "completion_pct": round(r["matched_sec"] / pres * 100, 1), "why": why})
+        e.update({"power_score": round(ps, 1), "duration_factor": round(df, 3),
+                  "score": round(ps * df, 1),
+                  "completion_pct": round(r["matched_sec"] / pres * 100, 1), "why": why})
+        ent.append(e)
     if not ent:
         return None
     tot = sum(e["planned_sec"] for e in ent)
     score = sum(e["score"] * e["planned_sec"] for e in ent) / tot
     return {"score": round(score, 1), "segments": ent,
-            "method": "各 work/allout 段的（功率分 × 時間完成率），以處方秒數加權平均"}
+            "method": "各 work/allout 段的（功率分 × 離散度因子 × 時間完成率），以處方秒數加權平均"
+                      "；全力段的功率分是跟全趟同長度最佳窗口相比"}
 
 
 # ---------------------------------------------------------------- 維度二：紀律（規則）
@@ -725,15 +821,29 @@ def durability_dim(segreps, P):
         h2 = r["actual"]["second_half_w"]
         decay = (h1 - h2) / h1 * 100 if h1 else 0.0
         sc = max(0.0, min(100.0, 100.0 - max(0.0, decay) * P["durability_k"]))
+        shape = ("負分割（後半更強）" if decay < -1 else
+                 ("平穩" if abs(decay) <= 1 else "後半掉瓦"))
+        why = None
+        # 負分割不一律等於續航好。前半根本沒踩到處方的「負分割」，是起步太慢、
+        # 靠後段把平均補回來 —— 8/13 主測 1 前半 173W（處方 185W）就是這個形狀，
+        # 摘要自己寫「平均達標是後段補回來的」，續航卻拿滿分 20/20。
+        tw = r["target_w"] or {}
+        ref = tw.get("lo") or tw.get("about") or tw.get("hi")
+        if decay < 0 and ref and h1 < ref:
+            short = (ref - h1) / ref * 100.0
+            sc = max(0.0, 100.0 - short * P["slow_start_k"])
+            shape = "負分割，但前半沒踩到處方"
+            why = ("前半 %.0fW 低於處方 %dW（-%.1f%%），後半 %.0fW 補回來 —— "
+                   "這是起步太慢，不是撐得住" % (h1, ref, short, h2))
         ent.append({"name": r["name"], "sec": r["matched_sec"], "first_half_w": h1,
                     "second_half_w": h2, "decay_pct": round(decay, 1), "score": round(sc, 1),
-                    "shape": "負分割（後半更強）" if decay < -1 else
-                             ("平穩" if abs(decay) <= 1 else "後半掉瓦")})
+                    "shape": shape, **({"why": why} if why else {})})
     if not ent:
         return None
     tot = sum(e["sec"] for e in ent)
     return {"score": round(sum(e["score"] * e["sec"] for e in ent) / tot, 1), "segments": ent,
-            "method": "各 work/allout 段前半 vs 後半平均功率的衰減率，以實際秒數加權；後半更強一律 100"}
+            "method": "各 work/allout 段前半 vs 後半平均功率的衰減率，以實際秒數加權；"
+                      "後半更強且前半有踩到處方才給 100，前半欠瓦的負分割按欠的比例扣"}
 
 
 # ---------------------------------------------------------------- 維度四：迴轉
@@ -747,25 +857,32 @@ def cadence_dim(segreps, S, P):
         lo, hi = tc["lo"], tc["hi"]
         a, b = r["matched_start_sec"], r["matched_start_sec"] + r["matched_sec"]
         dur = b - a
-        inb = nb = 0
+        inb = nb = ped = 0
         for c in S["cad"][a:b]:
             if not c:
                 continue
+            ped += 1
             if lo <= c <= hi:
                 inb += 1
             elif lo - near <= c < lo or hi < c <= hi + near:
                 nb += 1
-        sc = (inb + credit * nb) / dur * 100
-        ent.append({"name": r["name"], "target": [lo, hi], "sec": dur,
+        if not ped:
+            continue
+        # 分母只算「有在踩」的秒數。舊版拿整段秒數當分母，滑行的秒數進了分母卻
+        # 進不了分子，等於用迴轉維度重複懲罰滑行 —— 滑行已經由執行度的離散度罰過了。
+        sc = (inb + credit * nb) / ped * 100
+        ent.append({"name": r["name"], "target": [lo, hi], "sec": dur, "pedaling_sec": ped,
                     "avg_cad": r["actual"]["avg_cad"],
-                    "in_band_pct": round(inb / dur * 100, 1),
-                    "near_band_pct": round(nb / dur * 100, 1),
+                    "pedaling_pct": round(ped / dur * 100, 1),
+                    "in_band_pct": round(inb / ped * 100, 1),
+                    "near_band_pct": round(nb / ped * 100, 1),
                     "score": round(sc, 1)})
     if not ent:
         return None
-    tot = sum(e["sec"] for e in ent)
-    return {"score": round(sum(e["score"] * e["sec"] for e in ent) / tot, 1), "segments": ent,
-            "method": "目標區間內給滿分、區間外 %d rpm 內給半分，以實際秒數加權" % near}
+    tot = sum(e["pedaling_sec"] for e in ent)
+    return {"score": round(sum(e["score"] * e["pedaling_sec"] for e in ent) / tot, 1), "segments": ent,
+            "method": "目標區間內給滿分、區間外 %d rpm 內給半分；分母只算有踩踏的秒數"
+                      "（滑行由執行度的離散度負責罰，不重複計）" % near}
 
 
 # ---------------------------------------------------------------- 校準日專用
@@ -782,6 +899,10 @@ def calibration_report(cal, segreps, S, plan, P):
         act = hs["actual"]
         comp = hs["matched_sec"] / (cal.get("hold_minutes", 60) * 60)
         held = (comp >= 0.95 and act["avg_w"] >= tgt * 0.99 and act["second_half_w"] >= tgt * 0.97)
+        # 這個判定的後果是「四週表全部 -10W」，所以餘裕多少一定要寫出來。
+        # 實測 8/13 只贏 2.05W，對齊位移 ±2 分鐘就會翻面（-120s 沒撐住、+60s 撐得住）。
+        margins = [("平均", act["avg_w"] - tgt * 0.99), ("後半", act["second_half_w"] - tgt * 0.97)]
+        tight = min(margins, key=lambda m: abs(m[1]))
         out["hold_test"] = {
             "segment": hs["name"], "target_w": tgt,
             "planned_min": cal.get("hold_minutes"), "actual_min": round(hs["matched_sec"] / 60.0, 1),
@@ -790,8 +911,13 @@ def calibration_report(cal, segreps, S, plan, P):
             "first_half_w": act["first_half_w"], "second_half_w": act["second_half_w"],
             "avg_hr": act["avg_hr"], "max_hr": act["max_hr"],
             "held": held,
+            "margin_w": round(tight[1], 2), "margin_on": tight[0],
+            "marginal": abs(tight[1]) < 5.0,
             "verdict": ("撐得住 —— 四週表數字照跑" if held else "沒撐住 —— 四週表全部 -10W"),
             "criteria": "做滿 95% 時間、平均 >= 目標 99%、後半 >= 目標 97%，三條都過才算撐住",
+            "caveat": ("擦邊過關：最緊的是「%s」，只差 %.2fW。這個結論對切段位置很敏感，"
+                       "±2 分鐘的對齊位移就可能翻面 —— 務必確認當天有按手動 lap。"
+                       % (tight[0], abs(tight[1]))) if abs(tight[1]) < 5.0 else None,
         }
     else:
         out["hold_test"] = {"segment": cal.get("hold_segment"), "target_w": tgt,
@@ -803,17 +929,22 @@ def calibration_report(cal, segreps, S, plan, P):
     if as_ and as_["matched"]:
         a, b = as_["matched_start_sec"], as_["matched_start_sec"] + as_["matched_sec"]
         dur = b - a
+        # 兩個分支一定要用同一個統計量，否則配對比較會有系統性偏差。
+        # 舊版做滿取「滾動最佳」（最大值）、沒做滿取「整段平均」外推，
+        # 於是 9/10 驗收拿最大值去比 8/13 的平均，會偏向「看起來有進步」。
+        # 現在一律是「段內最佳 min(need, dur) 秒滾動平均」，只有不足時才依衰減律外推。
+        win = min(need, dur)
+        best = max(_mean_w(S, i, i + win) for i in range(a, b - win + 1))
+        k = P["twenty_min_decay_exponent"]
         if dur >= need:
-            best = max(_mean_w(S, i, i + need) for i in range(a, b - need + 1))
             w20, est = round(best, 1), False
             how = "段內最佳 %d 秒滾動平均" % need
         else:
-            raw = _mean_w(S, a, b)
-            k = P["twenty_min_decay_exponent"]
-            w20 = round(raw * (need / dur) ** (-k), 1)
+            w20 = round(best * (need / win) ** (-k), 1)
             est = True
-            how = ("只做了 %.1f 分（處方 %d 分），以實測 %.0fW 依 P ∝ t^(-%.2f) 外推到 %d 分"
-                   % (dur / 60.0, need // 60, raw, k, need // 60))
+            how = ("只做了 %.1f 分（處方 %d 分）；段內最佳 %d 秒滾動平均 %.0fW，"
+                   "依 P ∝ t^(-%.2f) 外推到 %d 分"
+                   % (dur / 60.0, need // 60, win, best, k, need // 60))
         item = {"segment": as_["name"], "planned_min": need // 60,
                 "actual_min": round(dur / 60.0, 1),
                 "actual_avg_w": as_["actual"]["avg_w"], "np_w": as_["actual"]["np_w"],
@@ -933,7 +1064,7 @@ def score_ride(path, date=None, plan=None, plan_path=None):
                 }
         segreps.append(rep)
 
-    comp = compliance_dim(segreps, P)
+    comp = compliance_dim(segreps, S, P)
     disc, rulereps = discipline_dim(day.get("rules"), segreps, S, P)
     dur = durability_dim(segreps, P)
     cad = cadence_dim(segreps, S, P)
@@ -1022,6 +1153,9 @@ def score_ride(path, date=None, plan=None, plan_path=None):
 def _build_notes(res):
     """把數字翻成可以直接貼進報告的中文句子。每一句都對得回上面的欄位。"""
     out = []
+    # 離散度與全力段的基準只存在執行度維度裡，這裡照段名接回來
+    cdim = (res.get("dimensions") or {}).get("compliance") or {}
+    cby = {e["name"]: e for e in (cdim.get("segments") or [])}
     for r in res["segments"]:
         if r["role"] not in WORK_ROLES or not r["matched"]:
             if r["role"] in WORK_ROLES:
@@ -1031,6 +1165,11 @@ def _build_notes(res):
         if tw.get("allout"):
             out.append("%s 全力段做了 %.1f 分（處方 %.0f 分），平均 %.0fW、最高 %dW。"
                        % (r["name"], r["matched_min"], r["planned_min"], act["avg_w"], act["max_w"]))
+            ao = (cby.get(r["name"]) or {}).get("allout")
+            if ao and ao["ratio"] < 1.0:
+                out.append("  └ 全趟同長度的最佳窗口是 %.0fW，這段只有它的 %.0f%% —— "
+                           "真的全力，最佳窗口就會落在這一段。"
+                           % (ao["best_window_w"], ao["ratio"] * 100))
         else:
             ref = tw.get("lo") or tw.get("about")
             if ref:
@@ -1051,6 +1190,13 @@ def _build_notes(res):
                     out.append("  └ 形狀：前 %.0f 分 %.0fW 超 %.0fW、後 %.0f 分 %.0fW 欠 %.0fW —— "
                                "出門太猛，後段掉下來。"
                                % (half, h1, h1 - ref, half, h2, ref - h2))
+            st = (cby.get(r["name"]) or {}).get("steadiness")
+            if st and st["factor"] < 1.0:
+                out.append("  └ 離散度：只有 %.0f%% 的移動秒數落在 %s 裡（門檻 %.0f%%），"
+                           "其中 %.0f%% 的時間功率低於 20W 等於在滑行 —— "
+                           "平均達標但不是照著處方踩，執行度打 %.2f 折。"
+                           % (st["in_band_pct"], r["target_w_text"], st["target_pct"],
+                              st["coast_pct"], st["factor"]))
         if r.get("completion_pct", 100) < 95:
             out.append("  └ %s 只做到處方時間的 %.0f%%，執行度按比例打折。"
                        % (r["name"], r["completion_pct"]))
@@ -1115,10 +1261,10 @@ def format_scorecard(res):
     L.append(_hr())
     L.append(" 總分   %.1f / 100      等第  %s" % (tot["score"], tot["grade"]))
     L.append(_hr())
-    names = {"compliance": ("執行度", "work 段平均功率 vs 處方區間"),
+    names = {"compliance": ("執行度", "work 段功率 vs 處方（平均 × 落在區間的時間佔比）"),
              "discipline": ("紀律", "逐秒執行 rules[]"),
-             "durability": ("續航", "work 段前半 vs 後半衰減"),
-             "cadence": ("迴轉", "落在目標迴轉區間的時間佔比")}
+             "durability": ("續航", "work 段前半 vs 後半衰減（前半欠瓦的負分割不算撐得住）"),
+             "cadence": ("迴轉", "踩踏秒數中落在目標迴轉區間的佔比")}
     for k in ("compliance", "discipline", "durability", "cadence"):
         d = res["dimensions"].get(k)
         zh, why = names[k]
@@ -1201,6 +1347,8 @@ def format_scorecard(res):
                      % (h["actual_min"], h["completion_pct"], h["avg_w"], h["np_w"],
                         h["first_half_w"], h["second_half_w"], h["avg_hr"], h["max_hr"]))
             L.append("     判定條件：%s" % h["criteria"])
+            if h.get("caveat"):
+                L.append("     ⚠️  %s" % h["caveat"])
         f = cal.get("fatigued_20min") or {}
         L.append(" (2) 疲勞後 20 分功率 ->  %s"
                  % ("%.0f W%s" % (f["watts_20min"], "（外推估算）" if f.get("estimated") else "")

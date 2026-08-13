@@ -86,6 +86,13 @@ jobs:
 
       # always()：產報告那步就算非零退出也要存檔。單一壞掉的 FIT 不該讓當班
       # 抓到的檔案與已產出的報告全部丟掉（runner 是拋棄式的，沒存就沒了）。
+      #
+      # 這一步的順序是刻意的，為了避開跟 strava-sync 搶 data/itt-segments.json：
+      #   1. 先 commit「只有 fit-sync 會動」的東西（data/fit、rides）
+      #   2. 再 pull --rebase 吃掉 strava-sync 可能剛推的 itt-segments.json
+      #      —— 我方這個 commit 完全沒碰那個檔，所以 rebase 不可能衝突
+      #   3. 最後才在「最新版的 itt-segments.json」上跑回補，另開一個 commit
+      # 反過來（先回補再 pull）就會兩邊都改同一個 JSON，rebase 撞在一起整班報銷。
       - name: 存檔
         if: always()
         run: |
@@ -94,10 +101,17 @@ jobs:
           mkdir -p data/fit rides
           git add data/fit rides
           if git diff --staged --quiet; then
-            echo "沒有變更。"
+            echo "沒有 FIT／報告變更。"
           else
             git commit -m "chore: fit sync $(date -u '+%Y-%m-%d')"
-            # 排程實際延遲 13~56 分，跟 strava-sync 的錯開設計會失效而撞車；
-            # push 被拒就 rebase 重試，不要讓當班成果丟掉。
-            git push || (git pull --rebase && git push)
           fi
+          # 排程實際延遲 13~56 分，跟 strava-sync 的錯開設計會失效而撞車。
+          git pull --rebase || echo "::warning::rebase 失敗，改用當前 itt-segments.json 回補"
+          # 自建偵測器補 Strava 漏配對的成績（實測 8/13 關渡→美堤 Strava 全史 0 筆）。
+          # 純本機運算、不打任何 API，且對既有內容是合併不是覆寫。
+          python scripts/backfill-itt-efforts.py --quiet || \
+            echo "::warning::ITT 回補失敗，這班先跳過"
+          git add data/itt-segments.json
+          git diff --staged --quiet || \
+            git commit -m "chore: 回補自建 ITT 成績 $(date -u '+%Y-%m-%d')"
+          git push || (git pull --rebase && git push)
