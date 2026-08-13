@@ -1,3 +1,8 @@
 athlete/*.csv
 scripts/.env
 __pycache__/
+
+# FIT 同步的執行日誌：append-only，每班整份重寫再 commit 一次。
+# 44K × 每天兩班 ≈ 一年 32MB 的 git 垃圾，跟一年份 FIT 本體差不多大，
+# 而且 Actions 的執行紀錄本來就看得到。留在工作目錄，不要進版控。
+data/fit/_sync.log
