@@ -1027,6 +1027,9 @@ button.deck-stat:hover .ds-hint{color:#FC4C02}
   transition:background .15s,border-color .15s,transform .25s;
 }
 .fc-board .fc.fc-open .fc-close{display:flex}
+/* 鈕是 44px 的實心圓，會蓋住 .fc-top 右端的「🔁 N 次挑戰」。
+   讓那一列在展開時往左讓開，跟 .seg-modal-head 的 padding-right 同一個作法。 */
+.fc-board .fc.fc-open .fc-top{padding-right:48px}
 .fc-close:hover{background:var(--fc-accent);border-color:var(--fc-accent);color:#000;transform:rotate(90deg)}
 .fc-close:focus-visible{outline:2px solid var(--fc-accent);outline-offset:2px}
 /* 展開時其餘卡退到背景：玻璃是半透明的，不退的話後面卡片的字會透上來打架 */
