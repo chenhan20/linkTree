@@ -581,6 +581,31 @@
           <span>報告</span>`
         a.addEventListener('click', e => e.stopPropagation())
         link.parentNode.insertBefore(a, link)
+
+        // 課表對帳徽章：只有那天在 data/plan.json 裡有處方、而且報告真的算出分數才出現
+        // （score 由 render_dashboard.py 寫進 ride-meta，build_index.py 帶進 index.json）。
+        // 自由騎那天沒有 score 欄位，這裡就整段不做 —— 不拿課表標準去標記一趟沒課表的騎乘。
+        const sc = rep.score
+        if (sc && sc.total != null) {
+          const b = document.createElement('span')
+          b.className = 'act-plan-badge' + (sc.total >= 85 ? ' is-hit' : sc.total < 70 ? ' is-low' : '')
+          b.innerHTML = `<span class="k">課表</span><b>${sc.grade || '—'}</b><i>${sc.total}</i>`
+          b.title = [
+            `${rep.date} 課表對帳${sc.label ? '：' + sc.label : ''}`,
+            `總分 ${sc.total}（${sc.grade}）`,
+            sc.compliance != null ? `執行度 ${sc.compliance}` : '',
+            sc.work_pct != null ? `主課表做滿 ${sc.work_pct}%` : '',
+          ].filter(Boolean).join(' · ')
+          // 放在報告鈕正下方那排標籤的最前面，而不是擠進標題那一排。
+          // 找不到那排（其他主題的卡片結構不同）就退回原本的位置，不會漏顯示。
+          // 標題排是 flex 不換行、活動名稱是唯一會縮的項目：實測在 1200px 下多一顆
+          // 89px 的徽章會把名稱從 208px 壓到 102px，700px 下直接壓成 2px（整個名字消失）。
+          // 標籤排本來就是條件式增減、會自然換行的地方，塞進去不動到任何既有元件的尺寸。
+          const card = link.closest('.activity-card')
+          const meta = card && card.querySelector('.activity-meta')
+          if (meta) meta.insertBefore(b, meta.firstChild)
+          else link.parentNode.insertBefore(b, link)
+        }
       }
     })
   }

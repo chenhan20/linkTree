@@ -512,3 +512,31 @@
   .act-report-link{transition:none}
   .act-report-link:hover{transform:none}
 }
+
+/* ── 課表對帳徽章：報告鈕正下方那排標籤的第一顆，只有那天有處方才注入 ──
+   刻意做成跟該排既有標籤同一個尺寸級距（padding／圓角／行高都對齊 .activity-meta .tag），
+   只借主題色 --am-accent 的三個濃度來分等級：達成＝填色、一般＝淡框、未達＝退成灰框。
+   沒有新字體、沒有新顏色、不可點也不會動。 */
+.act-plan-badge{
+  display:inline-flex;align-items:center;gap:5px;flex-shrink:0;
+  padding:2px 8px;margin-right:6px;margin-top:3px;
+  border:1px solid color-mix(in srgb, var(--am-accent) 34%, transparent);
+  border-radius:4px;
+  background:color-mix(in srgb, var(--am-accent) 8%, transparent);
+  color:var(--am-accent);
+  font-family:inherit;line-height:1.5;
+  white-space:nowrap;vertical-align:middle;font-variant-numeric:tabular-nums;
+  cursor:default;
+}
+.act-plan-badge .k{font-size:9.5px;font-weight:800;letter-spacing:1.4px;opacity:.7}
+.act-plan-badge b{font-size:12.5px;font-weight:800;letter-spacing:.4px}
+.act-plan-badge i{font-style:normal;font-size:11px;font-weight:700;opacity:.78}
+.act-plan-badge.is-hit{
+  background:color-mix(in srgb, var(--am-accent) 18%, transparent);
+  border-color:var(--am-accent);
+}
+.act-plan-badge.is-low{
+  color:var(--am-text-dim);
+  border-color:var(--am-border);
+  background:transparent;
+}

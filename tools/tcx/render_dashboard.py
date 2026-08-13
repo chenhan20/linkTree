@@ -5,7 +5,12 @@ render_dashboard.py — 把 analyze_tcx.py 的輸出變成一頁自包含 HTML �
 
 用法:
   python3 render_dashboard.py ride.json chart.json -o out.html \
-      [--notes notes.json] [--title "劍 中中中中 劍"]
+      [--notes notes.json] [--title "劍 中中中中 劍"] [--score score.json]
+
+--score 是 tools/tcx/score.py --json 的輸出（當天有 data/plan.json 處方時才有）。
+給了而且 scored:true 的話，頁面會多出「課表對帳」區塊，而且 KPI 的「有效訓練 %」
+會換成「課表執行度」—— effective_pct 是 IF>=0.75 的時間佔比，那是爬坡指標，
+拿來看平路課表會把處方寫死的熱身與恢復算成「沒在練」。沒有處方的日子維持原樣。
 
 notes.json（可省略；有的話會覆蓋自動產生的文案）:
 {
@@ -107,6 +112,28 @@ th:first-child,td:first-child{text-align:left}
 td.hi{color:var(--ink-1);font-weight:700}
 details{margin-top:12px}
 summary{cursor:pointer;font-size:13px;color:var(--ink-3)}
+/* 課表對帳（只有當天有處方時才會出現，見 --score）。
+   刻意只借用既有的 .card / .kpis / table / .note 語彙，沒有新的設計語言。 */
+.plan-cal:not([hidden]){display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px;margin:14px 0 2px}
+.plan-cal .v{font-size:30px;letter-spacing:-.02em}
+.plan-cal .n{line-height:1.55}
+.plan-tw{overflow-x:auto;margin:14px 0 0}
+.plan-tw table{min-width:560px;margin-top:0}
+.plan-seg td.nm{color:var(--ink-1);font-weight:700}
+.plan-seg .r{display:block;font-size:11px;font-weight:400;color:var(--ink-3);margin-top:1px}
+.plan-seg tr.miss td{color:var(--ink-3)}
+.plan-seg td.pos{color:var(--good-ink);font-weight:700}
+.plan-seg td.neg{color:var(--critical);font-weight:700}
+.plan-sp td{text-align:left;font-size:11.5px;color:var(--ink-3);padding-top:0}
+.plan-rule{border:1px solid var(--ring);border-left:3px solid var(--s2);border-radius:0 8px 8px 0;
+ padding:11px 15px;margin:12px 0 0;font-size:13.5px;color:var(--ink-2)}
+.plan-rule.ok{border-left-color:var(--good)}
+.plan-rule.bad{border-left-color:var(--critical)}
+.plan-rule.info{border-left-color:var(--axis)}
+.plan-rule b{color:var(--ink-1)}
+.plan-rule .s{float:right;font-size:12px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.plan-rule ul{margin:7px 0 0;padding-left:17px;font-size:12.5px;color:var(--ink-3)}
+.plan-notes div{margin-top:3px}
 #tip{position:fixed;pointer-events:none;background:var(--surface-1);border:1px solid var(--ring);
  border-radius:8px;padding:8px 11px;font-size:12.5px;box-shadow:0 6px 22px rgba(0,0,0,.14);
  opacity:0;transition:opacity .1s;z-index:9;font-variant-numeric:tabular-nums;line-height:1.5;color:var(--ink-2)}
@@ -124,6 +151,17 @@ a{color:inherit}
   <p class="lede">__LEDE__</p>
 </header>
 <div class="kpis" id="kpis"></div>
+
+<div class="card" id="card-plan" hidden>
+  <h2 id="plan-h2">課表對帳</h2>
+  <div class="sub" id="plan-sub"></div>
+  <div class="plan-cal" id="plan-cal" hidden></div>
+  <div id="plan-seg"></div>
+  <div id="plan-rules"></div>
+  <div id="plan-checks"></div>
+  <div class="kpis" id="plan-dims"></div>
+  <div class="note plan-notes" id="plan-notes" hidden></div>
+</div>
 
 <div class="card" id="card-main" hidden>
   <h2 id="main-title"></h2>
@@ -143,7 +181,7 @@ a{color:inherit}
 <div class="card">
   <h2>時間都花到哪去了</h2>
   <div class="sub" id="tl-sub"></div>
-  <div class="legend">
+  <div class="legend" id="tl-legend">
     <span><span class="sw" style="background:var(--s2)"></span>有效訓練（IF ≥ 0.75）</span>
     <span><span class="sw" style="background:var(--s1)"></span>低強度移動</span>
     <span><span class="sw" style="background:var(--dim)"></span>休息區段</span></div>
@@ -197,7 +235,10 @@ a{color:inherit}
 <footer id="foot"></footer>
 </div>
 <script>
-const R = __RIDE__, CH = __CHART__, N = __NOTES__;
+const R = __RIDE__, CH = __CHART__, N = __NOTES__, SC = __SCORE__;
+/* SC＝當天的課表對帳結果（tools/tcx/score.py）。沒有處方的日子是 null，
+   下面所有跟課表有關的分支都會整段跳過，頁面回到原本的樣子。 */
+const PLANDAY = !!(SC && SC.scored);
 const tip=document.getElementById('tip'), cs=getComputedStyle(document.documentElement);
 const C=k=>cs.getPropertyValue('--'+k).trim();
 function showTip(e,h){tip.innerHTML=h;tip.style.opacity=1;const r=tip.getBoundingClientRect();
@@ -220,7 +261,13 @@ function bar(x,y,w,h,r){r=Math.min(r||4,w/2,h);return `M${x} ${y+h} L${x} ${y+r}
   const K=[];
   K.push({l:'距離',v:t.distance_km,u:' km',d:`爬升 ${t.elev_gain_m.toLocaleString()} m`});
   K.push({l:'移動時間',v:hms(t.moving_sec),d:st&&st.total_sec>120?`停等 ${hm(st.total_sec)}`:'幾乎沒停'});
-  if(q) K.push({l:'有效訓練',v:Math.round(q.effective_sec/60),u:' 分',
+  /* 有處方的日子不能用 effective_pct（IF>=0.75 的時間佔比）——那是爬坡指標，
+     會把課表寫死的熱身與恢復算成「移動但沒在練」。改報課表執行度。 */
+  if(PLANDAY){
+    const cp=(SC.dimensions.compliance||{}).score, wt=SC.work_time;
+    K.push({l:'課表執行度',v:cp!=null?cp:SC.total.score,u:' 分',
+      d:`主課表 ${wt.matched_min} / ${wt.planned_min} 分（${wt.pct}%）`,hl:true});
+  } else if(q) K.push({l:'有效訓練',v:Math.round(q.effective_sec/60),u:' 分',
     d:`佔移動時間 ${q.effective_pct}%`,hl:true});
   if(p.np_w) K.push({l:'NP',v:p.np_w,u:' W',d:`移動均瓦 ${p.avg_w_moving} W`,hl:true});
   if(p.tss) K.push({l:'TSS',v:p.tss,d:`IF ${p.if} · VI ${p.vi}`});
@@ -231,6 +278,132 @@ function bar(x,y,w,h,r){r=Math.min(r||4,w/2,h);return `M${x} ${y+h} L${x} ${y+r}
   h.innerHTML=K.slice(0,6).map(k=>`<div class="kpi"><div class="l">${k.l}</div>`+
     `<div class="v"${k.hl?' style="color:var(--s2)"':''}>${k.v}${k.u?`<small>${k.u}</small>`:''}</div>`+
     `<div class="d${k.up?' up':''}">${k.d||''}</div></div>`).join('');
+})();
+
+/* ---------- 課表對帳（只有當天 data/plan.json 有處方才出現）----------
+   主體是逐段表格：處方叫你做什麼、你實際做了什麼、差多少。總分只是摘要，
+   放在表格後面。規則違規逐次列出時間點，讓人可以拿碼錶回去查。 */
+(function(){
+  if(!PLANDAY) return;
+  const P=SC.plan||{}, WT=SC.work_time||{}, TOT=SC.total||{}, D=SC.dimensions||{};
+  document.getElementById('card-plan').hidden=false;
+  const w=v=>Math.round(v);
+  const sgn=v=>(v>0?'+':'')+w(v);
+  /* 差只有 0.2W 的時候寫「+0 W」會讓人以為程式在唬爛，小數字保留一位 */
+  const dw=v=>(v>0?'+':'')+(Math.abs(v)<10?v.toFixed(1):String(w(v)));
+  const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const tw=s=>esc(s).replace(/&gt;=/g,'≥').replace(/&lt;=/g,'≤');
+
+  document.getElementById('plan-h2').textContent='課表對帳 · '+(P.label||'');
+  document.getElementById('plan-sub').innerHTML=
+    `${SC.date}（${esc(P.weekday)}）`+(P.block?' · '+esc(P.block):'')+(P.week!=null?' · W'+P.week:'')+
+    `　主課表處方 <b style="color:var(--ink-1)">${WT.planned_min}</b> 分，實際對到 `+
+    `<b style="color:var(--ink-1)">${WT.matched_min}</b> 分（${WT.pct}%）。`+
+    `熱身與組間恢復的低功率是處方寫死的，不算「沒在練」。`;
+
+  /* 校準日的兩個數字：課表第 4 節指定的產出，放在最上面 */
+  const cal=SC.calibration;
+  if(cal){
+    const box=document.getElementById('plan-cal'), t=[];
+    const h=cal.hold_test||{}, f=cal.fatigued_20min||{};
+    if(h.target_w){
+      const ok=h.held===true, col=h.held==null?'var(--ink-2)':(ok?'var(--good-ink)':'var(--critical)');
+      t.push(`<div class="fit-tile"><div class="k">校準產出 ① · ${h.planned_min} 分 @${h.target_w}W 撐不撐得住</div>`+
+        `<div class="v" style="color:${col}">${h.held==null?'無法判定':(ok?'撐得住':'沒撐住')}</div>`+
+        `<div class="n">${h.avg_w?`實際 ${h.actual_min} 分（${h.completion_pct}%）· 平均 ${w(h.avg_w)}W · 前半 ${w(h.first_half_w)}W → 後半 ${w(h.second_half_w)}W<br>`:''}${esc(h.verdict)}</div></div>`);
+    }
+    if(f.watts_20min){
+      const v0=(f.vs_fresh||[])[0];
+      t.push(`<div class="fit-tile"><div class="k">校準產出 ② · 疲勞後 20 分功率</div>`+
+        `<div class="v" style="color:var(--s2)">${w(f.watts_20min)}<small>W${f.estimated?' · 外推':''}</small></div>`+
+        `<div class="n">`+(v0?`對照 ${v0.period} 新鮮狀態 ${v0.fresh_w}W：<b style="color:var(--critical)">${v0.delta_pct}%</b> ← 斷崖的實際大小<br>`:'')+
+        `${esc(f.method)}</div></div>`);
+    }
+    if(t.length){ box.hidden=false; box.innerHTML=t.join(''); }
+  }
+
+  /* 逐段表格 —— 這是主體 */
+  const CE={}; ((D.compliance||{}).segments||[]).forEach(e=>{CE[e.name]=e});
+  const ROLE={warmup:'熱身',work:'主課表',recovery:'恢復',allout:'全力',cooldown:'收操'};
+  let T='<table class="plan-seg"><tr><th>段落</th><th>處方</th><th>實際</th><th>差</th><th>執行度</th></tr>';
+  (SC.segments||[]).forEach(s=>{
+    const isw=(s.role==='work'||s.role==='allout');
+    const nm=`<td class="nm">${esc(s.name)}<span class="r">${ROLE[s.role]||esc(s.role)}`+
+             (s.note?' · '+esc(s.note):'')+`</span></td>`;
+    const pres=`<td>${s.planned_min} 分<span class="r">${tw(s.target_w_text)}</span></td>`;
+    if(!s.matched){
+      T+=`<tr class="miss">${nm}${pres}<td>沒對到</td><td>—</td><td>0 分</td></tr>`; return;
+    }
+    const a=s.actual||{}, vt=s.vs_target;
+    const act=`<td class="hi">${w(a.avg_w)} W<span class="r">${s.matched_min} 分`+
+              (a.avg_cad?` · ${w(a.avg_cad)} rpm`:'')+`</span></td>`;
+    const dt=s.matched_min-s.planned_min;
+    const dts=Math.abs(dt)<0.1?'時間達標':(dt>0?'+':'')+dt.toFixed(1)+' 分';
+    /* 差這一格同時要回答兩件事：瓦數差多少、時間差多少。全力段沒有處方瓦數，
+       就把時間差當主角。顏色只給主課表段：綠＝瓦數與時間都達標，紅＝有一項沒到
+       （門檻跟執行度的 duration_grace 0.95 一致，不要兩套標準）。 */
+    const shortfall=s.matched_sec<s.planned_sec*0.95;
+    let dtxt=dts, sub='沒有處方瓦數', cls='';
+    if(vt){ dtxt=dw(vt.delta_w)+' W'; sub=dts; }
+    if(isw) cls=((vt&&vt.delta_w<-1)||shortfall)?'neg':'pos';
+    const ce=CE[s.name];
+    const jud=ce?`${ce.score} 分<span class="r">${esc(ce.why)}</span>`:'不計分';
+    T+=`<tr>${nm}${pres}${act}<td class="${cls}">${dtxt}<span class="r">${sub}</span></td><td>${jud}</td></tr>`;
+    if(isw&&s.splits&&s.splits.length>1){
+      const sp=s.splits.map(x=>w(x.avg_w)).join(' / ');
+      const dh=(a.second_half_w-a.first_half_w)/Math.max(1,a.first_half_w)*100;
+      T+=`<tr class="plan-sp"><td colspan="5">每 ${Math.round((s.splits[0].to_min-s.splits[0].from_min))} 分平均 ${sp} W`+
+         `　·　前半 ${w(a.first_half_w)}W → 後半 ${w(a.second_half_w)}W（${sgn(dh)}%）`+
+         (a.avg_hr?`　·　心率 ${a.avg_hr} / 最高 ${a.max_hr}`:'')+
+         (a.stopped_sec>30?`　·　其中停等 ${ms(a.stopped_sec)}`:'')+`</td></tr>`;
+    }
+  });
+  document.getElementById('plan-seg').innerHTML='<div class="plan-tw">'+T+'</table></div>';
+
+  /* 規則：課表寫死的那幾條，逐次列出違規的時間點 */
+  const RB=(SC.rules||[]).map(r=>{
+    const info=!!r.informational, sc=r.score;
+    const cls=info?'info':(sc==null?'':(sc>=90?'ok':(sc>=70?'':'bad')));
+    const mark=info?'僅記錄，不扣分':(sc==null?'不計分':sc+' 分');
+    const d=r.detail||{}, li=[];
+    (d.worst||[]).forEach(v=>li.push(`${esc(v.segment)} 第 ${v.at_min_in_seg} 分起，低於 ${d.threshold_w}W 共 ${v.dur_sec} 秒`+
+      `（平均 ${v.avg_w}W、最低 ${v.min_w}W，${v.stopped_sec?'其中停等 '+v.stopped_sec+' 秒':'不是停等'}）`));
+    if(d.violations&&(d.worst||[]).length&&d.violations>d.worst.length)
+      li.push(`以上是最長的 ${d.worst.length} 次，全部 ${d.violations} 次共 ${d.violation_sec} 秒`);
+    (d.reps||[]).forEach(v=>li.push(`${esc(v.segment)} 整體 ${w(v.whole_w)}W，最後 ${d.minutes} 分 ${w(v.last_w)}W（${sgn(-v.drop_pct)}%）`));
+    (d.segments||[]).forEach(v=>{ if(v.avg_w_before_cross!=null)
+      li.push(`${esc(v.segment)} 第 ${v.cross_at_min_in_seg} 分心率站上門檻，之後功率 ${v.avg_w_before_cross}W → ${v.avg_w_after_cross}W`+
+              `（${v.held_watts?'沒有降瓦，照課表':'有降瓦'}）`); });
+    return `<div class="plan-rule ${cls}"><div><span class="s">${mark}</span><b>${esc(r.label||r.kind)}</b></div>`+
+           `<div>${esc(r.verdict)}</div>`+(li.length?'<ul><li>'+li.join('</li><li>')+'</li></ul>':'')+'</div>';
+  });
+  document.getElementById('plan-rules').innerHTML=RB.join('');
+
+  if(SC.checks&&SC.checks.length)
+    document.getElementById('plan-checks').innerHTML='<div class="legend" style="margin:14px 0 0">'+
+      SC.checks.map(c=>`<span><span class="dot" style="background:var(--${c.pass?'good':'critical'})"></span> `+
+        `${esc(c.name)} <b style="color:var(--ink-1)">${c.value}</b>　目標 ${tw(c.target)}</span>`).join('')+'</div>';
+
+  /* 分數摘要放在表格後面：它是結論，不是主體 */
+  const DN={compliance:['執行度','處方瓦數 × 做滿時間'],discipline:['紀律','逐秒守課表規則'],
+            durability:['續航','前半 vs 後半衰減'],cadence:['迴轉','落在目標區間的時間']};
+  let K=`<div class="kpi"><div class="l">課表總分</div><div class="v" style="color:var(--s2)">${TOT.score}`+
+        `<small> 分</small></div><div class="d">等第 ${TOT.grade}</div></div>`;
+  ['compliance','discipline','durability','cadence'].forEach(k=>{
+    const dd=D[k]; if(!dd) return;
+    const wg=(TOT.weights_used||{})[k];
+    K+=`<div class="kpi"><div class="l">${DN[k][0]}${wg?'　權重 '+Math.round(wg*100)+'%':''}</div>`+
+       `<div class="v">${dd.score}</div><div class="d">${DN[k][1]}</div></div>`;
+  });
+  document.getElementById('plan-dims').innerHTML=K;
+
+  if(SC.notes&&SC.notes.length){
+    const n=document.getElementById('plan-notes'); n.hidden=false;
+    n.innerHTML='<b>對帳摘要</b>'+SC.notes.map(x=>{
+      const sub=/^\s/.test(x);
+      return `<div${sub?' style="margin-left:15px;color:var(--ink-3)"':''}>${tw(x.trim())}</div>`;
+    }).join('');
+  }
 })();
 
 /* ---------- 主故事圖：偵測反覆課表 ---------- */
@@ -339,11 +512,19 @@ if(REPS){
   if(!B.length){document.getElementById('c-tl').closest('.card').hidden=true;return;}
   const tot=R.totals.elapsed_sec, W=960,L=8,Rr=8,iw=W-L-Rr,T=34,H=34;
   const grp=b=>(b.kind==='停等／休息'||b.stopped_sec>b.sec*0.55)?2:((b.if||0)>=0.75?0:1);
-  const GC=[C('s2'),C('s1'),C('dim')], GN=['有效訓練','低強度移動','休息區段'];
+  const GC=[C('s2'),C('s1'),C('dim')];
+  /* 有處方的日子不能把 IF<0.75 的區段叫「低強度移動」對比「有效訓練」——
+     熱身、組間恢復、收操本來就在那個區間，它們是處方的一部分。改成中性的強度描述，
+     照不照課表由上面的「課表對帳」判定。 */
+  const GN=PLANDAY?['高強度區段（IF ≥ 0.75）','低強度區段','停等／休息']
+                  :['有效訓練','低強度移動','休息區段'];
+  if(PLANDAY) document.getElementById('tl-legend').innerHTML=
+    GN.map((n,i)=>`<span><span class="sw" style="background:${GC[i]}"></span>${n}</span>`).join('');
   const q=R.training_quality, st=R.stop_summary;
   document.getElementById('tl-sub').textContent=
     `整趟 ${hms(tot)} 依 3 分鐘為單位自動分類。`+
-    (st&&st.count?`全程停等 ${hm(st.total_sec)}（${st.count} 次，最長 ${ms(st.longest)}）。`:'');
+    (st&&st.count?`全程停等 ${hm(st.total_sec)}（${st.count} 次，最長 ${ms(st.longest)}）。`:'')+
+    (PLANDAY?'這張圖只描述強度分布，不是課表判定——照不照表看上面的「課表對帳」。':'');
   s.appendChild(txt(L,16,'出發 '+R.when.start_local.slice(11),{fs:11.5}));
   s.appendChild(txt(W-Rr,16,'總計 '+hms(tot),{anchor:'end',fs:11.5}));
   B.forEach(b=>{const g2=grp(b),x=L+iw*b.start_sec/tot,w=Math.max(1.2,iw*b.sec/tot-1.2);
@@ -559,7 +740,7 @@ if(REPS){
 </html>"""
 
 
-def auto_lede(r):
+def auto_lede(r, score=None):
     q = r.get("training_quality") or {}
     p = r["power"]
     t = r["totals"]
@@ -567,7 +748,14 @@ def auto_lede(r):
     bits = [f"{t['distance_km']} km、爬升 {t['elev_gain_m']:,} 公尺"]
     if p.get("tss"):
         bits.append(f"TSS {p['tss']}、IF {p['if']}")
-    if pct is not None:
+    # 有處方的日子改用課表對帳的說法。effective_pct 會把處方寫死的熱身與恢復
+    # 算成「沒在練」，照表操課的一趟會被寫成「這比較像一段路程而不是一堂課」。
+    if score and score.get("scored"):
+        wt, tot = score["work_time"], score["total"]
+        bits.append(f"照《{score['plan'].get('label')}》執行，主課表做到 "
+                    f"{wt['matched_min']} / {wt['planned_min']} 分，"
+                    f"課表對帳 <b>{tot['score']} 分（{tot['grade']}）</b>")
+    elif pct is not None:
         if pct >= 60:
             bits.append(f"有效訓練佔 <b>{pct}%</b>，是一堂結構完整的課")
         elif pct >= 30:
@@ -592,6 +780,15 @@ def slim(ride):
     return out
 
 
+# 白名單而不是「整包塞進去」：score.py 之後多加欄位時，頁面不會無聲地變胖。
+SCORE_KEYS = ("scored", "date", "plan", "work_time", "segments", "rules",
+              "dimensions", "total", "calibration", "checks", "notes")
+
+
+def slim_score(score):
+    return {k: score[k] for k in SCORE_KEYS if k in score}
+
+
 SPORT_LABEL = {"Cycling": "Biking", "Biking": "Biking", "Running": "Running", "Swimming": "Swimming"}
 
 
@@ -602,17 +799,22 @@ def main():
     ap.add_argument("-o", "--out", required=True)
     ap.add_argument("--notes")
     ap.add_argument("--title")
+    ap.add_argument("--score", help="tools/tcx/score.py --json 的輸出；沒有處方的日子不要傳")
     a = ap.parse_args()
 
     ride = json.load(open(a.ride_json, encoding="utf-8"))
     chart = json.load(open(a.chart_json, encoding="utf-8"))
     notes = json.load(open(a.notes, encoding="utf-8")) if a.notes else {}
+    score = json.load(open(a.score, encoding="utf-8")) if a.score else None
+    # scored:false（當天沒處方／這個檔沒有功率）就當作沒有評分，頁面完全維持原樣
+    if score and not score.get("scored"):
+        score = None
 
     w = ride["when"]
     title = a.title or notes.get("title") or f"{w['date']} 訓練報告"
     eyebrow = (f"{w['date']} · {w['weekday']} {w['start_local'][11:]} · "
                f"{ride['totals']['distance_km']} km · 爬升 {ride['totals']['elev_gain_m']:,} m")
-    lede = notes.get("lede") or auto_lede(ride)
+    lede = notes.get("lede") or auto_lede(ride, score)
 
     # 標題退回預設時本身就含日期，再前綴一次會變「2026-08-13 2026-08-13 訓練報告」
     page_title = title if title.startswith(w["date"]) else f"{w['date']} {title}"
@@ -624,13 +826,15 @@ def main():
             .replace("__LEDE__", lede)
             .replace("__RIDE__", json.dumps(slim(ride), ensure_ascii=False, separators=(",", ":")))
             .replace("__CHART__", json.dumps(chart, ensure_ascii=False, separators=(",", ":")))
-            .replace("__NOTES__", json.dumps(notes, ensure_ascii=False, separators=(",", ":"))))
+            .replace("__NOTES__", json.dumps(notes, ensure_ascii=False, separators=(",", ":")))
+            .replace("__SCORE__", json.dumps(slim_score(score), ensure_ascii=False,
+                                             separators=(",", ":")) if score else "null"))
 
     # build_index.py 靠這行註解建清單頁。以前這行是手動補的，於是重生任何一頁
     # 都會讓它從索引裡消失（2026-08-12 踩過）—— 改由這裡輸出，來源唯一。
     w, tt, pw = ride.get("when", {}), ride.get("totals", {}), ride.get("power", {})
     tq = ride.get("training_quality") or {}
-    meta_line = json.dumps({
+    meta = {
         "date":       w.get("date"),
         "weekday":    w.get("weekday"),
         "time":       (w.get("start_local") or " ").split(" ")[-1],
@@ -642,7 +846,20 @@ def main():
         "tss":        pw.get("tss"),
         "eff":        tq.get("effective_pct"),
         "sport":      SPORT_LABEL.get(str(ride.get("meta", {}).get("sport") or ""), "Biking"),
-    }, ensure_ascii=False, separators=(",", ":"))
+    }
+    # 課表對帳的摘要跟著 ride-meta 走：build_index.py 是整包 json.loads 之後原封不動
+    # 塞進 rides/index.json，所以這裡加什麼欄位，strava.html 那邊就拿得到什麼欄位。
+    # 只放徽章需要的幾個數字，不要把整份評分卡塞進索引檔。
+    if score:
+        meta["score"] = {
+            "total":      score["total"]["score"],
+            "grade":      score["total"]["grade"],
+            "compliance": (score["dimensions"].get("compliance") or {}).get("score"),
+            "work_pct":   score["work_time"].get("pct"),
+            "type":       score["plan"].get("type"),
+            "label":      score["plan"].get("label"),
+        }
+    meta_line = json.dumps(meta, ensure_ascii=False, separators=(",", ":"))
     html = html.replace("<!DOCTYPE html>", f"<!DOCTYPE html>\n<!-- ride-meta {meta_line} -->", 1)
     with open(a.out, "w", encoding="utf-8") as f:
         f.write(html)

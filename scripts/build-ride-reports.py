@@ -41,6 +41,7 @@ RIDES = ROOT / "rides"
 NOTES = RIDES / "notes"
 TOOLS = ROOT / "tools/tcx"
 ITT = ROOT / "data/itt-segments.json"
+PLAN = ROOT / "data/plan.json"
 
 # 個人參數；CLI 沒給時 analyze_tcx.py 會優先讀 FIT 裡錶上的設定值
 WEIGHT = os.getenv("ATHLETE_WEIGHT", "80")
@@ -73,6 +74,45 @@ def itt_dates() -> set[str]:
             d = str(e.get("date", ""))[:10]
             if DATE_RE.fullmatch(d):
                 out.add(d)
+    return out
+
+
+def plan_dates() -> set[str]:
+    """data/plan.json 裡有處方的日期。只有這些日子才會叫 score.py 去對帳 ——
+    沒有處方的自由騎不套課表標準，也不必白跑一次評分。"""
+    if not PLAN.exists():
+        return set()
+    try:
+        data = json.loads(PLAN.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        log("⚠️ plan.json 解析失敗，這批全部不做課表對帳")
+        return set()
+    return {d for d in (data.get("days") or {}) if DATE_RE.fullmatch(str(d))}
+
+
+def score(fit: Path, date: str, tmp: Path) -> Path | None:
+    """跑 tools/tcx/score.py，回傳評分 JSON 的路徑；對不上或失敗就回 None。
+
+    評分失敗絕不能拖垮報告：這裡吞掉所有錯誤，只記一行 log，報告照常產出
+    （只是沒有「課表對帳」那一張卡）。
+    """
+    out = tmp / "score.json"
+    cmd = [sys.executable, str(TOOLS / "score.py"), str(fit),
+           "--date", date, "--json", str(out), "--quiet"]
+    r = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
+    if r.returncode != 0 or not out.exists():
+        log(f"[評分] {date} 失敗，報告照常產出：{(r.stderr or r.stdout or '').strip()[:160]}")
+        return None
+    try:
+        res = json.loads(out.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        log(f"[評分] {date} 輸出不是合法 JSON，略過")
+        return None
+    if not res.get("scored"):
+        log(f"[評分] {date} 不評分：{res.get('reason')}")
+        return None
+    t = res.get("total") or {}
+    log(f"[評分] {date} {res['plan'].get('label')} → {t.get('score')} 分（{t.get('grade')}）")
     return out
 
 
@@ -195,6 +235,9 @@ def main() -> int:
     names = activity_names()
     if names:
         log(f"活動名稱 {len(names)} 筆")
+    plans = plan_dates()
+    if plans:
+        log(f"課表處方 {len(plans)} 天")
 
     done_file = FIT_DIR / "_reports.json"
     done = {}
@@ -287,6 +330,10 @@ def main() -> int:
                     cmd += ["--notes", str(note)]      # 評語不會被洗掉
                 if want_title:
                     cmd += ["--title", want_title]     # intervals.icu 的活動名稱
+                if date in plans:
+                    sj = score(fit, date, tmp)
+                    if sj:
+                        cmd += ["--score", str(sj)]    # 報告多一張「課表對帳」
                 r = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
                 if r.returncode != 0:
                     raise RuntimeError((r.stderr or r.stdout or "").strip()[:400])

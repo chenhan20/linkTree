@@ -49,7 +49,11 @@ def main():
       <div class="m"><span>{r['km']} km</span><span>↑{r['elev']:,} m</span><span>{hm(r['moving_sec'])}</span>'''
         + (f'<span>NP {r["np"]:.0f}</span>' if r.get("np") else "")
         + (f'<span>TSS {r["tss"]}</span>' if r.get("tss") else "")
-        + (f'<span class="eff">有效 {r["eff"]}%</span>' if r.get("eff") is not None else "")
+        # 有處方的日子報課表對帳，沒有的才報 effective_pct。
+        # 「有效 44.9%」對照表操課的一趟是誤導：熱身與恢復是處方寫死的低功率。
+        + (f'<span class="eff">課表 {r["score"]["grade"]} · {r["score"]["total"]} 分</span>'
+           if r.get("score") else
+           (f'<span class="eff">有效 {r["eff"]}%</span>' if r.get("eff") is not None else ""))
         + "</div>\n    </a>"
         for r in rows)
 
