@@ -86,7 +86,7 @@ ITT、segScore、FTP、TSS、PR、以及狀態詞 NEW / BREAKTHROUGH / HEATING U
 - `data/itt-segments.json`、`data/power-prs.json`、`data/segment-streams.json` — 自動
 - `data/itt-config.json` — 手動維護的 ITT 路段設定
 - `data/rivals.json`、`data/landmarks.json`、`data/taipei-outline.json`（OSM 台北市界＋淡水河／基隆河）
-- `data/life-quotes.json`、`data/movie-life-quotes.json` — 每日一句語錄庫
+- 每日一句語錄庫 — 已搬到獨立 repo `steve-quotes`，經 jsDelivr CDN 消費（`https://cdn.jsdelivr.net/gh/chenhan20/steve-quotes@main/dist/all.json`）
 - `athlete/` — 使用者的教練前提資料：`基本資料.json`、`游泳能力資料.json`、`跑步能力資料.json`、`公路車-功率區段最高紀錄.json`、`gpt_教練前提資訊.json`
 - `docs/strava-*.png` — 既有頁面截圖；`docs/strava-goals-prd.md` — 月度目標與紀律追蹤的 PRD（v1 已完成、v2 規劃中）
 - `docs/data-flow.md` — 完整資料流程圖

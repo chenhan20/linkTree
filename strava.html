@@ -7735,9 +7735,22 @@ function initChapters() {
 /* ── fetch strava.json + itt-config.json ──
    revalidate（no-cache）而不是 no-store：還是走 HTTP 快取，但每次都跟伺服器對一次
    ETag/Last-Modified，沒變就回 304（幾乎零流量）、變了才重抓。
-   沒有這個的話回訪者會吃到舊 JSON —— 實測過 life-quotes.json 新增 originalQuote 之後，
+   沒有這個的話回訪者會吃到舊 JSON —— 實測過語錄檔新增 originalQuote 欄位之後，
    瀏覽器仍拿舊檔，200 則全都讀不到原文；每天 cron 更新的 strava.json 也有同樣問題。 */
 const fetchData = p => fetch(p, { cache: 'no-cache' })
+/* ── 每日一句：語錄庫已搬到獨立 repo steve-quotes，走 jsDelivr CDN ──
+   @main 分支在 jsDelivr 約有 12 小時 CDN 快取；語錄不是時效資料，可接受。
+   上面的 { cache:'no-cache' } 對跨網域絕對 URL 一樣合法（一般 CORS fetch），
+   只是新鮮度由 CDN 決定。repo 尚未公開時 jsDelivr 會 404 → 回 null，
+   quote 區走既有降級（「名言資料載入中或暫無內容…」），其他章節不受影響。
+   新 schema 一包全部，type 值域目前是 anime/movie/drama；映射回渲染碼期待的舊形狀：
+   type==='anime' → 舊動畫包（_src:'anime'），其餘 type → 舊影劇包（_src:'movie'）；
+   speaker → character、work → anime/movie，渲染函式一行都不用動。 */
+const QUOTES_URL = 'https://cdn.jsdelivr.net/gh/chenhan20/steve-quotes@main/dist/all.json'
+const mapQuotes = all => (all?.quotes || []).map(q => {
+  const src = q.type === 'anime' ? 'anime' : 'movie'
+  return { ...q, _src: src, character: q.speaker, [src]: q.work }
+})
 Promise.all([
   fetchData('data/strava.json').then(r => { if (!r.ok) throw new Error(`strava.json HTTP ${r.status}`); return r.json() }),
   fetchData('data/itt-config.json').then(r => { if (!r.ok) throw new Error(`itt-config.json HTTP ${r.status}`); return r.json() }),
@@ -7752,13 +7765,12 @@ Promise.all([
   fetchData('data/rivals.json').then(r => r.ok ? r.json() : null).catch(() => null),
   // 台北市界 + 淡水河/基隆河（OpenStreetMap 資料整理，見 buildTaipeiMiniMap）；缺檔就不顯示小地圖
   fetchData('data/taipei-outline.json').then(r => r.ok ? r.json() : null).catch(() => null),
-  // 每日一句：動畫 + 影劇語錄（缺檔就不顯示該來源）
-  fetchData('data/life-quotes.json').then(r => r.ok ? r.json() : null).catch(() => null),
-  fetchData('data/movie-life-quotes.json').then(r => r.ok ? r.json() : null).catch(() => null),
+  // 每日一句：語錄庫（steve-quotes repo → jsDelivr；404 或離線就走降級文案）
+  fetchData(QUOTES_URL).then(r => r.ok ? r.json() : null).catch(() => null),
   // 手寫的訓練週期計畫（見 data/training-block.json 的 _howToUse）；缺檔就不顯示週期章
   fetchData('data/training-block.json').then(r => r.ok ? r.json() : null).catch(() => null),
 ])
-  .then(([data, ittConfig, segStreams, segTerrain, landmarks, rivals, taipeiOutline, animeQuotes, movieQuotes, trainingBlock]) => {
+  .then(([data, ittConfig, segStreams, segTerrain, landmarks, rivals, taipeiOutline, quotesData, trainingBlock]) => {
     // 建立 SEG_META lookup，下面 renderSegments 用
     window._ittSegMeta = Object.fromEntries(ittConfig.segments.map(s => [s.id, s]))
     window.__rideFeed = data.recent_rides || []
@@ -7775,10 +7787,7 @@ Promise.all([
     }))
     window._trainingBlock = trainingBlock || null
     window._taipeiMiniMap = buildTaipeiMiniMap(taipeiOutline)
-    window._quotePool = [
-      ...((animeQuotes?.quotes || []).map(q => ({ ...q, _src: 'anime' }))),
-      ...((movieQuotes?.quotes || []).map(q => ({ ...q, _src: 'movie' }))),
-    ]
+    window._quotePool = mapQuotes(quotesData)
     render(data)
     initQuoteWidget()
     initSeg3DWhenVisible()

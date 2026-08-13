@@ -418,17 +418,23 @@ function setMode(m) {
   render()
 }
 
-// no-store：originalQuote 是後來才加的欄位，瀏覽器若還快取著舊 JSON 會整頁看不到原文
+// 語錄庫已搬到獨立 repo steve-quotes，走 jsDelivr CDN（@main 約 12 小時 CDN 快取，可接受）。
+// no-store 照舊：originalQuote 是後來才加的欄位，瀏覽器若還快取著舊 JSON 會整頁看不到原文。
+// 新 schema 一包全部（type: anime/movie/drama），映射回卡片碼期待的舊形狀：
+// type==='anime' → 動畫包，其餘 → 影劇包；speaker → character、work → anime/movie
+const QUOTES_URL = 'https://cdn.jsdelivr.net/gh/chenhan20/steve-quotes@main/dist/all.json'
 const getJSON = p => fetch(p, { cache: 'no-store' }).then(r => r.ok ? r.json() : null).catch(() => null)
-Promise.all([
-  getJSON('../data/life-quotes.json'),
-  getJSON('../data/movie-life-quotes.json'),
-]).then(([a, m]) => {
-  SRC.anime = ((a || {}).quotes || []).filter(q => q.originalQuote)
-  SRC.movie = ((m || {}).quotes || []).filter(q => q.originalQuote)
+const mapQuotes = all => (all?.quotes || []).map(q => {
+  const src = q.type === 'anime' ? 'anime' : 'movie'
+  return { ...q, _src: src, character: q.speaker, [src]: q.work }
+})
+getJSON(QUOTES_URL).then(all => {
+  const mapped = mapQuotes(all)
+  SRC.anime = mapped.filter(q => q._src === 'anime' && q.originalQuote)
+  SRC.movie = mapped.filter(q => q._src === 'movie' && q.originalQuote)
   if (!SRC.anime.length && !SRC.movie.length) {
     document.getElementById('wrap').innerHTML =
-      `<p class="sub" style="color:#ff8f8f">讀不到 data/*-life-quotes.json —— 這頁需要用 http server 開（file:// 會被 CORS 擋）。</p>`
+      `<p class="sub" style="color:#ff8f8f">讀不到 steve-quotes 的 all.json —— jsDelivr 404（repo 尚未公開）或目前離線。</p>`
     return
   }
   if (!SRC.anime.length) mode = 'movie'
