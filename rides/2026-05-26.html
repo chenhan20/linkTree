@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<!-- ride-meta {"date":"2026-05-26","weekday":"週二","time":"06:57","title":"2026-05-26 訓練報告","km":23.46,"elev":514,"moving_sec":4704,"np":211.3,"tss":104,"eff":58.4,"sport":"Biking"} -->
+<html lang="zh-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>2026-05-26 2026-05-26 訓練報告</title>
+<style>
+:root{
+  color-scheme:light;
+  --surface-1:#fcfcfb; --page:#f9f9f7;
+  --ink-1:#0b0b0b; --ink-2:#52514e; --ink-3:#898781;
+  --grid:#e1e0d9; --axis:#c3c2b7; --ring:rgba(11,11,11,.10);
+  --s1:#2a78d6; --s2:#eb6834;
+  --q1:#86b6ef; --q2:#5598e7; --q3:#2a78d6; --q4:#1c5cab; --q5:#104281;
+  --dim:#d6d5cf;
+  --good:#0ca30c; --warn:#fab219; --serious:#ec835a; --critical:#d03b3b;
+  --good-ink:#006300;
+}
+@media (prefers-color-scheme:dark){:root:where(:not([data-theme="light"])){
+  color-scheme:dark;
+  --surface-1:#1a1a19; --page:#0d0d0d;
+  --ink-1:#ffffff; --ink-2:#c3c2b7; --ink-3:#898781;
+  --grid:#2c2c2a; --axis:#383835; --ring:rgba(255,255,255,.10);
+  --s1:#3987e5; --s2:#d95926;
+  --q1:#9ec5f4; --q2:#6da7ec; --q3:#3987e5; --q4:#256abf; --q5:#184f95;
+  --dim:#3d3d3a; --good-ink:#0ca30c;
+}}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--page);color:var(--ink-1);
+ font-family:system-ui,-apple-system,"Segoe UI","Noto Sans TC",sans-serif;
+ line-height:1.6;font-size:15px;padding:0 0 64px}
+.wrap{max-width:1000px;margin:0 auto;padding:0 18px}
+header{padding:36px 0 8px}
+.eyebrow{color:var(--ink-3);font-size:12px;letter-spacing:.18em;text-transform:uppercase;font-weight:700}
+h1{font-size:30px;font-weight:800;letter-spacing:-.02em;margin:6px 0 12px}
+.lede{font-size:17px;color:var(--ink-2);max-width:720px}
+.lede b{color:var(--ink-1)}
+.card{background:var(--surface-1);border:1px solid var(--ring);border-radius:12px;padding:20px 22px;margin:18px 0}
+.fit-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(122px,1fr));gap:10px;margin-bottom:20px}
+.fit-tile{background:var(--surface-2,rgba(255,255,255,.03));border:1px solid var(--ring);border-radius:9px;padding:11px 13px}
+.fit-tile .k{font-size:11px;color:var(--ink-3);letter-spacing:.4px}
+.fit-tile .v{font-size:22px;font-weight:800;color:var(--ink-1);line-height:1.15;margin-top:4px;font-variant-numeric:tabular-nums}
+.fit-tile .v small{font-size:11px;font-weight:700;color:var(--ink-3);margin-left:3px}
+.fit-tile .n{font-size:10.5px;color:var(--ink-3);margin-top:3px}
+.lr-bar{display:flex;height:34px;border-radius:7px;overflow:hidden;margin:8px 0 6px;background:var(--surface-1)}
+.lr-bar i{display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:800;color:#fff;font-style:normal}
+.lr-note{font-size:12px;color:var(--ink-2);line-height:1.7}
+h2{font-size:16px;font-weight:750;margin:0 0 4px}
+.sub{font-size:13px;color:var(--ink-3);margin-bottom:14px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1px;background:var(--ring);
+ border:1px solid var(--ring);border-radius:12px;overflow:hidden;margin:18px 0}
+.kpi{background:var(--surface-1);padding:14px 16px}
+.kpi .l{font-size:11.5px;color:var(--ink-3);letter-spacing:.03em}
+.kpi .v{font-size:27px;font-weight:800;letter-spacing:-.025em;margin-top:2px;line-height:1.15}
+.kpi .v small{font-size:13px;font-weight:600;color:var(--ink-2)}
+.kpi .d{font-size:12px;color:var(--ink-3);margin-top:1px}
+.kpi .d.up{color:var(--good-ink);font-weight:600}
+.hero{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin:2px 0 6px}
+.hero .fig{font-size:56px;font-weight:800;letter-spacing:-.03em;line-height:1}
+.hero .cap{font-size:14px;color:var(--ink-2);max-width:430px}
+svg{display:block;width:100%;height:auto;overflow:visible}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media(max-width:720px){.g2{grid-template-columns:1fr}}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--ink-2);margin:2px 0 10px}
+.legend i{display:inline-block;width:14px;height:3px;border-radius:2px;margin-right:6px;vertical-align:middle}
+.legend .sw{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.note{border:1px solid var(--ring);border-left:3px solid var(--s2);border-radius:0 8px 8px 0;
+ padding:12px 16px;margin:14px 0 0;font-size:13.5px;color:var(--ink-2)}
+.note b{color:var(--ink-1)}
+.acts{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+.act{border:1px solid var(--ring);border-radius:10px;padding:14px 16px;background:var(--surface-1)}
+.act .tag{font-size:11.5px;font-weight:800;letter-spacing:.04em;display:flex;align-items:center;gap:6px}
+.act .t{font-weight:700;margin:6px 0 3px;font-size:14.5px}
+.act .b{font-size:13px;color:var(--ink-2)}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+table{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums;margin-top:10px}
+th{text-align:right;color:var(--ink-3);font-weight:600;font-size:11.5px;padding:7px 8px;border-bottom:1px solid var(--grid)}
+td{text-align:right;padding:6px 8px;border-bottom:1px solid var(--grid);color:var(--ink-2)}
+th:first-child,td:first-child{text-align:left}
+td.hi{color:var(--ink-1);font-weight:700}
+details{margin-top:12px}
+summary{cursor:pointer;font-size:13px;color:var(--ink-3)}
+#tip{position:fixed;pointer-events:none;background:var(--surface-1);border:1px solid var(--ring);
+ border-radius:8px;padding:8px 11px;font-size:12.5px;box-shadow:0 6px 22px rgba(0,0,0,.14);
+ opacity:0;transition:opacity .1s;z-index:9;font-variant-numeric:tabular-nums;line-height:1.5;color:var(--ink-2)}
+#tip b{color:var(--ink-1)}
+footer{color:var(--ink-3);font-size:12px;margin-top:34px;text-align:center}
+a{color:inherit}
+</style>
+</head>
+<body>
+<div id="tip"></div>
+<div class="wrap">
+<header>
+  <div class="eyebrow">2026-05-26 · 週二 06:57 · 23.46 km · 爬升 514 m</div>
+  <h1>2026-05-26 訓練報告</h1>
+  <p class="lede">23.46 km、爬升 514 公尺，TSS 104、IF 0.892，有效訓練只佔 <b>58.4%</b>，屬於訓練＋接駁的混合行程。</p>
+</header>
+<div class="kpis" id="kpis"></div>
+
+<div class="card" id="card-main" hidden>
+  <h2 id="main-title"></h2>
+  <div class="sub" id="main-sub"></div>
+  <div id="main-body"></div>
+</div>
+
+<div class="card">
+  <h2>全程剖面</h2>
+  <div class="sub">上：海拔（公尺）／下：功率（瓦，45 秒平均）。橘色區塊是爬坡段，灰色是停等 90 秒以上的地方。滑鼠移過去看細節。</div>
+  <div class="legend"><span><i style="background:var(--s1)"></i>海拔</span><span><i style="background:var(--s2)"></i>功率</span>
+    <span><span class="sw" style="background:var(--s2);opacity:.14"></span>爬坡段</span>
+    <span><span class="sw" style="background:var(--dim)"></span>長停等</span></div>
+  <svg id="c-prof" viewBox="0 0 960 326"></svg>
+</div>
+
+<div class="card">
+  <h2>時間都花到哪去了</h2>
+  <div class="sub" id="tl-sub"></div>
+  <div class="legend">
+    <span><span class="sw" style="background:var(--s2)"></span>有效訓練（IF ≥ 0.75）</span>
+    <span><span class="sw" style="background:var(--s1)"></span>低強度移動</span>
+    <span><span class="sw" style="background:var(--dim)"></span>休息區段</span></div>
+  <svg id="c-tl" viewBox="0 0 960 132"></svg>
+</div>
+
+<div class="g2">
+  <div class="card" id="card-load" hidden>
+    <h2>四週訓練負荷</h2>
+    <div class="sub" id="load-sub"></div>
+    <svg id="c-load" viewBox="0 0 420 230"></svg>
+  </div>
+  <div class="card" id="card-curve" hidden>
+    <h2>功率曲線 vs 個人最佳</h2>
+    <div class="sub">時間越長、離 PR 越近，代表有氧基礎越厚。</div>
+    <div class="legend"><span><i style="background:var(--s1)"></i>本次</span><span><i style="background:var(--s2)"></i>個人最佳</span></div>
+    <svg id="c-curve" viewBox="0 0 420 230"></svg>
+  </div>
+</div>
+
+<div class="card">
+  <h2>強度分布</h2>
+  <div class="sub" id="z-sub"></div>
+  <div id="zones"></div>
+</div>
+
+<div class="card" id="card-fit" hidden>
+  <h2>裝置原始數據</h2>
+  <div class="sub" id="fit-sub"></div>
+  <div id="fit-tiles" class="fit-tiles"></div>
+  <div id="fit-lr"></div>
+  <div id="fit-zones"></div>
+</div>
+
+<div class="card" id="card-acts" hidden>
+  <h2>教練評語</h2>
+  <div class="sub">依優先順序。</div>
+  <div class="acts" id="acts"></div>
+</div>
+
+<div class="card" id="card-hero" hidden>
+  <h2 id="hero-title"></h2>
+  <div class="hero"><div class="fig" id="hero-fig"></div><div class="cap" id="hero-cap"></div></div>
+</div>
+
+<details class="wrap" style="padding:0 4px">
+<summary>完整分圈、路段與停等明細</summary>
+<div id="tables"></div>
+</details>
+
+<footer id="foot"></footer>
+</div>
+<script>
+const R = {"meta":{"sport":"Cycling","id":"2026-05-25 22:57:55+00:00","device":"4565","fit":{"lr_balance_right_pct":55.4,"threshold_power":237,"training_effect":4.0,"anaerobic_effect":2.2,"garmin_np":211,"garmin_tss":103.9,"garmin_if":0.892,"total_ascent":525,"total_descent":522,"max_hr_setting":188,"resting_hr":70,"threshold_hr":163,"hr_zone_high":[94,113,132,150,169,188],"power_zone_high":[0,133,178,215,249,286,358,4000],"time_in_hr_zone":[85.0,750.3,1260.8,729.4,1382.0,516.2,9.0],"time_in_power_zone":[0.0,2212.0,461.4,599.3,540.0,481.0,314.0,120.0],"training_load_peak":179.9647979736328,"devices":["Garmin","Giant","Shimano"]}},"athlete":{"height_cm":173.0,"weight_kg":80.0,"age":null,"bmi":26.7,"ftp":237.0,"ftp_estimated":false,"ftp_source":"裝置設定值","ftp_wkg":2.96,"max_hr":188,"max_hr_source":"裝置設定值","rest_hr":70},"when":{"start_utc":"2026-05-25T22:57:55+00:00","start_local":"2026-05-26 06:57","weekday":"週二","date":"2026-05-26"},"totals":{"elapsed_sec":5709,"moving_sec":4704,"stopped_sec":1005,"distance_km":23.46,"avg_speed_kmh":18.0,"max_speed_kmh":55.6,"elev_gain_m":514,"elev_loss_m":517,"elev_min_m":6,"elev_max_m":316,"climb_rate_m_per_km":21.9},"power":{"has_power":true,"avg_w":115.6,"avg_w_moving":140.3,"np_w":211.3,"max_w":551,"if":0.892,"tss":104,"vi":1.51,"kj":660,"w_per_kg":1.44,"np_per_kg":2.64,"curve":{"5s":431.6,"10s":424.7,"30s":386.1,"60s":351.1,"120s":324.1,"300s":281.7,"480s":269.0,"600s":256.6,"1200s":244.9,"1800s":193.5,"3600s":169.4,"5400s":null}},"hr":{"avg":135,"max":192,"pct_of_max":72,"decoupling":{"pct":-16.0,"reliable":true,"note":null}},"cadence":{"avg":77,"max":111,"pedaling_pct":71.9},"energy":{"kcal":671,"fat_g_est":14,"fat_pct_est":18,"device_kcal":778},"zones":{"hr":[{"zone":"Z1 恢復","range":"0-113","sec":1040,"mmss":"17:20","pct":18.2},{"zone":"Z2 有氧","range":"113-132","sec":1934,"mmss":"32:14","pct":33.9},{"zone":"Z3 節奏","range":"132-150","sec":732,"mmss":"12:12","pct":12.8},{"zone":"Z4 閾值","range":"150-169","sec":1382,"mmss":"23:02","pct":24.2},{"zone":"Z5 最大","range":"169-+","sec":622,"mmss":"10:22","pct":10.9}],"power":[{"zone":"Z1 主動恢復","range":"0-130","sec":3150,"mmss":"52:30","pct":55.2},{"zone":"Z2 耐力","range":"130-178","sec":485,"mmss":"8:05","pct":8.5},{"zone":"Z3 節奏","range":"178-213","sec":555,"mmss":"9:15","pct":9.7},{"zone":"Z4 閾值","range":"213-249","sec":582,"mmss":"9:42","pct":10.2},{"zone":"Z5 VO2max","range":"249-284","sec":468,"mmss":"7:48","pct":8.2},{"zone":"Z6 無氧","range":"284-356","sec":324,"mmss":"5:24","pct":5.7},{"zone":"Z7 神經肌肉","range":"356-+","sec":125,"mmss":"2:05","pct":2.2}]},"laps":[{"n":1,"sec":542,"hhmmss":"0:09:02","km":2.5,"kmh":16.6,"avg_hr":101,"max_hr":114,"cad":70,"avg_w":35,"np_w":52.3,"max_w":185,"elev_gain_m":0,"kcal":43,"trigger":"manual"},{"n":2,"sec":765,"hhmmss":"0:12:45","km":1.92,"kmh":9.0,"avg_hr":143,"max_hr":158,"cad":70,"avg_w":193,"np_w":201.0,"max_w":323,"elev_gain_m":131,"kcal":166,"trigger":"manual"},{"n":3,"sec":471,"hhmmss":"0:07:51","km":3.13,"kmh":23.8,"avg_hr":120,"max_hr":146,"cad":73,"avg_w":61,"np_w":115.7,"max_w":248,"elev_gain_m":17,"kcal":42,"trigger":"manual"},{"n":4,"sec":1141,"hhmmss":"0:19:01","km":3.96,"kmh":12.5,"avg_hr":167,"max_hr":183,"cad":89,"avg_w":249,"np_w":258.4,"max_w":551,"elev_gain_m":246,"kcal":312,"trigger":"manual"},{"n":5,"sec":501,"hhmmss":"0:08:21","km":4.6,"kmh":33.0,"avg_hr":120,"max_hr":183,"cad":52,"avg_w":2,"np_w":17.8,"max_w":57,"elev_gain_m":1,"kcal":15,"trigger":"manual"},{"n":6,"sec":500,"hhmmss":"0:08:20","km":2.57,"kmh":18.5,"avg_hr":165,"max_hr":192,"cad":75,"avg_w":265,"np_w":277.3,"max_w":536,"elev_gain_m":103,"kcal":145,"trigger":"manual"},{"n":7,"sec":814,"hhmmss":"0:13:34","km":4.78,"kmh":21.1,"avg_hr":124,"max_hr":178,"cad":64,"avg_w":21,"np_w":53.0,"max_w":216,"elev_gain_m":3,"kcal":55,"trigger":"session_end"}],"climbs":[{"start_sec":1760,"sec":1458,"dist_km":4.77,"gain_m":265,"grade_pct":5.6,"vam":655,"avg_w":212,"avg_hr":162,"avg_cad":87,"speed_kmh":11.8},{"start_sec":648,"sec":882,"dist_km":2.49,"gain_m":133,"grade_pct":5.4,"vam":545,"avg_w":176,"avg_hr":141,"avg_cad":71,"speed_kmh":10.2},{"start_sec":4099,"sec":475,"dist_km":2.39,"gain_m":101,"grade_pct":4.2,"vam":762,"avg_w":263,"avg_hr":167,"avg_cad":75,"speed_kmh":18.1}],"stop_summary":{"count":17,"total_sec":993,"路口／紅燈":{"count":15,"sec":549},"短休（補水、等人、拍照）":{"count":2,"sec":444},"長休（店休、等待、非騎乘）":{"count":0,"sec":0},"longest":347},"blocks":[{"kind":"平路巡航","start_sec":0,"sec":180,"moving_sec":180,"stopped_sec":0,"km":0.82,"kmh":16.3,"avg_w":58,"np_w":60,"if":0.25,"avg_hr":100,"grade_pct":-0.1,"draft_pct":null},{"kind":"市區走停","start_sec":180,"sec":360,"moving_sec":203,"stopped_sec":157,"km":0.9,"kmh":16.0,"avg_w":45,"np_w":53,"if":0.22,"avg_hr":98,"grade_pct":-0.1,"draft_pct":null},{"kind":"平路巡航","start_sec":540,"sec":180,"moving_sec":180,"stopped_sec":0,"km":0.87,"kmh":17.5,"avg_w":75,"np_w":85,"if":0.36,"avg_hr":107,"grade_pct":0.5,"draft_pct":null},{"kind":"爬坡","start_sec":720,"sec":720,"moving_sec":720,"stopped_sec":0,"km":1.78,"kmh":8.9,"avg_w":194,"np_w":200,"if":0.85,"avg_hr":144,"grade_pct":7.0,"draft_pct":null},{"kind":"下坡滑降","start_sec":1440,"sec":360,"moving_sec":352,"stopped_sec":8,"km":2.64,"kmh":27.0,"avg_w":36,"np_w":85,"if":0.36,"avg_hr":117,"grade_pct":-3.5,"draft_pct":null},{"kind":"爬坡","start_sec":1800,"sec":1260,"moving_sec":1252,"stopped_sec":8,"km":4.36,"kmh":12.5,"avg_w":237,"np_w":241,"if":1.02,"avg_hr":162,"grade_pct":5.8,"draft_pct":null},{"kind":"市區走停","start_sec":3060,"sec":180,"moving_sec":83,"stopped_sec":97,"km":0.46,"kmh":19.8,"avg_w":122,"np_w":314,"if":1.32,"avg_hr":165,"grade_pct":0.2,"draft_pct":null},{"kind":"下坡滑降","start_sec":3240,"sec":360,"moving_sec":354,"stopped_sec":6,"km":3.71,"kmh":37.7,"avg_w":0,"np_w":1,"if":0.0,"avg_hr":117,"grade_pct":-6.4,"draft_pct":null},{"kind":"停等／休息","start_sec":3600,"sec":360,"moving_sec":10,"stopped_sec":350,"km":0.03,"kmh":10.0,"avg_w":0,"np_w":0,"if":0.0,"avg_hr":113,"grade_pct":0.0,"draft_pct":null},{"kind":"平路加速","start_sec":3960,"sec":180,"moving_sec":151,"stopped_sec":29,"km":1.13,"kmh":26.9,"avg_w":152,"np_w":217,"if":0.92,"avg_hr":131,"grade_pct":-1.0,"draft_pct":null},{"kind":"爬坡","start_sec":4140,"sec":360,"moving_sec":360,"stopped_sec":0,"km":1.62,"kmh":16.2,"avg_w":258,"np_w":276,"if":1.16,"avg_hr":166,"grade_pct":5.0,"draft_pct":null},{"kind":"下坡滑降","start_sec":4500,"sec":180,"moving_sec":180,"stopped_sec":0,"km":1.35,"kmh":27.0,"avg_w":104,"np_w":238,"if":1.0,"avg_hr":158,"grade_pct":-4.3,"draft_pct":null},{"kind":"市區走停","start_sec":4680,"sec":180,"moving_sec":122,"stopped_sec":58,"km":0.93,"kmh":27.4,"avg_w":0,"np_w":0,"if":0.0,"avg_hr":118,"grade_pct":-7.3,"draft_pct":null},{"kind":"停等／休息","start_sec":4860,"sec":180,"moving_sec":63,"stopped_sec":117,"km":0.33,"kmh":18.7,"avg_w":45,"np_w":67,"if":0.28,"avg_hr":115,"grade_pct":-0.8,"draft_pct":null},{"kind":"平路巡航","start_sec":5040,"sec":180,"moving_sec":155,"stopped_sec":25,"km":0.79,"kmh":18.3,"avg_w":54,"np_w":65,"if":0.27,"avg_hr":118,"grade_pct":-0.0,"draft_pct":null},{"kind":"市區走停","start_sec":5220,"sec":489,"moving_sec":343,"stopped_sec":146,"km":1.75,"kmh":18.3,"avg_w":68,"np_w":85,"if":0.36,"avg_hr":122,"grade_pct":0.2,"draft_pct":null}],"training_quality":{"effective_sec":2746,"low_sec":1962,"stopped_sec":1001,"effective_pct":58.4},"stops":[{"at_sec":3102,"dur_sec":97,"km":11.54,"type":"短休（補水、等人、拍照）"},{"at_sec":3642,"dur_sec":347,"km":15.57,"type":"短休（補水、等人、拍照）"}],"strava":{"weekly_load":[{"range":"2026-05-20~2026-05-26","rides":2,"km":55.9,"elev_m":1247,"tss":239,"hours":3.1},{"range":"2026-05-13~2026-05-19","rides":2,"km":23.4,"elev_m":525,"tss":110,"hours":2.3},{"range":"2026-05-06~2026-05-12","rides":3,"km":95.8,"elev_m":745,"tss":225,"hours":4.4},{"range":"2026-04-29~2026-05-05","rides":2,"km":13.5,"elev_m":52,"tss":18,"hours":2.2}],"power_prs":[{"label":"5秒","sec":5,"watts":934,"date":"2026-07-30","activity":"Morning Ride - 下雨回頭"},{"label":"10秒","sec":10,"watts":918,"date":"2026-07-30","activity":"Morning Ride - 下雨回頭"},{"label":"30秒","sec":30,"watts":674,"date":"2026-07-30","activity":"Morning Ride - 下雨回頭"},{"label":"1分","sec":60,"watts":454,"date":"2025-09-04","activity":"傍晚騎乘"},{"label":"2分","sec":120,"watts":384,"date":"2025-12-22","activity":"傍晚騎乘"},{"label":"5分","sec":300,"watts":321,"date":"2025-12-22","activity":"傍晚騎乘"},{"label":"10分","sec":600,"watts":277,"date":"2025-10-14","activity":"晨間騎乘"},{"label":"20分","sec":1200,"watts":252,"date":"2025-10-02","activity":"晨間騎乘"},{"label":"60分","sec":3600,"watts":193,"date":"2026-05-21","activity":"晨間騎乘-風櫃嘴 劍南路套餐"}]}}, CH = {"profile":[[0.0,15.0,0,85],[0.0,15.0,0,86],[0.037,15.0,24,89],[0.084,15.1,34,91],[0.135,14.8,34,93],[0.179,14.2,44,96],[0.232,14.4,52,101],[0.271,14.2,39,104],[0.309,14.0,48,104],[0.365,14.1,58,102],[0.42,14.2,52,99],[0.476,14.3,68,96],[0.539,14.2,70,97],[0.606,14.1,73,99],[0.673,14.0,73,101],[0.739,13.9,66,103],[0.797,13.8,64,105],[0.838,13.9,49,105],[0.842,14.1,35,104],[0.842,14.0,23,102],[0.842,14.0,6,101],[0.847,13.9,0,99],[0.891,13.8,16,96],[0.929,13.8,17,94],[0.946,14.0,17,91],[0.964,13.8,23,89],[1.018,13.7,29,91],[1.075,13.8,37,93],[1.098,14.0,37,96],[1.098,14.0,34,98],[1.098,14.0,9,99],[1.135,13.9,13,99],[1.195,13.8,31,101],[1.255,14.0,53,102],[1.316,14.2,69,104],[1.377,14.1,72,105],[1.441,13.9,70,104],[1.503,13.7,64,105],[1.565,13.6,60,105],[1.622,13.5,55,104],[1.678,13.5,48,103],[1.716,13.3,33,101],[1.718,13.1,20,99],[1.718,12.8,11,98],[1.718,12.8,1,96],[1.718,12.8,0,95],[1.718,12.8,0,95],[1.718,12.8,0,95],[1.718,12.8,0,95],[1.718,12.8,0,95],[1.751,12.6,15,93],[1.788,12.5,26,95],[1.842,12.7,55,98],[1.899,12.9,69,102],[1.958,13.2,68,107],[2.019,13.2,72,107],[2.081,13.0,60,106],[2.141,12.9,58,104],[2.209,12.9,52,103],[2.272,12.6,51,104],[2.337,12.9,46,106],[2.398,13.2,38,107],[2.453,13.3,42,108],[2.498,13.7,59,109],[2.544,14.6,77,109],[2.578,16.0,120,111],[2.61,17.8,153,115],[2.637,19.8,187,119],[2.662,22.1,217,124],[2.688,24.5,230,129],[2.715,26.8,233,132],[2.743,28.6,209,135],[2.775,29.9,176,137],[2.807,30.8,143,137],[2.832,31.8,137,135],[2.857,33.0,142,133],[2.886,34.4,154,129],[2.918,35.8,167,128],[2.953,37.2,165,129],[2.986,38.8,165,130],[3.016,40.7,176,132],[3.042,42.8,194,134],[3.068,45.0,217,136],[3.092,47.3,232,138],[3.116,49.7,243,142],[3.141,52.1,246,145],[3.168,54.6,247,149],[3.196,57.1,242,151],[3.226,59.4,231,151],[3.253,61.5,216,151],[3.282,63.4,198,151],[3.312,65.2,185,151],[3.344,66.9,162,151],[3.373,68.1,142,149],[3.4,69.3,138,146],[3.427,70.9,154,143],[3.452,73.0,169,140],[3.479,75.1,197,139],[3.503,77.4,215,140],[3.532,79.7,201,142],[3.562,81.3,186,143],[3.589,82.5,181,144],[3.616,84.2,179,144],[3.64,86.4,190,144],[3.664,88.6,218,145],[3.688,90.7,222,146],[3.711,92.7,215,149],[3.736,94.5,211,150],[3.758,96.8,214,151],[3.783,99.4,217,151],[3.809,101.7,223,152],[3.834,103.9,219,153],[3.859,106.4,216,153],[3.885,109.2,235,154],[3.91,112.2,245,154],[3.932,114.6,242,155],[3.955,116.4,227,156],[3.984,118.1,195,156],[4.011,120.1,169,155],[4.041,121.8,159,153],[4.072,123.3,154,150],[4.098,125.0,155,148],[4.122,126.8,164,146],[4.146,128.5,184,145],[4.172,130.4,197,145],[4.201,132.3,195,146],[4.23,134.0,187,147],[4.262,135.4,174,147],[4.292,137.0,164,147],[4.32,138.8,166,146],[4.349,140.5,168,145],[4.374,142.2,182,144],[4.4,144.4,188,144],[4.43,146.4,181,144],[4.467,147.9,173,145],[4.512,148.7,143,145],[4.553,149.5,122,144],[4.598,150.4,100,142],[4.66,150.6,75,139],[4.747,148.2,52,135],[4.843,143.5,25,129],[4.939,137.9,7,125],[5.049,130.9,0,121],[5.154,123.9,0,117],[5.253,118.7,4,115],[5.341,115.5,9,113],[5.435,113.4,23,113],[5.539,109.9,23,113],[5.646,105.0,21,112],[5.748,99.6,17,111],[5.836,95.3,0,109],[5.938,90.2,0,107],[6.025,84.9,3,105],[6.13,80.2,17,104],[6.246,74.9,17,104],[6.356,69.4,17,105],[6.461,63.9,16,106],[6.571,57.2,0,106],[6.681,51.6,0,106],[6.782,49.2,0,106],[6.862,48.2,9,105],[6.925,48.5,35,106],[6.978,49.6,48,108],[7.014,50.4,48,109],[7.015,50.7,42,110],[7.037,50.5,31,110],[7.079,50.9,64,109],[7.123,52.2,107,111],[7.164,53.9,148,116],[7.208,55.4,175,122],[7.255,56.6,160,128],[7.301,57.7,154,133],[7.344,59.0,149,134],[7.389,60.4,152,136],[7.43,61.6,164,137],[7.471,62.9,163,138],[7.509,64.3,165,140],[7.552,65.4,156,142],[7.618,66.6,181,144],[7.686,68.0,230,147],[7.738,70.9,269,151],[7.782,74.8,316,154],[7.828,78.5,303,157],[7.885,80.9,269,159],[7.942,82.5,237,160],[8.002,83.8,214,159],[8.057,85.7,236,159],[8.097,88.7,264,160],[8.129,92.1,283,161],[8.163,95.0,294,163],[8.193,97.8,287,165],[8.225,100.6,275,166],[8.258,103.4,265,167],[8.29,105.8,251,168],[8.322,108.2,235,167],[8.355,110.4,223,167],[8.391,112.5,217,167],[8.426,114.4,214,166],[8.462,116.0,204,166],[8.501,117.6,199,165],[8.543,119.0,204,163],[8.582,120.7,219,162],[8.619,123.2,249,161],[8.653,126.0,263,161],[8.691,128.6,259,162],[8.728,130.9,255,162],[8.765,133.5,259,163],[8.803,135.8,258,163],[8.84,138.2,264,165],[8.869,140.8,256,166],[8.901,143.3,243,166],[8.933,145.9,239,167],[8.965,148.4,236,166],[8.999,150.7,242,166],[9.033,153.2,242,166],[9.065,155.9,228,166],[9.098,158.1,212,166],[9.135,159.7,197,165],[9.17,161.5,191,164],[9.206,163.6,204,162],[9.243,165.9,217,161],[9.279,167.9,232,160],[9.314,170.2,235,161],[9.353,172.4,228,162],[9.393,174.2,218,163],[9.433,175.9,210,163],[9.469,178.2,212,164],[9.507,180.5,208,164],[9.541,182.7,231,164],[9.575,185.1,249,165],[9.609,187.7,251,165],[9.64,190.2,264,165],[9.674,192.6,259,166],[9.707,194.9,246,167],[9.739,197.0,231,168],[9.773,198.6,215,168],[9.806,200.3,205,167],[9.842,202.3,197,166],[9.879,204.1,202,165],[9.913,206.1,216,165],[9.946,208.4,227,166],[9.978,210.9,235,166],[10.012,213.2,245,166],[10.045,215.4,239,166],[10.081,217.4,233,167],[10.11,219.5,237,168],[10.142,221.9,238,168],[10.174,224.6,243,168],[10.204,227.2,249,168],[10.234,229.6,246,168],[10.264,231.7,230,168],[10.299,233.4,228,168],[10.332,235.4,222,168],[10.363,237.7,217,168],[10.398,239.8,221,168],[10.43,242.1,216,168],[10.465,244.5,214,169],[10.499,246.9,229,169],[10.533,249.4,240,169],[10.568,252.0,254,169],[10.604,254.9,278,169],[10.641,257.8,273,169],[10.681,260.3,257,170],[10.723,262.3,249,171],[10.769,264.4,230,171],[10.818,266.6,221,171],[10.864,268.5,241,171],[10.905,271.1,269,171],[10.949,274.2,272,171],[10.991,277.0,288,172],[11.029,279.6,310,172],[11.066,282.7,301,173],[11.102,285.7,313,174],[11.137,288.5,322,175],[11.176,291.1,300,176],[11.22,293.4,288,177],[11.269,295.5,286,177],[11.319,298.0,283,178],[11.368,301.1,302,178],[11.425,304.8,344,179],[11.482,308.7,365,180],[11.524,312.5,312,181],[11.541,315.1,239,181],[11.541,316.1,136,179],[11.541,316.2,45,177],[11.541,316.2,10,175],[11.541,316.2,0,173],[11.541,316.2,0,173],[11.541,316.2,0,173],[11.541,316.2,0,173],[11.541,316.2,0,173],[11.546,316.0,0,170],[11.589,315.0,4,161],[11.671,312.8,4,152],[11.772,308.5,4,141],[11.888,301.9,4,131],[12.005,295.2,0,129],[12.114,287.6,0,127],[12.208,279.0,0,125],[12.321,270.8,0,124],[12.435,263.5,0,123],[12.55,257.0,0,122],[12.647,252.0,0,122],[12.756,246.4,0,121],[12.86,239.8,0,120],[12.976,231.6,0,118],[13.093,222.6,0,117],[13.215,214.3,0,116],[13.33,206.5,0,116],[13.46,198.3,0,116],[13.585,190.0,0,116],[13.688,181.6,0,115],[13.797,174.5,0,115],[13.919,167.4,1,114],[14.031,160.6,1,114],[14.141,154.7,3,116],[14.255,148.2,3,116],[14.384,139.7,2,117],[14.492,131.7,2,116],[14.623,123.1,0,115],[14.747,116.2,0,114],[14.897,108.5,0,113],[15.042,97.2,0,113],[15.146,87.1,1,114],[15.262,81.8,1,115],[15.38,78.4,1,116],[15.497,73.1,1,115],[15.54,68.3,0,114],[15.54,66.8,0,112],[15.54,67.2,0,111],[15.54,67.1,0,110],[15.567,66.5,0,109],[15.568,66.0,0,110],[15.568,66.0,0,111],[15.568,66.0,0,112],[15.568,66.0,0,114],[15.568,66.0,0,114],[15.568,66.0,0,114],[15.568,66.0,0,114],[15.568,66.0,0,114],[15.568,66.0,0,114],[15.568,66.0,0,114],[15.568,66.0,0,114],[15.568,66.0,0,114],[15.568,66.0,0,114],[15.568,66.0,0,114],[15.568,66.0,0,114],[15.568,66.0,0,114],[15.568,66.0,0,114],[15.568,66.0,0,114],[15.568,66.0,0,114],[15.568,66.0,0,114],[15.568,66.0,0,114],[15.568,66.0,0,114],[15.568,66.0,0,114],[15.568,66.0,0,114],[15.568,66.0,0,114],[15.568,66.0,0,114],[15.568,66.0,0,114],[15.568,66.0,0,114],[15.568,66.0,0,114],[15.568,66.0,0,114],[15.568,66.0,0,114],[15.58,65.6,0,113],[15.646,64.7,20,113],[15.74,62.7,20,116],[15.828,58.1,20,117],[15.904,54.8,29,118],[15.988,54.6,15,119],[16.079,52.7,15,117],[16.15,49.8,39,117],[16.235,48.1,89,121],[16.338,46.9,126,128],[16.438,46.4,193,136],[16.53,46.9,248,144],[16.612,49.0,270,152],[16.678,52.3,317,159],[16.727,56.8,352,167],[16.776,61.6,368,174],[16.824,65.8,354,180],[16.881,68.5,311,179],[16.937,70.4,272,175],[16.985,73.0,260,172],[17.035,76.3,252,166],[17.086,78.9,260,165],[17.143,80.9,265,165],[17.206,82.6,232,165],[17.257,84.3,241,165],[17.294,87.1,258,164],[17.329,90.4,258,164],[17.364,93.2,268,164],[17.407,95.5,248,164],[17.457,97.0,214,164],[17.5,98.8,215,164],[17.546,101.0,213,163],[17.596,103.4,226,163],[17.642,105.7,256,163],[17.688,108.2,246,162],[17.729,110.4,242,163],[17.777,112.3,220,163],[17.825,114.0,212,162],[17.884,115.5,204,162],[17.95,116.9,210,162],[18.02,118.0,231,162],[18.072,119.9,255,163],[18.122,123.0,283,164],[18.181,126.4,286,166],[18.228,129.6,292,168],[18.269,132.5,291,170],[18.31,135.5,294,171],[18.353,138.2,298,171],[18.408,140.8,308,172],[18.461,143.7,319,173],[18.519,146.8,317,174],[18.597,149.0,324,175],[18.698,148.8,280,176],[18.808,146.6,201,176],[18.913,141.8,114,175],[19.006,134.8,39,171],[19.087,127.8,0,164],[19.172,121.8,0,158],[19.25,116.7,0,152],[19.337,110.6,0,147],[19.424,102.7,0,143],[19.535,93.6,0,139],[19.623,84.3,0,135],[19.718,76.2,0,132],[19.813,69.9,0,129],[19.912,63.9,0,127],[20.008,57.6,0,125],[20.08,49.3,0,124],[20.168,41.1,0,122],[20.249,34.4,0,121],[20.352,29.5,0,120],[20.441,25.8,0,119],[20.521,20.3,0,118],[20.581,14.2,0,116],[20.596,11.2,0,114],[20.596,10.6,0,113],[20.596,10.8,0,113],[20.596,10.8,0,113],[20.596,10.8,0,113],[20.596,10.8,0,113],[20.596,10.8,0,113],[20.596,10.8,0,113],[20.615,10.8,0,113],[20.627,10.6,0,113],[20.627,10.4,0,114],[20.627,10.2,0,115],[20.627,10.2,0,116],[20.627,10.2,0,116],[20.627,10.2,0,116],[20.627,10.2,0,116],[20.627,10.2,0,116],[20.633,10.2,0,115],[20.688,10.0,10,112],[20.773,8.9,45,111],[20.863,7.9,62,113],[20.917,8.0,62,115],[20.928,8.6,57,118],[20.928,8.9,20,119],[20.959,8.8,12,118],[21.02,8.7,37,117],[21.075,8.8,47,118],[21.089,8.7,52,119],[21.141,8.7,62,120],[21.184,9.0,37,121],[21.229,9.2,31,120],[21.278,9.1,36,119],[21.32,9.0,25,117],[21.371,9.0,40,116],[21.437,8.9,59,116],[21.516,8.7,75,116],[21.595,8.6,77,117],[21.67,8.2,69,119],[21.743,7.9,56,119],[21.802,7.4,44,119],[21.854,7.8,66,118],[21.906,9.0,69,118],[21.928,9.3,56,118],[21.928,9.1,48,119],[21.931,9.2,14,119],[21.968,9.2,13,118],[22.033,9.3,47,118],[22.102,9.6,67,120],[22.158,9.9,68,121],[22.2,10.0,64,122],[22.215,10.3,29,122],[22.215,10.5,7,121],[22.215,10.4,5,120],[22.252,10.0,22,118],[22.264,9.8,22,119],[22.312,9.6,50,120],[22.399,9.6,100,122],[22.485,9.9,108,127],[22.565,10.5,126,130],[22.649,10.7,130,133],[22.733,10.2,93,136],[22.782,10.1,60,135],[22.784,10.5,44,132],[22.784,10.6,15,130],[22.784,10.6,0,127],[22.784,10.6,0,125],[22.822,10.4,21,122],[22.889,10.2,37,119],[22.953,10.0,55,118],[23.02,10.0,66,118],[23.083,10.2,62,121],[23.128,10.6,46,124],[23.128,11.0,31,124],[23.128,11.2,18,123],[23.128,11.2,4,122],[23.135,11.0,1,121],[23.19,10.3,31,119],[23.244,9.6,57,119],[23.299,9.6,63,119],[23.348,9.9,74,119],[23.391,10.5,64,121],[23.435,11.1,51,120],[23.458,11.7,42,119],[23.458,11.7,42,119]],"lap_km":[[0.0,1.72],[2.51,4.42],[4.42,7.49],[7.55,11.51],[11.51,15.51],[16.11,18.69],[18.69,22.21]],"sport":"Cycling","total_km":23.46}, N = {};
+const tip=document.getElementById('tip'), cs=getComputedStyle(document.documentElement);
+const C=k=>cs.getPropertyValue('--'+k).trim();
+function showTip(e,h){tip.innerHTML=h;tip.style.opacity=1;const r=tip.getBoundingClientRect();
+ let x=e.clientX+14,y=e.clientY-r.height-12;
+ if(x+r.width>innerWidth-8)x=e.clientX-r.width-14; if(y<8)y=e.clientY+18;
+ tip.style.left=x+'px';tip.style.top=y+'px';}
+function hideTip(){tip.style.opacity=0;}
+const NS='http://www.w3.org/2000/svg';
+function el(t,a){const n=document.createElementNS(NS,t);for(const k in a)n.setAttribute(k,a[k]);return n;}
+function txt(x,y,s,o){o=o||{};const n=el('text',{x,y,'font-size':o.fs||11,fill:o.fill||C('ink-3'),
+ 'text-anchor':o.anchor||'start','font-weight':o.fw||400});n.textContent=s;return n;}
+function ms(s){s=Math.round(s);return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');}
+function hm(s){const h=Math.floor(s/3600),m=Math.round(s%3600/60);return h?h+' 小時 '+m+' 分':m+' 分';}
+function hms(s){s=Math.round(s);return Math.floor(s/3600)+':'+String(Math.floor(s%3600/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');}
+function bar(x,y,w,h,r){r=Math.min(r||4,w/2,h);return `M${x} ${y+h} L${x} ${y+r} Q${x} ${y} ${x+r} ${y} L${x+w-r} ${y} Q${x+w} ${y} ${x+w} ${y+r} L${x+w} ${y+h} Z`;}
+
+/* ---------- KPI ---------- */
+(function(){
+  const h=document.getElementById('kpis'), t=R.totals, p=R.power, q=R.training_quality, st=R.stop_summary;
+  const K=[];
+  K.push({l:'距離',v:t.distance_km,u:' km',d:`爬升 ${t.elev_gain_m.toLocaleString()} m`});
+  K.push({l:'移動時間',v:hms(t.moving_sec),d:st&&st.total_sec>120?`停等 ${hm(st.total_sec)}`:'幾乎沒停'});
+  if(q) K.push({l:'有效訓練',v:Math.round(q.effective_sec/60),u:' 分',
+    d:`佔移動時間 ${q.effective_pct}%`,hl:true});
+  if(p.np_w) K.push({l:'NP',v:p.np_w,u:' W',d:`移動均瓦 ${p.avg_w_moving} W`,hl:true});
+  if(p.tss) K.push({l:'TSS',v:p.tss,d:`IF ${p.if} · VI ${p.vi}`});
+  if(R.hr.avg) K.push({l:'平均心率',v:R.hr.avg,d:`最高 ${R.hr.max} bpm`});
+  if(R.energy.kcal) K.push({l:'熱量',v:R.energy.kcal.toLocaleString(),d:`kcal · 脂肪約 ${R.energy.fat_g_est} g`});
+  if(R.athlete.ftp&&R.athlete.weight_kg) K.push({l:'FTP W/kg',v:R.athlete.ftp_wkg,
+    d:`${R.athlete.ftp} W ÷ ${R.athlete.weight_kg} kg`});
+  h.innerHTML=K.slice(0,6).map(k=>`<div class="kpi"><div class="l">${k.l}</div>`+
+    `<div class="v"${k.hl?' style="color:var(--s2)"':''}>${k.v}${k.u?`<small>${k.u}</small>`:''}</div>`+
+    `<div class="d${k.up?' up':''}">${k.d||''}</div></div>`).join('');
+})();
+
+/* ---------- 主故事圖：偵測反覆課表 ---------- */
+const REPS=(function(){
+  const L=R.laps.filter(l=>l.sec>=300&&l.elev_gain_m>=60&&l.km>0.5);
+  if(L.length<2) return null;
+  const g={};
+  L.forEach(l=>{const k=Math.round(l.km*2)/2; (g[k]=g[k]||[]).push(l);});
+  const best=Object.values(g).sort((a,b)=>b.length-a.length)[0];
+  return (best&&best.length>=2)?best:null;
+})();
+if(REPS){
+  const c=document.getElementById('card-main'); c.hidden=false;
+  document.getElementById('main-title').textContent=`反覆段 × ${REPS.length}`;
+  const f=REPS[0], la=REPS[REPS.length-1];
+  const dt=la.sec-f.sec, dw=la.avg_w-f.avg_w;
+  document.getElementById('main-sub').textContent=
+    `同一段約 ${f.km} km / 爬升 ${f.elev_gain_m} m，重複 ${REPS.length} 趟。`+
+    (dt<0?`最後一趟比第一趟快 ${ms(-dt)}、功率高 ${Math.round(dw/f.avg_w*100)}%（負分割）。`
+        :`最後一趟比第一趟慢 ${ms(dt)}，功率${dw>=0?'高':'低'} ${Math.abs(Math.round(dw/f.avg_w*100))}%。`);
+  const wrap=document.createElement('div'); wrap.className='g2';
+  wrap.innerHTML='<div><svg id="r-time" viewBox="0 0 420 220"></svg></div><div><svg id="r-watt" viewBox="0 0 420 220"></svg></div>';
+  document.getElementById('main-body').appendChild(wrap);
+  const bestI=REPS.indexOf(REPS.reduce((a,b)=>b.sec<a.sec?b:a));
+  function rc(id,key,fmt,title,hint,ticks,max){
+    const s=document.getElementById(id);
+    const W=420,H=220,L2=48,Rr=14,T=34,B=46,iw=W-L2-Rr,ih=H-T-B;
+    s.appendChild(txt(0,14,title,{fs:12.5,fill:C('ink-2'),fw:700}));
+    s.appendChild(txt(W-Rr,14,hint,{anchor:'end',fs:11}));
+    ticks.forEach(v=>{const y=T+ih-ih*v/max;
+      s.appendChild(el('line',{x1:L2,y1:y,x2:W-Rr,y2:y,stroke:C('grid')}));
+      s.appendChild(txt(L2-8,y+4,fmt(v),{anchor:'end'}));});
+    s.appendChild(el('line',{x1:L2,y1:T+ih,x2:W-Rr,y2:T+ih,stroke:C('axis')}));
+    const gap=iw/REPS.length, bw=Math.min(24,gap*0.46);
+    REPS.forEach((l,i)=>{const v=l[key],h=ih*v/max,x=L2+gap*i+gap/2-bw/2,y=T+ih-h,bb=i===bestI;
+      const g=el('g',{}); g.style.cursor='crosshair';
+      g.appendChild(el('path',{d:bar(x,y,bw,h),fill:bb?C('s2'):C('dim')}));
+      g.appendChild(txt(x+bw/2,y-7,fmt(v),{anchor:'middle',fs:13,fw:bb?800:600,fill:bb?C('ink-1'):C('ink-2')}));
+      g.appendChild(txt(x+bw/2,T+ih+18,'#'+(i+1),{anchor:'middle',fs:12,fill:bb?C('ink-1'):C('ink-3'),fw:bb?700:400}));
+      g.appendChild(el('rect',{x:L2+gap*i,y:T,width:gap,height:ih,fill:'transparent'}));
+      g.addEventListener('mousemove',e=>showTip(e,`<b>第 ${i+1} 趟</b><br>${l.hhmmss.replace(/^0:/,'')} · ${l.km} km<br>${l.avg_w} W · 心率 ${l.avg_hr} · 踏頻 ${l.cad}`));
+      g.addEventListener('mouseleave',hideTip); s.appendChild(g);});
+  }
+  const mt=Math.ceil(Math.max(...REPS.map(l=>l.sec))/600)*600;
+  const mw=Math.ceil(Math.max(...REPS.map(l=>l.avg_w))*1.18/50)*50;
+  const tt=[]; for(let v=0;v<=mt;v+=600) tt.push(v);
+  rc('r-time','sec',ms,'完成時間','越低越好',tt,mt);
+  rc('r-watt','avg_w',v=>v+' W','平均功率','越高越好',[0,mw/2,mw],mw);
+}
+
+/* ---------- 剖面 ---------- */
+(function(){
+  const s=document.getElementById('c-prof');
+  const W=960,L=48,Rr=16,T=26,GAP=44,h1=150,h2=76,T2=T+h1+GAP,iw=W-L-Rr;
+  const P=CH.profile,maxX=P[P.length-1][0];
+  const maxA=Math.max(100,Math.ceil(Math.max(...P.map(p=>p[1]))*1.14/100)*100);
+  const maxP=Math.max(100,Math.ceil(Math.max(...P.map(p=>p[2]))*1.1/50)*50);
+  const X=v=>L+iw*v/maxX,Y1=v=>T+h1-h1*v/maxA,Y2=v=>T2+h2-h2*Math.min(v,maxP)/maxP;
+  (R.climbs||[]).slice(0,6).forEach(c=>{
+    const p0=P.find(p=>p[1]>0&&false); // placeholder
+  });
+  // 爬坡段：用 lap_km 對應 elev_gain 大的分圈
+  R.laps.forEach((l,i)=>{ if(l.elev_gain_m>=80&&CH.lap_km[i]){
+    const [a,b]=CH.lap_km[i];
+    s.appendChild(el('rect',{x:X(a),y:T,width:Math.max(2,X(b)-X(a)),height:h1+GAP+h2,fill:C('s2'),opacity:.10,rx:3}));
+    s.appendChild(txt((X(a)+X(b))/2,T-5,`L${l.n}`,{anchor:'middle',fs:10.5,fw:600}));}});
+  (R.stops||[]).filter(x=>x.dur_sec>=90).forEach(st=>{const x=X(st.km);
+    s.appendChild(el('rect',{x:x-3,y:T,width:6,height:h1+GAP+h2,fill:C('dim'),opacity:.6,rx:2}));
+    if(st.dur_sec>=300) s.appendChild(txt(x,T-5,'停 '+Math.round(st.dur_sec/60)+' 分',{anchor:'middle',fs:10.5,fw:600}));});
+  for(let v=0;v<=maxA;v+=maxA/4){s.appendChild(el('line',{x1:L,y1:Y1(v),x2:W-Rr,y2:Y1(v),stroke:C('grid')}));
+    s.appendChild(txt(L-8,Y1(v)+4,Math.round(v),{anchor:'end'}));}
+  for(let v=0;v<=maxP;v+=maxP/2){s.appendChild(el('line',{x1:L,y1:Y2(v),x2:W-Rr,y2:Y2(v),stroke:C('grid')}));
+    s.appendChild(txt(L-8,Y2(v)+4,Math.round(v),{anchor:'end'}));}
+  s.appendChild(txt(L-8,T+11,'公尺',{anchor:'end',fs:10.5}));
+  s.appendChild(txt(L-8,T2+11,'瓦',{anchor:'end',fs:10.5}));
+  let a='M'+X(0)+' '+Y1(P[0][1]); P.forEach(p=>a+=' L'+X(p[0]).toFixed(1)+' '+Y1(p[1]).toFixed(1));
+  s.appendChild(el('path',{d:a+` L${X(maxX)} ${T+h1} L${L} ${T+h1} Z`,fill:C('s1'),opacity:.10}));
+  s.appendChild(el('path',{d:a,fill:'none',stroke:C('s1'),'stroke-width':2,'stroke-linejoin':'round'}));
+  let b='M'+X(0)+' '+Y2(P[0][2]); P.forEach(p=>b+=' L'+X(p[0]).toFixed(1)+' '+Y2(p[2]).toFixed(1));
+  s.appendChild(el('path',{d:b,fill:'none',stroke:C('s2'),'stroke-width':2,'stroke-linejoin':'round'}));
+  s.appendChild(el('line',{x1:L,y1:T2+h2,x2:W-Rr,y2:T2+h2,stroke:C('axis')}));
+  const stepX=Math.max(5,Math.round(maxX/5/5)*5);
+  for(let v=0;v<=maxX;v+=stepX) s.appendChild(txt(X(v),T2+h2+16,v,{anchor:'middle'}));
+  s.appendChild(txt(X(maxX),T2+h2+16,maxX.toFixed(0)+' km',{anchor:'middle'}));
+  const cl=el('line',{x1:0,y1:T,x2:0,y2:T2+h2,stroke:C('axis'),opacity:0});
+  const d1=el('circle',{r:4.5,fill:C('s1'),stroke:C('surface-1'),'stroke-width':2,opacity:0});
+  const d2=el('circle',{r:4.5,fill:C('s2'),stroke:C('surface-1'),'stroke-width':2,opacity:0});
+  s.appendChild(cl);s.appendChild(d1);s.appendChild(d2);
+  const hit=el('rect',{x:L,y:T,width:iw,height:h1+GAP+h2,fill:'transparent'});
+  hit.style.cursor='crosshair'; s.appendChild(hit);
+  hit.addEventListener('mousemove',e=>{const r=s.getBoundingClientRect(),sx=(e.clientX-r.left)/r.width*W;
+    const km=Math.max(0,Math.min(maxX,(sx-L)/iw*maxX));
+    let lo=0,hi=P.length-1; while(hi-lo>1){const m=(lo+hi)>>1; if(P[m][0]<km)lo=m; else hi=m;}
+    const p=P[lo],x=X(p[0]);
+    cl.setAttribute('x1',x);cl.setAttribute('x2',x);cl.setAttribute('opacity',.6);
+    d1.setAttribute('cx',x);d1.setAttribute('cy',Y1(p[1]));d1.setAttribute('opacity',1);
+    d2.setAttribute('cx',x);d2.setAttribute('cy',Y2(p[2]));d2.setAttribute('opacity',1);
+    showTip(e,`<b>${p[0].toFixed(1)} km</b><br>海拔 ${Math.round(p[1])} m<br>功率 ${p[2]} W<br>心率 ${p[3]} bpm`);});
+  hit.addEventListener('mouseleave',()=>{hideTip();cl.setAttribute('opacity',0);
+    d1.setAttribute('opacity',0);d2.setAttribute('opacity',0);});
+})();
+
+/* ---------- 時間軸 ---------- */
+(function(){
+  const s=document.getElementById('c-tl'), B=R.blocks||[];
+  if(!B.length){document.getElementById('c-tl').closest('.card').hidden=true;return;}
+  const tot=R.totals.elapsed_sec, W=960,L=8,Rr=8,iw=W-L-Rr,T=34,H=34;
+  const grp=b=>(b.kind==='停等／休息'||b.stopped_sec>b.sec*0.55)?2:((b.if||0)>=0.75?0:1);
+  const GC=[C('s2'),C('s1'),C('dim')], GN=['有效訓練','低強度移動','休息區段'];
+  const q=R.training_quality, st=R.stop_summary;
+  document.getElementById('tl-sub').textContent=
+    `整趟 ${hms(tot)} 依 3 分鐘為單位自動分類。`+
+    (st&&st.count?`全程停等 ${hm(st.total_sec)}（${st.count} 次，最長 ${ms(st.longest)}）。`:'');
+  s.appendChild(txt(L,16,'出發 '+R.when.start_local.slice(11),{fs:11.5}));
+  s.appendChild(txt(W-Rr,16,'總計 '+hms(tot),{anchor:'end',fs:11.5}));
+  B.forEach(b=>{const g2=grp(b),x=L+iw*b.start_sec/tot,w=Math.max(1.2,iw*b.sec/tot-1.2);
+    const g=el('g',{}); g.style.cursor='crosshair';
+    g.appendChild(el('rect',{x,y:T,width:w,height:H,fill:GC[g2],rx:2}));
+    g.addEventListener('mousemove',e=>showTip(e,`<b>${b.kind}</b> · ${hm(b.sec)}<br>`+
+      `${b.km} km · ${b.kmh} km/h · 均坡 ${b.grade_pct}%<br>${b.avg_w} W`+
+      (b.if?` · IF ${b.if}`:'')+(b.avg_hr?` · 心率 ${b.avg_hr}`:'')+
+      (b.stopped_sec>30?`<br>其中停等 ${ms(b.stopped_sec)}`:'')+
+      (b.draft_pct!=null?`<br>疑似跟車（低於單騎理論功率 ${-b.draft_pct}%）`:'')));
+    g.addEventListener('mouseleave',hideTip); s.appendChild(g);});
+  const stepT=tot>7200?1800:900;
+  for(let t=0;t<=tot;t+=stepT){const x=L+iw*t/tot;
+    s.appendChild(el('line',{x1:x,y1:T+H+3,x2:x,y2:T+H+7,stroke:C('axis')}));
+    s.appendChild(txt(x,T+H+20,t?(t/3600).toFixed(1).replace(/\.0$/,'')+'h':'0',{anchor:'middle',fs:10.5}));}
+  const y2=T+H+34, secs=[0,1,2].map(g2=>B.filter(b=>grp(b)===g2).reduce((a,b)=>a+b.sec,0));
+  let cx=L;
+  secs.forEach((v,i)=>{const w=iw*v/tot-2; if(w<=0)return;
+    const g=el('g',{}); g.style.cursor='crosshair';
+    g.appendChild(el('rect',{x:cx,y:y2,width:Math.max(2,w),height:16,fill:GC[i],rx:3}));
+    if(w>92) g.appendChild(txt(cx+w/2,y2+12,`${GN[i]} ${Math.round(v/60)} 分`,{anchor:'middle',fs:11,fill:i===2?C('ink-2'):'#fff',fw:700}));
+    g.addEventListener('mousemove',e=>showTip(e,`<b>${GN[i]}</b><br>${hm(v)} · 佔全程 ${Math.round(v/tot*100)}%`));
+    g.addEventListener('mouseleave',hideTip); s.appendChild(g); cx+=w+2;});
+})();
+
+/* ---------- 四週負荷 ---------- */
+(function(){
+  const wl=R.strava&&R.strava.weekly_load; if(!wl||!wl.length)return;
+  document.getElementById('card-load').hidden=false;
+  const W=[...wl].reverse(), s=document.getElementById('c-load');
+  const cur=W[W.length-1].tss, prev=W[W.length-2]?W[W.length-2].tss:null;
+  const target=Math.round(cur*0.65/10)*10;
+  document.getElementById('load-sub').innerHTML=
+    (prev!=null?`本週 ${cur}，上週 ${prev}。`:`本週 ${cur}。`)+
+    (cur>=350?` <b style="color:var(--good-ink)">綠線＝建議下週上限 ${target}</b>`:'');
+  const Wd=420,H=230,L=40,Rr=16,T=22,B=46,iw=Wd-L-Rr,ih=H-T-B;
+  const max=Math.ceil(Math.max(...W.map(w=>w.tss))*1.12/100)*100||100, Y=v=>T+ih-ih*v/max;
+  for(let v=0;v<=max;v+=max/2){s.appendChild(el('line',{x1:L,y1:Y(v),x2:Wd-Rr,y2:Y(v),stroke:C('grid')}));
+    s.appendChild(txt(L-8,Y(v)+4,v,{anchor:'end'}));}
+  if(cur>=350){s.appendChild(el('line',{x1:L,y1:Y(target),x2:Wd-Rr,y2:Y(target),stroke:C('good'),'stroke-width':2,opacity:.85}));
+    s.appendChild(txt(L-8,Y(target)+4,target,{anchor:'end',fs:11,fill:C('good-ink'),fw:700}));}
+  s.appendChild(el('line',{x1:L,y1:T+ih,x2:Wd-Rr,y2:T+ih,stroke:C('axis')}));
+  const gap=iw/W.length, bw=Math.min(24,gap*0.48);
+  W.forEach((d,i)=>{const h=ih*d.tss/max,x=L+gap*i+gap/2-bw/2,y=T+ih-h,last=i===W.length-1;
+    const g=el('g',{}); g.style.cursor='crosshair';
+    g.appendChild(el('path',{d:bar(x,y,bw,h),fill:last?C('s2'):C('dim')}));
+    g.appendChild(txt(x+bw/2,y-7,d.tss,{anchor:'middle',fs:12.5,fw:last?800:600,fill:last?C('ink-1'):C('ink-2')}));
+    g.appendChild(txt(x+bw/2,T+ih+18,d.range.slice(5,10).replace('-','/'),{anchor:'middle',fs:11,fill:last?C('ink-1'):C('ink-3'),fw:last?700:400}));
+    g.appendChild(el('rect',{x:L+gap*i,y:T,width:gap,height:ih,fill:'transparent'}));
+    g.addEventListener('mousemove',e=>showTip(e,`<b>${d.range}</b><br>TSS ${d.tss} · ${d.rides} 趟<br>${d.km} km · 爬升 ${d.elev_m} m`));
+    g.addEventListener('mouseleave',hideTip); s.appendChild(g);});
+  s.appendChild(txt(0,12,'週 TSS',{fs:12.5,fill:C('ink-2'),fw:700}));
+})();
+
+/* ---------- 功率曲線 vs PR ---------- */
+(function(){
+  const prs=R.strava&&R.strava.power_prs; const cv=R.power.curve;
+  if(!prs||!prs.length||!cv)return;
+  const want=[60,300,600,1200,3600];
+  const pts=want.map(sec=>{const pr=prs.find(p=>p.sec===sec), a=cv[sec+'s'];
+    return (pr&&a)?{l:pr.label,a:Math.round(a),b:pr.watts}:null;}).filter(Boolean);
+  if(pts.length<3)return;
+  document.getElementById('card-curve').hidden=false;
+  const s=document.getElementById('c-curve');
+  const W=420,H=230,L=40,Rr=58,T=26,B=42,iw=W-L-Rr,ih=H-T-B;
+  const max=Math.ceil(Math.max(...pts.map(p=>p.b))*1.08/100)*100, Y=v=>T+ih-ih*v/max, X=i=>L+iw*i/(pts.length-1);
+  for(let v=0;v<=max;v+=max/2){s.appendChild(el('line',{x1:L,y1:Y(v),x2:W-Rr,y2:Y(v),stroke:C('grid')}));
+    s.appendChild(txt(L-8,Y(v)+4,v,{anchor:'end'}));}
+  s.appendChild(el('line',{x1:L,y1:T+ih,x2:W-Rr,y2:T+ih,stroke:C('axis')}));
+  s.appendChild(el('path',{d:pts.map((p,i)=>(i?'L':'M')+X(i)+' '+Y(p.b)).join(' '),fill:'none',stroke:C('s2'),'stroke-width':2}));
+  s.appendChild(el('path',{d:pts.map((p,i)=>(i?'L':'M')+X(i)+' '+Y(p.a)).join(' '),fill:'none',stroke:C('s1'),'stroke-width':2}));
+  pts.forEach((p,i)=>{
+    s.appendChild(el('circle',{cx:X(i),cy:Y(p.b),r:4,fill:C('s2'),stroke:C('surface-1'),'stroke-width':2}));
+    s.appendChild(el('circle',{cx:X(i),cy:Y(p.a),r:4,fill:C('s1'),stroke:C('surface-1'),'stroke-width':2}));
+    s.appendChild(txt(X(i),T+ih+18,p.l,{anchor:'middle',fs:11.5}));
+    const g=el('rect',{x:X(i)-iw/8,y:T,width:iw/4,height:ih,fill:'transparent'}); g.style.cursor='crosshair';
+    g.addEventListener('mousemove',e=>showTip(e,`<b>${p.l}</b><br>本次 ${p.a} W<br>個人最佳 ${p.b} W<br>差距 ${Math.round((p.b-p.a)/p.b*100)}%`));
+    g.addEventListener('mouseleave',hideTip); s.appendChild(g);});
+  const k=pts.length-1;
+  s.appendChild(txt(X(k)+9,Y(pts[k].b)-4,'PR '+pts[k].b,{fs:11.5,fill:C('ink-2'),fw:600}));
+  s.appendChild(txt(X(k)+9,Y(pts[k].a)+13,'本次 '+pts[k].a,{fs:11.5,fill:C('ink-2'),fw:600}));
+  s.appendChild(txt(0,12,'瓦',{fs:12.5,fill:C('ink-2'),fw:700}));
+})();
+
+/* ---------- 裝置原始數據（只有 FIT 來源才有）---------- */
+(function(){
+  const F = R.meta && R.meta.fit;
+  if(!F) return;                       // TCX／API 來源就整張卡不出現
+  document.getElementById('card-fit').hidden = false;
+  document.getElementById('fit-sub').textContent =
+    '直接從 ' + ((F.devices||['裝置']).join(' + ')) + ' 的原始檔讀出來的，不是推算值。';
+
+  const tiles=[];
+  const T=(k,v,unit,note)=>{ if(v===undefined||v===null) return;
+    tiles.push(`<div class="fit-tile"><div class="k">${k}</div><div class="v">${v}${unit?`<small>${unit}</small>`:''}</div>${note?`<div class="n">${note}</div>`:''}</div>`)}
+  T('裝置 FTP', F.threshold_power, 'W', '錶上設定值');
+  T('訓練效果', F.training_effect, '', '有氧 · 上限 5.0');
+  T('無氧效果', F.anaerobic_effect, '', '上限 5.0');
+  T('訓練負荷', F.training_load_peak!=null?Math.round(F.training_load_peak):null, '', '');
+  T('最大心率', F.max_hr_setting, 'bpm', '錶上設定值');
+  T('靜息心率', F.resting_hr, 'bpm', '');
+  T('閾值心率', F.threshold_hr, 'bpm', '');
+  T('裝置爬升', F.total_ascent, 'm', '氣壓計');
+  document.getElementById('fit-tiles').innerHTML = tiles.join('');
+
+  // 左右功率平衡
+  if(F.lr_balance_right_pct!=null){
+    const r=F.lr_balance_right_pct, l=+(100-r).toFixed(1);
+    const gap=Math.abs(r-50)*2;
+    const verdict = gap<4 ? '在一般範圍內（左右差 4% 以內）'
+      : gap<10 ? '略偏一側，值得留意但不必緊張'
+      : '明顯偏一側，建議檢查坐墊高度／前後位置，或請人看踩踏';
+    document.getElementById('fit-lr').innerHTML =
+      `<div style="font-size:12.5px;margin-bottom:2px"><b style="color:var(--ink-1)">左右功率平衡</b></div>
+       <div class="lr-bar">
+         <i style="flex:0 0 ${l}%;background:var(--q2)">左 ${l}%</i>
+         <i style="flex:0 0 ${r}%;background:var(--q4)">右 ${r}%</i>
+       </div>
+       <div class="lr-note">${verdict}。這個數字只有雙邊功率計的原始檔有，Strava 匯出與 TCX 都拿不到。</div>`;
+  }
+
+  // Garmin 自己算的區間時間（用錶上真正設定的邊界，不是這份腳本推的）
+  const mmss=s=>{const r=Math.round(s);return Math.floor(r/60)+':'+String(r%60).padStart(2,'0')};
+  const zrow=(title, secs, edges, unit)=>{
+    if(!secs || !edges) return '';
+    const tot=secs.reduce((a,b)=>a+b,0)||1;
+    const bins=secs.map((s,i)=>({s, lo:i===0?0:edges[i-1], hi:edges[i], i}))
+                   .filter(b=>b.s>0 && b.hi>0);
+    if(!bins.length) return '';
+    const seg=bins.map(b=>`<i style="flex:0 0 ${b.s/tot*100}%;background:var(--q${Math.min(5,Math.max(1,b.i))})"></i>`).join('');
+    const lg=bins.map(b=>{
+      const hi = b.hi>=3000 ? '+' : '–'+b.hi;
+      return `<span><span class="sw" style="background:var(--q${Math.min(5,Math.max(1,b.i))})"></span>${b.lo}${hi} ${unit} <b style="color:var(--ink-1)">${(b.s/tot*100).toFixed(1)}%</b> <span style="color:var(--ink-3)">${mmss(b.s)}</span></span>`;
+    }).join('');
+    return `<div style="font-size:12.5px;margin:16px 0 2px"><b style="color:var(--ink-1)">${title}</b></div>
+      <div class="lr-bar" style="height:22px">${seg}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:8px;font-size:12px;color:var(--ink-2)">${lg}</div>`;
+  };
+  document.getElementById('fit-zones').innerHTML =
+    zrow('心率區間（裝置設定）', F.time_in_hr_zone, F.hr_zone_high, 'bpm') +
+    zrow('功率區間（裝置設定）', F.time_in_power_zone, F.power_zone_high, 'W');
+})();
+
+/* ---------- 區間 ---------- */
+(function(){
+  const host=document.getElementById('zones'), ramp=['q1','q2','q3','q4','q5'];
+  document.getElementById('z-sub').textContent='顏色越深＝強度越高。心率基準 '+R.athlete.max_hr+
+    ' bpm（'+R.athlete.max_hr_source+'）。';
+  [['心率',R.zones.hr],['功率',R.zones.power]].forEach(([name,zs])=>{
+    if(!zs)return;
+    let Z=zs; if(Z.length>5) Z=Z.slice(0,4).concat([{zone:'Z5+ 高強度',
+      range:'≥'+Z[4].range.split('-')[0],
+      sec:Z.slice(4).reduce((a,z)=>a+z.sec,0), mmss:'', pct:+Z.slice(4).reduce((a,z)=>a+z.pct,0).toFixed(1)}]);
+    const tot=Z.reduce((a,z)=>a+z.pct,0)||100;
+    const w=document.createElement('div'); w.style.margin='0 0 22px';
+    w.innerHTML=`<div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:7px">
+      <b style="color:var(--ink-1)">${name}</b></div>`;
+    const b=document.createElement('div');
+    b.style.cssText='display:flex;height:30px;border-radius:6px;overflow:hidden;gap:2px;background:var(--surface-1)';
+    Z.forEach((z,i)=>{const seg=document.createElement('div');
+      const secs=z.sec, lbl=z.mmss||(Math.floor(secs/60)+':'+String(secs%60).padStart(2,'0'));
+      seg.style.cssText=`flex:0 0 ${z.pct/tot*100}%;background:var(--${ramp[i]});cursor:crosshair`;
+      seg.addEventListener('mousemove',e=>showTip(e,`<b>${z.zone}</b> ${z.range}<br>${lbl} · ${z.pct}%`));
+      seg.addEventListener('mouseleave',hideTip); b.appendChild(seg);});
+    w.appendChild(b);
+    const lg=document.createElement('div');
+    lg.style.cssText='display:flex;flex-wrap:wrap;gap:14px;margin-top:9px;font-size:12px;color:var(--ink-2)';
+    lg.innerHTML=Z.map((z,i)=>{const lbl=z.mmss||(Math.floor(z.sec/60)+':'+String(z.sec%60).padStart(2,'0'));
+      return `<span><span class="sw" style="background:var(--${ramp[i]})"></span>${z.zone} <b style="color:var(--ink-1)">${z.pct}%</b> <span style="color:var(--ink-3)">${lbl}</span></span>`;}).join('');
+    w.appendChild(lg); host.appendChild(w);});
+})();
+
+/* ---------- 評語卡 / hero ---------- */
+(function(){
+  if(N.cards&&N.cards.length){
+    document.getElementById('card-acts').hidden=false;
+    const M={good:['good','var(--good-ink)'],warn:['warn','var(--warn)'],
+             serious:['serious','var(--serious)'],critical:['critical','var(--critical)']};
+    document.getElementById('acts').innerHTML=N.cards.map(c=>{
+      const m=M[c.level]||M.good;
+      return `<div class="act"><div class="tag" style="color:${m[1]}"><span class="dot" style="background:var(--${m[0]})"></span>${c.tag}</div>
+        <div class="t">${c.title}</div><div class="b">${c.body}</div></div>`;}).join('');
+  }
+  if(N.hero){document.getElementById('card-hero').hidden=false;
+    document.getElementById('hero-title').textContent=N.hero.title||'';
+    document.getElementById('hero-fig').textContent=N.hero.figure||'';
+    document.getElementById('hero-cap').innerHTML=N.hero.caption||'';}
+  document.getElementById('foot').innerHTML=
+    (R.meta.device?R.meta.device+' · ':'')+`逐秒資料 ${R.totals.elapsed_sec.toLocaleString()} 筆 · `+
+    'NP／TSS 只採計移動中的資料（與 Strava 一致）'+(N.footnote?' · '+N.footnote:'');
+})();
+
+/* ---------- 明細表 ---------- */
+(function(){
+  const h=document.getElementById('tables');
+  let t='<h2 style="margin-top:14px">分圈</h2><table><tr><th>圈</th><th>時間</th><th>距離</th><th>均速</th><th>均瓦</th><th>NP</th><th>心率</th><th>踏頻</th><th>爬升</th></tr>';
+  R.laps.forEach(l=>{const k=l.elev_gain_m>=80;
+    t+=`<tr><td${k?' class="hi"':''}>${l.n}</td><td>${l.hhmmss.replace(/^0:/,'')}</td><td>${l.km}</td><td>${l.kmh??'—'}</td><td${k?' class="hi"':''}>${l.avg_w??'—'}</td><td>${l.np_w??'—'}</td><td>${l.avg_hr??'—'}</td><td>${l.cad??'—'}</td><td>${l.elev_gain_m?'+'+l.elev_gain_m:'—'}</td></tr>`;});
+  t+='</table>';
+  if(R.blocks&&R.blocks.length){
+    t+='<h2 style="margin-top:22px">路段自動分類</h2><table><tr><th>起</th><th>類型</th><th>時長</th><th>距離</th><th>均速</th><th>均坡</th><th>均瓦</th><th>IF</th><th>心率</th><th>停等</th></tr>';
+    R.blocks.forEach(b=>{const k=(b.if||0)>=0.75;
+      t+=`<tr><td>${hm(b.start_sec)}</td><td${k?' class="hi"':''}>${b.kind}</td><td>${hm(b.sec)}</td><td>${b.km}</td><td>${b.kmh}</td><td>${b.grade_pct}%</td><td${k?' class="hi"':''}>${b.avg_w}</td><td>${b.if??'—'}</td><td>${b.avg_hr??'—'}</td><td>${b.stopped_sec>30?ms(b.stopped_sec):'—'}</td></tr>`;});
+    t+='</table>';}
+  const bs=(R.stops||[]).filter(s=>s.dur_sec>=90).sort((a,b)=>b.dur_sec-a.dur_sec);
+  if(bs.length){t+='<h2 style="margin-top:22px">停等 90 秒以上</h2><table><tr><th>位置</th><th>時間點</th><th>停多久</th><th>判定</th></tr>';
+    bs.forEach(s=>{t+=`<tr><td>${s.km} km</td><td>${hm(s.at_sec)}</td><td>${ms(s.dur_sec)}</td><td>${s.type}</td></tr>`;});
+    t+='</table>';}
+  h.innerHTML=t;
+})();
+</script>
+</body>
+</html>
