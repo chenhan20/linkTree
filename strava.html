@@ -1008,7 +1008,7 @@ button.deck-stat:hover .ds-hint{color:#FC4C02}
   position:absolute;top:0;left:0;width:272px;
   --x:0px;--y:0px;--rot:0deg;
   transform:translate3d(var(--x),var(--y),0) rotate(var(--rot));
-  cursor:grab;touch-action:none;
+  cursor:pointer;
   transition:width .38s cubic-bezier(.2,.9,.25,1),box-shadow .3s,opacity .3s,transform .38s cubic-bezier(.2,.9,.25,1);
 }
 .fc-board .fc.fc-drag{transition:box-shadow .2s;cursor:grabbing;z-index:30}
@@ -4100,16 +4100,20 @@ function applyIttMode() {
 }
 
 /* ── ITT 檯面 ──────────────────────────────────────────────────
-   一進來六段就整齊排好（置中的網格），之後每張都能任意拖放、點開原地長大。
-   位置記在 localStorage，下次進來還是你擺的樣子；「重新排列」歸位。
-   只有「展開中」的卡才會建 three.js 場景 —— 收起的卡不燒 GPU。 */
-// v3：卡片變寬（214→272）＋加了戰情室區塊，舊的座標會互相疊到，直接換 key 重排
-const ITT_BOARD_KEY = 'itt-board-v3'
+   路段整齊排在置中的網格上，點卡片原地展開 3D 路線。
+   只有「展開中」的卡才會建 three.js 場景 —— 收起的卡不燒 GPU。
+
+   2026-08-13：拖曳與「重新排列」都拿掉了。原本卡片可以任意拖放、座標存在
+   localStorage，但那表示版面取決於你上次拖到哪 —— 卡片數一變（六條路段加到
+   九條）舊座標就對不上，於是「排版有時候怪怪」。現在位置一律由 tidy() 算，
+   欄列數自動平衡，永遠是確定的結果。localStorage 只剩「哪張是展開的」。 */
+// v4：不再存座標（只存 open），順便讓舊版的 v3 座標自然失效
+const ITT_BOARD_KEY = 'itt-board-v4'
 const ITT_CARD_W = 272, ITT_CARD_OPEN_W = 560
 const ITT_BOARD_GAP = 16, ITT_BOARD_PAD = 16
 const ittBoardMode = () => matchMedia('(min-width:641px)').matches
 function ittBoardState() {
-  try { const s = JSON.parse(localStorage.getItem(ITT_BOARD_KEY)); return (s && s.pos) ? s : null } catch (e) { return null }
+  try { const s = JSON.parse(localStorage.getItem(ITT_BOARD_KEY)); return s || null } catch (e) { return null }
 }
 function initIttBoard(reduce) {
   const grid = document.getElementById('fc-grid')
@@ -4123,11 +4127,11 @@ function initIttBoard(reduce) {
   const idOf = c => String(c.dataset.segid)
 
   const saved = ittBoardState()
-  const state = {
-    pos: (saved && saved.pos) || {},
-    open: (saved && saved.open) || null,
+  // pos 每次都重算（place() 仍會寫進去給 setOpen 用），只有 open 需要記住
+  const state = { pos: {}, open: (saved && saved.open) || null }
+  const save = () => {
+    try { localStorage.setItem(ITT_BOARD_KEY, JSON.stringify({ open: state.open })) } catch (e) {}
   }
-  const save = () => { try { localStorage.setItem(ITT_BOARD_KEY, JSON.stringify(state)) } catch (e) {} }
 
   const boardW = () => grid.clientWidth
   // 檯面高度會做 .38s 的 transition，動畫途中量 clientHeight 會拿到中間值 →
@@ -4149,8 +4153,11 @@ function initIttBoard(reduce) {
   // 置中的網格：欄數看檯面塞得下幾張，列高取最高那張，整體垂直置中
   const tidy = () => {
     const W = boardW(), G = ITT_BOARD_GAP, P = ITT_BOARD_PAD
-    const cols = Math.max(1, Math.min(cards.length, Math.floor((W - P * 2 + G) / (ITT_CARD_W + G))))
-    const rows = Math.ceil(cards.length / cols)
+    const fit = Math.max(1, Math.min(cards.length, Math.floor((W - P * 2 + G) / (ITT_CARD_W + G))))
+    // 把列數攤平：9 張在塞得下 4 欄的螢幕上會排成 4+4+1，最後一排孤零零一張很醜。
+    // 先用「塞得下的欄數」算出需要幾列，再回頭把欄數收成剛好夠那幾列 → 3x3。
+    const rows = Math.ceil(cards.length / fit)
+    const cols = Math.ceil(cards.length / rows)
     // 列高只看收起態的卡：展開中的那張有六百多，拿它算會把檯面撐成兩倍高
     const ch = cards.reduce((m, c) => c.classList.contains('fc-open') ? m : Math.max(m, cardH(c)), 0) || 150
     const x0 = Math.max(P, (W - (cols * ITT_CARD_W + (cols - 1) * G)) / 2)
@@ -4163,9 +4170,11 @@ function initIttBoard(reduce) {
     const t = tidy()
     targetH = t.height
     if (!grid.classList.contains('has-open')) grid.style.height = targetH + 'px'
+    // 一律用算出來的位置。以前這裡會優先吃 state.pos（你上次拖到哪就放哪），
+    // 那正是「排版有時候怪怪」的來源：卡片數一變（6→9），舊座標就對不上了。
     cards.forEach((c, i) => {
       c.style.display = ''
-      const p = state.pos[idOf(c)] || t.at(i)
+      const p = t.at(i)
       place(c, p.x, p.y, p.rot)
     })
   }
@@ -4203,54 +4212,20 @@ function initIttBoard(reduce) {
     else if (on) loadThreeJS().then(setupSeg3D).catch(() => {})
   }
 
-  // 歸位
+  // 版面是算出來的，沒有「歸位」可言，所以不再放重新排列鈕
   const bar = document.createElement('div')
   bar.className = 'fc-board-bar'
-  bar.innerHTML = `<span class="fc-hint" style="margin:0;justify-content:flex-start">拖曳擺放 · 點卡片展開 3D</span>
-                   <button class="fc-board-reset" type="button">重新排列</button>`
+  bar.innerHTML = `<span class="fc-hint" style="margin:0;justify-content:flex-start">點卡片展開 3D 路線</span>`
   wrap.appendChild(bar)
-  bar.querySelector('.fc-board-reset').addEventListener('click', () => {
-    state.pos = {}; state.open = null
-    grid.classList.remove('has-open')
-    cards.forEach(c => { c.classList.remove('fc-open'); c.style.zIndex = '' })
-    layout(); save()
-    if (typeof THREE !== 'undefined') setupSeg3D()
-  })
 
-  // 拖放 + 點擊展開（位移超過門檻就算拖，不算點）
-  const MOVE = 5
-  let drag = null
+  // 點擊展開。拖曳已移除（見上方 ITT_BOARD_KEY 的說明）——位置一律由 tidy() 決定。
   const interactive = el => !!(el.closest && el.closest('.fc-3d, button, a, input, .fc-race-bar, .fc-pk-panel, .fc-self-panel'))
-  grid.addEventListener('pointerdown', e => {
+  grid.addEventListener('click', e => {
     if (!ittBoardMode()) return
     const card = e.target.closest && e.target.closest('.fc')
-    if (!card || e.button > 0 || interactive(e.target)) return
-    const p = state.pos[idOf(card)] || { x: 0, y: 0 }
-    drag = { card, sx: e.clientX, sy: e.clientY, ox: p.x, oy: p.y, moved: false, pid: e.pointerId }
-    card.style.zIndex = 30
-    try { grid.setPointerCapture(e.pointerId) } catch (err) {}
+    if (!card || interactive(e.target)) return
+    setOpen(card, !card.classList.contains('fc-open'))
   })
-  grid.addEventListener('pointermove', e => {
-    if (!drag || !ittBoardMode()) return
-    const dx = e.clientX - drag.sx, dy = e.clientY - drag.sy
-    if (!drag.moved && Math.hypot(dx, dy) > MOVE) {
-      drag.moved = true
-      drag.card.classList.add('fc-drag')
-      try { getSelection().removeAllRanges() } catch (err) {}
-    }
-    if (drag.moved) place(drag.card, drag.ox + dx, drag.oy + dy)
-  })
-  const endDrag = () => {
-    if (!drag) return
-    const { card, moved } = drag
-    drag = null
-    card.classList.remove('fc-drag')
-    card.style.zIndex = card.classList.contains('fc-open') ? 20 : ''
-    if (moved) save()
-    else setOpen(card, !card.classList.contains('fc-open'))
-  }
-  grid.addEventListener('pointerup', endDrag)
-  grid.addEventListener('pointercancel', endDrag)
 
   grid.__boardLayout = layout
   layout()
