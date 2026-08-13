@@ -142,6 +142,36 @@ def fetch_original(activity_id: str) -> tuple[bytes, str]:
 # -------------------------------------------------------------- 狀態 ----
 
 
+# intervals.icu 活動物件共 183 欄。這裡挑的是「我們自己也在算、可以互相對帳」
+# 以及「FIT 算不出來、只有 intervals 有」的兩類。全部來自既有的活動列表 call。
+ACTIVITY_FIELDS = (
+    # 負荷與強度（對帳我們自算的 TSS / IF / NP / VI）
+    "icu_training_load", "icu_intensity", "icu_weighted_avg_watts",
+    "icu_variability_index", "icu_efficiency_factor", "decoupling",
+    "polarization_index", "trimp", "icu_atl", "icu_ctl",
+    # 區間時間與當時的區間定義（報告的「強度分布」可以拿官方版對帳）
+    "icu_zone_times", "icu_hr_zone_times", "icu_power_zones", "icu_hr_zones",
+    "icu_ftp", "lthr",
+    # 功率模型／eFTP。FTP 目前是手抄在 plan.json baseline，這是自動化的替代源。
+    "icu_pm_cp", "icu_pm_w_prime", "icu_pm_p_max", "icu_pm_ftp",
+    "icu_pm_ftp_secs", "icu_pm_ftp_watts", "icu_rolling_ftp", "icu_rolling_ftp_delta",
+    # 裝置（報告的「裝置原始數據」目前只有 FIT 裡的欄位）
+    "device_name", "power_meter", "power_meter_serial", "power_meter_battery",
+    "crank_length", "file_type",
+    # 只有 intervals 有、FIT 算不出來的
+    "icu_joules_above_ftp", "icu_max_wbal_depletion", "icu_hrr", "coasting_time",
+)
+
+# wellness 想要的欄位。用 fields= 過濾，回傳小一點也少踩到 schema 變動。
+WELLNESS_FIELDS = (
+    "id", "ctl", "atl", "rampRate", "sportInfo",
+    "weight", "restingHR", "hrv", "hrvSDNN", "vo2max",
+    "sleepSecs", "sleepScore", "sleepQuality", "avgSleepingHR",
+    "spO2", "respiration", "readiness", "steps", "bodyFat",
+    "soreness", "fatigue", "stress", "mood", "motivation", "injury",
+)
+
+
 def load_state() -> dict:
     if STATE_FILE.exists():
         try:
@@ -180,11 +210,20 @@ def save_activities(acts: list[dict]) -> None:
         if prev and name and prev != name:
             log.info("  改名: %s 「%s」→「%s」", aid, prev, name)
             renamed += 1
-        data[aid] = {
+        rec = {
             "name": name,
             "type": a.get("type") or "",
             "start_date_local": a.get("start_date_local") or "",
         }
+        # intervals.icu 已經替你算好的欄位。這一整包在同一個 call 裡本來就回傳了,
+        # 以前只挑了 name/type/date 三欄,其餘直接丟掉 —— 額外成本是 0 個 API call。
+        # 用途是「官方對帳源」:報告的 IF / NP / 區間時間全是我們自己從 FIT 算的,
+        # 有這些就能兩邊對照,算錯了看得出來。詳見 docs/intervals-api-survey.md 第 2 節。
+        for k in ACTIVITY_FIELDS:
+            v = a.get(k)
+            if v not in (None, "", [], {}):
+                rec[k] = v
+        data[aid] = rec
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(".tmp")
     tmp.write_text(json.dumps(data, ensure_ascii=False, indent=1, sort_keys=True),
@@ -192,6 +231,59 @@ def save_activities(acts: list[dict]) -> None:
     tmp.replace(path)
     log.info("活動 metadata %d 筆 → %s%s", len(data), path.name,
              f"(其中 {renamed} 筆改名)" if renamed else "")
+
+
+def sync_wellness(oldest: str, newest: str) -> int:
+    """抓 wellness（每日 HRV / 靜息心率 / 睡眠 / 體重 / CTL-ATL / 每日 eFTP 快照）。
+
+    為什麼值得：這些數字目前是手抄在 athlete/ 底下的，而 Garmin 本來就會自動
+    餵給 intervals.icu（官方 wellness 功能頁列了 Garmin 在內的自動同步來源）。
+    成本是每班 1 個 call，對 5000/日的額度是零頭。
+
+    **刻意設計成不會讓整班失敗。** FIT 下載才是這支腳本的本業；wellness 是加值，
+    端點回什麼、帳號實際啟用哪些欄位都還沒實地驗過（docs/intervals-api-survey.md
+    的「待驗清單」），所以任何例外都只記一行 warning 就算了。
+    """
+    path = OUT_DIR / "_wellness.json"
+    try:
+        rows = _request(
+            f"/athlete/{ATHLETE}/wellness?oldest={oldest}&newest={newest}"
+            f"&fields={','.join(WELLNESS_FIELDS)}"
+        )
+    except Exception as e:                      # noqa: BLE001 —— 見上面的說明
+        log.warning("wellness 抓取失敗(不影響 FIT 同步): %s", e)
+        return 0
+    if not isinstance(rows, list):
+        log.warning("wellness 回傳的不是陣列(%s),跳過", type(rows).__name__)
+        return 0
+
+    data = {}
+    if path.exists():
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            log.warning("_wellness.json 壞掉,重建")
+    added = 0
+    for r in rows:
+        if not isinstance(r, dict):
+            continue
+        day = str(r.get("id") or "")           # wellness 的 id 就是日期
+        if not day:
+            continue
+        rec = {k: v for k, v in r.items() if k != "id" and v not in (None, "", [], {})}
+        if not rec:                            # 整天空白就不要佔一列
+            continue
+        if day not in data:
+            added += 1
+        data[day] = rec
+
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(".tmp")
+    tmp.write_text(json.dumps(data, ensure_ascii=False, indent=1, sort_keys=True),
+                   encoding="utf-8")
+    tmp.replace(path)
+    log.info("wellness %d 天 → %s%s", len(data), path.name, f"(新增 {added})" if added else "")
+    return added
 
 
 def save_state(state: dict) -> None:
@@ -242,6 +334,9 @@ def sync(backfill_days: int | None = None) -> int:
 
     # 先存 metadata：這一步跟「有沒有新檔要下載」無關，改名也要能傳進來。
     save_activities(acts)
+
+    # 每日身體狀態。放在下載迴圈之前，同理：就算沒有新 FIT 也要更新。
+    sync_wellness(oldest, newest)
 
     state = load_state()
     seen = set(state.get("downloaded", []))

@@ -115,6 +115,13 @@
 
 ## 建議落地順序(價值/成本比)
 
+> **落地進度（2026-08-13）**：第 1、2 項的**資料擷取**已進 `scripts/sync-intervals.py`
+> —— wellness 每班 1 call 寫進 `data/fit/_wellness.json`，活動計算欄位靠既有的
+> activities call 免費夾帶、寫進 `data/fit/_activities.json`（見 `ACTIVITY_FIELDS`）。
+> **但兩者都還沒接到畫面上**，而且本機沒有 API key，是離線單元測試（模擬回應）驗的，
+> 實際 schema 要等第一班 Action 跑完看 `_wellness.json` 才算數。
+> 第 3、4、5 項未動。
+
 1. sync-intervals.py 加一支 wellness 增量抓取(1 call/日)→ 淘汰 athlete/ 手抄 HRV/體重/FTP,並順手拿到官方 CTL/ATL 序列(問題 1+3 一起解)。
 2. 活動列表 call 加 `fields=`,把 `icu_training_load`、`icu_zone_times`、`icu_intensity`、`icu_pm_ftp`、裝置欄位存進 ride-meta → 報告「強度分布」「四週負荷」「裝置原始數據」有官方對帳源。
 3. 報告生成時每活動加打 `/intervals` 與 `/power-curve.csv`,PB 曲線日更一份共用 → 「功率曲線 vs 個人最佳」升級。
