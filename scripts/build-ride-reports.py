@@ -298,6 +298,11 @@ def main() -> int:
             # 用 fit.name 而不是 date：analyze() 就拋例外時 date 還沒賦值
             log(f"[失敗] {fit.name}: {e}")
             failed += 1
+            # 把失敗也記進 _reports.json，否則壞檔會「每一次執行都重炸」——
+            # 4 個跑步 FIT 就是這樣讓每班 CI 都帶著 4 個 traceback。
+            # --overwrite / --force 會重試，修好解析器之後不必手動清這個檔。
+            done[fit.name] = {"date": date_of(fit) or "", "skipped": True,
+                              "why": f"解析失敗：{str(e).splitlines()[-1][:120]}"}
 
     if not args.dry_run:
         done_file.parent.mkdir(parents=True, exist_ok=True)

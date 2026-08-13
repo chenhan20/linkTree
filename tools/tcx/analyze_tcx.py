@@ -241,6 +241,7 @@ def _fit_extras(sess, tiz, points, devices):
     # 陣列可能「非空但元素是 None」—— 跑步的 FIT 沒有功率區間邊界時就是這樣，
     # 直接 int(None) 會整個 analyze 掛掉（4 個跑步檔每次執行都吐 traceback）。
     zone_edges = lambda hi: ([int(x) for x in hi if x is not None] or None) if hi else None
+    zone_secs = lambda z: ([round(x, 1) for x in z if x is not None] or None) if z else None
     ex = {
         "lr_balance_right_pct": round(lrb, 1) if lrb is not None else None,
         "threshold_power":      sess.get("threshold_power") or tiz.get("functional_threshold_power"),
@@ -256,8 +257,11 @@ def _fit_extras(sess, tiz, points, devices):
         "threshold_hr":         tiz.get("threshold_heart_rate"),
         "hr_zone_high":         zone_edges(tiz.get("hr_zone_high_boundary")),
         "power_zone_high":      zone_edges(tiz.get("power_zone_high_boundary")),
-        "time_in_hr_zone":      [round(x, 1) for x in tiz["time_in_hr_zone"]] if tiz.get("time_in_hr_zone") else None,
-        "time_in_power_zone":   [round(x, 1) for x in tiz["time_in_power_zone"]] if tiz.get("time_in_power_zone") else None,
+        # 跟 zone_edges 同一個地雷：陣列非空但元素是 None。lap 級的 time_in_zone
+        # 訊息就長這樣（跑步的 time_in_power_zone 全是 None）。目前沒踩到只是因為
+        # :150 只取第一筆、而第一筆剛好是 session 級的 —— 那是寫入順序的運氣。
+        "time_in_hr_zone":      zone_secs(tiz.get("time_in_hr_zone")),
+        "time_in_power_zone":   zone_secs(tiz.get("time_in_power_zone")),
         "hrv_rmssd":            sess.get("rmssd_hrv"),
         "hrv_sdrr":             sess.get("sdrr_hrv"),
         "resp_avg":             sess.get("enhanced_avg_respiration_rate"),

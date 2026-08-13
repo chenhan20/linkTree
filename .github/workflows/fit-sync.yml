@@ -84,7 +84,10 @@ jobs:
           [ "${{ inputs.rebuild }}" = "true" ] && ARGS="$ARGS --overwrite"
           python scripts/build-ride-reports.py $ARGS
 
+      # always()：產報告那步就算非零退出也要存檔。單一壞掉的 FIT 不該讓當班
+      # 抓到的檔案與已產出的報告全部丟掉（runner 是拋棄式的，沒存就沒了）。
       - name: 存檔
+        if: always()
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -94,5 +97,7 @@ jobs:
             echo "沒有變更。"
           else
             git commit -m "chore: fit sync $(date -u '+%Y-%m-%d')"
-            git push
+            # 排程實際延遲 13~56 分，跟 strava-sync 的錯開設計會失效而撞車；
+            # push 被拒就 rebase 重試，不要讓當班成果丟掉。
+            git push || (git pull --rebase && git push)
           fi
