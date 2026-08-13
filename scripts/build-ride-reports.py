@@ -42,6 +42,7 @@ NOTES = RIDES / "notes"
 TOOLS = ROOT / "tools/tcx"
 ITT = ROOT / "data/itt-segments.json"
 PLAN = ROOT / "data/plan.json"
+BLOCK = ROOT / "data/training-block.json"
 
 # 個人參數；CLI 沒給時 analyze_tcx.py 會優先讀 FIT 裡錶上的設定值
 WEIGHT = os.getenv("ATHLETE_WEIGHT", "80")
@@ -114,6 +115,67 @@ def score(fit: Path, date: str, tmp: Path) -> Path | None:
     t = res.get("total") or {}
     log(f"[評分] {date} {res['plan'].get('label')} → {t.get('score')} 分（{t.get('grade')}）")
     return out
+
+
+def fill_training_block(date: str, score_path: Path) -> None:
+    """
+    把評分結果回填進 data/training-block.json 的 sessions[].actual。
+
+    那個檔的 _howToUse 寫著「實際值(actual)在 FIT 進來後回填」，但一直沒有
+    任何東西做這件事 —— 所以 strava.html 的週期章永遠顯示「0 / 9 完成」、
+    前後測永遠是「待 08/13 建立」，即使那天早就騎完、報告也產出來了。
+
+    strava.html:3237-3311 讀的欄位契約：
+        actual = {if, tss, vi, ride, note}，CAL/POST 另加 test（前後測數值）
+    if/tss/vi 是**整趟**的數字（週期章看的是當天課表的整體強度），
+    跟報告裡逐段對帳的分數是兩回事，兩個都要有才看得出全貌。
+    """
+    if not BLOCK.exists():
+        return
+    try:
+        res = json.loads(score_path.read_text(encoding="utf-8"))
+        blk = json.loads(BLOCK.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError) as e:
+        log(f"[週期] {date} 回填略過：{e}")
+        return
+
+    sess = next((s for s in blk.get("sessions", []) if s.get("date") == date), None)
+    if sess is None:
+        return
+
+    ride = res.get("ride") or {}
+    total = res.get("total") or {}
+    # note 會取代週期章的預設副標。這裡必須把「整趟強度」與「主課表執行」的
+    # 落差講清楚 —— IF/TSS/VI 是整趟的數字，會被熱身、恢復、收操稀釋，
+    # 所以可能三項全掛（顯示 UNDER）但主課表其實執行得很好。
+    # 不寫的話又會變成用戶抱怨過的那種「看起來像在混」的誤導。
+    wt = res.get("work_time") or {}
+    pct = wt.get("pct")
+    note = f"主課表對帳 {total.get('score')} 分（{total.get('grade')}）"
+    if isinstance(pct, (int, float)):
+        note += f" · 主課表做到處方的 {pct:.0f}%"
+    actual = {
+        "if": ride.get("if"),
+        "tss": ride.get("tss"),
+        "vi": ride.get("vi"),
+        "ride": date,                      # 週期章靠這個連到 rides/<date>.html
+        "note": note,
+    }
+
+    # 前後測：只有校準日與驗收日有。取「疲勞後 20 分功率」。
+    cal = res.get("calibration") or {}
+    f20 = (cal.get("fatigued_20min") or {}).get("watts_20min")
+    if f20 is not None and sess.get("code") in ("CAL", "POST"):
+        actual["test"] = round(f20)
+
+    if sess.get("actual") == actual:
+        return
+    sess["actual"] = actual
+    tmp = BLOCK.with_suffix(".tmp")
+    tmp.write_text(json.dumps(blk, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    tmp.replace(BLOCK)
+    log(f"[週期] {date} 回填：IF {actual['if']} · TSS {actual['tss']} · VI {actual['vi']}"
+        + (f" · 前後測 {actual['test']}W" if "test" in actual else ""))
 
 
 def date_of(fit: Path) -> str | None:
@@ -334,6 +396,7 @@ def main() -> int:
                     sj = score(fit, date, tmp)
                     if sj:
                         cmd += ["--score", str(sj)]    # 報告多一張「課表對帳」
+                        fill_training_block(date, sj)  # 週期章的 actual 回填
                 r = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
                 if r.returncode != 0:
                     raise RuntimeError((r.stderr or r.stdout or "").strip()[:400])
