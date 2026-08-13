@@ -4,6 +4,22 @@
     "ignoreFiles": [
       "demo/quote-card-styles.html"
     ],
-    "ignoreValues": []
+    "ignoreValues": [
+      {
+        "rule": "bounce-easing",
+        "value": "am-btn-bounce",
+        "createdAt": "2026-08-13T11:26:47.664Z",
+        "reason": "User confirmed am-btn-bounce is intentional"
+      },
+      {
+        "rule": "codex-grid-background",
+        "value": "*",
+        "files": [
+          "activity-modal.css"
+        ],
+        "createdAt": "2026-08-13T11:26:47.705Z",
+        "reason": "User confirmed: .am-route 是路線圖底，屬 hook 規則自己認可的 map surface"
+      }
+    ]
   }
 }
