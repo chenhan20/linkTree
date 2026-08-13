@@ -1,10 +1,17 @@
 # SteveChuang · Personal Hub
 
-> 個人入口網站，整合線上履歷與 Strava 運動儀表板。
-> 部署於 GitHub Pages，每天透過 GitHub Actions 自動同步 Strava 資料（台灣時間 10:00 / 18:00 / 22:00）。
+> 個人入口網站，整合線上履歷與運動儀表板。部署於 GitHub Pages，兩條 GitHub Actions 管線每天自動更新：
 >
-> Strava 儀表板同一份資料有三個並存的視覺世界，從首頁的 STEVE 專用版那一列三選一進入：
-> **深空觀測站**（`strava.html`）、**維修站牆**（`strava_pitwall.html`）、**遙測 OPUS MAX**（`strava_opus5_max.html`）。
+> | 管線 | 排程（台灣時間） | 來源 → 產出 |
+> |---|---|---|
+> | **Strava Daily Sync** | 10:00 / 18:00 / 22:00 | Strava API → `data/strava.json` → 儀表板總覽 |
+> | **FIT Sync** | 10:30 / 22:30 | intervals.icu 的 Garmin **原始 FIT** → `data/fit/*.fit` → `rides/<date>.html` 單日訓練報告 |
+>
+> 兩條完全獨立。整條管線是純 Python / Node，**沒有任何 LLM 參與、零推論成本**。
+>
+> Strava 儀表板同一份資料有**四個**並存的視覺世界，從首頁的 STEVE 專用版那一列選一個進入：
+> **深空觀測站**（`strava.html`）、**維修站牆**（`strava_pitwall.html`）、
+> **記震紙**（`strava_helicorder.html`）、**遙測 OPUS MAX**（`strava_opus5_max.html`）。
 
 🔗 **Live：** https://chenhan20.github.io/linkTree/linkTreeIndex.html
 
@@ -19,7 +26,7 @@
 ## 🚴 Strava 儀表板 · 重點功能
 
 > 資料每天自動同步。以下截圖為**深空觀測站**（`strava.html`）的桌面版畫面；
-> 功能與資料三個世界共通，只有視覺語言不同。
+> 功能與資料四個世界共通，只有視覺語言不同。
 
 ### 星座名片 + 功率排行榜
 即時星座動畫名片（FTP / 里程 / 爬升），下方為最佳功率 PR（5s ~ 60m）排行。
@@ -58,7 +65,7 @@
 - 技能進度條動畫
 - 學歷、興趣標籤
 
-### 🚴 Strava 儀表板（三個世界共用同一份資料）
+### 🚴 Strava 儀表板（四個世界共用同一份資料）
 
 共通內容：
 - 年度總覽：里程、爬升、次數、時數
@@ -73,10 +80,15 @@
 |------|------|----------|
 | `strava.html` | 深空觀測站 | 星空背景、signal-orange、液態玻璃 + 全息傾斜 + Bento 卡片 |
 | `strava_pitwall.html` | 維修站牆 | 消光石板黑 + 粉筆白，板牌（極大字）與計時紙（密集分段秒數）兩個語域；分段計時四色（紫＝90 天內最佳／綠＝歷史 PR／黃＝比自己慢／灰＝尚未計時）是唯一彩色，且只表功能。無發光、無毛玻璃、無 webfont |
+| `strava_helicorder.html` | 記震紙 | 地震儀記錄紙：訓練連續紀錄畫成連續走紙的波形 |
 | `strava_opus5_max.html` | 遙測 OPUS MAX | 青色遙測 |
 
 `strava_aespa.html` / `strava_maple.html` / `strava_cs.html` / `strava_lol.html` / `strava_halo.html`
 是更早的五個主題頁，檔案保留、直接開網址仍可用，但不再出現在任何導覽裡。
+
+> ⚠️ **`DESIGN.md` 只管 `strava.html` 一個世界。** 設計工具對其他世界報的
+> design-system drift 是預期的，不要照著改 —— 那會把各世界拉成同一種語言。
+> 同理，任何設計指令都要指定單一檔案，不要掃全 repo。
 
 ---
 
@@ -185,7 +197,26 @@ Invoke-RestMethod -Method POST -Uri "https://www.strava.com/oauth/token" -Body $
 
 - **找 Segment ID**：Strava 網頁開啟路段，URL 中的數字 `https://www.strava.com/segments/`**`641218`**
 - **`type` 可選**：`CLIMB` / `SPRINT` / `ENDURANCE`
-- 加完後重跑 Step 5 即可，`strava.html` 不需要改
+- **`accent` 配色有語意**：山路走暖色家族（橘／琥珀／金／珊瑚），河濱平路走藍色家族。
+  不要再開第二個高飽和冷色（綠／紫／青），會跟其他版塊打架。
+
+加完之後跑兩步：
+
+```bash
+# 1. 補抓成績（Actions → Strava Daily Sync → 勾 scan_segments）
+#    它會自動改用全量並關掉 power_only，不必自己記
+# 2. 補抓路段折線與地形（本機，只抓缺的、約 3-6 次 API）
+node scripts/fetch-segment-streams.js
+node scripts/fetch-segment-terrain.js
+```
+
+> ⚠️ **不要為了新路段跑全史掃描**。全史掃描會對每趟騎乘打一次 detail API，
+> 很容易撞到 Strava 的讀取額度上限（實測就是這樣爆掉的，路段 metadata 全部沒抓到）。
+> 上面那兩支專用腳本只抓缺的路段，成本是全史掃描的零頭。
+>
+> 額度撞牆時等 15 分鐘的窗口過去再跑一次即可，已抓到的不會重抓。
+
+`strava.html` 不需要改任何一行，九條路段的卡片、3D 路線圖、自建計時都會自動出現。
 
 ---
 
@@ -196,7 +227,7 @@ Invoke-RestMethod -Method POST -Uri "https://www.strava.com/oauth/token" -Body $
 > 想像 Strava 是「便利商店」、`strava.json` 是「冰箱裡的便當」、網頁是「飯桌」。
 
 ```
-台灣時間每天三次（10:00 / 18:00 / 22:00）
+台灣時間每天三次（10:00 / 18:00 / 22:00）※ 這節只講 Strava；FIT 管線見上面「FIT 管線」章
    ↓
 機器人（GitHub Actions）拿著鑰匙去 Strava 便利商店
    ↓
@@ -310,14 +341,94 @@ rm -f power-prs.json power-prs-cache.json && $env:SCAN_POWER="1"; node scripts/f
 
 ---
 
+## 🏔 FIT 管線 · 單日訓練報告
+
+Strava 給的是**處理過**的數字；Garmin 的**原始 FIT** 才有左右平衡、錶上 FTP、
+真實功率區間邊界、逐秒功率。這條管線把原始檔拿回來，產出單日訓練報告。
+
+### 為什麼是 intervals.icu
+
+Garmin 官方 Developer API 是法人限定，個人申請不到。
+[intervals.icu](https://intervals.icu) 是 Garmin **官方核准的 partner**，
+Garmin 用官方 webhook 主動 push 活動給它，再用它的開放 API 拿原始檔即可 ——
+沒有 Garmin 帳密、沒有 MFA、沒有 Cloudflare、不挑 IP、免費。
+關鍵洞察是：**你申請不到官方 API，但可以免費用別人已經拿到的。**
+
+完整脈絡與驗證紀錄見 [docs/fit-pipeline.md](docs/fit-pipeline.md)、
+API 盤點見 [docs/intervals-api-survey.md](docs/intervals-api-survey.md)。
+
+```
+intervals.icu ──► data/fit/*.fit
+                     │
+                     ├─► analyze_tcx.py ──► render_dashboard.py ──► rides/<date>.html
+                     │                            ▲
+                     │        data/plan.json ──► score.py（課表對帳評分）
+                     │                            │
+                     │                            └─► data/training-block.json 的 actual
+                     │
+                     └─► segments.py（自建 ITT 計時，不靠 Strava）
+```
+
+### 產報告的門檻
+
+一年 150+ 趟全出會讓 `rides/` 變垃圾場，所以預設是 **有功率 且 TSS ≥ 100**，
+外加兩個例外：當天有教練評語（完全豁免）、當天有 ITT 成績（**只豁免 TSS，
+沒有功率仍然不合格**）。同一天有多個 FIT 時做同日去重，且**有功率的檔優先於無功率的**
+—— 不然肌力訓練會蓋掉同一天的騎乘報告。
+
+### 課表對帳評分
+
+報告原本用一個通用指標判斷「有沒有在練」：IF < 0.75 的時間算「移動但沒在練」。
+**那是爬坡指標** —— 爬坡低功率＝滑行＝真沒練，但平路課表的低功率是**處方寫死的**
+熱身與恢復。校準日那種協定光是熱身＋緩衝＋收操就有 40 分鐘照規定該低於門檻，
+於是指標會給出「你在爽騎」這種與事實相反的結論。
+
+現在改成：**有處方就對帳處方**（`data/plan.json`），沒有處方的自由騎才退回通用邏輯。
+逐段列出「處方 vs 實際」，規則寫成可執行的形式（例如「功率不得低於 165W 超過 10 秒」
+會真的逐秒去數並列出每次發生的時間點），四個維度各自附原始數字：
+
+| 維度 | 看什麼 |
+|---|---|
+| 執行度 | 主課段實際平均功率 vs 處方區間 |
+| 紀律 | 逐秒執行 `plan.json` 的 `rules[]` |
+| 續航 | 主課段前半 vs 後半的衰減 |
+| 迴轉 | 落在目標迴轉區間的時間佔比 |
+
+分數會回填進 `data/training-block.json` 的 `sessions[].actual`，
+儀表板的「週期」章與活動卡徽章就是讀那裡。
+
+### 自建 ITT 計時（去 Strava 化的關鍵）
+
+`tools/tcx/segments.py` 用 `data/segment-streams.json` 的折線做**垂直閘門線＋
+相鄰兩點插值**求穿越時刻（不能用半徑判定 —— 50 km/h 每秒跳 13.9 m，會整段跨過去），
+加上起點方位角同向判斷與折線中點檢查擋掉反向與抄捷徑。
+
+實測與 Strava 官方在可比的 19 筆 effort 上**全數吻合，最大差 2.0 秒**；
+新增路段第一次上場也只差 0.6 秒。而且它抓到過 Strava 沒配對到的成績 ——
+**Strava 訂閱到期後不只不會失去資料，還會拿到 Strava 沒給的。**
+
+---
+
 ## 資料檔結構
 
 | 檔案 | 角色 | 誰維護 |
 |------|------|--------|
-| `data/strava.json` | 主資料：stats / 活動清單 / ITT segments / 功率 PR | 自動 |
-| `data/itt-segments.json` | ITT 努力紀錄備份 | 自動 |
-| `data/power-prs.json` | 功率 PR 快取 | 自動 |
+| `data/strava.json` | 主資料：stats / 活動清單 / ITT segments / 功率 PR | 自動（Strava Sync） |
+| `data/itt-segments.json` | ITT 努力紀錄 | 自動（Strava Sync） |
+| `data/power-prs.json` | 功率 PR 快取 | 自動（Strava Sync） |
+| `data/segment-streams.json` | ITT 路段的官方折線（每條 140 點，給 3D 路線圖與自建偵測器） | 自動（新增路段後跑一次） |
+| `data/segment-terrain.json` | ITT 路段的地形高程（Tilezen DEM） | 自動（新增路段後跑一次） |
+| `data/fit/*.fit` | **Garmin 原始 FIT**，訓練報告與 ITT 偵測器的資料源 | 自動（FIT Sync） |
+| `data/fit/_activities.json` | 活動 metadata（**FIT 格式沒有活動名稱欄位**，標題唯一來源） | 自動（FIT Sync） |
+| `data/fit/_reports.json` | 哪些 FIT 已產過報告、用了什麼標題 | 自動（FIT Sync） |
 | **`data/itt-config.json`** | **ITT 路段設定（中文名、類型、顏色）** | **手動** |
+| **`data/plan.json`** | **課表處方（每段目標瓦數／迴轉／可執行的規則）** | **手動** |
+| **`data/training-block.json`** | **訓練週期計畫；`target` 手寫，`actual` 由 FIT Sync 回填** | **半自動** |
+| `rides/<date>.html` | 單日訓練報告 | 自動（FIT Sync） |
+| `rides/notes/<date>.json` | 教練評語（有的話標題與評語都以它為準，重生不會洗掉） | **手動** |
+
+> 名言語錄已搬到獨立 repo [steve-quotes](https://github.com/chenhan20/steve-quotes)，
+> 前端走 jsDelivr 取用，本 repo 不再存放語錄資料。
 
 ---
 
@@ -331,3 +442,36 @@ python -m http.server 8080
 ```
 
 開啟 http://localhost:8080/linkTreeIndex.html
+
+### FIT 管線的本機指令
+
+```bash
+pip install -r tools/tcx/requirements.txt      # 只需要 fitdecode
+
+# 抓 FIT（需要 INTERVALS_API_KEY）
+INTERVALS_API_KEY=xxx python3 scripts/sync-intervals.py --status
+INTERVALS_API_KEY=xxx python3 scripts/sync-intervals.py --backfill 90
+
+# 產報告（--dry-run 只看判斷不寫檔）
+python3 scripts/build-ride-reports.py --dry-run
+python3 scripts/build-ride-reports.py --only 2026-08-13 --overwrite
+
+# 單獨用某支工具
+python3 tools/tcx/score.py    data/fit/2026-08-13_*.fit --date 2026-08-13   # 課表對帳評分卡
+python3 tools/tcx/segments.py data/fit/2026-08-13_*.fit                     # 自建 ITT 計時
+```
+
+> 🍎 **macOS 專屬的坑**：python.org 的 framework build 沒有 CA bundle，
+> 任何 https 都會 `CERTIFICATE_VERIFY_FAILED`。不必裝 certifi，
+> **每個指令前面帶 `SSL_CERT_FILE=/etc/ssl/cert.pem` 就好**（系統內建的 bundle）。
+> CI 的 ubuntu runner 沒有這個問題。
+
+### 常見情境
+
+| 想做什麼 | 怎麼做 |
+|---|---|
+| 剛騎完想立刻看到報告 | Actions → **FIT Sync** → Run workflow（留空就是日常增量） |
+| 回補歷史 | 同上，`backfill` 填天數（例如 `90`） |
+| 改了活動名稱想讓報告標題跟著變 | 在 Garmin Connect 或 intervals.icu 改名即可，下次 FIT Sync 會偵測到標題變了並自動重生報告 |
+| 新增 ITT 路段 | 見上面 Step 6 |
+| 想重生所有報告 | FIT Sync 的 `rebuild` 勾起來（會保留教練評語，且肌力訓練不會蓋掉騎乘） |
