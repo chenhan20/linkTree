@@ -575,7 +575,18 @@ def _rule_min_power_hold(rule, segreps, S, P):
             else:
                 i += 1
     below = sum(r["dur_sec"] for r in runs)
-    pct = below / scope_sec * 100 if scope_sec else 0.0
+    # scope_sec == 0 表示這條規則的作用段一段都沒對到 —— 那是「無從判定」，
+    # 不是「全程守住」。給 100 分會讓一趟完全沒做課表的騎乘拿到 38.5 分，
+    # 而且 verdict 會印出「全程沒有一次低於 165W」這種假話（複驗實測）。
+    if not scope_sec:
+        return {
+            "score": None, "scored": False,
+            "detail": {"threshold_w": thr, "max_below_sec": maxb,
+                       "violations": None, "violation_sec": None,
+                       "scope_sec": 0, "pct": None},
+            "verdict": "作用段沒有對到，無從判定（不計分）",
+        }
+    pct = below / scope_sec * 100
     score = max(0.0, min(100.0, 100.0 - pct * P["below_k"]))
     runs.sort(key=lambda r: -r["dur_sec"])
     return {
@@ -856,6 +867,17 @@ def score_ride(path, date=None, plan=None, plan_path=None):
                 "detail": "data/plan.json 的 days 裡沒有 %s。這趟不套課表標準，"
                           "自由騎不該被課表打分。" % date,
                 "sport": (S["meta"] or {}).get("sport"),
+                "start_local": S["start_local"].strftime("%Y-%m-%d %H:%M")}
+
+    # 課表是騎車課表。Garmin 的跑步功率會通過 have_power 檢查，不擋的話
+    # 週二/週四改成跑步的日子會被拿騎車處方去打分（複驗實測跑步 FIT 會得 38.5 分）。
+    sport = str((S["meta"] or {}).get("sport") or "")
+    if sport and sport.lower() not in ("cycling", "biking", "ride", "virtualride"):
+        return {"scored": False, "date": date, "file": fname,
+                "reason": "不是騎乘",
+                "detail": "%s 有處方（%s），但這個檔案的運動類型是 %s。"
+                          "課表是騎車課表，不套用。" % (date, day.get("label"), sport),
+                "sport": sport,
                 "start_local": S["start_local"].strftime("%Y-%m-%d %H:%M")}
 
     if not S["have_power"]:
