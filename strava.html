@@ -10,6 +10,8 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Saira+Condensed:wght@600;700;800&display=swap">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
+/* hidden 屬性必須永遠贏過元件自己的 display（抽屜是 display:flex，沒有這條會關不掉） */
+[hidden]{display:none!important}
 
 /* ══ 計時板 · THE SPLIT BOARD ═══════════════════════════════════════
    這頁是一份計時賽的遙測紀錄，字體就取自賽道邊的分段計時板：
@@ -26,7 +28,7 @@
 }
 html,body{height:100%;font-family:var(--f-ui);background:#0a0408;color:#ddd}
 /* 數字是這頁的主角：一律走計時板字體，並鎖等寬數字避免滾動時抖寬 */
-.ds-num,.board-num,.total-val,.fc-time,.pm-dial-val,.stat-val{
+.ds-num,.board-num,.fc-time,.pm-dial-val,.row-v,.vval,.ac-n,.activity-dist,.ir-t{
   font-family:var(--f-num);font-variant-numeric:tabular-nums;
   font-feature-settings:"tnum" 1;font-weight:800;
 }
@@ -74,118 +76,184 @@ html,body{height:100%;font-family:var(--f-ui);background:#0a0408;color:#ddd}
   .df-neb.a,.df-neb.b,.df-aur{animation:none}
 }
 
-#app{position:relative;z-index:2;min-height:100vh;max-width:800px;margin:0 auto;padding:0 1.2rem 5rem}
+/* ══ APP SHELL ═══════════════════════════════════════════════════════
+   2026-08-14：一章一屏的捲動故事整組退役，改成真正的 app —— 左側常駐導覽、
+   右側單一 view，切換不捲動。這頁已經不是一篇故事，是每天會打開的工具：
+   進來的人心裡already有目的（我要看 ITT／我要找昨天那趟），不該逼他從第一章找起。
+   ── 舊架構留下的東西全部拆掉：scroll-snap、wheel 攔截、章節幾何量測、
+      ResizeObserver、右側章節軌、頂部進度條、往下 N 章的 cue。 */
+:root{
+  --side-w:188px;
+  --main-max:1140px;
+  --hair:rgba(255,255,255,.065);
+  --hair-2:rgba(255,255,255,.11);
+  --sig-hair:rgba(252,76,2,.14);
+  --surface:rgba(255,255,255,.02);
+}
+.app{position:relative;z-index:2;display:grid;grid-template-columns:var(--side-w) minmax(0,1fr);min-height:100vh}
 
-/* ── topbar ── */
-.topbar{
-  position:sticky;top:0;z-index:10;
-  display:flex;align-items:center;gap:12px;
-  padding:14px 1.2rem;margin:0 -1.2rem;
-  border-bottom:1px solid rgba(252,76,2,.15);
-  background:rgba(6,8,16,.95);
-  backdrop-filter:blur(8px);
+/* ── 側欄：非常安靜。導覽只有五項，不需要圖示、不需要卡片、不需要玻璃 ── */
+.side{
+  position:sticky;top:0;align-self:start;height:100vh;
+  display:flex;flex-direction:column;
+  padding:22px 12px 16px;border-right:1px solid var(--hair);
+  background:rgba(7,4,3,.86);
 }
-.back-btn{
-  display:flex;align-items:center;gap:6px;
-  background:rgba(252,76,2,.1);border:1px solid rgba(252,76,2,.3);
-  border-radius:20px;padding:6px 14px;
-  color:#FC4C02;font-size:13px;font-weight:500;
-  cursor:pointer;text-decoration:none;transition:background .2s;
-  -webkit-tap-highlight-color:transparent;
+.side-brand{
+  padding:0 9px;margin-bottom:24px;line-height:1.35;
+  font-size:11.5px;font-weight:800;letter-spacing:3.2px;color:var(--ink-1);
 }
-.back-btn:hover{background:rgba(252,76,2,.2)}
-.topbar-title{font-size:12px;color:rgba(252,76,2,.55);letter-spacing:2.5px;text-transform:uppercase;flex:1;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
-
-/* ── chapter scroll system: 一次手勢＝一章 ──────────────────────────
-   滾輪／觸控滑一下就落到下一章，靠的是原生 scroll-snap，不劫持滾輪事件：
-   `mandatory` 讓每章都是停靠點，`scroll-snap-stop:always` 保證快滑也不會一次跳過兩章。
-   高過一屏的章節（ITT、活動紀錄）由 JS 掛上 .ch-tall —— 規格允許「停靠區大於視窗時，
-   視窗可停在區內任一處」，所以那兩章仍可自由捲讀，不會被 snap 卡在開頭。 */
-/* snap 用 proximity 不用 mandatory：mandatory 會把「不到半屏」的手勢整個彈回原點，
-   而滑鼠滾輪一格只有 ~120px，撥一兩下頁面完全不動 —— 那就是「卡」的來源（實測 300px 手勢：0→0）。
-   翻章交給下面的 initChapterPager 接管 wheel；proximity 只負責觸控甩動與收尾對齊。 */
-html{scroll-behavior:smooth;scroll-snap-type:y proximity}
-.chapter{
-  position:relative;scroll-snap-align:start;scroll-snap-stop:always;scroll-margin-top:64px;
-  /* 每章一屏，內容垂直置中 —— 沿用甲板本來就有的作法，短章節才不會頂在上緣留一片空 */
-  min-height:100svh;
-  display:flex;flex-direction:column;justify-content:center;
-  justify-content:safe center;   /* 內容比視窗高時不要把上緣推出可捲範圍 */
-  padding-block:clamp(40px,7svh,84px);
+.side-brand small{display:block;font-size:8.5px;font-weight:700;letter-spacing:2.8px;color:rgba(252,76,2,.62);margin-top:2px}
+.nav{display:flex;flex-direction:column;gap:1px}
+.nav-i{
+  display:flex;align-items:center;gap:9px;width:100%;
+  padding:7px 9px;border:0;border-radius:6px;background:transparent;
+  font-family:inherit;font-size:12.5px;font-weight:600;letter-spacing:.5px;
+  color:var(--ink-2);text-align:left;cursor:pointer;
+  transition:background .13s,color .13s;-webkit-tap-highlight-color:transparent;
 }
-/* 高過一屏的章節：改回上對齊，留白也收緊 —— 它們是拿來讀的，不是一屏一格的 story。
-   停靠點保留（捲得到），但不強制 stop：卡在邊界上的章節（例如月度量只多出一百多 px）
-   若也 always，使用者會覺得最後一段被黏住捲不完。 */
-.chapter.ch-tall{
-  justify-content:flex-start;
-  scroll-snap-stop:normal;
-  padding-block:clamp(24px,4svh,48px);
+.nav-i i{width:4px;height:4px;border-radius:50%;background:transparent;flex:none;transition:background .13s,box-shadow .13s}
+.nav-i:hover{background:rgba(255,255,255,.04);color:var(--ink-1)}
+.nav-i:focus-visible{outline:1px solid rgba(252,76,2,.6);outline-offset:1px}
+.nav-i[aria-current="page"]{background:rgba(252,76,2,.07);color:#FC4C02}
+.nav-i[aria-current="page"] i{background:#FC4C02;box-shadow:0 0 6px rgba(252,76,2,.75)}
+.nav-i em{margin-left:auto;font-style:normal;font-size:8.5px;letter-spacing:1.6px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+/* ── 狀態儀表（側欄常駐）──
+   側欄先前有 501 px（62%）是空的。這裡放的是「看任何一章時都成立的脈絡」：
+   現在的疲勞狀態、體能走向、今天該練什麼。刻意做得比主區暗一階 —— 它是背景資訊，
+   不該跟正在看的那一章搶注意力。 */
+.rdy{margin-top:20px;display:flex;flex-direction:column;gap:9px;min-height:0}
+.rdy-hd{
+  display:flex;justify-content:space-between;align-items:baseline;padding:0 9px;
+  font-size:8.5px;letter-spacing:2.4px;text-transform:uppercase;color:var(--ink-3)
 }
-@supports not (min-height:100svh){.chapter{min-height:100vh}}
-
-/* 量測窗口：每章開頭先說清楚「這段數字涵蓋多長的時間」。
-   從絕對定位的 ::after 改成真正的流內元素，否則內容垂直置中後它會孤零零留在上緣。 */
-.ch-win{
-  flex:0 0 auto;margin-bottom:14px;
-  pointer-events:none;user-select:none;white-space:nowrap;
-  font-size:10px;font-weight:600;letter-spacing:3.4px;line-height:1;
-  color:var(--ink-3);text-transform:uppercase;
+.rdy-hd span{letter-spacing:1px;font-variant-numeric:tabular-nums}
+.rdy-tsb{padding:0 9px;line-height:1}
+.rdy-tsb b{
+  display:block;font-family:var(--f-num,inherit);font-size:30px;font-weight:800;
+  letter-spacing:-.5px;font-variant-numeric:tabular-nums;color:var(--ink-1)
 }
-@media(max-width:520px){
-  .chapter{padding-block:clamp(32px,6svh,64px)}
-  .ch-win{font-size:9px;letter-spacing:2.4px;margin-bottom:11px}
+.rdy-tsb span{display:block;margin-top:3px;font-size:9px;letter-spacing:1.6px;color:var(--ink-3)}
+.rdy-tsb.rdy-fresh b{color:#4ad07a}
+.rdy-tsb.rdy-ok    b{color:var(--ink-1)}
+.rdy-tsb.rdy-tired b{color:#ffb020}
+.rdy-tsb.rdy-deep  b{color:#FC4C02}
+.rdy-spark{display:block;width:calc(100% - 18px);margin:2px 9px 0;height:34px;overflow:visible}
+.rdy-spark path{fill:none;stroke-width:1.4;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke}
+.rdy-spark .rdy-ctl{stroke:#FC4C02}
+.rdy-spark .rdy-atl{stroke:rgba(255,255,255,.28);stroke-dasharray:3 3}
+.rdy-cta{
+  display:flex;gap:8px;padding:0 9px;font-size:9px;letter-spacing:.6px;
+  color:var(--ink-3);font-variant-numeric:tabular-nums
 }
-.chapter>*{position:relative;z-index:1}
-/* 章節進場：expo-out 上升，子元素階梯錯拍 */
-.chapter:not(.hero-deck)>*{
-  opacity:0;transform:translateY(26px);
-  transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1);
+.rdy-cta em{margin-left:auto;font-style:normal;opacity:.7}
+.rdy-row{
+  display:grid;grid-template-columns:34px 1fr auto;align-items:baseline;gap:6px;
+  padding:2px 9px;font-size:10.5px;color:var(--ink-3)
 }
-.chapter>*:nth-child(2){transition-delay:.09s}
-.chapter>*:nth-child(3){transition-delay:.18s}
-.chapter>*:nth-child(4){transition-delay:.27s}
-.chapter>*:nth-child(n+5){transition-delay:.36s}
-.chapter.in>*{opacity:1;transform:none}
-
-/* Apple 式平移：進出場都由捲動位置直接驅動（跑在合成緒上，不經 rAF／IntersectionObserver）。
-   終態就是 CSS 預設值，所以不支援 view() 的瀏覽器直接看到完整內容 —— 動畫純屬疊加。 */
-@supports (animation-timeline: view()){
-  @media (prefers-reduced-motion: no-preference){
-    /* 交給捲動時間軸，就不要再讓 IO 的 transition 插手同一批屬性 */
-    .chapter:not(.hero-deck)>*{opacity:1;transform:none;transition:none}
-    .chapter:not(.hero-deck):not(.ch-tall)>*{
-      animation:chPan linear both;
-      animation-timeline:view();
-      animation-range:cover 0% cover 100%;
-    }
-    @keyframes chPan{
-      0%  {opacity:0;transform:translateY(64px) scale(.975)}
-      26% {opacity:1;transform:none}
-      74% {opacity:1;transform:none}
-      100%{opacity:.16;transform:translateY(-46px) scale(.985)}
-    }
+.rdy-row b{color:var(--ink-2);font-weight:700;font-variant-numeric:tabular-nums}
+.rdy-row em{font-style:normal;font-size:8px;letter-spacing:.6px;opacity:.55;font-variant-numeric:tabular-nums}
+.rdy-blk{margin-top:6px;padding:9px 9px 0;border-top:1px solid var(--hair)}
+.rdy-blk-t{
+  display:flex;justify-content:space-between;align-items:baseline;gap:6px;
+  font-size:10.5px;font-weight:700;color:var(--ink-2)
+}
+.rdy-blk-t span{font-size:8.5px;font-weight:600;letter-spacing:1px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.rdy-bar{height:3px;margin:6px 0 8px;border-radius:2px;background:rgba(255,255,255,.09);overflow:hidden}
+.rdy-bar i{display:block;height:100%;background:#FC4C02;box-shadow:0 0 6px rgba(252,76,2,.5)}
+.rdy-next{display:flex;flex-direction:column;gap:1px;font-size:10px;color:var(--ink-3)}
+.rdy-next-w{font-size:8.5px;letter-spacing:1.4px;text-transform:uppercase;opacity:.8}
+.rdy-next b{font-size:11px;color:var(--ink-2);font-weight:700}
+.rdy-next em{font-style:normal;font-size:9px;opacity:.75;font-variant-numeric:tabular-nums}
+/* 手機：側欄整個 display:none，子元素逃不出去，所以同一份 HTML 在 Overview 章首再掛一次 */
+#rdy-mobile{display:none}
+@media(max-width:767px){
+  #rdy-mobile{display:block;margin-bottom:14px}
+  #rdy-mobile .rdy{
+    margin-top:0;padding:14px 4px;border:1px solid var(--hair);border-radius:10px;
+    background:rgba(255,255,255,.02)
   }
 }
-/* 標題底線在章節抵達時掃過 —— 畫成一條有刻度的量尺，呼應計時板的主題 */
-.chapter .section-title{position:relative;border-bottom-color:rgba(252,76,2,.07)}
-.chapter .section-title::after{
+
+.side-foot{margin-top:auto;padding-top:13px;border-top:1px solid var(--hair);display:flex;flex-direction:column;gap:1px}
+.side-lnk{
+  display:block;padding:6px 9px;border-radius:6px;text-decoration:none;
+  font-size:11px;letter-spacing:1.2px;color:var(--ink-3);transition:background .13s,color .13s;
+}
+.side-lnk:hover{background:rgba(255,255,255,.04);color:var(--ink-1)}
+
+/* ── 主區：極薄的 app chrome，不是 landing navbar ── */
+.main{min-width:0;display:flex;flex-direction:column}
+.apphead{
+  position:sticky;top:0;z-index:9;display:flex;align-items:center;gap:12px;
+  height:44px;padding:0 26px;border-bottom:1px solid var(--hair);
+  background:rgba(9,5,3,.93);
+}
+.ah-t{font-size:9.5px;font-weight:700;letter-spacing:2.6px;text-transform:uppercase;color:var(--ink-2);white-space:nowrap}
+.ah-t::before{content:'Steve / ';color:var(--ink-3)}
+.ah-s{font-size:9.5px;letter-spacing:1.4px;color:var(--ink-3);min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.ah-r{margin-left:auto;font-size:9.5px;letter-spacing:1.8px;color:var(--ink-3);font-variant-numeric:tabular-nums;white-space:nowrap}
+.viewport{flex:1;min-width:0;padding:26px 26px 72px}
+.view{display:none;max-width:var(--main-max);margin:0 auto}
+.view.is-on{display:block}
+@media (prefers-reduced-motion: no-preference){
+  .view.is-on{animation:viewIn .16s cubic-bezier(.2,.8,.3,1) both}
+  @keyframes viewIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+}
+
+/* View 的簽名表頭：全站每個 view 只出現這一次量尺 */
+.view-h{position:relative;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;
+  padding-bottom:11px;margin-bottom:22px;border-bottom:1px solid var(--sig-hair)}
+.view-h b{font-size:19px;font-weight:700;letter-spacing:.6px;color:var(--ink-1)}
+.view-h i{font-style:normal;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:rgba(252,76,2,.62)}
+.view-h span{margin-left:auto;font-size:10px;letter-spacing:1.6px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.view-h::after{
   content:'';position:absolute;left:0;bottom:-1px;height:4px;width:100%;
   background:
     linear-gradient(90deg,#FC4C02,rgba(252,76,2,.05)) left bottom/100% 1px no-repeat,
     repeating-linear-gradient(90deg,rgba(252,76,2,.5) 0 1px,transparent 1px 12px) left bottom/100% 4px no-repeat;
-  transform:scaleX(0);transform-origin:left center;
-  transition:transform 1s cubic-bezier(.16,1,.3,1) .2s;
 }
-.chapter.in .section-title::after{transform:scaleX(1)}
+.view-sub{margin:-14px 0 22px;font-size:11.5px;line-height:1.7;color:var(--ink-3);max-width:70ch}
 
-/* ── chapter 00: observation deck（首屏） ── */
-.hero-deck{
-  min-height:calc(100vh - 128px);
-  min-height:calc(100svh - 128px);
-  display:flex;flex-direction:column;justify-content:center;gap:20px;
-  padding:18px 0 12px;
+/* ── 手機：底部固定導覽，五個都是 primary destination，不做漢堡選單 ── */
+.tabbar{display:none}
+@media(max-width:1023px){
+  .app{grid-template-columns:148px minmax(0,1fr)}
+  .side-brand{font-size:10.5px;letter-spacing:2.4px}
+  .nav-i{font-size:12px;padding:7px}
+  .viewport{padding:22px 18px 64px}
 }
-.hero-deck .rider-card{flex:0 0 auto}
+@media(max-width:767px){
+  .app{grid-template-columns:1fr}
+  .side{display:none}
+  /* 手機的 app chrome 只放得下「在哪個 view」＋「資料多新」，中文副標讓位 */
+  .apphead{padding:0 14px;height:42px;gap:8px}
+  .ah-s{display:none}
+  .ah-r{font-size:9px;letter-spacing:1.2px}
+  .viewport{padding:16px 14px calc(78px + env(safe-area-inset-bottom,0px))}
+  .tabbar{
+    display:grid;grid-template-columns:repeat(5,1fr);
+    position:fixed;left:0;right:0;bottom:0;z-index:30;
+    border-top:1px solid var(--hair-2);background:rgba(8,4,3,.97);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  .tab-i{
+    display:flex;flex-direction:column;align-items:center;gap:4px;
+    padding:9px 2px 8px;border:0;background:transparent;cursor:pointer;font-family:inherit;
+    font-size:9.5px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;
+    color:var(--ink-3);-webkit-tap-highlight-color:transparent;
+  }
+  .tab-i i{display:block;width:14px;height:2px;border-radius:2px;background:transparent;transition:background .13s}
+  .tab-i[aria-current="page"]{color:#FC4C02}
+  .tab-i[aria-current="page"] i{background:#FC4C02;box-shadow:0 0 6px rgba(252,76,2,.7)}
+  #to-top-btn{bottom:calc(84px + env(safe-area-inset-bottom,0px))!important}
+}
+
+/* 舊的 .chapter / .hero-deck / .ch-win / #prog / #rail 整組已移除（見 APP SHELL 註解）。
+   捲動交還瀏覽器原生：沒有 scroll-snap、沒有 wheel 攔截、沒有章節幾何量測。 */
+html{scroll-behavior:smooth}
+.block{margin-bottom:34px}
+.block:last-child{margin-bottom:0}
 
 /* ── 分段計時板讀數（住在出發名單卡裡）──
    原本四格等寬的甲板讓四個數字互相抵消，誰都不是重點。
@@ -243,27 +311,6 @@ button.deck-stat:hover{background:rgba(252,76,2,.1)}
 button.deck-stat:focus-visible{outline:2px solid #FC4C02;outline-offset:-2px;border-radius:0}
 .ds-hint{position:absolute;right:10px;bottom:7px;font-size:8px;letter-spacing:1.5px;color:rgba(252,76,2,.6);transition:color .2s;text-transform:uppercase}
 button.deck-stat:hover .ds-hint{color:#FC4C02}
-.deck-cue{
-  align-self:center;margin-top:2px;background:transparent;border:none;cursor:pointer;font-family:inherit;
-  font-size:10px;letter-spacing:3px;color:rgba(252,76,2,.85);text-transform:uppercase;
-  display:flex;flex-direction:column;align-items:center;gap:8px;padding:8px 16px;
-  transition:color .2s;
-}
-.deck-cue:hover{color:#FC4C02}
-.deck-cue:focus-visible{outline:1px solid rgba(252,76,2,.6);outline-offset:4px;border-radius:6px}
-.deck-cue i{width:1px;height:32px;background:linear-gradient(180deg,rgba(252,76,2,.7),transparent);position:relative;display:block}
-.deck-cue i::after{
-  content:'';position:absolute;left:-2px;top:0;width:5px;height:5px;border-radius:50%;
-  background:#FC4C02;box-shadow:0 0 8px rgba(252,76,2,.8);
-  animation:cueDrop 1.8s cubic-bezier(.6,0,.4,1) infinite;
-}
-@keyframes cueDrop{
-  0%{transform:translateY(0);opacity:0}
-  25%{opacity:1}
-  80%{opacity:1}
-  100%{transform:translateY(28px);opacity:0}
-}
-@media(max-height:640px){.deck-cue i{height:18px}}
 @media(max-width:640px){
   .board-tape{margin:12px -14px 0}
   .deck-strip{margin:0 -14px}
@@ -275,30 +322,9 @@ button.deck-stat:hover .ds-hint{color:#FC4C02}
   .ds-hint{font-size:7px;right:7px;bottom:5px;letter-spacing:1px}
 }
 
-/* ── scroll progress + chapter rail ── */
-#prog{
-  position:fixed;top:0;left:0;height:2px;width:0;z-index:40;pointer-events:none;
-  background:linear-gradient(90deg,#FC4C02,#ffb066);box-shadow:0 0 8px rgba(252,76,2,.55);
-}
-#rail{position:fixed;right:14px;top:50%;transform:translateY(-50%);z-index:30;display:none;flex-direction:column;gap:5px}
-@media(min-width:1000px){#rail{display:flex}}
-#rail a{display:flex;align-items:center;justify-content:flex-end;gap:8px;text-decoration:none;padding:3px 2px;border-radius:6px}
-#rail a i{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.22);transition:background .25s,box-shadow .25s,transform .25s;flex-shrink:0}
-#rail a span{
-  font-size:9px;letter-spacing:1.5px;color:rgba(255,255,255,.6);text-transform:uppercase;
-  opacity:0;transform:translateX(6px);transition:opacity .25s,transform .25s;white-space:nowrap;
-}
-#rail a:hover span,#rail a:focus-visible span,#rail a.act span{opacity:1;transform:none}
-#rail a:hover i{background:rgba(255,255,255,.5)}
-#rail a.act i{background:#FC4C02;box-shadow:0 0 10px rgba(252,76,2,.8);transform:scale(1.25)}
-#rail a.act span{color:#FC4C02}
-#rail a:focus-visible{outline:1px solid rgba(252,76,2,.6)}
-
 @media (prefers-reduced-motion: reduce){
-  html{scroll-behavior:auto;scroll-snap-type:none}
-  .chapter:not(.hero-deck)>*,.chapter::after{opacity:1;transform:none;transition:none}
-  .chapter .section-title::after{transform:scaleX(1);transition:none}
-  .deck-cue i::after{animation:none}
+  html{scroll-behavior:auto}
+  .view.is-on{animation:none}
 }
 
 .verified{width:20px;height:20px;fill:#FC4C02;flex-shrink:0}
@@ -383,41 +409,6 @@ button.deck-stat:hover .ds-hint{color:#FC4C02}
   .rc-year{font-size:18px}
   .rc-foot{font-size:8.5px;letter-spacing:1.2px}
 }
-
-/* ── stats grid ── */
-.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:2.2rem}
-.stat-card{
-  padding:1rem 1rem 1.1rem;border-radius:10px;
-  border:1px solid rgba(252,76,2,.2);background:rgba(252,76,2,.05);
-}
-.stat-val{font-size:34px;color:#FF6B35;line-height:.9;letter-spacing:-.5px}
-.stat-unit{font-size:10px;color:rgba(252,76,2,.55);margin-top:3px}
-.stat-label{font-size:12px;color:#bbb;margin-bottom:9px;letter-spacing:.5px}
-.stat-metrics{display:flex;align-items:flex-start;gap:0}
-.stat-metric{flex:1;min-width:0}
-.stat-vdiv{width:1px;background:rgba(252,76,2,.15);align-self:stretch;margin:2px 10px 6px;flex-shrink:0}
-
-/* ── monthly consistency ── */
-.consistency-list{display:flex;flex-direction:column;gap:10px;margin-bottom:2.2rem}
-.consistency-row{
-  display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;
-  padding:.7rem .9rem;border-radius:9px;
-  border:1px solid rgba(252,76,2,.15);background:rgba(10,4,0,.4);
-}
-.consistency-name{font-size:13px;color:#eeebe8;display:flex;align-items:center;gap:6px;white-space:nowrap}
-.consistency-name .count{font-size:12px;color:#aaa;margin-left:4px}
-.consistency-name .count b{color:#FC4C02;font-weight:600}
-.progress-bar{position:relative;height:8px;border-radius:6px;background:rgba(252,76,2,.1);overflow:hidden}
-.progress-fill{height:100%;border-radius:6px;width:0;transition:width .8s cubic-bezier(.25,.46,.45,.94)}
-.progress-fill.danger {background:linear-gradient(90deg,#7a1010,#c83232)}
-.progress-fill.warning{background:linear-gradient(90deg,#7a5510,#e0a020)}
-.progress-fill.done   {background:linear-gradient(90deg,#1e6b1e,#3fcc4a)}
-.progress-fill.over   {background:linear-gradient(90deg,#992b00,#FC4C02,#ff7040)}
-.status-badge{font-size:10px;padding:3px 8px;border-radius:10px;white-space:nowrap;letter-spacing:.5px}
-.status-badge.danger {background:rgba(220,60,60,.12);color:#e06060;border:1px solid rgba(220,60,60,.3)}
-.status-badge.warning{background:rgba(224,160,32,.12);color:#e0b040;border:1px solid rgba(224,160,32,.3)}
-.status-badge.done   {background:rgba(63,204,74,.12);color:#5fd060;border:1px solid rgba(63,204,74,.3)}
-.status-badge.over   {background:rgba(252,76,2,.15);color:#ff7040;border:1px solid rgba(252,76,2,.4);font-size:13px;font-weight:700;letter-spacing:0}
 
 /* ── 訓練現況：本月訓練量 × 月度紀律 × 本週任務 合併 ──────────────
    這三章原本各佔一屏，但迭代的是同一組四個運動 —— 等於同一張表被拆成三個畫面，
@@ -601,55 +592,6 @@ button.deck-stat:hover .ds-hint{color:#FC4C02}
 .mc-test.is-pr{border-color:rgba(255,215,0,.45);background:rgba(255,215,0,.06)}
 .mc-test.is-pr .mc-test-v b,.mc-test.is-pr .mc-test-s{color:#FFD700}
 
-.mc-list{display:flex;flex-direction:column;gap:7px}
-.mc-s{
-  display:block;padding:12px 13px;border-radius:10px;text-decoration:none;color:inherit;
-  border:1px solid rgba(255,255,255,.12);background:rgba(10,4,0,.45);
-  transition:background .15s ease,border-color .15s ease;
-}
-.mc-s.is-ok,.mc-s.is-over{border-color:rgba(95,208,96,.3)}
-.mc-s.is-under{border-color:rgba(255,106,106,.3)}
-.mc-s.is-sched,.mc-s.is-missed{opacity:.72}
-.mc-s.is-next{
-  border-color:rgba(252,76,2,.55);
-  box-shadow:0 0 8px rgba(252,76,2,.18),inset 0 0 0 1px rgba(252,76,2,.18);
-}
-.mc-s.has-link{cursor:pointer}
-.mc-s.has-link:hover{background:rgba(252,76,2,.08)}
-
-.mc-s-top{display:flex;align-items:baseline;gap:8px}
-.mc-wk{
-  flex:none;font-family:var(--f-ui);font-size:9px;font-weight:700;letter-spacing:1.6px;
-  color:#FC4C02;border:1px solid rgba(252,76,2,.3);border-radius:4px;padding:2px 6px;
-}
-.mc-nm{font-size:13px;font-weight:700;color:var(--ink-1);min-width:0}
-.mc-dt{
-  margin-left:auto;flex:none;font-size:10px;letter-spacing:1px;
-  color:var(--ink-3);font-variant-numeric:tabular-nums;
-}
-.mc-dt i{font-style:normal;color:#FC4C02;margin-left:2px}
-.mc-plan{font-size:11px;line-height:1.5;color:var(--ink-2);margin:6px 0 9px}
-.mc-res{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.mc-sub{font-size:9px;letter-spacing:.4px;color:var(--ink-3)}
-.mc-nums{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
-.mc-m{
-  font-size:10px;letter-spacing:.6px;color:var(--ink-3);
-  border:1px solid rgba(255,255,255,.14);border-radius:4px;padding:2px 6px;
-  font-variant-numeric:tabular-nums;
-}
-.mc-m b{font-weight:700;font-size:12px;margin-left:2px}
-.mc-m i{font-style:normal;margin-left:4px}
-.mc-m.ok{color:#5FD060;border-color:rgba(95,208,96,.35);background:rgba(95,208,96,.08)}
-.mc-m.no{color:#FF6A6A;border-color:rgba(255,106,106,.35);background:rgba(255,106,106,.08)}
-.mc-tgt{margin-left:auto;font-size:10px;letter-spacing:.6px;color:var(--ink-3);font-variant-numeric:tabular-nums}
-
-.status-badge.mc-b-ok{background:rgba(95,208,96,.12);color:#5FD060;border:1px solid rgba(95,208,96,.3)}
-.status-badge.mc-b-over{background:rgba(95,208,96,.14);color:#5FD060;border:1px solid rgba(95,208,96,.45);box-shadow:0 0 8px rgba(95,208,96,.2)}
-.status-badge.mc-b-under{background:rgba(255,106,106,.12);color:#FF6A6A;border:1px solid rgba(255,106,106,.3)}
-.status-badge.mc-b-next{background:rgba(252,76,2,.15);color:#FC4C02;border:1px solid rgba(252,76,2,.45);box-shadow:0 0 8px rgba(252,76,2,.18)}
-.status-badge.mc-b-sched{background:transparent;color:var(--ink-3);border:1px solid rgba(255,255,255,.14)}
-.status-badge.mc-b-missed{background:transparent;color:var(--ink-3);border:1px solid rgba(255,106,106,.2)}
-
 @media(max-width:520px){
   .console{padding:15px 14px 14px}
   .console-tape{margin:14px -14px 12px}
@@ -660,50 +602,8 @@ button.deck-stat:hover .ds-hint{color:#FC4C02}
   .mc-test{gap:10px;padding:13px 14px}
   .mc-test-v{font-size:28px}
   .mc-test-s{margin-left:0;width:100%}
-  .mc-nums,.mc-tgt{margin-left:0;width:100%}
 }
 
-/* ── weekly quest tiles ── */
-.quest-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:2.4rem}
-@media(max-width:360px){.quest-grid{grid-template-columns:1fr}}
-.quest-tile{padding:30px 20px 26px;border-radius:14px;text-align:center;background:rgba(20,8,2,.7);border:1px solid rgba(252,76,2,.18);user-select:none}
-.quest-tile.on{background:rgba(63,204,74,.1);border-color:rgba(63,204,74,.35)}
-.quest-tile .qico{font-size:40px;display:block;margin-bottom:14px;filter:grayscale(1);opacity:.4}
-.quest-tile.on .qico{filter:none;opacity:1}
-.quest-tile .qlabel{font-size:12px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.35)}
-.quest-tile.on .qlabel{color:rgba(63,204,74,.75)}
-.quest-tile .qcheck{font-size:20px;margin-top:12px;color:rgba(255,255,255,.2)}
-.quest-tile.on .qcheck{color:#5fd060}
-.quest-tile .qprog-wrap{margin:12px auto 0;width:75%;height:5px;border-radius:5px;background:rgba(252,76,2,.15)}
-.quest-tile .qprog-fill{height:100%;border-radius:5px;background:rgba(252,76,2,.65);transition:width .6s ease}
-.quest-tile .qpct{font-size:11px;margin-top:6px;color:rgba(252,76,2,.65);letter-spacing:.5px}
-.quest-tile .qdetail{font-size:10px;margin-top:4px;color:rgba(255,255,255,.35);letter-spacing:.3px}
-@media(max-width:600px){
-  .quest-tile{padding:18px 12px 16px;border-radius:10px}
-  .quest-tile .qico{font-size:28px;margin-bottom:8px}
-  .quest-tile .qlabel{font-size:10px;letter-spacing:2.5px}
-  .quest-tile .qcheck{font-size:16px;margin-top:8px}
-  .quest-tile .qprog-wrap{height:3px;border-radius:3px;margin-top:8px}
-  .quest-tile .qprog-fill{border-radius:3px}
-  .quest-tile .qpct{font-size:9px;margin-top:4px}
-}
-/* OR dual-progress for ride/run tiles */
-.qprog-or{display:flex;gap:10px;margin:12px auto 0;width:86%}
-.qprog-or-slot{flex:1;min-width:0}
-.qprog-or-lbl{font-size:9px;letter-spacing:1.5px;color:rgba(255,255,255,.28);margin-bottom:4px;text-align:center}
-.qprog-or-lbl.met{color:rgba(63,204,74,.85)}
-.qprog-or-bar{height:5px;border-radius:5px;background:rgba(252,76,2,.18)}
-.qprog-or-fill{height:100%;border-radius:5px;background:rgba(252,76,2,.65);transition:width .6s ease}
-.qprog-or-slot.met .qprog-or-bar{background:rgba(63,204,74,.2)}
-.qprog-or-slot.met .qprog-or-fill{background:rgba(63,204,74,.75)}
-.qprog-or-val{font-size:10px;margin-top:5px;text-align:center;color:rgba(255,255,255,.28);letter-spacing:.3px}
-.qprog-or-slot.met .qprog-or-val{color:rgba(63,204,74,.7)}
-@media(max-width:600px){.qprog-or{gap:6px;margin-top:8px;width:90%}.qprog-or-lbl{font-size:7px;margin-bottom:2px}.qprog-or-bar{height:3px;border-radius:3px}.qprog-or-fill{border-radius:3px}.qprog-or-val{font-size:8px;margin-top:3px}}
-/* SUPER: both OR conditions met → gold */
-.quest-tile.super{background:rgba(255,196,0,.13)!important;border-color:rgba(255,196,0,.55)!important;box-shadow:0 0 20px rgba(255,196,0,.2)!important}
-.quest-tile.super .qlabel{color:rgba(255,210,0,.95)!important}
-.quest-tile.super .qico{filter:none!important;opacity:1!important}
-.quest-tile.super .qcheck{color:#ffd700!important;font-size:20px!important}
 /* act highlight flash */
 .act-highlight{animation:actFlash .9s ease-out}
 @keyframes actFlash{0%,40%{background:rgba(252,76,2,.18);border-color:rgba(252,76,2,.5)}100%{background:inherit;border-color:inherit}}
@@ -711,25 +611,277 @@ button.deck-stat:hover .ds-hint{color:#FC4C02}
 .activity-name-wrap{display:flex;align-items:center;gap:8px;min-width:0;margin-bottom:0}
 .lap-toggle{background:transparent;border:none;color:rgba(252,76,2,.6);font-size:10px;cursor:pointer;padding:2px 4px;letter-spacing:.5px;display:inline-block}
 .lap-toggle:hover{color:#FC4C02}
+.lap-toggle:focus-visible{outline:1px solid rgba(252,76,2,.6);outline-offset:2px;border-radius:4px}
+/* 收起的路段挑戰：一行安靜的摘要，點了開抽屜 —— 它自己永遠留在原地不動 */
+.itt-more{
+  display:block;width:100%;margin-top:4px;padding:5px 0 5px 12px;
+  border-left:2px solid var(--hair-2);border-radius:0;
+  font-size:10px;letter-spacing:.8px;color:var(--ink-3);text-align:left;
+  transition:color .13s,border-color .13s;
+}
+.itt-more:hover{color:#FC4C02;border-left-color:rgba(252,76,2,.5)}
+/* 抽屜裡的逐次挑戰：分組標題 + 一次一列 */
+.dw-h4n{float:right;font-weight:400;letter-spacing:1.4px;color:var(--ink-3);opacity:.8}
+.ittd{
+  display:grid;grid-template-columns:minmax(0,1fr) 3.8rem;gap:1px 10px;
+  padding:6px 0;border-bottom:1px solid var(--hair);
+}
+.ittd-l{font-size:12px;color:var(--ink-2);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ittd-t{font-family:var(--f-num);font-size:15px;font-weight:800;color:var(--ink-1);
+  font-variant-numeric:tabular-nums;text-align:right;letter-spacing:-.2px}
+.ittd-m{grid-column:1/-1;font-size:9.5px;letter-spacing:.6px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.ittd.is-pr .ittd-l{color:#FFD700}
+.ittd.is-pr .ittd-t{color:#FFD700;text-shadow:0 0 12px rgba(255,215,0,.35)}
 
 /* ── section title ──
-   中文標題拿回應有的份量（原本 11px 全大寫，跟旁邊的標籤分不出層級）；
-   拉丁副標退成髮絲字，橘色只留給它，中文走中性墨色。 */
+   view 表頭（.view-h）拿走了量尺與最大字級，所以段落標題退一階：
+   它現在是「這個 view 裡的第幾塊」，不是一整章的招牌。全站統一。 */
 .section-title{
-  display:flex;align-items:baseline;gap:0;flex-wrap:wrap;
-  font-size:17px;font-weight:700;color:var(--ink-1);letter-spacing:.6px;text-transform:none;
-  margin-bottom:1rem;padding-bottom:.55rem;
-  border-bottom:1px solid rgba(252,76,2,.15);
+  display:flex;align-items:baseline;gap:0 8px;flex-wrap:wrap;
+  font-size:13.5px;font-weight:700;color:var(--ink-1);letter-spacing:.5px;text-transform:none;
+  margin-bottom:.8rem;padding-bottom:.45rem;
+  border-bottom:1px solid var(--hair);
 }
 .section-title .muted{
-  font-size:9.5px;font-weight:600;color:rgba(252,76,2,.62);
-  letter-spacing:2.6px;text-transform:uppercase;white-space:nowrap;
+  font-size:8.5px;font-weight:600;color:rgba(252,76,2,.55);
+  letter-spacing:2.4px;text-transform:uppercase;white-space:nowrap;
 }
 .section-title-text{flex:1}
 @media(max-width:520px){
-  .section-title{font-size:15px}
-  .section-title .muted{font-size:8.5px;letter-spacing:1.8px}
+  .section-title{font-size:12.5px}
+  .section-title .muted{font-size:8px;letter-spacing:1.8px}
 }
+
+/* ══ ROW SYSTEM ═══════════════════════════════════════════════════════
+   全站統一的列。靠 spacing / typography / 一條髮絲線分隔，不靠卡片。
+   §39：hover 只換底色，不位移、不發光。 */
+.rows{border-top:1px solid var(--hair)}
+.row{
+  display:grid;grid-template-columns:var(--row-cols,auto minmax(0,1fr) auto);
+  align-items:baseline;gap:4px 16px;
+  padding:11px 8px;margin:0 -8px;border-bottom:1px solid var(--hair);
+  text-decoration:none;color:inherit;
+  border-radius:4px;transition:background .13s;
+}
+a.row,button.row{width:calc(100% + 16px);text-align:left;border-left:0;border-right:0;background:transparent;font-family:inherit;cursor:pointer}
+a.row:hover,button.row:hover,.row.is-hot:hover{background:rgba(255,255,255,.025)}
+a.row:focus-visible,button.row:focus-visible{outline:1px solid rgba(252,76,2,.6);outline-offset:-1px}
+.row-k{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ink-3);white-space:nowrap}
+.row-p{font-size:13.5px;font-weight:600;color:var(--ink-1);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row-s{font-size:10.5px;letter-spacing:.6px;color:var(--ink-3);min-width:0;grid-column:2;margin-top:-2px}
+.row-v{font-family:var(--f-num);font-size:20px;font-weight:800;line-height:1;letter-spacing:-.3px;
+  color:var(--ink-1);font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right}
+.row-v small{font-family:var(--f-ui);font-size:9px;font-weight:700;letter-spacing:1px;color:var(--ink-3);margin-left:3px}
+.row-st{font-size:10px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;white-space:nowrap;text-align:right}
+.row-st.ok{color:#5FD060}.row-st.no{color:#FF6A6A}.row-st.next{color:#FC4C02}.row-st.pr{color:#FFD700}
+.row-st.dim{color:var(--ink-3)}
+.row-go{font-size:11px;color:var(--ink-3);transition:color .13s}
+a.row:hover .row-go,button.row:hover .row-go{color:#FC4C02}
+
+/* 讀數列：一排儀器讀數，靠細線分隔（§18：不要四張 KPI 卡） */
+.meters{display:flex;flex-wrap:wrap;margin:0 -1px;overflow:hidden;
+  border-top:1px solid var(--hair);border-bottom:1px solid var(--hair)}
+.meter{flex:1 1 128px;padding:13px 0 14px 16px;border-left:1px solid var(--hair)}
+.meter .k{font-size:8.5px;font-weight:700;letter-spacing:2.4px;text-transform:uppercase;color:var(--ink-3);white-space:nowrap}
+.meter .v{display:block;margin-top:5px;font-family:var(--f-num);font-size:26px;font-weight:800;line-height:.95;
+  letter-spacing:-.5px;color:var(--ink-1);font-variant-numeric:tabular-nums}
+.meter .v small{font-family:var(--f-ui);font-size:10px;font-weight:700;letter-spacing:1px;color:rgba(252,76,2,.75);margin-left:3px}
+.meter .n{display:block;margin-top:4px;font-size:9.5px;letter-spacing:.8px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+@media(max-width:600px){.meter{flex:1 1 44%;padding:11px 0 12px 13px}.meter .v{font-size:22px}}
+
+/* 空狀態 / 載入 / 錯誤：跟產品語言一致，不要巨大置中的 No Data（§46/§47） */
+.nil{font-size:11px;letter-spacing:1.6px;color:var(--ink-3);padding:14px 0}
+.sync{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:rgba(252,76,2,.6);padding:26px 0}
+
+/* ══ DETAIL DRAWER ════════════════════════════════════════════════════
+   §24：桌機點一列 → 右側抽屜，不是 Modal（清單還看得見，可以連著點下一列）。
+   手機 <768px 抽屜變成整屏子頁面，左上角一顆 Back —— 那是 navigation，不是長頁捲動。 */
+.drawer{
+  position:fixed;top:0;right:0;bottom:0;z-index:60;
+  width:min(420px,100vw);display:flex;flex-direction:column;overflow:hidden;
+  background:rgba(11,7,5,.975);border-left:1px solid var(--hair-2);
+  box-shadow:-18px 0 46px rgba(0,0,0,.5);
+  transform:translateX(100%);visibility:hidden;
+  transition:transform .18s cubic-bezier(.2,.8,.3,1),visibility .18s;
+}
+.drawer.open{transform:none;visibility:visible}
+.dw-head{
+  flex:none;display:flex;align-items:flex-start;gap:12px;
+  padding:16px 18px 13px;border-bottom:1px solid var(--hair);
+}
+.dw-head .t{min-width:0;flex:1}
+.dw-k{font-size:8.5px;font-weight:700;letter-spacing:2.6px;text-transform:uppercase;color:rgba(252,76,2,.62)}
+.dw-t{font-size:17px;font-weight:700;letter-spacing:.4px;color:var(--ink-1);margin-top:3px;line-height:1.3}
+.dw-s{font-size:10.5px;letter-spacing:1px;color:var(--ink-3);margin-top:4px;font-variant-numeric:tabular-nums}
+.dw-x{
+  flex:none;width:32px;height:32px;border-radius:6px;border:1px solid var(--hair-2);
+  background:transparent;color:var(--ink-2);font-size:14px;line-height:1;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:background .13s,color .13s;
+}
+.dw-x:hover{background:rgba(252,76,2,.14);color:#FC4C02;border-color:rgba(252,76,2,.5)}
+.dw-x:focus-visible{outline:2px solid rgba(252,76,2,.7);outline-offset:1px}
+.dw-body{flex:1;overflow-y:auto;overscroll-behavior:contain;padding:16px 18px 32px}
+.dw-body::-webkit-scrollbar{width:4px}
+.dw-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,.16);border-radius:2px}
+.dw-sec{margin-bottom:20px}
+.dw-sec>h4{font-size:8.5px;font-weight:700;letter-spacing:2.6px;text-transform:uppercase;
+  color:var(--ink-3);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--hair)}
+.dw-p{font-size:13px;line-height:1.75;color:var(--ink-2)}
+.dw-kv{display:grid;grid-template-columns:3.2rem auto minmax(0,1fr) auto;gap:0 10px;align-items:baseline;
+  padding:7px 0;border-bottom:1px solid var(--hair);font-size:12.5px;color:var(--ink-2)}
+.dw-kv b{font-family:var(--f-num);font-size:17px;font-weight:800;color:var(--ink-1);
+  font-variant-numeric:tabular-nums;letter-spacing:-.2px}
+.dw-kv .u{font-size:9.5px;letter-spacing:1.4px;color:var(--ink-3);text-transform:uppercase}
+.dw-kv .m{margin-left:auto;font-size:10px;font-weight:800;letter-spacing:1.4px}
+.dw-kv .m.ok{color:#5FD060}.dw-kv .m.no{color:#FF6A6A}.dw-kv .m.dim{color:var(--ink-3)}
+.dw-cta{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;
+  padding:11px 14px;margin-top:4px;border-radius:8px;
+  border:1px solid rgba(252,76,2,.45);background:rgba(252,76,2,.09);
+  color:#FC4C02;font-family:inherit;font-size:12px;font-weight:700;letter-spacing:1.4px;
+  text-transform:uppercase;text-decoration:none;cursor:pointer;transition:background .13s;
+}
+.dw-cta:hover{background:rgba(252,76,2,.2)}
+.dw-back{display:none}
+@media(max-width:767px){
+  .drawer{width:100vw;border-left:0;box-shadow:none}
+  .dw-head{padding:12px 14px 11px}
+  .dw-body{padding:14px 14px calc(80px + env(safe-area-inset-bottom,0px))}
+  .dw-x{display:none}
+  .dw-back{
+    display:flex;align-items:center;gap:6px;flex:none;
+    height:32px;padding:0 12px 0 8px;border-radius:6px;border:1px solid var(--hair-2);
+    background:transparent;color:var(--ink-2);font-family:inherit;font-size:11px;
+    letter-spacing:1.4px;cursor:pointer;
+  }
+  .dw-back:hover{color:#FC4C02;border-color:rgba(252,76,2,.5)}
+}
+body.dw-lock{overflow:hidden}
+/* 回頂鈕的 z-index 比抽屜高（9998 vs 60），開著抽屜時會壓在清單上 —— 讓它先退場 */
+body.dw-open #to-top-btn{display:none!important}
+/* 夠寬的螢幕：抽屜推開主欄，清單不被蓋住（窄一點就讓它疊上去，那是可接受的取捨） */
+@media(min-width:1280px){
+  .main{transition:padding-right .18s cubic-bezier(.2,.8,.3,1)}
+  body.dw-open .main{padding-right:420px}
+}
+
+/* ══ SESSION ROWS（Plan）══════════════════════════════════════════════
+   §23：三個層級。過去低對比、未來低對比、下一堂最高優先。
+   不是每一堂都要 border + 圓角卡 + badge + 投影 —— 那樣九堂課一樣重，等於沒有層級。 */
+.ses-list{border-top:1px solid var(--hair)}
+.ses{
+  display:grid;grid-template-columns:2.4rem minmax(0,1fr) 4.6rem 5.4rem 1rem;
+  gap:2px 14px;align-items:baseline;width:100%;
+  padding:12px 8px 12px 10px;border:0;border-left:2px solid transparent;
+  border-bottom:1px solid var(--hair);border-radius:0 5px 5px 0;
+  background:transparent;font-family:inherit;text-align:left;cursor:pointer;
+  transition:background .13s;
+}
+.ses:hover{background:rgba(255,255,255,.025)}
+.ses:focus-visible{outline:1px solid rgba(252,76,2,.6);outline-offset:-1px}
+.ses-wk{font-size:9px;font-weight:700;letter-spacing:1.4px;color:var(--ink-3);white-space:nowrap}
+.ses-nm{font-size:13.5px;font-weight:650;color:var(--ink-2);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ses-dt{font-size:10.5px;letter-spacing:.6px;color:var(--ink-3);font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right}
+.ses-st{font-size:9.5px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;text-align:right;white-space:nowrap;color:var(--ink-3)}
+.ses-go{font-size:11px;color:transparent;transition:color .13s;text-align:right}
+.ses:hover .ses-go{color:#FC4C02}
+.ses-sub{grid-column:2/4;font-size:10.5px;line-height:1.55;color:var(--ink-3);
+  min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:-1px}
+/* 三個數字擠在最後兩欄會頂出版面（實測 1180px 溢出 35px），所以從第 3 欄起就讓它用 */
+.ses-num{grid-column:3/-1;font-family:var(--f-mono);font-size:9.5px;letter-spacing:.2px;
+  color:var(--ink-3);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap;
+  margin-top:-1px;overflow:hidden;text-overflow:ellipsis}
+.ses-num em{font-style:normal}
+.ses-num em.ok{color:#5FD060}.ses-num em.no{color:#FF6A6A}
+/* 三個層級 */
+.ses--past .ses-nm{color:var(--ink-2)}
+.ses--past.is-ok .ses-st,.ses--past.is-over .ses-st{color:#5FD060}
+.ses--past.is-under .ses-st{color:#FF6A6A}
+.ses--past.is-missed{opacity:.55}
+.ses--future{opacity:.62}
+.ses--future .ses-nm{font-weight:600}
+.ses--next{
+  border-left-color:#FC4C02;background:rgba(252,76,2,.05);
+  box-shadow:inset 0 0 22px rgba(252,76,2,.055);
+}
+.ses--next .ses-nm{color:#FC4C02;font-weight:700}
+.ses--next .ses-st{color:#FC4C02}
+.ses--next .ses-go{color:rgba(252,76,2,.6)}
+@media(max-width:640px){
+  .ses{grid-template-columns:2.2rem minmax(0,1fr) auto;gap:2px 10px}
+  .ses-dt{grid-column:3;text-align:right}
+  .ses-st{grid-column:3;text-align:right}
+  .ses-go{display:none}
+  .ses-sub{grid-column:1/-1}
+  .ses-num{grid-column:1/-1;text-align:left}
+}
+
+/* NEXT SESSION：Plan 的主指示。全站少數幾個允許容器的地方之一（§40.3） */
+.nx{
+  position:relative;border:1px solid rgba(252,76,2,.32);border-radius:12px;
+  padding:16px 18px 15px;background:rgba(252,76,2,.045);
+  box-shadow:inset 0 0 30px rgba(252,76,2,.05);
+}
+.nx::before,.nx::after{content:'';position:absolute;width:12px;height:12px;
+  border:1.5px solid rgba(252,76,2,.55);pointer-events:none}
+.nx::before{top:-1px;left:-1px;border-right:0;border-bottom:0;border-radius:12px 0 0 0}
+.nx::after{bottom:-1px;right:-1px;border-left:0;border-top:0;border-radius:0 0 12px 0}
+.nx-top{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.nx-k{font-size:8.5px;font-weight:700;letter-spacing:2.8px;text-transform:uppercase;color:#FC4C02}
+.nx-dt{margin-left:auto;font-size:10.5px;letter-spacing:1.4px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.nx-nm{font-size:22px;font-weight:700;letter-spacing:.4px;color:var(--ink-1);margin-top:6px;line-height:1.25}
+.nx-plan{font-size:13px;line-height:1.7;color:var(--ink-2);margin-top:7px;max-width:56ch}
+.nx-cmp{display:grid;grid-template-columns:auto repeat(3,minmax(0,1fr));gap:0 14px;
+  margin-top:14px;padding-top:12px;border-top:1px solid rgba(252,76,2,.16)}
+.nx-cmp>span{font-size:8.5px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  color:var(--ink-3);padding-bottom:6px}
+.nx-cmp>b,.nx-cmp>i{font-style:normal;font-family:var(--f-num);font-size:19px;font-weight:800;
+  color:var(--ink-1);font-variant-numeric:tabular-nums;letter-spacing:-.2px;padding:3px 0}
+.nx-cmp>i{font-family:var(--f-num);color:var(--ink-3);font-size:15px}
+.nx-cmp .rl{font-size:8.5px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  color:var(--ink-3);align-self:center;padding:3px 0}
+.nx-act{margin-top:14px}
+@media(max-width:520px){.nx-nm{font-size:19px}.nx-cmp{gap:0 8px}.nx-cmp>b{font-size:17px}}
+
+/* ── Overview：週期 × 下一堂並排。只有「下一堂」有訊號色與極輕的光暈（Glow Is State） ── */
+.ov-2{display:grid;grid-template-columns:1fr 1fr;gap:0}
+.ov-2>*+*{border-left:1px solid var(--hair);padding-left:22px}
+.ov-2>*{padding-right:22px}
+@media(max-width:720px){
+  .ov-2{grid-template-columns:1fr}
+  .ov-2>*{padding-right:0}
+  .ov-2>*+*{border-left:0;padding-left:0;padding-top:16px;margin-top:16px;border-top:1px solid var(--hair)}
+}
+.ov-cell{
+  display:flex;flex-direction:column;align-items:flex-start;gap:5px;
+  border:0;background:transparent;font-family:inherit;color:inherit;text-align:left;
+  padding-top:2px;padding-bottom:4px;border-radius:6px;transition:background .13s;
+}
+button.ov-cell{cursor:pointer}
+button.ov-cell:hover{background:rgba(255,255,255,.025)}
+button.ov-cell:focus-visible{outline:1px solid rgba(252,76,2,.6);outline-offset:2px}
+.ov-k{font-size:8.5px;font-weight:700;letter-spacing:2.6px;text-transform:uppercase;color:rgba(252,76,2,.6)}
+.ov-b{font-size:19px;font-weight:700;letter-spacing:.4px;color:var(--ink-1);line-height:1.25}
+.ov-n{font-size:10.5px;letter-spacing:.8px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.ov-plan{font-size:12px;line-height:1.6;color:var(--ink-2);max-width:46ch}
+.ov-cell.is-next .ov-k{color:#FC4C02}
+.ov-cell.is-next .ov-b{color:#FC4C02;text-shadow:0 0 16px rgba(252,76,2,.35)}
+.ov-track{display:flex;gap:3px;width:100%;max-width:280px;margin-top:3px}
+.ov-track i{flex:1;height:4px;border-radius:2px;background:rgba(255,255,255,.08)}
+.ov-track i.is-ok{background:#5FD060}
+.ov-track i.is-next{background:#FC4C02;box-shadow:0 0 8px rgba(252,76,2,.5)}
+.ov-track i.is-missed{background:rgba(255,106,106,.25)}
+.row-more{
+  display:block;width:100%;margin-top:10px;padding:9px 8px;border:0;border-radius:6px;
+  background:transparent;font-family:inherit;font-size:10.5px;font-weight:700;letter-spacing:2px;
+  text-transform:uppercase;color:rgba(252,76,2,.75);cursor:pointer;text-align:left;transition:background .13s,color .13s;
+}
+.row-more:hover{background:rgba(252,76,2,.07);color:#FC4C02}
+.row[disabled]{opacity:.42;cursor:default}
+.row[disabled]:hover{background:transparent}
+/* 每日一句：Overview 最底下的一條安靜帶子，不跟訓練數據搶第一屏 */
+.ov-quote{border-top:1px solid var(--hair);padding-top:6px;opacity:.86}
+.ov-quote .rc-quote{margin-top:0;border-top:0;padding-top:8px}
 /* ── 節奏 · 訓練日曆 ── */
 .tcal{
   margin-bottom:2.4rem;padding:12px 0 10px;border-radius:16px;
@@ -920,6 +1072,81 @@ button.deck-stat:hover .ds-hint{color:#FC4C02}
   .itt-tabs{gap:6px}
   .itt-tab-btn{padding:7px 12px;font-size:12px;letter-spacing:.5px}
 }
+/* ══ ITT MASTER → DETAIL ══════════════════════════════════════════════
+   §25/§26：ITT 仍然是全站最有個性的地方，但 UX 從「卡片遊樂場」變成清單 → 詳情。
+   玻璃、狀態色、戰情室、3D 全部原封不動，只是一次只掛一條。 */
+.itt-bar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+.itt-modes{display:flex;gap:2px;padding:2px;border:1px solid var(--hair-2);border-radius:7px}
+.itt-mode{
+  padding:5px 13px;border:0;border-radius:5px;background:transparent;font-family:inherit;
+  font-size:10.5px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;
+  color:var(--ink-3);cursor:pointer;transition:background .13s,color .13s;
+}
+.itt-mode:hover{color:var(--ink-1)}
+.itt-mode[aria-selected="true"]{background:rgba(252,76,2,.16);color:#FC4C02}
+.itt-bar .itt-tabs{margin:0 0 0 auto}
+
+.itt-shell{display:block}
+.itt-shell.is-list{display:grid;grid-template-columns:minmax(280px,340px) minmax(0,1fr);gap:0 26px;align-items:start}
+.itt-list{display:none}
+.itt-shell.is-list .itt-list{display:block;border-top:1px solid var(--hair)}
+.itt-lhead{
+  display:grid;grid-template-columns:minmax(0,1fr) 3.9rem 2.6rem 1.4rem;gap:0 8px;
+  padding:0 6px 7px;border-bottom:1px solid var(--hair-2);
+  font-size:8px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;color:var(--ink-3);
+}
+.itt-lhead span:nth-child(2),.itt-lhead span:nth-child(3),.itt-lhead span:nth-child(5){text-align:right}
+.itt-lhead span:nth-child(4){display:none}
+.itt-row{
+  display:grid;grid-template-columns:minmax(0,1fr) 3.9rem 2.6rem 1.4rem;gap:1px 8px;
+  width:100%;padding:9px 6px;border:0;border-left:2px solid transparent;
+  border-bottom:1px solid var(--hair);background:transparent;
+  font-family:inherit;text-align:left;cursor:pointer;transition:background .13s;
+}
+.itt-row:hover{background:rgba(255,255,255,.025)}
+.itt-row:focus-visible{outline:1px solid rgba(252,76,2,.6);outline-offset:-1px}
+.itt-row.is-on{border-left-color:var(--fc-accent,#e87c1a);background:rgba(255,255,255,.045)}
+.ir-nm{font-size:12.5px;font-weight:650;color:var(--ink-2);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.itt-row.is-on .ir-nm{color:var(--ink-1)}
+.ir-t{font-family:var(--f-num);font-size:15px;font-weight:800;color:var(--ink-1);
+  font-variant-numeric:tabular-nums;text-align:right;letter-spacing:-.2px}
+.ir-sc{font-family:var(--f-mono);font-size:10.5px;color:var(--ink-3);text-align:right;font-variant-numeric:tabular-nums}
+.ir-sc i{font-style:normal;font-size:8px}
+.ir-st{grid-column:1/3;font-size:8.5px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;margin-top:-1px}
+.ir-n{grid-column:4;font-family:var(--f-mono);font-size:9px;color:var(--ink-3);text-align:right;font-variant-numeric:tabular-nums}
+.itt-back{display:none}
+
+/* 清單模式：整個檯面／輪播只剩「選中的那一張卡」，佔滿右欄 */
+.fc-grid.fc-list{
+  display:block;overflow:visible;padding:0;margin:0;height:auto;
+  border:0;background:none;scroll-snap-type:none;cursor:default;
+}
+.fc-grid.fc-list .fc{display:none;position:static;width:100%;min-height:0;
+  transform:none;opacity:1;translate:none;scroll-snap-align:none;cursor:default}
+.fc-grid.fc-list .fc.is-sel{display:block}
+.fc-grid.fc-list .fc .fc-close{display:none}
+.fc-grid.fc-list .fc::after{content:none}
+.itt-shell.is-list .fc-nav,
+.itt-shell.is-list .fc-dots,
+.itt-shell.is-list .fc-hint,
+.itt-shell.is-list .fc-board-bar{display:none}
+.itt-shell.is-list .fc-carousel{margin:0}
+
+@media(max-width:1023px){
+  /* 平板／手機：清單與詳情是兩個畫面，不是上下兩段長頁（§9） */
+  .itt-shell.is-list{grid-template-columns:1fr;gap:0}
+  .itt-shell.is-list .itt-stage{display:none}
+  .itt-shell.is-list.is-detail .itt-list{display:none}
+  .itt-shell.is-list.is-detail .itt-stage{display:block}
+  .itt-shell.is-list.is-detail .itt-back{
+    display:inline-flex;align-items:center;gap:6px;margin-bottom:14px;
+    padding:7px 12px 7px 8px;border-radius:6px;border:1px solid var(--hair-2);
+    background:transparent;color:var(--ink-2);font-family:inherit;font-size:11px;letter-spacing:1.4px;cursor:pointer;
+  }
+  .itt-shell.is-list.is-detail .itt-back:hover{color:#FC4C02;border-color:rgba(252,76,2,.5)}
+  .itt-bar .itt-tabs{margin:0}
+}
+
 .itt-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1.2rem}
 .itt-tab-btn{
   display:flex;align-items:center;gap:7px;
@@ -1530,107 +1757,147 @@ html.lg-refract .fc-refract{display:block}
   .r3d-overlay,.r3d-box{transition:none}
 }
 
-/* ── monthly chart ── */
-.monthly-chart{margin-bottom:2.2rem}
-.chart-rows{display:flex;flex-direction:column;gap:0}
-.chart-row{display:flex;align-items:center;gap:10px;padding:8px 0}
-.chart-row + .chart-row{border-top:1px solid rgba(252,76,2,.1)}
-.chart-label{font-size:12px;color:#aaa;width:30px;text-align:right;flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+/* ══ CONTROLS（§32：pill 只給真的有互動意義的控制項）════════════════ */
+.ctl{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 16px}
+.seg{display:flex;gap:2px;padding:2px;border:1px solid var(--hair-2);border-radius:7px}
+.seg button{
+  display:flex;align-items:baseline;gap:6px;padding:5px 11px;border:0;border-radius:5px;
+  background:transparent;font-family:inherit;font-size:11.5px;font-weight:650;letter-spacing:.4px;
+  color:var(--ink-3);cursor:pointer;transition:background .13s,color .13s;
+}
+.seg button i{font-style:normal;font-size:8px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;opacity:.6}
+.seg button:hover{color:var(--ink-1)}
+.seg button[aria-selected="true"]{background:rgba(252,76,2,.16);color:#FC4C02}
+.seg.alt{margin-left:auto}
+.seg.alt button{font-family:var(--f-mono);font-size:10.5px;letter-spacing:1.2px;padding:5px 9px}
+@media(max-width:640px){.seg.alt{margin-left:0}.seg button i{display:none}}
+
+/* ══ MONTHLY VOLUME（一次一個指標）════════════════════════════════ */
+.vol{border-top:1px solid var(--hair)}
+.vrow{
+  display:grid;grid-template-columns:3.6rem minmax(0,1fr) 5.4rem 4.6rem;gap:0 14px;align-items:center;
+  padding:7px 4px;border-bottom:1px solid var(--hair);
+}
+.vrow[hidden]{display:none}
+.vm{font-family:var(--f-mono);font-size:10.5px;letter-spacing:1px;color:var(--ink-2);white-space:nowrap}
+.vm em{font-style:normal;display:block;font-size:8px;color:var(--ink-3);letter-spacing:1.2px}
+.vtrack{display:block;height:9px;background:rgba(252,76,2,.09);border-radius:2px;overflow:hidden}
+.vfill{display:block;height:100%;width:0;border-radius:2px;
+  background:linear-gradient(90deg,#992b00,#FC4C02);transition:width .45s cubic-bezier(.25,.46,.45,.94)}
+.vval{font-family:var(--f-num);font-size:17px;font-weight:800;color:var(--ink-1);
+  font-variant-numeric:tabular-nums;text-align:right;letter-spacing:-.2px}
+.vval small{font-family:var(--f-ui);font-size:9px;font-weight:700;color:var(--ink-3);margin-left:2px;letter-spacing:.6px}
+.vside{display:flex;align-items:center;justify-content:flex-end;gap:7px}
+.cap-note{font-size:10.5px;letter-spacing:.6px;color:var(--ink-3);margin-top:10px}
+.ac-dash{color:var(--ink-3)}
+@media(max-width:640px){
+  .vrow{grid-template-columns:3rem minmax(0,1fr) 4.4rem;gap:0 10px}
+  .vside{grid-column:2/4;justify-content:flex-start;margin-top:2px}
+  .vval{font-size:15px}
+}
+@media (prefers-reduced-motion:reduce){.vfill{transition:none}}
+
+/* 月度量的舊樣式（.monthly-chart / .chart-row / .chart-bar 三條並列）已隨 .vol 取代而移除。
+   .chart-pr / .chart-trend / .chart-tss 仍在用，定義在下面。 */
 .chart-pr{font-size:11px;line-height:1;cursor:help;position:relative;filter:drop-shadow(0 0 4px rgba(255,200,60,.5))}
 .chart-pr i{font-style:normal;font-size:8px;font-weight:800;color:#ffd24d;vertical-align:top}
-.chart-side{display:flex;flex-direction:column;gap:4px;align-items:flex-end;width:60px;flex-shrink:0}
 .chart-trend{font-size:10px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:.3px}
 .chart-trend.up{color:#5fd060}
 .chart-trend.down{color:#ff6a6a}
 .chart-trend.flat{color:#8a8a8a}
-.chart-tss{font-size:9px;font-weight:700;color:#ffb066;background:rgba(252,76,2,.1);border:1px solid rgba(252,76,2,.25);padding:2px 6px;border-radius:8px;cursor:help;font-variant-numeric:tabular-nums;white-space:nowrap}
-.chart-bar-wrap{flex:1;display:flex;flex-direction:column;gap:5px;min-width:0}
-.chart-track{position:relative;height:22px;border-radius:6px;overflow:hidden}
-.chart-track.dist{background:rgba(252,76,2,.1)}
-.chart-track.elev{background:rgba(60,200,220,.08)}
-.chart-track.hr{background:rgba(224,160,32,.08);height:16px}
-.chart-bar{
-  height:100%;border-radius:6px;
-  display:flex;align-items:center;justify-content:flex-end;
-  padding-right:9px;min-width:46px;
-  width:0;transition:width 1s cubic-bezier(.25,.46,.45,.94);
-}
-.chart-bar.dist{background:linear-gradient(90deg,#992b00,#FC4C02,#ff7040)}
-.chart-bar.elev{background:linear-gradient(90deg,#0a5a66,#19b6c9,#5fe3f0)}
-.chart-bar.hr{background:linear-gradient(90deg,#6b4a0e,#d29a1e,#ffd24d)}
-.chart-bar.hr .chart-bar-val{color:#241a04;font-size:10px}
-.chart-bar-val{font-size:11px;font-weight:700;color:#fff;white-space:nowrap;font-variant-numeric:tabular-nums}
-.chart-bar-val small{font-size:8px;font-weight:600;opacity:.75;margin-left:2px}
-.chart-bar.elev .chart-bar-val{color:#04222a}
-.chart-legend{display:flex;gap:16px;margin:0 0 14px 34px}
-.chart-legend span{display:flex;align-items:center;gap:6px;font-size:10px;letter-spacing:1px;color:#888;text-transform:uppercase}
-.chart-legend i{width:14px;height:6px;border-radius:3px;display:inline-block}
-.chart-legend i.dist{background:linear-gradient(90deg,#FC4C02,#ff7040)}
-.chart-legend i.elev{background:linear-gradient(90deg,#19b6c9,#5fe3f0)}
-.chart-legend i.hr{background:linear-gradient(90deg,#d29a1e,#ffd24d)}
 
-/* ── chart year toggle ── */
-.chart-year-header{
-  display:flex;align-items:center;gap:8px;
-  font-size:11px;font-weight:700;color:#FC4C02;letter-spacing:2.5px;
-  text-transform:uppercase;padding:12px 0 4px;
-  cursor:pointer;user-select:none;opacity:.8;
-}
-.chart-year-header:hover{opacity:1}
-.chart-year-arrow{transition:transform .25s;font-style:normal;font-size:10px}
-.chart-year-rows{overflow:hidden;transition:max-height .35s ease}
-
-/* ── sport tabs ── */
-.sport-tabs{display:flex;gap:8px;margin-bottom:1.2rem;flex-wrap:wrap}
+/* ── sport tabs（§36：保留篩選邏輯，樣式收斂成文字 + 底線，不做滿排圓 pill） ── */
+.sport-tabs{display:flex;gap:2px;margin-bottom:14px;flex-wrap:wrap;border-bottom:1px solid var(--hair)}
 .sport-tab{
   display:flex;align-items:center;gap:5px;
-  font-size:12px;padding:5px 14px;border-radius:20px;
-  border:1px solid rgba(252,76,2,.2);color:#777;background:transparent;
-  cursor:pointer;transition:all .2s;-webkit-tap-highlight-color:transparent;
+  font-family:inherit;font-size:12px;font-weight:650;letter-spacing:.4px;
+  padding:8px 12px;border:0;border-bottom:2px solid transparent;border-radius:5px 5px 0 0;
+  color:var(--ink-3);background:transparent;margin-bottom:-1px;
+  cursor:pointer;transition:color .13s,background .13s;-webkit-tap-highlight-color:transparent;
 }
-.sport-tab.active{background:rgba(252,76,2,.14);border-color:#FC4C02;color:#FC4C02}
-.sport-tab:hover:not(.active){border-color:rgba(252,76,2,.4);color:#FC4C02}
+.sport-tab.active{color:#FC4C02;border-bottom-color:#FC4C02}
+.sport-tab:hover:not(.active){color:var(--ink-1);background:rgba(255,255,255,.03)}
 
-/* ── timeline ── */
-.timeline{margin-bottom:2.2rem}
-.timeline-day{margin-bottom:1.4rem}
+/* ══ ACTIVITY LOG（§35：列，不是卡）══════════════════════════════════
+   .activity-card / .activity-meta / .act-strava-link 三個 class 是 activity-modal.js
+   注入詳情鈕的依據（它靠 MutationObserver 找），只能改樣式與內部排版，不能改名。 */
+.timeline{margin-bottom:1.6rem}
+.timeline-day{margin-bottom:2px}
 .timeline-date{
-  font-size:17px;font-weight:600;color:#FC4C02;
-  margin-bottom:.75rem;padding-left:22px;position:relative;
-}
-.timeline-date::before{
-  content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);
-  width:10px;height:10px;border-radius:50%;
-  background:#FC4C02;box-shadow:0 0 8px rgba(252,76,2,.7);
+  position:sticky;top:44px;z-index:2;
+  font-family:var(--f-mono);font-size:10px;font-weight:700;letter-spacing:2.4px;
+  color:var(--ink-3);background:rgba(9,5,3,.92);
+  padding:9px 4px 6px;border-bottom:1px solid var(--hair-2);
 }
 .activity-card{
-  display:flex;align-items:flex-start;gap:12px;
-  padding:.85rem 1rem;border-radius:9px;
-  border:1px solid rgba(252,76,2,.12);background:rgba(10,4,0,.45);
-  margin-bottom:8px;margin-left:22px;
-  transition:border-color .2s,background .2s;
+  display:grid;grid-template-columns:26px minmax(0,1fr) 4.4rem 5rem 4rem;gap:0 12px;align-items:baseline;
+  padding:11px 4px;border-bottom:1px solid var(--hair);background:transparent;
+  transition:background .13s;
 }
-.activity-card:hover{border-color:rgba(252,76,2,.32);background:rgba(22,8,0,.55)}
+.activity-card:hover{background:rgba(255,255,255,.025)}
 .activity-icon{
-  width:46px;height:46px;border-radius:10px;flex-shrink:0;
-  background:rgba(252,76,2,.18);border:1px solid rgba(252,76,2,.3);
+  width:20px;height:20px;border-radius:4px;flex-shrink:0;align-self:center;
+  background:transparent;border:0;
   display:flex;align-items:center;justify-content:center;
 }
-.activity-icon svg{width:24px;height:24px;fill:#FC4C02}
-.activity-info{flex:1;min-width:0}
-.activity-name{font-size:16px;font-weight:500;color:#eeebe8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0}
+.activity-icon svg{width:16px;height:16px;fill:rgba(252,76,2,.55)}
+.ac-n{
+  font-family:var(--f-num);font-size:16px;font-weight:800;color:var(--ink-1);
+  font-variant-numeric:tabular-nums;text-align:right;letter-spacing:-.2px;white-space:nowrap;align-self:center;
+}
+.ac-n small{font-family:var(--f-ui);font-size:9px;font-weight:700;color:var(--ink-3);margin-left:2px;letter-spacing:.6px}
+.ac-time{font-size:14px;color:var(--ink-2)}
+.ac-tss{font-size:14px;color:var(--ink-2)}
+.activity-info{min-width:0}
+/* 數字欄跟活動名稱對齊，不要浮在整列的垂直中央 */
+.ac-n,.activity-dist{align-self:start;padding-top:1px}
+.activity-icon{align-self:start;margin-top:-1px}
+/* activity-modal.css / r3d 的觸發鈕在列式版面裡太吵：降成 ghost，只有「詳情」留一點訊號。
+   那份 CSS 是跨主題共用的，不動它，改用更高的選擇器在這裡壓過去。 */
+.activity-card .activity-name-wrap .act-detail-btn,
+.activity-card .activity-name-wrap .act-report-link,
+.activity-card .activity-name-wrap .act-strava-link,
+.activity-card .activity-name-wrap .r3d-trigger-btn{
+  padding:3px 8px!important;border-radius:5px!important;font-size:10px!important;
+  font-weight:700!important;letter-spacing:.6px!important;line-height:1.5!important;
+  background:transparent!important;border:1px solid var(--hair-2)!important;
+  color:var(--ink-3)!important;box-shadow:none!important;transform:none!important;
+  animation:none!important;text-shadow:none!important;
+}
+.activity-card .activity-name-wrap .act-detail-btn{
+  border-color:rgba(252,76,2,.42)!important;color:rgba(252,76,2,.92)!important;
+}
+.activity-card .activity-name-wrap .act-detail-btn:hover,
+.activity-card .activity-name-wrap .act-report-link:hover,
+.activity-card .activity-name-wrap .act-strava-link:hover,
+.activity-card .activity-name-wrap .r3d-trigger-btn:hover{
+  background:rgba(252,76,2,.14)!important;color:#FC4C02!important;border-color:rgba(252,76,2,.55)!important;
+}
+.activity-card .activity-name-wrap .act-detail-btn::before,
+.activity-card .activity-name-wrap .act-detail-btn::after{content:none!important}
+@media(max-width:820px){
+  .activity-card{grid-template-columns:22px minmax(0,1fr) 4.6rem;gap:2px 10px}
+  .ac-time{grid-column:3;font-size:12.5px}
+  .activity-dist{grid-column:3;text-align:right}
+  .ac-tss{grid-column:3;font-size:12px}
+  .activity-info{grid-column:2/4}
+}
+.activity-name{font-size:13.5px;font-weight:650;color:var(--ink-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0}
 .indoor-tag,.bike-tag{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;line-height:1;border-radius:3px;padding:2px 5px 2px 4px;vertical-align:middle;margin-right:5px;flex-shrink:0;white-space:nowrap}
 .indoor-tag{background:rgba(252,76,2,.12);color:#FC4C02;border:1px solid rgba(252,76,2,.3)}
 .bike-tag{background:rgba(255,210,60,.1);color:#f0c030;border:1px solid rgba(255,210,60,.35)}
-.activity-meta{font-size:11px;color:#666;margin-top:3px}
+/* §35 的第二行：一串以「·」分隔的純文字，不是一排 pill */
+.activity-meta{font-size:10.5px;color:var(--ink-3);margin-top:3px;line-height:1.6}
 .activity-meta .tag{
-  display:inline-flex;align-items:center;gap:3px;
-  background:rgba(252,76,2,.08);border:1px solid rgba(252,76,2,.15);
-  border-radius:4px;padding:2px 8px;margin-right:4px;margin-top:3px;
-  color:#b05030;font-size:12px;white-space:nowrap;
+  display:inline;background:none;border:0;border-radius:0;padding:0;margin:0;
+  color:var(--ink-3);font-size:10.5px;white-space:nowrap;
 }
-.activity-meta .tag.hr{border-color:rgba(220,60,60,.2);background:rgba(220,60,60,.06);color:#c04040}
-.activity-dist{font-size:18px;font-weight:700;color:#FC4C02;font-variant-numeric:tabular-nums;flex-shrink:0;white-space:nowrap;padding-top:2px;line-height:1}
+.activity-meta .tag+.tag::before{content:' · ';color:var(--ink-3);opacity:.5}
+.activity-meta .tag.hr{color:rgba(255,140,140,.7)}
+.activity-meta .tag.hr b{color:rgba(255,140,140,.9)!important;font-weight:700}
+.activity-dist{font-family:var(--f-num);font-size:16px;font-weight:800;color:var(--ink-1);
+  font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right;letter-spacing:-.2px}
+.activity-dist small{font-family:var(--f-ui);font-size:9px;font-weight:700;color:var(--ink-3);margin-left:2px;letter-spacing:.6px}
 /* lap strip */
 .lap-strip{
   margin-top:4px;padding:4px 8px;border-radius:5px;
@@ -1731,44 +1998,15 @@ html.lg-refract .fc-refract{display:block}
   .pa-chips{gap:4px}
 }
 
-/* ── bottom totals ── */
-.totals-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:2rem}
-.total-card{
-  padding:1rem;border-radius:10px;
-  border:1px solid rgba(252,76,2,.12);background:rgba(10,4,0,.3);text-align:center;
-}
-.total-val{font-size:46px;line-height:.88;color:#FF6B35;letter-spacing:-1px}
-.total-label{font-size:10px;color:#555;letter-spacing:2px;text-transform:uppercase;margin-top:5px}
-
-/* ── CTA button ── */
-.strava-cta{
-  display:flex;align-items:center;justify-content:center;gap:8px;
-  width:100%;padding:14px;border-radius:10px;
-  background:rgba(252,76,2,.1);border:1px solid rgba(252,76,2,.4);
-  color:#FC4C02;font-size:14px;font-weight:500;
-  text-decoration:none;transition:background .2s,border-color .2s;
-}
-.strava-cta:hover{background:rgba(252,76,2,.2);border-color:#FC4C02}
-.strava-cta svg{width:16px;height:16px;fill:#FC4C02;flex-shrink:0}
-
 /* ── loading / error ── */
 .loading{text-align:center;padding:4rem 0;color:#555;font-size:14px}
 
 @media(max-width:520px){
-  #app{padding:0 .9rem 5rem}
-  .topbar{padding:12px .9rem;margin:0 -.9rem;gap:8px}
-  .stats-grid{grid-template-columns:repeat(2,1fr)}
-  .stat-val{font-size:26px}
-  .totals-grid{grid-template-columns:repeat(3,1fr)}
-  .total-val{font-size:35px}
-  .consistency-row{grid-template-columns:auto 1fr;row-gap:8px}
-  .consistency-row .status-badge{grid-column:1 / -1;justify-self:start}
   .activity-name-wrap{flex-wrap:wrap;gap:6px}
   .activity-name{white-space:normal;overflow:visible;text-overflow:clip;flex:1 1 100%}
   .act-detail-btn{margin-right:0}
 }
 @media(max-width:420px){
-  .topbar-title{letter-spacing:1.4px}
   .activity-card{align-items:flex-start;gap:9px;padding:.75rem .85rem;margin-left:0}
   .activity-icon{width:38px;height:38px}
   .activity-name-wrap{flex-wrap:wrap;gap:6px}
@@ -1777,7 +2015,6 @@ html.lg-refract .fc-refract{display:block}
   .activity-dist{font-size:16px;margin-left:auto}
   .itt-badge{align-items:flex-start;gap:8px}
   .itt-attempt{text-align:right;max-width:38%}
-  .totals-grid{grid-template-columns:1fr}
   #to-top-btn{right:14px!important;bottom:18px!important}
 }
 
@@ -1911,58 +2148,9 @@ html.lg-refract .fc-refract{display:block}
 .rc-quote .qb-actions{display:inline-flex;gap:5px;margin:0 0 0 8px;vertical-align:middle}
 .rc-quote .qb-btn{padding:2px 9px;font-size:9.5px;border-radius:100px}
 
-/* 矮螢幕分級退場 —— 甲板永遠不該超過一屏，超過就破壞一手勢一章的捲動。
-   關鍵：句子是隨機抽的，同一個尺寸下 1 行是 30px、2 行是 61px，
-   所以每一階都要按「抽到最長的那句」抓，按平均抓會在某次重整突然爆版。
-   退場順序 = 重要性反序：原文 → 收藏/複製 → 句子收成一行。 */
-@media(max-height:880px){
-  .hero-deck{gap:12px;padding:10px 0 8px}
-  .board-num{font-size:clamp(56px,10.5vw,104px)}
-  .board-unit{font-size:clamp(22px,3vw,30px)}
-  .rc-quote{margin-top:12px;padding-top:11px}
-  .rc-quote .qb-text{-webkit-line-clamp:2;font-size:clamp(15px,1.55vw,19px)}
-  .rc-quote .qb-orig{-webkit-line-clamp:1}
-}
-@media(max-height:820px){
-  .hero-deck{gap:10px;padding:8px 0 6px}
-  .board-num{font-size:clamp(52px,9.5vw,88px)}
-  .board-unit{font-size:clamp(20px,2.8vw,26px)}
-  .rc-quote .qb-text{font-size:clamp(14px,1.4vw,17px)}
-  .rc-quote .qb-orig{display:none}
-}
-@media(max-height:740px){
-  .board-num{font-size:clamp(46px,8.5vw,76px)}
-  .rc-quote{margin-top:9px;padding-top:8px}
-  .rc-quote .qb-text{-webkit-line-clamp:1}
-  .rc-quote .qb-actions{display:none}
-}
-/* 640/568 這種老手機：名片本身就吃掉大半屏，句子只留「一行 + 出處」。
-   作品名（.qb-tag）拿掉不會失去歸屬 —— .qb-src 的「角色《作品》」還在。 */
-@media(max-height:660px){
-  .hero-deck{gap:8px;padding:6px 0 4px}
-  .rc-head{padding-top:8px}
-  .board-num{font-size:clamp(36px,7vw,52px)}
-  .board-unit{font-size:clamp(17px,2.4vw,22px)}
-  .rc-quote{margin-top:8px;padding-top:7px}
-  .rcq-hd{margin-bottom:5px}
-  .rc-quote .qb-tag,.rc-quote .qb-chips{display:none}
-  .rc-quote .qb-text{font-size:13.5px;margin-bottom:5px}
-}
-/* 極矮（縮小的桌機視窗、568 高的老 iPhone）：實測名片本身就吃掉 367–418px，
-   留給句子的只剩 54–73px，而標籤列自己就要 20px。
-   把控制項改成絕對定位釘在右上角 —— 不佔任何一行，🎲 仍然點得到；
-   三個來源分頁是這裡唯一犧牲掉的功能（版面放不下，且它是選配不是內容）。 */
-@media(max-height:620px){
-  .board-num{font-size:clamp(30px,5vw,40px)}
-  .board-unit{font-size:clamp(15px,2vw,18px)}
-  .rc-quote{position:relative;margin-top:6px;padding-top:6px}
-  .rcq-lab,.rc-quote .qb-tabs{display:none}
-  /* .quote-book 本身是 position:relative 且 DOM 在後面，不給 z-index 會蓋掉 🎲 */
-  .rcq-hd{position:absolute;top:5px;right:0;margin:0;z-index:2}
-  .rc-quote .quote-book{padding-right:38px}
-  .rc-quote .qb-text{font-size:12.5px;margin-bottom:4px}
-  .rc-quote .qb-src{font-size:10px}
-}
+/* 甲板不再被「一屏」綁住（章節架構已退役），所以矮螢幕的分級退場整組拿掉。
+   句子現在住在 Overview 底部一條安靜的帶子裡，長度由 line-clamp 控制即可。 */
+.rc-quote .qb-text{-webkit-line-clamp:3}
 
 /* ── 每日一句 quote book ── */
 .qb-tabs{display:flex;gap:8px;margin-bottom:12px}
@@ -2057,7 +2245,8 @@ html.lg-refract .fc-refract{display:block}
 #ss-pad-right{right:0}
 .ss-pad-tag{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);
   font-size:9px;letter-spacing:3px;color:rgba(252,76,2,.55);text-transform:uppercase;white-space:nowrap}
-@media(min-width:1240px){.ss-pad{display:flex}}
+/* 全寬 app shell 沒有外側留白了，發射台會壓在內容上 —— 整組收起，DOM 保留備用 */
+.ss-pad{display:none!important}
 
 /* ── 左側：發射（動作集中在 0–10s） ── */
 #ss-sceneL{animation:ssCamL 20s linear infinite}
@@ -2233,14 +2422,77 @@ html.lg-refract .fc-refract{display:block}
 @media (prefers-reduced-motion: reduce){
   .ss-pad *{animation-play-state:paused !important}
 }
+
+/* ══ ATLAS ═══════════════════════════════════════════════════════════
+   騎乘地圖：軌跡疊圖（顏色＝那段路騎過幾趟）＋ 行政區灰階（＝在那區騎了多少公里）。
+   兩組色階都跑過 dataviz 的 validate_palette；灰階刻意收斂，橘色才是主角。
+   資料 data/ride-atlas.json 由 scripts/build-ride-atlas.py 產生，進到本 view 才載入。 */
+:root{
+  --at-r1:#7a3410;--at-r2:#a84a12;--at-r3:#d0611a;--at-r4:#ec8340;--at-r5:#f5a771;--at-r6:#fbc9a6;
+  --at-g1:#241e18;--at-g2:#382e25;--at-g3:#4e4234;--at-g4:#665744;--at-g5:#816f57;
+  --at-sea:#07040a;--at-land:rgba(255,255,255,.035);--at-coast:rgba(255,255,255,.24);
+}
+.at-rail{display:flex;flex-direction:column;gap:7px;margin-bottom:12px}
+.at-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.at-row>b{font:600 10px/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;
+  color:var(--ink-3);width:58px;flex:none}
+.at-chip{display:inline-flex;align-items:baseline;gap:6px;border:1px solid var(--hair-2);
+  background:var(--surface);color:var(--ink-1);border-radius:999px;padding:5px 11px 5px 10px;
+  cursor:pointer;font:500 12px/1 var(--f-ui);transition:border-color .14s,background .14s}
+.at-chip:hover{border-color:var(--sig);background:rgba(252,76,2,.08)}
+.at-chip:focus-visible{outline:2px solid var(--sig);outline-offset:2px}
+.at-chip b{font:700 13px/1 var(--f-num);color:var(--at-r5)}
+.at-chip.is-on{background:var(--sig);border-color:var(--sig);color:#120a06}
+.at-chip.is-on b{color:#120a06}
+.at-more{color:var(--ink-3);font:400 11.5px/1 var(--f-ui);padding-left:4px}
+.at-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px}
+.at-bar .sp{flex:1 1 auto}
+.at-bar button{appearance:none;border:1px solid var(--hair-2);background:var(--surface);
+  color:var(--ink-1);font:500 12.5px/1 var(--f-ui);padding:8px 12px;border-radius:8px;
+  cursor:pointer;transition:background .14s,border-color .14s}
+.at-bar button:hover{border-color:var(--sig)}
+.at-bar button[aria-pressed="true"]{background:var(--sig);border-color:var(--sig);color:#120a06}
+.at-bar button:focus-visible{outline:2px solid var(--sig);outline-offset:2px}
+.at-grp{display:inline-flex;border:1px solid var(--hair-2);border-radius:8px;overflow:hidden}
+.at-grp button{border:0;border-radius:0}
+.at-grp button+button{border-left:1px solid var(--hair-2)}
+.at-stage{position:relative;border:1px solid var(--hair-2);border-radius:12px;overflow:hidden;
+  background:var(--at-sea);touch-action:none}
+.at-stage canvas{display:block;width:100%;height:auto;cursor:grab}
+.at-stage canvas.is-drag{cursor:grabbing}
+.at-legend{position:absolute;left:12px;bottom:12px;display:flex;gap:15px;
+  background:rgba(10,4,8,.88);border:1px solid var(--hair-2);border-radius:9px;
+  padding:9px 12px 8px;pointer-events:none;backdrop-filter:blur(4px)}
+.at-legend section{display:flex;flex-direction:column;gap:4px}
+.at-legend h5{margin:0;font:600 9.5px/1 var(--f-mono);letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ink-3)}
+.at-sw,.at-tk{display:grid;gap:2px}
+.at-sw i{height:10px;border-radius:2px}
+.at-tk{font:500 9px/1 var(--f-mono);color:var(--ink-3);text-align:center}
+.at-sw.r,.at-tk.r{grid-template-columns:repeat(6,29px)}
+.at-sw.g,.at-tk.g{grid-template-columns:repeat(5,29px)}
+.at-read{position:absolute;right:12px;top:12px;background:rgba(10,4,8,.88);
+  border:1px solid var(--hair-2);border-radius:9px;padding:9px 11px;pointer-events:none;
+  min-width:162px;font:500 11.5px/1.55 var(--f-mono);color:var(--ink-2);backdrop-filter:blur(4px)}
+.at-read .n{display:block;font:700 22px/1.15 var(--f-num);color:var(--at-r5)}
+.at-read .t{display:block;font:600 13px/1.3 var(--f-ui);color:var(--ink-1);margin-top:3px}
+.at-read.is-idle{color:var(--ink-3)}
+.at-cap{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-top:9px;
+  color:var(--ink-3);font:400 11.5px/1.55 var(--f-ui)}
+.at-cap i{font-style:normal;font-family:var(--f-mono)}
+@media (max-width:700px){
+  .at-row>b{width:100%}
+  .at-legend{left:8px;bottom:8px;gap:10px;padding:7px 9px 6px}
+  .at-sw.r,.at-tk.r{grid-template-columns:repeat(6,22px)}
+  .at-sw.g,.at-tk.g{grid-template-columns:repeat(5,22px)}
+  .at-read{right:8px;top:8px;min-width:0;padding:7px 9px}
+}
 </style>
 </head>
 <body>
 
 <div id="deepfield" aria-hidden="true"><i class="df-neb a"></i><i class="df-neb b"></i><i class="df-aur"></i><i class="df-vig"></i></div>
 <canvas id="star-canvas"></canvas>
-<div id="prog" aria-hidden="true"></div>
-<nav id="rail" aria-label="章節導覽"></nav>
 
 <!-- ═══════════ 左側：星艦全箭發射 ═══════════ -->
 <div class="ss-pad" id="ss-pad-left">
@@ -2824,13 +3076,41 @@ html.lg-refract .fc-refract{display:block}
   </div>
 </div>
 
-<div id="app">
-  <div class="topbar">
-    <a class="back-btn" href="javascript:history.length>1?history.back():location.href='linkTreeIndex.html'">← BACK</a>
-    <span class="topbar-title">Athletics · Strava</span>
+<div class="app">
+  <aside class="side">
+    <div class="side-brand">STEVE<small>ATHLETICS</small></div>
+    <nav class="nav" id="nav" aria-label="主導覽"></nav>
+    <div class="side-foot">
+      <a class="side-lnk" href="https://www.strava.com/athletes/161539959" target="_blank" rel="noopener">Strava ↗</a>
+      <a class="side-lnk" href="linkTreeIndex.html">← Link Tree</a>
+    </div>
+  </aside>
+  <div class="main">
+    <header class="apphead">
+      <span class="ah-t" id="ah-title">Overview</span>
+      <span class="ah-s" id="ah-sub"></span>
+      <span class="ah-r" id="ah-upd"></span>
+    </header>
+    <div class="viewport">
+      <div id="content"><div class="sync">Syncing data…</div></div>
+    </div>
   </div>
-  <div id="content"><div class="loading">Loading athlete data…</div></div>
 </div>
+<nav class="tabbar" id="tabbar" aria-label="主導覽"></nav>
+
+<!-- 共用的 detail drawer：桌機右側抽屜、手機整屏子頁面 -->
+<aside class="drawer" id="drawer" role="dialog" aria-modal="false" aria-labelledby="dw-t" hidden>
+  <div class="dw-head">
+    <button class="dw-back" id="dw-back" type="button">‹ 返回</button>
+    <div class="t">
+      <div class="dw-k" id="dw-k"></div>
+      <div class="dw-t" id="dw-t"></div>
+      <div class="dw-s" id="dw-s"></div>
+    </div>
+    <button class="dw-x" id="dw-x" type="button" aria-label="關閉">✕</button>
+  </div>
+  <div class="dw-body" id="dw-body"></div>
+</aside>
 
 <script>
 /* ── living starfield ──────────────────────────────────────────────
@@ -2964,6 +3244,15 @@ const INDOOR_TAG = '<span class="indoor-tag"><svg width="10" height="10" viewBox
 const BIKE_TAG   = '<span class="bike-tag"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12,2 15.5,8.5 22,9.5 17,14.5 18.5,22 12,18.5 5.5,22 7,14.5 2,9.5 8.5,8.5"/></svg>TCR Pro 0</span>'
 
 /* ── helpers ── */
+/* 通用的展開/收合。收合時的文字掛在按鈕的 data-more 上，這樣同一支函式可以服務不同的清單。 */
+function toggleMore(btn) {
+  const els = [...document.querySelectorAll('[data-grp="' + btn.dataset.grp + '"]')]
+  if (!els.length) return
+  const show = els[0].style.display === 'none'
+  els.forEach(e => { e.style.display = show ? '' : 'none' })
+  btn.textContent = show ? '▲ 收起' : (btn.dataset.more || '▼ 展開')
+  btn.setAttribute('aria-expanded', String(show))
+}
 function toggleLaps(btn, gid) {
   const els = [...document.querySelectorAll('[data-lapgrp="' + gid + '"]')]
   if (!els.length) return
@@ -2985,6 +3274,13 @@ function effortTimeKey(e) {
 }
 function sameEffort(a, b) {
   return !!a && !!b && effortKey(a) === effortKey(b)
+}
+/* 表格欄位用的緊湊時長：h:mm / m 分。中文版（fmtMovingTime）語意清楚但太寬，
+   在一欄 4.4rem 的表格裡會被截掉，所以列表另外用這個。 */
+function fmtDur(hr) {
+  const totalMin = Math.max(0, Math.round((hr || 0) * 60))
+  if (totalMin < 60) return `${totalMin}<small>min</small>`
+  return `${Math.floor(totalMin / 60)}:${String(totalMin % 60).padStart(2, '0')}`
 }
 function fmtMovingTime(hr) {
   // PRD FR-4: 避免 "1:00" 歧義，改為 "45 分" / "1 小時" / "1 小時 30 分"
@@ -3332,36 +3628,65 @@ function renderMesocycle(block) {
     return { cls: 'sched', badge: '➖ SCHEDULED', sub: `${md(s.date)} 週${wd(s.date)}` }
   }
 
+  // 狀態文字：不再是每一堂都掛一顆 badge，只留右對齊的一個小字（§45）
+  const ST_TXT = { ok:'達標', over:'超標', under:'未達', missed:'未執行', next:'下一堂', sched:'' }
+  // 三個層級（§23）：做過的＝低對比、未來的＝低對比、下一堂＝最高優先
+  const tier = st => st.cls === 'next' ? 'next' : (st.cls === 'sched' ? 'future' : 'past')
+
+  // 抽屜要用的原始資料：只是把已經算好的東西存起來，沒有第二套判斷
+  const detail = {}
   const rows = S.map((s, i) => {
     const st = state(s, i)
     const t = s.target || {}
-    let nums
-    if (s.actual) {
-      const p = MC_PASS(s.actual, t)
-      const m = (k, label, val) => p[k] == null
-        ? ''
-        : `<span class="mc-m ${p[k] ? 'ok' : 'no'}">${label} <b>${val}</b><i>${p[k] ? '✓' : '✗'}</i></span>`
-      nums = m('if', 'IF', n2(s.actual.if)) + m('tss', 'TSS', Math.round(s.actual.tss ?? 0)) + m('vi', 'VI', n2(s.actual.vi))
-    } else {
-      nums = `<span class="mc-tgt">目標 IF ${n2(t.if)} · TSS ${t.tss ?? '—'} · VI ≤${n2(t.vi)}</span>`
-    }
-    const href = s.actual?.ride ? `rides/${s.actual.ride}.html` : null
-    const inner = `
-      <div class="mc-s-top">
-        <span class="mc-wk">${s.wk || ''}</span>
-        <span class="mc-nm">${s.name || ''}</span>
-        <span class="mc-dt">${md(s.date)} ${wd(s.date)}${href ? ' <i>↗</i>' : ''}</span>
-      </div>
-      <div class="mc-plan">${s.plan || ''}</div>
-      <div class="mc-res">
-        <span class="status-badge mc-b-${st.cls}">${st.badge}</span>
-        <span class="mc-sub">${s.actual?.note || st.sub}</span>
-        <span class="mc-nums">${nums}</span>
-      </div>`
-    return href
-      ? `<a class="mc-s is-${st.cls} has-link" href="${href}">${inner}</a>`
-      : `<div class="mc-s is-${st.cls}">${inner}</div>`
+    const p = s.actual ? MC_PASS(s.actual, t) : null
+    // 做過的三個數字帶達標色（判定來自 MC_PASS，沒有第二套規則）；還沒做的顯示目標
+    const num = s.actual
+      ? [p.if  == null ? '' : `<em class="${p.if  ? 'ok' : 'no'}">IF ${n2(s.actual.if)}</em>`,
+         p.tss == null ? '' : `<em class="${p.tss ? 'ok' : 'no'}">TSS ${Math.round(s.actual.tss ?? 0)}</em>`,
+         p.vi  == null ? '' : `<em class="${p.vi  ? 'ok' : 'no'}">VI ${n2(s.actual.vi)}</em>`]
+        .filter(Boolean).join(' ')
+      : `IF ${n2(t.if)} · TSS ${t.tss ?? '—'} · VI ≤${n2(t.vi)}`
+    detail[s.date] = { s, st, p, i }
+    return `<button class="ses ses--${tier(st)} is-${st.cls}" type="button" data-ses="${s.date}">
+      <span class="ses-wk">${s.wk || ''}</span>
+      <span class="ses-nm">${s.name || ''}</span>
+      <span class="ses-dt">${md(s.date)} ${wd(s.date)}</span>
+      <span class="ses-st">${ST_TXT[st.cls] || ''}</span>
+      <span class="ses-go">→</span>
+      <span class="ses-sub">${s.actual?.note || s.plan || st.sub}</span>
+      <span class="ses-num">${num}</span>
+    </button>`
   }).join('')
+  window.__mcDetail = detail
+
+  // ── NEXT SESSION：Plan 的主指示，配 TARGET vs PREVIOUS（前一堂做完的實際值）──
+  const nx = nextIdx >= 0 ? S[nextIdx] : null
+  const prevDone = nx ? S.slice(0, nextIdx).filter(x => x.actual).pop() : null
+  const nxHtml = nx ? (() => {
+    const t = nx.target || {}, pa = prevDone?.actual || null
+    const days = Math.round((Date.parse(nx.date) - Date.parse(today)) / 86400000)
+    return `
+      <div class="nx">
+        <div class="nx-top">
+          <span class="nx-k">Next session</span>
+          <span class="nx-dt">${md(nx.date)} 週${wd(nx.date)} · ${days <= 0 ? '就是今天' : `還有 ${days} 天`}</span>
+        </div>
+        <div class="nx-nm">${nx.name || ''}</div>
+        ${nx.plan ? `<div class="nx-plan">${nx.plan}</div>` : ''}
+        <div class="nx-cmp">
+          <span></span><span>IF</span><span>TSS</span><span>VI</span>
+          <span class="rl">Target</span>
+          <b>${n2(t.if)}</b><b>${t.tss ?? '—'}</b><b>≤${n2(t.vi)}</b>
+          ${pa ? `<span class="rl">Previous</span>
+          <i>${n2(pa.if)}</i><i>${Math.round(pa.tss ?? 0) || '—'}</i><i>${n2(pa.vi)}</i>` : ''}
+        </div>
+        <div class="nx-act">
+          <button class="dw-cta" type="button" data-ses="${nx.date}" data-drawer="1">
+            <span>檢視這一堂</span><span>→</span>
+          </button>
+        </div>
+      </div>`
+  })() : ''
 
   const track = S.map((s, i) => `<span class="mc-tk is-${state(s, i).cls}" title="${md(s.date)} ${s.name || ''}"></span>`).join('')
 
@@ -3381,9 +3706,9 @@ function renderMesocycle(block) {
     : `${done.length} / ${S.length} 完成` +
       (nextIdx >= 0 ? ` · 下一堂 ${md(S[nextIdx].date)} 週${wd(S[nextIdx].date)}` : '')
 
+  // §40：週期本身不再整個包在 .console 框裡 —— 只有「前後測」那個結論值得容器。
   return `
-    <div class="section-title">週期 <span class="muted">· MESOCYCLE</span></div>
-    <div class="mc console${over ? ' is-over' : ''}">
+    <div class="block mc${over ? ' is-over' : ''}">
       <div class="mc-hd">
         <div class="mc-ttl">
           <b>${block.title || ''}</b><i>${block.title_en || ''}</i>
@@ -3399,9 +3724,53 @@ function renderMesocycle(block) {
         <span class="mc-test-v">${mcNum(pre)}<i>→</i>${mcNum(post)}<small>${unit}</small></span>
         <span class="mc-test-s">${testSub}</span>
       </div>
-      <div class="mc-list">${rows}</div>
-      ${block.note ? `<div class="mc-note">${block.note}</div>` : ''}
+    </div>
+    ${nxHtml ? `<div class="block">${nxHtml}</div>` : ''}
+    <div class="block">
+      <div class="section-title">全部課表 <span class="muted">· ${S.length} SESSIONS · 點一列看細節</span></div>
+      <div class="ses-list">${rows}</div>
+      ${block.note ? `<p class="view-sub" style="margin:14px 0 0">${block.note}</p>` : ''}
     </div>`
+}
+
+/* 課表細節抽屜：資料全部來自 renderMesocycle 已經算好的 detail map，這裡只負責排版。 */
+function openSessionDrawer(date) {
+  const d = (window.__mcDetail || {})[date]
+  if (!d) return
+  const { s, st, p } = d
+  appState.selectedSession = date
+  const h = '#plan/session/' + date
+  if (location.hash !== h) history.replaceState({ view: 'plan', ses: date }, '', h)
+  const n2 = v => v == null ? '—' : (+v).toFixed(2).replace(/^0/, '')
+  const WD = ['日','一','二','三','四','五','六']
+  const wd = x => WD[new Date(x + 'T00:00:00Z').getUTCDay()]
+  const t = s.target || {}, a = s.actual || null
+  // tv 給 null 代表這一項沒有目標可比（例如前後測的量測值），就只顯示單位
+  const kv = (label, unit, tv, av, pass) => `
+    <div class="dw-kv"><span class="u">${label}</span>
+      <b>${av != null ? av : tv}</b>
+      <span class="u">${av != null && tv != null ? `目標 ${tv}` : unit}</span>
+      ${pass == null ? '' : `<span class="m ${pass ? 'ok' : 'no'}">${pass ? '達標' : '未達'}</span>`}
+    </div>`
+  const body =
+    (s.plan ? `<div class="dw-sec"><h4>處方 · Prescription</h4><div class="dw-p">${s.plan}</div></div>` : '') +
+    `<div class="dw-sec"><h4>${a ? '實際 vs 目標 · Actual vs target' : '目標 · Target'}</h4>
+      ${kv('IF', '', n2(t.if), a ? n2(a.if) : null, p ? p.if : null)}
+      ${kv('TSS', '', t.tss ?? '—', a ? Math.round(a.tss ?? 0) : null, p ? p.tss : null)}
+      ${kv('VI', '', '≤' + n2(t.vi), a ? n2(a.vi) : null, p ? p.vi : null)}
+      ${a && a.test != null ? kv('前後測', 'W 量測值', null, a.test, null) : ''}
+    </div>` +
+    `<div class="dw-sec"><h4>狀態 · Status</h4>
+      <div class="dw-p">${st.badge} · ${a?.note || st.sub}</div></div>` +
+    (a?.ride
+      ? `<a class="dw-cta" href="rides/${a.ride}.html"><span>打開這一趟的報告</span><span>↗</span></a>`
+      : '<div class="nil">還沒有這一堂的騎乘報告。</div>')
+  openDrawer({
+    label: (s.wk || '') + (s.code ? ' · ' + s.code : ''),
+    title: s.name || '',
+    sub: `${s.date} 週${wd(s.date)}`,
+    body,
+  })
 }
 
 function renderTrainingCalendar(data) {
@@ -3556,6 +3925,9 @@ function initTrainingCalendarNav() {
   }
   requestAnimationFrame(() => { toEnd(); requestAnimationFrame(toEnd) })
   setTimeout(toEnd, 300)
+  // Plan view 一開始是 display:none，scrollWidth 量到 0 → 捲不到今天。
+  // 所以把「捲到底」開出去，view 真的顯示出來的那一刻再補一次。
+  window.__tcalRefresh = () => { toEnd(); requestAnimationFrame(toEnd) }
 }
 
 /* ── 戰情室：每張 ITT 卡直接帶「每次挑戰的時間曲線」+「我 vs 同事」 ──
@@ -3832,6 +4204,8 @@ function renderSegments(segs) {
     </div>`
   }
 
+  // 主清單的列（§26）。全部取自下面同一輪迴圈算好的值，沒有第二次計算。
+  const listRows = []
   const cards = segs.map((seg, idx) => {
     const meta   = SEG_META[seg.id] || {}
     const sorted = (seg.efforts || []).slice().sort((a,b) => a.elapsed_sec - b.elapsed_sec)
@@ -3967,6 +4341,14 @@ function renderSegments(segs) {
     const gradeLabel = (meta.avgGrade != null && meta.maxGrade != null)
       ? `均坡 ${meta.avgGrade}% · 最陡 ${meta.maxGrade}%` : ''
 
+    listRows.push(`<button class="itt-row" type="button" data-seg="${seg.id}" style="--fc-accent:${accent}">
+      <span class="ir-nm">${meta.nameZh || seg.name}</span>
+      <span class="ir-t">${prTimeStr}</span>
+      <span class="ir-sc">${scorePct !== null ? scorePct : '—'}<i>${scorePct !== null ? '%' : ''}</i></span>
+      <span class="ir-st" style="color:${statusCol}">${statusLine}</span>
+      <span class="ir-n">${attempts}</span>
+    </button>`)
+
     return `<div class="fc ${sizeClass}" style="--fc-accent:${accent};--fc-status:${statusCol}" data-fc data-segid="${seg.id}">
       <canvas class="fc-canvas"></canvas>
       <div class="fc-glass"></div>
@@ -4044,22 +4426,39 @@ function renderSegments(segs) {
     </div>`
   }).join('')
 
+  window.__ittCount = `${segs.length} 條路線 / ${Object.keys(bySeg).length} 段`
+  window.__ittFirstSeg = segs.length ? String(segs[0].id) : null
+  // §26/§28：預設是 Master → Detail 的清單；抽卡檯面／輪播降為 COLLECTION 次要模式。
   return `
-    <div class="section-title"><span>ITT 區間 <span class="muted">· SEGMENT EFFORTS · ${segs.length} 條路線 / ${Object.keys(bySeg).length} 段</span></span></div>
-    <div class="itt-tabs">
-      <button class="itt-tab-btn" onclick="toggleIttLevel(this,'status')">📋 狀態一覽</button>
-      <button class="itt-tab-btn" onclick="toggleIttLevel(this,'calc')">⚙️ 計算方式</button>
-      <button class="itt-tab-btn" onclick="toggleIttLevel(this,'flow')">🔀 判斷流程</button>
-      <button class="itt-tab-btn" onclick="toggleIttLevel(this,'example')">📊 範例</button>
+    <div class="itt-bar">
+      <div class="itt-modes" role="tablist" aria-label="ITT 檢視模式">
+        <button class="itt-mode" type="button" data-ittmode="list" role="tab">List</button>
+        <button class="itt-mode" type="button" data-ittmode="collection" role="tab">Collection</button>
+      </div>
+      <div class="itt-tabs">
+        <button class="itt-tab-btn" onclick="toggleIttLevel(this,'status')">📋 狀態一覽</button>
+        <button class="itt-tab-btn" onclick="toggleIttLevel(this,'calc')">⚙️ 計算方式</button>
+        <button class="itt-tab-btn" onclick="toggleIttLevel(this,'flow')">🔀 判斷流程</button>
+        <button class="itt-tab-btn" onclick="toggleIttLevel(this,'example')">📊 範例</button>
+      </div>
     </div>
-    <div class="fc-carousel">
-      <button class="fc-nav prev" aria-label="上一個路段">‹</button>
-      <div class="fc-grid" id="fc-grid" aria-label="ITT 路段卡片">${cards}</div>
-      <button class="fc-nav next" aria-label="下一個路段">›</button>
-      <div class="fc-dots" id="fc-dots" role="tablist" aria-label="路段頁點"></div>
-      <div class="fc-hint" aria-hidden="true">
-        <span class="fc-hint-mouse">拖曳瀏覽 · 長按卡片排序</span>
-        <span class="fc-hint-touch">左右滑動 · 長按卡片排序</span>
+    <div class="itt-shell" id="itt-shell">
+      <div class="itt-list" id="itt-list">
+        <div class="itt-lhead"><span>Segment</span><span>Best</span><span>Score</span><span>Status</span><span>N</span></div>
+        ${listRows.join('')}
+      </div>
+      <div class="itt-stage">
+        <button class="itt-back" id="itt-back" type="button">‹ 全部路段</button>
+        <div class="fc-carousel">
+          <button class="fc-nav prev" aria-label="上一個路段">‹</button>
+          <div class="fc-grid" id="fc-grid" aria-label="ITT 路段卡片">${cards}</div>
+          <button class="fc-nav next" aria-label="下一個路段">›</button>
+          <div class="fc-dots" id="fc-dots" role="tablist" aria-label="路段頁點"></div>
+          <div class="fc-hint" aria-hidden="true">
+            <span class="fc-hint-mouse">拖曳瀏覽 · 長按卡片排序</span>
+            <span class="fc-hint-touch">左右滑動 · 長按卡片排序</span>
+          </div>
+        </div>
       </div>
     </div>`
 }
@@ -4173,15 +4572,17 @@ function bindSegmentCards() {
   }, { threshold: .2 })
   cards.forEach(c => revealObs.observe(c))
 
-  // 兩套互動都綁上去，各自在事件裡檢查目前模式 —— 這樣拉寬拉窄可以來回切，
+  // 三套互動都綁上去，各自在事件裡檢查目前模式 —— 這樣拉寬拉窄可以來回切，
   // 不必拆掉 DOM 再重建（拆掉重建會讓 3D 場景與已擺好的位置一起消失）
   initIttCarousel(reduce)
   initIttBoard(reduce)
+  initIttShell()
   applyIttMode()
   if (!window.__ittModeWatch) {
     window.__ittModeWatch = true
     let was = ittBoardMode()
     addEventListener('resize', () => {
+      if (ittMode() === 'list') return   // 清單模式的版面純 CSS，不必重排
       const now = ittBoardMode()
       if (now === was) return
       was = now
@@ -4189,10 +4590,38 @@ function bindSegmentCards() {
     })
   }
 }
+/* ── ITT 檢視模式 ──────────────────────────────────────────────────
+   LIST（預設）＝ Master → Detail：左邊一張全部路段的表，右邊只掛「選中的那一條」。
+   COLLECTION ＝ 舊的抽卡檯面（桌機）／輪播（手機），降為次要模式，拖曳排序仍在。
+   兩套共用同一份 DOM，只靠 class 決定誰現身 —— 切模式不重建卡片，3D 場景與位置才不會消失。 */
+const ITT_MODE_KEY = 'itt-view-mode-v1'
+const ittMode = () => { try { return localStorage.getItem(ITT_MODE_KEY) === 'collection' ? 'collection' : 'list' } catch (e) { return 'list' } }
+function setIttMode(m) {
+  try { localStorage.setItem(ITT_MODE_KEY, m) } catch (e) {}
+  applyIttMode()
+}
 function applyIttMode() {
   const grid = document.getElementById('fc-grid')
   if (!grid) return
   const wrap = grid.closest('.fc-carousel')
+  const shell = document.getElementById('itt-shell')
+  const list = ittMode() === 'list'
+  shell?.classList.toggle('is-list', list)
+  document.querySelectorAll('.itt-mode').forEach(b =>
+    b.setAttribute('aria-selected', String(b.dataset.ittmode === (list ? 'list' : 'collection'))))
+
+  if (list) {
+    // 清單模式：檯面／輪播的狀態全部收掉，卡片交給 .fc-list 的 CSS 控制誰現身
+    grid.classList.remove('fc-board', 'has-open')
+    wrap.classList.remove('is-board')
+    grid.classList.add('fc-list')
+    grid.style.height = ''
+    grid.querySelectorAll('.fc').forEach(c => { c.style.display = ''; c.classList.remove('fc-open', 'fc-drag'); c.style.zIndex = '' })
+    selectSegment(appState.selectedSegment || window.__ittFirstSeg, { silent: true })
+    return
+  }
+
+  grid.classList.remove('fc-list')
   const board = ittBoardMode()
   grid.classList.toggle('fc-board', board)
   wrap.classList.toggle('is-board', board)
@@ -4207,6 +4636,46 @@ function applyIttMode() {
     if (grid.__carouselSync) grid.__carouselSync()
   }
   if (typeof THREE !== 'undefined') setupSeg3D()
+}
+
+/* 選一條路段 → 右邊只掛這一條。setupSeg3D() 開頭就會把舊場景整組 dispose，
+   所以「切換路段＝換一顆 3D 場景」是自然發生的，不需要另外管生命週期。 */
+function selectSegment(id, opts) {
+  if (id == null) return
+  const sid = String(id)
+  appState.selectedSegment = sid
+  document.querySelectorAll('.itt-row').forEach(r => r.classList.toggle('is-on', r.dataset.seg === sid))
+  let hit = false
+  document.querySelectorAll('#fc-grid .fc').forEach(c => {
+    const on = String(c.dataset.segid) === sid
+    c.classList.toggle('is-sel', on)
+    if (on) hit = true
+  })
+  if (!hit) return
+  // 手機是「清單 → 詳情 → 返回」，所以只有使用者真的選了（或深連結指定了）才切到詳情畫面；
+  // applyIttMode 的預設選取是 silent，不該一進 ITT 就跳過清單。
+  if (!(opts && opts.silent) || (opts && opts.reveal)) document.getElementById('itt-shell')?.classList.add('is-detail')
+  if (!(opts && opts.silent)) {
+    const h = '#itt/segment/' + sid
+    if (location.hash !== h) history.replaceState({ view: 'itt', seg: sid }, '', h)
+  }
+  const stage = document.querySelector('.itt-stage')
+  if (stage && !(opts && opts.silent)) stage.scrollIntoView({ block: 'nearest' })
+  if (typeof THREE !== 'undefined') setupSeg3D()
+  else loadThreeJS().then(setupSeg3D).catch(() => {})
+}
+function initIttShell() {
+  const shell = document.getElementById('itt-shell')
+  if (!shell || shell.dataset.bound) return
+  shell.dataset.bound = '1'
+  document.getElementById('itt-list')?.addEventListener('click', e => {
+    const r = e.target.closest('.itt-row')
+    if (r) selectSegment(r.dataset.seg)
+  })
+  // 手機：清單 → 詳情 → 返回，是 navigation，不是往下捲
+  document.getElementById('itt-back')?.addEventListener('click', () => shell.classList.remove('is-detail'))
+  document.querySelectorAll('.itt-mode').forEach(b =>
+    b.addEventListener('click', () => setIttMode(b.dataset.ittmode)))
 }
 
 /* ── ITT 檯面 ──────────────────────────────────────────────────
@@ -4260,7 +4729,10 @@ function initIttBoard(reduce) {
     c.style.setProperty('--y', cy + 'px')
     c.style.setProperty('--rot', state.pos[idOf(c)].rot + 'deg')
   }
-  // 置中的網格：欄數看檯面塞得下幾張，列高取最高那張，整體垂直置中
+  // 置中的網格：欄數看檯面塞得下幾張，每一列各自量高（不是全站共用一個最高值）——
+  // 卡片內容長短差很多（有沒有分段列表、對戰列），全站共用同一個列高會讓矮卡片那排
+  // 留下一大片空白，看起來很像沒排好。列高只看收起態的卡：展開中的那張有六百多，
+  // 拿它算會把那一列撐成兩倍高。
   const tidy = () => {
     const W = boardW(), G = ITT_BOARD_GAP, P = ITT_BOARD_PAD
     const fit = Math.max(1, Math.min(cards.length, Math.floor((W - P * 2 + G) / (ITT_CARD_W + G))))
@@ -4268,12 +4740,21 @@ function initIttBoard(reduce) {
     // 先用「塞得下的欄數」算出需要幾列，再回頭把欄數收成剛好夠那幾列 → 3x3。
     const rows = Math.ceil(cards.length / fit)
     const cols = Math.ceil(cards.length / rows)
-    // 列高只看收起態的卡：展開中的那張有六百多，拿它算會把檯面撐成兩倍高
-    const ch = cards.reduce((m, c) => c.classList.contains('fc-open') ? m : Math.max(m, cardH(c)), 0) || 150
     const x0 = Math.max(P, (W - (cols * ITT_CARD_W + (cols - 1) * G)) / 2)
+    const rowY = []
+    let y = P
+    for (let r = 0; r < rows; r++) {
+      let h = 0
+      for (let c = 0; c < cols; c++) {
+        const card = cards[r * cols + c]
+        if (card && !card.classList.contains('fc-open')) h = Math.max(h, cardH(card))
+      }
+      rowY.push(y)
+      y += (h || 150) + G
+    }
     return {
-      height: rows * ch + (rows - 1) * G + P * 2,
-      at: i => ({ x: x0 + (i % cols) * (ITT_CARD_W + G), y: P + Math.floor(i / cols) * (ch + G), rot: 0 }),
+      height: y - G + P,
+      at: i => ({ x: x0 + (i % cols) * (ITT_CARD_W + G), y: rowY[Math.floor(i / cols)], rot: 0 }),
     }
   }
   function layout() {
@@ -6460,8 +6941,10 @@ function setupSeg3D() {
     SEG3D = null
     window.__seg3d = null
   }
-  // 抽卡桌模式下只有「展開中」的卡建場景；收起的卡完全不佔 GPU
+  // 只有「畫得到的」卡才建場景。offsetParent 為 null 代表它（或祖先）是 display:none ——
+  // 清單模式的未選路段、抽卡檯面收起的卡，都會被這一條擋掉，完全不佔 GPU。
   const canvases = [...document.querySelectorAll('canvas.fc-3d')].filter(cv => {
+    if (!cv.offsetParent) return false
     const board = cv.closest('.fc-board')
     if (!board) return true
     const card = cv.closest('.fc')
@@ -6734,7 +7217,6 @@ function renderTimeline(list, type, expanded, ittMap, pwrAchv) {
         const aIcon = ICONS[aType] || ICONS.ride
         const tags = []
         if (aIsSwim && a.distance_km)   tags.push(`<span class="tag">🏊 ${Math.round(a.distance_km * 1000)} m</span>`)
-        tags.push(`<span class="tag">⏱ ${fmtMovingTime(a.moving_time_hr || 0)}</span>`)
         if (!aIsWeight && !aIsSwim && a.elevation_m >= 100) tags.push(`<span class="tag">↑${a.elevation_m}m</span>`)
         if (aIsRun && a.avg_pace_km)     tags.push(`<span class="tag">💨 ${a.avg_pace_km}/km</span>`)
         if (aIsRun && a.avg_cadence_spm) tags.push(`<span class="tag">🦵 ${a.avg_cadence_spm} spm</span>`)
@@ -6759,24 +7241,40 @@ function renderTimeline(list, type, expanded, ittMap, pwrAchv) {
         const route3dBtn = (aIsRide && a.id && a.route_stream && a.route_stream.length > 1)
           ? `<button class="r3d-trigger-btn" onclick="openRoute3D(${a.id})" title="3D 路線回放">🛰️ 3D</button>` : ''
         const pwrBadge = aIsRide ? powerAchvHTML(achvOf(a)) : ''
-        const ittBadges = (aIsRide && ittMap && ittMap[date])
-          ? ittMap[date].map(it => {
-              const isPr = it.is_pr
-              const crown = isPr ? '👑' : `<span style="font-size:11px;color:#555">#${it.attemptNum}</span>`
-              const rankStr = it.rank ? (it.rank === 1 ? '🥇 第1名' : `第${it.rank}名`) : ''
-              const attempt = isPr ? `第${it.attemptNum}次 · 🏆 PR ${rankStr}` : `第${it.attemptNum} / ${it.total} 次 · ${rankStr}`
-              return `<div class="itt-badge${isPr ? ' pr' : ''}">
-                <div class="itt-crown">${crown}</div>
-                <div class="itt-info">
-                  <div class="itt-seg-name">${it.segName}</div>
-                  <div class="itt-time">${it.elapsed_str}</div>
-                </div>
-                <div class="itt-attempt">${attempt}</div>
-              </div>`
-            }).join('')
+        /* ITT 徽章：一趟「劍中中中中劍」會刷掉三十幾個重疊路段（母路線 + 上半 + 四等分 …），
+           全部攤在活動列裡會把那一天洗成一面牆。預設只留**破 PR 的那幾次**，
+           其餘收進一顆可展開的鈕 —— 資料一筆都沒少，只是不預設攤開。 */
+        const ittList = (aIsRide && ittMap && ittMap[date]) ? ittMap[date] : []
+        const ittBadge = it => {
+          const isPr = it.is_pr
+          const crown = isPr ? '👑' : `<span style="font-size:11px;color:#555">#${it.attemptNum}</span>`
+          const rankStr = it.rank ? (it.rank === 1 ? '🥇 第1名' : `第${it.rank}名`) : ''
+          const attempt = isPr ? `第${it.attemptNum}次 · 🏆 PR ${rankStr}` : `第${it.attemptNum} / ${it.total} 次 · ${rankStr}`
+          return `<div class="itt-badge${isPr ? ' pr' : ''}">
+            <div class="itt-crown">${crown}</div>
+            <div class="itt-info">
+              <div class="itt-seg-name">${it.segName}</div>
+              <div class="itt-time">${it.elapsed_str}</div>
+            </div>
+            <div class="itt-attempt">${attempt}</div>
+          </div>`
+        }
+        const ittPr   = ittList.filter(it => it.is_pr)
+        const ittRest = ittList.filter(it => !it.is_pr)
+        const bestRank = ittRest.length ? Math.min(...ittRest.map(it => it.rank || 9999)) : null
+        // 就地展開會把摘要那一行推走三十幾列，收回來又跳回原位 —— 那一跳就是「怪怪的」。
+        // 改成開右側抽屜：這一行永遠留在原地，清單有自己的空間，也才排得下分組標題。
+        const ittMore = ittRest.length
+          ? `<button class="lap-toggle itt-more" type="button" data-ittday="${date}">
+               ${ittPr.length ? '另外 ' : ''}${ittRest.length} 次路段挑戰${bestRank && bestRank < 9999 ? ` · 最佳第 ${bestRank} 名` : ''} →
+             </button>`
           : ''
+        const ittBadges = ittList.length ? ittPr.map(ittBadge).join('') + ittMore : ''
+        const distCell = (!aIsWeight && !aIsSwim && a.distance_km)
+          ? `${a.distance_km}<small>km</small>`
+          : (!aIsWeight && aIsSwim && a.distance_km) ? `${Math.round(a.distance_km*1000)}<small>m</small>` : '—'
         return `
-        <div class="activity-card">
+        <div class="activity-card" data-act="${a.id || ''}">
           <div class="activity-icon"><svg viewBox="0 0 24 24">${aIcon}</svg></div>
           <div class="activity-info">
             <div class="activity-name-wrap"><div class="activity-name">${a.trainer ? INDOOR_TAG : (aIsRide ? BIKE_TAG : '')}${a.name || '—'}</div>${stravaLink}${route3dBtn}</div>
@@ -6786,7 +7284,9 @@ function renderTimeline(list, type, expanded, ittMap, pwrAchv) {
             ${pwrBadge}
             ${ittBadges}
           </div>
-          ${(!aIsWeight && !aIsSwim && a.distance_km) ? `<div class="activity-dist">${a.distance_km}<small style="font-size:11px;font-weight:400;margin-left:2px">km</small></div>` : (!aIsWeight && aIsSwim && a.distance_km) ? `<div class="activity-dist">${Math.round(a.distance_km*1000)}<small style="font-size:11px;font-weight:400;margin-left:2px">m</small></div>` : ''}
+          <div class="ac-n ac-time">${fmtDur(a.moving_time_hr || 0)}</div>
+          <div class="ac-n activity-dist">${distCell}</div>
+          <div class="ac-n ac-tss">${a.tss != null ? `${a.tss}<small>tss</small>` : '<span class="ac-dash">—</span>'}</div>
         </div>`
       }).join('')}
     </div>
@@ -6931,11 +7431,11 @@ function render(data) {
 
   // tabs config
   const tabs = [
-    { key:'all',    label:'📋 全部',   list: allList             },
-    { key:'ride',   label:'🚴 單車',   list: data.recent_rides   },
-    { key:'run',    label:'🏃 跑步',   list: data.recent_runs    },
-    { key:'swim',   label:'🏊 游泳',   list: data.recent_swims   },
-    { key:'weight', label:'🏋️ 重訓', list: data.recent_weights },
+    { key:'all',    label:'全部',   list: allList             },
+    { key:'ride',   label:'單車',   list: data.recent_rides   },
+    { key:'run',    label:'跑步',   list: data.recent_runs    },
+    { key:'swim',   label:'游泳',   list: data.recent_swims   },
+    { key:'weight', label:'重訓',   list: data.recent_weights },
   ]
   // only show tabs that have data
   const activeTabs = tabs.filter(t => t.list && t.list.length > 0)
@@ -6955,9 +7455,11 @@ function render(data) {
     sorted.forEach((e, idx) => {
       const d = (e.date || '').slice(0, 10)
       if (!ittMap[d]) ittMap[d] = []
-      ittMap[d].push({ segName: seg.name, elapsed_str: e.elapsed_str, is_pr: e.is_pr, attemptNum: idx + 1, total: sorted.length, rank: rankOf.get(effortKey(e)), activityId: e.activity_id, startTime: e.start_time || null })
+      ittMap[d].push({ segId: seg.id, segName: seg.name, elapsed_str: e.elapsed_str, is_pr: e.is_pr, attemptNum: idx + 1, total: sorted.length, rank: rankOf.get(effortKey(e)), activityId: e.activity_id, startTime: e.start_time || null })
     })
   })
+
+  window.__ittMap = ittMap
 
   function tabHTML() {
     return activeTabs.map(t => `
@@ -6969,149 +7471,105 @@ function render(data) {
     return renderTimeline(t?.list, activeTab, showMore[activeTab] || false, ittMap, pwrAchv)
   }
 
-  // ── 月度訓練量圖表（章節內容） ──
+  // ── 月度訓練量（§31 metric switch + §32 time range）──
+  //    四個指標的值全部來自上面已經算好的 monthDist / monthElev / monthAgg，
+  //    切換只是換一個欄位畫，不重算任何東西。
+  const maxTss = Math.max(...history.map(h => (monthAgg[h.month] || {}).tss || 0), 1)
+  const METRICS = [
+    { k:'dist', zh:'距離', en:'Distance',  u:'km', max:maxDist,     v:h => monthDist(h) },
+    { k:'elev', zh:'爬升', en:'Elevation', u:'m',  max:maxElev,     v:h => monthElev(h) },
+    { k:'hr',   zh:'時數', en:'Hours',     u:'hr', max:maxMonthHr,  v:h => Math.round(((monthAgg[h.month]||{}).hr || 0) * 10) / 10 },
+    { k:'tss',  zh:'TSS',  en:'TSS',       u:'',   max:maxTss,      v:h => Math.round((monthAgg[h.month]||{}).tss || 0) },
+  ]
+  const RANGES = [
+    { k:'3',   label:'3M'  }, { k:'6',   label:'6M' },
+    { k:'ytd', label:'YTD' }, { k:'12',  label:'1Y' }, { k:'all', label:'ALL' },
+  ]
   const volumeHtml = history.length ? `
-    <div class="monthly-chart">
+    <div class="block">
       <div class="section-title">月度訓練量 <span class="muted">· MONTHLY VOLUME</span></div>
-      <div class="chart-legend"><span><i class="dist"></i>里程 KM</span><span><i class="elev"></i>爬升 M</span><span><i class="hr"></i>時數 HR</span><span>🏆 PR 月份</span></div>
-      <div class="chart-rows" id="chart-rows">
-        ${(() => {
-          // group by year
-          const byYear = {}
-          history.forEach(h => {
-            const y = h.month.slice(0, 4)
-            if (!byYear[y]) byYear[y] = []
-            byYear[y].push(h)
-          })
-          const years = Object.keys(byYear).sort((a,b) => b.localeCompare(a)) // newest first
-          const currentYear = new Date().getFullYear().toString()
-          return years.map(year => {
-            const collapsed = year !== currentYear
-            const rows = byYear[year].map(h => {
-              const dist = monthDist(h)
-              const elev = monthElev(h)
-              const distPct = dist > 0 ? Math.max((dist / maxDist) * 100, 4) : 0
-              const elevPct = elev > 0 ? Math.max((elev / maxElev) * 100, 4) : 0
-              const agg = monthAgg[h.month] || {}
-              const hrVal = Math.round((agg.hr || 0) * 10) / 10
-              const hrPct = hrVal > 0 ? Math.max((hrVal / maxMonthHr) * 100, 4) : 0
-              const tss = Math.round(agg.tss || 0)
-              const prs = prMonths[h.month] || []
-              const prBadge = prs.length
-                ? `<span class="chart-pr" title="${prs.join('\n').replace(/"/g, '&quot;')}">🏆${prs.length > 1 ? `<i>${prs.length}</i>` : ''}</span>` : ''
-              const prevDist = distByMonth[prevMonthKey(h.month)]
-              let trendChip = ''
-              if (prevDist > 0 && dist > 0) {
-                const pct = Math.round((dist - prevDist) / prevDist * 100)
-                const cls = pct > 2 ? 'up' : pct < -2 ? 'down' : 'flat'
-                const arrow = pct > 2 ? '▲' : pct < -2 ? '▼' : '─'
-                trendChip = `<span class="chart-trend ${cls}" title="里程 vs 上月">${arrow} ${Math.abs(pct)}%</span>`
-              }
-              return `
-                <div class="chart-row">
-                  <div class="chart-label">${fmtMonthLabel(h.month)}${prBadge}</div>
-                  <div class="chart-bar-wrap">
-                    <div class="chart-track dist">
-                      <div class="chart-bar dist" data-pct="${distPct}">
-                        <span class="chart-bar-val">${dist.toLocaleString()}<small>km</small></span>
-                      </div>
-                    </div>
-                    <div class="chart-track elev">
-                      <div class="chart-bar elev" data-pct="${elevPct}">
-                        <span class="chart-bar-val">${elev.toLocaleString()}<small>m</small></span>
-                      </div>
-                    </div>
-                    ${hrVal > 0 ? `
-                    <div class="chart-track hr">
-                      <div class="chart-bar hr" data-pct="${hrPct}">
-                        <span class="chart-bar-val">${hrVal}<small>hr</small></span>
-                      </div>
-                    </div>` : ''}
-                  </div>
-                  <div class="chart-side">
-                    ${trendChip}
-                    ${tss > 0 ? `<span class="chart-tss" title="當月 TSS 加總（有功率的騎乘）">TSS ${tss}</span>` : ''}
-                  </div>
-                </div>
-              `
-            }).join('')
-            const rowHeight = byYear[year].length * 50 // approx px per row
-            return `
-              <div class="chart-year-header" data-year="${year}">
-                <span class="chart-year-arrow" id="arrow-${year}">${collapsed ? '▶' : '▼'}</span>
-                ${year}
-              </div>
-              <div class="chart-year-rows" id="year-rows-${year}" style="max-height:${collapsed ? '0' : '9999px'}" data-collapsed="${collapsed ? '1' : ''}">
-                ${rows}
-              </div>
-            `
-          }).join('')
-        })()}
+      <div class="ctl">
+        <div class="seg" data-ctl="metric">
+          ${METRICS.map((m, i) => `<button type="button" data-metric="${m.k}" aria-selected="${i === 0}">${m.zh}<i>${m.en}</i></button>`).join('')}
+        </div>
+        <div class="seg alt" data-ctl="range">
+          ${RANGES.map(r => `<button type="button" data-range="${r.k}" aria-selected="${r.k === '12'}">${r.label}</button>`).join('')}
+        </div>
       </div>
-    </div>
-  ` : ''
+      <div class="vol" id="vol" data-metric="dist" data-range="12">
+        ${history.map((h, i) => {
+          const vals = {}
+          METRICS.forEach(m => {
+            const v = m.v(h)
+            vals[m.k] = v
+            vals[m.k + 'p'] = v > 0 ? Math.max(v / m.max * 100, 2).toFixed(1) : 0
+          })
+          const prs = prMonths[h.month] || []
+          const prBadge = prs.length
+            ? `<span class="chart-pr" title="${prs.join('\n').replace(/"/g, '&quot;')}">🏆${prs.length > 1 ? `<i>${prs.length}</i>` : ''}</span>` : ''
+          const prevDist = distByMonth[prevMonthKey(h.month)]
+          let trend = ''
+          if (prevDist > 0 && vals.dist > 0) {
+            const pct = Math.round((vals.dist - prevDist) / prevDist * 100)
+            const cls = pct > 2 ? 'up' : pct < -2 ? 'down' : 'flat'
+            const arrow = pct > 2 ? '▲' : pct < -2 ? '▼' : '─'
+            trend = `<span class="chart-trend ${cls}" title="里程 vs 上月">${arrow} ${Math.abs(pct)}%</span>`
+          }
+          return `<div class="vrow" data-i="${i}" data-y="${h.month.slice(0,4)}"
+            ${METRICS.map(m => `data-${m.k}="${vals[m.k]}" data-${m.k}p="${vals[m.k + 'p']}"`).join(' ')}>
+            <span class="vm">${fmtMonthLabel(h.month)}<em>${h.month.slice(0,4)}</em></span>
+            <span class="vtrack"><i class="vfill"></i></span>
+            <b class="vval"></b>
+            <span class="vside">${trend}${prBadge}</span>
+          </div>`
+        }).join('')}
+      </div>
+      <p class="cap-note" id="vol-note"></p>
+    </div>` : ''
 
   // ── 章節內容：活動紀錄 · 生涯總量 ──
   const activityHtml = `
-    <div class="section-title">活動紀錄 <span class="muted">· ACTIVITY LOG</span></div>
     <div class="sport-tabs" id="sport-tabs">${tabHTML()}</div>
     <div class="timeline" id="timeline">${timelineHTML()}</div>`
 
-  const totalCard = (v, label) => {
+  // §34：生涯總量是 context，不是主角 —— 三張巨卡改成 Trends 底部的三列低調讀數
+  const totalRow = (v, zh, en, unit) => {
     const isNum = typeof v === 'number'
-    return `
-      <div class="total-card">
-        <div class="total-val"${isNum ? ` data-count="${v}" data-dec="${v % 1 ? 1 : 0}"` : ''}>${isNum ? v.toLocaleString() : (v ?? '—')}</div>
-        <div class="total-label">${label}</div>
-      </div>`
+    return `<div class="row" style="--row-cols:auto minmax(0,1fr) auto">
+      <span class="row-k">${en}</span>
+      <span class="row-p" style="color:var(--ink-3);font-weight:400">${zh}</span>
+      <span class="row-v">${isNum ? v.toLocaleString() : (v ?? '—')}${unit ? `<small>${unit}</small>` : ''}</span>
+    </div>`
   }
   const totalsHtml = `
-    <div class="section-title">生涯總量 <span class="muted">· CAREER TOTALS</span></div>
-    <div class="totals-grid">
-      ${totalCard(s.all_time_distance_km, 'Total KM')}
-      ${totalCard(s.all_time_elevation_m, 'Total Elev')}
-      ${totalCard(s.all_time_rides, 'Total Rides')}
+    <div class="section-title">生涯總量 <span class="muted">· SINCE DAY ONE</span></div>
+    <div class="rows">
+      ${totalRow(s.all_time_distance_km, '總里程', 'Distance', 'km')}
+      ${totalRow(s.all_time_elevation_m, '總爬升', 'Elevation', 'm')}
+      ${totalRow(s.all_time_rides, '總騎乘次數', 'Rides', '')}
     </div>
-    <a class="strava-cta" href="https://www.strava.com/athletes/161539959" target="_blank">
-      <svg viewBox="0 0 24 24"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/></svg>
-      View full profile on Strava
-    </a>`
+    <a class="row-more" href="https://www.strava.com/athletes/161539959" target="_blank" rel="noopener"
+       style="display:block;text-decoration:none">在 Strava 看完整檔案 ↗</a>`
 
-  // ── 組裝章節（編號進浮水印與右側導覽軌） ──
-  // 每章開頭標出量測窗口 —— 這頁的九個章節其實是九個不同長度的時間尺度，
-  // 說清楚「這段數字涵蓋多久」比標一個序號有用得多。
-  // 週期章的量測窗口就是週期本身的起訖日，沒有週期資料時整章會被下面的 filter 濾掉
+  // ══ OVERVIEW ═══════════════════════════════════════════════════════
+  // 這個 view 只回答三件事：我現在狀況怎樣、這週做了什麼、下一步要做什麼。
+  // 它不是統計博物館 —— 生涯總量搬去 Trends，逐月圖表也是。
   const blk = window._trainingBlock
-  const blkWin = blk?.start && blk?.end
-    ? `${blk.start.slice(5).replace('-', '/')} – ${blk.end.slice(5).replace('-', '/')} · THE BLOCK`
-    : '進行中 · THE BLOCK'
-  const chapterDefs = [
-    ['週期',     blkWin,                              renderMesocycle(blk)],
-    ['節奏',     '每一天 × 本週 × 本月 · DAY BY DAY', renderRhythm(data)],
-    ['ITT 區間', '歷來最佳 · ALL-TIME BEST',          renderSegments(data.segments)],
-    ['月度量',   '逐月 · MONTH BY MONTH',             volumeHtml],
-    ['活動紀錄', '近期 · RECENT',                     activityHtml],
-    ['生涯總量', '生涯 · SINCE DAY ONE',              totalsHtml],
-  ].filter(cd => cd[2] && cd[2].trim())
-  const chapterHtml = chapterDefs.map(([nav, win, body], i) =>
-    `<section class="chapter" id="ch-${i + 1}" data-ch="${String(i + 1).padStart(2, '0')}" data-win="${win}" data-nav="${nav}">` +
-    `<div class="ch-win">${win}</div>${body}</section>`
-  ).join('')
 
-  // ── 章節 00：觀測甲板（首屏就是數字） ──
+  // 賽季儀器：全站唯一保留的那張「主儀表」，身分與整年的數字是同一件事
   const p20 = (data.power_prs || []).find(p => p.duration_sec === 1200)
   const deckFtp = p20 ? Math.round(p20.watts * 0.95) : null   // FTP = 20 分功率 × 0.95
   const pad2 = v => String(v).padStart(2, '0')
   const updatedStr = updatedAtTpe
     ? `${updatedAtTpe.getUTCFullYear()}-${pad2(updatedAtTpe.getUTCMonth() + 1)}-${pad2(updatedAtTpe.getUTCDate())} ${pad2(updatedAtTpe.getUTCHours())}:${pad2(updatedAtTpe.getUTCMinutes())}`
     : ''
+  window.__updatedStr = updatedStr
   const deckStat = (zh, en, val, dec, unit) => `
         <div class="deck-stat">
           <span class="ds-label">${zh}<small>${en}</small></span>
           <span class="ds-val"><span class="ds-num" data-count="${val ?? 0}" data-dec="${dec}">0</span><small>${unit}</small></span>
         </div>`
-  const deckHtml = `
-    <section class="chapter hero-deck in" id="ch-deck" data-nav="甲板">
+  const seasonHtml = `
       <div class="rider-card">
         <canvas class="nc-canvas" id="nc-canvas"></canvas>
         <div class="rc-scrim"></div>
@@ -7142,26 +7600,264 @@ function render(data) {
             <span><b>${s.ytd_rides ?? 0}</b> 騎 · <b>${s.ytd_runs ?? 0}</b> 跑 · <b>${s.ytd_swims ?? 0}</b> 游</span>
             ${updatedStr ? `<span>更新 ${updatedStr} TPE</span>` : ''}
           </div>
-          ${renderDeckQuote()}
         </div>
+      </div>`
+
+  // ── CURRENT BLOCK × NEXT SESSION ──
+  // 「下一堂」的定義跟 renderMesocycle 的 nextIdx 完全同一條規則：
+  // 今天或之後、還沒有實際值的第一堂。這裡只是把它拉到 Overview，沒有另一套判斷。
+  const blkS = (blk && Array.isArray(blk.sessions))
+    ? blk.sessions.slice().sort((a, b) => a.date.localeCompare(b.date)) : []
+  const todayStr = new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10)
+  const nextSes = blkS.find(x => !x.actual && x.date >= todayStr) || null
+  const doneN = blkS.filter(x => x.actual).length
+  const WD_ = ['日', '一', '二', '三', '四', '五', '六']
+  const mdOf = d => `${d.slice(5, 7)}/${d.slice(8, 10)}`
+  const wdOf = d => WD_[new Date(d + 'T00:00:00Z').getUTCDay()]
+  const n2_ = v => v == null ? '—' : (+v).toFixed(2).replace(/^0/, '')
+  const blockHtml = blkS.length ? `
+    <div class="block">
+      <div class="section-title">當前週期 <span class="muted">· CURRENT BLOCK</span></div>
+      <div class="ov-2">
+        <button class="ov-cell" data-goto="plan" type="button">
+          <span class="ov-k">${blk.title_en || 'BLOCK'}</span>
+          <b class="ov-b">${blk.title || ''}</b>
+          <span class="ov-n">${doneN} / ${blkS.length} 完成${blk.ftp ? ` · FTP ${blk.ftp} W` : ''}</span>
+          <span class="ov-track">${blkS.map(x => `<i class="${x.actual ? 'is-ok' : (x === nextSes ? 'is-next' : (x.date < todayStr ? 'is-missed' : ''))}"></i>`).join('')}</span>
+        </button>
+        ${nextSes ? `
+        <button class="ov-cell is-next" data-goto="plan" type="button">
+          <span class="ov-k">NEXT SESSION</span>
+          <b class="ov-b">${nextSes.name || ''}</b>
+          <span class="ov-n">${mdOf(nextSes.date)} 週${wdOf(nextSes.date)}${nextSes.date === todayStr ? ' · 就是今天' : ''}</span>
+          <span class="ov-plan">${nextSes.plan || ''}</span>
+          <span class="ov-n">目標 IF ${n2_(nextSes.target?.if)} · TSS ${nextSes.target?.tss ?? '—'} · VI ≤${n2_(nextSes.target?.vi)}</span>
+        </button>` : `
+        <div class="ov-cell">
+          <span class="ov-k">NEXT SESSION</span>
+          <b class="ov-b" style="color:var(--ink-3)">週期已排完</b>
+          <span class="ov-n">沒有待執行的課表</span>
+        </div>`}
       </div>
-      <button class="deck-cue" id="deck-cue" type="button">往下 · ${chapterDefs.length} 章<i></i></button>
+    </div>` : ''
+
+  // ── THIS WEEK ── 純聚合，數字全部來自已經算好的活動欄位
+  const wkActs = allList.filter(a => (a.date || '') >= thisWeekStart)
+  const wkRides = wkActs.filter(a => a._type === 'ride')
+  const wkKm  = Math.round(wkActs.reduce((n, a) => n + (a.distance_km || 0), 0) * 10) / 10
+  const wkHr  = wkActs.reduce((n, a) => n + (a.moving_time_hr || 0), 0)
+  const wkTss = Math.round(wkRides.reduce((n, a) => n + (a.tss || 0), 0))
+  const weekHtml = `
+    <div class="block">
+      <div class="section-title">本週 <span class="muted">· THIS WEEK · ${thisWeekStart.slice(5).replace('-', '/')} 起</span></div>
+      <div class="meters">
+        <div class="meter"><span class="k">TSS</span><span class="v">${wkTss || '—'}</span><span class="n">有功率的騎乘加總</span></div>
+        <div class="meter"><span class="k">距離</span><span class="v">${wkKm}<small>KM</small></span><span class="n">全部運動</span></div>
+        <div class="meter"><span class="k">時數</span><span class="v">${fmtMovingTime(wkHr)}</span><span class="n">移動時間</span></div>
+        <div class="meter"><span class="k">場次</span><span class="v">${wkActs.length}</span><span class="n">${wkRides.length} 騎乘</span></div>
+      </div>
+    </div>`
+
+  // ── PERFORMANCE SIGNALS ── 三個「最近變動」的入口，資料全是現成的
+  const sigRows = []
+  const lastEffort = (data.segments || []).flatMap(seg =>
+    (seg.efforts || []).map(e => ({ seg, e }))).sort((a, b) =>
+      effortTimeKey(b.e).localeCompare(effortTimeKey(a.e)))[0]
+  if (lastEffort) {
+    const nm = (window._ittSegMeta?.[lastEffort.seg.id]?.nameZh) || lastEffort.seg.name
+    sigRows.push(`<button class="row" data-goto="itt" type="button" style="--row-cols:minmax(0,1fr) auto auto auto">
+      <span class="row-p">${nm}</span>
+      <span class="row-v">${lastEffort.e.elapsed_str}</span>
+      <span class="row-st ${lastEffort.e.is_pr ? 'pr' : 'dim'}">${lastEffort.e.is_pr ? '🏆 PR' : lastEffort.e.date.slice(5).replace('-', '/')}</span>
+      <span class="row-go">→</span></button>`)
+  }
+  if (p20) {
+    sigRows.push(`<button class="row" data-power="1200" type="button" style="--row-cols:minmax(0,1fr) auto auto auto">
+      <span class="row-p">20 分功率</span>
+      <span class="row-v">${p20.watts}<small>W</small></span>
+      <span class="row-st pr">🏆 BEST</span>
+      <span class="row-go">→</span></button>`)
+  }
+  const gRide = data.monthly_goals?.ride
+  if (gRide) {
+    const st = gRide.status
+    sigRows.push(`<button class="row" data-goto="plan" type="button" style="--row-cols:minmax(0,1fr) auto auto auto">
+      <span class="row-p">本月騎乘次數</span>
+      <span class="row-v">${gRide.count}<small>/ ${gRide.target}</small></span>
+      <span class="row-st ${st === 'over' || st === 'done' ? 'ok' : st === 'warning' ? 'next' : 'no'}">${st === 'over' ? 'EXCEEDED' : st === 'done' ? 'ON TRACK' : st === 'warning' ? 'BEHIND' : 'AT RISK'}</span>
+      <span class="row-go">→</span></button>`)
+  }
+  const signalsHtml = sigRows.length ? `
+    <div class="block">
+      <div class="section-title">表現訊號 <span class="muted">· PERFORMANCE SIGNALS</span></div>
+      <div class="rows">${sigRows.join('')}</div>
+    </div>` : ''
+
+  // ── RECENT ── Overview 只給五列摘要；完整清單在 Log
+  // 刻意不重用 renderTimeline：它會輸出 id="act-<date>"，兩個 view 同時掛會撞 id
+  const recentRows = allList.slice(0, 5).map(a => {
+    const km = a.distance_km ? (a._type === 'swim' ? `${Math.round(a.distance_km * 1000)}<small>M</small>` : `${a.distance_km}<small>KM</small>`) : '—'
+    const sub = [fmtMovingTime(a.moving_time_hr || 0),
+                 a.tss != null ? `TSS ${a.tss}` : '',
+                 a.if_score != null ? `IF ${a.if_score}` : '',
+                 a.avg_heartrate ? `♥ ${a.avg_heartrate}` : ''].filter(Boolean).join(' · ')
+    return `<button class="row" data-goto="log" data-actdate="${a.date}" type="button" style="--row-cols:64px minmax(0,1fr) auto auto">
+      <span class="row-k">${(a.date || '').slice(5).replace('-', '/')}</span>
+      <span class="row-p">${a.name || '—'}</span>
+      <span class="row-v">${km}</span>
+      <span class="row-go">→</span>
+      <span class="row-s" style="grid-column:2/3">${sub}</span></button>`
+  }).join('')
+  const recentHtml = allList.length ? `
+    <div class="block">
+      <div class="section-title">最近活動 <span class="muted">· RECENT</span></div>
+      <div class="rows">${recentRows}</div>
+      <button class="row-more" data-goto="log" type="button">全部活動紀錄 →</button>
+    </div>` : ''
+
+  // ── NEEDS ATTENTION ──
+  // 全部是既有欄位的門檻判讀，沒有新的計算：太久沒測的路段、本週還沒達標的項目、
+  // 以及「下一堂是不是校準/驗收」。沒有任何一項成立時整塊不出現 —— 不寫「一切正常」。
+  const attn = []
+  const dayMs = 86400000
+  ;(data.segments || []).forEach(seg => {
+    const last = (seg.efforts || []).slice().sort((a, b) => effortTimeKey(b).localeCompare(effortTimeKey(a)))[0]
+    if (!last || !last.date) return
+    const days = Math.round((Date.parse(todayStr) - Date.parse(last.date.slice(0, 10))) / dayMs)
+    if (days > 45) attn.push({ k: 'ITT', p: (window._ittSegMeta?.[seg.id]?.nameZh) || seg.name,
+                               v: `${days} 天`, s: '久未挑戰', c: 'no', go: 'itt', d: days })
+  })
+  attn.sort((a, b) => (b.d || 0) - (a.d || 0))
+  const attnItt = attn.splice(0, 2)
+  const wq = data.weekly_quest || {}
+  const WQ_ZH = { ride: '單車', run: '跑步', swim: '游泳', weight: '重訓' }
+  const wqMiss = Object.keys(WQ_ZH).filter(k => wq[k] && !wq[k].done)
+  const attnRows = [
+    ...attnItt,
+    wqMiss.length ? { k: 'THIS WEEK', p: wqMiss.map(k => WQ_ZH[k]).join(' · ') + ' 本週還沒達標',
+                      v: `${4 - wqMiss.length} / 4`, s: '待完成', c: 'next', go: 'plan' } : null,
+    (nextSes && (nextSes.code === 'CAL' || nextSes.code === 'POST'))
+      ? { k: 'PROTOCOL', p: `${nextSes.name} 是${nextSes.code === 'CAL' ? '前測' : '驗收'}，協定要照跑`,
+          v: mdOf(nextSes.date), s: '別亂改', c: 'next', go: 'plan' } : null,
+  ].filter(Boolean)
+  const attnHtml = attnRows.length ? `
+    <div class="block">
+      <div class="section-title">需要注意 <span class="muted">· NEEDS ATTENTION</span></div>
+      <div class="rows">
+        ${attnRows.map(r => `<button class="row" data-goto="${r.go}" type="button" style="--row-cols:auto minmax(0,1fr) auto auto auto">
+          <span class="row-k">${r.k}</span>
+          <span class="row-p" style="font-weight:600">${r.p}</span>
+          <span class="row-v" style="font-size:15px">${r.v}</span>
+          <span class="row-st ${r.c}">${r.s}</span>
+          <span class="row-go">→</span></button>`).join('')}
+      </div>
+    </div>` : ''
+
+  const quoteHtml = `<div class="block ov-quote">${renderDeckQuote()}</div>`
+
+  // ── 功率曲線（Trends 內）──
+  const pwrMap = buildPwrMap(data.power_prs)
+  const curveHtml = (data.power_prs && data.power_prs.length) ? `
+    <div class="block">
+      <div class="section-title">功率曲線 <span class="muted">· POWER CURVE · ALL-TIME BEST</span></div>
+      <div class="rows">
+        ${PWR_DURATIONS.map(d => {
+          const p = pwrMap.get(d.sec)
+          return `<button class="row" data-power="${d.sec}" type="button" style="--row-cols:70px minmax(0,1fr) auto auto"${p ? '' : ' disabled'}>
+            <span class="row-k">${d.label}</span>
+            <span class="row-p" style="color:var(--ink-3);font-weight:400">${p ? (p.activity_name || p.date || '') : '尚無紀錄'}</span>
+            <span class="row-v"${p ? '' : ' style="color:var(--ink-3)"'}>${p ? p.watts : '—'}<small>W</small></span>
+            <span class="row-go">${p ? '→' : ''}</span></button>`
+        }).join('')}
+      </div>
+    </div>` : ''
+
+  // ══ 組裝五個 View ══════════════════════════════════════════════════
+  const viewH = (zh, en, right) =>
+    `<div class="view-h"><b>${zh}</b><i>${en}</i>${right ? `<span>${right}</span>` : ''}</div>`
+  const blkWin = blk?.start && blk?.end
+    ? `${blk.start.slice(5).replace('-', '/')} – ${blk.end.slice(5).replace('-', '/')}` : ''
+
+  const viewsHtml = `
+    <section class="view" data-view="overview">
+      ${viewH('現況', 'Overview', `${tY} SEASON`)}
+      <div id="rdy-mobile"></div>
+      <div class="block">${seasonHtml}</div>
+      ${blockHtml}
+      ${weekHtml}
+      ${attnHtml}
+      ${signalsHtml}
+      ${recentHtml}
+      ${quoteHtml}
+    </section>
+
+    <section class="view" data-view="plan">
+      ${viewH('計畫', 'Plan', blkWin)}
+      <p class="view-sub">週期是「接下來四週要做什麼」，節奏是「這段時間到底練了多少」。
+        兩者都對照手寫課表（data/training-block.json），計算方式沒有改變。</p>
+      ${renderMesocycle(blk) || '<div class="nil">目前沒有進行中的訓練週期。</div>'}
+      ${renderRhythm(data)}
+    </section>
+
+    <section class="view" data-view="itt">
+      ${(sHtml => viewH('ITT 區間', 'Individual time trial', window.__ittCount || '歷來最佳') + (sHtml || '<div class="nil">尚無路段成績。</div>'))(renderSegments(data.segments))}
+    </section>
+
+    <section class="view" data-view="atlas">
+      ${viewH('地圖', 'Atlas', '<span id="at-kpi"></span>')}
+      <p class="view-sub">每一條線都是真的 GPS 軌跡，顏色是<b>那一段路被幾趟不同的騎乘經過</b>；
+        底下的灰是行政區，深淺為<b>在那個區裡騎了多少公里</b>。
+        滾輪縮放、拖曳平移，膠囊點了會飛過去。</p>
+      <div class="at-rail">
+        <div class="at-row"><b>路段</b><span id="at-rail-itt"></span></div>
+        <div class="at-row"><b>行政區</b><span id="at-rail-town"></span></div>
+      </div>
+      <div class="at-bar">
+        <div class="at-grp"><button id="at-out" type="button" title="縮小">−</button><button id="at-in" type="button" title="放大">＋</button></div>
+        <button id="at-home" type="button">台北</button>
+        <button id="at-all" type="button">全台</button>
+        <div class="at-grp" id="at-blur">
+          <button type="button" data-blur="0">無暈染</button>
+          <button type="button" data-blur="5">淡</button>
+          <button type="button" data-blur="11">濃</button>
+        </div>
+        <span class="sp"></span>
+        <button id="at-t-town" type="button">行政區</button>
+        <button id="at-t-tname" type="button">區名</button>
+        <button id="at-t-pname" type="button">路段名</button>
+      </div>
+      <div class="at-stage">
+        <canvas id="at-map"></canvas>
+        <div class="at-legend">
+          <section><h5>這條路騎過幾趟</h5><div class="at-sw r" id="at-sw-r"></div><div class="at-tk r" id="at-tk-r"></div></section>
+          <section><h5>這區騎了幾公里</h5><div class="at-sw g" id="at-sw-g"></div><div class="at-tk g" id="at-tk-g"></div></section>
+        </div>
+        <div class="at-read is-idle" id="at-read">游標移到地圖上</div>
+      </div>
+      <div class="at-cap">
+        <span>軌跡：Strava archive 完整折線，Douglas–Peucker 簡化至 8 m · 界線：內政部 鄉鎮市區/縣市界線（TWD97）</span>
+        <i id="at-stat"></i>
+      </div>
+    </section>
+
+    <section class="view" data-view="trends">
+      ${viewH('趨勢', 'Trends', String(tY))}
+      ${volumeHtml || ''}
+      ${curveHtml}
+      <div class="block">${totalsHtml}</div>
+    </section>
+
+    <section class="view" data-view="log">
+      ${viewH('活動紀錄', 'Activity log', `${allList.length} 筆`)}
+      ${activityHtml}
     </section>`
 
-  document.getElementById('content').innerHTML = deckHtml + chapterHtml
+  document.getElementById('content').innerHTML = viewsHtml
 
   initTrainingCalendarNav()
 
-  // animate chart bars (only visible ones)
+  // 進場時把進度條長出來（月度量的 .vfill 由 applyVolume 負責）
   requestAnimationFrame(() => {
-    document.querySelectorAll('.chart-bar').forEach(bar => {
-      const pct = bar.dataset.pct
-      bar.style.width = '0'
-      requestAnimationFrame(() => {
-        setTimeout(() => { bar.style.width = pct + '%' }, 80)
-      })
-    })
-    // animate consistency bars
     document.querySelectorAll('.progress-fill').forEach(fill => {
       const pct = fill.dataset.pct
       fill.style.width = '0'
@@ -7171,79 +7867,39 @@ function render(data) {
     })
   })
 
-  // year collapse toggle
-  const chartRows = document.getElementById('chart-rows')
-  if (chartRows) {
-    chartRows.addEventListener('click', e => {
-      const header = e.target.closest('.chart-year-header')
-      if (!header) return
-      const year = header.dataset.year
-      const rows = document.getElementById(`year-rows-${year}`)
-      const arrow = document.getElementById(`arrow-${year}`)
-      const isCollapsed = rows.dataset.collapsed === '1'
-      if (isCollapsed) {
-        rows.dataset.collapsed = ''
-        rows.style.maxHeight = rows.scrollHeight + 'px'
-        arrow.textContent = '▼'
-        // animate newly visible bars
-        rows.querySelectorAll('.chart-bar').forEach(bar => {
-          bar.style.width = '0'
-          requestAnimationFrame(() => {
-            setTimeout(() => { bar.style.width = bar.dataset.pct + '%' }, 60)
-          })
-        })
-        // after transition, set to unrestricted so content can grow
-        setTimeout(() => { if (rows.dataset.collapsed !== '1') rows.style.maxHeight = '9999px' }, 400)
-      } else {
-        // set explicit height first so transition has a from-value
-        rows.style.maxHeight = rows.scrollHeight + 'px'
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            rows.style.maxHeight = '0'
-            rows.dataset.collapsed = '1'
-            arrow.textContent = '▶'
-          })
-        })
-      }
-    })
+  // ── 月度訓練量：指標切換 + 時間範圍（§31 / §32）──
+  // 切換只是換 DOM 上已經算好的欄位，一個數字都沒有重算。
+  initVolume()
+
+  // Log 的「全部展開」對外接口：跨 view 定位時（focusActivity）用得到
+  window.__logExpandAll = () => {
+    activeTab = 'all'
+    showMore['all'] = true
+    document.querySelectorAll('.sport-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === 'all'))
+    const tl = document.getElementById('timeline')
+    if (tl) tl.innerHTML = timelineHTML()
   }
 
-  // seg row click → scroll to activity
+  // ITT 成績表的某一列 → 切到 Log 並定位到那一天。
+  // 舊版是「切 tab → setTimeout → scrollIntoView 找章節」；現在走統一的 setView + focusActivity。
   document.addEventListener('click', e => {
     const tr = e.target.closest('tr[data-date]')
     if (!tr) return
     const date = tr.dataset.date
     const actId = tr.dataset.actid || ''
-    // make sure the right tab (all or ride) is showing, then scroll
-    const actEl = document.getElementById('act-' + date)
-    if (actEl) {
-      actEl.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      actEl.classList.add('act-highlight')
-      setTimeout(() => actEl.classList.remove('act-highlight'), 1500)
-    } else {
-      // not visible: switch to all + expand, then scroll after layout
-      activeTab = 'all'
-      showMore['all'] = true
-      document.querySelectorAll('.sport-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === 'all'))
-      document.getElementById('timeline').innerHTML = timelineHTML()
-      setTimeout(() => {
-        const el = document.getElementById('act-' + date)
-        if (el) {
-          el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-          el.classList.add('act-highlight')
-          setTimeout(() => el.classList.remove('act-highlight'), 1500)
-        } else {
-          // activity too old, not in recent data — show toast
-          const toast = document.createElement('div')
-          toast.innerHTML = actId
-            ? `📅 ${date} 不在最近記錄 &nbsp;<a href="https://www.strava.com/activities/${actId}" target="_blank" style="color:#FC4C02;font-weight:700;text-decoration:underline">前往 Strava ↗</a>`
-            : `📅 ${date} 的活動不在最近記錄內`
-          toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(30,10,0,.9);color:#FC4C02;border:1px solid rgba(252,76,2,.4);padding:8px 18px;border-radius:8px;font-size:12px;letter-spacing:1px;z-index:9999'
-          document.body.appendChild(toast)
-          setTimeout(() => toast.remove(), 3500)
-        }
-      }, 80)
-    }
+    setView('log', { push: true })
+    focusActivity(date)
+    setTimeout(() => {
+      if (document.getElementById('act-' + date)) return
+      // 太舊、不在最近記錄裡：給一條指向 Strava 的出口，不要靜靜失敗
+      const toast = document.createElement('div')
+      toast.innerHTML = actId
+        ? `📅 ${date} 不在最近記錄 &nbsp;<a href="https://www.strava.com/activities/${actId}" target="_blank" style="color:#FC4C02;font-weight:700;text-decoration:underline">前往 Strava ↗</a>`
+        : `📅 ${date} 的活動不在最近記錄內`
+      toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(30,10,0,.9);color:#FC4C02;border:1px solid rgba(252,76,2,.4);padding:8px 18px;border-radius:8px;font-size:12px;letter-spacing:1px;z-index:9999'
+      document.body.appendChild(toast)
+      setTimeout(() => toast.remove(), 3500)
+    }, 220)
   })
 
   // tab switching
@@ -7262,6 +7918,57 @@ function render(data) {
       document.getElementById('timeline').innerHTML = timelineHTML()
     }
   })
+}
+
+/* ── 月度訓練量的兩個控制項 ─────────────────────────────────────────
+   §32 允許 pill，因為它是 control（有互動意義）；被禁的是純裝飾的 pill。
+   單位與標籤都掛在每一列的 data-* 上，切換不碰資料。 */
+const VOL_UNIT = { dist: 'km', elev: 'm', hr: 'hr', tss: '' }
+const VOL_ZH   = { dist: '距離', elev: '爬升', hr: '時數', tss: 'TSS' }
+function applyVolume() {
+  const box = document.getElementById('vol')
+  if (!box) return
+  const m = box.dataset.metric || 'dist'
+  const r = box.dataset.range || '12'
+  const nowY = String(new Date(Date.now() + 8 * 3600 * 1000).getUTCFullYear())
+  const rows = [...box.querySelectorAll('.vrow')]
+  let shown = 0
+  rows.forEach((row, i) => {
+    const keep = r === 'all' ? true
+      : r === 'ytd' ? row.dataset.y === nowY
+      : i < +r
+    row.hidden = !keep
+    if (!keep) return
+    shown++
+    const v = +row.dataset[m] || 0
+    const pct = +row.dataset[m + 'p'] || 0
+    row.querySelector('.vfill').style.width = pct + '%'
+    row.querySelector('.vval').innerHTML = v > 0
+      ? `${v.toLocaleString()}${VOL_UNIT[m] ? `<small>${VOL_UNIT[m]}</small>` : ''}`
+      : '<span class="ac-dash">—</span>'
+    // 趨勢箭頭是「里程 vs 上月」算出來的，換成別的指標就不該再顯示（§30：沒資料不要捏造）
+    const tr = row.querySelector('.chart-trend')
+    if (tr) tr.style.display = m === 'dist' ? '' : 'none'
+  })
+  const note = document.getElementById('vol-note')
+  if (note) note.textContent = `${VOL_ZH[m]} · 顯示 ${shown} 個月`
+    + (m === 'dist' ? '　箭頭是里程與上個月的比較。' : '　趨勢箭頭只在「距離」有意義，其餘指標不顯示。')
+}
+function initVolume() {
+  const box = document.getElementById('vol')
+  if (!box || box.dataset.bound) return
+  box.dataset.bound = '1'
+  document.querySelectorAll('.ctl .seg').forEach(seg => {
+    seg.addEventListener('click', e => {
+      const b = e.target.closest('button')
+      if (!b) return
+      const kind = seg.dataset.ctl
+      box.dataset[kind === 'metric' ? 'metric' : 'range'] = kind === 'metric' ? b.dataset.metric : b.dataset.range
+      seg.querySelectorAll('button').forEach(x => x.setAttribute('aria-selected', String(x === b)))
+      applyVolume()
+    })
+  })
+  applyVolume()
 }
 
 /* ── power PR card + modal ── */
@@ -7656,14 +8363,16 @@ function updatePwrModalTab(prs, durSec) {
   document.querySelectorAll('#pm-tbody tr').forEach(tr => tr.classList.toggle('active', +tr.dataset.dur === durSec))
 }
 
-function openPowerModal(prs) {
+function openPowerModal(prs, focusSec) {
   document.getElementById('pwr-modal-overlay')?.remove()
   document.body.insertAdjacentHTML('beforeend', renderPowerModal(prs))
   const overlay = document.getElementById('pwr-modal-overlay')
   void overlay.offsetWidth
   overlay.classList.add('open')
   document.body.style.overflow = 'hidden'
-  const initial = prs.find(p => p.duration_sec === 5) ? 5 : prs[0].duration_sec
+  // focusSec：從 Trends 的功率曲線某一列點進來時，直接開在那個時距
+  const wanted = focusSec && prs.some(p => p.duration_sec === focusSec) ? focusSec : null
+  const initial = wanted || (prs.find(p => p.duration_sec === 5) ? 5 : prs[0].duration_sec)
   updatePwrModalTab(prs, initial)
   const close = () => {
     overlay.classList.remove('open')
@@ -7688,11 +8397,12 @@ function openPowerModal(prs) {
   })
 }
 
-/* ── deck numbers + chapter choreography ──────────────────────────
-   countUp：expo-out 數字滾動（reduced-motion 直接落定）
-   bindDeck：甲板大字啟動、FTP 鍵開功率彈窗、cue 捲到第一章
-   initChapters：章節進場（IO + 保險絲）、右側導覽軌、頂部進度條 */
+/* ── 讀數動畫 + 導覽/路由 ───────────────────────────────────────────
+   countUp：expo-out 數字滾動（reduced-motion 直接落定）。
+   §16：切 view 不重跑數字動畫 —— 每個元素只跑一次，跑過就記在 dataset 上。 */
 function countUp(el, to, dec) {
+  if (el.dataset.counted) return
+  el.dataset.counted = '1'
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches
   const fmt = v => v.toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec })
   const fin = () => { el.textContent = fmt(to); el.closest('.deck-stat')?.classList.add('lit') }
@@ -7704,149 +8414,923 @@ function countUp(el, to, dec) {
     if (k < 1) requestAnimationFrame(step); else fin()
   })(t0)
 }
+function countUpIn(root) {
+  ;(root || document).querySelectorAll('[data-count]').forEach(n =>
+    countUp(n, parseFloat(n.dataset.count) || 0, +n.dataset.dec || 0))
+}
 
-function bindDeck(data) {
-  document.querySelectorAll('#ch-deck [data-count]').forEach(n => countUp(n, parseFloat(n.dataset.count) || 0, +n.dataset.dec || 0))
-  const ftpBtn = document.getElementById('deck-ftp')
-  if (ftpBtn && data.power_prs && data.power_prs.length)
-    ftpBtn.addEventListener('click', () => openPowerModal(data.power_prs))
-  const cue = document.getElementById('deck-cue')
-  if (cue) cue.addEventListener('click', () => {
-    document.getElementById('ch-1')?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })
+/* ══ DETAIL DRAWER ═════════════════════════════════════════════════════
+   一個共用元件，Plan 的 session 先用；之後 Log 的活動、ITT 的路段都接同一個。
+   刻意不是 Modal：桌機上清單還看得見，可以連著點下一列。 */
+let _dwOpener = null
+function openDrawer(o) {
+  const dw = document.getElementById('drawer')
+  if (!dw) return
+  _dwOpener = document.activeElement
+  document.getElementById('dw-k').textContent = o.label || ''
+  document.getElementById('dw-t').textContent = o.title || ''
+  document.getElementById('dw-s').textContent = o.sub || ''
+  document.getElementById('dw-body').innerHTML = o.body || ''
+  dw.hidden = false
+  requestAnimationFrame(() => { dw.classList.add('open'); document.body.classList.add('dw-open') })
+  // 手機是整屏子頁面，底層不該還能捲；桌機是側欄，底層照常
+  if (matchMedia('(max-width:767px)').matches) document.body.classList.add('dw-lock')
+  document.getElementById('dw-x').focus({ preventScroll: true })
+}
+function closeDrawer() {
+  const dw = document.getElementById('drawer')
+  if (!dw || dw.hidden) return
+  dw.classList.remove('open')
+  document.body.classList.remove('dw-lock', 'dw-open')
+  setTimeout(() => { dw.hidden = true }, 200)
+  if (_dwOpener && _dwOpener.isConnected) _dwOpener.focus({ preventScroll: true })
+  _dwOpener = null
+  appState.selectedSession = null
+}
+function initDrawer() {
+  document.getElementById('dw-x')?.addEventListener('click', closeDrawer)
+  document.getElementById('dw-back')?.addEventListener('click', closeDrawer)
+  addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return
+    // 既有的彈窗各自有 Esc；抽屜只在沒有彈窗開著時才吃這個鍵
+    if (document.querySelector('.pwr-modal-overlay.open,.seg-modal-overlay.open,.r3d-overlay.open,#am-overlay.open')) return
+    closeDrawer()
+  })
+  // 點抽屜以外的地方就關（桌機才有意義；手機是整屏，點不到外面）
+  addEventListener('pointerdown', e => {
+    const dw = document.getElementById('drawer')
+    if (!dw || dw.hidden) return
+    if (dw.contains(e.target)) return
+    if (e.target.closest && e.target.closest('.ses,[data-drawer]')) return
+    closeDrawer()
+  }, true)
+}
+
+/* ── 某一天的全部路段挑戰（抽屜）─────────────────────────────────────
+   排序完全照 data/itt-config.json 的陣列順序：那份檔案裡本來就是
+   「全段 → 1/4 → 2/4 → 3/4 → 4/4 → 上半」這種人看得懂的順序，
+   不需要另外定規則。同一條路線的分段收在同一個標題底下，同一段的多次挑戰照次數排。 */
+function ittDayBody(date) {
+  const META = window._ittSegMeta || {}
+  const list = ((window.__ittMap || {})[date] || []).slice()
+  if (!list.length) return '<div class="nil">這一天沒有路段成績。</div>'
+  const metaOf = it => META[it.segId] || {}
+  const groupOf = it => metaOf(it).group || ('solo-' + it.segId)
+  const idxOf = it => { const m = metaOf(it); return m._idx == null ? 9999 : m._idx }
+  // 每組的排序位置＝組內設定檔序號最小的那一段（通常就是「全段」）
+  const gmin = {}
+  list.forEach(it => { const g = groupOf(it); gmin[g] = Math.min(gmin[g] == null ? 9999 : gmin[g], idxOf(it)) })
+  list.sort((a, b) =>
+    (gmin[groupOf(a)] - gmin[groupOf(b)]) || (idxOf(a) - idxOf(b)) || ((a.attemptNum || 0) - (b.attemptNum || 0)))
+
+  const groups = []
+  list.forEach(it => {
+    const g = groupOf(it)
+    let bucket = groups.find(x => x.g === g)
+    if (!bucket) { bucket = { g, items: [], segs: new Set() }; groups.push(bucket) }
+    bucket.items.push(it)
+    bucket.segs.add(it.segId)
+  })
+  return groups.map(b => {
+    // 組名取「全段」那一段的中文名，去掉尾巴的「全段」；沒有全段就用第一筆的名字
+    const full = b.items.find(it => (metaOf(it).label || '') === '全段')
+    const title = ((metaOf(full || b.items[0]).nameZh) || b.items[0].segName || '').replace(/\s*全段$/, '')
+    return `<div class="dw-sec">
+      <h4>${title}<span class="dw-h4n">${b.segs.size} 段 · ${b.items.length} 次</span></h4>
+      ${b.items.map(it => {
+        const label = metaOf(it).label || it.segName
+        const rankStr = it.rank ? (it.rank === 1 ? '🥇 第 1 名' : `第 ${it.rank} 名`) : ''
+        return `<div class="ittd${it.is_pr ? ' is-pr' : ''}">
+          <span class="ittd-l">${it.is_pr ? '👑 ' : ''}${label}</span>
+          <span class="ittd-t">${it.elapsed_str}</span>
+          <span class="ittd-m">第 ${it.attemptNum} / ${it.total} 次${rankStr ? ' · ' + rankStr : ''}</span>
+        </div>`
+      }).join('')}
+    </div>`
+  }).join('')
+}
+function openIttDayDrawer(date) {
+  const list = (window.__ittMap || {})[date] || []
+  const prN = list.filter(it => it.is_pr).length
+  openDrawer({
+    label: 'Segment efforts',
+    title: date,
+    sub: `${list.length} 次挑戰${prN ? ` · ${prN} 次破 PR` : ''}`,
+    body: ittDayBody(date),
   })
 }
 
-/* ── 翻章器：一次滾輪手勢＝一章 ──────────────────────────────────
-   為什麼非攔 wheel 不可：滑鼠滾輪一格約 120px，而一章是一整屏。
-   沒有任何 CSS 能把 120px 的意圖放大成 900px 的翻頁 —— scroll-snap 只能在
-   手勢「已經」跨過半屏時把你對齊過去，跨不過就整個彈回，那正是卡住的手感。
-   所以這裡接管 wheel，但只在該接管的時候： */
-function initChapterPager() {
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return
-  let busy = false
-  addEventListener('wheel', e => {
-    if (e.ctrlKey) return                                   // 縮放手勢不碰
-    // 彈窗開著就整個放行（彈窗有自己的捲軸）
-    if (document.querySelector('.pwr-modal-overlay.open,.seg-modal-overlay.open,.r3d-overlay.open,.itt-level-popup.open')) return
-    const dir = Math.sign(e.deltaY)
-    if (!dir) return
 
-    // 巢狀捲動容器：只有「真的能吃下這個方向的垂直捲動」才讓給它。
-    // ITT 輪播與抽卡桌面是純橫向容器 —— 早期版本無條件讓行，結果滑鼠停在卡片上時
-    // 垂直滾輪被交給一個不會垂直捲的容器，整頁就此卡死（實測連撥四下 scrollY 動也不動）。
-    const sc = e.target.closest && e.target.closest('.fc-grid,.fc-board,.tcal-scroll,.pm-body,.seg-modal-body,.itt-level-popup')
-    if (sc && sc.scrollHeight > sc.clientHeight + 1) {
-      const atTop = sc.scrollTop <= 0
-      const atBot = sc.scrollTop >= sc.scrollHeight - sc.clientHeight - 1
-      if (!((dir > 0 && atBot) || (dir < 0 && atTop))) return
-    }
-    const list = [...document.querySelectorAll('#content .chapter')]
-    if (!list.length) return
+/* ══ ATLAS ═════════════════════════════════════════════════════════════
+   騎乘地圖。資料 data/ride-atlas.json（scripts/build-ride-atlas.py 產生），
+   進到本 view 才 fetch —— 1.25 MB 不該拖慢首屏。
+   設計決定與踩過的坑寫在 docs/ride-atlas-port.md，改之前先讀那份。 */
+const AT = {
+  d: null, ready: false, cv: null, ctx: null,
+  blurA: null, bctxA: null, blurB: null, bctxB: null,
+  W: 1100, H: 720, dpr: 1, view: { cx: 0, cy: 0, k: 1 },
+  drag: null, focus: null,
+  st: { towns: true, tname: true, pname: true, blur: 5 }, fitted: false,
+  RUNS: [], TOWNS: [], RIDDEN: [], ARCS: [], LAND: [], PLACES: [],
+  ramp: { r: [], g: [] }, font: { ui: '', mono: '', num: '' },
+}
+const AT_RL = ['1', '2–3', '4–7', '8–15', '16–31', '32+']
+const AT_GB = [0.1, 5, 30, 120, 450]
+const AT_GL = ['<5', '5–30', '30–120', '120–450', '450+']
+const atGBin = km => { let i = 0; while (i < AT_GB.length - 1 && km >= AT_GB[i + 1]) i++; return i }
 
-    const y = scrollY
-    let i = 0
-    list.forEach((s, k) => { if (s.offsetTop - 80 <= y) i = k })
-    const cur = list[i]
-
-    // 比一屏高的章節：還沒讀到底就放行原生捲動，不要把人鎖在一屏裡。
-    // 這裡刻意看實際幾何而不是 .ch-tall class —— class 有 1.06 屏的門檻，
-    // 卡在門檻下緣的章節（月度量 1.069 屏，實測沒被標記）底部會有幾十 px 永遠捲不到。
-    // 幾何判斷對任何高度都成立，class 只留給樣式用。
-    const top = cur.offsetTop - 64
-    const bot = top + cur.offsetHeight - innerHeight
-    if (bot > top + 4) {
-      if (dir > 0 && y < bot - 4) return
-      if (dir < 0 && y > top + 4) return
-    }
-    const next = i + dir
-    if (next < 0 || next >= list.length) return             // 頭尾交還原生（含橡皮筋回彈）
-
-    e.preventDefault()
-    if (busy) return                                        // 冷卻期內的連續 tick 併成同一次手勢
-    busy = true
-    list[next].scrollIntoView({ behavior: 'smooth', block: 'start' })
-    setTimeout(() => { busy = false }, 620)
-  }, { passive: false })
+// TWD97 / TM2（EPSG:3826）。跟 build-ride-atlas.py 是同一組公式，
+// 已對 pyproj 交叉驗算過，北台灣全域誤差 0.000 m。
+function atTm(lng, lat) {
+  const A = 6378137, F = 1 / 298.257222101, E2 = F * (2 - F), EP2 = E2 / (1 - E2)
+  const p = lat * Math.PI / 180, dl = (lng - 121) * Math.PI / 180, k0 = 0.9999
+  const s = Math.sin(p), c = Math.cos(p), t = Math.tan(p)
+  const N = A / Math.sqrt(1 - E2 * s * s), T = t * t, C = EP2 * c * c, a1 = dl * c
+  const M = A * ((1 - E2 / 4 - 3 * E2 ** 2 / 64 - 5 * E2 ** 3 / 256) * p
+    - (3 * E2 / 8 + 3 * E2 ** 2 / 32 + 45 * E2 ** 3 / 1024) * Math.sin(2 * p)
+    + (15 * E2 ** 2 / 256 + 45 * E2 ** 3 / 1024) * Math.sin(4 * p)
+    - (35 * E2 ** 3 / 3072) * Math.sin(6 * p))
+  return [k0 * N * (a1 + (1 - T + C) * a1 ** 3 / 6
+      + (5 - 18 * T + T * T + 72 * C - 58 * EP2) * a1 ** 5 / 120) + 250000,
+    k0 * (M + N * t * (a1 * a1 / 2 + (5 - T + 9 * C + 4 * C * C) * a1 ** 4 / 24
+      + (61 - 58 * T + T * T + 600 * C - 330 * EP2) * a1 ** 6 / 720))]
 }
 
-function initChapters() {
-  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches
-  const secs = [...document.querySelectorAll('#content .chapter')]
+let _atlasMounted = false
+function mountAtlas() {
+  // 已經掛過就只重量尺寸：首次 fetch 完成時窗格可能還沒顯示，那次 atResize 會直接 bail
+  if (_atlasMounted) { if (AT.ready) atResize(true); return }
+  if (!document.getElementById('at-map')) return
+  _atlasMounted = true
+  fetchData('data/ride-atlas.json')
+    .then(r => r.ok ? r.json() : null)
+    .then(d => { if (d) atInit(d) })
+    .catch(() => {})   // 缺檔就是空面板，不能讓整頁掛掉
+}
 
-  /* 高過一屏的章節（ITT、活動紀錄）標記 .ch-tall：
-     內容改回上對齊，並且不套進出場平移 —— 那兩章是拿來「讀」的，不是一屏一格的 story。
-     停靠點本身保留：規格明訂停靠區大於視窗時視窗可停在區內任一處，所以捲讀不會被 snap 拉回開頭。 */
-  const tagTall = () => {
-    const vh = innerHeight
-    // 門檻抓 1.06 屏而不是剛好一屏：差幾十 px 的章節左右搖擺會讓 .ch-tall 在 resize 時抖動，
-    // 而 .ch-tall 會同時改變對齊與留白 —— 抖動就是版面跳動。
-    secs.forEach(s => s.classList.toggle('ch-tall', s.getBoundingClientRect().height > vh * 1.06))
+function atInit(d) {
+  AT.d = d
+  // 地圖的導覽徽章在這裡補，不在 updateNavBadges 裡：ride-atlas.json 有 1.28 MB，
+  // 而且是刻意 lazy-load 的（見 mountAtlas）。為了側欄一個數字就在開頁時預抓它，
+  // 等於把整個延遲載入的設計作廢。所以進過地圖之後才會出現，之前留空。
+  const badge = document.querySelector('.nav-i em[data-badge="atlas"]')
+  if (badge && d.meta && d.meta.towns_ridden) badge.textContent = `${d.meta.towns_ridden} 鄉鎮`
+  const cs = getComputedStyle(document.documentElement)
+  const v = n => cs.getPropertyValue(n).trim()
+  AT.ramp.r = ['--at-r1', '--at-r2', '--at-r3', '--at-r4', '--at-r5', '--at-r6'].map(v)
+  AT.ramp.g = ['--at-g1', '--at-g2', '--at-g3', '--at-g4', '--at-g5'].map(v)
+  AT.font.ui = v('--f-ui'); AT.font.mono = v('--f-mono'); AT.font.num = v('--f-num')
+  AT.css = { sea: v('--at-sea'), land: v('--at-land'), coast: v('--at-coast'),
+    hair: v('--hair-2'), ink1: v('--ink-1'), ink2: v('--ink-2') }
+
+  // 折線：每段轉 Float64Array + bbox，之後平移縮放只做仿射，culling 靠 bbox
+  d.routes.forEach((grp, b) => grp.forEach(run => {
+    const n = run.length, xy = new Float64Array(n * 2), nn = new Uint8Array(n)
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity
+    for (let i = 0; i < n; i++) {
+      const x = run[i][0], y = run[i][1]
+      xy[i * 2] = x; xy[i * 2 + 1] = y; nn[i] = Math.min(255, run[i][2])
+      if (x < x0) x0 = x; if (x > x1) x1 = x
+      if (y < y0) y0 = y; if (y > y1) y1 = y
+    }
+    AT.RUNS.push({ b, n, xy, nn, x0, y0, x1, y1 })
+  }))
+  AT.TOWNS = d.towns.map(t => {
+    const rings = t.rings.map(r => { const o = new Float64Array(r.length * 2)
+      for (let i = 0; i < r.length; i++) { const q = atTm(r[i][0], r[i][1]); o[i*2] = q[0]; o[i*2+1] = q[1] }
+      return o })
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity, ax = 0, ay = 0, c = 0
+    for (const r of rings) for (let i = 0; i < r.length; i += 2) {
+      if (r[i] < x0) x0 = r[i]; if (r[i] > x1) x1 = r[i]
+      if (r[i+1] < y0) y0 = r[i+1]; if (r[i+1] > y1) y1 = r[i+1]
+      ax += r[i]; ay += r[i+1]; c++
+    }
+    return Object.assign({}, t, { rings, x0, y0, x1, y1, cx: ax / c, cy: ay / c })
+  })
+  AT.RIDDEN = AT.TOWNS.filter(t => t.km > 0)
+  AT.ARCS = d.coast.arcs.map(a => { const o = new Float64Array(a.length * 2)
+    for (let i = 0; i < a.length; i++) { const q = atTm(a[i][0], a[i][1]); o[i*2] = q[0]; o[i*2+1] = q[1] }
+    return o })
+  AT.LAND = d.coast.counties.filter(c => c.group === 'main')
+  AT.PLACES = d.places.map(p => { const q = atTm(p.lng, p.lat); return Object.assign({}, p, { x: q[0], y: q[1] }) })
+
+  AT.cv = document.getElementById('at-map')
+  AT.ctx = AT.cv.getContext('2d')
+  AT.blurA = document.createElement('canvas'); AT.bctxA = AT.blurA.getContext('2d')
+  AT.blurB = document.createElement('canvas'); AT.bctxB = AT.blurB.getContext('2d')
+  atBuildChrome()
+  atBind()
+  AT.ready = true
+  atResize(false)
+}
+
+/* ── 視圖 ──────────────────────────────────────────────────────────── */
+const atSX = x => (x - AT.view.cx) * AT.view.k + AT.W / 2
+const atSY = y => (AT.view.cy - y) * AT.view.k + AT.H / 2
+const atIX = px => (px - AT.W / 2) / AT.view.k + AT.view.cx
+const atIY = py => AT.view.cy - (py - AT.H / 2) / AT.view.k
+const atClampK = k => Math.max(Math.min(AT.W, AT.H) / 520000, Math.min(1.2, k))
+function atFit(x0, y0, x1, y1, pad) {
+  AT.view.k = atClampK(Math.min((AT.W - pad * 2) / Math.max(1, x1 - x0),
+    (AT.H - pad * 2) / Math.max(1, y1 - y0)))
+  AT.view.cx = (x0 + x1) / 2; AT.view.cy = (y0 + y1) / 2
+}
+// 預設視角只框「騎過 8 趟以上」的路段。用 bbox 或行政區範圍都會被單次長征拉開，
+// 退到看不出輪廓的高度（詳見 docs/ride-atlas-port.md §6）。
+function atCoreExtent() {
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity
+  for (const r of AT.RUNS) {
+    if (r.b < 3) continue
+    if (r.x0 < x0) x0 = r.x0; if (r.x1 > x1) x1 = r.x1
+    if (r.y0 < y0) y0 = r.y0; if (r.y1 > y1) y1 = r.y1
   }
-  tagTall()
-  let rt
-  addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(tagTall, 150) }, { passive: true })
-  // 章節內容會長高（展開年份、載入更多活動、切換運動分頁），高度一變就要重判
-  if ('ResizeObserver' in window) {
-    const ro = new ResizeObserver(() => { clearTimeout(rt); rt = setTimeout(tagTall, 150) })
-    secs.forEach(s => ro.observe(s))
+  return [x0, y0, x1, y1]
+}
+function atAllExtent() {
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity
+  for (const r of AT.RUNS) {
+    if (r.x0 < x0) x0 = r.x0; if (r.x1 > x1) x1 = r.x1
+    if (r.y0 < y0) y0 = r.y0; if (r.y1 > y1) y1 = r.y1
   }
-  const revealed = new Set()
-  const show = sec => {
-    if (revealed.has(sec)) return
-    revealed.add(sec)
-    sec.classList.add('in')
-    // 章節抵達才開始數數字（甲板由 bindDeck 處理）
-    sec.querySelectorAll('[data-count]').forEach(n => countUp(n, parseFloat(n.dataset.count) || 0, +n.dataset.dec || 0))
-  }
-  secs.filter(sec => sec.classList.contains('in')).forEach(sec => revealed.add(sec))
-  if (!('IntersectionObserver' in window) || reduce) {
-    secs.forEach(show)
-  } else {
-    const io = new IntersectionObserver(es => es.forEach(e => {
-      if (e.isIntersecting) { show(e.target); io.unobserve(e.target) }
-    }), { threshold: .1, rootMargin: '0px 0px -50px 0px' })
-    secs.forEach(sec => { if (!revealed.has(sec)) io.observe(sec) })
-    // 保險絲：IO 被節流（背景分頁等）時，4.5 秒後點亮所有已在視口內的章節
-    setTimeout(() => {
-      const vh = innerHeight
-      secs.forEach(sec => { if (sec.getBoundingClientRect().top < vh * .92) show(sec) })
-    }, 4500)
+  return [x0, y0, x1, y1]
+}
+function atResize(keep) {
+  if (!AT.ready) return
+  const box = AT.cv.parentElement.getBoundingClientRect()
+  if (box.width < 10) return           // 還沒顯示就別算，等下次進 view
+  AT.W = Math.max(280, Math.round(box.width))
+  AT.H = Math.round(Math.min(760, Math.max(420, AT.W * 0.7)))
+  AT.dpr = Math.min(2, window.devicePixelRatio || 1)
+  AT.cv.width = AT.W * AT.dpr; AT.cv.height = AT.H * AT.dpr
+  AT.cv.style.height = AT.H + 'px'
+  // 還沒成功套過預設視角就一定要套一次，否則 view 會停在 k=1 的空白狀態
+  if (!keep || !AT.fitted) { const e = atCoreExtent(); atFit(e[0], e[1], e[2], e[3], 36); AT.fitted = true }
+  else AT.view.k = atClampK(AT.view.k)
+  atDraw()
+}
+
+/* ── 繪製 ──────────────────────────────────────────────────────────── */
+function atDraw() {
+  if (!AT.ready) return
+  const c = AT.ctx, W = AT.W, H = AT.H
+  c.setTransform(AT.dpr, 0, 0, AT.dpr, 0, 0)
+  c.fillStyle = AT.css.sea; c.fillRect(0, 0, W, H)
+  c.lineJoin = 'round'; c.lineCap = 'round'
+
+  // 陸地（台北市是新北市裡的洞，用 evenodd）
+  c.fillStyle = AT.css.land
+  for (const co of AT.LAND) for (const poly of co.polygons) {
+    c.beginPath()
+    for (const ring of poly) {
+      let first = true
+      for (const ai of ring) {
+        const a = AT.ARCS[ai < 0 ? ~ai : ai], rev = ai < 0
+        for (let j = 0; j < a.length; j += 2) {
+          const idx = rev ? a.length - 2 - j : j
+          const px = atSX(a[idx]), py = atSY(a[idx + 1])
+          if (first) { c.moveTo(px, py); first = false } else c.lineTo(px, py)
+        }
+      }
+      c.closePath()
+    }
+    c.fill('evenodd')
   }
 
-  // 右側章節導覽軌（≥1000px 顯示）
-  const rail = document.getElementById('rail')
-  if (rail) {
-    rail.innerHTML = secs.map(sec =>
-      `<a href="#${sec.id}" data-for="${sec.id}"><span>${sec.dataset.nav || ''}</span><i></i></a>`).join('')
-    rail.addEventListener('click', e => {
-      const a = e.target.closest('a')
-      if (!a) return
-      e.preventDefault()
-      document.getElementById(a.dataset.for)?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth' })
-    })
-    if ('IntersectionObserver' in window) {
-      const actIO = new IntersectionObserver(es => es.forEach(en => {
-        if (!en.isIntersecting) return
-        rail.querySelectorAll('a').forEach(a => a.classList.toggle('act', a.dataset.for === en.target.id))
-      }), { rootMargin: '-30% 0px -60% 0px', threshold: 0 })
-      secs.forEach(sec => actIO.observe(sec))
+  const onScreen = t => !(atSX(t.x1) < 0 || atSX(t.x0) > W || atSY(t.y0) < 0 || atSY(t.y1) > H)
+  if (AT.st.towns) {
+    c.globalAlpha = 0.72          // 整層退到背景，橘色的路線才是主角
+    for (let b = 0; b < AT.ramp.g.length; b++) {
+      c.fillStyle = AT.ramp.g[b]
+      for (const t of AT.RIDDEN) {
+        if (atGBin(t.km) !== b || !onScreen(t)) continue
+        c.beginPath()
+        for (const r of t.rings) {
+          for (let i = 0; i < r.length; i += 2) {
+            const px = atSX(r[i]), py = atSY(r[i + 1])
+            i === 0 ? c.moveTo(px, py) : c.lineTo(px, py)
+          }
+          c.closePath()
+        }
+        c.fill('evenodd')
+      }
+    }
+    c.globalAlpha = 1
+    c.strokeStyle = AT.css.hair; c.lineWidth = 1
+    c.beginPath()
+    for (const t of AT.TOWNS) {
+      if (!onScreen(t)) continue
+      for (const r of t.rings) {
+        for (let i = 0; i < r.length; i += 2) {
+          const px = atSX(r[i]), py = atSY(r[i + 1])
+          i === 0 ? c.moveTo(px, py) : c.lineTo(px, py)
+        }
+        c.closePath()
+      }
+    }
+    c.stroke()
+  }
+
+  c.strokeStyle = AT.css.coast; c.lineWidth = 1
+  c.beginPath()
+  for (let ai = 0; ai < AT.ARCS.length; ai++) {
+    if (AT.d.coast.arcKind[ai] !== 0) continue
+    const a = AT.ARCS[ai]
+    for (let i = 0; i < a.length; i += 2) {
+      const px = atSX(a[i]), py = atSY(a[i + 1])
+      i === 0 ? c.moveTo(px, py) : c.lineTo(px, py)
     }
   }
+  c.stroke()
 
-  // 頂部進度條 + 甲板 cue 淡出（單一 passive listener、rAF 合流，零強制 layout 連讀）
-  const prog = document.getElementById('prog'), cue = document.getElementById('deck-cue')
-  let tick = false
-  addEventListener('scroll', () => {
-    if (tick) return
-    tick = true
-    requestAnimationFrame(() => {
-      tick = false
-      const h = document.documentElement
-      const max = h.scrollHeight - h.clientHeight
-      if (prog) prog.style.width = Math.min(100, scrollY / (max || 1) * 100) + '%'
-      if (cue) cue.style.opacity = Math.max(0, 1 - scrollY / 240)
-    })
-  }, { passive: true })
+  const lw = Math.max(1.3, Math.min(4.2, 14 * AT.view.k))
+  const vis = r => !(atSX(r.x1) < -20 || atSX(r.x0) > W + 20 || atSY(r.y0) < -20 || atSY(r.y1) > H + 20)
+
+  // 暈染：同一組線畫粗、模糊後墊在銳利線底下 —— 密的地方連成一塊、疏的地方仍是一條線。
+  // 必須降解析度做：全解析度 11 px 實測 147 ms/frame，降到 1/2 剩 37 ms。
+  if (AT.st.blur > 0) {
+    const S = AT.drag ? 4 : 2
+    const bw = Math.max(2, Math.ceil(W / S)), bh = Math.max(2, Math.ceil(H / S))
+    if (AT.blurA.width !== bw || AT.blurA.height !== bh) {
+      AT.blurA.width = bw; AT.blurA.height = bh
+      AT.blurB.width = bw; AT.blurB.height = bh
+    }
+    const bc = AT.bctxA
+    bc.setTransform(1 / S, 0, 0, 1 / S, 0, 0)
+    bc.clearRect(0, 0, W, H)
+    bc.lineJoin = 'round'; bc.lineCap = 'round'
+    for (let b = 0; b < AT.ramp.r.length; b++) {
+      bc.strokeStyle = AT.ramp.r[b]; bc.lineWidth = lw + AT.st.blur * 1.6
+      bc.beginPath()
+      for (const r of AT.RUNS) {
+        if (r.b !== b || !vis(r)) continue
+        for (let i = 0; i < r.n; i++) {
+          const px = atSX(r.xy[i * 2]), py = atSY(r.xy[i * 2 + 1])
+          i === 0 ? bc.moveTo(px, py) : bc.lineTo(px, py)
+        }
+      }
+      bc.stroke()
+    }
+    AT.bctxB.setTransform(1, 0, 0, 1, 0, 0)
+    AT.bctxB.clearRect(0, 0, bw, bh)
+    AT.bctxB.filter = 'blur(' + Math.max(0.5, AT.st.blur / S) + 'px)'
+    AT.bctxB.drawImage(AT.blurA, 0, 0)
+    c.save(); c.globalAlpha = 0.62; c.imageSmoothingEnabled = true
+    c.drawImage(AT.blurB, 0, 0, W, H); c.restore()
+  } else {
+    // 沒有暈染時補一道底色 casing，否則深色線會糊進深色的行政區
+    c.strokeStyle = 'rgba(7,4,10,.8)'; c.lineWidth = lw + 1.5
+    c.beginPath()
+    for (const r of AT.RUNS) {
+      if (!vis(r)) continue
+      for (let i = 0; i < r.n; i++) {
+        const px = atSX(r.xy[i * 2]), py = atSY(r.xy[i * 2 + 1])
+        i === 0 ? c.moveTo(px, py) : c.lineTo(px, py)
+      }
+    }
+    c.stroke()
+  }
+
+  let drawn = 0
+  for (let b = 0; b < AT.ramp.r.length; b++) {
+    c.strokeStyle = AT.ramp.r[b]; c.lineWidth = lw
+    c.beginPath()
+    for (const r of AT.RUNS) {
+      if (r.b !== b || !vis(r)) continue
+      drawn++
+      for (let i = 0; i < r.n; i++) {
+        const px = atSX(r.xy[i * 2]), py = atSY(r.xy[i * 2 + 1])
+        i === 0 ? c.moveTo(px, py) : c.lineTo(px, py)
+      }
+    }
+    c.stroke()
+  }
+
+  const taken = []
+  if (AT.st.tname) atDrawTownNames(taken)
+  if (AT.st.pname) atDrawPlaces(taken)
+  atDrawScale()
+
+  const st = document.getElementById('at-stat')
+  if (st) st.textContent = '1 px ≈ ' + (1 / AT.view.k).toFixed(1) + ' m · 線寬 '
+    + lw.toFixed(1) + ' px · 可見 ' + drawn + ' 段 / 共 ' + AT.RUNS.length
+}
+const atHit = (a, taken) => taken.some(b =>
+  a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y)
+
+function atDrawTownNames(taken) {
+  const c = AT.ctx
+  c.textAlign = 'center'
+  for (const t of AT.RIDDEN) {
+    if (t.km < 10) continue                       // 只路過幾百公尺的區不標名，但仍然填色
+    if ((t.x1 - t.x0) * AT.view.k < 42) continue  // 螢幕上太小就不標
+    const px = atSX(t.cx), py = atSY(t.cy)
+    if (px < 0 || px > AT.W || py < 0 || py > AT.H) continue
+    const label = t.name.replace(/[區鄉鎮市]$/, '')
+    c.font = '600 ' + (t.km > 300 ? 13 : 11.5) + 'px ' + AT.font.ui
+    const tw = c.measureText(label).width
+    const box = { x: px - tw / 2 - 3, y: py - 8, w: tw + 6, h: 16 }
+    if (atHit(box, taken)) continue
+    taken.push(box)
+    c.lineWidth = 3.4; c.strokeStyle = 'rgba(7,4,10,.82)'
+    c.strokeText(label, px, py + 4)
+    c.fillStyle = AT.css.ink2; c.fillText(label, px, py + 4)
+  }
+  c.textAlign = 'left'
+}
+function atDrawPlaces(taken) {
+  const c = AT.ctx
+  for (const p of AT.PLACES) {
+    if (p.n < 5 && AT.focus !== p.name) continue   // 母路線層級，n>=5 才標
+    const px = atSX(p.x), py = atSY(p.y)
+    if (px < -70 || px > AT.W + 70 || py < -20 || py > AT.H + 20) continue
+    const on = AT.focus === p.name
+    const label = p.name + ' ' + p.n
+    c.font = '650 ' + (on ? 14 : 12) + 'px ' + AT.font.ui
+    const box = { x: px + 8, y: py - 9, w: c.measureText(label).width + 10, h: 18 }
+    if (!on && atHit(box, taken)) continue
+    taken.push(box)
+    c.beginPath(); c.arc(px, py, on ? 5 : 3.4, 0, 7)
+    c.fillStyle = AT.ramp.r[5]; c.fill()
+    c.strokeStyle = 'rgba(7,4,10,.9)'; c.lineWidth = 1.6; c.stroke()
+    c.fillStyle = on ? AT.ramp.r[5] : 'rgba(7,4,10,.82)'
+    atRoundRect(c, box.x, box.y, box.w, box.h, 4); c.fill()
+    c.fillStyle = on ? '#120a06' : AT.css.ink1
+    c.fillText(label, box.x + 5, py + 4.5)
+  }
+}
+function atRoundRect(c, x, y, w, h, r) {
+  c.beginPath()
+  c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r)
+  c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r)
+  c.arcTo(x, y, x + w, y, r); c.closePath()
+}
+function atDrawScale() {
+  const c = AT.ctx
+  const target = AT.W * 0.14 / AT.view.k
+  const pow = Math.pow(10, Math.floor(Math.log10(target)))
+  const m = [1, 2, 5, 10].map(v => v * pow)
+    .reduce((a, b) => Math.abs(b - target) < Math.abs(a - target) ? b : a)
+  const px = m * AT.view.k, x = AT.W - px - 18, y = AT.H - 18
+  c.strokeStyle = AT.css.ink2; c.lineWidth = 1.2
+  c.beginPath(); c.moveTo(x, y - 5); c.lineTo(x, y); c.lineTo(x + px, y); c.lineTo(x + px, y - 5); c.stroke()
+  c.font = '600 10.5px ' + AT.font.mono
+  c.fillStyle = AT.css.ink2
+  c.fillText(m >= 1000 ? (m / 1000) + ' km' : m + ' m', x, y - 9)
+}
+
+/* ── 互動 ──────────────────────────────────────────────────────────── */
+function atZoom(f, px, py) {
+  if (px === undefined) { px = AT.W / 2; py = AT.H / 2 }
+  const ax = atIX(px), ay = atIY(py)
+  AT.view.k = atClampK(AT.view.k * f)
+  AT.view.cx = ax - (px - AT.W / 2) / AT.view.k
+  AT.view.cy = ay + (py - AT.H / 2) / AT.view.k
+  atDraw()
+}
+function atTownAt(wx, wy) {
+  for (const t of AT.TOWNS) {
+    if (wx < t.x0 || wx > t.x1 || wy < t.y0 || wy > t.y1) continue
+    let inside = false
+    for (const r of t.rings) {
+      const n = r.length / 2
+      for (let i = 0, j = n - 1; i < n; j = i++) {
+        const xi = r[i*2], yi = r[i*2+1], xj = r[j*2], yj = r[j*2+1]
+        if ((yi > wy) !== (yj > wy) && wx < (xj - xi) * (wy - yi) / (yj - yi) + xi) inside = !inside
+      }
+    }
+    if (inside) return t
+  }
+  return null
+}
+function atRouteAt(wx, wy, tol) {
+  let best = null, bd = tol * tol
+  for (const r of AT.RUNS) {
+    if (wx < r.x0 - tol || wx > r.x1 + tol || wy < r.y0 - tol || wy > r.y1 + tol) continue
+    for (let i = 0; i < r.n; i++) {
+      const dx = r.xy[i*2] - wx, dy = r.xy[i*2+1] - wy
+      const d = dx * dx + dy * dy
+      if (d < bd) { bd = d; best = r.nn[i] }
+    }
+  }
+  return best
+}
+function atReadout(px, py) {
+  const el = document.getElementById('at-read')
+  if (!el) return
+  if (px == null) { el.className = 'at-read is-idle'; el.textContent = '游標移到地圖上'; return }
+  const wx = atIX(px), wy = atIY(py)
+  const t = atTownAt(wx, wy), n = atRouteAt(wx, wy, 10 / AT.view.k)
+  if (!t && n == null) { el.className = 'at-read is-idle'; el.textContent = '游標移到地圖上'; return }
+  el.className = 'at-read'
+  let h = ''
+  if (n != null) h += '<span class="n">' + n + '</span>趟經過這段路'
+  if (t) h += '<span class="t">' + t.county + t.name + '</span>'
+    + (t.km > 0 ? '在這區騎了 ' + t.km + ' km / ' + t.rides + ' 趟' : '沒騎過')
+  el.innerHTML = h
+}
+
+function atBuildChrome() {
+  const m = AT.d.meta
+  const kpi = document.getElementById('at-kpi')
+  if (kpi) kpi.textContent = m.activities + ' 趟 · ' + m.total_km.toLocaleString()
+    + ' KM · ' + m.towns_ridden + ' 區'
+  document.getElementById('at-rail-itt').innerHTML = AT.PLACES.filter(p => p.n > 0)
+    .map(p => '<button class="at-chip" type="button" data-kind="itt" data-name="' + p.name
+      + '"><span>' + p.name + '</span><b>' + p.n + '</b></button>').join('')
+  document.getElementById('at-rail-town').innerHTML = AT.RIDDEN.slice(0, 12)
+    .map(t => '<button class="at-chip" type="button" data-kind="town" data-name="' + t.county + t.name
+      + '"><span>' + t.name + '</span><b>' + Math.round(t.km) + '</b></button>').join('')
+    + '<span class="at-more">…共 ' + m.towns_ridden + ' 個區</span>'
+  document.getElementById('at-sw-r').innerHTML = AT.ramp.r.map(c => '<i style="background:' + c + '"></i>').join('')
+  document.getElementById('at-tk-r').innerHTML = AT_RL.map(l => '<span>' + l + '</span>').join('')
+  document.getElementById('at-sw-g').innerHTML = AT.ramp.g.map(c => '<i style="background:' + c + '"></i>').join('')
+  document.getElementById('at-tk-g').innerHTML = AT_GL.map(l => '<span>' + l + '</span>').join('')
+}
+
+function atBind() {
+  const cv = AT.cv
+  cv.addEventListener('wheel', e => {
+    e.preventDefault()
+    const r = cv.getBoundingClientRect()
+    atZoom(Math.exp(-e.deltaY * 0.0016), e.clientX - r.left, e.clientY - r.top)
+    atReadout(e.clientX - r.left, e.clientY - r.top)
+  }, { passive: false })
+  cv.addEventListener('pointerdown', e => {
+    cv.setPointerCapture(e.pointerId)
+    const r = cv.getBoundingClientRect()
+    AT.drag = { x: e.clientX - r.left, y: e.clientY - r.top, cx: AT.view.cx, cy: AT.view.cy }
+    cv.classList.add('is-drag')
+  })
+  cv.addEventListener('pointermove', e => {
+    const r = cv.getBoundingClientRect()
+    const px = e.clientX - r.left, py = e.clientY - r.top
+    if (AT.drag) {
+      AT.view.cx = AT.drag.cx - (px - AT.drag.x) / AT.view.k
+      AT.view.cy = AT.drag.cy + (py - AT.drag.y) / AT.view.k
+      atDraw()
+    } else atReadout(px, py)
+  })
+  const end = () => { if (AT.drag) { cv.classList.remove('is-drag'); AT.drag = null; atDraw() } }
+  cv.addEventListener('pointerup', end)
+  cv.addEventListener('pointercancel', end)
+  cv.addEventListener('pointerleave', () => atReadout(null))
+
+  document.getElementById('at-in').onclick = () => atZoom(1.7)
+  document.getElementById('at-out').onclick = () => atZoom(1 / 1.7)
+  document.getElementById('at-home').onclick = () => {
+    const e = atCoreExtent(); atFit(e[0], e[1], e[2], e[3], 36); AT.focus = null; atSyncChips(null); atDraw()
+  }
+  document.getElementById('at-all').onclick = () => {
+    const e = atAllExtent(); atFit(e[0], e[1], e[2], e[3], 22); AT.focus = null; atSyncChips(null); atDraw()
+  }
+  document.querySelector('.at-rail').addEventListener('click', e => {
+    const b = e.target.closest('.at-chip')
+    if (!b) return
+    if (b.dataset.kind === 'itt') {
+      const p = AT.PLACES.find(q => q.name === b.dataset.name)
+      AT.focus = AT.focus === p.name ? null : p.name
+      if (AT.focus) {
+        AT.view.cx = p.x; AT.view.cy = p.y
+        AT.view.k = atClampK(Math.min(AT.W, AT.H) / 3000)
+      }
+    } else {
+      const t = AT.TOWNS.find(q => q.county + q.name === b.dataset.name)
+      AT.focus = null
+      atFit(t.x0, t.y0, t.x1, t.y1, 54)
+    }
+    atSyncChips(AT.focus ? b : null); atDraw()
+  })
+  document.querySelectorAll('#at-blur button').forEach(b => {
+    b.setAttribute('aria-pressed', String(+b.dataset.blur === AT.st.blur))
+    b.onclick = () => {
+      AT.st.blur = +b.dataset.blur
+      document.querySelectorAll('#at-blur button').forEach(o =>
+        o.setAttribute('aria-pressed', String(+o.dataset.blur === AT.st.blur)))
+      atDraw()
+    }
+  })
+  ;[['at-t-town', 'towns'], ['at-t-tname', 'tname'], ['at-t-pname', 'pname']].forEach(pair => {
+    const el = document.getElementById(pair[0])
+    el.setAttribute('aria-pressed', String(AT.st[pair[1]]))
+    el.onclick = () => {
+      AT.st[pair[1]] = !AT.st[pair[1]]
+      el.setAttribute('aria-pressed', String(AT.st[pair[1]]))
+      atDraw()
+    }
+  })
+  addEventListener('resize', () => { if (appState.view === 'atlas') atResize(true) })
+}
+function atSyncChips(active) {
+  document.querySelectorAll('.at-chip').forEach(c => c.classList.toggle('is-on', c === active))
+}
+
+/* ══ VIEW ROUTER ═══════════════════════════════════════════════════════
+   五個 view，切換不捲動、不攔滾輪。網址是 #<view>，重新整理會回到同一個 view。
+   §37/§38：從別的 view 點某筆活動 → setView('log') + 定位，而不是 scrollIntoView 找章節。 */
+// 順序＝使用頻率，不是資訊架構的分類。前三個是日常三連（我現在如何、接下來練什麼、
+// 剛剛做了什麼），ITT 與趨勢是低頻的深入分析。原本 ITT 卡在第三，把最常看的活動紀錄
+// 擠到最後。
+const VIEWS = [
+  { id: 'overview', zh: '現況',     en: 'Overview' },
+  { id: 'plan',     zh: '計畫',     en: 'Plan'     },
+  { id: 'log',      zh: '活動紀錄', en: 'Log'      },
+  { id: 'itt',      zh: 'ITT',      en: 'ITT'      },
+  { id: 'atlas',    zh: '地圖',     en: 'Atlas'    },
+  { id: 'trends',   zh: '趨勢',     en: 'Trends'   },
+]
+const appState = { view: 'overview', selectedSegment: null, selectedActivity: null, selectedSession: null }
+
+/** 導覽徽章：每章一個活數字，填進 .nav-i em。資料缺就留空，不填假值。 */
+function updateNavBadges(data) {
+  const set = (id, txt) => {
+    const el = document.querySelector(`.nav-i em[data-badge="${id}"]`)
+    if (el) el.textContent = txt || ''
+  }
+  const today = new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10)
+
+  // 現況：資料多新。看的是「該不該重新整理」，所以用相對時間而不是時刻。
+  if (data.updated_at) {
+    const mins = Math.max(0, Math.round((Date.now() - Date.parse(data.updated_at)) / 60000))
+    set('overview', mins < 60 ? `${mins} 分前`
+      : mins < 1440 ? `${Math.round(mins / 60)} 小時前`
+      : `${Math.round(mins / 1440)} 天前`)
+  }
+
+  // 計畫：下一課還有幾天
+  const b = window._trainingBlock
+  const next = b && (b.sessions || []).filter(s => s.date >= today).sort((x, y) => x.date.localeCompare(y.date))[0]
+  if (next) {
+    const d = Math.round((Date.parse(next.date) - Date.parse(today)) / 86400000)
+    set('plan', d === 0 ? '今天' : d === 1 ? '明天' : `${d} 天後`)
+  }
+
+  // 活動紀錄：本週幾趟（週一起算，跟 weekly_quest 同一個定義）
+  const now = new Date(Date.now() + 8 * 3600 * 1000)
+  const monday = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(),
+    now.getUTCDate() - ((now.getUTCDay() + 6) % 7))).toISOString().slice(0, 10)
+  const wk = (data.recent_rides || []).filter(r => (r.date || '') >= monday).length
+  set('log', wk ? `本週 ${wk}` : '本週 0')
+
+  // ITT：目前追蹤幾條分段
+  const nSeg = (data.segments || []).length
+  if (nSeg) set('itt', `${nSeg} 段`)
+
+  // 趨勢：體能（CTL）—— 趨勢章看的就是這條線的長期走向
+  const w = window._wellness
+  if (w) {
+    const days = Object.keys(w).sort()
+    const ctl = days.length ? w[days[days.length - 1]]?.ctl : null
+    if (ctl != null) set('trends', `CTL ${Math.round(ctl)}`)
+  }
+}
+
+/* ══ 狀態儀表：側欄那 501 px 的空白 ═══════════════════════════════════════
+   側欄是全站唯一「不管在哪一章都看得到」的位置。把 Overview 複製一份過來是浪費；
+   該放的是**看任何一章時心裡都在問的那件事**：我現在狀態如何、今天該練什麼。
+   資料來自 data/fit/_wellness.json（每天同步、367 天，先前完全沒被讀取）。 */
+const RDY_DAYS = 90
+
+function tsbMood(tsb) {
+  if (tsb == null) return { txt: '—', cls: '' }
+  if (tsb > 5)    return { txt: '新鮮',   cls: 'rdy-fresh' }
+  if (tsb > -10)  return { txt: '平衡',   cls: 'rdy-ok'    }
+  if (tsb > -20)  return { txt: '疲勞中', cls: 'rdy-tired' }
+  return              { txt: '高負荷', cls: 'rdy-deep'  }
+}
+
+/** 最近一筆有值的欄位，連同它是哪一天 —— 今天的睡眠／HRV 常常還沒同步進來，
+    直接顯示空白會讓人以為壞了，標上日期才知道那是「昨天的數字」。 */
+function latestField(w, days, key) {
+  for (let i = days.length - 1; i >= 0; i--) {
+    const v = w[days[i]] && w[days[i]][key]
+    if (v != null) return { v, date: days[i] }
+  }
+  return { v: null, date: null }
+}
+
+function rdySpark(series, w, h) {
+  const vals = series.filter(v => v != null)
+  if (vals.length < 2) return ''
+  const lo = Math.min(...vals), hi = Math.max(...vals), span = (hi - lo) || 1
+  const pt = (v, i) => [
+    (i / (series.length - 1) * w).toFixed(1),
+    (h - (v - lo) / span * h).toFixed(1),
+  ]
+  const d = series.map((v, i) => v == null ? null : pt(v, i))
+    .filter(Boolean).map((p, i) => `${i ? 'L' : 'M'}${p[0]} ${p[1]}`).join(' ')
+  return d
+}
+
+function renderReadiness() {
+  const w = window._wellness
+  if (!w) return ''
+  const days = Object.keys(w).sort()
+  if (!days.length) return ''
+  const recent = days.slice(-RDY_DAYS)
+  const last = days[days.length - 1]
+  const ctl = w[last]?.ctl, atl = w[last]?.atl
+  const tsb = (ctl != null && atl != null) ? ctl - atl : null
+  const mood = tsbMood(tsb)
+
+  const ctlSeries = recent.map(d => w[d]?.ctl ?? null)
+  const atlSeries = recent.map(d => w[d]?.atl ?? null)
+  const W = 156, H = 34
+  // 兩條線共用同一個值域才比得出「疲勞高於體能」的形狀，所以先合併求範圍
+  const all = [...ctlSeries, ...atlSeries].filter(v => v != null)
+  const lo = Math.min(...all), hi = Math.max(...all), span = (hi - lo) || 1
+  const path = s => s.map((v, i) => v == null ? null
+      : `${(i / (s.length - 1) * W).toFixed(1)} ${(H - (v - lo) / span * H).toFixed(1)}`)
+    .filter(Boolean).map((p, i) => `${i ? 'L' : 'M'}${p}`).join(' ')
+
+  const hrv = latestField(w, days, 'hrv')
+  const rhr = latestField(w, days, 'restingHR')
+  const slp = latestField(w, days, 'sleepSecs')
+  const eftp = (() => {
+    for (let i = days.length - 1; i >= 0; i--) {
+      const si = w[days[i]]?.sportInfo
+      const ride = Array.isArray(si) ? si.find(x => x.type === 'Ride' && x.eftp) : null
+      if (ride) return Math.round(ride.eftp)
+    }
+    return null
+  })()
+  const md = d => d ? d.slice(5).replace('-', '/') : ''
+  const hhmm = s => s == null ? '—' : `${Math.floor(s / 3600)}:${String(Math.round(s % 3600 / 60)).padStart(2, '0')}`
+  const row = (k, v, date) =>
+    `<div class="rdy-row"><span>${k}</span><b>${v}</b><em>${md(date)}</em></div>`
+
+  return `<div class="rdy">
+    <div class="rdy-hd">狀態<span>${md(last)}</span></div>
+    <div class="rdy-tsb ${mood.cls}">
+      <b>${tsb == null ? '—' : (tsb > 0 ? '+' : '') + tsb.toFixed(1)}</b>
+      <span>TSB · ${mood.txt}</span>
+    </div>
+    <svg class="rdy-spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">
+      <path d="${path(atlSeries)}" class="rdy-atl"/>
+      <path d="${path(ctlSeries)}" class="rdy-ctl"/>
+    </svg>
+    <div class="rdy-cta">
+      <span>CTL ${ctl == null ? '—' : ctl.toFixed(1)}</span>
+      <span>ATL ${atl == null ? '—' : atl.toFixed(1)}</span>
+      <em>${RDY_DAYS} 天</em>
+    </div>
+    ${row('HRV', hrv.v == null ? '—' : Math.round(hrv.v), hrv.date)}
+    ${row('靜息', rhr.v == null ? '—' : Math.round(rhr.v), rhr.date)}
+    ${row('睡眠', hhmm(slp.v), slp.date)}
+    ${eftp ? row('eFTP', eftp + ' W', null) : ''}
+    ${renderBlockProgress()}
+  </div>`
+}
+
+/** 週期進度 + 下一課。沒有 training-block.json 就整塊不出現。 */
+function renderBlockProgress() {
+  const b = window._trainingBlock
+  if (!b || !b.start || !b.end) return ''
+  const today = new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10)
+  const dayNo = Math.floor((Date.parse(today) - Date.parse(b.start)) / 86400000)
+  const total = Math.max(1, Math.round((Date.parse(b.end) - Date.parse(b.start)) / 86400000))
+  const wkNow = Math.max(1, Math.floor(dayNo / 7) + 1)
+  const wkAll = Math.max(1, Math.ceil(total / 7))
+  const pct = Math.max(0, Math.min(100, dayNo / total * 100))
+  const next = (b.sessions || []).filter(s => s.date >= today).sort((a, c) => a.date.localeCompare(c.date))[0]
+  const inDays = next ? Math.round((Date.parse(next.date) - Date.parse(today)) / 86400000) : null
+  const when = inDays === 0 ? '今天' : inDays === 1 ? '明天' : `${inDays} 天後`
+  const t = next && next.target
+  return `<div class="rdy-blk">
+    <div class="rdy-blk-t">${b.title || '訓練週期'}<span>${wkNow}/${wkAll} 週</span></div>
+    <div class="rdy-bar"><i style="width:${pct.toFixed(0)}%"></i></div>
+    ${next ? `<div class="rdy-next">
+      <span class="rdy-next-w">下一課 · ${when}</span>
+      <b>${next.name || next.date}</b>
+      ${t ? `<em>IF ${t.if ?? '—'} · TSS ${t.tss ?? '—'}</em>` : ''}
+    </div>` : `<div class="rdy-next"><span class="rdy-next-w">本週期已排完</span></div>`}
+  </div>`
+}
+
+/** 側欄（桌機）與 Overview 章首（手機）各掛一份。手機側欄 display:none，
+    子元素逃不出去，所以只能各渲染一次；內容是靜態 HTML，重複沒有副作用。 */
+function mountReadiness() {
+  const html = renderReadiness()
+  if (!html) return
+  const side = document.querySelector('.side'), foot = document.querySelector('.side-foot')
+  if (side && foot && !side.querySelector('.rdy')) foot.insertAdjacentHTML('beforebegin', html)
+  const host = document.getElementById('rdy-mobile')
+  if (host && !host.querySelector('.rdy')) host.innerHTML = html
+}
+
+function buildNav() {
+  const nav = document.getElementById('nav')
+  const tab = document.getElementById('tabbar')
+  // em 這個槽位的 CSS 本來就寫著 font-variant-numeric:tabular-nums（見 .nav-i em）——
+  // 右對齊、低對比、等寬數字，那是「數值欄」的定義，先前卻裝著 OVERVIEW/PLAN 這些
+  // 純字母，等寬數字設定完全沒作用。而且英文在右上角 apphead 已經是主標了，
+  // 側欄再放一次等於同一個詞在畫面上出現四次。改放每章一個活數字。
+  if (nav) nav.innerHTML = VIEWS.map(v =>
+    `<button class="nav-i" type="button" data-view="${v.id}"><i></i>${v.zh}<em data-badge="${v.id}"></em></button>`).join('')
+  if (tab) tab.innerHTML = VIEWS.map(v =>
+    `<button class="tab-i" type="button" data-view="${v.id}"><i></i>${v.en}</button>`).join('')
+  const go = e => {
+    const b = e.target.closest('[data-view]')
+    if (!b) return
+    setView(b.dataset.view, { push: true })
+  }
+  nav?.addEventListener('click', go)
+  tab?.addEventListener('click', go)
+}
+
+function setView(name, opts) {
+  const v = VIEWS.find(x => x.id === name) ? name : 'overview'
+  if (v !== appState.view) closeDrawer()
+  appState.view = v
+  document.querySelectorAll('#content .view').forEach(sec =>
+    sec.classList.toggle('is-on', sec.dataset.view === v))
+  document.querySelectorAll('.nav-i,.tab-i').forEach(b => {
+    const on = b.dataset.view === v
+    if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current')
+  })
+  const meta = VIEWS.find(x => x.id === v)
+  const t = document.getElementById('ah-title'), sub = document.getElementById('ah-sub')
+  const upd = document.getElementById('ah-upd')
+  if (t) t.textContent = meta.en
+  if (sub) sub.textContent = meta.zh
+  if (upd) upd.textContent = window.__updatedStr ? `UPDATED ${window.__updatedStr} TPE` : ''
+  const sec = document.querySelector(`#content .view[data-view="${v}"]`)
+  if (sec) countUpIn(sec)
+  scrollTo({ top: 0, behavior: 'auto' })
+  if (opts && opts.push && location.hash.slice(1) !== v) history.pushState({ view: v }, '', '#' + v)
+  // ITT 的 3D 是重資源：進到這個 view 才掛，其它 view 完全不碰
+  if (v === 'itt') mountItt()
+  // 地圖：ride-atlas.json 有 1.25 MB，同樣是進到這個 view 才載入
+  if (v === 'atlas') mountAtlas()
+  // 隱藏的窗格量不到寬度：日曆要在真的顯示之後才捲得到「今天」
+  if (v === 'plan' && typeof window.__tcalRefresh === 'function') window.__tcalRefresh()
+}
+
+let _ittMounted = false
+function mountItt() {
+  if (_ittMounted) return
+  if (!document.querySelector('#content .view[data-view="itt"] .fc')) return
+  _ittMounted = true
+  bindSegmentCards()
+  initSeg3DWhenVisible()
+}
+
+/* §38：view 之外再吃一層子路由，重新整理不會掉回 Overview 或第一條路段。
+   `#itt/segment/641218`、`#log/activity/2026-08-13`、`#plan/session/2026-08-18` */
+function routeFromHash() {
+  const raw = (location.hash || '').replace(/^#/, '')
+  const [v, kind, id] = raw.split('/')
+  setView(v || 'overview')
+  if (!kind || !id) return
+  const key = decodeURIComponent(id)
+  if (v === 'itt'  && kind === 'segment')  selectSegment(key, { silent: true, reveal: true })
+  if (v === 'log'  && kind === 'activity') focusActivity(key)
+  if (v === 'plan' && kind === 'session')  openSessionDrawer(key)
+}
+
+function initRouter() {
+  buildNav()
+  initDrawer()
+  addEventListener('popstate', routeFromHash)
+  routeFromHash()
+
+  // 全站的跨 view 跳轉：data-goto="log" [data-actdate] / data-power="1200" / data-ses="<date>"
+  document.getElementById('content').addEventListener('click', e => {
+    const ses = e.target.closest('[data-ses]')
+    if (ses) { openSessionDrawer(ses.dataset.ses); return }
+    const iday = e.target.closest('[data-ittday]')
+    if (iday) { openIttDayDrawer(iday.dataset.ittday); return }
+    const pw = e.target.closest('[data-power]')
+    if (pw && !pw.disabled) {
+      const prs = window.__powerPrs
+      if (prs && prs.length) { openPowerModal(prs, +pw.dataset.power); return }
+    }
+    const go = e.target.closest('[data-goto]')
+    if (!go) return
+    const date = go.dataset.actdate
+    setView(go.dataset.goto, { push: true })
+    if (date) focusActivity(date)
+  })
+}
+
+/* 從別的 view 指到某一天的活動：切到 Log、必要時展開，再定位。
+   這取代舊版「切 tab → setTimeout → scrollIntoView 找章節」那條路徑。 */
+function focusActivity(date) {
+  appState.selectedActivity = date
+  const h = '#log/activity/' + date
+  if (location.hash !== h) history.replaceState({ view: 'log', act: date }, '', h)
+  const hit = () => {
+    const el = document.getElementById('act-' + date)
+    if (!el) return false
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    el.classList.add('act-highlight')
+    setTimeout(() => el.classList.remove('act-highlight'), 1500)
+    return true
+  }
+  if (hit()) return
+  if (typeof window.__logExpandAll === 'function') {
+    window.__logExpandAll()
+    setTimeout(hit, 60)
+  }
 }
 
 /* ── fetch strava.json + itt-config.json ──
@@ -7949,11 +9433,18 @@ Promise.all([
   // 實測撞過：三條新路段在 itt-segments.json 有 10 筆，strava.json 只有 1 筆，畫面就是空的。
   // 缺檔或壞檔就回 null，退回 strava.json 那份，不會比現在差。
   fetchData('data/itt-segments.json').then(r => r.ok ? r.json() : null).catch(() => null),
+  // 每日 wellness（FIT Sync 從 intervals.icu 抓的）：CTL/ATL、靜息心率、HRV、睡眠、eFTP。
+  // 367 天的資料每天同步、每天 commit，但這個頁面在 2026-08-15 之前一次都沒讀過它。
+  // 缺檔就回 null → 側欄狀態儀表整塊不顯示，其他章節不受影響。
+  fetchData('data/fit/_wellness.json').then(r => r.ok ? r.json() : null).catch(() => null),
 ])
-  .then(([data, ittConfig, segStreams, segTerrain, landmarks, rivals, taipeiOutline, quotesData, trainingBlock, ittSegments]) => {
+  .then(([data, ittConfig, segStreams, segTerrain, landmarks, rivals, taipeiOutline, quotesData, trainingBlock, ittSegments, wellness]) => {
     mergeIttSegments(data, ittSegments)
+    window._wellness = wellness || null
     // 建立 SEG_META lookup，下面 renderSegments 用
-    window._ittSegMeta = Object.fromEntries(ittConfig.segments.map(s => [s.id, s]))
+    // _idx = itt-config.json 裡的排列順序（全段 → 1/4 → 2/4 …）。
+    // 物件的數字字串鍵會被引擎重排成遞增，所以順序一定要自己存，不能靠 Object.keys。
+    window._ittSegMeta = Object.fromEntries(ittConfig.segments.map((s, i) => [s.id, { ...s, _idx: i }]))
     window.__rideFeed = data.recent_rides || []
     window._segStreams = segStreams || {}
     window._segTerrain = segTerrain || {}
@@ -7969,20 +9460,24 @@ Promise.all([
     window._trainingBlock = trainingBlock || null
     window._taipeiMiniMap = buildTaipeiMiniMap(taipeiOutline)
     window._quotePool = mapQuotes(quotesData)
+    window.__powerPrs = data.power_prs || []
     render(data)
     initQuoteWidget()
-    initSeg3DWhenVisible()
-    bindDeck(data)
-    initChapters()
-    initChapterPager()
     bindNameCard()
-    bindSegmentCards()
+    // ITT 的重資源（three.js 場景、卡片綁定）留到真的進到 ITT view 才掛（見 mountItt）
+    initRouter()
+    // initRouter 之後才掛：導覽徽章要等 buildNav 把 em[data-badge] 建出來
+    mountReadiness()
+    updateNavBadges(data)
+    const ftpBtn = document.getElementById('deck-ftp')
+    if (ftpBtn && window.__powerPrs.length)
+      ftpBtn.addEventListener('click', () => openPowerModal(window.__powerPrs, 1200))
   })
   .catch(err => {
     document.getElementById('content').innerHTML = `
-      <div class="loading" style="color:#FC4C02">
-        載入失敗：${err.message}<br><br>
-        <span style="color:#555;font-size:12px">請先執行 GitHub Actions 產生 strava.json</span>
+      <div class="nil" style="color:#FC4C02;padding:32px 0">
+        Data unavailable · 載入失敗：${err.message}<br><br>
+        <span style="color:var(--ink-3)">請先執行 GitHub Actions 產生 strava.json</span>
       </div>
     `
   })
