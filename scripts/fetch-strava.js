@@ -180,6 +180,9 @@ function mapSegEffort(se, activityId, date) {
     avg_watts:     se.average_watts     ? Math.round(se.average_watts)     : null,
     avg_heartrate: se.average_heartrate ? Math.round(se.average_heartrate) : null,
     pr_rank:       se.pr_rank           || null,
+    // 來源標記。Strava 給的是它自己配對出來的官方成績，自建偵測器寫的是 'fit'。
+    // 兩者混在同一個 efforts 陣列裡，前端要能分辨哪些是官方計時、哪些是我自己算的。
+    source:        'strava',
   }
 }
 

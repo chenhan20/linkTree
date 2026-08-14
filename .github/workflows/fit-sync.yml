@@ -111,7 +111,12 @@ jobs:
           # 純本機運算、不打任何 API，且對既有內容是合併不是覆寫。
           python scripts/backfill-itt-efforts.py --quiet || \
             echo "::warning::ITT 回補失敗，這班先跳過"
-          git add data/itt-segments.json
+          # 補來源標記，並把成績併回 data/strava.json 的 segments 副本。
+          # 沒有這步的話兩份檔案會漂移：itt-segments.json 有 10 筆、strava.json 只有 1 筆，
+          # 而 strava-sync（已棄用、隨時可能停跑）是唯一會把它們對齊的東西。實測撞過。
+          python scripts/tag-itt-sources.py || \
+            echo "::warning::ITT 來源標記失敗，這班先跳過"
+          git add data/itt-segments.json data/strava.json
           git diff --staged --quiet || \
             git commit -m "chore: 回補自建 ITT 成績 $(date -u '+%Y-%m-%d')"
           git push || (git pull --rebase && git push)

@@ -1376,6 +1376,21 @@ html.lg-refract .fc-refract{display:block}
 .s2-etable td:not(:first-child){text-align:right;font-variant-numeric:tabular-nums}
 .s2-etable tbody tr:hover td{background:rgba(255,255,255,.04)}
 .s2-etable tr.s2-epr td{color:var(--modal-accent)!important;font-weight:700;background:color-mix(in srgb,var(--modal-accent) 12%,transparent)}
+/* 成績來源標籤：Strava 官方配對 vs 自建 FIT 計時。
+   兩者一律低調（外框字，不填色），因為它是註記不是數據 —— 版面上唯一該亮的是秒數。 */
+.s2-src{
+  display:inline-block;padding:1px 5px;border-radius:3px;
+  font-size:8.5px;font-weight:700;letter-spacing:.8px;line-height:1.5;
+  border:1px solid currentColor;white-space:nowrap;font-variant-numeric:normal
+}
+.s2-src-strava{color:rgba(252,110,60,.62)}
+.s2-src-fit{color:rgba(122,214,255,.62)}
+.s2-etable tr.s2-epr .s2-src{opacity:.9}
+.seg-modal-legend{
+  margin-top:10px;font-size:9.5px;line-height:1.7;letter-spacing:.5px;
+  color:rgba(255,255,255,.38)
+}
+.seg-modal-legend .s2-src{margin-right:4px;vertical-align:1px}
 
 /* ── 3D route replay (Three.js, lazy-loaded) ── */
 .r3d-trigger-btn{
@@ -2739,9 +2754,10 @@ html.lg-refract .fc-refract{display:block}
     </div>
     <div class="seg-modal-body">
       <table class="s2-etable">
-        <thead><tr><th>日期</th><th>時間</th><th>⚡ 功率</th><th>❤️ HR</th></tr></thead>
+        <thead><tr><th>日期</th><th>時間</th><th>⚡ 功率</th><th>❤️ HR</th><th>來源</th></tr></thead>
         <tbody id="seg-modal-tbody"></tbody>
       </table>
+      <div class="seg-modal-legend" id="seg-modal-legend"></div>
     </div>
   </div>
 </div>
@@ -4539,6 +4555,14 @@ function initLiquidRefraction() {
   addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(rebuild, 250) })
 }
 
+/* 成績來源：'fit' = 自建偵測器從 Garmin 原始 FIT 算出來的，其餘（含沒有 source 欄位的
+   舊紀錄）一律是 Strava 官方配對。舊資料的空白已由 scripts/tag-itt-sources.py 補成
+   'strava'，這裡的 fallback 只是防呆。 */
+const srcKind = e => (e && e.source === 'fit') ? 'fit' : 'strava'
+const srcTag = e => srcKind(e) === 'fit'
+  ? '<span class="s2-src s2-src-fit" title="自建 ITT 計時：由 Garmin 原始 FIT 逐秒座標判定閘門通過">自建計時</span>'
+  : '<span class="s2-src s2-src-strava" title="Strava 官方配對的路段成績（需付費訂閱）">STRAVA</span>'
+
 function openSegModal(id) {
   const seg = window.__segData && window.__segData[id]
   if (!seg) return
@@ -4561,9 +4585,17 @@ function openSegModal(id) {
     const rep   = dayCount[e.date || ''] > 1 && e.start_time
       ? ` <small style="color:rgba(255,255,255,.55)">${e.start_time}</small>` : ''
     return `<tr class="${e.is_pr ? 's2-epr' : ''}" data-date="${e.date||''}" data-actid="${e.activity_id||''}" style="cursor:pointer" title="跳至活動紀錄">
-      <td>${date}${rep}</td><td>${crown}${e.elapsed_str}</td><td>${watts}</td><td>${hr}</td>
+      <td>${date}${rep}</td><td>${crown}${e.elapsed_str}</td><td>${watts}</td><td>${hr}</td><td>${srcTag(e)}</td>
     </tr>`
   }).join('')
+  // 圖例只列這條路段實際出現過的來源；全都是同一種來源時就不用兩行都印
+  const kinds = new Set(seg.efforts.map(e => srcKind(e)))
+  document.getElementById('seg-modal-legend').innerHTML = [
+    kinds.has('strava')
+      ? `<div><span class="s2-src s2-src-strava">STRAVA</span>Strava 官方配對的成績（需付費訂閱，已棄用的舊管線）</div>` : '',
+    kinds.has('fit')
+      ? `<div><span class="s2-src s2-src-fit">自建計時</span>由 Garmin 原始 FIT 的逐秒座標自行判定閘門通過 —— 我自己算的，不經任何第三方</div>` : '',
+  ].join('')
   // bind row click to scroll to activity
   tbody.querySelectorAll('tr[data-date]').forEach(tr => {
     tr.addEventListener('click', () => {
@@ -7751,6 +7783,60 @@ function initChapters() {
    沒有這個的話回訪者會吃到舊 JSON —— 實測過語錄檔新增 originalQuote 欄位之後，
    瀏覽器仍拿舊檔，200 則全都讀不到原文；每天 cron 更新的 strava.json 也有同樣問題。 */
 const fetchData = p => fetch(p, { cache: 'no-cache' })
+
+/* ── ITT 成績：itt-segments.json 是權威檔，就地併進 data.segments ──
+   兩份檔案各有一半真相：strava.json 那份只有 strava-sync 跑過才更新（Strava 這條路已棄用），
+   itt-segments.json 則是 FIT 自建偵測器每班回補的目標。這裡做 union，兩邊都不能掉。
+   effort 身分用自然鍵（日期 + 起跑時刻，容忍 90 秒），不是 activity_id ——
+   同一趟刷四次中社是四筆、activity_id 全一樣，FIT 來源的 activity_id 更是 null。 */
+const ITT_SAME_START_TOL_SEC = 90
+function ittStartSec(e) {
+  const st = e && e.start_time
+  if (!st || st.indexOf(':') < 0) return null
+  const p = st.split(':')
+  const h = +p[0], m = +p[1], s = p.length > 2 ? Math.trunc(+p[2]) : 0
+  return Number.isFinite(h) && Number.isFinite(m) ? h * 3600 + m * 60 + (s || 0) : null
+}
+function ittSameEffort(a, b) {
+  if ((a.date || '') !== (b.date || '')) return false
+  const ka = ittStartSec(a), kb = ittStartSec(b)
+  if (ka !== null && kb !== null) return Math.abs(ka - kb) <= ITT_SAME_START_TOL_SEC
+  return Math.abs((a.elapsed_sec || 0) - (b.elapsed_sec || 0)) <= 8   // 舊紀錄沒有起跑時刻
+}
+function mergeIttSegments(data, ittSegments) {
+  const incoming = Array.isArray(ittSegments) ? ittSegments : (ittSegments && ittSegments.segments)
+  if (!incoming || !incoming.length) return
+  const main = data.segments || []
+  const byId = new Map(main.map(s => [s.id, s]))
+  incoming.forEach(src => {
+    const dst = byId.get(src.id)
+    if (!dst) { main.push(src); return }
+    const efforts = dst.efforts || []
+    ;(src.efforts || []).forEach(e => {
+      if (!efforts.some(x => ittSameEffort(e, x))) efforts.push(e)
+    })
+    // 路段 metadata 以 itt-segments.json 為準，efforts 用上面併好的
+    Object.keys(src).forEach(k => { if (k !== 'efforts') dst[k] = src[k] })
+    dst.efforts = efforts
+  })
+  // 皇冠重算：Strava 的 is_pr 只在它自己的集合裡成立，併入 FIT 成績後最快的可能換人，
+  // 不重算會同時出現兩頂皇冠。
+  main.forEach(seg => {
+    const list = seg.efforts || []
+    if (!list.length) return
+    list.sort((a, b) => `${b.date || ''} ${b.start_time || '00:00'}`.localeCompare(`${a.date || ''} ${a.start_time || '00:00'}`))
+    const best = list.reduce((m, e) => (e.elapsed_sec < m.elapsed_sec ? e : m), list[0])
+    list.forEach(e => { e.is_pr = e === best })
+    seg.pr_time_str = fmtIttElapsed(best.elapsed_sec)
+  })
+  data.segments = main
+}
+function fmtIttElapsed(sec) {
+  const s = Math.round(sec || 0)
+  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), ss = s % 60
+  return h ? `${h}:${String(m).padStart(2,'0')}:${String(ss).padStart(2,'0')}`
+           : `${m}:${String(ss).padStart(2,'0')}`
+}
 /* ── 每日一句：語錄庫已搬到獨立 repo steve-quotes，走 jsDelivr CDN ──
    @main 分支在 jsDelivr 約有 12 小時 CDN 快取；語錄不是時效資料，可接受。
    上面的 { cache:'no-cache' } 對跨網域絕對 URL 一樣合法（一般 CORS fetch），
@@ -7782,8 +7868,14 @@ Promise.all([
   fetchData(QUOTES_URL).then(r => r.ok ? r.json() : null).catch(() => null),
   // 手寫的訓練週期計畫（見 data/training-block.json 的 _howToUse）；缺檔就不顯示週期章
   fetchData('data/training-block.json').then(r => r.ok ? r.json() : null).catch(() => null),
+  // ITT 成績的權威檔。strava.json 裡也有一份 segments，但那份只有 strava-sync 跑過才會更新，
+  // 而 FIT 自建偵測器（scripts/backfill-itt-efforts.py）寫的是 itt-segments.json。
+  // 實測撞過：三條新路段在 itt-segments.json 有 10 筆，strava.json 只有 1 筆，畫面就是空的。
+  // 缺檔或壞檔就回 null，退回 strava.json 那份，不會比現在差。
+  fetchData('data/itt-segments.json').then(r => r.ok ? r.json() : null).catch(() => null),
 ])
-  .then(([data, ittConfig, segStreams, segTerrain, landmarks, rivals, taipeiOutline, quotesData, trainingBlock]) => {
+  .then(([data, ittConfig, segStreams, segTerrain, landmarks, rivals, taipeiOutline, quotesData, trainingBlock, ittSegments]) => {
+    mergeIttSegments(data, ittSegments)
     // 建立 SEG_META lookup，下面 renderSegments 用
     window._ittSegMeta = Object.fromEntries(ittConfig.segments.map(s => [s.id, s]))
     window.__rideFeed = data.recent_rides || []

@@ -187,9 +187,71 @@ def merge(seg, fit_efforts, dry_run=False):
     return added, len(pruned)
 
 
+def compare(data, fit_efforts):
+    """對帳：同一趟兩邊都有時，自建偵測器與 Strava 官方差幾秒。
+
+    這是偵測器的驗收方式 —— 不是「有沒有抓到」，是「抓到的準不準」。
+    寫入模式會把重複的 FIT 筆數 prune 掉（以官方為準），對帳要在 prune 之前做，
+    所以獨立成一個 read-only 模式。
+    """
+    rows, only_strava, only_fit = [], [], []
+    for seg in data:
+        existing = seg.get("efforts") or []
+        strava = [e for e in existing if e.get("source") != "fit"]
+        mine = fit_efforts.get(seg["id"], [])
+        matched_fit = set()
+        for s in strava:
+            hit = next((f for f in mine if same_effort(s, f)), None)
+            if hit is None:
+                only_strava.append((seg["name"], s))
+                continue
+            matched_fit.add(id(hit))
+            rows.append((seg["name"], s.get("date"), s.get("start_time"),
+                         s.get("elapsed_sec") or 0, hit["elapsed_sec"]))
+        only_fit.extend((seg["name"], f) for f in mine if id(f) not in matched_fit)
+
+    print("\n" + "=" * 74)
+    print("對帳：自建 FIT 計時 vs Strava 官方（只列兩邊都有的那幾筆）")
+    print("=" * 74)
+    if not rows:
+        print("  沒有可比對的重疊筆數。")
+    else:
+        print(f"  {'路段':<20} {'日期':<11} {'起跑':<6} {'Strava':>8} {'自建':>8} {'差':>7}")
+        worst = 0.0
+        for name, date, st, s_sec, f_sec in sorted(rows, key=lambda r: -abs(r[3] - r[4])):
+            d = f_sec - s_sec
+            worst = max(worst, abs(d))
+            print(f"  {name[:18]:<20} {date:<11} {st or '—':<6} "
+                  f"{s_sec:>8.1f} {f_sec:>8.1f} {d:>+7.1f}s")
+        mean_abs = sum(abs(r[4] - r[3]) for r in rows) / len(rows)
+        print(f"\n  可比對 {len(rows)} 筆，平均差 {mean_abs:.2f}s，最大差 {worst:.1f}s")
+
+    # 「自建沒抓到」要先扣掉根本沒有 FIT 檔的年代，否則會把「檔案不存在」誤讀成「偵測失敗」。
+    fits = sorted(f for f in os.listdir(FIT_DIR) if f.lower().endswith(".fit"))
+    fit_from = fits[0][:10] if fits else "9999-99-99"
+    pre_archive = [x for x in only_strava if (x[1].get("date") or "") < fit_from]
+    in_archive = [x for x in only_strava if (x[1].get("date") or "") >= fit_from]
+    print(f"\n  只有 Strava 有、自建沒抓到：{len(only_strava)} 筆")
+    print(f"    其中 {len(pre_archive)} 筆早於 FIT 檔起始日 {fit_from}（本機沒有原始檔，不是偵測失敗）")
+    print(f"    落在 FIT 檔涵蓋範圍內的真正漏抓：{len(in_archive)} 筆")
+    for name, e in in_archive[:15]:
+        print(f"    ⚠️  {name[:18]:<20} {e.get('date')} {e.get('start_time') or '—'} {e.get('elapsed_str')}")
+    if len(in_archive) > 15:
+        print(f"    …另外 {len(in_archive) - 15} 筆")
+
+    print(f"\n  只有自建抓到、Strava 沒配對：{len(only_fit)} 筆")
+    for name, e in only_fit[:15]:
+        print(f"    {name[:18]:<20} {e.get('date')} {e.get('start_time') or '—'} {e.get('elapsed_str')}")
+    if len(only_fit) > 15:
+        print(f"    …另外 {len(only_fit) - 15} 筆")
+    return 0
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description="用 FIT 自建偵測器回補 ITT 成績")
     ap.add_argument("--dry-run", action="store_true", help="只印差異，不寫檔")
+    ap.add_argument("--compare", action="store_true",
+                    help="只對帳不寫檔：列出自建計時與 Strava 官方在同一筆上差幾秒")
     ap.add_argument("--only", nargs="+", metavar="SEG_ID", help="只處理這些路段編號")
     ap.add_argument("-q", "--quiet", action="store_true")
     args = ap.parse_args(argv)
@@ -199,6 +261,10 @@ def main(argv=None):
                                     verbose=not args.quiet)
 
     data = json.load(open(ITT_FILE, encoding="utf-8"))
+
+    if args.compare:
+        return compare(data, fit_efforts)
+
     total_add = total_prune = 0
     for seg in data:
         mine = fit_efforts.get(seg["id"], [])
