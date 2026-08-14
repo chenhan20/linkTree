@@ -15,3 +15,11 @@ data/fit/_sync.log
 # 這包原始檔隨時可以用 --phase details 重抓（額度夠），不值得讓 repo 多幾十 MB。
 # 想留就自己備份到 repo 外面。
 data/strava-archive/activities/
+
+# 封存的路段原始折線（77 條、9.2 MB、每條 800~2000 點）。
+# 刻意不進版控：那是別人建立的「路段資料」，不是自己的活動資料，
+# 而這個 repo 是公開的（Strava API Agreement 對第三方快取有 7 天限制）。
+# 真的會用到的那幾條，降採樣成 140 點之後存在 data/segment-streams.json 裡，
+# 那份本來就公開、也只放已設成 ITT 的路段。
+# 要把某條接上自建計時：加進 data/itt-config.json → node scripts/merge-harvested-streams.js
+data/strava-archive/segments/
