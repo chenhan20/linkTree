@@ -173,41 +173,49 @@ def load_segments(path=DEFAULT_SEGMENTS):
 
 # ---------------------------------------------------------------- 偵測
 def _match_efforts(seg, gps_pts, source):
-    starts = [c for c in seg["start_gate"].crossings(gps_pts) if c[1] > 0.0]
-    ends = [c for c in seg["end_gate"].crossings(gps_pts) if c[1] > 0.0]
+    """把起／終點閘門的穿越配成 effort。
+
+    配對方向是「以終點為錨，往回找起點」，而且取**最後一次**正向穿越 ——
+    不是第一次。實測 2025-10-29 河濱10K：騎士 20:01:14 正向過了起點線，
+    20:02:57 反向折回去，20:03:01 再正向起跑，20:25:06 抵達終點。
+    取第一次會得到 1431 秒，取最後一次是 1324 秒，Strava 官方給的正是後者 ——
+    折返代表前一次不算數，真正的起跑是最後那一次。
+
+    候選由晚到早試，是為了讓「最後一次」若沒通過秒數／中途檢查時，
+    還能退回更早的那次，而不是整筆丟掉。
+    """
+    starts = sorted(c[0] for c in seg["start_gate"].crossings(gps_pts) if c[1] > 0.0)
+    ends = sorted(c[0] for c in seg["end_gate"].crossings(gps_pts) if c[1] > 0.0)
     if not starts or not ends:
         return []
     times = [p["t"] for p in gps_pts]
     efforts = []
-    last_end = None
-    for s_time, _ in starts:
-        if last_end is not None and s_time < last_end:
-            continue  # 已被上一筆 effort 覆蓋（同一次通過內的重覆穿越）
-        cand = [e for e, _ in ends if e > s_time]
-        if not cand:
-            continue
-        e_time = min(cand)
-        elapsed = (e_time - s_time).total_seconds()
-        if elapsed < seg["min_sec"] or elapsed > seg["max_sec"]:
-            continue  # 快得離譜或超過合理上限：丟棄這次起點穿越，繼續掃
-        # 中途檢查點：防反向與抄捷徑
-        import bisect
-        i0 = bisect.bisect_left(times, s_time)
-        i1 = bisect.bisect_right(times, e_time)
-        mid_ok = any(
-            _haversine_m((p["lat"], p["lon"]), seg["mid"]) <= MID_RADIUS_M
-            for p in gps_pts[i0:i1]
-        )
-        if not mid_ok:
-            continue
-        last_end = e_time
-        efforts.append({
-            "segment_id": seg["id"],
-            "segment_name": seg["name"],
-            "start_time": s_time.astimezone(TPE).isoformat(),
-            "elapsed_sec": round(elapsed, 1),
-            "source": os.path.basename(source),
-        })
+    prev_end = None
+    for e_time in ends:
+        cand = [s for s in starts if s < e_time and (prev_end is None or s > prev_end)]
+        for s_time in reversed(cand):          # 由晚到早
+            elapsed = (e_time - s_time).total_seconds()
+            if elapsed < seg["min_sec"] or elapsed > seg["max_sec"]:
+                continue  # 快得離譜或超過合理上限，試更早的那次起點穿越
+            # 中途檢查點：防反向與抄捷徑
+            import bisect
+            i0 = bisect.bisect_left(times, s_time)
+            i1 = bisect.bisect_right(times, e_time)
+            mid_ok = any(
+                _haversine_m((p["lat"], p["lon"]), seg["mid"]) <= MID_RADIUS_M
+                for p in gps_pts[i0:i1]
+            )
+            if not mid_ok:
+                continue
+            prev_end = e_time
+            efforts.append({
+                "segment_id": seg["id"],
+                "segment_name": seg["name"],
+                "start_time": s_time.astimezone(TPE).isoformat(),
+                "elapsed_sec": round(elapsed, 1),
+                "source": os.path.basename(source),
+            })
+            break
     return efforts
 
 

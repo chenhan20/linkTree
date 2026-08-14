@@ -99,9 +99,15 @@ def main(argv=None):
                       f"（{len(itt_seg.get('efforts') or [])} 筆）")
                 continue
             # 路段 metadata 以 itt-segments.json 為準（它是 fetch-strava.js 的完整副本，
-            # 且之後又被 FIT 回補加過料），但 efforts 走 union，兩邊都不能掉。
-            existing = dst.get("efforts") or []
-            before = len(existing)
+            # 且之後又被 FIT 回補加過料）。
+            #
+            # efforts 分兩種來源處理，不能一律 union：
+            #   ‧ source='fit' —— itt-segments.json 是唯一權威，整批取代。
+            #     union 會留下幽靈：偵測器修正後某筆的起跑時刻變了，舊的那筆在
+            #     strava.json 裡永遠刪不掉，同一趟就變成兩列（實測 2025-10-29 河濱10K）。
+            #   ‧ Strava 來源 —— 走 union，因為 strava.json 可能有 itt 還沒收到的。
+            existing = [e for e in (dst.get("efforts") or []) if e.get("source") != "fit"]
+            before = len(dst.get("efforts") or [])
             for e in itt_seg.get("efforts") or []:
                 if not any(same_effort(e, x) for x in existing):
                     existing.append(json.loads(json.dumps(e, ensure_ascii=False)))
@@ -114,7 +120,8 @@ def main(argv=None):
                 merged_total += len(existing) - before
                 print(f"  ~ {itt_seg['id']} {itt_seg['name']}：{before} → {len(existing)} 筆")
         strava["segments"] = main_segs
-        print(f"strava.json：併入 {merged_total} 筆")
+        print(f"strava.json：淨變動 {merged_total:+d} 筆"
+              f"（負數 = 清掉偵測器修正後不再成立的舊筆）")
 
     for seg in itt:
         sort_efforts(seg.get("efforts") or [])

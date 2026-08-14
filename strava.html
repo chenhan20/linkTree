@@ -7811,7 +7811,11 @@ function mergeIttSegments(data, ittSegments) {
   incoming.forEach(src => {
     const dst = byId.get(src.id)
     if (!dst) { main.push(src); return }
-    const efforts = dst.efforts || []
+    // 自建計時（source==='fit'）以 itt-segments.json 為唯一權威，整批取代；
+    // 純 union 會留下幽靈 —— 偵測器修正後某筆的起跑時刻變了，strava.json 裡
+    // 那筆舊的永遠刪不掉，同一趟就變成兩列（實測 2025-10-29 河濱10K）。
+    // Strava 來源的才走 union，因為 strava.json 可能有 itt 還沒收到的。
+    const efforts = (dst.efforts || []).filter(e => e.source !== 'fit')
     ;(src.efforts || []).forEach(e => {
       if (!efforts.some(x => ittSameEffort(e, x))) efforts.push(e)
     })

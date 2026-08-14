@@ -4,10 +4,15 @@
 backfill-itt-efforts.py —— 用自建偵測器把 data/fit/*.fit 的 ITT 成績補進 itt-segments.json
 
 為什麼需要這支：
-  Strava 的 segment matching 會漏。實測 2026-08-13 那趟，自建偵測器抓到
-  「關渡→美堤 1506.9 s」，Strava 全史 0 筆。新加的路段更慘 —— 加進來的那一刻，
-  Strava 只會往後配對，過去的騎乘不會回頭補。
-  FIT 是本機檔案，重跑偵測器不花任何 API 額度，所以歷史可以直接從 FIT 重建。
+  Strava 的路段成績配對是**付費功能**，訂閱斷了就沒了；而 FIT 是本機檔案，
+  重跑偵測器不花任何 API 額度，所以歷史可以無限次從 FIT 重建。
+  改了演算法就重掃一次，整批歷史自動跟著修正 —— 這是靠 API 拿數字做不到的。
+
+  ⚠️ 一個曾經寫在這裡的錯誤結論：本檔先前宣稱「Strava 會漏配對，實測關渡→美堤
+  Strava 全史 0 筆」。那是錯的。真正的原因是 scripts/fetch-strava.js 打 activity
+  detail 時沒帶 include_all_efforts=true（預設 false），Strava 只回「重點」efforts。
+  補上參數重抓後，那些成績 Strava 全都有，而且跟自建計時逐筆吻合（--compare 可驗）。
+  Strava 也**會**回頭把新路段配對到舊活動，不是只往後配。
 
 跟 fetch-strava.js 的關係：
   那支是「合併」不是「覆寫」（scripts/fetch-strava.js:693），會讀既有 efforts 再 push
@@ -142,27 +147,35 @@ def build_fit_efforts(only_ids=None, verbose=True):
     return out
 
 
-def merge(seg, fit_efforts, dry_run=False):
-    """把某路段的 FIT efforts 併進既有 efforts，回傳 (新增數, 刪除數)。"""
+def merge(seg, fit_efforts, scanned=True, dry_run=False):
+    """把某路段的 FIT efforts 併進既有 efforts，回傳 (新增數, 刪除數)。
+
+    scanned=True 時，這條路段的 FIT 成績是「整批重算」而不是「累加」——
+    偵測結果是 FIT 檔加演算法的純函數，演算法改了就該以新結果為準。
+    累加會留下幽靈：實測 2025-10-29 河濱10K，偵測器修正起跑點判定之後
+    起跑時刻從 20:01 變成 20:03，超過 90 秒的同一筆容忍度，
+    舊寫法會把它當成新的一筆而把錯的那筆留著，同一趟就變成兩列。
+
+    scanned=False（--only 沒掃到這條）則完全不動它的 FIT 成績。
+    """
     existing = seg.get("efforts") or []
     strava = [e for e in existing if e.get("source") != "fit"]
-    kept_fit = [e for e in existing if e.get("source") == "fit"]
+    old_fit = [e for e in existing if e.get("source") == "fit"]
 
-    # ① 先清掉「Strava 後來自己配對到、FIT 版已多餘」的舊 FIT 筆
-    pruned = [e for e in kept_fit if any(same_effort(e, s) for s in strava)]
-    kept_fit = [e for e in kept_fit if e not in pruned]
+    if not scanned:
+        return 0, 0
 
-    # ② 再併入這次偵測到的；Strava 已有的不重複加，FIT 已有的就地更新
-    added = 0
+    # ① 這次偵測到的就是 FIT 端的全部事實；Strava 已有的同一筆不重複列
+    kept_fit, added = [], 0
     for fe in fit_efforts:
         if any(same_effort(fe, s) for s in strava):
             continue
-        hit = next((e for e in kept_fit if same_effort(fe, e)), None)
-        if hit:
-            hit.update(fe)
-            continue
         kept_fit.append(fe)
-        added += 1
+        if not any(same_effort(fe, e) for e in old_fit):
+            added += 1
+
+    # ② 被丟掉的舊 FIT 筆：可能是 Strava 事後補配對到，也可能是演算法修正後不再成立
+    pruned = [e for e in old_fit if not any(same_effort(e, f) for f in kept_fit)]
 
     merged = strava + kept_fit
     merged.sort(key=lambda e: f"{e.get('date','')} {e.get('start_time','')}", reverse=True)
@@ -187,6 +200,35 @@ def merge(seg, fit_efforts, dry_run=False):
     return added, len(pruned)
 
 
+HARVEST_CATALOG = os.path.join(ROOT, "data", "strava-archive", "segment-catalog.json")
+
+
+def strava_side(data):
+    """對帳基準：優先用 harvest 封存的完整 Strava 資料。
+
+    itt-segments.json 裡的 Strava 成績是歷來同步累積的，而那些同步一直沒帶
+    include_all_efforts=true，所以少了一大截（Strava 只回「重點」efforts）。
+    scripts/harvest-strava.js 補齊之後，那份 catalog 才是 Strava 端的完整事實。
+    沒有 catalog 就退回舊來源，只是比對筆數會比較少。
+    """
+    if os.path.exists(HARVEST_CATALOG):
+        cat = json.load(open(HARVEST_CATALOG, encoding="utf-8"))
+        by_id = {s["id"]: s for s in cat.get("segments", [])}
+        if by_id:
+            print(f"（對帳基準：{os.path.relpath(HARVEST_CATALOG, ROOT)}，"
+                  f"封存 {cat.get('scanned_activities')} 趟／{len(by_id)} 條路段）")
+            return {seg["id"]: [
+                {"date": e["date"], "start_time": e["start_time"],
+                 "elapsed_sec": e["elapsed_sec"],
+                 "elapsed_str": fmt_elapsed(e["elapsed_sec"] or 0)}
+                for e in (by_id.get(seg["id"], {}).get("efforts") or [])
+            ] for seg in data}
+    print("（對帳基準：itt-segments.json 裡既有的 Strava 紀錄；"
+          "跑過 scripts/harvest-strava.js 之後會自動改用更完整的封存檔）")
+    return {seg["id"]: [e for e in (seg.get("efforts") or []) if e.get("source") != "fit"]
+            for seg in data}
+
+
 def compare(data, fit_efforts):
     """對帳：同一趟兩邊都有時，自建偵測器與 Strava 官方差幾秒。
 
@@ -194,10 +236,10 @@ def compare(data, fit_efforts):
     寫入模式會把重複的 FIT 筆數 prune 掉（以官方為準），對帳要在 prune 之前做，
     所以獨立成一個 read-only 模式。
     """
+    strava_by_seg = strava_side(data)
     rows, only_strava, only_fit = [], [], []
     for seg in data:
-        existing = seg.get("efforts") or []
-        strava = [e for e in existing if e.get("source") != "fit"]
+        strava = strava_by_seg.get(seg["id"]) or []
         mine = fit_efforts.get(seg["id"], [])
         matched_fit = set()
         for s in strava:
@@ -265,17 +307,21 @@ def main(argv=None):
     if args.compare:
         return compare(data, fit_efforts)
 
+    # --only 沒指定就是全掃；有指定時，沒被掃到的路段不能動它既有的 FIT 成績
+    scanned_ids = set(args.only) if args.only else None
+
     total_add = total_prune = 0
     for seg in data:
         mine = fit_efforts.get(seg["id"], [])
         before = len(seg.get("efforts") or [])
-        add, prune = merge(seg, mine, dry_run=args.dry_run)
+        scanned = scanned_ids is None or str(seg["id"]) in scanned_ids
+        add, prune = merge(seg, mine, scanned=scanned, dry_run=args.dry_run)
         total_add += add
         total_prune += prune
         if add or prune:
             after = before + add - prune
             print(f"  {seg['id']} {seg['name']}：{before} → {after} 筆"
-                  f"（新增 {add}{f'、清掉被 Strava 取代的 {prune}' if prune else ''}）")
+                  f"（新增 {add}{f'、清掉不再成立的舊 FIT 筆 {prune}' if prune else ''}）")
 
     if args.dry_run:
         print(f"\n[dry-run] 會新增 {total_add} 筆、清掉 {total_prune} 筆，未寫檔。")
