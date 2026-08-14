@@ -13,11 +13,17 @@
  * 名稱優先序：data/itt-config.json 的 nameZh > Strava 原名。
  * 已存在的路段預設不覆寫（--force 才會），避免手工調過的中文名被英文原名蓋掉。
  *
+ * ⚠️ 預設**只併入 data/itt-config.json 裡有的路段**，不是 archive 裡的全部。
+ * segment-streams.json 是瀏覽器每次開頁都會下載的檔案，把 77 條全塞進去會從
+ * 32 KB 變成約 230 KB，而其中絕大多數根本不會顯示（沒設成 ITT 就不會畫卡片）。
+ * archive 留著就好，哪天把某條加進 itt-config.json，再跑一次這支就接上了。
+ *
  * 用法：
- *   node scripts/merge-harvested-streams.js               # 只補缺的
+ *   node scripts/merge-harvested-streams.js               # 只補 itt-config 裡缺折線的
  *   node scripts/merge-harvested-streams.js --dry-run
  *   node scripts/merge-harvested-streams.js --force       # 連已存在的也重算
  *   node scripts/merge-harvested-streams.js --only 641218 1761462
+ *   node scripts/merge-harvested-streams.js --all         # 真的要全部（會讓前端多下載 200 KB）
  * ─────────────────────────────────────────────────────────────────────────── */
 'use strict'
 
@@ -34,6 +40,7 @@ const TARGET_PTS = 140
 const args = process.argv.slice(2)
 const dryRun = args.includes('--dry-run')
 const force  = args.includes('--force')
+const all    = args.includes('--all')
 const onlyIx = args.indexOf('--only')
 const only   = onlyIx >= 0 ? new Set(args.slice(onlyIx + 1).filter(a => /^\d+$/.test(a))) : null
 
@@ -64,11 +71,16 @@ function main() {
   const nameZh = new Map((readJSON(ITT_CONFIG)?.segments || []).map(s => [String(s.id), s.nameZh]))
   const existing = readJSON(OUT_FILE) || {}
 
+  // 預設範圍 = itt-config.json 裡的路段。--only 指定就聽它的，--all 才放全部。
+  const scope = only || (all ? null : new Set(nameZh.keys()))
+  if (!scope) console.log('⚠️  --all：把 archive 裡的每一條都併進去，前端會多下載約 200 KB')
+  else if (!only) console.log(`範圍：data/itt-config.json 的 ${scope.size} 條路段（--all 可放全部）`)
+
   const files = fs.readdirSync(SEG_DIR).filter(f => f.endsWith('.json'))
   let added = 0, updated = 0, skipped = 0, bad = 0
   for (const f of files) {
     const id = f.replace(/\.json$/, '')
-    if (only && !only.has(id)) continue
+    if (scope && !scope.has(id)) continue
     if (existing[id] && !force) { skipped++; continue }
 
     const rec = readJSON(path.join(SEG_DIR, f))
