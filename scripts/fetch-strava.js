@@ -226,10 +226,14 @@ async function fetchSegmentLeaderboard(token, segmentId, athleteId) {
 }
 
 // ── Step 4a：抓單一活動詳情（用於取得 laps）──
+// include_all_efforts=true 是必要的，預設是 false。
+// 不帶的時候 Strava 只回「重點」segment efforts（星號路段、PR、KOM），不是全部 ——
+// 這很可能就是新增路段之後歷史成績配對不到的原因：段是新的，自然沒有 PR 也沒被星號，
+// 於是整批被判為不重要而沒回傳。帶了之後回傳量會變大，但不多花任何一個請求。
 async function fetchActivityDetail(token, activityId) {
   const data = await request({
     hostname: 'www.strava.com',
-    path:     `/api/v3/activities/${activityId}`,
+    path:     `/api/v3/activities/${activityId}?include_all_efforts=true`,
     method:   'GET',
     headers:  { Authorization: `Bearer ${token}` },
   })

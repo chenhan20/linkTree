@@ -6,3 +6,12 @@ __pycache__/
 # 44K × 每天兩班 ≈ 一年 32MB 的 git 垃圾，跟一年份 FIT 本體差不多大，
 # 而且 Actions 的執行紀錄本來就看得到。留在工作目錄，不要進版控。
 data/fit/_sync.log
+
+# Strava 封存的「原始活動明細」：140 趟 × 完整 segment_efforts / laps / splits / polyline，
+# 是 harvest-strava.js 的中間產物。真正不可取代的東西已經萃取到會進版控的三個檔案裡：
+#   data/strava-archive/index.json            活動清單
+#   data/strava-archive/segments/*.json       路段折線與 metadata ← 訂閱到期後就拿不到的
+#   data/strava-archive/segment-catalog.json  每一條路段的每一筆成績（聚合後）
+# 這包原始檔隨時可以用 --phase details 重抓（額度夠），不值得讓 repo 多幾十 MB。
+# 想留就自己備份到 repo 外面。
+data/strava-archive/activities/
