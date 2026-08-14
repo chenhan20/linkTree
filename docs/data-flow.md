@@ -1,5 +1,16 @@
 # Strava 資料抓取流程（完整版）
 
+> ## 🗂️ 歷史文件（已棄用的管線）
+>
+> Strava 已經不是主力資料源，這份流程圖記錄的是舊管線。
+> 現行管線是 **Garmin → intervals.icu → 原始 FIT**，見 [主 README](../README.md)
+> 與 [docs/fit-pipeline.md](fit-pipeline.md)。
+> 棄用的理由、還剩哪些相依，見 [docs/strava-pipeline.md](strava-pipeline.md)。
+>
+> ⚠️ 底下的排程時間也已經過時 —— 現行 `strava-sync.yml` 是 10:00 / 18:00 / 22:00 台灣時間。
+
+---
+
 > 對應檔案：[scripts/fetch-strava.js](../scripts/fetch-strava.js)
 > 觸發點：`.github/workflows/strava-sync.yml`（cron `'30 1 * * *'` UTC = **09:30 Asia/Taipei**），或手動 `workflow_dispatch`，或本機 `node scripts/fetch-strava.js`
 
