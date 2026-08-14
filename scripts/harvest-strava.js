@@ -97,6 +97,10 @@ function parseArgs(argv) {
     else if (k === '--min-rides') a.minRides = +next()
     else if (k === '--allow-estimated') a.allowEstimated = true
     else if (k === '--max-requests') a.maxRequests = +next()
+    else if (k === '--segments') {            // 直接指定要抓折線的路段 id（不經探勘門檻）
+      a.segmentIds = []
+      while (i + 1 < argv.length && /^\d+$/.test(argv[i + 1])) a.segmentIds.push(+argv[++i])
+    }
     else if (k === '-h' || k === '--help') { printHelp(); process.exit(0) }
     else { console.error(`未知參數：${k}（--help 看用法）`); process.exit(2) }
   }
@@ -407,9 +411,14 @@ async function phaseSegments(token, args, candidates) {
   console.log('\n── Phase 3 · 路段折線與 metadata ──────────────────')
   ensureDir(SEG_DIR)
   const known = (readJSON(ITT_CONFIG)?.segments || []).map(s => s.id)
-  const wanted = [...new Set([...known, ...candidates.map(s => s.id)])]
+  // --segments 指定時就只抓那些：分段（子路段）多半短於探勘門檻，不會出現在 candidates 裡
+  const wanted = args.segmentIds
+    ? [...new Set(args.segmentIds)]
+    : [...new Set([...known, ...candidates.map(s => s.id)])]
   const todo = wanted.filter(id => !fs.existsSync(path.join(SEG_DIR, `${id}.json`)))
-  console.log(`  目標 ${wanted.length} 條（itt-config ${known.length} + 探勘入選 ${candidates.length}，去重後）`)
+  console.log(args.segmentIds
+    ? `  目標 ${wanted.length} 條（--segments 指定）`
+    : `  目標 ${wanted.length} 條（itt-config ${known.length} + 探勘入選 ${candidates.length}，去重後）`)
   console.log(`  已存檔 ${wanted.length - todo.length} 條，待抓 ${todo.length} 條 → 每條 2 個請求`)
   if (args.dryRun) { console.log(`  [dry-run] 會送出 ${todo.length * 2} 個請求`); return }
   let ok = 0

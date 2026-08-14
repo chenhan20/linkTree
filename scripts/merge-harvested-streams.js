@@ -35,7 +35,13 @@ const SEG_DIR    = path.join(ROOT, 'data', 'strava-archive', 'segments')
 const OUT_FILE   = path.join(ROOT, 'data', 'segment-streams.json')
 const ITT_CONFIG = path.join(ROOT, 'data', 'itt-config.json')
 
-const TARGET_PTS = 140
+// 取樣密度：固定 140 點對長路段太稀 —— 劍中劍 9.55 km 被切成 68 m 一段，
+// 折線總長掉了 11.5%，而且髮夾彎處的閘門法線是用相鄰點算的，60 m 的間距在彎道上
+// 會把方向算歪，直接造成偵測器漏抓（實測風櫃嘴髮夾彎間漏 9 筆、碧山路 26-5 漏 4 筆）。
+// 改成固定約 25 m 一點，短路段仍至少 60 點，長路段封頂 400 點（河濱平路是直線，不需要更密）。
+const SPACING_M = 25
+const MIN_PTS = 60
+const MAX_PTS = 400
 
 const args = process.argv.slice(2)
 const dryRun = args.includes('--dry-run')
@@ -46,16 +52,23 @@ const only   = onlyIx >= 0 ? new Set(args.slice(onlyIx + 1).filter(a => /^\d+$/.
 
 const readJSON = f => { try { return JSON.parse(fs.readFileSync(f, 'utf8')) } catch (e) { return null } }
 
-/** 原始 stream → 140 點的 [[lat, lng, alt], ...]（與 fetch-segment-streams.js 同一套）。 */
+/** 原始 stream → [[lat, lng, alt], ...]，取樣點數依路段長度而定（約 SPACING_M 一點）。 */
 function downsample(streams) {
   const latlng = streams?.latlng?.data   || []
   const alt    = streams?.altitude?.data || []
+  const dist   = streams?.distance?.data || []
   const n = latlng.length
   if (n < 2) return null
-  const step = n <= TARGET_PTS ? 1 : (n - 1) / (TARGET_PTS - 1)
-  const indices = n <= TARGET_PTS
+  const total = dist.length === n ? (dist[n - 1] - dist[0]) : 0
+  const target = Math.max(MIN_PTS, Math.min(MAX_PTS,
+    total > 0 ? Math.ceil(total / SPACING_M) + 1 : 140))
+  const step = n <= target ? 1 : (n - 1) / (target - 1)
+  const indices = n <= target
     ? Array.from({ length: n }, (_, i) => i)
-    : Array.from({ length: TARGET_PTS }, (_, i) => Math.round(i * step))
+    : Array.from({ length: target }, (_, i) => Math.round(i * step))
+  // 端點永遠保留原值：閘門錨點就是它們，差幾公尺就會整段計時偏掉
+  indices[0] = 0
+  indices[indices.length - 1] = n - 1
   return indices.map(i => [
     Math.round(latlng[i][0] * 1e5) / 1e5,
     Math.round(latlng[i][1] * 1e5) / 1e5,

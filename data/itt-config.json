@@ -2,10 +2,12 @@
   "_comment": "ITT 路段設定檔 — 新增路段只需在此加一筆，其餘程式自動讀取",
   "_howToAddSegment": [
     "1. 在 Strava 網頁開啟目標路段，URL 中的數字就是 id",
-    "2. 在下方 segments 陣列新增一筆，填入 id / nameZh / nameApi / type / accent",
-    "3. 執行 FETCH_ALL=1 SCAN_SEGMENTS=1 重跑一次 fetch-strava.js",
-    "4. strava.html 無需改動，會自動顯示新路段",
-    "5. accent 色彩：整頁是暖橘太空主題，配色故意收在暖色家族（橘/琥珀/金/珊瑚）+ 一個固定的冷色點綴（#4ab4ff 藍，已用在社子島砍鴨頭與其他頁面元件），新增路段挑色時避免再加第二個高飽和冷色（綠/紫/青），才不會跟其他版塊打架"
+    "2. 決定它屬於哪個 group（groups[] 裡的 id）；獨立路線就在 groups[] 新增一組",
+    "3. 在 segments[] 新增一筆，填 id / group / nameZh / label / nameApi / type / accent",
+    "4. 折線：node scripts/harvest-strava.js --phase segments --segments <id>",
+    "   然後 node scripts/merge-harvested-streams.js（Strava 訂閱到期後只能靠 archive）",
+    "5. 成績：python3 scripts/backfill-itt-efforts.py（純本機從 FIT 算，不打 API）",
+    "6. strava.html 無需改動，會自動依 group 收攏成一張群組卡"
   ],
   "_types": {
     "CLIMB": "爬坡路段（依功率與時間評估）",
@@ -15,8 +17,216 @@
   "_profile": "profile：從 PR 那趟活動的 altitude/distance stream 實測切出來的坡度示意點（x:0-100 距離% , y:0 最高-40 最低），非逐日更新，路段地形固定就不用重抓；avgGrade/maxGrade 是同一份 stream 算出的 grade_smooth 平均/最大值",
   "segments": [
     {
+      "id": 1761462,
+      "group": "zhongshe",
+      "nameZh": "中社路 全段",
+      "label": "全段",
+      "nameApi": "中社路ITT",
+      "type": "CLIMB",
+      "accent": "#ffb020",
+      "note": "快速衝刺段",
+      "avgGrade": 6.3,
+      "maxGrade": 13.1,
+      "profile": [
+        [
+          0,
+          40
+        ],
+        [
+          14.6,
+          35.7
+        ],
+        [
+          24,
+          32.1
+        ],
+        [
+          34.1,
+          28
+        ],
+        [
+          43.9,
+          24.4
+        ],
+        [
+          53.8,
+          20.8
+        ],
+        [
+          63,
+          17.5
+        ],
+        [
+          71.6,
+          13.8
+        ],
+        [
+          80.5,
+          10.4
+        ],
+        [
+          90,
+          6.6
+        ],
+        [
+          100,
+          3
+        ]
+      ]
+    },
+    {
+      "id": 35601000,
+      "group": "zhongshe",
+      "nameZh": "中社路 上半 2.2K",
+      "label": "上半 2.2K",
+      "nameApi": "中社路ITT 上半",
+      "type": "CLIMB",
+      "accent": "#ffb020"
+    },
+    {
+      "id": 1527456,
+      "group": "zhongshe",
+      "nameZh": "中社路 1/4",
+      "label": "1/4",
+      "nameApi": "中社路ITT 1/4",
+      "type": "CLIMB",
+      "accent": "#ffb020"
+    },
+    {
+      "id": 1527462,
+      "group": "zhongshe",
+      "nameZh": "中社路 2/4",
+      "label": "2/4",
+      "nameApi": "中社路ITT 2/4",
+      "type": "CLIMB",
+      "accent": "#ffb020"
+    },
+    {
+      "id": 1527467,
+      "group": "zhongshe",
+      "nameZh": "中社路 3/4",
+      "label": "3/4",
+      "nameApi": "中社路ITT 3/4",
+      "type": "CLIMB",
+      "accent": "#ffb020"
+    },
+    {
+      "id": 1527471,
+      "group": "zhongshe",
+      "nameZh": "中社路 4/4",
+      "label": "4/4",
+      "nameApi": "中社路ITT 4/4",
+      "type": "CLIMB",
+      "accent": "#ffb020"
+    },
+    {
+      "id": 956558,
+      "group": "jiannan-south",
+      "nameZh": "劍南路 至善側全段",
+      "label": "全段",
+      "nameApi": "劍南路（至善側）ITT",
+      "type": "CLIMB",
+      "accent": "#ff6a4d",
+      "note": "劍南路下坡回程，短衝計時",
+      "avgGrade": 4.2,
+      "maxGrade": 15.2,
+      "profile": [
+        [
+          0,
+          37.5
+        ],
+        [
+          18.5,
+          36.4
+        ],
+        [
+          26.7,
+          30.7
+        ],
+        [
+          35.7,
+          26.9
+        ],
+        [
+          44.8,
+          22.5
+        ],
+        [
+          53.2,
+          19.3
+        ],
+        [
+          62.2,
+          15.6
+        ],
+        [
+          72.5,
+          12.1
+        ],
+        [
+          80.1,
+          7.9
+        ],
+        [
+          87.2,
+          4
+        ],
+        [
+          100,
+          6.1
+        ]
+      ]
+    },
+    {
+      "id": 733781,
+      "group": "jiannan-south",
+      "nameZh": "劍南路 自強隧道段",
+      "label": "自強隧道段",
+      "nameApi": "劍南路（至善側）自強隧道段",
+      "type": "CLIMB",
+      "accent": "#ff6a4d"
+    },
+    {
+      "id": 32300084,
+      "group": "jiannan-south",
+      "nameZh": "劍南路 最後 1.2K",
+      "label": "最後 1.2K",
+      "nameApi": "劍南路（至善側）最後1.2K",
+      "type": "CLIMB",
+      "accent": "#ff6a4d"
+    },
+    {
+      "id": 733780,
+      "group": "jiannan-north",
+      "nameZh": "劍南路 北安側全段",
+      "label": "全段",
+      "nameApi": "劍南路（北安側）ITT",
+      "type": "CLIMB",
+      "accent": "#d4503a"
+    },
+    {
+      "id": 7047153,
+      "group": "jiannan-north",
+      "nameZh": "劍南路 北安路上",
+      "label": "北安路上",
+      "nameApi": "劍南路（北安側）北安路上",
+      "type": "CLIMB",
+      "accent": "#d4503a"
+    },
+    {
+      "id": 13760818,
+      "group": "jiannan-north",
+      "nameZh": "劍南路 軍營→路頂",
+      "label": "軍營→路頂",
+      "nameApi": "劍南路（北安側）軍營到路頂",
+      "type": "CLIMB",
+      "accent": "#d4503a"
+    },
+    {
       "id": 641218,
-      "nameZh": "風櫃嘴",
+      "group": "fongguizui",
+      "nameZh": "風櫃嘴 全段",
+      "label": "全段",
       "nameApi": "風櫃嘴ITT",
       "type": "CLIMB",
       "accent": "#e87c1a",
@@ -71,60 +281,144 @@
       ]
     },
     {
-      "id": 1761462,
-      "nameZh": "中社路",
-      "nameApi": "中社路ITT",
-      "type": "SPRINT",
-      "accent": "#ffb020",
-      "note": "快速衝刺段",
-      "avgGrade": 6.3,
-      "maxGrade": 13.1,
+      "id": 13662739,
+      "group": "fongguizui",
+      "nameZh": "風櫃嘴 萬溪陡段",
+      "label": "萬溪陡段",
+      "nameApi": "風櫃嘴ITT 萬溪陡段",
+      "type": "CLIMB",
+      "accent": "#e87c1a"
+    },
+    {
+      "id": 28829528,
+      "group": "fongguizui",
+      "nameZh": "風櫃嘴 中段",
+      "label": "中段",
+      "nameApi": "風櫃嘴ITT 中段",
+      "type": "CLIMB",
+      "accent": "#e87c1a"
+    },
+    {
+      "id": 13659488,
+      "group": "fongguizui",
+      "nameZh": "風櫃嘴 最後 1.8K",
+      "label": "最後 1.8K",
+      "nameApi": "風櫃嘴ITT 最後1.8K",
+      "type": "CLIMB",
+      "accent": "#e87c1a"
+    },
+    {
+      "id": 9064272,
+      "group": "fongguizui",
+      "nameZh": "風櫃嘴 第一段",
+      "label": "第一段",
+      "nameApi": "風櫃嘴ITT 第一段",
+      "type": "CLIMB",
+      "accent": "#e87c1a"
+    },
+    {
+      "id": 31018735,
+      "group": "fongguizui",
+      "nameZh": "風櫃嘴 髮夾彎間",
+      "label": "髮夾彎間",
+      "nameApi": "風櫃嘴ITT 髮夾彎間",
+      "type": "CLIMB",
+      "accent": "#e87c1a"
+    },
+    {
+      "id": 7506566,
+      "group": "bishan",
+      "nameZh": "碧山 全段",
+      "label": "全段",
+      "nameApi": "碧山露營場ITT",
+      "type": "CLIMB",
+      "accent": "#f2c14e",
+      "note": "內湖碧山路爬坡至山頂，3.67 km / 398m 爬升，均坡 9.1%",
+      "avgGrade": 9.7,
+      "maxGrade": 20,
       "profile": [
         [
           0,
           40
         ],
         [
-          14.6,
-          35.7
+          9.4,
+          36
         ],
         [
-          24,
-          32.1
+          18.8,
+          32.6
         ],
         [
-          34.1,
-          28
+          28.3,
+          29.1
         ],
         [
-          43.9,
-          24.4
+          37.3,
+          25.7
         ],
         [
-          53.8,
-          20.8
+          46.3,
+          21
         ],
         [
-          63,
-          17.5
+          59.6,
+          18.4
         ],
         [
-          71.6,
-          13.8
+          70.1,
+          14.4
         ],
         [
-          80.5,
+          78.9,
           10.4
         ],
         [
-          90,
-          6.6
+          89.8,
+          7.1
         ],
         [
           100,
           3
         ]
       ]
+    },
+    {
+      "id": 9262397,
+      "group": "bishan",
+      "nameZh": "碧山巖→停車廣場",
+      "label": "碧山巖→停車廣場",
+      "nameApi": "碧山ITT 碧山巖到停車廣場",
+      "type": "CLIMB",
+      "accent": "#f2c14e"
+    },
+    {
+      "id": 1093471,
+      "group": "bishan",
+      "nameZh": "碧山路 26-5",
+      "label": "碧山路 26-5",
+      "nameApi": "碧山ITT 碧山路26-5",
+      "type": "CLIMB",
+      "accent": "#f2c14e"
+    },
+    {
+      "id": 8607609,
+      "group": "nanshen",
+      "nameZh": "南深路 全段",
+      "label": "全段",
+      "nameApi": "南深路ITT",
+      "type": "CLIMB",
+      "accent": "#d9683a",
+      "note": "長爬坡"
+    },
+    {
+      "id": 967073,
+      "group": "jianzhongjian",
+      "nameZh": "劍中劍",
+      "label": "全段",
+      "nameApi": "劍中劍ITT",
+      "type": "CLIMB",
+      "accent": "#f7931e"
     },
     {
       "id": 7032136,
@@ -183,126 +477,6 @@
       ]
     },
     {
-      "id": 956558,
-      "nameZh": "劍南路回程",
-      "nameApi": "劍南路（回程）ITT",
-      "type": "SPRINT",
-      "accent": "#ff6a4d",
-      "note": "劍南路下坡回程，短衝計時",
-      "avgGrade": 4.2,
-      "maxGrade": 15.2,
-      "profile": [
-        [
-          0,
-          37.5
-        ],
-        [
-          18.5,
-          36.4
-        ],
-        [
-          26.7,
-          30.7
-        ],
-        [
-          35.7,
-          26.9
-        ],
-        [
-          44.8,
-          22.5
-        ],
-        [
-          53.2,
-          19.3
-        ],
-        [
-          62.2,
-          15.6
-        ],
-        [
-          72.5,
-          12.1
-        ],
-        [
-          80.1,
-          7.9
-        ],
-        [
-          87.2,
-          4
-        ],
-        [
-          100,
-          6.1
-        ]
-      ]
-    },
-    {
-      "id": 7506566,
-      "nameZh": "碧山露營場",
-      "nameApi": "碧山露營場ITT",
-      "type": "CLIMB",
-      "accent": "#f2c14e",
-      "note": "內湖碧山路爬坡至山頂，3.67 km / 398m 爬升，均坡 9.1%",
-      "avgGrade": 9.7,
-      "maxGrade": 20,
-      "profile": [
-        [
-          0,
-          40
-        ],
-        [
-          9.4,
-          36
-        ],
-        [
-          18.8,
-          32.6
-        ],
-        [
-          28.3,
-          29.1
-        ],
-        [
-          37.3,
-          25.7
-        ],
-        [
-          46.3,
-          21
-        ],
-        [
-          59.6,
-          18.4
-        ],
-        [
-          70.1,
-          14.4
-        ],
-        [
-          78.9,
-          10.4
-        ],
-        [
-          89.8,
-          7.1
-        ],
-        [
-          100,
-          3
-        ]
-      ]
-    },
-    {
-      "id": 8607609,
-      "nameZh": "南深路",
-      "nameApi": "南深路ITT",
-      "type": "CLIMB",
-      "accent": "#d9683a",
-      "note": "長爬坡"
-    },
-    {
       "id": 31161895,
       "nameZh": "關渡→美堤",
       "nameApi": "Guandu to Meiti",
@@ -325,6 +499,59 @@
       "type": "ENDURANCE",
       "accent": "#2f86c9",
       "note": "淡水河濱"
+    }
+  ],
+  "_groups": "groups[] 是母路線，segments[] 是它底下的分段。沒有 group 欄位的路段自成一張卡（河濱那四條是四條各自獨立的路線，不是同一條的分段，刻意不分組）。segments 刻意保持扁平，這樣 fetch-strava.js / fetch-segment-streams.js / fetch-segment-terrain.js / merge-harvested-streams.js 既有的 map(s => s.id) 讀法完全不用改。",
+  "_labels": "label 是分段在群組卡裡顯示的短名；nameZh 是完整名稱（彈窗標題用）。",
+  "groups": [
+    {
+      "id": "zhongshe",
+      "nameZh": "中社路",
+      "type": "CLIMB",
+      "accent": "#ffb020",
+      "note": "陽明山中社路爬坡。Strava 上現成的四等分正好是一組間歇階梯。"
+    },
+    {
+      "id": "jiannan-south",
+      "nameZh": "劍南路・至善側",
+      "type": "CLIMB",
+      "accent": "#ff6a4d",
+      "note": "由至善路上劍南路。"
+    },
+    {
+      "id": "jiannan-north",
+      "nameZh": "劍南路・北安側",
+      "type": "CLIMB",
+      "accent": "#d4503a",
+      "note": "由北安路上劍南路。全資料集騎乘天數最高的一段（31 天），先前完全沒計時。"
+    },
+    {
+      "id": "fongguizui",
+      "nameZh": "風櫃嘴",
+      "type": "CLIMB",
+      "accent": "#e87c1a",
+      "note": "萬里橋到風櫃嘴主爬坡，切成六階。"
+    },
+    {
+      "id": "bishan",
+      "nameZh": "碧山",
+      "type": "CLIMB",
+      "accent": "#f2c14e",
+      "note": "內湖碧山路爬坡至山頂。"
+    },
+    {
+      "id": "nanshen",
+      "nameZh": "南深路",
+      "type": "CLIMB",
+      "accent": "#d9683a",
+      "note": "南港往深坑的長爬坡。"
+    },
+    {
+      "id": "jianzhongjian",
+      "nameZh": "劍中劍",
+      "type": "CLIMB",
+      "accent": "#f7931e",
+      "note": "劍南路＋中社路的合體挑戰，9.55 km。獨立成組，不分段。"
     }
   ]
 }

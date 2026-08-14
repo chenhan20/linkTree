@@ -201,6 +201,53 @@ def merge(seg, fit_efforts, scanned=True, dry_run=False):
 
 
 HARVEST_CATALOG = os.path.join(ROOT, "data", "strava-archive", "segment-catalog.json")
+ITT_CONFIG = os.path.join(ROOT, "data", "itt-config.json")
+ARCHIVE_SEGS = os.path.join(ROOT, "data", "strava-archive", "segments")
+
+
+def seed_missing(data):
+    """itt-config.json 有、itt-segments.json 還沒有的路段，就地建檔。
+
+    沒有這步的話「加一條 ITT」要動兩個檔：config 加一筆、還要手動在成績檔補一個空殼，
+    否則回補迴圈跑的是 itt-segments.json 的既有項目，新路段永遠不會被掃到。
+    路段的靜態 metadata（距離、爬升、均坡、KOM）直接從 harvest 封存檔讀 ——
+    純本機、不打 API，所以 Strava 訂閱到期之後照樣能加新路段。
+    """
+    have = {s["id"] for s in data}
+    cfg = json.load(open(ITT_CONFIG, encoding="utf-8"))
+    added = []
+    for c in cfg.get("segments", []):
+        if c["id"] in have:
+            continue
+        seg = {"id": c["id"], "name": c.get("nameApi") or c.get("nameZh") or str(c["id"]),
+               "distance_km": None, "pr_time_str": None, "athlete_count": None,
+               "effort_count": None, "leaderboard_total": None, "pr_rank": None,
+               "kom_time_str": None, "kom_elapsed_sec": None, "efforts": []}
+        meta_path = os.path.join(ARCHIVE_SEGS, f"{c['id']}.json")
+        if os.path.exists(meta_path):
+            m = (json.load(open(meta_path, encoding="utf-8")) or {}).get("meta") or {}
+            if m.get("distance"):
+                seg["distance_km"] = round(m["distance"] / 1000, 2)
+            seg["athlete_count"] = m.get("athlete_count")
+            seg["effort_count"] = m.get("effort_count")
+            if m.get("total_elevation_gain") is not None:
+                seg["elevation_gain_m"] = round(m["total_elevation_gain"])
+            if m.get("average_grade") is not None:
+                seg["average_grade"] = round(m["average_grade"], 1)
+            xoms = m.get("xoms") or {}
+            kom = xoms.get("kom") or xoms.get("overall")
+            if kom and kom[:1].isdigit():
+                seg["kom_time_str"] = kom
+                parts = [int(x) for x in kom.split(":")]
+                seg["kom_elapsed_sec"] = (parts[0] * 3600 + parts[1] * 60 + parts[2]
+                                          if len(parts) == 3 else parts[0] * 60 + parts[1])
+        data.append(seg)
+        added.append(seg)
+    if added:
+        print(f"  依 itt-config.json 建檔 {len(added)} 條新路段："
+              + "、".join(s["name"] for s in added[:6])
+              + (f" …等 {len(added)} 條" if len(added) > 6 else ""))
+    return added
 
 
 def strava_side(data):
@@ -265,8 +312,17 @@ def compare(data, fit_efforts):
             worst = max(worst, abs(d))
             print(f"  {name[:18]:<20} {date:<11} {st or '—':<6} "
                   f"{s_sec:>8.1f} {f_sec:>8.1f} {d:>+7.1f}s")
-        mean_abs = sum(abs(r[4] - r[3]) for r in rows) / len(rows)
-        print(f"\n  可比對 {len(rows)} 筆，平均差 {mean_abs:.2f}s，最大差 {worst:.1f}s")
+        # 平均會被少數離群值主導（一筆差 400 秒就能把 400 筆的平均拉高一秒），
+        # 中位數與「落在 ±2 秒內的比例」才看得出偵測器平常準不準。
+        diffs = sorted(abs(r[4] - r[3]) for r in rows)
+        mean_abs = sum(diffs) / len(diffs)
+        med = diffs[len(diffs) // 2] if len(diffs) % 2 else (diffs[len(diffs)//2 - 1] + diffs[len(diffs)//2]) / 2
+        within2 = sum(1 for d in diffs if d <= 2.0)
+        within10 = sum(1 for d in diffs if d <= 10.0)
+        print(f"\n  可比對 {len(rows)} 筆")
+        print(f"    中位差 {med:.1f}s　·　平均差 {mean_abs:.2f}s　·　最大差 {worst:.1f}s")
+        print(f"    ±2 秒內 {within2} 筆（{within2/len(diffs)*100:.1f}%）　·　"
+              f"±10 秒內 {within10} 筆（{within10/len(diffs)*100:.1f}%）")
 
     # 「自建沒抓到」要先扣掉根本沒有 FIT 檔的年代，否則會把「檔案不存在」誤讀成「偵測失敗」。
     fits = sorted(f for f in os.listdir(FIT_DIR) if f.lower().endswith(".fit"))
@@ -303,6 +359,7 @@ def main(argv=None):
                                     verbose=not args.quiet)
 
     data = json.load(open(ITT_FILE, encoding="utf-8"))
+    seed_missing(data)
 
     if args.compare:
         return compare(data, fit_efforts)

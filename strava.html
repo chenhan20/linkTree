@@ -1376,6 +1376,32 @@ html.lg-refract .fc-refract{display:block}
 .s2-etable td:not(:first-child){text-align:right;font-variant-numeric:tabular-nums}
 .s2-etable tbody tr:hover td{background:rgba(255,255,255,.04)}
 .s2-etable tr.s2-epr td{color:var(--modal-accent)!important;font-weight:700;background:color-mix(in srgb,var(--modal-accent) 12%,transparent)}
+/* ── 群組卡裡的分段清單 ──
+   同一條坡切成好幾段各自計時，分段排行本身就是訓練資訊（中社路那四等分 ≈ 四趟間歇）。
+   刻意做成低調的密集列表而不是小卡：這裡是次要資訊，版面上該亮的仍是母路線的 BEST TIME。*/
+.fc-subs{margin-top:12px;border-top:1px solid rgba(255,255,255,.09);padding-top:9px}
+.fc-subs-lbl{
+  display:flex;justify-content:space-between;align-items:baseline;
+  font-size:8.5px;letter-spacing:2px;text-transform:uppercase;
+  color:rgba(255,255,255,.34);margin-bottom:5px
+}
+.fc-subs-lbl span{letter-spacing:1px}
+.fc-sub{
+  display:grid;grid-template-columns:1fr auto 28px;align-items:center;gap:8px;
+  width:100%;padding:5px 7px;margin:0 0 3px;border:0;border-radius:5px;
+  background:rgba(255,255,255,.035);color:rgba(255,255,255,.8);
+  font:inherit;font-size:11.5px;text-align:left;cursor:pointer;
+  transition:background .15s,transform .15s
+}
+.fc-sub:hover{background:color-mix(in srgb,var(--fc-accent) 16%,transparent);transform:translateX(2px)}
+.fc-sub-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fc-sub-time{font-variant-numeric:tabular-nums;font-weight:700;color:var(--fc-accent)}
+.fc-sub-n{
+  font-variant-numeric:tabular-nums;font-size:9.5px;text-align:right;
+  color:rgba(255,255,255,.38)
+}
+@media (prefers-reduced-motion:reduce){.fc-sub{transition:none}.fc-sub:hover{transform:none}}
+
 /* 成績來源標籤：Strava 官方配對 vs 自建 FIT 計時。
    兩者一律低調（外框字，不填色），因為它是註記不是數據 —— 版面上唯一該亮的是秒數。 */
 .s2-src{
@@ -3752,6 +3778,29 @@ function renderSegments(segs) {
   const SEG_META = window._ittSegMeta || {}
   const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches
 
+  // ── 群組：一條實際路線一張卡，卡內列出它的分段 ──
+  // 同一條坡 Strava 上往往有 6~13 個重疊路段，全部各發一張卡會洗版；但分段的排行
+  // 本身有價值（中社路那四等分就是現成的間歇階梯）。所以卡片只由「代表分段」產生，
+  // 其餘分段收進卡內一條清單，點了照樣開既有的成績彈窗。
+  // 代表 = config 標了 label:'全段' 的那條；沒有就取成績筆數最多的。
+  const bySeg = Object.fromEntries(segs.map(s => [s.id, s]))
+  const memberIds = {}          // group id → [segment id...]（依 config 順序）
+  segs.forEach(s => {
+    const g = (SEG_META[s.id] || {}).group
+    if (!g) return
+    ;(memberIds[g] = memberIds[g] || []).push(s.id)
+  })
+  const isRep = seg => {
+    const g = (SEG_META[seg.id] || {}).group
+    if (!g) return true                                  // 沒分組的自成一張卡
+    const ids = memberIds[g]
+    const full = ids.find(id => (SEG_META[id] || {}).label === '全段')
+    if (full != null) return seg.id === full
+    return seg.id === ids.slice().sort((a, b) =>
+      ((bySeg[b].efforts || []).length - (bySeg[a].efforts || []).length))[0]
+  }
+  segs = segs.filter(isRep)
+
   // 使用者拖拉排定的順序（localStorage）；沒排過的照原順序附在後面
   const saved = ittSavedOrder()
   if (saved) {
@@ -3759,6 +3808,28 @@ function renderSegments(segs) {
       const ia = saved.indexOf(a.id), ib = saved.indexOf(b.id)
       return (ia < 0 ? 999 : ia) - (ib < 0 ? 999 : ib)
     })
+  }
+
+  /** 卡內的分段清單。代表自己不重複列，只列同組的其他分段（依中位時間由長到短）。 */
+  function fcSubsHTML(seg, accent) {
+    const g = (SEG_META[seg.id] || {}).group
+    if (!g) return ''
+    const others = (memberIds[g] || []).filter(id => id !== seg.id).map(id => bySeg[id]).filter(Boolean)
+    if (!others.length) return ''
+    const withPr = others.map(s => {
+      const list = (s.efforts || []).slice().sort((a, b) => a.elapsed_sec - b.elapsed_sec)
+      return { s, pr: list[0] || null, n: (s.efforts || []).length }
+    }).sort((a, b) => (b.pr?.elapsed_sec || 0) - (a.pr?.elapsed_sec || 0))
+    return `<div class="fc-subs">
+      <div class="fc-subs-lbl">分段 · ${others.length}　<span>最佳時間</span></div>
+      ${withPr.map(({ s, pr, n }) => `
+        <button class="fc-sub" type="button" onclick="event.stopPropagation();openSegModal(${s.id})"
+                title="${(SEG_META[s.id] || {}).nameZh || s.name}">
+          <span class="fc-sub-name">${(SEG_META[s.id] || {}).label || s.name}</span>
+          <span class="fc-sub-time">${pr ? pr.elapsed_str : '—'}</span>
+          <span class="fc-sub-n">${n}</span>
+        </button>`).join('')}
+    </div>`
   }
 
   const cards = segs.map((seg, idx) => {
@@ -3965,6 +4036,7 @@ function renderSegments(segs) {
           <div class="fc-stat"><b style="color:${wattGapColor}">${wattGapTxt}</b><span>${wattGapLabel}</span></div>
           <div class="fc-stat"><b style="color:${lastGapColor}">${lastGapTxt}</b><span>${lastGapLabel}</span></div>
         </div>
+        ${fcSubsHTML(seg, accent)}
         <div class="fc-foot">
           <button class="seg-detail-btn" onclick="openSegModal(${seg.id})">▶ REVIEW ATTEMPT <span style="opacity:.6;font-size:.85em">(${attempts})</span></button>
         </div>
@@ -3973,7 +4045,7 @@ function renderSegments(segs) {
   }).join('')
 
   return `
-    <div class="section-title"><span>ITT 區間 <span class="muted">· SEGMENT EFFORTS · ${segs.length} 段</span></span></div>
+    <div class="section-title"><span>ITT 區間 <span class="muted">· SEGMENT EFFORTS · ${segs.length} 條路線 / ${Object.keys(bySeg).length} 段</span></span></div>
     <div class="itt-tabs">
       <button class="itt-tab-btn" onclick="toggleIttLevel(this,'status')">📋 狀態一覽</button>
       <button class="itt-tab-btn" onclick="toggleIttLevel(this,'calc')">⚙️ 計算方式</button>
