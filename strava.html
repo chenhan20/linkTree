@@ -7821,6 +7821,11 @@ function render(data) {
           <button type="button" data-blur="5">淡</button>
           <button type="button" data-blur="11">濃</button>
         </div>
+        <div class="at-grp" id="at-rstyle">
+          <button type="button" data-rstyle="casing" title="路線一律墊深色描邊，跟行政區色階分開">描邊</button>
+          <button type="button" data-rstyle="glow" title="描邊之外再加訊號光暈">光暈</button>
+          <button type="button" data-rstyle="recede" title="描邊之外行政區底色再退一階">退底</button>
+        </div>
         <span class="sp"></span>
         <button id="at-t-town" type="button">行政區</button>
         <button id="at-t-tname" type="button">區名</button>
@@ -8530,7 +8535,7 @@ const AT = {
   blurA: null, bctxA: null, blurB: null, bctxB: null,
   W: 1100, H: 720, dpr: 1, view: { cx: 0, cy: 0, k: 1 },
   drag: null, focus: null,
-  st: { towns: true, tname: true, pname: true, blur: 5 }, fitted: false,
+  st: { towns: true, tname: true, pname: true, blur: 5, rstyle: 'casing' }, fitted: false,
   RUNS: [], TOWNS: [], RIDDEN: [], ARCS: [], LAND: [], PLACES: [],
   ramp: { r: [], g: [] }, font: { ui: '', mono: '', num: '' },
 }
@@ -8698,7 +8703,8 @@ function atDraw() {
 
   const onScreen = t => !(atSX(t.x1) < 0 || atSX(t.x0) > W || atSY(t.y0) < 0 || atSY(t.y1) > H)
   if (AT.st.towns) {
-    c.globalAlpha = 0.72          // 整層退到背景，橘色的路線才是主角
+    // 「退底」風格再退一階：讓路線靠行政區更暗撐出對比，不動 --at-g1..g5 本身的色值
+    c.globalAlpha = AT.st.rstyle === 'recede' ? 0.5 : 0.72
     for (let b = 0; b < AT.ramp.g.length; b++) {
       c.fillStyle = AT.ramp.g[b]
       for (const t of AT.RIDDEN) {
@@ -8745,6 +8751,20 @@ function atDraw() {
   const lw = Math.max(1.3, Math.min(4.2, 14 * AT.view.k))
   const vis = r => !(atSX(r.x1) < -20 || atSX(r.x0) > W + 20 || atSY(r.y0) < -20 || atSY(r.y1) > H + 20)
 
+  // casing 一律先畫、不管暈染開不開：路線色（暖橘）跟行政區色（暖灰）色相太近，
+  // 只靠色相在 r1–r3 疊 g3–g5 時對比常常掉到 1.1–1.3:1，肉眼幾乎分不出來。
+  // 墊一圈近黑的描邊，靠明暗把路線從底色裡撐出來，不用動任何一階的色值。
+  c.strokeStyle = 'rgba(7,4,10,.82)'; c.lineWidth = lw + 1.6
+  c.beginPath()
+  for (const r of AT.RUNS) {
+    if (!vis(r)) continue
+    for (let i = 0; i < r.n; i++) {
+      const px = atSX(r.xy[i * 2]), py = atSY(r.xy[i * 2 + 1])
+      i === 0 ? c.moveTo(px, py) : c.lineTo(px, py)
+    }
+  }
+  c.stroke()
+
   // 暈染：同一組線畫粗、模糊後墊在銳利線底下 —— 密的地方連成一塊、疏的地方仍是一條線。
   // 必須降解析度做：全解析度 11 px 實測 147 ms/frame，降到 1/2 剩 37 ms。
   if (AT.st.blur > 0) {
@@ -8776,19 +8796,11 @@ function atDraw() {
     AT.bctxB.drawImage(AT.blurA, 0, 0)
     c.save(); c.globalAlpha = 0.62; c.imageSmoothingEnabled = true
     c.drawImage(AT.blurB, 0, 0, W, H); c.restore()
-  } else {
-    // 沒有暈染時補一道底色 casing，否則深色線會糊進深色的行政區
-    c.strokeStyle = 'rgba(7,4,10,.8)'; c.lineWidth = lw + 1.5
-    c.beginPath()
-    for (const r of AT.RUNS) {
-      if (!vis(r)) continue
-      for (let i = 0; i < r.n; i++) {
-        const px = atSX(r.xy[i * 2]), py = atSY(r.xy[i * 2 + 1])
-        i === 0 ? c.moveTo(px, py) : c.lineTo(px, py)
-      }
-    }
-    c.stroke()
   }
+
+  // 「光暈」風格：銳利線疊一圈訊號色光暈，呼應全站「光＝狀態」的語彙——
+  // 路線畫在地圖上這件事本身就是一個狀態（你騎過這裡）。
+  if (AT.st.rstyle === 'glow') { c.shadowColor = 'rgba(252,150,70,.65)'; c.shadowBlur = 6 }
 
   let drawn = 0
   for (let b = 0; b < AT.ramp.r.length; b++) {
@@ -8804,6 +8816,7 @@ function atDraw() {
     }
     c.stroke()
   }
+  if (AT.st.rstyle === 'glow') { c.shadowColor = 'transparent'; c.shadowBlur = 0 }
 
   const taken = []
   if (AT.st.tname) atDrawTownNames(taken)
@@ -9006,6 +9019,15 @@ function atBind() {
       AT.st.blur = +b.dataset.blur
       document.querySelectorAll('#at-blur button').forEach(o =>
         o.setAttribute('aria-pressed', String(+o.dataset.blur === AT.st.blur)))
+      atDraw()
+    }
+  })
+  document.querySelectorAll('#at-rstyle button').forEach(b => {
+    b.setAttribute('aria-pressed', String(b.dataset.rstyle === AT.st.rstyle))
+    b.onclick = () => {
+      AT.st.rstyle = b.dataset.rstyle
+      document.querySelectorAll('#at-rstyle button').forEach(o =>
+        o.setAttribute('aria-pressed', String(o.dataset.rstyle === AT.st.rstyle)))
       atDraw()
     }
   })
