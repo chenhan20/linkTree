@@ -1,0 +1,635 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>騎過的台灣</title>
+<style>
+  /* 紙圖，白底黑線；單一視覺世界，每個顏色都明寫 */
+  :root{
+    --paper:#faf7f3; --sea:#e9e2d6; --land:#ffffff;
+    --ink:#14110d; --ink-2:#4d463d; --ink-3:#8a8073;
+    --hair:#ded7cb; --line:#e5ded3;
+    /* 路線：單色橘序列（validate_palette --ordinal --mode light 全通過） */
+    --r1:#f79a60; --r2:#eb7b36; --r3:#d8611c; --r4:#b74a0b; --r5:#8c3608; --r6:#5a2007;
+    /* 行政區：中性暖灰序列，刻意收斂，讓橘色的路線是畫面唯一的主角 */
+    --g1:#f1ebe1; --g2:#ded3c0; --g3:#c8b99f; --g4:#b09d7e; --g5:#96815f;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--paper);color:var(--ink);
+    font-family:ui-sans-serif,system-ui,"PingFang TC","Noto Sans TC",sans-serif;
+    -webkit-font-smoothing:antialiased}
+  .wrap{max-width:1250px;margin:0 auto;padding:32px 22px 56px;
+    display:flex;flex-direction:column;gap:15px}
+  .kicker{font:600 10.5px/1 ui-monospace,Menlo,monospace;letter-spacing:.2em;
+    text-transform:uppercase;color:var(--r4)}
+  h1{margin:8px 0 6px;font-size:clamp(26px,3.4vw,38px);line-height:1.08;
+    letter-spacing:-.02em;font-weight:640;text-wrap:balance}
+  .lede{margin:0;max-width:64ch;color:var(--ink-2);font-size:14.5px;line-height:1.65}
+
+  .rail{display:flex;flex-direction:column;gap:7px}
+  .rail-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+  /* 側欄與工具列共用同一種小標；.rail-lbl 只多一個固定寬度好對齊 */
+  .rail-lbl,.lbl{font:600 10px/1 ui-monospace,Menlo,monospace;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--ink-3)}
+  .rail-lbl{width:64px;flex:none}
+  .chip{display:inline-flex;align-items:baseline;gap:6px;border:1px solid var(--hair);
+    background:var(--land);border-radius:999px;padding:5px 11px 5px 10px;cursor:pointer;
+    font:500 12px/1 inherit;color:var(--ink);transition:border-color .14s,background .14s}
+  .chip:hover{border-color:var(--r3);background:#fff8f2}
+  .chip:focus-visible{outline:2px solid var(--r3);outline-offset:2px}
+  .chip b{font:700 13px/1 ui-monospace,Menlo,monospace;font-variant-numeric:tabular-nums;
+    color:var(--r4)}
+  .chip.town b{color:var(--ink-2)}
+  .chip.on{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+  .chip.on b{color:var(--r1)}
+
+  .toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .spacer{flex:1 1 auto}
+  button{appearance:none;border:1px solid var(--hair);background:var(--land);color:var(--ink);
+    font:500 12.5px/1 inherit;padding:8px 12px;border-radius:7px;cursor:pointer;
+    transition:background .14s,border-color .14s}
+  button:hover{background:#fff8f2;border-color:var(--r1)}
+  button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+  button:focus-visible{outline:2px solid var(--r3);outline-offset:2px}
+  .group{display:inline-flex;border:1px solid var(--hair);border-radius:7px;
+    overflow:hidden;background:var(--land)}
+  .group button{border:0;border-radius:0}
+  .group button+button{border-left:1px solid var(--hair)}
+
+  .stage{position:relative;border:1px solid var(--hair);border-radius:10px;
+    overflow:hidden;background:var(--sea);touch-action:none}
+  canvas{display:block;width:100%;height:auto;cursor:grab}
+  canvas.dragging{cursor:grabbing}
+
+  .legend{position:absolute;left:12px;bottom:12px;display:flex;gap:16px;
+    background:rgba(255,255,255,.95);border:1px solid var(--hair);border-radius:8px;
+    padding:9px 12px 8px;pointer-events:none}
+  .legend section{display:flex;flex-direction:column;gap:4px}
+  .legend h4{margin:0;font:600 9.5px/1 ui-monospace,Menlo,monospace;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--ink-3)}
+  .sw{display:grid;gap:2px}
+  .sw i{height:10px;border-radius:1px}
+  .tk{display:grid;gap:2px;font:500 9px/1 ui-monospace,Menlo,monospace;
+    color:var(--ink-3);text-align:center}
+  .sw.r,.tk.r{grid-template-columns:repeat(6,30px)}
+  .sw.g,.tk.g{grid-template-columns:repeat(5,30px)}
+
+  .readout{position:absolute;right:12px;top:12px;background:rgba(255,255,255,.95);
+    border:1px solid var(--hair);border-radius:8px;padding:9px 11px;pointer-events:none;
+    font:500 11.5px/1.55 ui-monospace,Menlo,monospace;color:var(--ink-2);min-width:158px}
+  .readout b{display:block;font-size:15px;line-height:1.25;color:var(--ink);font-weight:640;
+    font-family:ui-sans-serif,system-ui,"PingFang TC",sans-serif}
+  .readout .big{font:700 20px/1.2 ui-monospace,Menlo,monospace;color:var(--r4)}
+  .readout.idle{color:var(--ink-3)}
+
+  .cap{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;
+    color:var(--ink-3);font-size:11.5px;line-height:1.55}
+  .notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(238px,1fr));gap:19px;
+    padding-top:18px;border-top:1px solid var(--line)}
+  .note h3{margin:0 0 6px;font-size:12.5px}
+  .note p{margin:0;color:var(--ink-2);font-size:12.5px;line-height:1.65}
+  .note code{font:11.5px/1 ui-monospace,Menlo,monospace;background:#f1ece5;
+    padding:1px 5px;border-radius:3px}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="kicker" id="kicker"></div>
+    <h1 id="h1"></h1>
+    <p class="lede">
+      每一條線都是真的 GPS 軌跡，<strong>顏色是那一段路被幾趟不同的騎乘經過</strong>——
+      不是把線疊出來的亮度，是查表查出來的數字，所以讀得出「這條 43 趟、那條 2 趟」。
+      底下的灰是行政區，深淺為<strong>在那個區裡騎了多少公里</strong>。
+      滾輪縮放、拖曳平移；上面的膠囊點了會飛過去。
+    </p>
+  </header>
+
+  <div class="rail">
+    <div class="rail-row"><span class="rail-lbl">路段</span><span id="railItt"></span></div>
+    <div class="rail-row"><span class="rail-lbl">行政區</span><span id="railTown"></span></div>
+  </div>
+
+  <div class="toolbar">
+    <div class="group"><button id="zOut">−</button><button id="zIn">＋</button></div>
+    <button id="bHome">台北</button>
+    <button id="bAll">全台</button>
+    <span class="spacer"></span>
+    <span class="lbl">暈染</span>
+    <div class="group" id="blurGroup">
+      <button data-blur="0">無</button>
+      <button data-blur="5">淡</button>
+      <button data-blur="11">濃</button>
+    </div>
+    <button id="tTowns" aria-pressed="true">行政區</button>
+    <button id="tTownNames" aria-pressed="true">區名</button>
+    <button id="tItt" aria-pressed="true">路段名</button>
+  </div>
+
+  <div class="stage">
+    <canvas id="map"></canvas>
+    <div class="legend">
+      <section>
+        <h4>這條路騎過幾趟</h4>
+        <div class="sw r" id="swR"></div>
+        <div class="tk r" id="tkR"></div>
+      </section>
+      <section>
+        <h4>這區騎了幾公里</h4>
+        <div class="sw g" id="swG"></div>
+        <div class="tk g" id="tkG"></div>
+      </section>
+    </div>
+    <div class="readout idle" id="readout">游標移到地圖上</div>
+  </div>
+
+  <div class="cap">
+    <span>軌跡：Strava archive 的完整折線，Douglas–Peucker 簡化至 8 m · 行政區界：內政部 鄉鎮市區界線</span>
+    <span id="stat" style="font-family:ui-monospace,Menlo,monospace"></span>
+  </div>
+
+  <div class="notes">
+    <div class="note"><h3>為什麼不是密度場了</h3>
+      <p>核密度的 bandwidth 本來就是「把這個尺度以下的結構抹掉」，
+      200 公尺平滑等於明確丟棄路線輪廓——那不是參數沒調好，是那個工具的本意。
+      要看輪廓就只能畫線。</p></div>
+    <div class="note"><h3>疊線但不靠疊色</h3>
+      <p>Strava 那種熱力圖是加法混色：疊越多越亮。缺點是顏色不可控、
+      疊十次就飽和、而且讀不出數字。這裡改成先把每個 25 m 格的
+      <strong>不重複趟數</strong>算好，再把折線<strong>依所在格上色</strong>，
+      線是銳利的，數字是精確的。</p></div>
+    <div class="note"><h3>兩層顏色不打架</h3>
+      <p>橘色序列已經被路線佔走，行政區就走中性暖灰，並且一律附上區名與公里數——
+      顏色從來不是唯一線索。灰階最淺的那階刻意接近底色，
+      因為「幾乎沒騎過的區」本來就該退到背景去。</p></div>
+  </div>
+</div>
+
+<script id="dat" type="application/json">/*__DATA__*/</script>
+<script>
+const D = JSON.parse(document.getElementById('dat').textContent)
+const M = D.meta
+
+/* ---------- TWD97 / TM2 ---------- */
+const A = 6378137, F = 1 / 298.257222101, E2 = F * (2 - F), EP2 = E2 / (1 - E2)
+function tm(lng, lat) {
+  const φ = lat * Math.PI / 180, dλ = (lng - 121) * Math.PI / 180, k0 = 0.9999
+  const s = Math.sin(φ), c = Math.cos(φ), t = Math.tan(φ)
+  const N = A / Math.sqrt(1 - E2 * s * s), T = t * t, C = EP2 * c * c, a1 = dλ * c
+  const Mm = A * ((1 - E2 / 4 - 3 * E2 ** 2 / 64 - 5 * E2 ** 3 / 256) * φ
+    - (3 * E2 / 8 + 3 * E2 ** 2 / 32 + 45 * E2 ** 3 / 1024) * Math.sin(2 * φ)
+    + (15 * E2 ** 2 / 256 + 45 * E2 ** 3 / 1024) * Math.sin(4 * φ)
+    - (35 * E2 ** 3 / 3072) * Math.sin(6 * φ))
+  return [k0 * N * (a1 + (1 - T + C) * a1 ** 3 / 6
+      + (5 - 18 * T + T * T + 72 * C - 58 * EP2) * a1 ** 5 / 120) + 250000,
+    k0 * (Mm + N * t * (a1 * a1 / 2 + (5 - T + 9 * C + 4 * C * C) * a1 ** 4 / 24
+      + (61 - 58 * T + T * T + 600 * C - 330 * EP2) * a1 ** 6 / 720))]
+}
+const cssv = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim()
+const RAMP_R = ['--r1','--r2','--r3','--r4','--r5','--r6'].map(cssv)
+const RAMP_G = ['--g1','--g2','--g3','--g4','--g5'].map(cssv)
+const R_LABEL = ['1','2–3','4–7','8–15','16–31','32+']
+const G_BREAKS = [0.1, 5, 30, 120, 450]                    // 公里，下界
+const G_LABEL = ['<5','5–30','30–120','120–450','450+']
+const gBin = km => { let i = 0; while (i < G_BREAKS.length - 1 && km >= G_BREAKS[i + 1]) i++; return i }
+
+/* ---------- 預處理 ---------- */
+// 路線：每段轉成 Float64Array + bbox，平移縮放時只做仿射，culling 靠 bbox
+const RUNS = []
+D.routes.forEach((grp, b) => grp.forEach(run => {
+  const n = run.length, xy = new Float64Array(n * 2), nn = new Uint8Array(n)
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity
+  for (let i = 0; i < n; i++) {
+    const x = run[i][0], y = run[i][1]
+    xy[i * 2] = x; xy[i * 2 + 1] = y; nn[i] = Math.min(255, run[i][2])
+    if (x < x0) x0 = x; if (x > x1) x1 = x
+    if (y < y0) y0 = y; if (y > y1) y1 = y
+  }
+  RUNS.push({ b, n, xy, nn, x0, y0, x1, y1 })
+}))
+const TOWNS = D.towns.map(t => {
+  const rings = t.rings.map(r => { const o = new Float64Array(r.length * 2)
+    for (let i = 0; i < r.length; i++) { const p = tm(r[i][0], r[i][1]); o[i*2] = p[0]; o[i*2+1] = p[1] }
+    return o })
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity, ax = 0, ay = 0, cnt = 0
+  for (const r of rings) for (let i = 0; i < r.length; i += 2) {
+    if (r[i] < x0) x0 = r[i]; if (r[i] > x1) x1 = r[i]
+    if (r[i+1] < y0) y0 = r[i+1]; if (r[i+1] > y1) y1 = r[i+1]
+    ax += r[i]; ay += r[i+1]; cnt++
+  }
+  return { ...t, rings, x0, y0, x1, y1, cx: ax / cnt, cy: ay / cnt }
+})
+const RIDDEN = TOWNS.filter(t => t.km > 0)
+const ARCS = D.coast.arcs.map(a => { const o = new Float64Array(a.length * 2)
+  for (let i = 0; i < a.length; i++) { const p = tm(a[i][0], a[i][1]); o[i*2] = p[0]; o[i*2+1] = p[1] }
+  return o })
+const LAND = D.coast.counties.filter(c => c.group === 'main')
+const PLACES = D.places.map(p => { const [x, y] = tm(p.lng, p.lat); return { ...p, x, y } })
+
+/* ---------- 視圖 ---------- */
+const cv = document.getElementById('map'), ctx = cv.getContext('2d')
+const blurCv = document.createElement('canvas'), bctx = blurCv.getContext('2d')
+const blurCv2 = document.createElement('canvas'), bctx2 = blurCv2.getContext('2d')
+const state = { towns: true, townNames: true, itt: true, focus: null, blur: 5 }
+const LABEL_MIN_N = 5      // 路段：騎過 5 次以上才標名
+const LABEL_MIN_KM = 10    // 行政區：騎滿 10 km 才標名（沒到的仍然填色）
+let W = 1150, H = 800, dpr = 1
+let view = { cx: 0, cy: 0, k: 1 }
+const sx = x => (x - view.cx) * view.k + W / 2
+const sy = y => (view.cy - y) * view.k + H / 2
+const invX = px => (px - W / 2) / view.k + view.cx
+const invY = py => view.cy - (py - H / 2) / view.k
+const clampK = k => Math.max(Math.min(W, H) / 520000, Math.min(1.2, k))
+function fit(x0, y0, x1, y1, pad) {
+  view.k = clampK(Math.min((W - pad * 2) / Math.max(1, x1 - x0), (H - pad * 2) / Math.max(1, y1 - y0)))
+  view.cx = (x0 + x1) / 2; view.cy = (y0 + y1) / 2
+}
+// 預設視角：只框「騎過 8 趟以上」的路段。
+// 用行政區的 bbox 會被士林一路延伸到陽明山那塊拉開，畫面就退到 1 px ≈ 36 m，
+// 那個高度線細得跟頭髮一樣，等於又看不到輪廓。
+function coreExtent() {
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity
+  for (const r of RUNS) {
+    if (r.b < 3) continue                        // b>=3 -> 8 趟以上
+    if (r.x0 < x0) x0 = r.x0; if (r.x1 > x1) x1 = r.x1
+    if (r.y0 < y0) y0 = r.y0; if (r.y1 > y1) y1 = r.y1
+  }
+  return [x0, y0, x1, y1]
+}
+function allExtent() {
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity
+  for (const r of RUNS) {
+    if (r.x0 < x0) x0 = r.x0; if (r.x1 > x1) x1 = r.x1
+    if (r.y0 < y0) y0 = r.y0; if (r.y1 > y1) y1 = r.y1
+  }
+  return [x0, y0, x1, y1]
+}
+
+/* ---------- 繪製 ---------- */
+function ringPath(rings) {
+  ctx.beginPath()
+  for (const r of rings) {
+    for (let i = 0; i < r.length; i += 2) {
+      const px = sx(r[i]), py = sy(r[i + 1])
+      i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py)
+    }
+    ctx.closePath()
+  }
+}
+function draw() {
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+  ctx.fillStyle = cssv('--sea'); ctx.fillRect(0, 0, W, H)
+  ctx.lineJoin = 'round'; ctx.lineCap = 'round'
+
+  // 陸地
+  ctx.fillStyle = cssv('--land')
+  for (const c of LAND) for (const poly of c.polygons) {
+    ctx.beginPath()
+    for (const ring of poly) {
+      let first = true
+      for (const ai of ring) {
+        const a = ARCS[ai < 0 ? ~ai : ai], rev = ai < 0
+        for (let j = 0; j < a.length; j += 2) {
+          const idx = rev ? a.length - 2 - j : j
+          const px = sx(a[idx]), py = sy(a[idx + 1])
+          if (first) { ctx.moveTo(px, py); first = false } else ctx.lineTo(px, py)
+        }
+      }
+      ctx.closePath()
+    }
+    ctx.fill('evenodd')
+  }
+
+  // 行政區：騎過的填灰，沒騎過的維持白紙
+  if (state.towns) {
+    // 灰階整層壓到 72% 不透明：色階彼此的相對關係不變（驗證過的那組），
+    // 但整層退到背景，橘色的路線才是畫面主角
+    ctx.globalAlpha = 0.72
+    for (let b = 0; b < RAMP_G.length; b++) {
+      ctx.fillStyle = RAMP_G[b]
+      for (const t of RIDDEN) {
+        if (gBin(t.km) !== b) continue
+        if (sx(t.x1) < 0 || sx(t.x0) > W || sy(t.y0) < 0 || sy(t.y1) > H) continue
+        ringPath(t.rings); ctx.fill('evenodd')
+      }
+    }
+    ctx.globalAlpha = 1
+    ctx.strokeStyle = cssv('--hair'); ctx.lineWidth = 1
+    ctx.beginPath()
+    for (const t of TOWNS) {
+      if (sx(t.x1) < 0 || sx(t.x0) > W || sy(t.y0) < 0 || sy(t.y1) > H) continue
+      for (const r of t.rings) {
+        for (let i = 0; i < r.length; i += 2) {
+          const px = sx(r[i]), py = sy(r[i + 1])
+          i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py)
+        }
+        ctx.closePath()
+      }
+    }
+    ctx.stroke()
+  }
+
+  // 海岸線
+  ctx.strokeStyle = cssv('--ink'); ctx.lineWidth = 1
+  ctx.beginPath()
+  for (let ai = 0; ai < ARCS.length; ai++) {
+    if (D.coast.arcKind[ai] !== 0) continue
+    const a = ARCS[ai]
+    for (let i = 0; i < a.length; i += 2) {
+      const px = sx(a[i]), py = sy(a[i + 1])
+      i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py)
+    }
+  }
+  ctx.stroke()
+
+  // 路線：淺的先畫，深的壓在上面，常騎的路才不會被偶爾騎的蓋掉
+  const lw = Math.max(1.3, Math.min(4.2, 14 * view.k))
+  let drawn = 0
+
+  // 暈染層：同一組線畫粗一點、模糊後墊在底下，
+  // 密的地方會連成一塊、疏的地方仍然是一條線 —— 這樣既有區塊感又保得住輪廓。
+  // 模糊半徑固定用螢幕像素，所以縮放時「區塊感」的強度不變。
+  if (state.blur > 0) {
+    // 模糊本身的成本跟「作用的像素數 x 半徑」成正比，在全解析度上做 11 px
+    // 實測 147 ms/frame。改成先縮到 1/S 畫、在那個尺寸上模糊 blur/S，
+    // 再放大回來——視覺上一樣（模糊本來就是低頻），成本掉一個數量級。
+    const S = drag ? 4 : 2
+    const bw = Math.max(2, Math.ceil(W / S)), bh = Math.max(2, Math.ceil(H / S))
+    if (blurCv.width !== bw || blurCv.height !== bh) {
+      blurCv.width = bw; blurCv.height = bh
+      blurCv2.width = bw; blurCv2.height = bh
+    }
+    bctx.setTransform(1 / S, 0, 0, 1 / S, 0, 0)
+    bctx.clearRect(0, 0, W, H)
+    bctx.lineJoin = 'round'; bctx.lineCap = 'round'
+    for (let b = 0; b < RAMP_R.length; b++) {
+      bctx.strokeStyle = RAMP_R[b]; bctx.lineWidth = lw + state.blur * 1.6
+      bctx.beginPath()
+      for (const r of RUNS) {
+        if (r.b !== b) continue
+        if (sx(r.x1) < -40 || sx(r.x0) > W + 40 || sy(r.y0) < -40 || sy(r.y1) > H + 40) continue
+        for (let i = 0; i < r.n; i++) {
+          const px = sx(r.xy[i * 2]), py = sy(r.xy[i * 2 + 1])
+          i === 0 ? bctx.moveTo(px, py) : bctx.lineTo(px, py)
+        }
+      }
+      bctx.stroke()
+    }
+    bctx2.setTransform(1, 0, 0, 1, 0, 0)
+    bctx2.clearRect(0, 0, bw, bh)
+    bctx2.filter = `blur(${Math.max(0.5, state.blur / S)}px)`
+    bctx2.drawImage(blurCv, 0, 0)
+    ctx.save()
+    ctx.globalAlpha = 0.62
+    ctx.imageSmoothingEnabled = true
+    ctx.drawImage(blurCv2, 0, 0, W, H)
+    ctx.restore()
+  } else {
+    // 沒有暈染時，用紙色外框讓深橘不要糊進深灰的行政區（製圖上的 casing）
+    ctx.strokeStyle = 'rgba(255,255,255,.62)'; ctx.lineWidth = lw + 1.5
+    ctx.beginPath()
+    for (const r of RUNS) {
+      if (sx(r.x1) < -20 || sx(r.x0) > W + 20 || sy(r.y0) < -20 || sy(r.y1) > H + 20) continue
+      for (let i = 0; i < r.n; i++) {
+        const px = sx(r.xy[i * 2]), py = sy(r.xy[i * 2 + 1])
+        i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py)
+      }
+    }
+    ctx.stroke()
+  }
+
+  for (let b = 0; b < RAMP_R.length; b++) {
+    ctx.strokeStyle = RAMP_R[b]; ctx.lineWidth = lw
+    ctx.beginPath()
+    for (const r of RUNS) {
+      if (r.b !== b) continue
+      if (sx(r.x1) < -20 || sx(r.x0) > W + 20 || sy(r.y0) < -20 || sy(r.y1) > H + 20) continue
+      drawn++
+      for (let i = 0; i < r.n; i++) {
+        const px = sx(r.xy[i * 2]), py = sy(r.xy[i * 2 + 1])
+        i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py)
+      }
+    }
+    ctx.stroke()
+  }
+
+  const taken = []
+  if (state.townNames) drawTownNames(taken)
+  if (state.itt) drawPlaces(taken)
+  drawScale()
+
+  document.getElementById('stat').textContent =
+    `1 px ≈ ${(1 / view.k).toFixed(1)} m · 線寬 ${lw.toFixed(1)} px · 可見 ${drawn} 段 / 共 ${RUNS.length}`
+}
+const hitTest = (a, taken) => taken.some(b =>
+  a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y)
+
+function drawTownNames(taken) {
+  ctx.textAlign = 'center'
+  for (const t of RIDDEN) {
+    if (t.km < LABEL_MIN_KM) continue            // 只路過幾百公尺的區不標名，但還是有填色
+    const wpx = (t.x1 - t.x0) * view.k
+    if (wpx < 42) continue                       // 螢幕上太小就不標，免得糊成一團
+    const px = sx(t.cx), py = sy(t.cy)
+    if (px < 0 || px > W || py < 0 || py > H) continue
+    const label = t.name.replace(/[區鄉鎮市]$/, '')
+    ctx.font = '600 ' + (t.km > 300 ? 13 : 11.5) + 'px ui-sans-serif,system-ui,"PingFang TC",sans-serif'
+    const tw = ctx.measureText(label).width
+    const box = { x: px - tw / 2 - 3, y: py - 8, w: tw + 6, h: 16 }
+    if (hitTest(box, taken)) continue
+    taken.push(box)
+    ctx.lineWidth = 3.4; ctx.strokeStyle = 'rgba(255,255,255,.86)'
+    ctx.strokeText(label, px, py + 4)
+    ctx.fillStyle = cssv('--ink-2'); ctx.fillText(label, px, py + 4)
+  }
+  ctx.textAlign = 'left'
+}
+function drawPlaces(taken) {
+  for (const p of PLACES) {
+    if (p.n < LABEL_MIN_N && state.focus !== p.name) continue
+    const px = sx(p.x), py = sy(p.y)
+    if (px < -60 || px > W + 60 || py < -20 || py > H + 20) continue
+    const focus = state.focus === p.name
+    const label = `${p.name} ${p.n}`
+    ctx.font = '650 ' + (focus ? 14 : 12) + 'px ui-sans-serif,system-ui,"PingFang TC",sans-serif'
+    const box = { x: px + 8, y: py - 9, w: ctx.measureText(label).width + 10, h: 18 }
+    if (!focus && hitTest(box, taken)) continue
+    taken.push(box)
+    ctx.beginPath(); ctx.arc(px, py, focus ? 5 : 3.4, 0, 7)
+    ctx.fillStyle = cssv('--r5'); ctx.fill()
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.6; ctx.stroke()
+    ctx.fillStyle = focus ? cssv('--ink') : 'rgba(255,255,255,.9)'
+    roundRect(box.x, box.y, box.w, box.h, 4); ctx.fill()
+    ctx.fillStyle = focus ? cssv('--paper') : cssv('--ink')
+    ctx.fillText(label, box.x + 5, py + 4.5)
+  }
+}
+function roundRect(x, y, w, h, r) {
+  ctx.beginPath()
+  ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r)
+  ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r)
+  ctx.arcTo(x, y, x + w, y, r); ctx.closePath()
+}
+function drawScale() {
+  const target = W * 0.14 / view.k
+  const pow = 10 ** Math.floor(Math.log10(target))
+  const m = [1, 2, 5, 10].map(v => v * pow)
+    .reduce((a, b) => Math.abs(b - target) < Math.abs(a - target) ? b : a)
+  const px = m * view.k, x = W - px - 20, y = H - 20
+  ctx.strokeStyle = cssv('--ink'); ctx.lineWidth = 1.2
+  ctx.beginPath(); ctx.moveTo(x, y - 5); ctx.lineTo(x, y); ctx.lineTo(x + px, y); ctx.lineTo(x + px, y - 5); ctx.stroke()
+  ctx.font = '600 10.5px ui-monospace,Menlo,monospace'
+  ctx.fillStyle = cssv('--ink-2')
+  ctx.fillText(m >= 1000 ? `${m / 1000} km` : `${m} m`, x, y - 9)
+}
+
+/* ---------- 互動 ---------- */
+function resize(keep) {
+  const rect = cv.parentElement.getBoundingClientRect()
+  W = Math.max(320, Math.round(rect.width))
+  H = Math.round(Math.min(800, Math.max(450, W * 0.7)))
+  dpr = Math.min(2, window.devicePixelRatio || 1)
+  cv.width = W * dpr; cv.height = H * dpr; cv.style.height = H + 'px'
+  // 暈染緩衝的尺寸在 draw() 裡依當下的降階倍率決定
+  if (!keep) { const e = coreExtent(); fit(e[0], e[1], e[2], e[3], 40) }
+  draw()
+}
+cv.addEventListener('wheel', e => {
+  e.preventDefault()
+  const r = cv.getBoundingClientRect()
+  zoomBy(Math.exp(-e.deltaY * 0.0016), e.clientX - r.left, e.clientY - r.top)
+  updateReadout(e.clientX - r.left, e.clientY - r.top)
+}, { passive: false })
+function zoomBy(f, px = W / 2, py = H / 2) {
+  const ax = invX(px), ay = invY(py)
+  view.k = clampK(view.k * f)
+  view.cx = ax - (px - W / 2) / view.k
+  view.cy = ay + (py - H / 2) / view.k
+  draw()
+}
+let drag = null
+cv.addEventListener('pointerdown', e => {
+  cv.setPointerCapture(e.pointerId)
+  const r = cv.getBoundingClientRect()
+  drag = { x: e.clientX - r.left, y: e.clientY - r.top, cx: view.cx, cy: view.cy }
+  cv.classList.add('dragging')
+})
+cv.addEventListener('pointermove', e => {
+  const r = cv.getBoundingClientRect()
+  const px = e.clientX - r.left, py = e.clientY - r.top
+  if (drag) {
+    view.cx = drag.cx - (px - drag.x) / view.k
+    view.cy = drag.cy + (py - drag.y) / view.k
+    draw()
+  } else updateReadout(px, py)
+})
+const endDrag = () => { if (drag) { cv.classList.remove('dragging'); drag = null } }
+cv.addEventListener('pointerup', endDrag)
+cv.addEventListener('pointercancel', endDrag)
+cv.addEventListener('pointerleave', () => setReadout(null))
+
+// 游標下的行政區（射線法），以及 12 px 內最近的軌跡點
+function townAt(wx, wy) {
+  for (const t of TOWNS) {
+    if (wx < t.x0 || wx > t.x1 || wy < t.y0 || wy > t.y1) continue
+    let inside = false
+    for (const r of t.rings) {
+      const n = r.length / 2
+      for (let i = 0, j = n - 1; i < n; j = i++) {
+        const xi = r[i*2], yi = r[i*2+1], xj = r[j*2], yj = r[j*2+1]
+        if ((yi > wy) !== (yj > wy) && wx < (xj - xi) * (wy - yi) / (yj - yi) + xi) inside = !inside
+      }
+    }
+    if (inside) return t
+  }
+  return null
+}
+function routeAt(wx, wy, tolM) {
+  let best = null, bd = tolM * tolM
+  for (const r of RUNS) {
+    if (wx < r.x0 - tolM || wx > r.x1 + tolM || wy < r.y0 - tolM || wy > r.y1 + tolM) continue
+    for (let i = 0; i < r.n; i++) {
+      const dx = r.xy[i*2] - wx, dy = r.xy[i*2+1] - wy
+      const d = dx * dx + dy * dy
+      if (d < bd) { bd = d; best = r.nn[i] }
+    }
+  }
+  return best
+}
+function updateReadout(px, py) {
+  const wx = invX(px), wy = invY(py)
+  setReadout({ town: townAt(wx, wy), n: routeAt(wx, wy, 10 / view.k) })
+}
+function setReadout(o) {
+  const el = document.getElementById('readout')
+  if (!o || (!o.town && o.n == null)) {
+    el.className = 'readout idle'; el.textContent = '游標移到地圖上'; return
+  }
+  el.className = 'readout'
+  const parts = []
+  if (o.n != null) parts.push(`<span class="big">${o.n}</span> 趟經過這段路`)
+  if (o.town) parts.push(
+    `<b>${o.town.county}${o.town.name}</b>` +
+    (o.town.km > 0 ? `<span style="color:var(--ink-3)">在這區騎了 ${o.town.km} km / ${o.town.rides} 趟</span>`
+                   : `<span style="color:var(--ink-3)">沒騎過</span>`))
+  el.innerHTML = parts.join('<br>')
+}
+
+/* ---------- 膠囊與圖例 ---------- */
+function buildRails() {
+  document.getElementById('railItt').innerHTML = PLACES.filter(p => p.n > 0)
+    .map(p => `<button class="chip" data-kind="itt" data-name="${p.name}"><span>${p.name}</span><b>${p.n}</b></button>`).join('')
+  document.getElementById('railTown').innerHTML = RIDDEN.slice(0, 12)
+    .map(t => `<button class="chip town" data-kind="town" data-name="${t.county}${t.name}"><span>${t.name}</span><b>${Math.round(t.km)}</b></button>`)
+    .join('') + `<span style="color:var(--ink-3);font-size:11.5px;padding-left:4px">…共 ${M.towns_ridden} 個區</span>`
+  document.querySelectorAll('.chip').forEach(b => b.onclick = () => {
+    if (b.dataset.kind === 'itt') {
+      const p = PLACES.find(q => q.name === b.dataset.name)
+      state.focus = state.focus === p.name ? null : p.name
+      if (state.focus) { view.cx = p.x; view.cy = p.y; view.k = clampK(Math.min(W, H) / 3000) }
+    } else {
+      const t = TOWNS.find(q => q.county + q.name === b.dataset.name)
+      state.focus = null
+      fit(t.x0, t.y0, t.x1, t.y1, 60)
+    }
+    syncChips(b); draw()
+  })
+  document.getElementById('kicker').textContent =
+    `${M.activities} 趟 · ${M.total_km.toLocaleString()} km · 騎過 ${M.towns_ridden} 個行政區 · TWD97 / TM2`
+  document.getElementById('h1').textContent = `我騎過台灣的 ${M.towns_ridden} 個行政區`
+  document.getElementById('swR').innerHTML = RAMP_R.map(c => `<i style="background:${c}"></i>`).join('')
+  document.getElementById('tkR').innerHTML = R_LABEL.map(l => `<span>${l}</span>`).join('')
+  document.getElementById('swG').innerHTML = RAMP_G.map(c => `<i style="background:${c}"></i>`).join('')
+  document.getElementById('tkG').innerHTML = G_LABEL.map(l => `<span>${l}</span>`).join('')
+}
+function syncChips(active) {
+  document.querySelectorAll('.chip').forEach(c => c.classList.toggle('on', c === active && !!state.focus))
+}
+
+document.querySelectorAll('#blurGroup button').forEach(b => {
+  b.setAttribute('aria-pressed', String(+b.dataset.blur === state.blur))
+  b.onclick = () => {
+    state.blur = +b.dataset.blur
+    document.querySelectorAll('#blurGroup button').forEach(o =>
+      o.setAttribute('aria-pressed', String(+o.dataset.blur === state.blur)))
+    draw()
+  }
+})
+document.getElementById('zIn').onclick = () => zoomBy(1.7)
+document.getElementById('zOut').onclick = () => zoomBy(1 / 1.7)
+document.getElementById('bHome').onclick = () => { const e = coreExtent(); fit(e[0], e[1], e[2], e[3], 40); state.focus = null; syncChips(); draw() }
+document.getElementById('bAll').onclick = () => { const e = allExtent(); fit(e[0], e[1], e[2], e[3], 24); state.focus = null; syncChips(); draw() }
+;[['tTowns','towns'],['tTownNames','townNames'],['tItt','itt']].forEach(([id, key]) => {
+  const el = document.getElementById(id)
+  el.setAttribute('aria-pressed', String(state[key]))
+  el.onclick = () => { state[key] = !state[key]; el.setAttribute('aria-pressed', String(state[key])); draw() }
+})
+addEventListener('resize', () => resize(true))
+buildRails()
+resize(false)
+window.__ready = true
+</script>
+</body>
+</html>

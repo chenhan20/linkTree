@@ -5,335 +5,428 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>訓練報告 · Steve Chuang</title>
 <style>
-:root{color-scheme:light;--surface-1:#fcfcfb;--page:#f9f9f7;--ink-1:#0b0b0b;--ink-2:#52514e;
- --ink-3:#898781;--ring:rgba(11,11,11,.10);--s2:#eb6834}
-@media (prefers-color-scheme:dark){:root{color-scheme:dark;--surface-1:#1a1a19;--page:#0d0d0d;
- --ink-1:#fff;--ink-2:#c3c2b7;--ink-3:#898781;--ring:rgba(255,255,255,.10);--s2:#d95926}}
+:root{
+  color-scheme:light;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC","PingFang TC",sans-serif;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+  --paper:#f6f5f1;--ink-1:#15150f;--ink-2:#55534b;--ink-3:#8a877c;
+  --rule:#e2e0d6;--rule-2:#cdcabc;--hover:#efeee8;--s2:#c8541c;
+}
+@media (prefers-color-scheme:dark){:root{
+  color-scheme:dark;
+  --paper:#121211;--ink-1:#f3f2ec;--ink-2:#a6a39a;--ink-3:#75726a;
+  --rule:#282825;--rule-2:#3b3a36;--hover:#1b1b19;--s2:#dd6a35;
+}}
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--page);color:var(--ink-1);font-family:system-ui,-apple-system,"Noto Sans TC",sans-serif;
- line-height:1.6;font-size:15px;padding:0 0 64px}
-.wrap{max-width:820px;margin:0 auto;padding:0 18px}
-header{padding:44px 0 18px}
-.eyebrow{color:var(--ink-3);font-size:12px;letter-spacing:.18em;text-transform:uppercase;font-weight:700}
-h1{font-size:30px;font-weight:800;letter-spacing:-.02em;margin:6px 0 10px}
-p.lede{color:var(--ink-2);max-width:620px}
-.row{display:block;text-decoration:none;color:inherit;background:var(--surface-1);
- border:1px solid var(--ring);border-radius:12px;padding:16px 18px;margin:12px 0;transition:.12s}
-.row:hover{border-color:var(--s2);transform:translateY(-1px)}
-.d{display:flex;gap:10px;align-items:baseline;font-size:12.5px;color:var(--ink-3)}
-.d b{color:var(--ink-1);font-size:14px;font-variant-numeric:tabular-nums}
-.t{font-size:19px;font-weight:750;margin:3px 0 8px}
-.m{display:flex;flex-wrap:wrap;gap:14px;font-size:13px;color:var(--ink-2);font-variant-numeric:tabular-nums}
-.eff{color:var(--s2);font-weight:700}
-footer{color:var(--ink-3);font-size:12px;margin-top:32px;text-align:center}
-footer a{color:var(--ink-3)}
+body{background:var(--paper);color:var(--ink-1);font-family:var(--sans);
+ line-height:1.6;font-size:14.5px;padding:0 0 80px;-webkit-font-smoothing:antialiased}
+.wrap{max-width:900px;margin:0 auto;padding:0 34px}
+header{padding:54px 0 30px}
+.eyebrow{font-family:var(--mono);font-size:10.5px;letter-spacing:.17em;text-transform:uppercase;color:var(--ink-3)}
+h1{font-size:32px;font-weight:700;letter-spacing:-.024em;margin:10px 0 14px}
+p.lede{color:var(--ink-2);max-width:60ch;font-size:15px}
+.list{border-top:1px solid var(--rule-2)}
+.row{display:grid;grid-template-columns:9.5rem minmax(0,1fr) auto auto;gap:0 22px;align-items:baseline;
+ text-decoration:none;color:inherit;padding:15px 8px 15px 0;border-bottom:1px solid var(--rule);
+ margin:0 -8px 0 0}
+.row:hover{background:var(--hover)}
+.d{font-family:var(--mono);font-size:11.5px;color:var(--ink-3);font-variant-numeric:tabular-nums;
+ white-space:nowrap}
+.d b{color:var(--ink-1);font-weight:500;margin-right:9px}
+.t{font-size:15.5px;font-weight:650;letter-spacing:-.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.m{display:flex;gap:14px;font-family:var(--mono);font-size:11.5px;color:var(--ink-2);
+ font-variant-numeric:tabular-nums;white-space:nowrap}
+.m span{text-align:right}
+.m .c1{width:5.6em} .m .c2{width:4.2em} .m .c3{width:3.2em}
+.m .c4{width:4.6em} .m .c5{width:4.8em}
+.v{min-width:5.4rem;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.vd{font-family:var(--mono);font-size:11.5px;color:var(--s2)}
+.vd b{font-family:var(--sans);font-size:15px;font-weight:650;letter-spacing:-.02em}
+.vd.dim{color:var(--ink-3)}
+footer{color:var(--ink-3);font-size:11.5px;margin-top:34px;padding-top:18px;border-top:1px solid var(--rule)}
+footer a{color:var(--ink-2)}
+@media(max-width:760px){
+  .wrap{padding:0 20px}
+  .row{grid-template-columns:1fr auto;gap:2px 14px;padding:14px 0}
+  .d{order:1} .v{order:2;min-width:0} .t{order:3;grid-column:1/-1;white-space:normal}
+  .m{order:4;grid-column:1/-1;flex-wrap:wrap;gap:12px;margin-top:2px}
+}
 </style>
 </head>
 <body><div class="wrap">
 <header>
-  <div class="eyebrow">Training Reports</div>
+  <div class="eyebrow">Training reports</div>
   <h1>訓練報告</h1>
-  <p class="lede">每一趟 TCX 自動產生的分析頁：分圈、區間、爬坡、停等判讀與教練評語。點日期進去看細節。</p>
+  <p class="lede">每一趟騎乘自動產生的分析頁：課表對帳、逐段功率、區間分布、爬坡與停等判讀。
+    右側是當天的結論 —— 有處方的日子是課表分數，沒有的是有效訓練佔比。</p>
 </header>
-    <a class="row" href="2026-08-13.html">
-      <div class="d"><b>2026-08-13</b><span>週四 06:36</span></div>
-      <div class="t">內湖區 公路車</div>
-      <div class="m"><span>51.04 km</span><span>↑112 m</span><span>1:47</span><span>NP 182</span><span>TSS 108</span><span class="eff">課表 B+ · 81.7 分</span></div>
-    </a>
-    <a class="row" href="2026-08-11.html">
-      <div class="d"><b>2026-08-11</b><span>週二 05:54</span></div>
-      <div class="t">劍 中中中中 劍</div>
-      <div class="m"><span>47.36 km</span><span>↑1,239 m</span><span>2:43</span><span>NP 195</span><span>TSS 190</span><span class="eff">有效 71.0%</span></div>
-    </a>
-    <a class="row" href="2026-08-06.html">
-      <div class="d"><b>2026-08-06</b><span>週四 04:47</span></div>
-      <div class="t">劍 中 露</div>
-      <div class="m"><span>39.48 km</span><span>↑754 m</span><span>2:24</span><span>NP 177</span><span>TSS 138</span><span class="eff">有效 47.7%</span></div>
-    </a>
-    <a class="row" href="2026-08-04.html">
-      <div class="d"><b>2026-08-04</b><span>週二 06:10</span></div>
-      <div class="t">內湖區 公路車</div>
-      <div class="m"><span>30.41 km</span><span>↑969 m</span><span>1:58</span><span>NP 203</span><span>TSS 149</span><span class="eff">有效 70.1%</span></div>
-    </a>
-    <a class="row" href="2026-07-28.html">
-      <div class="d"><b>2026-07-28</b><span>週二 06:10</span></div>
-      <div class="t">內湖區 公路車</div>
-      <div class="m"><span>39.61 km</span><span>↑991 m</span><span>2:15</span><span>NP 196</span><span>TSS 159</span><span class="eff">有效 64.9%</span></div>
-    </a>
-    <a class="row" href="2026-07-23.html">
-      <div class="d"><b>2026-07-23</b><span>週四 05:12</span></div>
-      <div class="t">永和區 公路車</div>
-      <div class="m"><span>51.54 km</span><span>↑1,111 m</span><span>3:02</span><span>NP 169</span><span>TSS 158</span><span class="eff">有效 50.4%</span></div>
-    </a>
-    <a class="row" href="2026-07-22.html">
-      <div class="d"><b>2026-07-22</b><span>週三 18:25</span></div>
-      <div class="t">內湖區 公路車</div>
-      <div class="m"><span>36.66 km</span><span>↑301 m</span><span>1:38</span><span>NP 174</span><span>TSS 91</span><span class="eff">有效 20.2%</span></div>
-    </a>
-    <a class="row" href="2026-07-21.html">
-      <div class="d"><b>2026-07-21</b><span>週二 06:13</span></div>
-      <div class="t">內湖區 公路車</div>
-      <div class="m"><span>33.56 km</span><span>↑1,021 m</span><span>2:16</span><span>NP 188</span><span>TSS 147</span><span class="eff">有效 67.1%</span></div>
-    </a>
-    <a class="row" href="2026-07-16.html">
-      <div class="d"><b>2026-07-16</b><span>週四 06:44</span></div>
-      <div class="t">內湖區 公路車</div>
-      <div class="m"><span>20.79 km</span><span>↑618 m</span><span>1:23</span><span>NP 194</span><span>TSS 96</span><span class="eff">有效 48.6%</span></div>
-    </a>
-    <a class="row" href="2026-07-14.html">
-      <div class="d"><b>2026-07-14</b><span>週二 06:14</span></div>
-      <div class="t">內湖區 公路車</div>
-      <div class="m"><span>18.29 km</span><span>↑520 m</span><span>1:13</span><span>NP 210</span><span>TSS 96</span><span class="eff">有效 54.1%</span></div>
-    </a>
-    <a class="row" href="2026-06-23.html">
-      <div class="d"><b>2026-06-23</b><span>週二 06:35</span></div>
-      <div class="t">內湖區 公路車</div>
-      <div class="m"><span>33.51 km</span><span>↑784 m</span><span>1:52</span><span>NP 203</span><span>TSS 138</span><span class="eff">有效 62.5%</span></div>
-    </a>
-    <a class="row" href="2026-06-18.html">
-      <div class="d"><b>2026-06-18</b><span>週四 05:55</span></div>
-      <div class="t">內湖區 公路車</div>
-      <div class="m"><span>67.24 km</span><span>↑280 m</span><span>2:26</span><span>NP 172</span><span>TSS 126</span><span class="eff">有效 19.4%</span></div>
-    </a>
-    <a class="row" href="2026-06-16.html">
-      <div class="d"><b>2026-06-16</b><span>週二 06:35</span></div>
-      <div class="t">內湖區 公路車</div>
-      <div class="m"><span>33.1 km</span><span>↑704 m</span><span>1:45</span><span>NP 206</span><span>TSS 130</span><span class="eff">有效 62.3%</span></div>
-    </a>
-    <a class="row" href="2026-05-27.html">
-      <div class="d"><b>2026-05-27</b><span>週三 06:47</span></div>
-      <div class="t">內湖區 公路車</div>
-      <div class="m"><span>23.41 km</span><span>↑512 m</span><span>1:17</span><span>NP 209</span><span>TSS 100</span><span class="eff">有效 58.9%</span></div>
-    </a>
-    <a class="row" href="2026-05-26.html">
-      <div class="d"><b>2026-05-26</b><span>週二 06:57</span></div>
-      <div class="t">內湖區 公路車</div>
-      <div class="m"><span>23.46 km</span><span>↑514 m</span><span>1:18</span><span>NP 211</span><span>TSS 104</span><span class="eff">有效 58.4%</span></div>
-    </a>
-    <a class="row" href="2026-05-21.html">
-      <div class="d"><b>2026-05-21</b><span>週四 06:13</span></div>
-      <div class="t">內湖區 公路車</div>
-      <div class="m"><span>32.42 km</span><span>↑703 m</span><span>1:47</span><span>NP 205</span><span>TSS 134</span><span class="eff">有效 54.9%</span></div>
-    </a>
-    <a class="row" href="2026-05-19.html">
-      <div class="d"><b>2026-05-19</b><span>週二 06:41</span></div>
-      <div class="t">內湖區 公路車</div>
-      <div class="m"><span>23.35 km</span><span>↑519 m</span><span>1:17</span><span>NP 220</span><span>TSS 110</span><span class="eff">有效 55.1%</span></div>
-    </a>
-    <a class="row" href="2026-05-12.html">
-      <div class="d"><b>2026-05-12</b><span>週二 06:51</span></div>
-      <div class="t">內湖區 公路車</div>
-      <div class="m"><span>23.5 km</span><span>↑501 m</span><span>1:17</span><span>NP 204</span><span>TSS 95</span><span class="eff">有效 54.5%</span></div>
-    </a>
-    <a class="row" href="2026-05-11.html">
-      <div class="d"><b>2026-05-11</b><span>週一 18:26</span></div>
-      <div class="t">內湖區 公路車</div>
-      <div class="m"><span>46.34 km</span><span>↑100 m</span><span>1:51</span><span>NP 174</span><span>TSS 104</span><span class="eff">有效 40.2%</span></div>
-    </a>
-    <a class="row" href="2026-04-28.html">
-      <div class="d"><b>2026-04-28</b><span>週二 06:58</span></div>
-      <div class="t">內湖區 公路車</div>
-      <div class="m"><span>23.49 km</span><span>↑506 m</span><span>1:16</span><span>NP 211</span><span>TSS 100</span><span class="eff">有效 56.0%</span></div>
-    </a>
-    <a class="row" href="2026-04-21.html">
-      <div class="d"><b>2026-04-21</b><span>週二 06:49</span></div>
-      <div class="t">內湖區 公路車</div>
-      <div class="m"><span>23.44 km</span><span>↑522 m</span><span>1:16</span><span>NP 208</span><span>TSS 115</span><span class="eff">有效 58.7%</span></div>
-    </a>
-    <a class="row" href="2026-04-14.html">
-      <div class="d"><b>2026-04-14</b><span>週二 07:00</span></div>
-      <div class="t">內湖區 公路車</div>
-      <div class="m"><span>23.47 km</span><span>↑499 m</span><span>1:19</span><span>NP 194</span><span>TSS 105</span><span class="eff">有效 61.3%</span></div>
-    </a>
-    <a class="row" href="2026-04-08.html">
-      <div class="d"><b>2026-04-08</b><span>週三 18:26</span></div>
-      <div class="t">中山區 公路車</div>
-      <div class="m"><span>51.45 km</span><span>↑120 m</span><span>2:02</span><span>NP 150</span><span>TSS 95</span><span class="eff">有效 12.3%</span></div>
-    </a>
-    <a class="row" href="2026-04-01.html">
-      <div class="d"><b>2026-04-01</b><span>週三 18:44</span></div>
-      <div class="t">內湖區 公路車</div>
-      <div class="m"><span>51.62 km</span><span>↑140 m</span><span>2:01</span><span>NP 143</span><span>TSS 86</span><span class="eff">有效 0.0%</span></div>
-    </a>
-    <a class="row" href="2026-03-28.html">
-      <div class="d"><b>2026-03-28</b><span>週六 09:28</span></div>
-      <div class="t">台東市 公路車</div>
-      <div class="m"><span>89.47 km</span><span>↑553 m</span><span>3:05</span><span>NP 158</span><span>TSS 136</span><span class="eff">有效 4.9%</span></div>
-    </a>
-    <a class="row" href="2026-03-24.html">
-      <div class="d"><b>2026-03-24</b><span>週二 18:37</span></div>
-      <div class="t">內湖區 公路車</div>
-      <div class="m"><span>64.65 km</span><span>↑126 m</span><span>2:43</span><span>NP 128</span><span>TSS 79</span><span class="eff">有效 1.8%</span></div>
-    </a>
-    <a class="row" href="2026-03-05.html">
-      <div class="d"><b>2026-03-05</b><span>週四 14:47</span></div>
-      <div class="t">中山區 跑步</div>
-      <div class="m"><span>20.45 km</span><span>↑38 m</span><span>2:28</span><span>NP 256</span><span>TSS 118</span><span class="eff">有效 0.0%</span></div>
-    </a>
-    <a class="row" href="2026-02-27.html">
-      <div class="d"><b>2026-02-27</b><span>週五 10:17</span></div>
-      <div class="t">中和區 公路車</div>
-      <div class="m"><span>201.09 km</span><span>↑625 m</span><span>7:33</span><span>NP 133</span><span>TSS 233</span><span class="eff">有效 4.2%</span></div>
-    </a>
-    <a class="row" href="2026-02-08.html">
-      <div class="d"><b>2026-02-08</b><span>週日 06:50</span></div>
-      <div class="t">內湖區 公路車</div>
-      <div class="m"><span>90.16 km</span><span>↑552 m</span><span>3:40</span><span>NP 164</span><span>TSS 173</span><span class="eff">有效 18.9%</span></div>
-    </a>
-    <a class="row" href="2026-02-04.html">
-      <div class="d"><b>2026-02-04</b><span>週三 06:51</span></div>
-      <div class="t">內湖區 公路車</div>
-      <div class="m"><span>33.22 km</span><span>↑65 m</span><span>1:15</span><span>NP 185</span><span>TSS 75</span><span class="eff">有效 24.0%</span></div>
-    </a>
-    <a class="row" href="2026-01-14.html">
-      <div class="d"><b>2026-01-14</b><span>週三 05:53</span></div>
-      <div class="t">內湖區 公路車</div>
-      <div class="m"><span>67.11 km</span><span>↑349 m</span><span>2:22</span><span>NP 190</span><span>TSS 150</span><span class="eff">有效 59.7%</span></div>
-    </a>
-    <a class="row" href="2026-01-03.html">
-      <div class="d"><b>2026-01-03</b><span>週六 13:06</span></div>
-      <div class="t">北屯區 公路車</div>
-      <div class="m"><span>41.56 km</span><span>↑466 m</span><span>1:52</span><span>NP 179</span><span>TSS 105</span><span class="eff">有效 28.1%</span></div>
-    </a>
-    <a class="row" href="2025-12-31.html">
-      <div class="d"><b>2025-12-31</b><span>週三 12:09</span></div>
-      <div class="t">北屯區 公路車</div>
-      <div class="m"><span>55.54 km</span><span>↑1,094 m</span><span>2:36</span><span>NP 191</span><span>TSS 167</span><span class="eff">有效 61.2%</span></div>
-    </a>
-    <a class="row" href="2025-12-30.html">
-      <div class="d"><b>2025-12-30</b><span>週二 12:07</span></div>
-      <div class="t">北屯區 公路車</div>
-      <div class="m"><span>30.1 km</span><span>↑658 m</span><span>1:26</span><span>NP 210</span><span>TSS 111</span><span class="eff">有效 63.6%</span></div>
-    </a>
-    <a class="row" href="2025-12-22.html">
-      <div class="d"><b>2025-12-22</b><span>週一 18:19</span></div>
-      <div class="t">內湖區 公路車</div>
-      <div class="m"><span>23.18 km</span><span>↑511 m</span><span>1:17</span><span>NP 216</span><span>TSS 105</span><span class="eff">有效 56.4%</span></div>
-    </a>
-    <a class="row" href="2025-12-16.html">
-      <div class="d"><b>2025-12-16</b><span>週二 07:04</span></div>
-      <div class="t">內湖區 公路車</div>
-      <div class="m"><span>23.44 km</span><span>↑497 m</span><span>1:10</span><span>NP 224</span><span>TSS 104</span><span class="eff">有效 55.3%</span></div>
-    </a>
-    <a class="row" href="2025-12-10.html">
-      <div class="d"><b>2025-12-10</b><span>週三 05:15</span></div>
-      <div class="t">內湖區 公路車</div>
-      <div class="m"><span>67.8 km</span><span>↑286 m</span><span>2:31</span><span>NP 185</span><span>TSS 150</span><span class="eff">有效 48.5%</span></div>
-    </a>
-    <a class="row" href="2025-11-25.html">
-      <div class="d"><b>2025-11-25</b><span>週二 07:07</span></div>
-      <div class="t">內湖區 公路車</div>
-      <div class="m"><span>23.46 km</span><span>↑516 m</span><span>1:12</span><span>NP 216</span><span>TSS 96</span><span class="eff">有效 56.7%</span></div>
-    </a>
-    <a class="row" href="2025-10-29.html">
-      <div class="d"><b>2025-10-29</b><span>週三 18:48</span></div>
-      <div class="t">內湖區 公路車</div>
-      <div class="m"><span>36.31 km</span><span>↑321 m</span><span>1:34</span><span>NP 181</span><span>TSS 89</span><span class="eff">有效 22.2%</span></div>
-    </a>
-    <a class="row" href="2025-10-15.html">
-      <div class="d"><b>2025-10-15</b><span>週三 06:16</span></div>
-      <div class="t">內湖區 公路車</div>
-      <div class="m"><span>31.57 km</span><span>↑615 m</span><span>1:41</span><span>NP 192</span><span>TSS 107</span><span class="eff">有效 30.4%</span></div>
-    </a>
-    <a class="row" href="2025-10-14.html">
-      <div class="d"><b>2025-10-14</b><span>週二 06:50</span></div>
-      <div class="t">內湖區 公路車</div>
-      <div class="m"><span>23.81 km</span><span>↑507 m</span><span>1:13</span><span>NP 219</span><span>TSS 99</span><span class="eff">有效 52.8%</span></div>
-    </a>
-    <a class="row" href="2025-10-08.html">
-      <div class="d"><b>2025-10-08</b><span>週三 06:52</span></div>
-      <div class="t">內湖區 公路車</div>
-      <div class="m"><span>23.81 km</span><span>↑527 m</span><span>1:14</span><span>NP 208</span><span>TSS 90</span><span class="eff">有效 52.4%</span></div>
-    </a>
-    <a class="row" href="2025-10-02.html">
-      <div class="d"><b>2025-10-02</b><span>週四 06:11</span></div>
-      <div class="t">內湖區 公路車</div>
-      <div class="m"><span>31.64 km</span><span>↑615 m</span><span>1:39</span><span>NP 196</span><span>TSS 107</span><span class="eff">有效 52.1%</span></div>
-    </a>
-    <a class="row" href="2025-09-25.html">
-      <div class="d"><b>2025-09-25</b><span>週四 06:15</span></div>
-      <div class="t">內湖區 公路車</div>
-      <div class="m"><span>32.19 km</span><span>↑716 m</span><span>1:41</span><span>NP 207</span><span>TSS 122</span><span class="eff">有效 37.3%</span></div>
-    </a>
-    <a class="row" href="2025-09-21.html">
-      <div class="d"><b>2025-09-21</b><span>週日 06:57</span></div>
-      <div class="t">內湖區 公路車</div>
-      <div class="m"><span>35.52 km</span><span>↑952 m</span><span>2:07</span><span>NP 189</span><span>TSS 130</span><span class="eff">有效 44.4%</span></div>
-    </a>
-    <a class="row" href="2025-09-16.html">
-      <div class="d"><b>2025-09-16</b><span>週二 06:50</span></div>
-      <div class="t">內湖區 公路車</div>
-      <div class="m"><span>23.36 km</span><span>↑512 m</span><span>1:15</span><span>NP 192</span><span>TSS 79</span><span class="eff">有效 60.8%</span></div>
-    </a>
-    <a class="row" href="2025-09-11.html">
-      <div class="d"><b>2025-09-11</b><span>週四 06:21</span></div>
-      <div class="t">內湖區 公路車</div>
-      <div class="m"><span>31.38 km</span><span>↑613 m</span><span>1:37</span><span>NP 187</span><span>TSS 97</span><span class="eff">有效 52.9%</span></div>
-    </a>
-    <a class="row" href="2025-09-10.html">
-      <div class="d"><b>2025-09-10</b><span>週三 18:26</span></div>
-      <div class="t">內湖區 公路車</div>
-      <div class="m"><span>51.15 km</span><span>↑140 m</span><span>2:04</span><span>NP 152</span><span>TSS 82</span><span class="eff">有效 8.2%</span></div>
-    </a>
-    <a class="row" href="2025-09-09.html">
-      <div class="d"><b>2025-09-09</b><span>週二 06:50</span></div>
-      <div class="t">內湖區 公路車</div>
-      <div class="m"><span>23.34 km</span><span>↑504 m</span><span>1:14</span><span>NP 204</span><span>TSS 89</span><span class="eff">有效 52.4%</span></div>
-    </a>
-    <a class="row" href="2025-09-06.html">
-      <div class="d"><b>2025-09-06</b><span>週六 09:59</span></div>
-      <div class="t">永和區 公路車</div>
-      <div class="m"><span>85.29 km</span><span>↑1,165 m</span><span>4:03</span><span>NP 156</span><span>TSS 175</span><span class="eff">有效 20.1%</span></div>
-    </a>
-    <a class="row" href="2025-09-05.html">
-      <div class="d"><b>2025-09-05</b><span>週五 18:36</span></div>
-      <div class="t">內湖區 公路車</div>
-      <div class="m"><span>34.74 km</span><span>↑77 m</span><span>1:16</span><span>NP 159</span><span>TSS 56</span><span class="eff">有效 3.9%</span></div>
-    </a>
-    <a class="row" href="2025-09-04.html">
-      <div class="d"><b>2025-09-04</b><span>週四 06:18</span></div>
-      <div class="t">內湖區 公路車</div>
-      <div class="m"><span>31.32 km</span><span>↑613 m</span><span>1:32</span><span>NP 196</span><span>TSS 104</span><span class="eff">有效 57.4%</span></div>
-    </a>
-    <a class="row" href="2025-09-02.html">
-      <div class="d"><b>2025-09-02</b><span>週二 06:42</span></div>
-      <div class="t">內湖區 公路車</div>
-      <div class="m"><span>23.38 km</span><span>↑503 m</span><span>1:10</span><span>NP 220</span><span>TSS 100</span><span class="eff">有效 60.5%</span></div>
-    </a>
-    <a class="row" href="2025-08-28.html">
-      <div class="d"><b>2025-08-28</b><span>週四 06:05</span></div>
-      <div class="t">內湖區 公路車</div>
-      <div class="m"><span>32.28 km</span><span>↑705 m</span><span>1:43</span><span>NP 198</span><span>TSS 121</span><span class="eff">有效 41.9%</span></div>
-    </a>
-    <a class="row" href="2025-08-26.html">
-      <div class="d"><b>2025-08-26</b><span>週二 06:45</span></div>
-      <div class="t">內湖區 公路車</div>
-      <div class="m"><span>23.37 km</span><span>↑512 m</span><span>1:11</span><span>NP 210</span><span>TSS 94</span><span class="eff">有效 54.2%</span></div>
-    </a>
-    <a class="row" href="2025-08-25.html">
-      <div class="d"><b>2025-08-25</b><span>週一 05:48</span></div>
-      <div class="t">永和區 公路車</div>
-      <div class="m"><span>36.74 km</span><span>↑282 m</span><span>1:34</span><span>NP 192</span><span>TSS 103</span><span class="eff">有效 31.4%</span></div>
-    </a>
-    <a class="row" href="2025-08-24.html">
-      <div class="d"><b>2025-08-24</b><span>週日 08:54</span></div>
-      <div class="t">內湖區 公路車</div>
-      <div class="m"><span>8.84 km</span><span>↑20 m</span><span>0:34</span><span>NP 121</span><span>TSS 15</span><span class="eff">有效 0.0%</span></div>
-    </a>
-    <a class="row" href="2025-08-20.html">
-      <div class="d"><b>2025-08-20</b><span>週三 18:37</span></div>
-      <div class="t">內湖區 公路車</div>
-      <div class="m"><span>32.12 km</span><span>↑689 m</span><span>1:46</span><span>NP 194</span><span>TSS 122</span><span class="eff">有效 54.3%</span></div>
-    </a>
-    <a class="row" href="2025-08-19.html">
-      <div class="d"><b>2025-08-19</b><span>週二 06:41</span></div>
-      <div class="t">內湖區 公路車</div>
-      <div class="m"><span>23.47 km</span><span>↑506 m</span><span>1:11</span><span>NP 212</span><span>TSS 100</span><span class="eff">有效 65.2%</span></div>
-    </a>
-    <a class="row" href="2025-08-17.html">
-      <div class="d"><b>2025-08-17</b><span>週日 08:45</span></div>
-      <div class="t">內湖區 公路車</div>
-      <div class="m"><span>31.29 km</span><span>↑600 m</span><span>1:27</span><span>NP 199</span><span>TSS 108</span><span class="eff">有效 59.2%</span></div>
-    </a>
+<div class="list">
+  <a class="row" href="2026-08-13.html">
+    <div class="d"><b>2026-08-13</b><span>週四 06:36</span></div>
+    <div class="t">內湖區 公路車</div>
+    <div class="m"><span class="c1">51.04 km</span><span class="c2">↑112</span><span class="c3">1:47</span><span class="c4">NP 182</span><span class="c5">TSS 108</span></div>
+    <div class="v"><span class="vd"><b>81.7</b> B+</span></div>
+  </a>
+  <a class="row" href="2026-08-11.html">
+    <div class="d"><b>2026-08-11</b><span>週二 05:54</span></div>
+    <div class="t">劍 中中中中 劍</div>
+    <div class="m"><span class="c1">47.36 km</span><span class="c2">↑1,239</span><span class="c3">2:43</span><span class="c4">NP 195</span><span class="c5">TSS 190</span></div>
+    <div class="v"><span class="vd dim">有效 71.0%</span></div>
+  </a>
+  <a class="row" href="2026-08-06.html">
+    <div class="d"><b>2026-08-06</b><span>週四 04:47</span></div>
+    <div class="t">劍 中 露</div>
+    <div class="m"><span class="c1">39.48 km</span><span class="c2">↑754</span><span class="c3">2:24</span><span class="c4">NP 177</span><span class="c5">TSS 138</span></div>
+    <div class="v"><span class="vd dim">有效 47.7%</span></div>
+  </a>
+  <a class="row" href="2026-08-04.html">
+    <div class="d"><b>2026-08-04</b><span>週二 06:10</span></div>
+    <div class="t">內湖區 公路車</div>
+    <div class="m"><span class="c1">30.41 km</span><span class="c2">↑969</span><span class="c3">1:58</span><span class="c4">NP 203</span><span class="c5">TSS 149</span></div>
+    <div class="v"><span class="vd dim">有效 70.1%</span></div>
+  </a>
+  <a class="row" href="2026-07-28.html">
+    <div class="d"><b>2026-07-28</b><span>週二 06:10</span></div>
+    <div class="t">內湖區 公路車</div>
+    <div class="m"><span class="c1">39.61 km</span><span class="c2">↑991</span><span class="c3">2:15</span><span class="c4">NP 196</span><span class="c5">TSS 159</span></div>
+    <div class="v"><span class="vd dim">有效 64.9%</span></div>
+  </a>
+  <a class="row" href="2026-07-23.html">
+    <div class="d"><b>2026-07-23</b><span>週四 05:12</span></div>
+    <div class="t">永和區 公路車</div>
+    <div class="m"><span class="c1">51.54 km</span><span class="c2">↑1,111</span><span class="c3">3:02</span><span class="c4">NP 169</span><span class="c5">TSS 158</span></div>
+    <div class="v"><span class="vd dim">有效 50.4%</span></div>
+  </a>
+  <a class="row" href="2026-07-22.html">
+    <div class="d"><b>2026-07-22</b><span>週三 18:25</span></div>
+    <div class="t">內湖區 公路車</div>
+    <div class="m"><span class="c1">36.66 km</span><span class="c2">↑301</span><span class="c3">1:38</span><span class="c4">NP 174</span><span class="c5">TSS 91</span></div>
+    <div class="v"><span class="vd dim">有效 20.2%</span></div>
+  </a>
+  <a class="row" href="2026-07-21.html">
+    <div class="d"><b>2026-07-21</b><span>週二 06:13</span></div>
+    <div class="t">內湖區 公路車</div>
+    <div class="m"><span class="c1">33.56 km</span><span class="c2">↑1,021</span><span class="c3">2:16</span><span class="c4">NP 188</span><span class="c5">TSS 147</span></div>
+    <div class="v"><span class="vd dim">有效 67.1%</span></div>
+  </a>
+  <a class="row" href="2026-07-16.html">
+    <div class="d"><b>2026-07-16</b><span>週四 06:44</span></div>
+    <div class="t">內湖區 公路車</div>
+    <div class="m"><span class="c1">20.79 km</span><span class="c2">↑618</span><span class="c3">1:23</span><span class="c4">NP 194</span><span class="c5">TSS 96</span></div>
+    <div class="v"><span class="vd dim">有效 48.6%</span></div>
+  </a>
+  <a class="row" href="2026-07-14.html">
+    <div class="d"><b>2026-07-14</b><span>週二 06:14</span></div>
+    <div class="t">內湖區 公路車</div>
+    <div class="m"><span class="c1">18.29 km</span><span class="c2">↑520</span><span class="c3">1:13</span><span class="c4">NP 210</span><span class="c5">TSS 96</span></div>
+    <div class="v"><span class="vd dim">有效 54.1%</span></div>
+  </a>
+  <a class="row" href="2026-06-23.html">
+    <div class="d"><b>2026-06-23</b><span>週二 06:35</span></div>
+    <div class="t">內湖區 公路車</div>
+    <div class="m"><span class="c1">33.51 km</span><span class="c2">↑784</span><span class="c3">1:52</span><span class="c4">NP 203</span><span class="c5">TSS 138</span></div>
+    <div class="v"><span class="vd dim">有效 62.5%</span></div>
+  </a>
+  <a class="row" href="2026-06-18.html">
+    <div class="d"><b>2026-06-18</b><span>週四 05:55</span></div>
+    <div class="t">內湖區 公路車</div>
+    <div class="m"><span class="c1">67.24 km</span><span class="c2">↑280</span><span class="c3">2:26</span><span class="c4">NP 172</span><span class="c5">TSS 126</span></div>
+    <div class="v"><span class="vd dim">有效 19.4%</span></div>
+  </a>
+  <a class="row" href="2026-06-16.html">
+    <div class="d"><b>2026-06-16</b><span>週二 06:35</span></div>
+    <div class="t">內湖區 公路車</div>
+    <div class="m"><span class="c1">33.1 km</span><span class="c2">↑704</span><span class="c3">1:45</span><span class="c4">NP 206</span><span class="c5">TSS 130</span></div>
+    <div class="v"><span class="vd dim">有效 62.3%</span></div>
+  </a>
+  <a class="row" href="2026-05-27.html">
+    <div class="d"><b>2026-05-27</b><span>週三 06:47</span></div>
+    <div class="t">內湖區 公路車</div>
+    <div class="m"><span class="c1">23.41 km</span><span class="c2">↑512</span><span class="c3">1:17</span><span class="c4">NP 209</span><span class="c5">TSS 100</span></div>
+    <div class="v"><span class="vd dim">有效 58.9%</span></div>
+  </a>
+  <a class="row" href="2026-05-26.html">
+    <div class="d"><b>2026-05-26</b><span>週二 06:57</span></div>
+    <div class="t">內湖區 公路車</div>
+    <div class="m"><span class="c1">23.46 km</span><span class="c2">↑514</span><span class="c3">1:18</span><span class="c4">NP 211</span><span class="c5">TSS 104</span></div>
+    <div class="v"><span class="vd dim">有效 58.4%</span></div>
+  </a>
+  <a class="row" href="2026-05-21.html">
+    <div class="d"><b>2026-05-21</b><span>週四 06:13</span></div>
+    <div class="t">內湖區 公路車</div>
+    <div class="m"><span class="c1">32.42 km</span><span class="c2">↑703</span><span class="c3">1:47</span><span class="c4">NP 205</span><span class="c5">TSS 134</span></div>
+    <div class="v"><span class="vd dim">有效 54.9%</span></div>
+  </a>
+  <a class="row" href="2026-05-19.html">
+    <div class="d"><b>2026-05-19</b><span>週二 06:41</span></div>
+    <div class="t">內湖區 公路車</div>
+    <div class="m"><span class="c1">23.35 km</span><span class="c2">↑519</span><span class="c3">1:17</span><span class="c4">NP 220</span><span class="c5">TSS 110</span></div>
+    <div class="v"><span class="vd dim">有效 55.1%</span></div>
+  </a>
+  <a class="row" href="2026-05-12.html">
+    <div class="d"><b>2026-05-12</b><span>週二 06:51</span></div>
+    <div class="t">內湖區 公路車</div>
+    <div class="m"><span class="c1">23.5 km</span><span class="c2">↑501</span><span class="c3">1:17</span><span class="c4">NP 204</span><span class="c5">TSS 95</span></div>
+    <div class="v"><span class="vd dim">有效 54.5%</span></div>
+  </a>
+  <a class="row" href="2026-05-11.html">
+    <div class="d"><b>2026-05-11</b><span>週一 18:26</span></div>
+    <div class="t">內湖區 公路車</div>
+    <div class="m"><span class="c1">46.34 km</span><span class="c2">↑100</span><span class="c3">1:51</span><span class="c4">NP 174</span><span class="c5">TSS 104</span></div>
+    <div class="v"><span class="vd dim">有效 40.2%</span></div>
+  </a>
+  <a class="row" href="2026-04-28.html">
+    <div class="d"><b>2026-04-28</b><span>週二 06:58</span></div>
+    <div class="t">內湖區 公路車</div>
+    <div class="m"><span class="c1">23.49 km</span><span class="c2">↑506</span><span class="c3">1:16</span><span class="c4">NP 211</span><span class="c5">TSS 100</span></div>
+    <div class="v"><span class="vd dim">有效 56.0%</span></div>
+  </a>
+  <a class="row" href="2026-04-21.html">
+    <div class="d"><b>2026-04-21</b><span>週二 06:49</span></div>
+    <div class="t">內湖區 公路車</div>
+    <div class="m"><span class="c1">23.44 km</span><span class="c2">↑522</span><span class="c3">1:16</span><span class="c4">NP 208</span><span class="c5">TSS 115</span></div>
+    <div class="v"><span class="vd dim">有效 58.7%</span></div>
+  </a>
+  <a class="row" href="2026-04-14.html">
+    <div class="d"><b>2026-04-14</b><span>週二 07:00</span></div>
+    <div class="t">內湖區 公路車</div>
+    <div class="m"><span class="c1">23.47 km</span><span class="c2">↑499</span><span class="c3">1:19</span><span class="c4">NP 194</span><span class="c5">TSS 105</span></div>
+    <div class="v"><span class="vd dim">有效 61.3%</span></div>
+  </a>
+  <a class="row" href="2026-04-08.html">
+    <div class="d"><b>2026-04-08</b><span>週三 18:26</span></div>
+    <div class="t">中山區 公路車</div>
+    <div class="m"><span class="c1">51.45 km</span><span class="c2">↑120</span><span class="c3">2:02</span><span class="c4">NP 150</span><span class="c5">TSS 95</span></div>
+    <div class="v"><span class="vd dim">有效 12.3%</span></div>
+  </a>
+  <a class="row" href="2026-04-01.html">
+    <div class="d"><b>2026-04-01</b><span>週三 18:44</span></div>
+    <div class="t">內湖區 公路車</div>
+    <div class="m"><span class="c1">51.62 km</span><span class="c2">↑140</span><span class="c3">2:01</span><span class="c4">NP 143</span><span class="c5">TSS 86</span></div>
+    <div class="v"><span class="vd dim">有效 0.0%</span></div>
+  </a>
+  <a class="row" href="2026-03-28.html">
+    <div class="d"><b>2026-03-28</b><span>週六 12:43</span></div>
+    <div class="t">台東市 跑步</div>
+    <div class="m"><span class="c1">21.41 km</span><span class="c2">↑66</span><span class="c3">3:06</span><span class="c4">NP 211</span><span class="c5">TSS 106</span></div>
+    <div class="v"><span class="vd dim">有效 0.0%</span></div>
+  </a>
+  <a class="row" href="2026-03-24.html">
+    <div class="d"><b>2026-03-24</b><span>週二 18:37</span></div>
+    <div class="t">內湖區 公路車</div>
+    <div class="m"><span class="c1">64.65 km</span><span class="c2">↑126</span><span class="c3">2:43</span><span class="c4">NP 128</span><span class="c5">TSS 79</span></div>
+    <div class="v"><span class="vd dim">有效 1.8%</span></div>
+  </a>
+  <a class="row" href="2026-03-05.html">
+    <div class="d"><b>2026-03-05</b><span>週四 14:47</span></div>
+    <div class="t">中山區 跑步</div>
+    <div class="m"><span class="c1">20.45 km</span><span class="c2">↑38</span><span class="c3">2:28</span><span class="c4">NP 256</span><span class="c5">TSS 118</span></div>
+    <div class="v"><span class="vd dim">有效 0.0%</span></div>
+  </a>
+  <a class="row" href="2026-02-27.html">
+    <div class="d"><b>2026-02-27</b><span>週五 10:17</span></div>
+    <div class="t">中和區 公路車</div>
+    <div class="m"><span class="c1">201.09 km</span><span class="c2">↑625</span><span class="c3">7:33</span><span class="c4">NP 133</span><span class="c5">TSS 233</span></div>
+    <div class="v"><span class="vd dim">有效 4.2%</span></div>
+  </a>
+  <a class="row" href="2026-02-08.html">
+    <div class="d"><b>2026-02-08</b><span>週日 06:50</span></div>
+    <div class="t">內湖區 公路車</div>
+    <div class="m"><span class="c1">90.16 km</span><span class="c2">↑552</span><span class="c3">3:40</span><span class="c4">NP 164</span><span class="c5">TSS 173</span></div>
+    <div class="v"><span class="vd dim">有效 18.9%</span></div>
+  </a>
+  <a class="row" href="2026-02-04.html">
+    <div class="d"><b>2026-02-04</b><span>週三 06:51</span></div>
+    <div class="t">內湖區 公路車</div>
+    <div class="m"><span class="c1">33.22 km</span><span class="c2">↑65</span><span class="c3">1:15</span><span class="c4">NP 185</span><span class="c5">TSS 75</span></div>
+    <div class="v"><span class="vd dim">有效 24.0%</span></div>
+  </a>
+  <a class="row" href="2026-01-14.html">
+    <div class="d"><b>2026-01-14</b><span>週三 05:53</span></div>
+    <div class="t">內湖區 公路車</div>
+    <div class="m"><span class="c1">67.11 km</span><span class="c2">↑349</span><span class="c3">2:22</span><span class="c4">NP 190</span><span class="c5">TSS 150</span></div>
+    <div class="v"><span class="vd dim">有效 59.7%</span></div>
+  </a>
+  <a class="row" href="2026-01-03.html">
+    <div class="d"><b>2026-01-03</b><span>週六 13:06</span></div>
+    <div class="t">北屯區 公路車</div>
+    <div class="m"><span class="c1">41.56 km</span><span class="c2">↑466</span><span class="c3">1:52</span><span class="c4">NP 179</span><span class="c5">TSS 105</span></div>
+    <div class="v"><span class="vd dim">有效 28.1%</span></div>
+  </a>
+  <a class="row" href="2025-12-31.html">
+    <div class="d"><b>2025-12-31</b><span>週三 12:09</span></div>
+    <div class="t">北屯區 公路車</div>
+    <div class="m"><span class="c1">55.54 km</span><span class="c2">↑1,094</span><span class="c3">2:36</span><span class="c4">NP 191</span><span class="c5">TSS 167</span></div>
+    <div class="v"><span class="vd dim">有效 61.2%</span></div>
+  </a>
+  <a class="row" href="2025-12-30.html">
+    <div class="d"><b>2025-12-30</b><span>週二 12:07</span></div>
+    <div class="t">北屯區 公路車</div>
+    <div class="m"><span class="c1">30.1 km</span><span class="c2">↑658</span><span class="c3">1:26</span><span class="c4">NP 210</span><span class="c5">TSS 111</span></div>
+    <div class="v"><span class="vd dim">有效 63.6%</span></div>
+  </a>
+  <a class="row" href="2025-12-22.html">
+    <div class="d"><b>2025-12-22</b><span>週一 18:19</span></div>
+    <div class="t">內湖區 公路車</div>
+    <div class="m"><span class="c1">23.18 km</span><span class="c2">↑511</span><span class="c3">1:17</span><span class="c4">NP 216</span><span class="c5">TSS 105</span></div>
+    <div class="v"><span class="vd dim">有效 56.4%</span></div>
+  </a>
+  <a class="row" href="2025-12-16.html">
+    <div class="d"><b>2025-12-16</b><span>週二 07:04</span></div>
+    <div class="t">內湖區 公路車</div>
+    <div class="m"><span class="c1">23.44 km</span><span class="c2">↑497</span><span class="c3">1:10</span><span class="c4">NP 224</span><span class="c5">TSS 104</span></div>
+    <div class="v"><span class="vd dim">有效 55.3%</span></div>
+  </a>
+  <a class="row" href="2025-12-10.html">
+    <div class="d"><b>2025-12-10</b><span>週三 05:15</span></div>
+    <div class="t">內湖區 公路車</div>
+    <div class="m"><span class="c1">67.8 km</span><span class="c2">↑286</span><span class="c3">2:31</span><span class="c4">NP 185</span><span class="c5">TSS 150</span></div>
+    <div class="v"><span class="vd dim">有效 48.5%</span></div>
+  </a>
+  <a class="row" href="2025-11-25.html">
+    <div class="d"><b>2025-11-25</b><span>週二 07:07</span></div>
+    <div class="t">內湖區 公路車</div>
+    <div class="m"><span class="c1">23.46 km</span><span class="c2">↑516</span><span class="c3">1:12</span><span class="c4">NP 216</span><span class="c5">TSS 96</span></div>
+    <div class="v"><span class="vd dim">有效 56.7%</span></div>
+  </a>
+  <a class="row" href="2025-10-29.html">
+    <div class="d"><b>2025-10-29</b><span>週三 18:48</span></div>
+    <div class="t">內湖區 公路車</div>
+    <div class="m"><span class="c1">36.31 km</span><span class="c2">↑321</span><span class="c3">1:34</span><span class="c4">NP 181</span><span class="c5">TSS 89</span></div>
+    <div class="v"><span class="vd dim">有效 22.2%</span></div>
+  </a>
+  <a class="row" href="2025-10-15.html">
+    <div class="d"><b>2025-10-15</b><span>週三 06:16</span></div>
+    <div class="t">內湖區 公路車</div>
+    <div class="m"><span class="c1">31.57 km</span><span class="c2">↑615</span><span class="c3">1:41</span><span class="c4">NP 192</span><span class="c5">TSS 107</span></div>
+    <div class="v"><span class="vd dim">有效 30.4%</span></div>
+  </a>
+  <a class="row" href="2025-10-14.html">
+    <div class="d"><b>2025-10-14</b><span>週二 06:50</span></div>
+    <div class="t">內湖區 公路車</div>
+    <div class="m"><span class="c1">23.81 km</span><span class="c2">↑507</span><span class="c3">1:13</span><span class="c4">NP 219</span><span class="c5">TSS 99</span></div>
+    <div class="v"><span class="vd dim">有效 52.8%</span></div>
+  </a>
+  <a class="row" href="2025-10-08.html">
+    <div class="d"><b>2025-10-08</b><span>週三 18:29</span></div>
+    <div class="t">內湖區 公路車</div>
+    <div class="m"><span class="c1">25.56 km</span><span class="c2">↑69</span><span class="c3">1:00</span><span class="c4">NP 239</span><span class="c5">TSS 97</span></div>
+    <div class="v"><span class="vd dim">有效 44.4%</span></div>
+  </a>
+  <a class="row" href="2025-10-02.html">
+    <div class="d"><b>2025-10-02</b><span>週四 06:11</span></div>
+    <div class="t">內湖區 公路車</div>
+    <div class="m"><span class="c1">31.64 km</span><span class="c2">↑615</span><span class="c3">1:39</span><span class="c4">NP 196</span><span class="c5">TSS 107</span></div>
+    <div class="v"><span class="vd dim">有效 52.1%</span></div>
+  </a>
+  <a class="row" href="2025-09-30.html">
+    <div class="d"><b>2025-09-30</b><span>週二 06:56</span></div>
+    <div class="t">內湖區 公路車</div>
+    <div class="m"><span class="c1">14.69 km</span><span class="c2">↑182</span><span class="c3">0:46</span><span class="c4">NP 158</span><span class="c5">TSS 32</span></div>
+    <div class="v"><span class="vd dim">有效 6.4%</span></div>
+  </a>
+  <a class="row" href="2025-09-25.html">
+    <div class="d"><b>2025-09-25</b><span>週四 17:13</span></div>
+    <div class="t">內湖區 跑步</div>
+    <div class="m"><span class="c1">3.19 km</span><span class="c2">↑7</span><span class="c3">0:43</span><span class="c4">NP 228</span><span class="c5">TSS 31</span></div>
+    <div class="v"><span class="vd dim">有效 31.2%</span></div>
+  </a>
+  <a class="row" href="2025-09-21.html">
+    <div class="d"><b>2025-09-21</b><span>週日 10:45</span></div>
+    <div class="t">士林區 公路車</div>
+    <div class="m"><span class="c1">50.02 km</span><span class="c2">↑169</span><span class="c3">2:03</span><span class="c4">NP 147</span><span class="c5">TSS 77</span></div>
+    <div class="v"><span class="vd dim">有效 8.6%</span></div>
+  </a>
+  <a class="row" href="2025-09-16.html">
+    <div class="d"><b>2025-09-16</b><span>週二 06:50</span></div>
+    <div class="t">內湖區 公路車</div>
+    <div class="m"><span class="c1">23.36 km</span><span class="c2">↑512</span><span class="c3">1:15</span><span class="c4">NP 192</span><span class="c5">TSS 79</span></div>
+    <div class="v"><span class="vd dim">有效 60.8%</span></div>
+  </a>
+  <a class="row" href="2025-09-11.html">
+    <div class="d"><b>2025-09-11</b><span>週四 06:21</span></div>
+    <div class="t">內湖區 公路車</div>
+    <div class="m"><span class="c1">31.38 km</span><span class="c2">↑613</span><span class="c3">1:37</span><span class="c4">NP 187</span><span class="c5">TSS 97</span></div>
+    <div class="v"><span class="vd dim">有效 52.9%</span></div>
+  </a>
+  <a class="row" href="2025-09-10.html">
+    <div class="d"><b>2025-09-10</b><span>週三 18:26</span></div>
+    <div class="t">內湖區 公路車</div>
+    <div class="m"><span class="c1">51.15 km</span><span class="c2">↑140</span><span class="c3">2:04</span><span class="c4">NP 152</span><span class="c5">TSS 82</span></div>
+    <div class="v"><span class="vd dim">有效 8.2%</span></div>
+  </a>
+  <a class="row" href="2025-09-09.html">
+    <div class="d"><b>2025-09-09</b><span>週二 06:50</span></div>
+    <div class="t">內湖區 公路車</div>
+    <div class="m"><span class="c1">23.34 km</span><span class="c2">↑504</span><span class="c3">1:14</span><span class="c4">NP 204</span><span class="c5">TSS 89</span></div>
+    <div class="v"><span class="vd dim">有效 52.4%</span></div>
+  </a>
+  <a class="row" href="2025-09-06.html">
+    <div class="d"><b>2025-09-06</b><span>週六 09:59</span></div>
+    <div class="t">永和區 公路車</div>
+    <div class="m"><span class="c1">85.29 km</span><span class="c2">↑1,165</span><span class="c3">4:03</span><span class="c4">NP 156</span><span class="c5">TSS 175</span></div>
+    <div class="v"><span class="vd dim">有效 20.1%</span></div>
+  </a>
+  <a class="row" href="2025-09-05.html">
+    <div class="d"><b>2025-09-05</b><span>週五 18:36</span></div>
+    <div class="t">內湖區 公路車</div>
+    <div class="m"><span class="c1">34.74 km</span><span class="c2">↑77</span><span class="c3">1:16</span><span class="c4">NP 159</span><span class="c5">TSS 56</span></div>
+    <div class="v"><span class="vd dim">有效 3.9%</span></div>
+  </a>
+  <a class="row" href="2025-09-04.html">
+    <div class="d"><b>2025-09-04</b><span>週四 18:21</span></div>
+    <div class="t">內湖區 公路車</div>
+    <div class="m"><span class="c1">23.09 km</span><span class="c2">↑41</span><span class="c3">0:55</span><span class="c4">NP 192</span><span class="c5">TSS 59</span></div>
+    <div class="v"><span class="vd dim">有效 16.4%</span></div>
+  </a>
+  <a class="row" href="2025-09-02.html">
+    <div class="d"><b>2025-09-02</b><span>週二 06:42</span></div>
+    <div class="t">內湖區 公路車</div>
+    <div class="m"><span class="c1">23.38 km</span><span class="c2">↑503</span><span class="c3">1:10</span><span class="c4">NP 220</span><span class="c5">TSS 100</span></div>
+    <div class="v"><span class="vd dim">有效 60.5%</span></div>
+  </a>
+  <a class="row" href="2025-08-28.html">
+    <div class="d"><b>2025-08-28</b><span>週四 06:05</span></div>
+    <div class="t">內湖區 公路車</div>
+    <div class="m"><span class="c1">32.28 km</span><span class="c2">↑705</span><span class="c3">1:43</span><span class="c4">NP 198</span><span class="c5">TSS 121</span></div>
+    <div class="v"><span class="vd dim">有效 41.9%</span></div>
+  </a>
+  <a class="row" href="2025-08-26.html">
+    <div class="d"><b>2025-08-26</b><span>週二 06:45</span></div>
+    <div class="t">內湖區 公路車</div>
+    <div class="m"><span class="c1">23.37 km</span><span class="c2">↑512</span><span class="c3">1:11</span><span class="c4">NP 210</span><span class="c5">TSS 94</span></div>
+    <div class="v"><span class="vd dim">有效 54.2%</span></div>
+  </a>
+  <a class="row" href="2025-08-25.html">
+    <div class="d"><b>2025-08-25</b><span>週一 05:48</span></div>
+    <div class="t">永和區 公路車</div>
+    <div class="m"><span class="c1">36.74 km</span><span class="c2">↑282</span><span class="c3">1:34</span><span class="c4">NP 192</span><span class="c5">TSS 103</span></div>
+    <div class="v"><span class="vd dim">有效 31.4%</span></div>
+  </a>
+  <a class="row" href="2025-08-24.html">
+    <div class="d"><b>2025-08-24</b><span>週日 10:19</span></div>
+    <div class="t">中山區 公路車</div>
+    <div class="m"><span class="c1">29.47 km</span><span class="c2">↑56</span><span class="c3">0:58</span><span class="c4">NP 185</span><span class="c5">TSS 60</span></div>
+    <div class="v"><span class="vd dim">有效 35.7%</span></div>
+  </a>
+  <a class="row" href="2025-08-20.html">
+    <div class="d"><b>2025-08-20</b><span>週三 18:37</span></div>
+    <div class="t">內湖區 公路車</div>
+    <div class="m"><span class="c1">32.12 km</span><span class="c2">↑689</span><span class="c3">1:46</span><span class="c4">NP 194</span><span class="c5">TSS 122</span></div>
+    <div class="v"><span class="vd dim">有效 54.3%</span></div>
+  </a>
+  <a class="row" href="2025-08-19.html">
+    <div class="d"><b>2025-08-19</b><span>週二 06:41</span></div>
+    <div class="t">內湖區 公路車</div>
+    <div class="m"><span class="c1">23.47 km</span><span class="c2">↑506</span><span class="c3">1:11</span><span class="c4">NP 212</span><span class="c5">TSS 100</span></div>
+    <div class="v"><span class="vd dim">有效 65.2%</span></div>
+  </a>
+  <a class="row" href="2025-08-17.html">
+    <div class="d"><b>2025-08-17</b><span>週日 08:45</span></div>
+    <div class="t">內湖區 公路車</div>
+    <div class="m"><span class="c1">31.29 km</span><span class="c2">↑600</span><span class="c3">1:27</span><span class="c4">NP 199</span><span class="c5">TSS 108</span></div>
+    <div class="v"><span class="vd dim">有效 59.2%</span></div>
+  </a>
+</div>
 <footer>由 <code>tcx-training-report</code> 產生 · <a href="../strava.html">← 回 Strava 總覽</a> · <a href="../linkTreeIndex.html">Link Tree</a></footer>
 </div></body></html>
