@@ -249,6 +249,64 @@ html,body{height:100%;font-family:var(--f-ui);background:#0a0408;color:#ddd}
   #to-top-btn{bottom:calc(84px + env(safe-area-inset-bottom,0px))!important}
 }
 
+/* ── 大螢幕：側欄按比例放大 ──
+   188px／12.5px 是為筆電視野調的。在 27–32" 的桌機上，同一塊側欄在視野裡只剩
+   一條細帶，狀態儀表的數字要湊近才讀得到。側欄放大之後主區跟著放寬一階，
+   否則 4K 下會變成「粗側欄 + 窄內文 + 兩側大片空白」。--main-max 仍是硬上限
+   （1140 → 1280 → 1440），行長不會失控成一行 120 字；.view-sub 另有 70ch 保險。
+   兩段式：1600px 起一階（多數 macOS HiDPI 桌機落在這），2200px 起再一階
+   （4K 未縮放 / 「更多空間」的 3008–3840 CSS px）。 */
+@media(min-width:1600px){
+  :root{--side-w:236px;--main-max:1280px}
+  .viewport{padding:30px 34px 76px}
+  .side{padding:28px 15px 20px}
+  .side-brand{font-size:13px;letter-spacing:3.4px;margin-bottom:28px}
+  .side-brand small{font-size:9.5px}
+  .nav-i{font-size:14px;padding:9px 11px;gap:10px}
+  .nav-i i{width:5px;height:5px}
+  .nav-i em{font-size:9.5px}
+  .rdy{margin-top:24px;gap:11px}
+  .rdy-hd{font-size:9.5px}
+  .rdy-tsb b{font-size:36px}
+  .rdy-tsb span{font-size:10px}
+  .rdy-spark{height:40px}
+  .rdy-cta{font-size:10px}
+  .rdy-row{grid-template-columns:38px 1fr auto;font-size:11.5px}
+  .rdy-row em{font-size:9px}
+  .rdy-blk-t{font-size:11.5px}
+  .rdy-blk-t span{font-size:9.5px}
+  .rdy-next{font-size:11px}
+  .rdy-next-w{font-size:9.5px}
+  .rdy-next b{font-size:12px}
+  .rdy-next em{font-size:10px}
+  .side-lnk{padding:7px 11px;font-size:12px}
+}
+@media(min-width:2200px){
+  :root{--side-w:284px;--main-max:1440px}
+  .viewport{padding:34px 44px 84px}
+  .side{padding:34px 18px 24px}
+  .side-brand{font-size:15px;letter-spacing:3.8px;margin-bottom:34px}
+  .side-brand small{font-size:11px;letter-spacing:3.2px}
+  .nav-i{font-size:16px;padding:11px 13px;gap:12px}
+  .nav-i i{width:6px;height:6px}
+  .nav-i em{font-size:10.5px}
+  .rdy{margin-top:28px;gap:13px}
+  .rdy-hd{font-size:10.5px}
+  .rdy-tsb b{font-size:44px}
+  .rdy-tsb span{font-size:11px}
+  .rdy-spark{height:48px}
+  .rdy-cta{font-size:11px}
+  .rdy-row{grid-template-columns:44px 1fr auto;font-size:13px}
+  .rdy-row em{font-size:10px}
+  .rdy-blk-t{font-size:13px}
+  .rdy-blk-t span{font-size:10.5px}
+  .rdy-next{font-size:12px}
+  .rdy-next-w{font-size:10.5px}
+  .rdy-next b{font-size:13.5px}
+  .rdy-next em{font-size:11px}
+  .side-lnk{padding:8px 13px;font-size:13px}
+}
+
 /* 舊的 .chapter / .hero-deck / .ch-win / #prog / #rail 整組已移除（見 APP SHELL 註解）。
    捲動交還瀏覽器原生：沒有 scroll-snap、沒有 wheel 攔截、沒有章節幾何量測。 */
 html{scroll-behavior:smooth}
