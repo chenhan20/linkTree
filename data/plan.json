@@ -17,7 +17,8 @@
     "CALIBRATION": "校準／驗收日：跑固定協定，產出可配對比較的兩個數字",
     "A_THRESHOLD": "課表 A · 門檻續航（週二，最新鮮的一天）",
     "B_TEMPO": "課表 B · 不准滑行 Tempo（週四，帶兩天疲勞）",
-    "A_TAPER": "課表 A 的減量版（W4 週二）"
+    "A_TAPER": "課表 A 的減量版（W4 週二）",
+    "PRELOAD": "配對前置負荷日：不是減量，是把後測前 48 小時的疲勞狀態調到跟前測那次接近，讓 9/10 的數字可以直接跟 8/13 比"
   },
   "_roles": {
     "warmup": "熱身，不計入執行度與續航",
@@ -136,12 +137,19 @@
       "end": "2026-09-10",
       "source": "athlete/好兄弟月平路四週課表.md",
       "goal": "修 20 分 252W → 1 小時 190W 這個 -25% 的斷崖，以及平路強度自律",
-      "weekly_pattern": "週二 = 課表 A 門檻續航；週三 = 重訓（上肢＋核心，不騎車）；週四 = 課表 B 不准滑行 Tempo。週五到週一休。",
+      "weekly_pattern": "週二 = 課表 A 門檻續航（2.5 小時）；週三 = 重訓（上肢＋核心，不騎車）；週四 = 課表 B 不准滑行 Tempo（2 小時）。週五到週一休。",
+      "time_windows": {
+        "tuesday_min": 150,
+        "wednesday": "重訓，不騎車",
+        "thursday_min": 120,
+        "revised": "2026-08-15",
+        "revision_note": "原始版本假設三天都是 2 小時上限。週二實際有 2.5 小時，多出來的 30 分全部給『門檻組之後的續航尾巴』—— 一週只騎兩天的人，最缺的是連續施壓的時間，不是更多的間歇強度。週四維持 2 小時，但熱身縮 20→15、收操縮 15→10，把時間讓給主課表段。"
+      },
       "weeks": [
-        { "week": 1, "tuesday": "2026-08-18", "thursday": "2026-08-20", "target_tss": 235 },
-        { "week": 2, "tuesday": "2026-08-25", "thursday": "2026-08-27", "target_tss": 255 },
-        { "week": 3, "tuesday": "2026-09-01", "thursday": "2026-09-03", "target_tss": 270 },
-        { "week": 4, "tuesday": "2026-09-08", "thursday": "2026-09-10", "target_tss": 170 }
+        { "week": 1, "tuesday": "2026-08-18", "thursday": "2026-08-20", "target_tss": 227 },
+        { "week": 2, "tuesday": "2026-08-25", "thursday": "2026-08-27", "target_tss": 252 },
+        { "week": 3, "tuesday": "2026-09-01", "thursday": "2026-09-03", "target_tss": 265 },
+        { "week": 4, "tuesday": "2026-09-08", "thursday": "2026-09-10", "target_tss": 229 }
       ]
     }
   ],
@@ -232,7 +240,8 @@
       "block": "ghost-month-flat-2026-08",
       "week": 1,
       "weekday": "二",
-      "intent": "休了四天最新鮮，唯一能真正打到 215W 以上的一天",
+      "intent": "休了四天最新鮮，唯一能真正打到 215W 以上的一天。2.5 小時版：門檻組打完再接 45 分續航尾巴 —— 那 45 分才是直接對著『1 小時只有 20 分的 75%』練的。",
+      "time_budget": { "window_min": 150, "ride_min": 126, "note": "週二 2.5 小時窗口，留 24 分餘裕" },
       "segments": [
         { "name": "熱身", "role": "warmup", "minutes": 20, "target_w": { "lo": 130, "hi": 180, "about": 155 }, "target_cadence": null },
         { "name": "門檻組 1/3", "role": "work", "rep": 1, "of": 3, "minutes": 12, "target_w": { "lo": 215, "hi": 225, "about": 220 }, "target_cadence": { "lo": 85, "hi": 95 } },
@@ -240,7 +249,9 @@
         { "name": "門檻組 2/3", "role": "work", "rep": 2, "of": 3, "minutes": 12, "target_w": { "lo": 215, "hi": 225, "about": 220 }, "target_cadence": { "lo": 85, "hi": 95 } },
         { "name": "組間恢復 2", "role": "recovery", "minutes": 5, "target_w": { "lo": null, "hi": null, "about": 150 }, "target_cadence": null },
         { "name": "門檻組 3/3", "role": "work", "rep": 3, "of": 3, "minutes": 12, "target_w": { "lo": 215, "hi": 225, "about": 220 }, "target_cadence": { "lo": 85, "hi": 95 } },
-        { "name": "收操", "role": "cooldown", "minutes": 15, "target_w": { "lo": null, "hi": null, "about": 130 }, "target_cadence": null }
+        { "name": "轉換", "role": "recovery", "minutes": 5, "target_w": { "lo": null, "hi": null, "about": 150 }, "target_cadence": null, "note": "唯一一段可以喘的時間，喝水補給都在這裡做完" },
+        { "name": "疲勞後續航", "role": "work", "minutes": 45, "target_w": { "lo": 180, "hi": 190, "about": 185 }, "target_cadence": null, "note": "門檻組之後才做，形狀跟 8/13 主測 1 一樣。累了才是重點，不准滑行。" },
+        { "name": "收操", "role": "cooldown", "minutes": 10, "target_w": { "lo": null, "hi": null, "about": 130 }, "target_cadence": null }
       ],
       "rules": [
         {
@@ -250,22 +261,31 @@
           "label": "每組最後 3 分鐘不准掉瓦",
           "on_fail": "掉了代表這組設太高，下次同課表目標 -5W",
           "why": "課表原文：不要用意志力硬撐，那是在練「撐」不是練「續航」"
+        },
+        {
+          "kind": "min_power_hold",
+          "watts": 165,
+          "max_below_sec": 10,
+          "scope": "work",
+          "label": "功率不得低於 165W 超過 10 秒",
+          "why": "8/13 主測 1 有 271 秒（7.5%）掉到 165W 以下，最長一次 33 秒平均 39W —— 續航尾巴會複製同一個毛病，先把規則掛上"
         }
       ],
-      "targets": { "week_tss": 235 }
+      "targets": { "week_tss": 227 }
     },
 
     "2026-08-20": {
       "type": "B_TEMPO",
-      "label": "W1 · 課表 B 不准滑行 Tempo 70 分",
+      "label": "W1 · 課表 B 不准滑行 Tempo 80 分",
       "block": "ghost-month-flat-2026-08",
       "week": 1,
       "weekday": "四",
       "intent": "帶兩天疲勞做 tempo ＝ 直接練 durability",
+      "time_budget": { "window_min": 120, "ride_min": 105, "note": "週四 2 小時窗口。熱身縮到 15 分、收操 10 分，把時間全部餵給主課表段。" },
       "segments": [
-        { "name": "熱身", "role": "warmup", "minutes": 20, "target_w": { "lo": 130, "hi": 180, "about": 155 }, "target_cadence": null },
-        { "name": "連續 Tempo", "role": "work", "minutes": 70, "target_w": { "lo": 185, "hi": 195, "about": 190 }, "target_cadence": null },
-        { "name": "收操", "role": "cooldown", "minutes": 15, "target_w": { "lo": null, "hi": null, "about": 130 }, "target_cadence": null }
+        { "name": "熱身", "role": "warmup", "minutes": 15, "target_w": { "lo": 130, "hi": 180, "about": 155 }, "target_cadence": null },
+        { "name": "連續 Tempo", "role": "work", "minutes": 80, "target_w": { "lo": 185, "hi": 195, "about": 190 }, "target_cadence": null },
+        { "name": "收操", "role": "cooldown", "minutes": 10, "target_w": { "lo": null, "hi": null, "about": 130 }, "target_cadence": null }
       ],
       "rules": [
         {
@@ -277,7 +297,7 @@
           "why": "這條規則直接針對 2 小時只有 169W 這個數字"
         }
       ],
-      "targets": { "vi_max": 1.10, "if_range": [0.78, 0.82], "tss_range": [120, 145], "week_tss": 235 }
+      "targets": { "vi_max": 1.10, "if_range": [0.76, 0.80], "tss_range": [95, 115], "week_tss": 227 }
     },
 
     "2026-08-25": {
@@ -286,7 +306,8 @@
       "block": "ghost-month-flat-2026-08",
       "week": 2,
       "weekday": "二",
-      "intent": "門檻組拉長到 20 分；熱身後段塞低轉扭力，四週後回山上腿才不軟",
+      "intent": "門檻組拉長到 20 分；熱身後段塞低轉扭力，四週後回山上腿才不軟；尾巴 35 分續航",
+      "time_budget": { "window_min": 150, "ride_min": 135, "note": "週二 2.5 小時窗口，留 15 分餘裕" },
       "segments": [
         { "name": "熱身", "role": "warmup", "minutes": 20, "target_w": { "lo": 130, "hi": 180, "about": 155 }, "target_cadence": null },
         { "name": "大盤扭力 1/4", "role": "work", "rep": 1, "of": 4, "minutes": 3, "target_w": { "lo": 195, "hi": 210, "about": 200 }, "target_cadence": { "lo": 55, "hi": 65 } },
@@ -299,7 +320,9 @@
         { "name": "門檻組 1/2", "role": "work", "rep": 1, "of": 2, "minutes": 20, "target_w": { "lo": 220, "hi": 230, "about": 225 }, "target_cadence": { "lo": 85, "hi": 95 } },
         { "name": "組間恢復 1", "role": "recovery", "minutes": 8, "target_w": { "lo": null, "hi": null, "about": 150 }, "target_cadence": null },
         { "name": "門檻組 2/2", "role": "work", "rep": 2, "of": 2, "minutes": 20, "target_w": { "lo": 220, "hi": 230, "about": 225 }, "target_cadence": { "lo": 85, "hi": 95 } },
-        { "name": "收操", "role": "cooldown", "minutes": 15, "target_w": { "lo": null, "hi": null, "about": 130 }, "target_cadence": null }
+        { "name": "轉換", "role": "recovery", "minutes": 4, "target_w": { "lo": null, "hi": null, "about": 150 }, "target_cadence": null },
+        { "name": "疲勞後續航", "role": "work", "minutes": 35, "target_w": { "lo": 185, "hi": 195, "about": 190 }, "target_cadence": null, "note": "比 W1 短 10 分但高 5W —— 門檻量往上，尾巴往上不往長" },
+        { "name": "收操", "role": "cooldown", "minutes": 10, "target_w": { "lo": null, "hi": null, "about": 130 }, "target_cadence": null }
       ],
       "rules": [
         {
@@ -308,21 +331,29 @@
           "scope": "work",
           "label": "每組最後 3 分鐘不准掉瓦",
           "on_fail": "掉了代表這組設太高，下次同課表目標 -5W"
+        },
+        {
+          "kind": "min_power_hold",
+          "watts": 165,
+          "max_below_sec": 10,
+          "scope": "work",
+          "label": "功率不得低於 165W 超過 10 秒"
         }
       ],
-      "targets": { "week_tss": 255 }
+      "targets": { "week_tss": 252 }
     },
 
     "2026-08-27": {
       "type": "B_TEMPO",
-      "label": "W2 · 課表 B 不准滑行 Tempo 80 分",
+      "label": "W2 · 課表 B 不准滑行 Tempo 85 分",
       "block": "ghost-month-flat-2026-08",
       "week": 2,
       "weekday": "四",
+      "time_budget": { "window_min": 120, "ride_min": 110, "note": "週四 2 小時窗口，留 10 分餘裕" },
       "segments": [
-        { "name": "熱身", "role": "warmup", "minutes": 20, "target_w": { "lo": 130, "hi": 180, "about": 155 }, "target_cadence": null },
-        { "name": "連續 Tempo", "role": "work", "minutes": 80, "target_w": { "lo": 190, "hi": 200, "about": 195 }, "target_cadence": null },
-        { "name": "收操", "role": "cooldown", "minutes": 15, "target_w": { "lo": null, "hi": null, "about": 130 }, "target_cadence": null }
+        { "name": "熱身", "role": "warmup", "minutes": 15, "target_w": { "lo": 130, "hi": 180, "about": 155 }, "target_cadence": null },
+        { "name": "連續 Tempo", "role": "work", "minutes": 85, "target_w": { "lo": 190, "hi": 200, "about": 195 }, "target_cadence": null },
+        { "name": "收操", "role": "cooldown", "minutes": 10, "target_w": { "lo": null, "hi": null, "about": 130 }, "target_cadence": null }
       ],
       "rules": [
         {
@@ -333,7 +364,7 @@
           "label": "功率不得低於 165W 超過 10 秒（含轉彎、逆風、路口前）"
         }
       ],
-      "targets": { "if_range": [0.78, 0.82], "tss_range": [120, 145], "week_tss": 255 }
+      "targets": { "vi_max": 1.08, "if_range": [0.77, 0.81], "tss_range": [105, 125], "week_tss": 252 }
     },
 
     "2026-09-01": {
@@ -343,6 +374,7 @@
       "week": 3,
       "weekday": "二",
       "intent": "本區塊最重的一天。HRV 7 日均連兩天低於 52 就把這天改成 Z2，週四照跑。",
+      "time_budget": { "window_min": 150, "ride_min": 139, "note": "週二 2.5 小時窗口的上限。時間不夠就砍尾巴的續航段，門檻三組不准砍。" },
       "segments": [
         { "name": "熱身", "role": "warmup", "minutes": 20, "target_w": { "lo": 130, "hi": 180, "about": 155 }, "target_cadence": null },
         { "name": "大盤扭力 1/4", "role": "work", "rep": 1, "of": 4, "minutes": 3, "target_w": { "lo": 195, "hi": 210, "about": 200 }, "target_cadence": { "lo": 55, "hi": 65 } },
@@ -357,7 +389,9 @@
         { "name": "門檻組 2/3", "role": "work", "rep": 2, "of": 3, "minutes": 15, "target_w": { "lo": 225, "hi": 235, "about": 230 }, "target_cadence": { "lo": 85, "hi": 95 } },
         { "name": "組間恢復 2", "role": "recovery", "minutes": 6, "target_w": { "lo": null, "hi": null, "about": 150 }, "target_cadence": null },
         { "name": "門檻組 3/3", "role": "work", "rep": 3, "of": 3, "minutes": 15, "target_w": { "lo": 225, "hi": 235, "about": 230 }, "target_cadence": { "lo": 85, "hi": 95 } },
-        { "name": "收操", "role": "cooldown", "minutes": 15, "target_w": { "lo": null, "hi": null, "about": 130 }, "target_cadence": null }
+        { "name": "轉換", "role": "recovery", "minutes": 4, "target_w": { "lo": null, "hi": null, "about": 150 }, "target_cadence": null },
+        { "name": "疲勞後續航", "role": "work", "minutes": 30, "target_w": { "lo": 185, "hi": 195, "about": 190 }, "target_cadence": null, "note": "45 分門檻之後的 30 分 190W —— 全區塊最像後測的一段" },
+        { "name": "收操", "role": "cooldown", "minutes": 10, "target_w": { "lo": null, "hi": null, "about": 130 }, "target_cadence": null }
       ],
       "rules": [
         {
@@ -366,21 +400,30 @@
           "scope": "work",
           "label": "每組最後 3 分鐘不准掉瓦",
           "on_fail": "掉了代表這組設太高，下次同課表目標 -5W"
+        },
+        {
+          "kind": "min_power_hold",
+          "watts": 165,
+          "max_below_sec": 10,
+          "scope": "work",
+          "label": "功率不得低於 165W 超過 10 秒"
         }
       ],
-      "targets": { "week_tss": 270 }
+      "targets": { "week_tss": 265 }
     },
 
     "2026-09-03": {
       "type": "B_TEMPO",
-      "label": "W3 · 課表 B 不准滑行 Tempo 85 分",
+      "label": "W3 · 課表 B 不准滑行 Tempo 90 分",
       "block": "ghost-month-flat-2026-08",
       "week": 3,
       "weekday": "四",
+      "intent": "本區塊最長的一段連續施壓。90 分 @195W 撐得住，9/10 後測的 60 分 @185W 就只是熱身。",
+      "time_budget": { "window_min": 120, "ride_min": 115, "note": "週四 2 小時窗口的上限，只剩 5 分餘裕。出門前把碼錶跟補給準備好。" },
       "segments": [
-        { "name": "熱身", "role": "warmup", "minutes": 20, "target_w": { "lo": 130, "hi": 180, "about": 155 }, "target_cadence": null },
-        { "name": "連續 Tempo", "role": "work", "minutes": 85, "target_w": { "lo": 190, "hi": 200, "about": 195 }, "target_cadence": null },
-        { "name": "收操", "role": "cooldown", "minutes": 15, "target_w": { "lo": null, "hi": null, "about": 130 }, "target_cadence": null }
+        { "name": "熱身", "role": "warmup", "minutes": 15, "target_w": { "lo": 130, "hi": 180, "about": 155 }, "target_cadence": null },
+        { "name": "連續 Tempo", "role": "work", "minutes": 90, "target_w": { "lo": 190, "hi": 200, "about": 195 }, "target_cadence": null },
+        { "name": "收操", "role": "cooldown", "minutes": 10, "target_w": { "lo": null, "hi": null, "about": 130 }, "target_cadence": null }
       ],
       "rules": [
         {
@@ -391,28 +434,44 @@
           "label": "功率不得低於 165W 超過 10 秒（含轉彎、逆風、路口前）"
         }
       ],
-      "targets": { "vi_max": 1.06, "if_range": [0.78, 0.82], "tss_range": [120, 145], "week_tss": 270 }
+      "targets": { "vi_max": 1.06, "if_range": [0.77, 0.81], "tss_range": [110, 130], "week_tss": 265 }
     },
 
     "2026-09-08": {
-      "type": "A_TAPER",
-      "label": "W4 · 減量 Z2 70 分 ＋ 3×1 分開腿",
+      "type": "PRELOAD",
+      "label": "W4 · 配對前置負荷 95 分 @180W ＋ 3×1 分開腿",
       "block": "ghost-month-flat-2026-08",
       "week": 4,
       "weekday": "二",
-      "intent": "為 9/10 驗收留腿。這天刻意不打門檻。",
+      "intent": "為 9/10 驗收調狀態，但不是傳統減量。8/13 前測的前 48 小時是 8/11 那趟 TSS 190／1239 m 爬坡；如果 9/08 只做 TSS 60 的 Z2，9/10 會在明顯更新鮮的狀態下測，數字會虛胖，配對比較就作廢了。這天做 TSS ~118 的穩定 tempo，把前置疲勞拉近 —— 沒有目標賽事，這個區塊的產出就是那個可信的數字，不需要為誰 peak。",
+      "time_budget": { "window_min": 150, "ride_min": 127, "note": "週二 2.5 小時窗口。這天不准超時，超了就吃掉週四的測驗品質。" },
+      "preload_match": {
+        "reference_date": "2026-08-11",
+        "reference_tss": 190,
+        "reference_note": "2 小時 44 分、1239 m 爬升、IF 0.835 —— 平路 2.5 小時複製不了 190，只做到 ~118，屬於部分配對",
+        "target_tss": 118,
+        "read_the_result": "9/10 的數字仍略偏樂觀。判定進步時，把 ≥15W 的門檻視為底線而非剛好及格。"
+      },
       "segments": [
-        { "name": "熱身", "role": "warmup", "minutes": 20, "target_w": { "lo": 130, "hi": 180, "about": 155 }, "target_cadence": null },
-        { "name": "Z2 續航", "role": "work", "minutes": 70, "target_w": { "lo": 160, "hi": 175, "about": 165 }, "target_cadence": { "lo": 85, "hi": 95 } },
+        { "name": "熱身", "role": "warmup", "minutes": 15, "target_w": { "lo": 130, "hi": 180, "about": 155 }, "target_cadence": null },
+        { "name": "穩定續航", "role": "work", "minutes": 95, "target_w": { "lo": 175, "hi": 185, "about": 180 }, "target_cadence": { "lo": 85, "hi": 95 }, "note": "不是門檻日，別自己加碼。這段的任務是製造前置疲勞，不是拿分數。" },
         { "name": "開腿 1/3", "role": "allout", "rep": 1, "of": 3, "minutes": 1, "target_w": { "allout": true, "about": null }, "target_cadence": null },
         { "name": "開腿恢復 1", "role": "recovery", "minutes": 2, "target_w": { "lo": null, "hi": null, "about": 130 }, "target_cadence": null, "note": "課表未指定組間長度，此處假設 2 分" },
         { "name": "開腿 2/3", "role": "allout", "rep": 2, "of": 3, "minutes": 1, "target_w": { "allout": true, "about": null }, "target_cadence": null },
         { "name": "開腿恢復 2", "role": "recovery", "minutes": 2, "target_w": { "lo": null, "hi": null, "about": 130 }, "target_cadence": null },
         { "name": "開腿 3/3", "role": "allout", "rep": 3, "of": 3, "minutes": 1, "target_w": { "allout": true, "about": null }, "target_cadence": null },
-        { "name": "收操", "role": "cooldown", "minutes": 15, "target_w": { "lo": null, "hi": null, "about": 130 }, "target_cadence": null }
+        { "name": "收操", "role": "cooldown", "minutes": 10, "target_w": { "lo": null, "hi": null, "about": 130 }, "target_cadence": null }
       ],
-      "rules": [],
-      "targets": { "week_tss": 170 }
+      "rules": [
+        {
+          "kind": "min_power_hold",
+          "watts": 155,
+          "max_below_sec": 15,
+          "scope": "work",
+          "label": "穩定續航段功率不得低於 155W 超過 15 秒"
+        }
+      ],
+      "targets": { "week_tss": 229 }
     },
 
     "2026-09-10": {
@@ -422,12 +481,19 @@
       "week": 4,
       "weekday": "四",
       "intent": "與 8/13 完全相同的協定，直接做配對比較。疲勞後 20 分功率相較 8/13 提升 ≥ 15W 即代表斷崖被填了一段。",
+      "time_budget": {
+        "window_min": 120,
+        "ride_min": 118,
+        "protocol_locked_min": 108,
+        "note": "⚠️ 這天是全區塊唯一塞不進 2 小時窗口還有餘裕的一天。熱身 20＋主測 1 60＋緩衝 8＋主測 2 20 ＝ 108 分是鎖死的，一分鐘都不能動（動了就不能跟 8/13 比）。收操 10 分是唯一可以裁切的段，趕時間就縮到 5 分或直接騎回家當收操。",
+        "why": "8/13 主測 2 只做了 15.2 分（處方 20 分，76%），20 分功率是外推出來的。這次要拿到真值，就必須事先承認時間不夠，而不是騎到最後一段才發現。"
+      },
       "segments": [
         { "name": "熱身", "role": "warmup", "minutes": 20, "target_w": { "lo": 130, "hi": 180, "about": 155, "ramp": true }, "target_cadence": null, "note": "漸進 130→180W，最後 3 分做 3×20 秒開腿" },
-        { "name": "主測 1", "role": "work", "minutes": 60, "target_w": { "lo": 185, "hi": null, "about": 185 }, "target_cadence": { "lo": 88, "hi": 95 }, "note": "連續 185W" },
+        { "name": "主測 1", "role": "work", "minutes": 60, "target_w": { "lo": 185, "hi": null, "about": 185 }, "target_cadence": { "lo": 88, "hi": 95 }, "note": "連續 185W。8/13 前半只有 173W、後半 197W 補回來 —— 這次從第一分鐘就踩 185W，配對比較才看得出真的變強還是只是配速學乖了。" },
         { "name": "緩衝", "role": "recovery", "minutes": 8, "target_w": { "lo": null, "hi": null, "about": 140 }, "target_cadence": null },
-        { "name": "主測 2", "role": "allout", "minutes": 20, "target_w": { "allout": true, "about": null }, "target_cadence": null, "note": "全力 —— 疲勞後 20 分功率" },
-        { "name": "收操", "role": "cooldown", "minutes": 12, "target_w": { "lo": null, "hi": null, "about": 130 }, "target_cadence": null }
+        { "name": "主測 2", "role": "allout", "minutes": 20, "target_w": { "allout": true, "about": null }, "target_cadence": null, "note": "全力 —— 疲勞後 20 分功率。整個區塊就是為了這 20 分鐘存在，做滿 20 分，不准縮。" },
+        { "name": "收操", "role": "cooldown", "minutes": 10, "target_w": { "lo": null, "hi": null, "about": 130 }, "target_cadence": null, "note": "唯一可裁切的段" }
       ],
       "rules": [
         { "kind": "min_power_hold", "watts": 165, "max_below_sec": 10, "scope": "work", "label": "主測 1 功率不得低於 165W 超過 10 秒" },
@@ -441,12 +507,15 @@
         "allout_minutes": 20,
         "compare_to_date": "2026-08-13",
         "improvement_target_w": 15,
+        "baseline_value_w": 208,
+        "baseline_estimated": true,
+        "baseline_note": "8/13 的 208W 是 15.2 分外推成 20 分的估計值。這次做滿 20 分拿到的是真值，兩者比較本身就偏保守（真值 vs 外推值）—— 對進步的判定有利，記在帳上。",
         "compare_fresh_20min": [
           { "period": "2025-09", "watts": 252 },
           { "period": "2026-04", "watts": 240 }
         ]
       },
-      "targets": { "week_tss": 170 }
+      "targets": { "week_tss": 229 }
     }
   }
 }
