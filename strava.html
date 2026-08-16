@@ -4552,13 +4552,22 @@ function initFcCanvas(canvas, hex, reduce, card) {
   const ctx = canvas.getContext('2d')
   const n = parseInt(hex.slice(1), 16)
   const rgb = { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 }
-  let W, H, DPR, raf = 0, running = false
+  let W = 0, H = 0, DPR = 0, raf = 0, running = false
+  /* 量到 0 就不要動畫布 ——
+     清單模式只有選中的那張卡看得見，其餘 .fc 是 display:none，rect 全是 0。
+     舊版在 window resize 時無條件套用，等於把所有藏起來的卡設成 0×0；
+     之後切到那條路段，paint() 撞到 W<2 直接放棄，卡面就永遠是空的。
+     反過來也一樣：初始化時卡還藏著，量到的寬度是上一個版面的殘值，
+     露出來之後沒有人再量一次，畫布就一直以錯的寬度被 CSS 拉伸。 */
   function resize() {
-    DPR = Math.min(devicePixelRatio || 1, 2)
     const r = canvas.getBoundingClientRect()
-    W = r.width; H = r.height
-    canvas.width = W * DPR; canvas.height = H * DPR
+    if (r.width < 2 || r.height < 2) return false
+    const dpr = Math.min(devicePixelRatio || 1, 2)
+    if (r.width === W && r.height === H && dpr === DPR) return false
+    W = r.width; H = r.height; DPR = dpr
+    canvas.width = Math.round(W * DPR); canvas.height = Math.round(H * DPR)
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0)
+    return true
   }
   resize()
   const blobs = Array.from({ length: 3 }, (_, i) => ({
@@ -4592,7 +4601,11 @@ function initFcCanvas(canvas, hex, reduce, card) {
     }, { threshold: 0 })
     io.observe(card)
   }
-  addEventListener('resize', resize)
+  /* 用 ResizeObserver 而不是 window resize：真正要接住的事件是「這張卡從
+     display:none 變成看得見」（切路段、切檢視模式、展開卡片），那時候 window
+     沒有 resize。順手也涵蓋了視窗縮放與主區斷點變寬。尺寸真的變了才重畫，
+     靜止不動時（reduce-motion、離開視線停掉 rAF）也保證畫面不是空的。 */
+  new ResizeObserver(() => { if (resize()) paint() }).observe(canvas)
 }
 function bindSegmentCards() {
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches
