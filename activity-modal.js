@@ -14,7 +14,8 @@
   let dataPromise = null
   let reportMap = null   // date -> href，只有這天有訓練報告時才注入「報告」鈕
   let rideMap = null
-  let ittByDate = null
+  let ittSource = null  // strava.json 本體，ITT 成就列要用
+  let ittByAct = null   // activity id → 成就列（第一次開彈窗時才算）
   let _routeStream = null   // 目前彈窗的 route_stream（供動畫 + 重播）
   let _animTimer    = null   // JS 逐點動畫計時器
 
@@ -25,27 +26,26 @@
       .then(d => {
         rideMap = new Map()
         ;(d.recent_rides || []).forEach(r => { if (r.id) rideMap.set(String(r.id), r) })
-        // 建立 ITT 對照（依日期）
-        ittByDate = {}
-        ;(d.itt_segments || []).forEach(seg => {
-          ;(seg.efforts || []).forEach(ef => {
-            const date = (ef.start_date_local || '').slice(0, 10)
-            if (!date) return
-            ;(ittByDate[date] = ittByDate[date] || []).push({
-              segName: seg.name,
-              elapsed_str: ef.elapsed_str,
-              attemptNum: ef.attemptNum,
-              total: seg.efforts.length,
-              rank: ef.rank,
-              is_pr: ef.is_pr,
-              activity_id: ef.activity_id,
-            })
-          })
-        })
+        // ITT「最佳結果」：名次與門檻全部由 itt-achievements.js 算，跟活動列表同一份邏輯。
+        // 這裡以前讀的是 d.itt_segments —— strava.json 根本沒有這個 key（是 d.segments），
+        // 欄位也對不上（讀 start_date_local，資料裡是 date），所以這一段從來沒有生效過。
+        // strava.html 會把 itt-segments.json 合併進來後掛上 window.__ittRows，比這裡讀到的新，有就優先用。
+        ittSource = d
         return d
       })
       .catch(err => { console.warn('[activity-modal] load strava.json failed', err); return null })
     return dataPromise
+  }
+
+  /* 成就列到第一次開彈窗才算。不在 loadData 裡算是有原因的：
+     strava.html 的 render() 跟這支的 init() 誰先跑不保證，太早算會拿不到 window.__ittRows
+     （那份合併過 itt-segments.json，比 strava.json 自帶的 segments 新）。 */
+  function ittAchvMap() {
+    if (ittByAct) return ittByAct
+    const achv = window.__ittRows
+      || (window.ittAchievements && ittSource ? window.ittAchievements(ittSource.segments || []) : null)
+    ittByAct = achv ? achv.assign((ittSource && ittSource.recent_rides) || []) : new Map()
+    return ittByAct
   }
 
   /* ── DOM：彈窗骨架 ── */
@@ -460,19 +460,20 @@
         </div>
       </div>` : ''
 
-    const itts = (ittByDate && ittByDate[a.date]) ? ittByDate[a.date] : []
+    // 彈窗空間比活動卡寬鬆，不設列數上限：活動卡只留六列，這裡全部列出來。
+    const itts = a.id != null ? (ittAchvMap().get(String(a.id)) || []) : []
     const ittHtml = itts.length ? `
       <div class="am-section">
-        <h4 class="am-section-h">ITT 計時段</h4>
+        <h4 class="am-section-h">最佳結果</h4>
         <div class="am-itt">
           ${itts.map(it => `
-            <div class="am-itt-item ${it.is_pr ? 'pr' : ''}">
-              <div class="am-itt-crown">${it.is_pr ? '👑' : '🏁'}</div>
+            <div class="am-itt-item ${it.tier === 'pr' ? 'pr' : ''}">
+              <div class="am-itt-crown">${it.medal}</div>
               <div class="am-itt-info">
                 <div class="am-itt-seg">${esc(it.segName)}</div>
-                <div class="am-itt-meta">第 ${esc(it.attemptNum)} / ${esc(it.total)} 次${it.rank ? ` · 第 ${esc(it.rank)} 名` : ''}${it.is_pr ? ' · 🏆 PR' : ''}</div>
+                <div class="am-itt-meta">${esc(it.tierLabel)}${it.rankNote ? `（${esc(it.rankNote)}）` : ''} · 第 ${esc(it.attemptNum)} / ${esc(it.total)} 次${it.deltaSec > 0 ? ` · ${esc(it.deltaStr)}` : ''}</div>
               </div>
-              <div class="am-itt-time">${esc(it.elapsed_str || '')}</div>
+              <div class="am-itt-time">${esc(it.elapsedStr || '')}</div>
             </div>
           `).join('')}
         </div>

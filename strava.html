@@ -99,6 +99,35 @@ html,body{height:100%;font-family:var(--f-ui);background:#0a0408;color:#ddd}
   padding:22px 12px 16px;border-right:1px solid var(--hair);
   background:rgba(7,4,3,.86);
 }
+/* ── 側欄小火箭 ──
+   inset() 讓它沿著邊框內縮跑，圓角 12px 把轉角磨順；offset-rotate:auto
+   會讓機身自動朝向前進方向，所以 SVG 只要畫成「機鼻朝右」就好。
+   內縮量是量出來的，不是估的：轉角處機身斜著走，外接矩形會脹大，
+   內縮 7px 時最多凸出側欄 5.2px（側欄貼著視窗上緣，那一下會被裁掉半個機鼻）。
+   實測 7→5.2px、9→3.2px、11→1.2px，所以取 11px。
+   36 秒一圈是刻意的慢：這是陪襯不是主角，快到會搶走讀數字的注意力。 */
+.side-rocket{
+  position:absolute;top:0;left:0;width:30px;height:14px;
+  offset-path:inset(11px round 12px);offset-rotate:auto;offset-distance:0%;
+  animation:sr-orbit 36s linear infinite;
+  pointer-events:none;z-index:2;opacity:.62;
+}
+.sr-ship{position:absolute;inset:0;width:30px;height:14px;overflow:visible}
+.sr-body{fill:rgba(226,234,246,.95)}
+.sr-fin{fill:#FC4C02}
+.sr-win{fill:rgba(8,5,3,.92)}
+/* 火焰是唯一發光的部分 —— 光代表推力，不是裝飾 */
+.sr-flame{fill:#FC4C02;transform-origin:5.4px 6px;animation:sr-flame .09s ease-in-out infinite alternate}
+/* 尾跡要短於機身，否則整組讀起來會變成「一條線拖著一個點」而不是一台火箭 */
+.sr-trail{
+  position:absolute;top:50%;right:26px;width:17px;height:1.5px;transform:translateY(-50%);
+  background:linear-gradient(270deg,rgba(252,76,2,.42),rgba(252,76,2,0));border-radius:1px;
+}
+@keyframes sr-orbit{to{offset-distance:100%}}
+@keyframes sr-flame{from{transform:scaleX(.72);opacity:.75}to{transform:scaleX(1.12);opacity:1}}
+/* offset-path 不支援的瀏覽器：不要讓火箭卡在左上角當一顆謎樣的橘點，直接不顯示 */
+@supports not (offset-path:inset(11px round 12px)){ .side-rocket{display:none} }
+
 .side-brand{
   padding:0 9px;margin-bottom:24px;line-height:1.35;
   font-size:11.5px;font-weight:800;letter-spacing:3.2px;color:var(--ink-1);
@@ -118,6 +147,20 @@ html,body{height:100%;font-family:var(--f-ui);background:#0a0408;color:#ddd}
 .nav-i[aria-current="page"]{background:rgba(252,76,2,.07);color:#FC4C02}
 .nav-i[aria-current="page"] i{background:#FC4C02;box-shadow:0 0 6px rgba(252,76,2,.75)}
 .nav-i em{margin-left:auto;font-style:normal;font-size:8.5px;letter-spacing:1.6px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+/* 導覽徽章的數字保持安靜 —— 會動的只有側欄那條 CTL/ATL 心電圖（見 .rdy-scan）。
+   數字真的變了才閃這一下：那不是節拍，是「有新東西進來」。 */
+@keyframes nav-fresh{
+  0%{color:#ffd05a;text-shadow:0 0 10px rgba(255,208,90,.75)}
+  100%{color:var(--ink-3);text-shadow:none}
+}
+.nav-i em.is-fresh{animation:nav-fresh 1.4s ease-out 1}
+/* 這一段必須排在上面那些 animation 宣告之後 —— 同權重時後寫的贏，
+   寫在檔案前面的 reduce 區塊會被後面的 .side-rocket 蓋掉（實測過）。
+   關掉動畫但保留終態，不是整個藏起來：火箭停在左上角當一枚靜態徽記。 */
+@media (prefers-reduced-motion:reduce){
+  .side-rocket,.sr-flame,.nav-i em.is-fresh,.rdy-scan{animation:none}
+  .rdy-scan{opacity:0}
+}
 /* ── 狀態儀表（側欄常駐）──
    側欄先前有 501 px（62%）是空的。這裡放的是「看任何一章時都成立的脈絡」：
    現在的疲勞狀態、體能走向、今天該練什麼。刻意做得比主區暗一階 —— 它是背景資訊，
@@ -142,6 +185,21 @@ html,body{height:100%;font-family:var(--f-ui);background:#0a0408;color:#ddd}
 .rdy-spark path{fill:none;stroke-width:1.4;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke}
 .rdy-spark .rdy-ctl{stroke:#FC4C02}
 .rdy-spark .rdy-atl{stroke:rgba(255,255,255,.28);stroke-dasharray:3 3}
+/* ── 心電圖掃描線 ──
+   跟 .rdy-ctl 同一條 d，只是多疊一層「亮段」沿著它跑，就是監視器上那顆掃過去的光點。
+   路徑長度隨資料筆數變，所以 path 上掛 pathLength="100" 把它正規化 ——
+   dasharray 才能用固定數字寫死，不必每次重算。
+   白色是熱到發白的前緣、橘色光暈說明它仍然是 CTL 那條線；沒有新增第八個橘。 */
+.rdy-spark .rdy-scan{
+  stroke:rgba(255,248,242,.95);stroke-width:1.8;
+  stroke-dasharray:13 100;
+  filter:drop-shadow(0 0 3px rgba(252,76,2,.9));
+  animation:rdy-scan 3.6s linear infinite;
+}
+@keyframes rdy-scan{
+  from{stroke-dashoffset:13}
+  to{stroke-dashoffset:-100}
+}
 .rdy-cta{
   display:flex;gap:8px;padding:0 9px;font-size:9px;letter-spacing:.6px;
   color:var(--ink-3);font-variant-numeric:tabular-nums
@@ -153,6 +211,75 @@ html,body{height:100%;font-family:var(--f-ui);background:#0a0408;color:#ddd}
 }
 .rdy-row b{color:var(--ink-2);font-weight:700;font-variant-numeric:tabular-nums}
 .rdy-row em{font-style:normal;font-size:8px;letter-spacing:.6px;opacity:.55;font-variant-numeric:tabular-nums}
+/* 可點的量測列。用 button 而不是 div 是為了鍵盤與讀屏拿得到，
+   所以要把瀏覽器預設的按鈕外觀全部歸零，視覺才跟旁邊不可點的列一致。 */
+.rdy-row.is-tap{
+  width:calc(100% - 0px);border:0;background:transparent;font:inherit;text-align:left;
+  cursor:pointer;border-radius:5px;transition:background .13s;
+}
+.rdy-row.is-tap:hover{background:rgba(255,255,255,.05)}
+.rdy-row.is-tap:hover b{color:var(--ink-1)}
+.rdy-row.is-tap:focus-visible{outline:1px solid rgba(252,76,2,.6);outline-offset:1px}
+
+/* ── wellness 趨勢抽屜 ── */
+.wl-now{padding:2px 0 14px;line-height:1}
+.wl-now b{font-family:var(--f-num,inherit);font-size:38px;font-weight:800;letter-spacing:-1px;
+  font-variant-numeric:tabular-nums;color:#ffb020}
+.wl-now u{text-decoration:none;margin-left:5px;font-size:12px;letter-spacing:1.4px;color:var(--ink-3)}
+.wl-now span{display:block;margin-top:7px;font-size:10px;letter-spacing:.6px;color:var(--ink-3)}
+.wl-now i{font-style:normal;font-variant-numeric:tabular-nums}
+/* 箭頭方向＝數值升降，顏色＝好壞。靜息心率往下是綠色的 ▼，兩者不同步是刻意的。 */
+.wl-now i.good{color:#4ad07a}
+.wl-now i.bad{color:#ffb020}
+/* 指標切換：一列大頁籤，各自標出有幾天資料 —— 點進來第一件事是知道哪幾條有料 */
+.wl-mtabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.wl-mtab{
+  display:flex;align-items:baseline;gap:6px;
+  padding:7px 13px 8px;border:1px solid var(--hair);border-radius:7px;background:transparent;
+  font:inherit;font-size:12px;color:var(--ink-3);cursor:pointer;
+  transition:border-color .13s,color .13s,background .13s;
+}
+.wl-mtab em{font-style:normal;font-size:8.5px;letter-spacing:1px;opacity:.6;font-variant-numeric:tabular-nums}
+.wl-mtab:hover{color:var(--ink-1);border-color:rgba(255,255,255,.22)}
+.wl-mtab.on{border-color:rgba(255,176,32,.55);background:rgba(255,176,32,.1);color:#ffb020}
+.wl-tabs{display:flex;gap:5px;margin-bottom:11px}
+.wl-tab{
+  padding:4px 10px 5px;border:1px solid var(--hair);border-radius:5px;background:transparent;
+  font:inherit;font-size:9.5px;letter-spacing:1.2px;color:var(--ink-3);cursor:pointer;
+  font-variant-numeric:tabular-nums;transition:border-color .13s,color .13s,background .13s;
+}
+.wl-tab:hover{color:var(--ink-1);border-color:rgba(255,255,255,.22)}
+.wl-tab.on{border-color:rgba(255,176,32,.55);background:rgba(255,176,32,.1);color:#ffb020}
+/* 讀數要有量測感，但不必橫跨整個 27 吋螢幕：820px 是這幾條線的可讀寬度上限 */
+.wl-panel{max-width:820px}
+.wl-chart{display:block;width:100%;height:160px;overflow:visible}
+.wl-chart path{fill:none;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke}
+/* 基準帶：填色不描邊。它是背景參考，不該跟兩條資料線競爭 */
+.wl-chart .wl-band{fill:rgba(255,176,32,.09);stroke:none}
+.wl-chart .wl-raw{stroke:rgba(255,176,32,.34);stroke-width:1.2}
+.wl-chart .wl-avg{stroke:#ffb020;stroke-width:1.9}
+.wl-chart circle{vector-effect:non-scaling-stroke}
+.wl-chart .wl-good{fill:#4ad07a}
+.wl-chart .wl-bad{fill:#FC4C02}
+.wl-legend{
+  display:flex;align-items:center;gap:5px;margin-top:8px;
+  font-size:8.5px;letter-spacing:1.4px;text-transform:uppercase;color:var(--ink-3)
+}
+.wl-legend i{display:inline-block;width:13px;height:0;border-top:2px solid;margin-left:9px}
+.wl-legend i:first-child{margin-left:0}
+.wl-legend i.raw{border-color:rgba(255,176,32,.34)}
+.wl-legend i.avg{border-color:#ffb020}
+.wl-legend i.band{border-top-width:7px;border-color:rgba(255,176,32,.22)}
+.wl-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-top:16px}
+.wl-st{padding:9px 10px;border:1px solid var(--hair);border-radius:8px}
+.wl-st span{display:block;font-size:8.5px;letter-spacing:1.8px;text-transform:uppercase;color:var(--ink-3)}
+.wl-st b{display:block;margin-top:4px;font-family:var(--f-num,inherit);font-size:19px;font-weight:800;
+  font-variant-numeric:tabular-nums;color:var(--ink-1);letter-spacing:-.3px}
+.wl-st em{display:block;margin-top:2px;font-style:normal;font-size:8.5px;letter-spacing:.8px;
+  color:var(--ink-3);opacity:.75;font-variant-numeric:tabular-nums}
+.wl-note{margin-top:15px;font-size:10px;line-height:1.65;color:var(--ink-3)}
+.wl-note b{color:var(--ink-2)}
+@media(max-width:600px){ .wl-now b{font-size:32px} .wl-chart{height:132px} .wl-mtab{font-size:11px;padding:6px 10px 7px} }
 .rdy-blk{margin-top:6px;padding:9px 9px 0;border-top:1px solid var(--hair)}
 .rdy-blk-t{
   display:flex;justify-content:space-between;align-items:baseline;gap:6px;
@@ -679,15 +806,16 @@ button.deck-stat:hover .ds-hint{color:#FC4C02}
 }
 .itt-more:hover{color:#FC4C02;border-left-color:rgba(252,76,2,.5)}
 /* 抽屜裡的逐次挑戰：分組標題 + 一次一列 */
-.dw-h4n{float:right;font-weight:400;letter-spacing:1.4px;color:var(--ink-3);opacity:.8}
 .ittd{
-  display:grid;grid-template-columns:minmax(0,1fr) 3.8rem;gap:1px 10px;
+  display:grid;grid-template-columns:2.9rem minmax(0,1fr) 3.8rem;gap:1px 10px;
   padding:6px 0;border-bottom:1px solid var(--hair);
 }
+/* 起跑時刻。同一刻起跑的巢狀變體會留白，視覺上自然併成一次上坡。 */
+.ittd-c{font-family:var(--f-num);font-size:11px;color:var(--ink-3);font-variant-numeric:tabular-nums;letter-spacing:-.2px}
 .ittd-l{font-size:12px;color:var(--ink-2);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ittd-t{font-family:var(--f-num);font-size:15px;font-weight:800;color:var(--ink-1);
   font-variant-numeric:tabular-nums;text-align:right;letter-spacing:-.2px}
-.ittd-m{grid-column:1/-1;font-size:9.5px;letter-spacing:.6px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.ittd-m{grid-column:2/-1;font-size:9.5px;letter-spacing:.6px;color:var(--ink-3);font-variant-numeric:tabular-nums}
 .ittd.is-pr .ittd-l{color:#FFD700}
 .ittd.is-pr .ittd-t{color:#FFD700;text-shadow:0 0 12px rgba(255,215,0,.35)}
 
@@ -1317,11 +1445,11 @@ button.ov-cell:focus-visible{outline:1px solid rgba(252,76,2,.6);outline-offset:
 .fc-board .fc.fc-open .fc-top{padding-right:48px}
 .fc-close:hover{background:var(--fc-accent);border-color:var(--fc-accent);color:#000;transform:rotate(90deg)}
 .fc-close:focus-visible{outline:2px solid var(--fc-accent);outline-offset:2px}
-/* 展開時其餘卡退到背景：玻璃是半透明的，不退的話後面卡片的字會透上來打架 */
+/* 展開時其餘卡退到背景：卡面是半透明的，不退的話後面卡片的字會透上來打架 */
 .fc-board.has-open .fc:not(.fc-open){opacity:.19}
-/* 展開卡的玻璃壓深一階，讓數字有實底可讀 */
-.fc-board .fc.fc-open .fc-glass{
-  background:linear-gradient(165deg,rgba(255,241,224,.10),rgba(10,5,3,.58) 45%,rgba(5,2,2,.90));
+/* 展開卡的底再壓深一階，讓數字有實底可讀 */
+.fc-board .fc.fc-open .fc-face{
+  background:linear-gradient(165deg,rgba(255,255,255,.05),rgba(10,5,3,.62) 45%,rgba(5,2,2,.93));
 }
 /* 收起態：只留「這是哪一段、現在什麼狀態、最佳幾分」 */
 .fc-board .fc:not(.fc-open) .fc-spark-block,
@@ -1399,26 +1527,31 @@ button.ov-cell:focus-visible{outline:1px solid rgba(252,76,2,.6);outline-offset:
 }
 .fc.fc-flip{transition:transform .3s cubic-bezier(.2,.9,.25,1)}
 
-.fc-canvas{position:absolute;inset:0;width:100%;height:100%;z-index:0;opacity:.32}
-/* Chromium：SVG feDisplacementMap 邊緣折射（由 JS 產生 per-card filter）
-   放在 .fc-glass 之後 → 折射的是「已模糊」的背景，玻璃邊緣的彎折才清晰 */
-.fc-refract{position:absolute;inset:0;z-index:1;pointer-events:none;display:none}
-html.lg-refract .fc-refract{display:block}
-.fc-glass{
-  position:absolute;inset:0;z-index:1;
-  backdrop-filter:blur(24px) saturate(1.5) brightness(1.04);-webkit-backdrop-filter:blur(24px) saturate(1.5) brightness(1.04);
-  background:linear-gradient(165deg,rgba(255,241,224,.09),rgba(255,241,224,.02) 55%,rgba(8,4,2,.3));
+/* ── 2026-08-17：整組液態玻璃退役 ──────────────────────────────────
+   原本每張卡疊六層：動畫 canvas（每幀 ctx.filter='blur(28px)' 畫三顆光球）、
+   backdrop-filter blur(24px) 的玻璃層、Chromium 專用的 feDisplacementMap 折射層、
+   玻璃厚度 bevel，再加 rim / sheen / holo。
+
+   量出來的成本（headless、collection 模式）：
+     基準 10fps ／ 關掉 canvas 動畫 16fps（+60%）／ 關掉 backdrop-filter 14fps（+40%）
+     box-shadow、mix-blend-mode、filter 各自關掉都是 0% —— 那些不是問題，別去動。
+   真正致命的是折射層：lgMakeMap() 用 JS 逐像素算位移圖（272×330 ≈ 9 萬次
+   Math.hypot），每張卡一張，再 toDataURL() 編成 PNG。三十幾張卡就是三百萬次
+   迴圈加三十幾次 base64 編碼，而且視窗一縮放就重跑一遍。那就是「點過來快當機」。
+
+   換成扁平面板：跟站上其他容器（.console / .dw-sec / .pwr-achv）同一套語言 ——
+   半透明深底 + 髮絲邊框 + accent 收邊。留下 rim / sheen / holo 是因為它們實測
+   零成本，而且游標光暈是這張卡唯一還需要的「活著」的訊號。 */
+.fc-face{
+  position:absolute;inset:0;z-index:0;border-radius:inherit;
+  background:
+    linear-gradient(165deg,rgba(255,255,255,.05),rgba(255,255,255,.012) 46%,rgba(0,0,0,.22)),
+    rgba(12,7,5,.86);
 }
-/* 玻璃厚度：四邊 specular 內光，上亮下暗（光從上方來） */
-.fc-bevel{
-  position:absolute;inset:0;z-index:2;pointer-events:none;border-radius:inherit;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.32),
-    inset 0 -1px 0 rgba(255,255,255,.06),
-    inset 1px 0 0 rgba(255,255,255,.10),
-    inset -1px 0 0 rgba(255,255,255,.10),
-    inset 0 12px 30px -18px rgba(255,255,255,.22),
-    inset 0 -18px 30px -24px rgba(0,0,0,.55);
+/* accent 只出現在頂緣一道，不再整片染色 —— 光要有理由 */
+.fc-face::before{
+  content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.10),inset 0 0 0 1px rgba(255,255,255,.03);
 }
 .fc-rim{position:absolute;top:0;left:8%;right:8%;height:1px;z-index:2;background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent)}
 .fc-sheen{
@@ -1985,16 +2118,36 @@ html.lg-refract .fc-refract{display:block}
 }
 .show-more-btn:hover{background:rgba(252,76,2,.1)}
 
-/* ITT inline badge in activity log */
-.itt-badge{display:flex;align-items:center;gap:10px;padding:6px 12px 7px 12px;border-left:2px solid rgba(252,76,2,.2);margin:4px 0 0;background:rgba(252,76,2,.03);border-radius:0 6px 6px 0}
-.itt-badge.pr{background:rgba(252,76,2,.09);border-left-color:#FC4C02}
-.itt-crown{font-size:17px;line-height:1;flex-shrink:0}
-.itt-info{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
-.itt-seg-name{font-size:9px;color:#555;letter-spacing:1.5px;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.itt-badge.pr .itt-seg-name{color:rgba(252,76,2,.6)}
-.itt-time{font-size:13px;font-weight:700;color:#FC4C02;line-height:1}
-.itt-attempt{font-size:9px;color:#444;letter-spacing:1px}
-.itt-badge.pr .itt-attempt{color:rgba(252,76,2,.5)}
+/* ── ITT 成就列 ──
+   外殼吃 .pwr-achv（見下面那一段），這裡只補「一列一條路段」的排版。
+   兩塊會前後相鄰出現在同一張活動卡上，共用外殼才不會變成兩套語言。 */
+.ia-rows{display:flex;flex-direction:column;gap:3px}
+.ia-row{
+  display:flex;align-items:baseline;gap:7px;min-width:0;
+  font-size:11px;color:rgba(255,255,255,.62);
+}
+.ia-medal{font-size:11px;line-height:1;flex-shrink:0}
+.ia-tier{
+  font-size:9px;letter-spacing:1px;flex-shrink:0;
+  padding:1px 5px 2px;border-radius:3px;
+  border:1px solid rgba(160,170,190,.22);background:rgba(0,0,0,.28);color:#5c6472;
+}
+.ia-seg{
+  flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  color:rgba(200,210,225,.75);
+}
+.ia-time{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;color:rgba(230,236,245,.9);flex-shrink:0}
+/* 差距才是 ITT 的重點 —— Strava 的「最佳結果」沒有這一欄 */
+.ia-delta{font-size:10px;font-variant-numeric:tabular-nums;color:#5c6472;flex-shrink:0;min-width:44px}
+.ia-att{font-size:9px;letter-spacing:.5px;color:#4a515c;flex-shrink:0}
+/* 名次配色沿用 .pa-chip 既有的金 / 銀 / 銅；今年最佳刻意壓成中性灰藍 */
+.ia-row.r1 .ia-tier{border-color:rgba(252,76,2,.55);background:rgba(252,76,2,.12);color:#FC4C02;font-weight:700}
+.ia-row.r1 .ia-time{color:#ffd05a;text-shadow:0 0 9px rgba(255,208,90,.45)}
+.ia-row.r1 .ia-delta{color:rgba(255,208,90,.7)}
+.ia-row.r2 .ia-time{color:#dfe6f2}
+.ia-row.r3 .ia-time{color:#d8a878}
+.ia-row.ry{opacity:.72}
+.ia-row.ry .ia-time{color:rgba(200,210,225,.8)}
 
 /* ── power achievement badge in activity log ── */
 .pwr-achv{
@@ -2071,8 +2224,12 @@ html.lg-refract .fc-refract{display:block}
   .activity-name{white-space:normal;overflow:visible;text-overflow:clip;flex:1 1 100%}
   .act-detail-btn{margin-right:0}
   .activity-dist{font-size:16px;margin-left:auto}
-  .itt-badge{align-items:flex-start;gap:8px}
-  .itt-attempt{text-align:right;max-width:38%}
+  /* 手機寬度排不下六欄：路段名獨佔一行，數字那排在下面對齊 */
+  .ia-row{flex-wrap:wrap;gap:5px 6px}
+  .ia-seg{flex:1 1 100%;order:3;white-space:normal}
+  .ia-time{order:4}
+  .ia-delta{order:5;min-width:0}
+  .ia-att{order:6;margin-left:auto}
   #to-top-btn{right:14px!important;bottom:18px!important}
 }
 
@@ -3136,6 +3293,19 @@ html.lg-refract .fc-refract{display:block}
 
 <div class="app">
   <aside class="side">
+    <!-- 繞著側欄邊框跑的小火箭。純裝飾，所以 aria-hidden —— 讀屏不該念它。
+         走 offset-path 而不是四段 keyframes：邊框長度隨視窗高度變，四段寫死的話
+         轉角會忽快忽慢，offset-path 沿路徑等速，改視窗大小也不用重算。 -->
+    <div class="side-rocket" aria-hidden="true">
+      <span class="sr-trail"></span>
+      <svg class="sr-ship" viewBox="0 0 26 12">
+        <path class="sr-flame" d="M5.4 4.3 -1.6 6 5.4 7.7Z"/>
+        <path class="sr-fin" d="M6.6 3.3 3 0.4 5 3.3Z"/>
+        <path class="sr-fin" d="M6.6 8.7 3 11.6 5 8.7Z"/>
+        <path class="sr-body" d="M5 3.1h9.6c3.3 0 6.2 1.6 7.8 2.9-1.6 1.3-4.5 2.9-7.8 2.9H5Z"/>
+        <circle class="sr-win" cx="16.4" cy="6" r="1.05"/>
+      </svg>
+    </div>
     <div class="side-brand">STEVE<small>ATHLETICS</small></div>
     <nav class="nav" id="nav" aria-label="主導覽"></nav>
     <div class="side-foot">
@@ -4408,10 +4578,7 @@ function renderSegments(segs) {
     </button>`)
 
     return `<div class="fc ${sizeClass}" style="--fc-accent:${accent};--fc-status:${statusCol}" data-fc data-segid="${seg.id}">
-      <canvas class="fc-canvas"></canvas>
-      <div class="fc-glass"></div>
-      <div class="fc-refract"></div>
-      <div class="fc-bevel"></div>
+      <div class="fc-face"></div>
       <div class="fc-rim"></div>
       <div class="fc-sheen"></div>
       <div class="fc-holo"></div>
@@ -4528,6 +4695,10 @@ function fmtDate(d) {
 
 /* ── ITT fusion cards: pointer tilt/holo, fluid canvas, reveal + count-up ── */
 function fcFmtElapsed(sec, partsLen) {
+  /* 先取整。自建 FIT 偵測器算出來的 elapsed_sec 是小數（閘門是內插出來的），
+     兩筆相減就會浮出「3:12.699999999999932 vs PR」這種東西 —— 卡面上實際出現過。
+     每個呼叫端各自 round 遲早會漏掉一個，所以擋在這裡。 */
+  sec = Math.round(sec)
   if (partsLen >= 3) {
     const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60
     return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
@@ -4548,65 +4719,6 @@ function animateFcCount(el) {
   }
   requestAnimationFrame(step)
 }
-function initFcCanvas(canvas, hex, reduce, card) {
-  const ctx = canvas.getContext('2d')
-  const n = parseInt(hex.slice(1), 16)
-  const rgb = { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 }
-  let W = 0, H = 0, DPR = 0, raf = 0, running = false
-  /* 量到 0 就不要動畫布 ——
-     清單模式只有選中的那張卡看得見，其餘 .fc 是 display:none，rect 全是 0。
-     舊版在 window resize 時無條件套用，等於把所有藏起來的卡設成 0×0；
-     之後切到那條路段，paint() 撞到 W<2 直接放棄，卡面就永遠是空的。
-     反過來也一樣：初始化時卡還藏著，量到的寬度是上一個版面的殘值，
-     露出來之後沒有人再量一次，畫布就一直以錯的寬度被 CSS 拉伸。 */
-  function resize() {
-    const r = canvas.getBoundingClientRect()
-    if (r.width < 2 || r.height < 2) return false
-    const dpr = Math.min(devicePixelRatio || 1, 2)
-    if (r.width === W && r.height === H && dpr === DPR) return false
-    W = r.width; H = r.height; DPR = dpr
-    canvas.width = Math.round(W * DPR); canvas.height = Math.round(H * DPR)
-    ctx.setTransform(DPR, 0, 0, DPR, 0, 0)
-    return true
-  }
-  resize()
-  const blobs = Array.from({ length: 3 }, (_, i) => ({
-    a: Math.random() * Math.PI * 2, spd: .005 + Math.random() * .006, rad: .28 + Math.random() * .16, phase: i * 2.1,
-  }))
-  function paint() {
-    if (W < 2 || H < 2) return
-    ctx.clearRect(0, 0, W, H)
-    ctx.filter = 'blur(28px)'
-    for (const b of blobs) {
-      if (!reduce) b.a += b.spd
-      const cx = W * (.5 + Math.sin(b.a + b.phase) * .42)
-      const cy = H * (.5 + Math.cos(b.a * 1.3 + b.phase) * .48)
-      const rad = W * b.rad
-      const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, rad)
-      g.addColorStop(0, `rgba(${rgb.r},${rgb.g},${rgb.b},.4)`)
-      g.addColorStop(1, `rgba(${rgb.r},${rgb.g},${rgb.b},0)`)
-      ctx.fillStyle = g
-      ctx.beginPath(); ctx.arc(cx, cy, rad, 0, Math.PI * 2); ctx.fill()
-    }
-    ctx.filter = 'none'
-  }
-  function loop() { paint(); if (running) raf = requestAnimationFrame(loop) }
-  paint()
-  if (!reduce) {
-    const io = new IntersectionObserver(entries => {
-      entries.forEach(en => {
-        if (en.isIntersecting) { if (!running) { running = true; loop() } }
-        else { running = false; cancelAnimationFrame(raf) }
-      })
-    }, { threshold: 0 })
-    io.observe(card)
-  }
-  /* 用 ResizeObserver 而不是 window resize：真正要接住的事件是「這張卡從
-     display:none 變成看得見」（切路段、切檢視模式、展開卡片），那時候 window
-     沒有 resize。順手也涵蓋了視窗縮放與主區斷點變寬。尺寸真的變了才重畫，
-     靜止不動時（reduce-motion、離開視線停掉 rAF）也保證畫面不是空的。 */
-  new ResizeObserver(() => { if (resize()) paint() }).observe(canvas)
-}
 function bindSegmentCards() {
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches
   const cards = document.querySelectorAll('.fc')
@@ -4621,11 +4733,6 @@ function bindSegmentCards() {
         card.style.setProperty('--fc-mx', ((e.clientX - r.left) / r.width * 100) + '%')
         card.style.setProperty('--fc-my', ((e.clientY - r.top) / r.height * 100) + '%')
       })
-    }
-    const canvas = card.querySelector('.fc-canvas')
-    if (canvas) {
-      const accent = getComputedStyle(card).getPropertyValue('--fc-accent').trim() || '#e87c1a'
-      initFcCanvas(canvas, accent, reduce, card)
     }
   })
 
@@ -5087,96 +5194,6 @@ function initIttCarousel(reduce) {
   })
   grid.tabIndex = 0
 
-  initLiquidRefraction()
-}
-
-/* ── Apple liquid glass 邊緣折射：SVG feDisplacementMap（僅 Chromium 支援
-     backdrop-filter:url()；Safari/Firefox 自動落在 .fc-glass 的 blur 疊層）── */
-function lgIsChromium() {
-  if (navigator.userAgentData && navigator.userAgentData.brands)
-    return navigator.userAgentData.brands.some(b => /Chromium/i.test(b.brand))
-  return !!window.chrome
-}
-function lgMakeMap(w, h, radius, band) {
-  const cv = document.createElement('canvas')
-  cv.width = w; cv.height = h
-  const ctx = cv.getContext('2d')
-  const img = ctx.createImageData(w, h)
-  const d = img.data
-  const cx = w / 2, cy = h / 2, hw = w / 2, hh = h / 2
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      const px = x + .5 - cx, py = y + .5 - cy
-      const qx = Math.abs(px) - (hw - radius), qy = Math.abs(py) - (hh - radius)
-      let dirX = 0, dirY = 0, edgeDist
-      if (qx > 0 && qy > 0) {           // 圓角區
-        const hyp = Math.hypot(qx, qy) || 1
-        edgeDist = radius - hyp
-        dirX = (qx / hyp) * Math.sign(px)
-        dirY = (qy / hyp) * Math.sign(py)
-      } else if (qx > qy) {             // 左右邊
-        edgeDist = hw - Math.abs(px)
-        dirX = Math.sign(px)
-      } else {                          // 上下邊
-        edgeDist = hh - Math.abs(py)
-        dirY = Math.sign(py)
-      }
-      const t = Math.max(0, Math.min(1, 1 - Math.max(0, edgeDist) / band))
-      const mag = t * t                 // 凸透鏡剖面：越靠邊折射越強
-      const i = (y * w + x) * 4
-      d[i]     = Math.round(128 + dirX * mag * 127)
-      d[i + 1] = Math.round(128 + dirY * mag * 127)
-      d[i + 2] = 128
-      d[i + 3] = 255
-    }
-  }
-  ctx.putImageData(img, 0, 0)
-  return cv.toDataURL()
-}
-function initLiquidRefraction() {
-  if (!lgIsChromium()) return
-  document.documentElement.classList.add('lg-refract')
-  let svg = document.getElementById('fc-lg-defs')
-  if (!svg) {
-    svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
-    svg.id = 'fc-lg-defs'
-    svg.setAttribute('width', '0'); svg.setAttribute('height', '0')
-    svg.style.position = 'absolute'
-    svg.setAttribute('color-interpolation-filters', 'sRGB')
-    document.body.appendChild(svg)
-  }
-  const BAND = 34, SCALE = 70
-  function rebuild() {
-    svg.innerHTML = ''
-    document.querySelectorAll('.fc').forEach(card => {
-      const ref = card.querySelector('.fc-refract')
-      if (!ref) return
-      const w = Math.round(card.clientWidth), h = Math.round(card.clientHeight)
-      if (!w || !h) return
-      const id = `fc-lg-${card.dataset.segid}`
-      const f = document.createElementNS('http://www.w3.org/2000/svg', 'filter')
-      f.id = id
-      f.setAttribute('x', '0'); f.setAttribute('y', '0')
-      f.setAttribute('width', w); f.setAttribute('height', h)
-      f.setAttribute('filterUnits', 'userSpaceOnUse')
-      f.setAttribute('primitiveUnits', 'userSpaceOnUse')
-      const im = document.createElementNS('http://www.w3.org/2000/svg', 'feImage')
-      im.setAttribute('href', lgMakeMap(w, h, 20, BAND))
-      im.setAttribute('x', 0); im.setAttribute('y', 0)
-      im.setAttribute('width', w); im.setAttribute('height', h)
-      im.setAttribute('result', 'map')
-      const dm = document.createElementNS('http://www.w3.org/2000/svg', 'feDisplacementMap')
-      dm.setAttribute('in', 'SourceGraphic'); dm.setAttribute('in2', 'map')
-      dm.setAttribute('scale', SCALE)
-      dm.setAttribute('xChannelSelector', 'R'); dm.setAttribute('yChannelSelector', 'G')
-      f.appendChild(im); f.appendChild(dm)
-      svg.appendChild(f)
-      ref.style.backdropFilter = `url(#${id})`
-    })
-  }
-  rebuild()
-  let rt = null
-  addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(rebuild, 250) })
 }
 
 /* 成績來源：'fit' = 自建偵測器從 Garmin 原始 FIT 算出來的，其餘（含沒有 source 欄位的
@@ -7263,7 +7280,7 @@ function groupByDate(list) {
 }
 
 /* ── render timeline ── */
-function renderTimeline(list, type, expanded, ittMap, pwrAchv) {
+function renderTimeline(list, type, expanded, pwrAchv, ittAllByAct) {
   if (!list || !list.length) return '<div class="empty">暫無資料</div>'
   const isAll    = type === 'all'
   const icon = ICONS[type] || ICONS.ride
@@ -7312,35 +7329,19 @@ function renderTimeline(list, type, expanded, ittMap, pwrAchv) {
         const route3dBtn = (aIsRide && a.id && a.route_stream && a.route_stream.length > 1)
           ? `<button class="r3d-trigger-btn" onclick="openRoute3D(${a.id})" title="3D 路線回放">🛰️ 3D</button>` : ''
         const pwrBadge = aIsRide ? powerAchvHTML(achvOf(a)) : ''
-        /* ITT 徽章：一趟「劍中中中中劍」會刷掉三十幾個重疊路段（母路線 + 上半 + 四等分 …），
-           全部攤在活動列裡會把那一天洗成一面牆。預設只留**破 PR 的那幾次**，
-           其餘收進一顆可展開的鈕 —— 資料一筆都沒少，只是不預設攤開。 */
-        const ittList = (aIsRide && ittMap && ittMap[date]) ? ittMap[date] : []
-        const ittBadge = it => {
-          const isPr = it.is_pr
-          const crown = isPr ? '👑' : `<span style="font-size:11px;color:#555">#${it.attemptNum}</span>`
-          const rankStr = it.rank ? (it.rank === 1 ? '🥇 第1名' : `第${it.rank}名`) : ''
-          const attempt = isPr ? `第${it.attemptNum}次 · 🏆 PR ${rankStr}` : `第${it.attemptNum} / ${it.total} 次 · ${rankStr}`
-          return `<div class="itt-badge${isPr ? ' pr' : ''}">
-            <div class="itt-crown">${crown}</div>
-            <div class="itt-info">
-              <div class="itt-seg-name">${it.segName}</div>
-              <div class="itt-time">${it.elapsed_str}</div>
-            </div>
-            <div class="itt-attempt">${attempt}</div>
-          </div>`
-        }
-        const ittPr   = ittList.filter(it => it.is_pr)
-        const ittRest = ittList.filter(it => !it.is_pr)
-        const bestRank = ittRest.length ? Math.min(...ittRest.map(it => it.rank || 9999)) : null
-        // 就地展開會把摘要那一行推走三十幾列，收回來又跳回原位 —— 那一跳就是「怪怪的」。
-        // 改成開右側抽屜：這一行永遠留在原地，清單有自己的空間，也才排得下分組標題。
-        const ittMore = ittRest.length
-          ? `<button class="lap-toggle itt-more" type="button" data-ittday="${date}">
-               ${ittPr.length ? '另外 ' : ''}${ittRest.length} 次路段挑戰${bestRank && bestRank < 9999 ? ` · 最佳第 ${bestRank} 名` : ''} →
-             </button>`
+        /* ITT 成就列：一趟「劍中中中中劍」會刷掉三十幾個重疊路段（母路線 + 上半 + 四等分 …），
+           全部攤在活動列裡會把那一天洗成一面牆。門檻抄 Strava 活動頁的「最佳結果」——
+           只有全時前三（外加一個較弱的「今年最佳」）會浮出來，其餘收進抽屜鈕。
+           實測 65 個有 ITT 的日子裡，這條規則讓 40 天有徽章（舊的只看 PR 是 15 天），
+           而且單日最多 6 列，牆不會回來。 */
+        // 清單以「這一趟」為單位而不是「這一天」：一天兩趟的日子（recent_rides 裡有 13 天）
+        // 用日期掛的話，早上刷的中社成績會連傍晚那趟一起算進去。
+        const ittList = (aIsRide && ittAllByAct && a.id != null)
+          ? (ittAllByAct.get(String(a.id)) || []) : []
+        const ittShown = ittList.filter(r => r.tier).slice(0, ITT_ACHV_MAX)
+        const ittBadges = ittList.length
+          ? ittAchvHTML(ittShown) + ittMoreHTML(date, ittList, ittShown)
           : ''
-        const ittBadges = ittList.length ? ittPr.map(ittBadge).join('') + ittMore : ''
         const distCell = (!aIsWeight && !aIsSwim && a.distance_km)
           ? `${a.distance_km}<small>km</small>`
           : (!aIsWeight && aIsSwim && a.distance_km) ? `${Math.round(a.distance_km*1000)}<small>m</small>` : '—'
@@ -7532,6 +7533,17 @@ function render(data) {
 
   window.__ittMap = ittMap
 
+  // ── ITT 成就列（活動卡上的「最佳結果」）──
+  // 抽屜要的是完整清單（上面的 ittMap），活動卡要的是「值得說嘴的那幾筆」，
+  // 兩者的名次算法必須一致，所以計算收在 itt-achievements.js，彈窗也吃同一份。
+  const ittAchv = window.ittAchievements
+    ? window.ittAchievements(data.segments || [], { meta: window._ittSegMeta })
+    : null
+  const ittAllByAct = ittAchv ? ittAchv.assignAll(data.recent_rides || []) : new Map()
+  // 彈窗（activity-modal.js）優先吃這份 —— strava.html 這邊的 data.segments
+  // 已經跟 itt-segments.json 合併過，比它自己從 strava.json 讀到的新。
+  window.__ittRows = ittAchv
+
   function tabHTML() {
     return activeTabs.map(t => `
       <button class="sport-tab${t.key === activeTab ? ' active' : ''}" data-tab="${t.key}">${t.label}</button>
@@ -7539,7 +7551,7 @@ function render(data) {
   }
   function timelineHTML() {
     const t = activeTabs.find(t => t.key === activeTab)
-    return renderTimeline(t?.list, activeTab, showMore[activeTab] || false, ittMap, pwrAchv)
+    return renderTimeline(t?.list, activeTab, showMore[activeTab] || false, pwrAchv, ittAllByAct)
   }
 
   // ── 月度訓練量（§31 metric switch + §32 time range）──
@@ -7923,6 +7935,11 @@ function render(data) {
       <div class="block">${totalsHtml}</div>
     </section>
 
+    <section class="view" data-view="body">
+      ${viewH('身體', 'Body', '恢復與體能')}
+      ${renderBodyView()}
+    </section>
+
     <section class="view" data-view="log">
       ${viewH('活動紀錄', 'Activity log', `${allList.length} 筆`)}
       ${activityHtml}
@@ -8102,6 +8119,45 @@ function powerAchvHTML(achvs) {
       <div class="pa-chips">${chips}</div>
     </div>
   </div>`
+}
+/* ── ITT 成就列 ────────────────────────────────────────────────────
+   跟上面的功率成就列是同一個模型（獎牌欄 → kicker → 內容），共用 .pwr-achv 外殼，
+   所以兩塊疊在同一張活動卡上時看起來是一套東西而不是兩套。
+   差別在功率成就是短標籤（「5分 320W PR」）用 chip 排得下，
+   ITT 是中文路段名 + 時間 + 差距，必須一列一條。
+
+   實測單日最多 6 列（全時前三 + 今年最佳），所以上限就設 6：
+   不是怕排不下，是超過六條「最佳結果」本身就不像最佳結果了。*/
+const ITT_ACHV_MAX = 6
+function ittAchvHTML(rows) {
+  if (!rows || !rows.length) return ''
+  const h = window.ittAchievements.headline(rows)
+  const lines = rows.map(r => `<div class="ia-row ${r.rankClass}">
+    <span class="ia-medal">${r.medal}</span>
+    <span class="ia-tier">${r.tierLabel}</span>
+    <span class="ia-seg">${r.segName}</span>
+    <b class="ia-time">${r.elapsedStr}</b>
+    <span class="ia-delta">${r.deltaStr}</span>
+    <span class="ia-att">第 ${r.attemptNum}/${r.total} 次${r.rankNote ? ` · ${r.rankNote}` : ''}</span>
+  </div>`).join('')
+  return `<div class="pwr-achv itt-achv${h.isPr ? ' pr' : ''}">
+    <div class="pa-medal">${h.medal}</div>
+    <div class="pa-body">
+      <div class="pa-head"><span class="pa-zh">${h.zh}</span><span>${h.en}</span></div>
+      <div class="ia-rows">${lines}</div>
+    </div>
+  </div>`
+}
+/* 沒浮出來的那些收進抽屜。就地展開會把摘要那一行推走三十幾列，收回來又跳回原位 ——
+   那一跳就是「怪怪的」。抽屜讓這一行永遠留在原地，清單也才排得下分組標題。 */
+function ittMoreHTML(date, dayList, shownRows) {
+  const shown = new Set((shownRows || []).map(r => `${r.segId}|${r.attemptNum}`))
+  const rest = (dayList || []).filter(it => !shown.has(`${it.segId}|${it.attemptNum}`))
+  if (!rest.length) return ''
+  const bestRank = Math.min(...rest.map(it => it.rank || 9999))
+  return `<button class="lap-toggle itt-more" type="button" data-ittday="${date}">
+      ${shown.size ? '另外 ' : ''}${rest.length} 次路段挑戰${bestRank < 9999 ? ` · 最佳第 ${bestRank} 名` : ''} →
+    </button>`
 }
 function renderNameCard(data) {
   // 身分列：併進出發名單卡的頂端，不再是獨立一塊。
@@ -8546,42 +8602,35 @@ function initDrawer() {
    排序完全照 data/itt-config.json 的陣列順序：那份檔案裡本來就是
    「全段 → 1/4 → 2/4 → 3/4 → 4/4 → 上半」這種人看得懂的順序，
    不需要另外定規則。同一條路線的分段收在同一個標題底下，同一段的多次挑戰照次數排。 */
+/* 抽屜＝「這一天實際發生的順序」，不是排行榜。
+   以前是照 itt-config 的分組排（全段四次擠在一起、再來 1/4 四次…），
+   名次高低在活動卡的成就列上已經看得到了，點進來要回答的是另一個問題：
+   我那天是怎麼騎的。所以這裡純粹照起跑時間排，一趟劍中中中中劍讀起來就是
+   劍南北上 → 中社四趟 → 劍南南下 的順序。 */
 function ittDayBody(date) {
   const META = window._ittSegMeta || {}
   const list = ((window.__ittMap || {})[date] || []).slice()
   if (!list.length) return '<div class="nil">這一天沒有路段成績。</div>'
   const metaOf = it => META[it.segId] || {}
-  const groupOf = it => metaOf(it).group || ('solo-' + it.segId)
   const idxOf = it => { const m = metaOf(it); return m._idx == null ? 9999 : m._idx }
-  // 每組的排序位置＝組內設定檔序號最小的那一段（通常就是「全段」）
-  const gmin = {}
-  list.forEach(it => { const g = groupOf(it); gmin[g] = Math.min(gmin[g] == null ? 9999 : gmin[g], idxOf(it)) })
+  // 同一刻起跑的是巢狀變體（中社「全段」與它的 1/4、上半 同時開始），
+  // 用設定檔序號當第二鍵，母路線就會排在自己的分段前面。沒有起跑時間的舊資料沉底。
+  const tOf = it => it.startTime || '99:99'
   list.sort((a, b) =>
-    (gmin[groupOf(a)] - gmin[groupOf(b)]) || (idxOf(a) - idxOf(b)) || ((a.attemptNum || 0) - (b.attemptNum || 0)))
+    tOf(a).localeCompare(tOf(b)) || (idxOf(a) - idxOf(b)) || ((a.attemptNum || 0) - (b.attemptNum || 0)))
 
-  const groups = []
-  list.forEach(it => {
-    const g = groupOf(it)
-    let bucket = groups.find(x => x.g === g)
-    if (!bucket) { bucket = { g, items: [], segs: new Set() }; groups.push(bucket) }
-    bucket.items.push(it)
-    bucket.segs.add(it.segId)
-  })
-  return groups.map(b => {
-    // 組名取「全段」那一段的中文名，去掉尾巴的「全段」；沒有全段就用第一筆的名字
-    const full = b.items.find(it => (metaOf(it).label || '') === '全段')
-    const title = ((metaOf(full || b.items[0]).nameZh) || b.items[0].segName || '').replace(/\s*全段$/, '')
-    return `<div class="dw-sec">
-      <h4>${title}<span class="dw-h4n">${b.segs.size} 段 · ${b.items.length} 次</span></h4>
-      ${b.items.map(it => {
-        const label = metaOf(it).label || it.segName
-        const rankStr = it.rank ? (it.rank === 1 ? '🥇 第 1 名' : `第 ${it.rank} 名`) : ''
-        return `<div class="ittd${it.is_pr ? ' is-pr' : ''}">
-          <span class="ittd-l">${it.is_pr ? '👑 ' : ''}${label}</span>
-          <span class="ittd-t">${it.elapsed_str}</span>
-          <span class="ittd-m">第 ${it.attemptNum} / ${it.total} 次${rankStr ? ' · ' + rankStr : ''}</span>
-        </div>`
-      }).join('')}
+  let lastT = null
+  return list.map(it => {
+    const rankStr = it.rank ? (it.rank === 1 ? '🥇 第 1 名' : `第 ${it.rank} 名`) : ''
+    // 同一刻起跑的巢狀變體不重複印時間，一眼就看得出它們是同一次上坡
+    const t = it.startTime || null
+    const tCell = (t && t !== lastT) ? t : ''
+    lastT = t
+    return `<div class="ittd${it.is_pr ? ' is-pr' : ''}">
+      <span class="ittd-c">${tCell}</span>
+      <span class="ittd-l">${it.is_pr ? '👑 ' : ''}${metaOf(it).nameZh || it.segName}</span>
+      <span class="ittd-t">${it.elapsed_str}</span>
+      <span class="ittd-m">第 ${it.attemptNum} / ${it.total} 次${rankStr ? ' · ' + rankStr : ''}</span>
     </div>`
   }).join('')
 }
@@ -9130,6 +9179,8 @@ const VIEWS = [
   { id: 'itt',      zh: 'ITT',      en: 'ITT'      },
   { id: 'atlas',    zh: '地圖',     en: 'Atlas'    },
   { id: 'trends',   zh: '趨勢',     en: 'Trends'   },
+  // 趨勢講的是訓練輸出（量、功率曲線、總計），身體講的是恢復。兩件事，兩頁。
+  { id: 'body',     zh: '身體',     en: 'Body'     },
 ]
 const appState = { view: 'overview', selectedSegment: null, selectedActivity: null, selectedSession: null }
 
@@ -9137,7 +9188,17 @@ const appState = { view: 'overview', selectedSegment: null, selectedActivity: nu
 function updateNavBadges(data) {
   const set = (id, txt) => {
     const el = document.querySelector(`.nav-i em[data-badge="${id}"]`)
-    if (el) el.textContent = txt || ''
+    if (!el) return
+    const next = txt || ''
+    // 第一次填不算「變了」—— 空白換成數字是它本來就該長出來的樣子，不是新消息。
+    const changed = el.textContent && el.textContent !== next
+    el.textContent = next
+    if (changed) {
+      el.classList.remove('is-fresh')
+      void el.offsetWidth   // 重新觸發動畫；連續兩次更新才不會第二次沒反應
+      el.classList.add('is-fresh')
+      setTimeout(() => el.classList.remove('is-fresh'), 1500)
+    }
   }
   const today = new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10)
 
@@ -9262,8 +9323,14 @@ function renderReadiness() {
   })()
   const md = d => d ? d.slice(5).replace('-', '/') : ''
   const hhmm = s => s == null ? '—' : `${Math.floor(s / 3600)}:${String(Math.round(s % 3600 / 60)).padStart(2, '0')}`
-  const row = (k, v, date) =>
-    `<div class="rdy-row"><span>${k}</span><b>${v}</b><em>${md(date)}</em></div>`
+  // 有歷史的量測值做成可點的列 —— 側欄只放得下「最新一筆」，
+  // 但底下躺著一整年（靜息 365 天、睡眠 342 晚），點進去才看得到趨勢。
+  // eFTP 不可點：它來自 sportInfo，不是每日量測，沒有同一條時間序列。
+  const row = (k, v, date, metric) => metric
+    ? `<button class="rdy-row is-tap" type="button" data-wellness="${metric}">
+         <span>${k}</span><b>${v}</b><em>${md(date)}</em>
+       </button>`
+    : `<div class="rdy-row"><span>${k}</span><b>${v}</b><em>${md(date)}</em></div>`
 
   return `<div class="rdy">
     <div class="rdy-hd">狀態<span>${md(last)}</span></div>
@@ -9274,18 +9341,241 @@ function renderReadiness() {
     <svg class="rdy-spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">
       <path d="${path(atlSeries)}" class="rdy-atl"/>
       <path d="${path(ctlSeries)}" class="rdy-ctl"/>
+      <path d="${path(ctlSeries)}" class="rdy-scan" pathLength="100"/>
     </svg>
     <div class="rdy-cta">
       <span>CTL ${ctl == null ? '—' : ctl.toFixed(1)}</span>
       <span>ATL ${atl == null ? '—' : atl.toFixed(1)}</span>
       <em>${RDY_DAYS} 天</em>
     </div>
-    ${row('HRV', hrv.v == null ? '—' : Math.round(hrv.v), hrv.date)}
-    ${row('靜息', rhr.v == null ? '—' : Math.round(rhr.v), rhr.date)}
-    ${row('睡眠', hhmm(slp.v), slp.date)}
+    ${row('HRV', hrv.v == null ? '—' : Math.round(hrv.v), hrv.date, hrv.v == null ? null : 'hrv')}
+    ${row('靜息', rhr.v == null ? '—' : Math.round(rhr.v), rhr.date, rhr.v == null ? null : 'restingHR')}
+    ${row('睡眠', hhmm(slp.v), slp.date, slp.v == null ? null : 'sleepSecs')}
     ${eftp ? row('eFTP', eftp + ' W', null) : ''}
     ${renderBlockProgress()}
   </div>`
+}
+
+/* ══ WELLNESS 趨勢抽屜 ═══════════════════════════════════════════════
+   側欄只放得下「最新一筆」，但 data/fit/_wellness.json 躺著 369 天：
+   靜息心率 365 天、HRV 343 天、睡眠 342 晚。點側欄那一列就把整條攤開。
+
+   顏色三個指標都用金 —— DESIGN.md 把金綁在「時數／HR」這個維度上，
+   靜息與 HRV 都是心率衍生、睡眠是時數，三者都落在同一個維度裡，
+   不是新維度，所以不新增顏色。一次只看一個指標，配色也不必負責區分。 */
+const WELLNESS_METRICS = {
+  restingHR: { zh: '靜息心率', en: 'RESTING HR', unit: 'bpm', better: 'low',
+               fmt: v => String(Math.round(v)), disp: v => Math.round(v),
+               note: '睡眠中的最低心率。趨勢往下代表恢復在變好；連續往上通常先於「感覺很累」出現。' },
+  hrv:       { zh: 'HRV',      en: 'HRV',        unit: 'ms',  better: 'high',
+               fmt: v => String(Math.round(v)), disp: v => Math.round(v),
+               note: '心跳間隔的變異度。個人基準值差很大，看的是「相對自己的高低」而不是絕對數字。' },
+  sleepScore:{ zh: '睡眠分數', en: 'SLEEP SCORE',unit: '',    better: 'high',
+               fmt: v => String(Math.round(v)), disp: v => Math.round(v),
+               note: 'Garmin 給的睡眠品質評分，跟時數是兩回事：睡 7:44 可能拿 86 分，睡 4:56 拿 72 分。時數講長度，分數講深淺與中斷。' },
+  eftp:      { zh: 'eFTP',     en: 'ESTIMATED FTP', unit: 'W', better: 'high',
+               fmt: v => String(Math.round(v)), disp: v => Math.round(v),
+               note: 'intervals.icu 從實際功率資料反推的 FTP，不是測出來的。它會慢慢跟著騎乘紀錄漂移，所以看的是月與月之間的走向，不是單日跳動。' },
+  sleepSecs: { zh: '睡眠',     en: 'SLEEP',      unit: '',    better: 'high',
+               // 先取整到分再拆時分。先拆再 round 的話 3599 秒會變成 "0:60"（實際踩過）
+               fmt: v => { const t = Math.round(v / 60); return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}` },
+               disp: v => Math.round(v / 60) * 60,
+               note: '入睡到起床的實際睡眠時間。沒有值代表那晚沒戴錶，不是沒睡 —— 所以線是斷的，不補零。' },
+}
+const WELLNESS_RANGES = [30, 90, 365]
+let _wellnessRange = 90
+
+/** [date, value] 序列，含缺值的日子（值為 null），這樣線才斷得掉。 */
+function wellnessSeries(key, nDays) {
+  const w = window._wellness
+  if (!w) return []
+  const days = wellnessDays(w).slice(-nDays)
+  // eFTP 不在頂層，躺在 sportInfo 陣列裡那筆 type==='Ride' 的物件上
+  const pick = d => {
+    const rec = w[d]
+    if (!rec) return null
+    if (key === 'eftp') {
+      const si = Array.isArray(rec.sportInfo) ? rec.sportInfo.find(x => x.type === 'Ride') : null
+      return si && si.eftp != null ? si.eftp : null
+    }
+    return rec[key] != null ? rec[key] : null
+  }
+  return days.map(d => [d, pick(d)])
+}
+
+/** 只用有值的日子算移動平均；連續缺值就不給平均，不要拿舊值硬撐。 */
+function rollingMean(series, win) {
+  return series.map((_, i) => {
+    const slice = series.slice(Math.max(0, i - win + 1), i + 1).map(p => p[1]).filter(v => v != null)
+    return slice.length >= Math.ceil(win / 2) ? slice.reduce((a, b) => a + b, 0) / slice.length : null
+  })
+}
+
+/* 個人基準帶：長窗的滾動平均 ±1 SD。Garmin 判「平衡／失衡」就是拿 7 日均
+   跟這條帶子比 —— HRV 的絕對數字因人而異，只有「相對自己平常」才有意義。
+   窗內樣本不足一半就不給帶子，寧可留白也不要畫一條靠三個點撐出來的基準。 */
+function rollingBand(series, win) {
+  return series.map((_, i) => {
+    const v = series.slice(Math.max(0, i - win + 1), i + 1).map(p => p[1]).filter(x => x != null)
+    if (v.length < Math.max(8, win / 2)) return null
+    const mu = v.reduce((a, b) => a + b, 0) / v.length
+    const sd = Math.sqrt(v.reduce((a, b) => a + (b - mu) ** 2, 0) / v.length)
+    return [mu - sd, mu + sd]
+  })
+}
+
+function wellnessChartSVG(series, avg, m, band) {
+  /* viewBox 的長寬比刻意對齊 .wl-panel 的實際渲染尺寸（max-width 820 × height 160）。
+     preserveAspectRatio="none" 會把座標系拉滿整個框 —— 比例差太多的話，
+     端點那兩顆圓球會被橫向拉成橢圓（實際看到過，320 拉到 2000px 寬）。 */
+  const W = 820, H = 160
+  const vals = series.map(p => p[1]).filter(v => v != null)
+  if (vals.length < 2) return '<div class="nil">這個區間沒有足夠的資料。</div>'
+  // 值域要把基準帶一起算進去，不然帶子的上下緣會被裁在框外
+  const bandVals = (band || []).filter(Boolean).flat()
+  const all = vals.concat(bandVals)
+  const lo = Math.min(...all), hi = Math.max(...all), span = (hi - lo) || 1
+  // 上下各留 8% 呼吸空間，否則最高最低點會貼死在邊框上
+  const pad = span * 0.08
+  const y = v => (H - (v - (lo - pad)) / (span + pad * 2) * H).toFixed(1)
+  const x = i => (i / (series.length - 1) * W).toFixed(1)
+  // 缺值處把線斷開（M 重新起筆），不內插 —— 沒戴錶不等於數值持平
+  const line = arr => {
+    let d = '', pen = false
+    arr.forEach((v, i) => {
+      if (v == null) { pen = false; return }
+      d += `${pen ? 'L' : 'M'}${x(i)} ${y(v)} `
+      pen = true
+    })
+    return d.trim()
+  }
+  const vLo = Math.min(...vals), vHi = Math.max(...vals)
+  const iMin = series.findIndex(p => p[1] === vLo)
+  const iMax = series.findIndex(p => p[1] === vHi)
+  // 端點的顏色照「哪一端是好的」給，不是照高低給：睡最久那晚要是綠的，
+  // 靜息最低那天也要是綠的。寫死 min=綠 的話睡眠圖會把最慘的那晚標成好消息。
+  const goodIsHigh = m.better === 'high'
+  const dot = (i, good) => series[i] && series[i][1] != null
+    ? `<circle class="${good ? 'wl-good' : 'wl-bad'}" cx="${x(i)}" cy="${y(series[i][1])}" r="2.6"/>` : ''
+  // 帶子是一條「上緣往右、下緣往左」的封閉多邊形；中間有缺口就整段不畫
+  const bandPath = (() => {
+    if (!band) return ''
+    const ok = band.map((b, i) => (b ? i : -1)).filter(i => i >= 0)
+    if (ok.length < 2) return ''
+    const top = ok.map((i, k) => `${k ? 'L' : 'M'}${x(i)} ${y(band[i][1])}`).join(' ')
+    const bot = [...ok].reverse().map(i => `L${x(i)} ${y(band[i][0])}`).join(' ')
+    return `<path class="wl-band" d="${top} ${bot} Z"/>`
+  })()
+  return `<svg class="wl-chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">
+    ${bandPath}
+    <path class="wl-raw" d="${line(series.map(p => p[1]))}"/>
+    <path class="wl-avg" d="${line(avg)}"/>
+    ${dot(iMin, !goodIsHigh)}${dot(iMax, goodIsHigh)}
+  </svg>`
+}
+
+const BODY_METRICS = ['hrv', 'restingHR', 'sleepSecs', 'sleepScore', 'eftp']
+let _bodyMetric = 'hrv'
+
+function wellnessPanel(key) {
+  const m = WELLNESS_METRICS[key]
+  if (!m) return ''
+  const n = _wellnessRange
+  const series = wellnessSeries(key, n)
+  const vals = series.map(p => p[1]).filter(v => v != null)
+  if (!vals.length) return '<div class="nil">還沒有這個指標的資料。</div>'
+  const avg7 = rollingMean(series, 7)
+  // 基準帶只給 HRV 與靜息心率：那兩個的判讀方式就是「相對自己平常」。
+  // 睡眠時數、分數、eFTP 有絕對意義（睡 8 小時就是比 4 小時好），畫帶子只會多一層雜訊。
+  const band = (key === 'hrv' || key === 'restingHR') ? rollingBand(series, 60) : null
+  const bNow = band ? [...band].reverse().find(Boolean) : null
+  const latest = [...series].reverse().find(p => p[1] != null)
+  const mean = a => a.reduce((x, z) => x + z, 0) / a.length
+  const tailMean = k => {
+    const t = series.slice(-k).map(p => p[1]).filter(v => v != null)
+    return t.length ? mean(t) : null
+  }
+  const lo = Math.min(...vals), hi = Math.max(...vals)
+  const loDate = (series.find(p => p[1] === lo) || [])[0]
+  const hiDate = (series.find(p => p[1] === hi) || [])[0]
+  const missing = series.length - vals.length
+  const md = d => d ? d.slice(5).replace('-', '/') : '—'
+  // 「好」的方向不同：靜息越低越好、HRV 與睡眠越高越好。
+  // 所以箭頭方向講的是數值升降，顏色講的是好壞 —— 靜息往下是綠色的 ▼，這是對的。
+  // 差距一律用「四捨五入到顯示精度之後」的值去算。拿原始值算的話 HRV 兩格都印 55、
+  // 箭頭卻寫 ▼ 1（實際踩過：原始差 -0.7）。箭頭必須跟它上面那兩格永遠對得起來。
+  const d7 = tailMean(7), d28 = tailMean(28)
+  const delta = (d7 != null && d28 != null && m.disp(d7) !== m.disp(d28))
+    ? m.disp(d7) - m.disp(d28) : null
+  const good = delta == null ? null : (m.better === 'low' ? delta < 0 : delta > 0)
+  const stat = (k, v, sub) => `<div class="wl-st"><span>${k}</span><b>${v}</b>${sub ? `<em>${sub}</em>` : ''}</div>`
+
+  return `
+    <div class="wl-now">
+      <b>${m.fmt(latest[1])}</b>${m.unit ? `<u>${m.unit}</u>` : ''}
+      <span>${md(latest[0])}${delta == null ? '' :
+        ` · 近 7 天比近 28 天 <i class="${good ? 'good' : 'bad'}">${delta > 0 ? '▲' : '▼'} ${m.fmt(Math.abs(delta))}</i>`}</span>
+    </div>
+    <div class="wl-tabs" role="tablist">
+      ${WELLNESS_RANGES.map(r => `<button class="wl-tab${r === n ? ' on' : ''}" type="button"
+        data-wlrange="${r}" role="tab" aria-selected="${r === n}">${r} 天</button>`).join('')}
+    </div>
+    ${wellnessChartSVG(series, avg7, m, band)}
+    <div class="wl-legend"><i class="raw"></i>每日<i class="avg"></i>7 日平均${
+      bNow ? '<i class="band"></i>個人基準帶 ' + m.fmt(bNow[0]) + '~' + m.fmt(bNow[1]) : ''}</div>
+    <div class="wl-stats">
+      ${stat('近 7 天', d7 == null ? '—' : m.fmt(d7))}
+      ${stat('近 28 天', d28 == null ? '—' : m.fmt(d28))}
+      ${stat(m.better === 'low' ? '最低（最好）' : '最低', m.fmt(lo), md(loDate))}
+      ${stat(m.better === 'low' ? '最高' : '最高（最好）', m.fmt(hi), md(hiDate))}
+    </div>
+    <div class="wl-note">${m.note}${missing ? `<br>這 ${n} 天裡有 <b>${missing}</b> 天沒有資料，圖上是斷開的。` : ''}</div>`
+}
+
+/* 綁在 document 而不是 #content：狀態面板同時掛在側欄（.side，在 #content 之外）
+   與手機版的 #rdy-mobile，兩個位置都要吃得到。 */
+document.addEventListener('click', e => {
+  const tap = e.target.closest('[data-wellness]')
+  if (tap) { goBodyMetric(tap.dataset.wellness); return }
+  const mt = e.target.closest('[data-bodymetric]')
+  if (mt) { _bodyMetric = mt.dataset.bodymetric; paintBodyView(); return }
+  const rg = e.target.closest('[data-wlrange]')
+  if (rg) { _wellnessRange = +rg.dataset.wlrange; paintBodyView() }
+})
+
+/* 點側欄的量測列 → 切到「身體」頁並選中那個指標。
+   以前是開右側抽屜，但這些是一整年的曲線，抽屜那點寬度撐不起來，
+   而且看完要關掉才能做別的事 —— 它是一個目的地，不是一個附註。 */
+function goBodyMetric(key) {
+  if (!WELLNESS_METRICS[key]) return
+  _bodyMetric = key
+  setView('body', { push: true })
+  paintBodyView()
+}
+function paintBodyView() {
+  const host = document.getElementById('body-panel')
+  if (!host) return
+  host.innerHTML = wellnessPanel(_bodyMetric)
+  document.querySelectorAll('#body-tabs .wl-mtab').forEach(b => {
+    const on = b.dataset.bodymetric === _bodyMetric
+    b.classList.toggle('on', on)
+    b.setAttribute('aria-selected', String(on))
+  })
+}
+function renderBodyView() {
+  if (!window._wellness) return '<div class="nil">還沒有 wellness 資料。</div>'
+  const avail = BODY_METRICS.filter(k => wellnessSeries(k, 9999).some(p => p[1] != null))
+  if (!avail.length) return '<div class="nil">還沒有 wellness 資料。</div>'
+  if (!avail.includes(_bodyMetric)) _bodyMetric = avail[0]
+  const tabs = avail.map(k => {
+    const m = WELLNESS_METRICS[k]
+    const days = wellnessSeries(k, 9999).filter(p => p[1] != null).length
+    return `<button class="wl-mtab${k === _bodyMetric ? ' on' : ''}" type="button"
+      data-bodymetric="${k}" role="tab" aria-selected="${k === _bodyMetric}">
+      ${m.zh}<em>${days} 天</em></button>`
+  }).join('')
+  return `<div class="wl-mtabs" id="body-tabs" role="tablist" aria-label="身體指標">${tabs}</div>
+    <div class="block wl-panel" id="body-panel">${wellnessPanel(_bodyMetric)}</div>`
 }
 
 /** 週期進度 + 下一課。沒有 training-block.json 就整塊不出現。 */
@@ -9609,6 +9899,7 @@ Promise.all([
 <link rel="stylesheet" href="activity-modal.css">
 <link rel="stylesheet" href="theme-strava.css">
 <style>:root{--am-accent:#FC4C02;--am-accent-soft:rgba(252,76,2,.18);--am-panel:#14100c;--am-panel-2:#1c160f}</style>
+<script src="itt-achievements.js" defer></script>
 <script src="activity-modal.js" defer></script>
 </body>
 </html>
