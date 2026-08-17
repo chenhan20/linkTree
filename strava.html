@@ -357,23 +357,30 @@ html,body{height:100%;font-family:var(--f-ui);background:#0a0408;color:#ddd}
   .apphead{padding:0 14px;height:42px;gap:8px}
   .ah-s{display:none}
   .ah-r{font-size:9px;letter-spacing:1.2px}
-  .viewport{padding:16px 14px calc(78px + env(safe-area-inset-bottom,0px))}
+  .viewport{padding:16px 14px calc(64px + env(safe-area-inset-bottom,0px))}
+  /* 欄數不要寫死。原本是 repeat(5,1fr)，第七個 view（身體）進來之後就裂成兩排 ——
+     67px 高的雙排把畫面吃掉一大塊，第二排還壓在內容上。改成 auto-flow: column，
+     幾個 view 就幾欄，以後再加第八個也不會再爛一次。 */
   .tabbar{
-    display:grid;grid-template-columns:repeat(5,1fr);
+    display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);
     position:fixed;left:0;right:0;bottom:0;z-index:30;
     border-top:1px solid var(--hair-2);background:rgba(8,4,3,.97);
     padding-bottom:env(safe-area-inset-bottom,0px);
   }
+  /* 七欄之後每格只剩 ~54px，OVERVIEW／TRENDS 這種英文字排不進去（就是它撐爆版面的）。
+     改用中文兩字：同樣的寬度綽綽有餘，而且跟桌機側欄的用字一致 —— 同一個目的地
+     在兩個裝置上不該叫不同的名字。ITT 本來就是縮寫，維持原樣。 */
   .tab-i{
     display:flex;flex-direction:column;align-items:center;gap:4px;
-    padding:9px 2px 8px;border:0;background:transparent;cursor:pointer;font-family:inherit;
-    font-size:9.5px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;
+    padding:12px 1px 11px;border:0;background:transparent;cursor:pointer;font-family:inherit;
+    font-size:11px;font-weight:700;letter-spacing:.5px;
     color:var(--ink-3);-webkit-tap-highlight-color:transparent;
+    white-space:nowrap;overflow:hidden;
   }
   .tab-i i{display:block;width:14px;height:2px;border-radius:2px;background:transparent;transition:background .13s}
   .tab-i[aria-current="page"]{color:#FC4C02}
   .tab-i[aria-current="page"] i{background:#FC4C02;box-shadow:0 0 6px rgba(252,76,2,.7)}
-  #to-top-btn{bottom:calc(84px + env(safe-area-inset-bottom,0px))!important}
+  #to-top-btn{bottom:calc(70px + env(safe-area-inset-bottom,0px))!important}
 }
 
 /* ── 大螢幕：側欄按比例放大 ──
@@ -9172,10 +9179,12 @@ function atSyncChips(active) {
 // 順序＝使用頻率，不是資訊架構的分類。前三個是日常三連（我現在如何、接下來練什麼、
 // 剛剛做了什麼），ITT 與趨勢是低頻的深入分析。原本 ITT 卡在第三，把最常看的活動紀錄
 // 擠到最後。
+/* tab＝手機底部導覽的短名。七欄之後每格只有 ~54px，英文排不下（見 .tab-i 的註解），
+   而「活動紀錄」四個字也會擠掉左右鄰居，只有這一項需要縮成兩字。 */
 const VIEWS = [
   { id: 'overview', zh: '現況',     en: 'Overview' },
   { id: 'plan',     zh: '計畫',     en: 'Plan'     },
-  { id: 'log',      zh: '活動紀錄', en: 'Log'      },
+  { id: 'log',      zh: '活動紀錄', en: 'Log',     tab: '紀錄' },
   { id: 'itt',      zh: 'ITT',      en: 'ITT'      },
   { id: 'atlas',    zh: '地圖',     en: 'Atlas'    },
   { id: 'trends',   zh: '趨勢',     en: 'Trends'   },
@@ -9624,7 +9633,7 @@ function buildNav() {
   if (nav) nav.innerHTML = VIEWS.map(v =>
     `<button class="nav-i" type="button" data-view="${v.id}"><i></i>${v.zh}<em data-badge="${v.id}"></em></button>`).join('')
   if (tab) tab.innerHTML = VIEWS.map(v =>
-    `<button class="tab-i" type="button" data-view="${v.id}"><i></i>${v.en}</button>`).join('')
+    `<button class="tab-i" type="button" data-view="${v.id}"><i></i>${v.tab || v.zh}</button>`).join('')
   const go = e => {
     const b = e.target.closest('[data-view]')
     if (!b) return
