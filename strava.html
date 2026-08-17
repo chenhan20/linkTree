@@ -9171,8 +9171,10 @@ function updateNavBadges(data) {
   // 趨勢：體能（CTL）—— 趨勢章看的就是這條線的長期走向
   const w = window._wellness
   if (w) {
-    const days = Object.keys(w).sort()
-    const ctl = days.length ? w[days[days.length - 1]]?.ctl : null
+    // 同樣要切掉未來日（見 wellnessDays）：徽章講的是「現在的體能」，不是後天的推算
+    const days = wellnessDays(w)
+    const last = [...days].reverse().find(d => w[d]?.ctl != null)
+    const ctl = last ? w[last].ctl : null
     if (ctl != null) set('trends', `CTL ${Math.round(ctl)}`)
   }
 }
@@ -9190,6 +9192,16 @@ function tsbMood(tsb) {
   if (tsb > -20)  return { txt: '疲勞中', cls: 'rdy-tired' }
   return              { txt: '高負荷', cls: 'rdy-deep'  }
 }
+
+/** wellness 的日期清單，切到台北時間的今天為止。
+    sync-intervals.py 查的區間是 today+1，而 intervals.icu 對未來日一樣會回 CTL/ATL ——
+    那是它照衰減曲線＋已排課表推算的，不是量到的。實測：08-13 那班同步寫進去的
+    08-14 CTL 是 32.904373，之後兩班一模一樣沒動過。
+    不切掉的話 days[last] 會是明天甚至後天，側欄「狀態」標的日期就變成未來，
+    TSB 也是推算值。凡是要講「現在的狀態」的地方都得先過這一關。
+    HRV／靜息／睡眠不受影響（未來日本來就沒有），但一併切掉才不會有人日後誤用。 */
+const wellnessDays = w =>
+  Object.keys(w).sort().filter(d => d <= new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10))
 
 /** 最近一筆有值的欄位，連同它是哪一天 —— 今天的睡眠／HRV 常常還沒同步進來，
     直接顯示空白會讓人以為壞了，標上日期才知道那是「昨天的數字」。 */
@@ -9217,10 +9229,12 @@ function rdySpark(series, w, h) {
 function renderReadiness() {
   const w = window._wellness
   if (!w) return ''
-  const days = Object.keys(w).sort()
+  const days = wellnessDays(w)
   if (!days.length) return ''
   const recent = days.slice(-RDY_DAYS)
-  const last = days[days.length - 1]
+  // 最後一天不一定有 CTL（同步落後、或那天只有睡眠沒有訓練負荷），往回找到有值的那天，
+  // 標題的日期也跟著它 —— 顯示的數字是哪一天的，日期就得是哪一天。
+  const last = [...days].reverse().find(d => w[d]?.ctl != null) || days[days.length - 1]
   const ctl = w[last]?.ctl, atl = w[last]?.atl
   const tsb = (ctl != null && atl != null) ? ctl - atl : null
   const mood = tsbMood(tsb)
