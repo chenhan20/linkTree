@@ -920,6 +920,9 @@ a.row:hover .row-go,button.row:hover .row-go{color:#FC4C02}
 .dw-sec>h4{font-size:8.5px;font-weight:700;letter-spacing:2.6px;text-transform:uppercase;
   color:var(--ink-3);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--hair)}
 .dw-p{font-size:13px;line-height:1.75;color:var(--ink-2)}
+.dw-coach{padding-left:11px;border-left:1px solid rgba(252,76,2,.22)}
+.dw-coach+.dw-coach{margin-top:11px}
+.dw-coach b{color:var(--ink-1);font-weight:700}
 .dw-kv{display:grid;grid-template-columns:3.2rem auto minmax(0,1fr) auto;gap:0 10px;align-items:baseline;
   padding:7px 0;border-bottom:1px solid var(--hair);font-size:12.5px;color:var(--ink-2)}
 .dw-kv b{font-family:var(--f-num);font-size:17px;font-weight:800;color:var(--ink-1);
@@ -991,6 +994,8 @@ body.dw-open #to-top-btn{display:none!important}
 .ses--past.is-ok .ses-st,.ses--past.is-over .ses-st{color:#5FD060}
 .ses--past.is-under .ses-st{color:#FF6A6A}
 .ses--past.is-missed{opacity:.55}
+.ses--past.is-missed.is-sub{opacity:.82}
+.ses--past.is-sub .ses-num{color:var(--ink-3)}
 .ses--future{opacity:.62}
 .ses--future .ses-nm{font-weight:600}
 .ses--next{
@@ -3824,6 +3829,9 @@ function renderRhythm(data) {
 const mcNum = v => v == null
   ? '<b class="is-na">--</b>'
   : `<b>${v}</b>`
+/* 替代執行（下雨改跑步機那種）有 actual，但那不是這一堂的處方 ——
+   計數、進度軌、下一堂三個地方都要走這個判斷，不能只看 s.actual。 */
+const SES_DONE = s => !!(s.actual && !s.actual.substituted)
 const MC_PASS = (a, t) => ({
   if:  a.if  != null && t.if  != null ? a.if  >= t.if - 0.02      : null,
   tss: a.tss != null && t.tss != null ? a.tss >= t.tss * 0.9      : null,
@@ -3839,13 +3847,17 @@ function renderMesocycle(block) {
   const md = d => `${d.slice(5, 7)}/${d.slice(8, 10)}`
   const wd = d => WD[new Date(d + 'T00:00:00Z').getUTCDay()]
   const n2 = v => v == null ? '—' : (+v).toFixed(2).replace(/^0/, '')
-  const done = S.filter(s => s.actual)
+  const done = S.filter(SES_DONE)
 
   // 下一堂 = 今天或之後、還沒有實際值的第一堂
   const nextIdx = S.findIndex(s => !s.actual && s.date >= today)
 
   const state = (s, i) => {
     if (s.actual) {
+      if (s.actual.substituted) return {
+        cls: 'missed', extra: 'is-sub', txt: '替代', badge: '🔁 SUBSTITUTED',
+        sub: s.actual.note || '原課表未執行，做了替代課表',
+      }
       const p = MC_PASS(s.actual, s.target || {})
       const hits = ['if', 'tss', 'vi'].filter(k => p[k] === true).length
       const graded = ['if', 'tss', 'vi'].filter(k => p[k] != null).length
@@ -3875,18 +3887,20 @@ function renderMesocycle(block) {
     const t = s.target || {}
     const p = s.actual ? MC_PASS(s.actual, t) : null
     // 做過的三個數字帶達標色（判定來自 MC_PASS，沒有第二套規則）；還沒做的顯示目標
-    const num = s.actual
+    const num = s.actual && s.actual.substituted
+      ? `<em>${s.actual.sub_metrics || ''}</em>`
+      : s.actual
       ? [p.if  == null ? '' : `<em class="${p.if  ? 'ok' : 'no'}">IF ${n2(s.actual.if)}</em>`,
          p.tss == null ? '' : `<em class="${p.tss ? 'ok' : 'no'}">TSS ${Math.round(s.actual.tss ?? 0)}</em>`,
          p.vi  == null ? '' : `<em class="${p.vi  ? 'ok' : 'no'}">VI ${n2(s.actual.vi)}</em>`]
         .filter(Boolean).join(' ')
       : `IF ${n2(t.if)} · TSS ${t.tss ?? '—'} · VI ≤${n2(t.vi)}`
     detail[s.date] = { s, st, p, i }
-    return `<button class="ses ses--${tier(st)} is-${st.cls}" type="button" data-ses="${s.date}">
+    return `<button class="ses ses--${tier(st)} is-${st.cls}${st.extra ? ' ' + st.extra : ''}" type="button" data-ses="${s.date}">
       <span class="ses-wk">${s.wk || ''}</span>
       <span class="ses-nm">${s.name || ''}</span>
       <span class="ses-dt">${md(s.date)} ${wd(s.date)}</span>
-      <span class="ses-st">${ST_TXT[st.cls] || ''}</span>
+      <span class="ses-st">${st.txt || ST_TXT[st.cls] || ''}</span>
       <span class="ses-go">→</span>
       <span class="ses-sub">${s.actual?.note || s.plan || st.sub}</span>
       <span class="ses-num">${num}</span>
@@ -3968,6 +3982,12 @@ function renderMesocycle(block) {
     </div>`
 }
 
+/* 教練評是唯一帶行內強調的長文字。只支援 **粗體** 一種標記——
+   先跳脫再還原，避免 JSON 裡的文字被當成 HTML。 */
+const mdBold = txt => String(txt)
+  .replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]))
+  .replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
+
 /* 課表細節抽屜：資料全部來自 renderMesocycle 已經算好的 detail map，這裡只負責排版。 */
 function openSessionDrawer(date) {
   const d = (window.__mcDetail || {})[date]
@@ -3980,6 +4000,9 @@ function openSessionDrawer(date) {
   const WD = ['日','一','二','三','四','五','六']
   const wd = x => WD[new Date(x + 'T00:00:00Z').getUTCDay()]
   const t = s.target || {}, a = s.actual || null
+  // 替代執行沒有可比的 IF/TSS/VI（拿跑步去對騎車的處方是假比較），
+  // 所以比較區退回「目標」，實際做了什麼另外開一節說。
+  const ac = a && a.substituted ? null : a
   // tv 給 null 代表這一項沒有目標可比（例如前後測的量測值），就只顯示單位
   const kv = (label, unit, tv, av, pass) => `
     <div class="dw-kv"><span class="u">${label}</span>
@@ -3989,12 +4012,18 @@ function openSessionDrawer(date) {
     </div>`
   const body =
     (s.plan ? `<div class="dw-sec"><h4>處方 · Prescription</h4><div class="dw-p">${s.plan}</div></div>` : '') +
-    `<div class="dw-sec"><h4>${a ? '實際 vs 目標 · Actual vs target' : '目標 · Target'}</h4>
-      ${kv('IF', '', n2(t.if), a ? n2(a.if) : null, p ? p.if : null)}
-      ${kv('TSS', '', t.tss ?? '—', a ? Math.round(a.tss ?? 0) : null, p ? p.tss : null)}
-      ${kv('VI', '', '≤' + n2(t.vi), a ? n2(a.vi) : null, p ? p.vi : null)}
-      ${a && a.test != null ? kv('前後測', 'W 量測值', null, a.test, null) : ''}
+    (a?.substituted ? `<div class="dw-sec"><h4>替代執行 · Substituted</h4>
+      <div class="dw-p"><b>${a.sub_name || ''}</b>${a.sub_metrics ? `<br>${a.sub_metrics}` : ''}</div></div>` : '') +
+    `<div class="dw-sec"><h4>${ac ? '實際 vs 目標 · Actual vs target' : '目標 · Target'}</h4>
+      ${kv('IF', '', n2(t.if), ac ? n2(ac.if) : null, p ? p.if : null)}
+      ${kv('TSS', '', t.tss ?? '—', ac ? Math.round(ac.tss ?? 0) : null, p ? p.tss : null)}
+      ${kv('VI', '', '≤' + n2(t.vi), ac ? n2(ac.vi) : null, p ? p.vi : null)}
+      ${ac && ac.test != null ? kv('前後測', 'W 量測值', null, ac.test, null) : ''}
     </div>` +
+    (Array.isArray(a?.coach) && a.coach.length
+      ? `<div class="dw-sec"><h4>教練評 · Coach</h4>${
+          a.coach.map(x => `<div class="dw-p dw-coach">${mdBold(x)}</div>`).join('')}</div>`
+      : '') +
     `<div class="dw-sec"><h4>狀態 · Status</h4>
       <div class="dw-p">${st.badge} · ${a?.note || st.sub}</div></div>` +
     (a?.ride
@@ -7700,7 +7729,7 @@ function render(data) {
     ? blk.sessions.slice().sort((a, b) => a.date.localeCompare(b.date)) : []
   const todayStr = new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10)
   const nextSes = blkS.find(x => !x.actual && x.date >= todayStr) || null
-  const doneN = blkS.filter(x => x.actual).length
+  const doneN = blkS.filter(SES_DONE).length
   const WD_ = ['日', '一', '二', '三', '四', '五', '六']
   const mdOf = d => `${d.slice(5, 7)}/${d.slice(8, 10)}`
   const wdOf = d => WD_[new Date(d + 'T00:00:00Z').getUTCDay()]
@@ -7713,7 +7742,7 @@ function render(data) {
           <span class="ov-k">${blk.title_en || 'BLOCK'}</span>
           <b class="ov-b">${blk.title || ''}</b>
           <span class="ov-n">${doneN} / ${blkS.length} 完成${blk.ftp ? ` · FTP ${blk.ftp} W` : ''}</span>
-          <span class="ov-track">${blkS.map(x => `<i class="${x.actual ? 'is-ok' : (x === nextSes ? 'is-next' : (x.date < todayStr ? 'is-missed' : ''))}"></i>`).join('')}</span>
+          <span class="ov-track">${blkS.map(x => `<i class="${SES_DONE(x) ? 'is-ok' : (x === nextSes ? 'is-next' : (x.actual || x.date < todayStr ? 'is-missed' : ''))}"></i>`).join('')}</span>
         </button>
         ${nextSes ? `
         <button class="ov-cell is-next" data-goto="plan" type="button">
@@ -9601,7 +9630,7 @@ function renderBlockProgress() {
   const wkNow = Math.max(1, Math.floor(dayNo / 7) + 1)
   const wkAll = Math.max(1, Math.ceil(total / 7))
   const pct = Math.max(0, Math.min(100, dayNo / total * 100))
-  const next = (b.sessions || []).filter(s => s.date >= today).sort((a, c) => a.date.localeCompare(c.date))[0]
+  const next = (b.sessions || []).filter(s => s.date >= today && !s.actual).sort((a, c) => a.date.localeCompare(c.date))[0]
   const inDays = next ? Math.round((Date.parse(next.date) - Date.parse(today)) / 86400000) : null
   const when = inDays === 0 ? '今天' : inDays === 1 ? '明天' : `${inDays} 天後`
   const t = next && next.target
