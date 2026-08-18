@@ -9227,11 +9227,15 @@ function updateNavBadges(data) {
     set('plan', d === 0 ? '今天' : d === 1 ? '明天' : `${d} 天後`)
   }
 
-  // 活動紀錄：本週幾趟（週一起算，跟 weekly_quest 同一個定義）
+  // 活動紀錄：本週幾場（週一起算）。四種運動都要算 —— 這顆徽章對應的是活動紀錄頁，
+  // 那頁的「本週 · 場次」數的就是 allList（騎乘＋跑步＋游泳＋重訓）。先前這裡只數
+  // recent_rides，於是只跑步或只重訓的一週會顯示「本週 0」，跟點進去看到的清單自打嘴巴。
+  // 刻意跟 weekly_quest 不同：那是騎乘任務，這是活動紀錄。
   const now = new Date(Date.now() + 8 * 3600 * 1000)
   const monday = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(),
     now.getUTCDate() - ((now.getUTCDay() + 6) % 7))).toISOString().slice(0, 10)
-  const wk = (data.recent_rides || []).filter(r => (r.date || '') >= monday).length
+  const wk = ['recent_rides', 'recent_runs', 'recent_swims', 'recent_weights']
+    .reduce((n, k) => n + (data[k] || []).filter(a => (a.date || '') >= monday).length, 0)
   set('log', wk ? `本週 ${wk}` : '本週 0')
 
   // ITT：目前追蹤幾條分段
