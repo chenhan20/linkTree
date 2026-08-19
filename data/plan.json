@@ -149,7 +149,7 @@
         { "week": 1, "tuesday": "2026-08-18", "thursday": "2026-08-20", "target_tss": 227 },
         { "week": 2, "tuesday": "2026-08-25", "thursday": "2026-08-27", "target_tss": 252 },
         { "week": 3, "tuesday": "2026-09-01", "thursday": "2026-09-03", "target_tss": 265 },
-        { "week": 4, "tuesday": "2026-09-08", "thursday": "2026-09-10", "target_tss": 229 }
+        { "week": 4, "tuesday": "2026-09-08", "thursday": "2026-09-10", "target_tss": 263 }
       ]
     }
   ],
@@ -439,22 +439,23 @@
 
     "2026-09-08": {
       "type": "PRELOAD",
-      "label": "W4 · 配對前置負荷 95 分 @180W ＋ 3×1 分開腿",
+      "label": "W4 · 配對前置負荷 110 分 @185-195W ＋ 3×1 分開腿",
       "block": "ghost-month-flat-2026-08",
       "week": 4,
       "weekday": "二",
-      "intent": "為 9/10 驗收調狀態，但不是傳統減量。8/13 前測的前 48 小時是 8/11 那趟 TSS 190／1239 m 爬坡；如果 9/08 只做 TSS 60 的 Z2，9/10 會在明顯更新鮮的狀態下測，數字會虛胖，配對比較就作廢了。這天做 TSS ~118 的穩定 tempo，把前置疲勞拉近 —— 沒有目標賽事，這個區塊的產出就是那個可信的數字，不需要為誰 peak。",
-      "time_budget": { "window_min": 150, "ride_min": 127, "note": "週二 2.5 小時窗口。這天不准超時，超了就吃掉週四的測驗品質。" },
+      "intent": "為 9/10 驗收調狀態，但不是傳統減量。8/13 前測的前 48 小時是 8/11 那趟 TSS 190／1239 m 爬坡；如果 9/08 只做 TSS 60 的 Z2，9/10 會在明顯更新鮮的狀態下測，數字會虛胖，配對比較就作廢了。這天做 TSS ~152 的穩定 tempo，把前置疲勞拉近 —— 沒有目標賽事，這個區塊的產出就是那個可信的數字，不需要為誰 peak。",
+      "time_budget": { "window_min": 150, "ride_min": 142, "note": "週二 2.5 小時窗口，留 8 分餘裕。這天不准超時，超了就吃掉週四的測驗品質。" },
       "preload_match": {
         "reference_date": "2026-08-11",
         "reference_tss": 190,
-        "reference_note": "2 小時 44 分、1239 m 爬升、IF 0.835 —— 平路 2.5 小時複製不了 190，只做到 ~118，屬於部分配對",
-        "target_tss": 118,
-        "read_the_result": "9/10 的數字仍略偏樂觀。判定進步時，把 ≥15W 的門檻視為底線而非剛好及格。"
+        "reference_note": "2 小時 44 分、1239 m 爬升、IF 0.835 —— 平路的 2.5 小時複製不了爬升，但可以靠時間×強度把 TSS 拉近",
+        "target_tss": 152,
+        "revised": "2026-08-19：原本只排 TSS 118，跟 8/11 差 72，9/10 會在明顯更新鮮的腿上測、數字虛高。改成 110 分 @185-195W，缺口收到 ~38。刻意不做成門檻課（IF ~0.80 是上緣 tempo，正是本區塊的主刺激），寧可殘留一點偏樂觀，也不要用一堂硬課把測驗變成測疲勞。",
+        "read_the_result": "9/10 仍略偏樂觀但幅度小了。判定進步時把 ≥10W 當底線（原本的 15W 是為了 118 的大缺口設的）。"
       },
       "segments": [
         { "name": "熱身", "role": "warmup", "minutes": 15, "target_w": { "lo": 130, "hi": 180, "about": 155 }, "target_cadence": null },
-        { "name": "穩定續航", "role": "work", "minutes": 95, "target_w": { "lo": 175, "hi": 185, "about": 180 }, "target_cadence": { "lo": 85, "hi": 95 }, "note": "不是門檻日，別自己加碼。這段的任務是製造前置疲勞，不是拿分數。" },
+        { "name": "穩定續航", "role": "work", "minutes": 110, "target_w": { "lo": 185, "hi": 195, "about": 190 }, "target_cadence": { "lo": 85, "hi": 95 }, "note": "不是門檻日，別自己加碼。這段的任務是製造跟 8/11 對等的前置疲勞，不是拿分數。" },
         { "name": "開腿 1/3", "role": "allout", "rep": 1, "of": 3, "minutes": 1, "target_w": { "allout": true, "about": null }, "target_cadence": null },
         { "name": "開腿恢復 1", "role": "recovery", "minutes": 2, "target_w": { "lo": null, "hi": null, "about": 130 }, "target_cadence": null, "note": "課表未指定組間長度，此處假設 2 分" },
         { "name": "開腿 2/3", "role": "allout", "rep": 2, "of": 3, "minutes": 1, "target_w": { "allout": true, "about": null }, "target_cadence": null },
@@ -465,13 +466,13 @@
       "rules": [
         {
           "kind": "min_power_hold",
-          "watts": 155,
+          "watts": 165,
           "max_below_sec": 15,
           "scope": "work",
-          "label": "穩定續航段功率不得低於 155W 超過 15 秒"
+          "label": "穩定續航段功率不得低於 165W 超過 15 秒"
         }
       ],
-      "targets": { "week_tss": 229 }
+      "targets": { "week_tss": 263 }
     },
 
     "2026-09-10": {

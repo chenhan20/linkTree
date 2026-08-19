@@ -99,6 +99,43 @@ def main():
             print('  最近一次主觀校準：{} 主觀 {}/10、模型 {}/10 {}'.format(
                 c['date'], c['rating'], c['model_0_10'], c.get('note') or ''))
 
+
+    # ── 本月騎乘時數 vs 損益線 ────────────────────────────────────────
+    # 迴歸（17 個月、r=0.91、剔除 2025-11 的偵測離群）：eFTP 每多騎 1 小時 +0.64 W，
+    # 不進不退的門檻是月騎 15.3 小時。低於它就是在掉功率，跟意志力無關。
+    BREAKEVEN, SLOPE = 15.3, 0.64
+    try:
+        rides = J('data', 'strava.json').get('recent_rides') or []
+    except FileNotFoundError:
+        rides = []
+    if rides:
+        mth = today[:7]
+        d0 = datetime.date.fromisoformat(today)
+        eom = (d0.replace(day=28) + datetime.timedelta(days=4)).replace(day=1) - datetime.timedelta(days=1)
+        got = vh = 0.0
+        for r in rides:
+            if (r.get('date') or '')[:7] != mth or (r.get('date') or '') > today:
+                continue
+            h = (r.get('moving_time_sec') or 0) / 3600.0
+            got += h
+            if r.get('sport_type') == 'VirtualRide' or r.get('trainer') is True:
+                vh += h
+        left = (eom - d0).days
+        pace = got / max(d0.day, 1) * eom.day
+        gap = BREAKEVEN - got
+        print('\n── 本月騎乘時數（損益線 {} h／月：低於它 eFTP 就在掉，斜率 {:+.2f} W/h）'.format(
+            BREAKEVEN, SLOPE))
+        print('  {} 已騎 {:.1f} h（室內 {:.1f} h／戶外 {:.1f} h）· 還剩 {} 天'.format(
+            mth, got, vh, got - vh, left))
+        if gap > 0:
+            print('  距損益線還差 {:.1f} h　→ 平均每週要再補 {:.1f} h'.format(
+                gap, gap / max(left / 7.0, 0.3)))
+        else:
+            print('  已過線 +{:.1f} h　→ 這個月預計 {:+.1f} W'.format(-gap, -gap * SLOPE))
+        print('  照目前節奏推估月底 {:.1f} h（{}）'.format(
+            pace, '過線' if pace >= BREAKEVEN else '不足 {:.1f} h'.format(BREAKEVEN - pace)))
+        print('  參考：2025-09 是 28.4 h，兩個 PR 就在它後面 3–5 週')
+
     # ── 週期 ──────────────────────────────────────────────────────────
     try:
         b = J('data', 'training-block.json')

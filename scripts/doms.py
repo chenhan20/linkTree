@@ -36,14 +36,18 @@ FIT = os.path.join(ROOT, 'data', 'fit')
 ACT = os.path.join(FIT, '_activities.json')
 OUT = os.path.join(FIT, '_doms.json')
 FB = os.path.join(FIT, '_doms_feedback.json')
+REC = os.path.join(FIT, '_doms_recurring.json')
 
 # 每小時的離心係數（跑步 = 100 當基準）
-ECC = {'run': 100, 'treadmill': 85, 'hike': 70, 'lift': 55, 'ride': 12, 'swim': 3, 'other': 20}
+ECC = {'run': 100, 'bball': 100, 'treadmill': 85, 'class': 80, 'hike': 70,
+       'lift': 55, 'ride': 12, 'swim': 3, 'other': 20}
 SPORT = {
     'Run': 'run', 'TrailRun': 'run', 'VirtualRun': 'treadmill',
     'Ride': 'ride', 'VirtualRide': 'ride', 'GravelRide': 'ride', 'MountainBikeRide': 'ride',
     'WeightTraining': 'lift', 'Workout': 'lift',
     'Swim': 'swim', 'OpenWaterSwim': 'swim', 'Hike': 'hike',
+    'Basketball': 'bball', 'Soccer': 'bball', 'Badminton': 'bball', 'Tennis': 'bball',
+    'HighIntensityIntervalTraining': 'class', 'Crossfit': 'class', 'Elliptical': 'class',
 }
 PEAK_H = 36.0     # 高峰落在活動後 36 小時
 SHAPE_K = 3.0     # 曲線陡度：越大退得越快
@@ -73,6 +77,53 @@ def load(path, default):
         return default
 
 
+
+def recurring(rows):
+    """把「沒被錶錄到但每週固定發生」的活動合成成佔位的一趟。
+
+    來源 data/fit/_doms_recurring.json。同一天已經有同 sport 的真實活動就讓位，
+    所以哪天他真的戴錶錄了籃球，佔位會自動消失，不會重複計算。
+    """
+    cfg = load(REC, {})
+    evs = [e for e in cfg.get('events', []) if e.get('enabled', True)]
+    if not evs:
+        return []
+    real = {(r['date'], r['sport']) for r in rows}
+    last = max((r['date'] for r in rows), default=None)
+    end = max(datetime.date.fromisoformat(last) if last else datetime.date.today(),
+              datetime.date.today()) + datetime.timedelta(days=7)
+    out = []
+    for e in evs:
+        sp = e['sport']
+        if sp not in ECC:
+            continue
+        hh, mm = (int(x) for x in e.get('start', '20:00').split(':'))
+        if e.get('dates'):                      # 一次性的特例（不是每週）
+            days = [datetime.date.fromisoformat(x) for x in e['dates']]
+        else:
+            d = datetime.date.fromisoformat(e['from'])
+            d += datetime.timedelta(days=(e['weekday'] - d.weekday()) % 7)
+            stop = min(end, datetime.date.fromisoformat(e['to'])) if e.get('to') else end
+            days = []
+            while d <= stop:
+                days.append(d)
+                d += datetime.timedelta(days=7)
+        for d in days:
+            if (d.isoformat(), sp) not in real:
+                inten = e.get('intensity')
+                imul = min(2.2, max(0.5, (inten / 70.0) ** 1.4)) if inten else 1.0
+                hours = float(e.get('hours', 1.0))
+                out.append({
+                    'id': 'recur:{}:{}'.format(e['id'], d.isoformat()),
+                    'sport': sp, 'type': e.get('name'), 'name': e.get('name'),
+                    'start': datetime.datetime.combine(d, datetime.time(hh, mm)).isoformat(),
+                    'date': d.isoformat(), 'min': round(hours * 60),
+                    'raw': ECC[sp] * hours * imul,
+                    'intensity': inten, 'tl': None, 'placeholder': True,
+                })
+    return out
+
+
 def compute():
     acts = load(ACT, {})
     rows = []
@@ -94,6 +145,7 @@ def compute():
         rows.append({'id': aid, 'sport': sp, 'type': v.get('type'), 'name': v.get('name'),
                      'start': sd, 'date': sd[:10], 'min': round(secs / 60), 'raw': raw,
                      'intensity': inten, 'tl': v.get('icu_training_load')})
+    rows += recurring(rows)          # 補上籃球／有氧課這種沒被錄到的固定行程
     rows.sort(key=lambda r: r['start'])
 
     # 重複訓練效應：同項目最近 42 天的曝光量越高，這一趟越不會酸
@@ -121,6 +173,8 @@ def compute():
         out[r['id']] = {k: r[k] for k in ('date', 'sport', 'type', 'name', 'min', 'index',
                                           'novelty', 'exposure', 'peak_at',
                                           'days_since_same_sport', 'why')}
+        if r.get('placeholder'):
+            out[r['id']]['placeholder'] = True
 
     # 每日累積
     if rows:

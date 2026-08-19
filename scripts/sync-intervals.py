@@ -194,6 +194,14 @@ def save_activities(acts: list[dict]) -> None:
     你在 Garmin 或 intervals.icu 改了名字就永遠傳不進來。
     """
     path = OUT_DIR / "_activities.json"
+    # 忽略清單:誤啟動/重複錄製那種垃圾筆。每次同步都重新套用,所以刪掉後不會被拉回來。
+    ignore = {}
+    ig_path = OUT_DIR / "_ignore_activities.json"
+    if ig_path.exists():
+        try:
+            ignore = json.loads(ig_path.read_text(encoding="utf-8")).get("ids") or {}
+        except json.JSONDecodeError:
+            log.warning("_ignore_activities.json 壞掉,忽略清單這次不套用")
     data = {}
     if path.exists():
         try:
@@ -210,6 +218,8 @@ def save_activities(acts: list[dict]) -> None:
         if prev and name and prev != name:
             log.info("  改名: %s 「%s」→「%s」", aid, prev, name)
             renamed += 1
+        if aid in ignore:
+            continue
         rec = {
             "name": name,
             "type": a.get("type") or "",
@@ -224,6 +234,15 @@ def save_activities(acts: list[dict]) -> None:
             if v not in (None, "", [], {}):
                 rec[k] = v
         data[aid] = rec
+    purged = [k for k in data if k in ignore]
+    for k in purged:
+        del data[k]
+        f = next(iter(OUT_DIR.glob(f"*_{k}_*.fit")), None)
+        if f:
+            f.unlink()
+            log.info("  忽略清單:刪除 %s", f.name)
+    if purged:
+        log.info("忽略清單:排除 %d 筆(%s)", len(purged), ", ".join(purged))
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(".tmp")
     tmp.write_text(json.dumps(data, ensure_ascii=False, indent=1, sort_keys=True),
@@ -277,6 +296,15 @@ def sync_wellness(oldest: str, newest: str) -> int:
             added += 1
         data[day] = rec
 
+    purged = [k for k in data if k in ignore]
+    for k in purged:
+        del data[k]
+        f = next(iter(OUT_DIR.glob(f"*_{k}_*.fit")), None)
+        if f:
+            f.unlink()
+            log.info("  忽略清單:刪除 %s", f.name)
+    if purged:
+        log.info("忽略清單:排除 %d 筆(%s)", len(purged), ", ".join(purged))
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(".tmp")
     tmp.write_text(json.dumps(data, ensure_ascii=False, indent=1, sort_keys=True),

@@ -1,0 +1,52 @@
+{
+  "_comment": "沒有被錶錄到、但每週固定發生的活動。scripts/doms.py 會把它們合成成佔位的一趟，讓 DOMS 不再少算。",
+  "_why": "籃球一年 0 筆進 intervals，但它每週二晚上都在發生，離心係數跟跑步同級（起跳落地、急停變向）。少了它，週四早上的痠痛會被低估一半以上。",
+  "_rules": [
+    "weekday：0=週一 … 6=週日（跟 Python 的 date.weekday() 一致）",
+    "同一天如果已經有『同 sport』的真實活動，佔位就自動讓位，不會重複計算",
+    "intensity 是心率強度的估計值（%），只影響強度修正，不進 TL/CTL",
+    "這些是估計值。真的想準，就戴錶錄——錄了之後把該筆 enabled 設成 false",
+    "dates：一次性的特例日（有 dates 就忽略 weekday/from/to）"
+  ],
+  "events": [
+    {
+      "id": "bball",
+      "sport": "bball",
+      "enabled": true,
+      "weekday": 1,
+      "start": "20:00",
+      "hours": 1.0,
+      "intensity": 80,
+      "name": "籃球（未錄·佔位）",
+      "from": "2025-04-01",
+      "to": null,
+      "note": "全場輪打，實際上場約 1 小時（2026-08-19 本人確認）"
+    },
+    {
+      "id": "airobic",
+      "sport": "class",
+      "enabled": true,
+      "weekday": 2,
+      "start": "20:00",
+      "hours": 1.0,
+      "intensity": 78,
+      "name": "公司有氧課（未錄·佔位）",
+      "from": "2026-08-26",
+      "to": null,
+      "note": "Tabata＋伏地挺身類，會逐週進階。離心係數暫用 80，等主觀回報再校準"
+    },
+    {
+      "id": "airobic-thu-onceoff",
+      "sport": "class",
+      "enabled": true,
+      "dates": [
+        "2026-08-27"
+      ],
+      "start": "20:00",
+      "hours": 1.0,
+      "intensity": 78,
+      "name": "公司有氧課 · 週四特例（未錄·佔位）",
+      "note": "本人 2026-08-19 說明：正常週四晚上不能運動，8/27 這天是特例。週四早上已有課表 B，這是雙練日。"
+    }
+  ]
+}
