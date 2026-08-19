@@ -256,6 +256,8 @@ html,body{height:100%;font-family:var(--f-ui);background:#0a0408;color:#ddd}
 .wl-chart path{fill:none;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke}
 /* 基準帶：填色不描邊。它是背景參考，不該跟兩條資料線競爭 */
 .wl-chart .wl-band{fill:rgba(255,176,32,.09);stroke:none}
+/* 缺值區段：畫在最底層的灰底。線斷開只說得出「這裡斷了」，說不出斷多久 */
+.wl-chart .wl-gap{fill:rgba(255,255,255,.05)}
 .wl-chart .wl-raw{stroke:rgba(255,176,32,.34);stroke-width:1.2}
 .wl-chart .wl-avg{stroke:#ffb020;stroke-width:1.9}
 .wl-chart circle{vector-effect:non-scaling-stroke}
@@ -317,6 +319,8 @@ html,body{height:100%;font-family:var(--f-ui);background:#0a0408;color:#ddd}
 .wl-legend i.raw{border-color:rgba(255,176,32,.34)}
 .wl-legend i.avg{border-color:#ffb020}
 .wl-legend i.band{border-top-width:7px;border-color:rgba(255,176,32,.22)}
+.wl-legend i.gap{width:11px;height:9px;border:0;border-radius:2px;background:rgba(255,255,255,.11);
+  transform:translateY(2px)}
 .wl-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-top:16px}
 .wl-st{padding:9px 10px;border:1px solid var(--hair);border-radius:8px}
 .wl-st span{display:block;font-size:8.5px;letter-spacing:1.8px;text-transform:uppercase;color:var(--ink-3)}
@@ -9557,7 +9561,21 @@ function rollingBand(series, win) {
 
 const WL_MON = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC']
 
-function wellnessPlot(series, avg, m, band, nDays) {
+/** 連續缺值的區段（長度 ≥ min）。一兩天多半只是那晚沒戴錶，
+    全部畫出來會變成一排柵欄；連續三天以上才是「這段期間沒有資料」。 */
+function nullRuns(series, min) {
+  const out = []
+  let st = -1
+  series.forEach((p, i) => {
+    if (p[1] == null) { if (st < 0) st = i; return }
+    if (st >= 0 && i - st >= min) out.push([st, i - 1])
+    st = -1
+  })
+  if (st >= 0 && series.length - st >= min) out.push([st, series.length - 1])
+  return out
+}
+
+function wellnessPlot(series, avg, m, band, nDays, gaps) {
   /* viewBox 的長寬比刻意對齊 .wl-panel 的實際渲染尺寸（max-width 820 × height 160）。
      preserveAspectRatio="none" 會把座標系拉滿整個框 —— 比例差太多的話，
      端點那兩顆圓球會被橫向拉成橢圓（實際看到過，320 拉到 2000px 寬）。 */
@@ -9622,13 +9640,17 @@ function wellnessPlot(series, avg, m, band, nDays) {
     // 兩套標籤混在一起會排出 07/29、08/01、08/05 這種不等距的節奏
     if (short) lab = weekly ? `${d.slice(5, 7)}/${d.slice(8, 10)}` : ''
     else if (newMonth && (i > 0 || +d.slice(8, 10) <= 3)) {
-      // 區間左緣通常切在月中（90 天那張是 05/21），那裡標「MAY」既不準又會跟 JUN 疊在一起。
+      // 區間左緣通常切在月中（90 天那張是 05/21），那裡標月份既不準又會跟下一個疊在一起。
       // 只有真的落在月初三天內才標；刻度照給。
       const mo = +d.slice(5, 7)
-      // 365 天有 12 個月界，全標會在手機上疊成一團；標單數月，一月一律標並帶年份
-      if (nDays < 200 || mo % 2 === 1 || mo === 1) lab = (mo === 1 ? d.slice(0, 4) + ' ' : '') + WL_MON[mo - 1]
+      // 365 天有 12 個月界，全標會在手機上疊成一團 —— 標單數月。
+      // 年份只在「這一頁的第一個標籤」與「每年一月」出現，其餘只給兩位數的月：
+      // 每個標籤都寫 2026/05 的話，365 天那張會變成六串一模一樣的前綴。
+      if (nDays < 200 || mo % 2 === 1) {
+        lab = (lastLab < 0 || mo === 1) ? `${d.slice(0, 4)}/${d.slice(5, 7)}` : d.slice(5, 7)
+      }
     }
-    if (lab && px - lastLab >= 7) {
+    if (lab && (lastLab < 0 || px - lastLab >= (lab.length > 2 ? 11 : 7))) {
       axis += `<span class="${px < 4 ? 'st' : px > 96 ? 'en' : ''}" style="left:${px.toFixed(2)}%">${lab}</span>`
       lastLab = px
     }
@@ -9637,8 +9659,15 @@ function wellnessPlot(series, avg, m, band, nDays) {
   // 在這裡再標一次只會跟最後一個月份標籤擠在一起 —— 手機上實測 JUL 跟 08/19 直接相黏。
   axis += `<i class="maj" style="left:100%"></i>`
 
+  // 缺值區段畫成灰底，畫在最底層。
+  // 只把線斷開的話，讀者只知道「這裡斷了」，不知道斷多久 —— 而斷三天跟斷三週
+  // 對判讀的意義完全不同（後者的 7 日平均在復播之後有好幾天是不可信的）。
+  const gapRects = (gaps || []).map(([a, b]) =>
+    `<rect class="wl-gap" x="${x(a)}" y="0" width="${Math.max(1.6, +x(b) - +x(a))}" height="${H}"/>`).join('')
+
   return `<div class="wl-plot">
     <svg class="wl-chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">
+      ${gapRects}
       ${grid}
       ${bandPath}
       <path class="wl-raw" d="${line(series.map(p => p[1]))}"/>
@@ -9674,6 +9703,8 @@ function wellnessPanel(key) {
   const loDate = (series.find(p => p[1] === lo) || [])[0]
   const hiDate = (series.find(p => p[1] === hi) || [])[0]
   const missing = series.length - vals.length
+  const gaps = nullRuns(series, 3)
+  const gapDays = gaps.reduce((n, [a, b]) => n + (b - a + 1), 0)
   const md = d => d ? d.slice(5).replace('-', '/') : '—'
   // 「好」的方向不同：靜息越低越好、HRV 與睡眠越高越好。
   // 所以箭頭方向講的是數值升降，顏色講的是好壞 —— 靜息往下是綠色的 ▼，這是對的。
@@ -9695,16 +9726,18 @@ function wellnessPanel(key) {
       ${WELLNESS_RANGES.map(r => `<button class="wl-tab${r === n ? ' on' : ''}" type="button"
         data-wlrange="${r}" role="tab" aria-selected="${r === n}">${r} 天</button>`).join('')}
     </div>
-    ${wellnessPlot(series, avg7, m, band, n)}
+    ${wellnessPlot(series, avg7, m, band, n, gaps)}
     <div class="wl-legend"><i class="raw"></i>每日<i class="avg"></i>7 日平均${
-      bNow ? '<i class="band"></i>個人基準帶 ' + m.fmt(bNow[0]) + '~' + m.fmt(bNow[1]) : ''}</div>
+      bNow ? '<i class="band"></i>個人基準帶 ' + m.fmt(bNow[0]) + '~' + m.fmt(bNow[1]) : ''}${
+      gaps.length ? '<i class="gap"></i>無資料' : ''}</div>
     <div class="wl-stats">
       ${stat('近 7 天', d7 == null ? '—' : m.fmt(d7))}
       ${stat('近 28 天', d28 == null ? '—' : m.fmt(d28))}
       ${stat(m.better === 'low' ? '最低（最好）' : '最低', m.fmt(lo), md(loDate))}
       ${stat(m.better === 'low' ? '最高' : '最高（最好）', m.fmt(hi), md(hiDate))}
     </div>
-    <div class="wl-note">${m.note}${missing ? `<br>這 ${n} 天裡有 <b>${missing}</b> 天沒有資料，圖上是斷開的。` : ''}</div>`
+    <div class="wl-note">${m.note}${missing ? `<br>這 ${n} 天裡有 <b>${missing}</b> 天沒有資料，線是斷開的${
+      gaps.length ? `；其中 <b>${gapDays}</b> 天落在 ${gaps.length} 段連續三天以上的空窗，圖上用灰底標出來 —— 空窗結束後那幾天的 7 日平均只有零星幾筆撐著，別當成趨勢讀` : ''}。` : ''}</div>`
 }
 
 /* 綁在 document 而不是 #content：狀態面板同時掛在側欄（.side，在 #content 之外）
