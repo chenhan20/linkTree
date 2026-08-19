@@ -106,9 +106,11 @@ def main():
         print('\n（沒有 data/training-block.json，跳過週期）')
         return
     S = sorted(b.get('sessions', []), key=lambda s: s['date'])
-    doneN = sum(1 for s in S if s.get('actual') and not s['actual'].get('substituted'))
-    print('\n── 週期：{} {} → {} · FTP {}W · {}/{} 完成'.format(
-        b.get('title'), b.get('start'), b.get('end'), b.get('ftp'), doneN, len(S)))
+    key = [s for s in S if not s.get('support')]
+    doneN = sum(1 for s in key if s.get('actual') and not s['actual'].get('substituted'))
+    # 完成度只數主課表，跟站上的 SES_DONE() 同一套（輔助課表做了不算進度、沒做不算欠帳）
+    print('\n── 週期：{} {} → {} · FTP {}W · {}/{} 完成（另有 {} 堂輔助課表）'.format(
+        b.get('title'), b.get('start'), b.get('end'), b.get('ftp'), doneN, len(key), len(S) - len(key)))
     print('  目標：{}'.format(b.get('goal')))
     for s in S:
         act = s.get('actual') or None
