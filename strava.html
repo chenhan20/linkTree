@@ -357,30 +357,55 @@ html,body{height:100%;font-family:var(--f-ui);background:#0a0408;color:#ddd}
   .apphead{padding:0 14px;height:42px;gap:8px}
   .ah-s{display:none}
   .ah-r{font-size:9px;letter-spacing:1.2px}
-  .viewport{padding:16px 14px calc(64px + env(safe-area-inset-bottom,0px))}
-  /* 欄數不要寫死。原本是 repeat(5,1fr)，第七個 view（身體）進來之後就裂成兩排 ——
-     67px 高的雙排把畫面吃掉一大塊，第二排還壓在內容上。改成 auto-flow: column，
-     幾個 view 就幾欄，以後再加第八個也不會再爛一次。 */
+  .viewport{padding:16px 14px calc(80px + env(safe-area-inset-bottom,0px))}
+  /* 底部選單是浮起來的玻璃膠囊，不是貼底的實心列。
+     兩個理由，都不是為了好看：
+     ① 七個 view 在 390px 寬平均分只剩 54px 一格 —— 那個寬度逼著字級降到 11px，
+        而 DESIGN.md 的 11px 樓地板就是為了這種「再擠一點」而立的。改成可橫向捲動
+        的字籤之後，每一籤有 62px 以上，字級回到 12px，第六籤露頭當捲動提示。
+     ② 貼底的實心列會在內容與畫面邊緣之間切一條硬線；半透明 + backdrop-filter
+        讓底下的內容透出來，捲動時看得到東西從膠囊底下經過，位置感不會斷。
+     mask 掛在內層 .tab-scroll，不能掛在 .tabbar —— 掛在外層會連膠囊自己的
+     背景與邊框一起淡掉，玻璃的形狀就沒了。 */
   .tabbar{
-    display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);
-    position:fixed;left:0;right:0;bottom:0;z-index:30;
-    border-top:1px solid var(--hair-2);background:rgba(8,4,3,.97);
-    padding-bottom:env(safe-area-inset-bottom,0px);
+    display:block;overflow:hidden;
+    position:fixed;left:10px;right:10px;z-index:30;
+    bottom:calc(9px + env(safe-area-inset-bottom,0px));
+    padding:5px;border-radius:26px;
+    border:1px solid rgba(252,76,2,.2);
+    background:rgba(10,7,6,.55);
+    -webkit-backdrop-filter:blur(20px) saturate(160%);
+    backdrop-filter:blur(20px) saturate(160%);
+    box-shadow:0 10px 30px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.07);
   }
-  /* 七欄之後每格只剩 ~54px，OVERVIEW／TRENDS 這種英文字排不進去（就是它撐爆版面的）。
-     改用中文兩字：同樣的寬度綽綽有餘，而且跟桌機側欄的用字一致 —— 同一個目的地
-     在兩個裝置上不該叫不同的名字。ITT 本來就是縮寫，維持原樣。 */
+  .tab-scroll{
+    --fade-l:14px;--fade-r:14px;
+    display:flex;gap:2px;overflow-x:auto;overscroll-behavior-x:contain;
+    scrollbar-width:none;scroll-snap-type:x proximity;
+    -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 var(--fade-l),#000 calc(100% - var(--fade-r)),transparent 100%);
+    mask-image:linear-gradient(90deg,transparent 0,#000 var(--fade-l),#000 calc(100% - var(--fade-r)),transparent 100%);
+  }
+  /* 捲到底的那一端不要再淡出 —— 否則最後一籤（通常正是現用的那一籤）
+     會連膠囊底色一起被吃掉，看起來像被切掉一半。 */
+  .tab-scroll.at-start{--fade-l:0px}
+  .tab-scroll.at-end{--fade-r:0px}
+  .tab-scroll::-webkit-scrollbar{display:none}
+  /* 中文兩字跟桌機側欄一致 —— 同一個目的地在兩個裝置上不該叫不同的名字。 */
   .tab-i{
-    display:flex;flex-direction:column;align-items:center;gap:4px;
-    padding:12px 1px 11px;border:0;background:transparent;cursor:pointer;font-family:inherit;
-    font-size:11px;font-weight:700;letter-spacing:.5px;
+    flex:0 0 auto;min-width:62px;scroll-snap-align:center;
+    display:flex;flex-direction:column-reverse;align-items:center;gap:3px;
+    padding:9px 12px 8px;border:0;border-radius:20px;background:transparent;
+    cursor:pointer;font-family:inherit;
+    font-size:12px;font-weight:700;letter-spacing:.6px;
     color:var(--ink-3);-webkit-tap-highlight-color:transparent;
-    white-space:nowrap;overflow:hidden;
+    white-space:nowrap;transition:background .16s,color .16s;
   }
-  .tab-i i{display:block;width:14px;height:2px;border-radius:2px;background:transparent;transition:background .13s}
-  .tab-i[aria-current="page"]{color:#FC4C02}
-  .tab-i[aria-current="page"] i{background:#FC4C02;box-shadow:0 0 6px rgba(252,76,2,.7)}
-  #to-top-btn{bottom:calc(70px + env(safe-area-inset-bottom,0px))!important}
+  /* 現用的那一籤＝填色膠囊；小圓點是它在玻璃上的第二個訊號（單靠顏色不夠） */
+  .tab-i i{display:block;width:4px;height:4px;border-radius:50%;background:transparent;transition:background .16s}
+  .tab-i[aria-current="page"]{color:#FC4C02;background:rgba(252,76,2,.14)}
+  .tab-i[aria-current="page"] i{background:#FC4C02;box-shadow:0 0 6px rgba(252,76,2,.75)}
+  .tab-i:active{background:rgba(252,76,2,.08)}
+  #to-top-btn{bottom:calc(78px + env(safe-area-inset-bottom,0px))!important}
 }
 
 /* ── 大螢幕：側欄按比例放大 ──
@@ -2242,7 +2267,7 @@ button.ov-cell:focus-visible{outline:1px solid rgba(252,76,2,.6);outline-offset:
   .ia-time{order:4}
   .ia-delta{order:5;min-width:0}
   .ia-att{order:6;margin-left:auto}
-  #to-top-btn{right:14px!important;bottom:18px!important}
+  #to-top-btn{right:14px!important;bottom:calc(78px + env(safe-area-inset-bottom,0px))!important}
 }
 
 /* ── power modal (compact, fits viewport) ── */
@@ -9665,8 +9690,8 @@ function buildNav() {
   // 側欄再放一次等於同一個詞在畫面上出現四次。改放每章一個活數字。
   if (nav) nav.innerHTML = VIEWS.map(v =>
     `<button class="nav-i" type="button" data-view="${v.id}"><i></i>${v.zh}<em data-badge="${v.id}"></em></button>`).join('')
-  if (tab) tab.innerHTML = VIEWS.map(v =>
-    `<button class="tab-i" type="button" data-view="${v.id}"><i></i>${v.tab || v.zh}</button>`).join('')
+  if (tab) tab.innerHTML = `<div class="tab-scroll">${VIEWS.map(v =>
+    `<button class="tab-i" type="button" data-view="${v.id}"><i></i>${v.tab || v.zh}</button>`).join('')}</div>`
   const go = e => {
     const b = e.target.closest('[data-view]')
     if (!b) return
@@ -9674,6 +9699,29 @@ function buildNav() {
   }
   nav?.addEventListener('click', go)
   tab?.addEventListener('click', go)
+  const sc = tab?.querySelector('.tab-scroll')
+  if (sc) {
+    sc.addEventListener('scroll', () => updateTabFade(sc), { passive: true })
+    updateTabFade(sc)
+  }
+}
+
+/** 淡出只掛在「還有東西可以捲」的那一端。捲動中就會被呼叫，不必等停下來。 */
+function updateTabFade(sc) {
+  const el = sc || document.querySelector('.tab-scroll')
+  if (!el) return
+  el.classList.toggle('at-start', el.scrollLeft <= 2)
+  el.classList.toggle('at-end', el.scrollLeft >= el.scrollWidth - el.clientWidth - 2)
+}
+
+/** 手機底部選單是可橫向捲動的，把現用的那一籤帶到視野中央。 */
+function centerTab(view) {
+  const sc = document.querySelector('.tab-scroll')
+  if (!sc || !sc.clientWidth) return          // 桌機是 display:none，量不到寬度就不用捲
+  const el = sc.querySelector(`.tab-i[data-view="${view}"]`)
+  if (!el) return
+  const left = el.offsetLeft - (sc.clientWidth - el.offsetWidth) / 2
+  sc.scrollTo({ left: Math.max(0, left), behavior: 'smooth' })
 }
 
 function setView(name, opts) {
@@ -9686,6 +9734,7 @@ function setView(name, opts) {
     const on = b.dataset.view === v
     if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current')
   })
+  centerTab(v)
   const meta = VIEWS.find(x => x.id === v)
   const t = document.getElementById('ah-title'), sub = document.getElementById('ah-sub')
   const upd = document.getElementById('ah-upd')
