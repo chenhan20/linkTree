@@ -10,6 +10,7 @@
   data/fit/_wellness.json    每日 CTL/ATL/HRV/靜息/睡眠（未來日是推算值，這裡切掉）
   data/training-block.json   手寫週期計畫與實際值（含替代執行與教練評）
   data/plan.json             逐段處方，tools/tcx/score.py 用它對帳
+  data/fit/_doms.json        每趟的痠痛本金與每日預估（scripts/doms.py 算的，估計值）
 """
 import json, argparse, datetime, os, sys
 
@@ -40,18 +41,25 @@ def main():
     acts = J('data', 'fit', '_activities.json')
     rows = sorted((v for v in acts.values() if str(v.get('start_date_local', ''))[:10] >= since),
                   key=lambda v: v['start_date_local'], reverse=True)
-    print('\n── 活動（近 {} 天，{} 筆）　※ TL：有功率的騎乘走功率算，其餘走心率'.format(a.days, len(rows)))
-    print('{:11}{:14}{:>6}{:>5}{:>7}{:>6}{:>6}{:>6}{:>9}'.format(
-        '日期', '項目', '時長', 'TL', 'TRIMP', '強度', 'NP', 'VI', '心率漂移'))
+    doms = J('data', 'fit', '_doms.json') if os.path.exists(
+        os.path.join(ROOT, 'data', 'fit', '_doms.json')) else {}
+    dacts, ddaily = doms.get('activities', {}), doms.get('daily', {})
+    print('\n── 活動（近 {} 天，{} 筆）　※ TL：有功率的騎乘走功率算，其餘走心率；DOMS 是估計值'.format(
+        a.days, len(rows)))
+    print('{:11}{:14}{:>6}{:>5}{:>7}{:>6}{:>6}{:>6}{:>9}{:>7}'.format(
+        '日期', '項目', '時長', 'TL', 'TRIMP', '強度', 'NP', 'VI', '心率漂移', 'DOMS'))
+    ids = {v['start_date_local'] + (v.get('name') or ''): k for k, v in acts.items()}
     for v in rows:
         secs = sum(v.get('icu_hr_zone_times') or []) or (v.get('moving_time') or 0)
         dec = v.get('decoupling')
-        print('{:11}{:14}{:>5}m{:>5}{:>7}{:>5}%{:>6}{:>6}{:>9}'.format(
+        aid = ids.get(v['start_date_local'] + (v.get('name') or ''))
+        dm = (dacts.get(aid) or {}).get('index')
+        print('{:11}{:14}{:>5}m{:>5}{:>7}{:>5}%{:>6}{:>6}{:>9}{:>7}'.format(
             v['start_date_local'][:10], v.get('type') or '',
             num(secs / 60), num(v.get('icu_training_load')), num(v.get('trimp')),
             num(v.get('icu_intensity')), num(v.get('icu_weighted_avg_watts')),
             num(v.get('icu_variability_index'), '{:.2f}'),
-            num(dec, '{:.1f}') + ('%' if dec is not None else '')))
+            num(dec, '{:.1f}') + ('%' if dec is not None else ''), num(dm)))
     if not rows:
         print('  （視窗內沒有活動）')
 
@@ -73,6 +81,23 @@ def main():
     hrvs = [days[k]['hrv'] for k in sorted(days) if k <= today and days[k].get('hrv')][-7:]
     if hrvs:
         print('  HRV 7 日均 {:.1f}（基線 52–71，下緣 52 ← 連兩天低於它就踩恢復煞車）'.format(sum(hrvs) / len(hrvs)))
+
+    # ── 痠痛預估 ──────────────────────────────────────────────────────
+    fwd = [d for d in sorted(ddaily) if d >= today][:4]
+    if fwd:
+        print('\n── DOMS 預估（估計值不是量測值；am ＝ 早上七點，訓練窗口那個時間點）')
+        for d in fwd:
+            v = ddaily[d]
+            src = (dacts.get(v.get('top')) or {}).get('name') or ''
+            print('  {}{}  全天 {:>3.0f}  am {:>3.0f}   {:6}主因：{}'.format(
+                d, ' ←今天' if d == today else '     ', v['all'], v['am'],
+                '—' if v['all'] < 10 else '低' if v['all'] < 25 else '中'
+                if v['all'] < 45 else '高' if v['all'] < 65 else '很高', src))
+        cal = doms.get('calibration') or []
+        if cal:
+            c = cal[-1]
+            print('  最近一次主觀校準：{} 主觀 {}/10、模型 {}/10 {}'.format(
+                c['date'], c['rating'], c['model_0_10'], c.get('note') or ''))
 
     # ── 週期 ──────────────────────────────────────────────────────────
     try:

@@ -338,6 +338,16 @@ def sync(backfill_days: int | None = None) -> int:
     # 每日身體狀態。放在下載迴圈之前，同理：就算沒有新 FIT 也要更新。
     sync_wellness(oldest, newest)
 
+    # DOMS 預估（data/fit/_doms.json）。純衍生資料，只讀 _activities.json，
+    # 所以放在 metadata 存檔之後、不依賴這次有沒有下載到新 FIT。算壞了不該擋同步。
+    try:
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        import doms
+        doc = doms.compute()
+        log.info("DOMS 預估 %d 趟 → _doms.json", len(doc.get("activities", {})))
+    except Exception as e:  # noqa: BLE001
+        log.warning("DOMS 預估失敗（不影響同步）: %s", e)
+
     state = load_state()
     seen = set(state.get("downloaded", []))
 

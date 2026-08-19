@@ -31,6 +31,7 @@ python3 -c "import fitdecode"          # 已安裝，直接用；lap / record �
 |---|---|---|
 | `data/fit/_activities.json` | 每筆活動的 TL / TRIMP / 強度 / NP / VI / decoupling / 心率分區秒數 | key 是 intervals id，不是日期 |
 | `data/fit/_wellness.json` | 每日 CTL / ATL / HRV / 靜息 / 睡眠 | **未來日照樣有推算值**，一律切到今天為止（brief 已經處理） |
+| `data/fit/_doms.json` | 每趟的痠痛本金與每日預估（`scripts/doms.py` 算的，**估計值不是量測值**） | 重訓沒有重量資料、沒有下坡資料，兩者都被低估／看不見 |
 | `data/training-block.json` | 手寫的週期計畫、每堂的 target 與 actual、教練評 | 不由 cron 產生，可以直接改；改完要 `json.load` 驗一次 |
 | `data/plan.json` | 逐段處方（分鐘、瓦數帶、迴轉、規則），`tools/tcx/score.py` 拿它逐段對帳 | 沒列在 `days` 的日期一律不評分 |
 | `athlete/好兄弟月平路四週課表.md` | 當前區塊的完整說明與執行紀錄（人看的） | 課表數字改了要同步 plan.json 與 training-block.json |
@@ -62,6 +63,19 @@ python3 tools/tcx/score.py <檔案>.fit          # 逐段對帳 + 評分卡（co
 4. **實際 IF / TSS** vs 當天目標
 
 **他的已知傾向**：習慣「後段補回來」（8/13 前半 173W／後半 197W；8/18 跑步心率 156→172）。平均達標不等於執行到位，**永遠拆前後半看**。
+
+**DOMS（延遲性肌肉痠痛）**跟心肺負荷是兩回事，不要用 TL 推。`scripts/doms.py` 每次同步後自動重算：
+
+```bash
+python3 scripts/doms.py                                   # 重算並看表
+python3 scripts/doms.py --log 2026-08-19 9 --note "下樓梯痛"  # 記主觀 0–10 並校準
+```
+
+模型是「離心係數 × 時數 × 強度修正 × 重複訓練效應」，曲線 **36 小時高峰、約 96 小時退到一成**。
+判讀看 `am`（早上七點那個值，就是他的訓練窗口）：**≥65 很高 → 不要排門檻或高扭力，tempo 還可以做；
+25–45 中 → 照常但把目標下修 5W；<10 → 沒事**。騎車本身幾乎不產生 DOMS（離心係數 12），
+所以指數一旦衝高，來源通常是跑步、重訓或久違的動作。**它是估計值，每次他回報體感就 `--log` 一次**，
+校準列會把主觀跟模型並排印出來——不要拿一個吻合的點當成模型被驗證了。
 
 **恢復煞車**：HRV 連兩天低於 52 → 週二門檻改 Z2，**週四照跑**（犧牲週二不犧牲週四）。門檻組打完覺得不對勁 → 直接跳過續航尾巴收工，尾巴是設計好的可棄項目。
 
