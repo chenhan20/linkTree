@@ -80,7 +80,14 @@ python3 scripts/doms.py --log 2026-08-19 9 --note "下樓梯痛"  # 記主觀 0�
 **室內騎乘一定要用手錶錄**（訓練台走 ANT+ 配成功率計，Rouvy 只當畫面）。
 Rouvy → Garmin Connect → intervals 走不通（Garmin API 只推裝置錄的活動）；
 Rouvy → Strava → intervals 也走不通（Strava 來源的活動不會經由 intervals API 吐出來，
-而我們的 `sync-intervals.py` 走的正是那支 API）。忘了錄就只能事後手動上傳 FIT 到 intervals.icu。
+而我們的 `sync-intervals.py` 走的正是那支 API）。忘了錄的話，Rouvy 的活動頁可以匯出 FIT，再用：
+
+```bash
+python3 scripts/upload-fit.py ~/Desktop/activity_export_*.fit --name "ROUVY - <路線>"
+python3 scripts/sync-intervals.py     # 上傳完再拉一次，FIT 就進 data/fit
+```
+
+（實測可行，2026-08-19。缺點：Rouvy 的匯出**沒有迴轉**，手錶配曲柄才有。）
 
 **恢復煞車**：HRV 連兩天低於 52 → 週二門檻改 Z2，**週四照跑**（犧牲週二不犧牲週四）。門檻組打完覺得不對勁 → 直接跳過續航尾巴收工，尾巴是設計好的可棄項目。
 
