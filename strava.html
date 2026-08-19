@@ -260,6 +260,23 @@ html,body{height:100%;font-family:var(--f-ui);background:#0a0408;color:#ddd}
 .wl-chart .wl-avg{stroke:#ffb020;stroke-width:1.9}
 .wl-chart circle{vector-effect:non-scaling-stroke}
 .wl-chart .wl-good{fill:#4ad07a}
+/* 刻度：三條水平參考線 + 月界的直立刻度。這頁在講「相對自己的高低」，
+   一條沒有座標的曲線只看得出形狀、看不出量級，所以刻度是判讀的一部分。
+   文字不能放進 SVG —— 那支 svg 是 preserveAspectRatio="none" 拉滿框的，
+   字會被橫向拉長，所以軸標一律用 HTML 疊在外面。 */
+.wl-plot{position:relative;padding-right:34px}
+.wl-chart .wl-grid{stroke:rgba(255,255,255,.055);stroke-width:1;vector-effect:non-scaling-stroke}
+.wl-ylab{position:absolute;right:0;width:30px;text-align:right;transform:translateY(-50%);
+  font-family:var(--f-mono);font-size:9.5px;letter-spacing:.4px;color:var(--ink-3);
+  font-variant-numeric:tabular-nums;pointer-events:none}
+.wl-axis{position:relative;height:19px;margin-top:3px;margin-right:34px;
+  border-top:1px solid rgba(255,255,255,.07)}
+.wl-axis i{position:absolute;top:0;width:1px;height:3px;background:rgba(255,255,255,.13)}
+.wl-axis i.maj{height:5px;background:rgba(255,255,255,.26)}
+.wl-axis span{position:absolute;top:7px;transform:translateX(-50%);white-space:nowrap;
+  font-family:var(--f-mono);font-size:9px;letter-spacing:1.1px;color:var(--ink-3)}
+.wl-axis span.st{transform:none;left:0!important}
+.wl-axis span.en{transform:translateX(-100%)}
 .wl-chart .wl-bad{fill:#FC4C02}
 .wl-legend{
   display:flex;align-items:center;gap:5px;margin-top:8px;
@@ -9508,7 +9525,9 @@ function rollingBand(series, win) {
   })
 }
 
-function wellnessChartSVG(series, avg, m, band) {
+const WL_MON = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC']
+
+function wellnessPlot(series, avg, m, band, nDays) {
   /* viewBox 的長寬比刻意對齊 .wl-panel 的實際渲染尺寸（max-width 820 × height 160）。
      preserveAspectRatio="none" 會把座標系拉滿整個框 —— 比例差太多的話，
      端點那兩顆圓球會被橫向拉成橢圓（實際看到過，320 拉到 2000px 寬）。 */
@@ -9550,12 +9569,52 @@ function wellnessChartSVG(series, avg, m, band) {
     const bot = [...ok].reverse().map(i => `L${x(i)} ${y(band[i][0])}`).join(' ')
     return `<path class="wl-band" d="${top} ${bot} Z"/>`
   })()
-  return `<svg class="wl-chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">
-    ${bandPath}
-    <path class="wl-raw" d="${line(series.map(p => p[1]))}"/>
-    <path class="wl-avg" d="${line(avg)}"/>
-    ${dot(iMin, !goodIsHigh)}${dot(iMax, goodIsHigh)}
-  </svg>`
+  // 三條水平參考線：資料的最低、中間、最高（不含上下那 8% 呼吸空間，
+  // 否則標出來的數字是畫布邊界不是真的量到的值）
+  const yTicks = [vLo, (vLo + vHi) / 2, vHi]
+  const grid = yTicks.map(v => `<line class="wl-grid" x1="0" x2="${W}" y1="${y(v)}" y2="${y(v)}"/>`).join('')
+  const yLabs = yTicks.map(v =>
+    `<span class="wl-ylab" style="top:${(y(v) / H * 100).toFixed(2)}%">${m.fmt(v)}</span>`).join('')
+
+  // X 軸：月界一律給刻度，標籤密度看區間 —— 30 天標到日、90 天每月、365 天單月＋一月帶年份
+  const pctAt = i => i / (series.length - 1) * 100
+  const short = nDays <= 31
+  let axis = '', lastLab = -99
+  series.forEach((p, i) => {
+    const d = p[0]
+    const newMonth = i === 0 || d.slice(0, 7) !== series[i - 1][0].slice(0, 7)
+    const weekly = short && (series.length - 1 - i) % 7 === 0
+    if (!newMonth && !weekly) return
+    const px = pctAt(i)
+    axis += `<i class="${newMonth ? 'maj' : ''}" style="left:${px.toFixed(2)}%"></i>`
+    let lab = ''
+    // 短區間只標「每七天」那一排，月界仍給長刻度但不標字 ——
+    // 兩套標籤混在一起會排出 07/29、08/01、08/05 這種不等距的節奏
+    if (short) lab = weekly ? `${d.slice(5, 7)}/${d.slice(8, 10)}` : ''
+    else if (newMonth) {
+      const mo = +d.slice(5, 7)
+      // 365 天有 12 個月界，全標會在手機上疊成一團；標單數月，一月一律標並帶年份
+      if (nDays < 200 || mo % 2 === 1 || mo === 1) lab = (mo === 1 ? d.slice(0, 4) + ' ' : '') + WL_MON[mo - 1]
+    }
+    if (lab && px - lastLab >= 7) {
+      axis += `<span class="${px < 4 ? 'st' : px > 96 ? 'en' : ''}" style="left:${px.toFixed(2)}%">${lab}</span>`
+      lastLab = px
+    }
+  })
+  // 收尾只給刻度不給日期：今天的日期已經印在上面那行讀數裡（「08/19 · 近 7 天比近 28 天」），
+  // 在這裡再標一次只會跟最後一個月份標籤擠在一起 —— 手機上實測 JUL 跟 08/19 直接相黏。
+  axis += `<i class="maj" style="left:100%"></i>`
+
+  return `<div class="wl-plot">
+    <svg class="wl-chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">
+      ${grid}
+      ${bandPath}
+      <path class="wl-raw" d="${line(series.map(p => p[1]))}"/>
+      <path class="wl-avg" d="${line(avg)}"/>
+      ${dot(iMin, !goodIsHigh)}${dot(iMax, goodIsHigh)}
+    </svg>${yLabs}
+  </div>
+  <div class="wl-axis">${axis}</div>`
 }
 
 const BODY_METRICS = ['hrv', 'restingHR', 'sleepSecs', 'sleepScore', 'eftp']
@@ -9604,7 +9663,7 @@ function wellnessPanel(key) {
       ${WELLNESS_RANGES.map(r => `<button class="wl-tab${r === n ? ' on' : ''}" type="button"
         data-wlrange="${r}" role="tab" aria-selected="${r === n}">${r} 天</button>`).join('')}
     </div>
-    ${wellnessChartSVG(series, avg7, m, band)}
+    ${wellnessPlot(series, avg7, m, band, n)}
     <div class="wl-legend"><i class="raw"></i>每日<i class="avg"></i>7 日平均${
       bNow ? '<i class="band"></i>個人基準帶 ' + m.fmt(bNow[0]) + '~' + m.fmt(bNow[1]) : ''}</div>
     <div class="wl-stats">
