@@ -23,3 +23,8 @@ data/strava-archive/activities/
 # 那份本來就公開、也只放已設成 ITT 的路段。
 # 要把某條接上自建計時：加進 data/itt-config.json → node scripts/merge-harvested-streams.js
 data/strava-archive/segments/
+
+# 訓練台課表檔：本機用，不進 repo（產生器是 scripts/make-workout.py）
+athlete/workouts/*.zwo
+athlete/workouts/*.erg
+athlete/workouts/*.mrc
