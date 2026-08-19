@@ -49,6 +49,7 @@ def main():
     ap.add_argument('--cooldown', type=float, help='覆寫收操分鐘數')
     ap.add_argument('--out', default='athlete/workouts', help='輸出資料夾')
     ap.add_argument('--name', help='課表名稱（預設取 plan.json 的 label）')
+    ap.add_argument('--stem', help='輸出檔名（不含副檔名）；預設 <日期>_<type>')
     a = ap.parse_args()
 
     plan = json.load(open(os.path.join(ROOT, 'data', 'plan.json'), encoding='utf-8'))
@@ -74,13 +75,16 @@ def main():
 
     name = a.name or day.get('label') or a.date
     total = sum(s['min'] for s in segs)
-    desc = (f"{name}｜訓練台瓦數已扣掉傳動損失 {a.offset:.0f}%"
-            + (f"、當天修正 {a.adjust:+.0f}W" if a.adjust else '')
-            + f"；曲柄 FTP {ftp}W。"
-            + ' '.join(r.get('label', '') for r in day.get('rules', [])))
+    # 檔案內容一律 ASCII —— 這幾個檔是餵訓練台 App 的，不是給人讀的。
+    # 中文檔頭有些匯入器會卡住或顯示成亂碼（實測 Rouvy 吃得下的那個檔名也是純 ASCII）。
+    work = next((x for x in segs if x['role'] == 'work'), segs[0])
+    desc = (f"{a.date} target {work['w0']}W on trainer = {work['crank0']}W at crank "
+            f"(-{a.offset:.0f}% drivetrain"
+            + (f", {a.adjust:+.0f}W same-day adjust" if a.adjust else '') + f"). Crank FTP {ftp}W. "
+            "Hold the watts, do not drop. Indoor HR runs 5-10bpm higher, that is heat not fitness.")
     outdir = os.path.join(ROOT, a.out)
     os.makedirs(outdir, exist_ok=True)
-    stem = f"{a.date}_{day.get('type', 'workout')}"
+    stem = a.stem or f"{a.date}_{day.get('type', 'workout')}"
     base = os.path.join(outdir, stem)
 
     # ── .erg（絕對瓦數）與 .mrc（FTP 百分比）──
@@ -100,7 +104,7 @@ def main():
     # ── .zwo（Zwift workout XML；瓦數以 FTP 的比例表示）──
     def frac(w):
         return f'{w / ftp:.4f}'
-    xml = ['<workout_file>', '  <author>Claude coach</author>', f'  <name>{name}</name>',
+    xml = ['<workout_file>', '  <author>Claude coach</author>', f'  <name>{stem}</name>',
            f'  <description>{desc}</description>', '  <sportType>bike</sportType>', '  <workout>']
     for s in segs:
         dur = int(round(s['min'] * 60))
