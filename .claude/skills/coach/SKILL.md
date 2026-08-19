@@ -107,7 +107,10 @@ python3 scripts/doms.py --log 2026-08-19 9 --note "下樓梯痛"  # 記主觀 0�
 }
 ```
 
-規則：**不要拿跑步去對騎車的處方**（IF/TSS/VI 留 null）；「算不算完成」全站只認 `SES_DONE()`（`actual` 且非 `substituted`）。長一點的執行紀錄另外寫進 `athlete/好兄弟月平路四週課表.md` 的 §5.x。
+輔助課表（週六輕鬆跑那種）在同一份檔案裡，但帶 `"support": true` ＋ `metrics` ＋ `why`，
+沒有 `target`：它不計入區塊完成度、不進進度軌、不會變成「下一堂」，沒做也不算欠帳。
+
+規則：**不要拿跑步去對騎車的處方**（IF/TSS/VI 留 null）；「算不算完成」全站只認 `SES_DONE()`（`actual`、非 `substituted`、非 `support`）。長一點的執行紀錄另外寫進 `athlete/好兄弟月平路四週課表.md` 的 §5.x。
 
 改完 `strava.html` 要驗：抽 `<script>` 丟 `node --check`，再用 headless Chrome + CDP 量 DOM（`python3 -m http.server` + `--remote-debugging-port`，見 `docs/` 與既有做法）。**strava.html 的截圖會空白或陳舊，寬度與狀態一律用 DOM 量測，不要只看圖。**
 

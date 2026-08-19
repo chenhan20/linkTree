@@ -1020,6 +1020,9 @@ body.dw-open #to-top-btn{display:none!important}
 .ses--past.is-under .ses-st{color:#FF6A6A}
 .ses--past.is-missed{opacity:.55}
 .ses--past.is-missed.is-sub{opacity:.82}
+/* 輔助課表不是這個區塊的主線，所以它要「在場但不搶」：虛線左緣＋較輕的名稱字重 */
+.ses.is-sup{border-left:2px dashed rgba(252,76,2,.28)}
+.ses.is-sup .ses-nm{font-weight:550;color:var(--ink-3)}
 .ses--past.is-sub .ses-num{color:var(--ink-3)}
 .ses--future{opacity:.62}
 .ses--future .ses-nm{font-weight:600}
@@ -3855,8 +3858,11 @@ const mcNum = v => v == null
   ? '<b class="is-na">--</b>'
   : `<b>${v}</b>`
 /* 替代執行（下雨改跑步機那種）有 actual，但那不是這一堂的處方 ——
-   計數、進度軌、下一堂三個地方都要走這個判斷，不能只看 s.actual。 */
-const SES_DONE = s => !!(s.actual && !s.actual.substituted)
+   計數、進度軌、下一堂三個地方都要走這個判斷，不能只看 s.actual。
+   輔助課表（support：週六輕鬆跑那種）同理：它是為了補空窗與養重複訓練效應，
+   做了不算區塊進度、沒做也不算欠帳，所以兩個判斷合成同一個函式。 */
+const SES_DONE = s => !!(s.actual && !s.actual.substituted && !s.support)
+const SES_KEY = s => !s.support
 const MC_PASS = (a, t) => ({
   if:  a.if  != null && t.if  != null ? a.if  >= t.if - 0.02      : null,
   tss: a.tss != null && t.tss != null ? a.tss >= t.tss * 0.9      : null,
@@ -3872,12 +3878,18 @@ function renderMesocycle(block) {
   const md = d => `${d.slice(5, 7)}/${d.slice(8, 10)}`
   const wd = d => WD[new Date(d + 'T00:00:00Z').getUTCDay()]
   const n2 = v => v == null ? '—' : (+v).toFixed(2).replace(/^0/, '')
-  const done = S.filter(SES_DONE)
+  const done = S.filter(SES_DONE), key = S.filter(SES_KEY)
 
   // 下一堂 = 今天或之後、還沒有實際值的第一堂
-  const nextIdx = S.findIndex(s => !s.actual && s.date >= today)
+  const nextIdx = S.findIndex(s => !s.actual && !s.support && s.date >= today)
 
   const state = (s, i) => {
+    if (s.support) {
+      const sub = s.actual?.note || s.plan || ''
+      if (s.actual)      return { cls: 'sched', extra: 'is-sup', txt: '已做', badge: '✓ SUPPORT', sub }
+      if (s.date < today) return { cls: 'sched', extra: 'is-sup', txt: '未做', badge: '➖ SUPPORT', sub: sub + '（沒做不算欠帳）' }
+      return { cls: 'sched', extra: 'is-sup', txt: '輔助', badge: '➖ SUPPORT', sub }
+    }
     if (s.actual) {
       if (s.actual.substituted) return {
         cls: 'missed', extra: 'is-sub', txt: '替代', badge: '🔁 SUBSTITUTED',
@@ -3912,7 +3924,9 @@ function renderMesocycle(block) {
     const t = s.target || {}
     const p = s.actual ? MC_PASS(s.actual, t) : null
     // 做過的三個數字帶達標色（判定來自 MC_PASS，沒有第二套規則）；還沒做的顯示目標
-    const num = s.actual && s.actual.substituted
+    const num = s.support
+      ? `<em>${s.metrics || ''}</em>`
+      : s.actual && s.actual.substituted
       ? `<em>${s.actual.sub_metrics || ''}</em>`
       : s.actual
       ? [p.if  == null ? '' : `<em class="${p.if  ? 'ok' : 'no'}">IF ${n2(s.actual.if)}</em>`,
@@ -3962,7 +3976,8 @@ function renderMesocycle(block) {
       </div>`
   })() : ''
 
-  const track = S.map((s, i) => `<span class="mc-tk is-${state(s, i).cls}" title="${md(s.date)} ${s.name || ''}"></span>`).join('')
+  const track = S.map((s, i) => s.support ? ''
+    : `<span class="mc-tk is-${state(s, i).cls}" title="${md(s.date)} ${s.name || ''}"></span>`).join('')
 
   // 前後測：從 CAL / POST 兩堂的 actual.test 取值，兩個都有才算出差值
   const pre  = S.find(s => s.code === 'CAL')?.actual?.test  ?? block.test?.pre  ?? null
@@ -3976,8 +3991,8 @@ function renderMesocycle(block) {
 
   const over = block.end && today > block.end
   const meta = over
-    ? `週期結束 · ${done.length} / ${S.length} 完成`
-    : `${done.length} / ${S.length} 完成` +
+    ? `週期結束 · ${done.length} / ${key.length} 完成`
+    : `${done.length} / ${key.length} 完成` +
       (nextIdx >= 0 ? ` · 下一堂 ${md(S[nextIdx].date)} 週${wd(S[nextIdx].date)}` : '')
 
   // §40：週期本身不再整個包在 .console 框裡 —— 只有「前後測」那個結論值得容器。
@@ -4037,14 +4052,16 @@ function openSessionDrawer(date) {
     </div>`
   const body =
     (s.plan ? `<div class="dw-sec"><h4>處方 · Prescription</h4><div class="dw-p">${s.plan}</div></div>` : '') +
+    (s.support ? `<div class="dw-sec"><h4>輔助課表 · Support</h4>
+      <div class="dw-p">${s.metrics || ''}${s.why ? `<br><br>${s.why}` : ''}</div></div>` : '') +
     (a?.substituted ? `<div class="dw-sec"><h4>替代執行 · Substituted</h4>
       <div class="dw-p"><b>${a.sub_name || ''}</b>${a.sub_metrics ? `<br>${a.sub_metrics}` : ''}</div></div>` : '') +
-    `<div class="dw-sec"><h4>${ac ? '實際 vs 目標 · Actual vs target' : '目標 · Target'}</h4>
+    (s.support ? '' : `<div class="dw-sec"><h4>${ac ? '實際 vs 目標 · Actual vs target' : '目標 · Target'}</h4>
       ${kv('IF', '', n2(t.if), ac ? n2(ac.if) : null, p ? p.if : null)}
       ${kv('TSS', '', t.tss ?? '—', ac ? Math.round(ac.tss ?? 0) : null, p ? p.tss : null)}
       ${kv('VI', '', '≤' + n2(t.vi), ac ? n2(ac.vi) : null, p ? p.vi : null)}
       ${ac && ac.test != null ? kv('前後測', 'W 量測值', null, ac.test, null) : ''}
-    </div>` +
+    </div>`) +
     (Array.isArray(a?.coach) && a.coach.length
       ? `<div class="dw-sec"><h4>教練評 · Coach</h4>${
           a.coach.map(x => `<div class="dw-p dw-coach">${mdBold(x)}</div>`).join('')}</div>`
@@ -7753,7 +7770,7 @@ function render(data) {
   const blkS = (blk && Array.isArray(blk.sessions))
     ? blk.sessions.slice().sort((a, b) => a.date.localeCompare(b.date)) : []
   const todayStr = new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10)
-  const nextSes = blkS.find(x => !x.actual && x.date >= todayStr) || null
+  const nextSes = blkS.find(x => !x.actual && !x.support && x.date >= todayStr) || null
   const doneN = blkS.filter(SES_DONE).length
   const WD_ = ['日', '一', '二', '三', '四', '五', '六']
   const mdOf = d => `${d.slice(5, 7)}/${d.slice(8, 10)}`
@@ -7766,8 +7783,8 @@ function render(data) {
         <button class="ov-cell" data-goto="plan" type="button">
           <span class="ov-k">${blk.title_en || 'BLOCK'}</span>
           <b class="ov-b">${blk.title || ''}</b>
-          <span class="ov-n">${doneN} / ${blkS.length} 完成${blk.ftp ? ` · FTP ${blk.ftp} W` : ''}</span>
-          <span class="ov-track">${blkS.map(x => `<i class="${SES_DONE(x) ? 'is-ok' : (x === nextSes ? 'is-next' : (x.actual || x.date < todayStr ? 'is-missed' : ''))}"></i>`).join('')}</span>
+          <span class="ov-n">${doneN} / ${blkS.filter(SES_KEY).length} 完成${blk.ftp ? ` · FTP ${blk.ftp} W` : ''}</span>
+          <span class="ov-track">${blkS.filter(SES_KEY).map(x => `<i class="${SES_DONE(x) ? 'is-ok' : (x === nextSes ? 'is-next' : (x.actual || x.date < todayStr ? 'is-missed' : ''))}"></i>`).join('')}</span>
         </button>
         ${nextSes ? `
         <button class="ov-cell is-next" data-goto="plan" type="button">
@@ -9655,7 +9672,7 @@ function renderBlockProgress() {
   const wkNow = Math.max(1, Math.floor(dayNo / 7) + 1)
   const wkAll = Math.max(1, Math.ceil(total / 7))
   const pct = Math.max(0, Math.min(100, dayNo / total * 100))
-  const next = (b.sessions || []).filter(s => s.date >= today && !s.actual).sort((a, c) => a.date.localeCompare(c.date))[0]
+  const next = (b.sessions || []).filter(s => s.date >= today && !s.actual && !s.support).sort((a, c) => a.date.localeCompare(c.date))[0]
   const inDays = next ? Math.round((Date.parse(next.date) - Date.parse(today)) / 86400000) : null
   const when = inDays === 0 ? '今天' : inDays === 1 ? '明天' : `${inDays} 天後`
   const t = next && next.target
