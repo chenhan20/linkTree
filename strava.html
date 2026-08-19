@@ -264,6 +264,36 @@ html,body{height:100%;font-family:var(--f-ui);background:#0a0408;color:#ddd}
    一條沒有座標的曲線只看得出形狀、看不出量級，所以刻度是判讀的一部分。
    文字不能放進 SVG —— 那支 svg 是 preserveAspectRatio="none" 拉滿框的，
    字會被橫向拉長，所以軸標一律用 HTML 疊在外面。 */
+.dm{max-width:820px}
+.dm-vd{display:flex;flex-direction:column;gap:3px;padding:11px 13px;border-radius:8px;
+  border:1px solid var(--hair);background:rgba(255,255,255,.02);margin-bottom:12px}
+.dm-vd b{font-size:13px;font-weight:700;color:var(--ink-1)}
+.dm-vd span{font-size:11.5px;line-height:1.6;color:var(--ink-2)}
+.dm-vd.is-x{border-color:rgba(255,106,106,.45);background:rgba(255,106,106,.07)}
+.dm-vd.is-h{border-color:rgba(252,76,2,.4);background:rgba(252,76,2,.06)}
+.dm-vd.is-m{border-color:rgba(255,176,32,.3)}
+.dm-rows{display:flex;flex-direction:column;gap:7px}
+.dm-r{display:grid;grid-template-columns:6.6rem minmax(60px,1fr) 2.2rem 2.6rem minmax(0,7rem);
+  gap:9px;align-items:center}
+.dm-r.is-today .dm-d{color:var(--ink-1)}
+.dm-d{font-size:10.5px;letter-spacing:.4px;color:var(--ink-3);white-space:nowrap;
+  font-variant-numeric:tabular-nums}
+.dm-bar{display:block;height:6px;border-radius:3px;background:rgba(255,255,255,.06);overflow:hidden}
+.dm-bar b{display:block;height:100%;border-radius:3px;background:var(--ink-3);transition:width .3s}
+.dm-bar b.is-x{background:#FF6A6A}.dm-bar b.is-h{background:#FC4C02}.dm-bar b.is-m{background:#ffb020}
+.dm-v{font-family:var(--f-num);font-size:14px;font-weight:800;text-align:right;color:var(--ink-2)}
+.dm-v.is-x{color:#FF6A6A}.dm-v.is-h{color:#FC4C02}.dm-v.is-m{color:#ffb020}
+.dm-b{font-size:9.5px;letter-spacing:1.2px;color:var(--ink-3);white-space:nowrap}
+.dm-s{font-size:10px;color:var(--ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dm-note{margin-top:11px;font-size:10.5px;line-height:1.75;color:var(--ink-3)}
+.dm-note b{color:var(--ink-2)}
+.dm-note code{font-family:var(--f-mono);font-size:9.5px;color:var(--ink-2);
+  padding:1px 5px;border-radius:4px;background:rgba(255,255,255,.05)}
+@media(max-width:600px){
+  /* 手機把「主因／課表名」那欄收掉：五欄擠在 360px 會把長條壓成一條線 */
+  .dm-r{grid-template-columns:5.9rem minmax(40px,1fr) 2rem 2.4rem;gap:7px}
+  .dm-s{display:none}
+}
 .wl-plot{position:relative;padding-right:34px}
 .wl-chart .wl-grid{stroke:rgba(255,255,255,.055);stroke-width:1;vector-effect:non-scaling-stroke}
 .wl-ylab{position:absolute;right:0;width:30px;text-align:right;transform:translateY(-50%);
@@ -9591,7 +9621,9 @@ function wellnessPlot(series, avg, m, band, nDays) {
     // 短區間只標「每七天」那一排，月界仍給長刻度但不標字 ——
     // 兩套標籤混在一起會排出 07/29、08/01、08/05 這種不等距的節奏
     if (short) lab = weekly ? `${d.slice(5, 7)}/${d.slice(8, 10)}` : ''
-    else if (newMonth) {
+    else if (newMonth && (i > 0 || +d.slice(8, 10) <= 3)) {
+      // 區間左緣通常切在月中（90 天那張是 05/21），那裡標「MAY」既不準又會跟 JUN 疊在一起。
+      // 只有真的落在月初三天內才標；刻度照給。
       const mo = +d.slice(5, 7)
       // 365 天有 12 個月界，全標會在手機上疊成一團；標單數月，一月一律標並帶年份
       if (nDays < 200 || mo % 2 === 1 || mo === 1) lab = (mo === 1 ? d.slice(0, 4) + ' ' : '') + WL_MON[mo - 1]
@@ -9705,8 +9737,64 @@ function paintBodyView() {
     b.setAttribute('aria-selected', String(on))
   })
 }
+/* ══ 痠痛預估 ═══════════════════════════════════════════════════════════
+   DOMS 跟 CTL/ATL 是兩本帳：TL 188 的爬坡可以一點都不酸，TL 74 的久違跑步
+   可以讓人下不了樓梯。所以它不從負荷推，另外建模（scripts/doms.py），
+   而這一頁就是它該待的地方 —— 「今天能練什麼」的答案有一半在這裡。
+   顏色沿用既有語意：很高＝衰退紅、高＝訊號橘、中＝時數金、低與無＝弱灰。 */
+const DOMS_BANDS = [[65, '很高', 'x'], [45, '高', 'h'], [25, '中', 'm'], [10, '低', 'l'], [0, '—', 'n']]
+const domsBand = v => DOMS_BANDS.find(b => v >= b[0]) || DOMS_BANDS[DOMS_BANDS.length - 1]
+
+function domsAdvice(v) {
+  if (v >= 65) return '門檻與高扭力不要排，tempo 還做得動；目標下修 5W'
+  if (v >= 45) return '主課表照跑，但目標下修 5W，前 20 分鐘當試踩'
+  if (v >= 25) return '照課表，注意每組最後 3 分鐘有沒有掉瓦'
+  return '沒有痠痛負擔，照課表跑'
+}
+
+function domsPanel() {
+  const D = window._doms
+  if (!D || !D.daily) return ''
+  const today = new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10)
+  const WD = ['日', '一', '二', '三', '四', '五', '六']
+  const addD = k => new Date(Date.parse(today) + k * 86400000).toISOString().slice(0, 10)
+  const ses = Object.fromEntries(((window._trainingBlock || {}).sessions || []).map(s => [s.date, s]))
+  const rows = [0, 1, 2, 3].map(k => {
+    const d = addD(k), v = D.daily[d] || {}
+    return { d, k, am: v.am || 0, all: v.all || 0, top: (D.activities || {})[v.top] || null, ses: ses[d] || null }
+  })
+  if (!rows.some(r => r.all > 0)) return ''
+  // 判讀對準「下一個有課的早上」，不是今天 —— 今天多半已經練完或本來就休
+  const nx = rows.find(r => r.ses) || rows[0]
+  const nb = domsBand(nx.am)
+  const cal = (D.calibration || []).slice(-1)[0]
+  const bar = r => {
+    const b = domsBand(r.am)
+    return `<div class="dm-r${r.k === 0 ? ' is-today' : ''}">
+      <span class="dm-d">${r.k === 0 ? '今天' : r.k === 1 ? '明天' : ''} ${r.d.slice(5).replace('-', '/')} ${WD[new Date(r.d + 'T00:00:00Z').getUTCDay()]}</span>
+      <i class="dm-bar"><b class="is-${b[2]}" style="width:${Math.min(100, r.am)}%"></b></i>
+      <span class="dm-v is-${b[2]}">${Math.round(r.am)}</span>
+      <span class="dm-b">${b[1]}</span>
+      <span class="dm-s">${r.ses ? r.ses.name : (r.top ? '主因 ' + (r.top.name || '') : '')}</span>
+    </div>`
+  }
+  return `<div class="block dm">
+    <div class="section-title">痠痛預估 <span class="muted">· DOMS · 早上七點的估計值</span></div>
+    <div class="dm-vd is-${nb[2]}">
+      <b>${nx.ses ? `${nx.k === 0 ? '今天' : nx.k === 1 ? '明天' : nx.d.slice(5).replace('-', '/')} · ${nx.ses.name}` : '接下來沒有排課'}</b>
+      <span>預估 ${Math.round(nx.am)}（${nb[1]}）—— ${domsAdvice(nx.am)}</span>
+    </div>
+    <div class="dm-rows">${rows.map(bar).join('')}</div>
+    <div class="dm-note">離心係數 × 時數 × 強度修正 × 重複訓練效應，36 小時高峰、約 96 小時退到一成。
+      <b>這是估計不是量測</b>：重訓沒有重量資料、沒有下坡資料，兩者都被低估。
+      ${cal ? `最近一次校準 ${cal.date}：主觀 ${cal.rating}/10、模型 ${cal.model_0_10}/10${cal.note ? `（${cal.note}）` : ''}。` : ''}
+      回報體感：<code>python3 scripts/doms.py --log ${today} 5</code></div>
+  </div>`
+}
+
 function renderBodyView() {
-  if (!window._wellness) return '<div class="nil">還沒有 wellness 資料。</div>'
+  // 痠痛跟 wellness 是兩份檔案，缺一份不該讓另一份跟著消失
+  if (!window._wellness) return domsPanel() || '<div class="nil">還沒有 wellness 資料。</div>'
   const avail = BODY_METRICS.filter(k => wellnessSeries(k, 9999).some(p => p[1] != null))
   if (!avail.length) return '<div class="nil">還沒有 wellness 資料。</div>'
   if (!avail.includes(_bodyMetric)) _bodyMetric = avail[0]
@@ -9717,7 +9805,8 @@ function renderBodyView() {
       data-bodymetric="${k}" role="tab" aria-selected="${k === _bodyMetric}">
       ${m.zh}<em>${days} 天</em></button>`
   }).join('')
-  return `<div class="wl-mtabs" id="body-tabs" role="tablist" aria-label="身體指標">${tabs}</div>
+  return domsPanel()
+    + `<div class="wl-mtabs" id="body-tabs" role="tablist" aria-label="身體指標">${tabs}</div>
     <div class="block wl-panel" id="body-panel">${wellnessPanel(_bodyMetric)}</div>`
 }
 
@@ -10001,10 +10090,13 @@ Promise.all([
   // 367 天的資料每天同步、每天 commit，但這個頁面在 2026-08-15 之前一次都沒讀過它。
   // 缺檔就回 null → 側欄狀態儀表整塊不顯示，其他章節不受影響。
   fetchData('data/fit/_wellness.json').then(r => r.ok ? r.json() : null).catch(() => null),
+  // 痠痛預估（scripts/doms.py 在每次 fit sync 之後重算）。純衍生資料，缺檔就整塊不顯示。
+  fetchData('data/fit/_doms.json').then(r => r.ok ? r.json() : null).catch(() => null),
 ])
-  .then(([data, ittConfig, segStreams, segTerrain, landmarks, rivals, taipeiOutline, quotesData, trainingBlock, ittSegments, wellness]) => {
+  .then(([data, ittConfig, segStreams, segTerrain, landmarks, rivals, taipeiOutline, quotesData, trainingBlock, ittSegments, wellness, doms]) => {
     mergeIttSegments(data, ittSegments)
     window._wellness = wellness || null
+    window._doms = doms || null
     // 建立 SEG_META lookup，下面 renderSegments 用
     // _idx = itt-config.json 裡的排列順序（全段 → 1/4 → 2/4 …）。
     // 物件的數字字串鍵會被引擎重排成遞增，所以順序一定要自己存，不能靠 Object.keys。
