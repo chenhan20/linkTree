@@ -1056,16 +1056,25 @@ body.dw-open #to-top-btn{display:none!important}
 .gu>summary b{font-weight:700}
 .gu>summary i{font-style:normal;font-size:11.5px;color:var(--ink-3)}
 .gu>summary:focus-visible{outline:1px solid rgba(252,76,2,.6);outline-offset:2px}
+.gu>summary:hover::before{color:var(--sig)}
 .gu-body{padding:2px 0 15px calc(.9em + 8px)}
+/* .dw-p 是抽屜寬度設計的；在全寬主欄一行會到 70+ 個中文字，比照 .view-sub 封頂 */
+.gu-body .dw-p{max-width:70ch}
 .gu-body .dw-p+.dw-p{margin-top:9px}
 .gu-pre{margin:9px 0;padding:9px 11px;border-left:1px solid rgba(252,76,2,.22);
   font-size:12px;line-height:1.7;color:var(--ink-2);white-space:pre;overflow-x:auto;
   font-variant-numeric:tabular-nums}
 /* 表格橫向自己捲,頁面本體永遠不橫向捲 */
 .gu-tw{margin:9px 0;overflow-x:auto}
-.gu-tb{width:100%;border-collapse:collapse;font-size:12px;color:var(--ink-2)}
-.gu-tb th,.gu-tb td{padding:6px 10px 6px 0;text-align:left;vertical-align:baseline;
+/* 不撐滿：三欄拉到 1018px 寬,同一列要橫跨整個螢幕才讀得完。內容寬 + 大欄距 */
+.gu-tb{border-collapse:collapse;font-size:12px;color:var(--ink-2)}
+.gu-tb th,.gu-tb td{padding:6px 34px 6px 0;text-align:left;vertical-align:baseline;
   border-bottom:1px solid var(--hair);white-space:nowrap}
+.gu-tb th:last-child,.gu-tb td:last-child{padding-right:0}
+/* 手機：iOS 不畫捲軸,被截的欄位＝不可發現。改成換行,整張表放得下 */
+@media(max-width:767px){
+  .gu-tb th,.gu-tb td{white-space:normal;padding-right:16px}
+}
 .gu-tb th{color:var(--ink-3);font-weight:600;font-size:11px;letter-spacing:.4px}
 .gu-tb td b{color:var(--ink-1);font-weight:700}
 .gu-tb tr:last-child td{border-bottom:0}
