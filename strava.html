@@ -2079,6 +2079,155 @@ button.ov-cell:focus-visible{outline:1px solid rgba(252,76,2,.6);outline-offset:
 }
 @media (prefers-reduced-motion:reduce){.vfill{transition:none}}
 
+/* ══ HARVEST · 收成 ═══════════════════════════════════════════════════
+   四條共用同一根 x 軸的量尺：投入（月騎乘時數）、引擎（eFTP）、
+   同一條路的成績（中社路 ITT）、以及至今仍站著的紀錄。
+   分開看每一條都只是一串數字；疊在同一根軸上才看得到那件事 ——
+   收成落在投入的後面幾週，不在同一格。
+
+   為什麼是「HTML 柱子 ＋ preserveAspectRatio=none 的 SVG 折線」而不是一整張 SVG：
+   整張 SVG 等比縮放時手機上 9px 的字會變 3px、方塊會變 2px；改成 none 又會把
+   字和圓點橫向拉扁（.wl-chart 上面那段註解已經寫過這個坑）。所以「一變形就毀掉」的
+   東西（柱、點、方塊、軸標）全部走 HTML 百分比定位，只有折線交給 SVG，
+   線寬用 vector-effect:non-scaling-stroke 鎖住。整頁不需要量任何一次寬度，
+   隱藏窗格照樣正確（見 setView 對 display:none 的註解）。 */
+.hv-read{
+  display:flex;flex-wrap:wrap;align-items:baseline;gap:3px 18px;
+  padding:10px 13px;margin-bottom:12px;border:1px solid var(--hair);border-radius:8px;
+  background:var(--surface);min-height:39px;
+}
+.hv-read .k{font-family:var(--f-mono);font-size:10px;letter-spacing:1.8px;color:#FC4C02;white-space:nowrap}
+.hv-read.is-idle .k{color:var(--ink-3)}
+.hv-read span:not(.k){font-size:11px;letter-spacing:.4px;color:var(--ink-2);white-space:nowrap}
+.hv-read b{font-family:var(--f-num);font-size:15px;font-weight:800;letter-spacing:-.3px;
+  color:var(--ink-1);font-variant-numeric:tabular-nums;margin-right:2px}
+.hv-read em{font-style:normal;font-family:var(--f-num);font-weight:800;font-variant-numeric:tabular-nums}
+/* :not(.k) 讓上一條變成 (0,2,1)，.hv-read .up 只有 (0,2,0) 會被壓過去 —— 要帶元素選擇器 */
+.hv-read span.up,.hv-read em.up{color:#5FD060}
+.hv-read span.dn,.hv-read em.dn{color:#FF6A6A}
+.hv-read .gold b{color:#FFD700}
+
+/* ── 圖體：所有 lane 疊在同一個相對定位容器裡，命中層鋪滿全區 ── */
+.hv-body{position:relative}
+.hv-seed{position:absolute;top:0;bottom:26px;z-index:0;pointer-events:none;
+  background:rgba(252,76,2,.055);border-left:1px solid rgba(252,76,2,.16);border-right:1px solid rgba(252,76,2,.16)}
+.hv-seed b{position:absolute;top:-1px;left:0;right:0;height:2px;background:rgba(252,76,2,.5)}
+.hv-cursor{position:absolute;top:0;bottom:26px;z-index:1;pointer-events:none;
+  background:rgba(255,255,255,.05);border-left:1px solid var(--hair-2);border-right:1px solid var(--hair-2)}
+.hv-cursor[hidden]{display:none}
+.hv-hit{position:absolute;inset:0 0 26px;z-index:4;display:grid;grid-template-columns:repeat(var(--hv-n),1fr)}
+.hv-hit button{border:0;background:transparent;padding:0;cursor:pointer;font:inherit;-webkit-tap-highlight-color:transparent}
+.hv-hit button:focus-visible{outline:1px solid rgba(252,76,2,.7);outline-offset:-1px;border-radius:3px}
+
+.hv-lane{position:relative;z-index:2;margin-bottom:16px}
+.hv-lane-k{
+  display:flex;align-items:baseline;gap:0 8px;flex-wrap:wrap;margin-bottom:5px;
+  font-size:10px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;color:var(--ink-3);
+}
+.hv-lane-k b{font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:none;color:var(--ink-2)}
+.hv-lane-k i{font-style:normal;font-family:var(--f-mono);font-size:9.5px;letter-spacing:.8px;
+  color:var(--ink-3);font-variant-numeric:tabular-nums;margin-left:auto}
+.hv-plot{position:relative;display:grid;grid-template-columns:repeat(var(--hv-n),1fr);
+  height:var(--h);border-bottom:1px solid var(--hair)}
+.hv-c{position:relative;height:100%}
+
+/* ── lane 1 · 投入 ── */
+.hv-bar{position:absolute;left:21%;right:21%;bottom:0;display:flex;flex-direction:column;
+  border-radius:2px 2px 0 0;overflow:hidden;opacity:.62}
+/* 命中層（.hv-hit）疊在最上面，所以 .hv-plot / .hv-c 永遠收不到 :hover ——
+   別在這裡寫 hover 規則，游標回饋一律由 initHarvest 移動 .hv-cursor 負責。 */
+.hv-bar.is-over{opacity:1}
+.hv-bar i{display:block;flex:0 0 auto}
+.hv-bar .o{background:linear-gradient(180deg,#FC4C02,#8f2b01)}
+/* 室內不是次等的訓練，只是來源不同 —— 用斜線區分，不用降亮度懲罰它 */
+.hv-bar .v{background:repeating-linear-gradient(135deg,rgba(252,76,2,.85) 0 2px,rgba(252,76,2,.22) 2px 5px)}
+.hv-need{position:absolute;left:50%;width:0;border-left:1px dotted rgba(244,240,234,.3);pointer-events:none}
+.hv-rule{position:absolute;left:0;right:0;height:0;border-top:1px dashed rgba(244,240,234,.42);z-index:3;pointer-events:none}
+.hv-rule b{position:absolute;right:0;bottom:2px;font-family:var(--f-mono);font-size:9px;
+  letter-spacing:1px;color:rgba(244,240,234,.55);background:rgba(10,4,8,.75);padding:0 3px;border-radius:2px}
+
+/* ── lane 2/3 · 折線 ── */
+.hv-line{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;z-index:2}
+.hv-line path{fill:none;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke}
+.hv-line .fill{stroke:none}
+.hv-dot{position:absolute;width:7px;height:7px;margin:-3.5px 0 0 -3.5px;border-radius:50%;z-index:3}
+.hv-dot.hollow{background:transparent!important;border:1.5px solid currentColor}
+.hv-tag{position:absolute;transform:translate(-50%,-50%);font-family:var(--f-num);font-size:12px;
+  font-weight:800;letter-spacing:-.2px;font-variant-numeric:tabular-nums;white-space:nowrap;z-index:3;
+  background:rgba(10,4,8,.8);padding:0 3px;border-radius:2px}
+
+/* ── lane 4 · 收成 ──
+   一格一項紀錄，由下往上疊。方塊是路段、菱形是功率、空心是首登（那條路之前沒騎過，
+   第一次自動就是最佳）—— 三種形狀一個顏色，堆疊的高度才讀得出「那個月收了幾項」。 */
+.hv-stack{position:absolute;left:0;right:0;bottom:0;display:flex;flex-direction:column-reverse;
+  align-items:center;gap:3px}
+.hv-m{display:block;width:8px;height:8px;background:#FFD700;border-radius:1.5px;
+  box-shadow:0 0 6px rgba(255,215,0,.35)}
+.hv-m.pwr{transform:rotate(45deg);border-radius:1px}
+.hv-m.first{background:transparent;border:1.5px solid rgba(255,215,0,.85);box-shadow:none}
+.hv-brk{position:absolute;bottom:-4px;height:5px;border:1px solid rgba(255,215,0,.4);border-top:0;z-index:3}
+.hv-brk em{position:absolute;left:50%;top:6px;transform:translateX(-50%);font-style:normal;
+  font-family:var(--f-mono);font-size:9px;letter-spacing:.8px;color:rgba(255,215,0,.8);white-space:nowrap}
+
+/* ── x 軸 ── */
+.hv-x{position:relative;z-index:2;display:grid;grid-template-columns:repeat(var(--hv-n),1fr);height:26px;padding-top:5px}
+.hv-x span{text-align:center;font-family:var(--f-mono);font-size:9px;letter-spacing:.4px;color:var(--ink-3)}
+.hv-x span em{font-style:normal;display:block;font-size:8px;letter-spacing:.6px;color:rgba(252,76,2,.65)}
+.hv-x span.on{color:var(--ink-1)}
+
+/* ── 圖例 ── */
+.hv-leg{display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:12px}
+.hv-leg span{display:inline-flex;align-items:center;gap:6px;font-size:10px;letter-spacing:.5px;color:var(--ink-3)}
+.hv-leg i{display:block;width:9px;height:9px;border-radius:1.5px;flex:0 0 auto}
+.hv-leg i.o{background:linear-gradient(180deg,#FC4C02,#8f2b01)}
+.hv-leg i.v{background:repeating-linear-gradient(135deg,rgba(252,76,2,.85) 0 2px,rgba(252,76,2,.22) 2px 5px)}
+.hv-leg i.g{background:#FFD700}
+.hv-leg i.gd{background:#FFD700;transform:rotate(45deg)}
+.hv-leg i.gh{background:transparent;border:1.5px solid rgba(255,215,0,.85)}
+.hv-leg i.ln{height:0;border-top:2px solid currentColor;border-radius:0}
+
+/* ── 現存紀錄清單 ── */
+.hv-mh{display:flex;align-items:baseline;gap:0 10px;padding:16px 0 5px;border-bottom:1px solid var(--hair)}
+.hv-mh b{font-family:var(--f-num);font-size:17px;font-weight:800;letter-spacing:-.2px;
+  color:var(--ink-1);font-variant-numeric:tabular-nums}
+.hv-mh span{font-size:10px;letter-spacing:1.4px;text-transform:uppercase;color:var(--ink-3)}
+.hv-mh i{font-style:normal;margin-left:auto;font-family:var(--f-mono);font-size:9.5px;
+  letter-spacing:.8px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.hv-mh.hot b{color:#FFD700}
+.row-gain{font-family:var(--f-num);font-size:12px;font-weight:800;color:#5FD060;
+  font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right}
+.row-gain.nil2{color:var(--ink-3)}
+
+/* ── 刷新率 ── */
+.hv-conv{border-top:1px solid var(--hair)}
+.hv-crow{display:grid;grid-template-columns:3.4rem minmax(0,1fr) 4.6rem 3rem;gap:0 14px;align-items:center;
+  padding:6px 4px;border-bottom:1px solid var(--hair)}
+.hv-ck{font-family:var(--f-mono);font-size:10.5px;letter-spacing:1px;color:var(--ink-2);white-space:nowrap}
+.hv-ctrack{position:relative;height:9px;border-radius:2px;background:rgba(255,255,255,.05);overflow:hidden}
+.hv-ctry{position:absolute;inset:0 auto 0 0;background:rgba(255,255,255,.13);border-radius:2px}
+.hv-chit{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,#a8830a,#FFD700);border-radius:2px}
+.hv-cv{font-family:var(--f-num);font-size:14px;font-weight:800;color:var(--ink-1);
+  font-variant-numeric:tabular-nums;text-align:right;letter-spacing:-.2px}
+.hv-cv small{font-family:var(--f-ui);font-size:9px;font-weight:700;color:var(--ink-3);margin-left:2px}
+.hv-cp{font-family:var(--f-num);font-size:14px;font-weight:800;text-align:right;
+  font-variant-numeric:tabular-nums;color:var(--ink-3)}
+.hv-cp.hi{color:#FFD700}
+/* 嘗試次數 <10 的百分比再退一階：2/2＝100% 跟 49/61＝80% 不該長得一樣亮 */
+.hv-cp.thin{color:rgba(244,240,234,.22)}
+
+@media(max-width:640px){
+  .hv-read{gap:2px 12px;padding:8px 10px}
+  .hv-read span:not(.k){font-size:10.5px}
+  .hv-bar{left:16%;right:16%}
+  .hv-m{width:7px;height:7px}
+  .hv-stack{gap:2px}
+  .hv-x span{font-size:8px}
+  .hv-x span.off{visibility:hidden}
+  .hv-crow{grid-template-columns:3rem minmax(0,1fr) 4rem 2.6rem;gap:0 8px}
+  .hv-tag{font-size:10px}
+}
+@media (prefers-reduced-motion:reduce){.hv-bar{transition:none}}
+
 /* 月度量的舊樣式（.monthly-chart / .chart-row / .chart-bar 三條並列）已隨 .vol 取代而移除。
    .chart-pr / .chart-trend / .chart-tss 仍在用，定義在下面。 */
 .chart-pr{font-size:11px;line-height:1;cursor:help;position:relative;filter:drop-shadow(0 0 4px rgba(255,200,60,.5))}
@@ -7622,6 +7771,10 @@ function render(data) {
     const nm = (window._ittSegMeta && window._ittSegMeta[s.id] && window._ittSegMeta[s.id].nameZh) || s.name
     if (m) (prMonths[m] = prMonths[m] || []).push(`⏱ ${nm} ${e.elapsed_str}`)
   }))
+  // 收成：投入（月時數）／引擎（eFTP）／同一條路（中社）／現存紀錄，共用一根 x 軸
+  const harvest = window.__harvest = buildHarvest(data)
+  const harvestHtml = renderHarvest(harvest)
+
   const distByMonth = {}
   data.monthly_history.forEach(m => { distByMonth[m.month] = monthDist(m) })
   const prevMonthKey = mo => {
@@ -8064,6 +8217,15 @@ function render(data) {
       <div class="block">${totalsHtml}</div>
     </section>
 
+    <section class="view" data-view="harvest">
+      ${viewH('收成', 'Harvest', harvest ? `${harvest.stats.n} 個月` : '')}
+      <p class="view-sub">同一根 x 軸上疊四條量尺：<b>投入</b>（每個月騎了幾小時）、<b>引擎</b>（eFTP）、
+        <b>同一條路</b>（中社路全段每月最佳）、以及<b>收成</b>（至今仍站著的紀錄，掛在它被立下的月份）。
+        分開看每一條都只是一串數字，疊起來才看得到那件事 ——
+        紀錄不落在投入的同一格，落在它後面。</p>
+      ${harvestHtml}
+    </section>
+
     <section class="view" data-view="body">
       ${viewH('身體', 'Body', '恢復與體能')}
       ${renderBodyView()}
@@ -8088,6 +8250,9 @@ function render(data) {
       })
     })
   })
+
+  // 收成：游標帶 + 讀數條 + 清單篩選（位置全是百分比，不量寬度，隱藏窗格照樣正確）
+  initHarvest()
 
   // ── 月度訓練量：指標切換 + 時間範圍（§31 / §32）──
   // 切換只是換 DOM 上已經算好的欄位，一個數字都沒有重算。
@@ -8139,6 +8304,511 @@ function render(data) {
       showMore[activeTab] = true
       document.getElementById('timeline').innerHTML = timelineHTML()
     }
+  })
+}
+
+
+/* ══ HARVEST · 收成 ═══════════════════════════════════════════════════
+   這一頁只回答一個問題：那幾個月的量，最後換到了什麼。
+
+   它不是第三張趨勢圖。趨勢講「這個月比上個月多騎多少」，收成講的是投入與產出
+   之間那段時差 —— 2025 年 7/8/9 三個月是他 17 個月裡唯二三個超過損益線的月份，
+   而 44 項至今仍站著的紀錄裡有 23 項落在 8/9/10 月，也就是投入的正後方。
+   四條量尺共用同一根 x 軸，就是為了讓那個錯位自己浮出來。
+
+   損益線 15.3 h／月 與斜率 +0.64 W/h 沿用 scripts/coach-brief.py 的常數
+   （單一來源，站上與 CLI 不能各說各話）。⚠️ 但 2026-08-20 重跑對不回這兩個數：
+   兩種 eFTP 來源（_activities 的 icu_rolling_ftp ／ _wellness 的 sportInfo）
+   × 兩種剔除法，四組結果全部落在斜率 +0.47～+0.53、損益線 16.4～17.4 h、r 0.80–0.88。
+   0.64／15.3 很可能是連 2025-08 一起算了 —— 那個月 eFTP 從 199 爬到 235，
+   是 intervals.icu 剛接上帳號在收斂，不是一個月長了 36 W。真門檻大概再高 1～2 小時。
+   ⚠️ 還有一個更根本的限制：eFTP 是 intervals.icu 從「最近有沒有全力過」反推的，
+   不是量出來的。2025-12 那次 +18 W 就是 12/22 一趟測試效果造成的偵測跳動，
+   不是體能真的一個月長 18 W —— 所以那個月被當離群值剔除。 */
+const HV_BREAKEVEN = 15.3          // h／月：低於它 eFTP 在掉
+const HV_SLOPE     = 0.64          // W per h／月
+const HV_BENCH     = 1761462       // 中社路 全段 —— 他重複最多次的同一條測驗路
+
+function hvNextMonth(m) {
+  const y = +m.slice(0, 4), n = +m.slice(5, 7)
+  return n === 12 ? `${y + 1}-01` : `${y}-${String(n + 1).padStart(2, '0')}`
+}
+function hvDaysIn(m) { return new Date(Date.UTC(+m.slice(0, 4), +m.slice(5, 7), 0)).getUTCDate() }
+/* effort 的身分用「日期＋起跑時刻」，跟 mergeIttSegments 同一套自然鍵。
+   同一趟刷四次中社是四筆，activity_id 全一樣。 */
+function hvWhen(e) { return `${e.date || ''} ${e.start_time || '00:00'}` }
+function hvSegName(s) {
+  const meta = window._ittSegMeta && window._ittSegMeta[s.id]
+  return (meta && meta.nameZh) || s.name || String(s.id)
+}
+function hvMd(d) { return d ? d.slice(5).replace('-', '/') : '' }
+
+/** 全部從已經載進來的資料現算：strava.json（時數／功率）、itt-segments.json 併好的
+ *  data.segments（路段）、_wellness.json（eFTP）。沒有新的檔案要產、沒有 build step。 */
+function buildHarvest(data) {
+  const rides = data.recent_rides || []
+  if (!rides.length) return null
+
+  // ── 月時數 ──
+  // 用 moving_time_sec 自己換算，不用 moving_time_hr：後者是逐筆四捨五入到 0.1 h 的，
+  // 17 個月累起來會偏到 ±0.3 h（實測 2025-08 25.8 vs 25.5）。
+  const mv = {}
+  rides.forEach(r => {
+    const k = (r.date || '').slice(0, 7); if (!k) return
+    const o = mv[k] || (mv[k] = { out: 0, vir: 0 })
+    const h = (r.moving_time_sec || 0) / 3600
+    if (r.sport_type === 'VirtualRide' || r.trainer === true) o.vir += h; else o.out += h
+  })
+  const mk = Object.keys(mv).sort()
+  // 中間完全沒騎的月份要補空格，少一格 x 軸就在說謊
+  const keys = []
+  for (let k = mk[0]; k <= mk[mk.length - 1]; k = hvNextMonth(k)) keys.push(k)
+
+  // ── eFTP 逐日（_wellness.json 的 sportInfo 裡 type==='Ride' 那筆）──
+  // 未來日照樣有推算值 —— 走全站共用的 wellnessDays 切掉，不要自己再寫一次規矩。
+  const today = new Date(Date.now() + 8 * 3600e3).toISOString().slice(0, 10)
+  const wl = window._wellness
+  const eftp = []
+  if (wl) wellnessDays(wl).forEach(d => {
+    const si = wl[d] && wl[d].sportInfo
+    const r = Array.isArray(si) ? si.find(x => x.type === 'Ride' && x.eftp) : null
+    if (r) eftp.push({ d, v: Math.round(r.eftp) })
+  })
+  // 序列開頭那半個月不能用：intervals.icu 的 eFTP 是從既有騎乘反推的，帳號剛接上時
+  // 它是從低點一路往上爬到「真值」，不是體能兩週長了 36 W（2025-08-16 199 → 08-31 235）。
+  // 規則寫成「丟掉不完整的第一個月」而不是寫死日期，之後換資料源也還成立。
+  if (eftp.length && eftp[0].d.slice(8) !== '01') {
+    const drop = eftp[0].d.slice(0, 7)
+    while (eftp.length && eftp[0].d.slice(0, 7) === drop) eftp.shift()
+  }
+  const eftpEnd = {}                        // 月最後一筆＝該月月末值
+  eftp.forEach(p => { eftpEnd[p.d.slice(0, 7)] = p.v })
+
+  // ── 同一條路：中社路全段每月最佳 ──
+  const bench = (data.segments || []).find(s => s.id === HV_BENCH)
+  const benchBest = {}
+  ;(bench ? bench.efforts || [] : []).forEach(e => {
+    const k = (e.date || '').slice(0, 7); if (!k) return
+    if (!benchBest[k] || e.elapsed_sec < benchBest[k].sec)
+      benchBest[k] = { sec: e.elapsed_sec, str: e.elapsed_str, w: e.avg_watts || null, date: e.date }
+  })
+
+  // ── 現存紀錄：至今仍是最佳的那一筆，掛在它被立下的月份 ──
+  // 「首登」單獨標出來：那條路之前沒騎過，第一次自動就是最佳，它不是把誰推掉的。
+  const recs = []
+  ;(data.segments || []).forEach(s => {
+    const list = (s.efforts || []).slice().sort((a, b) => hvWhen(a).localeCompare(hvWhen(b)))
+    if (!list.length) return
+    const best = list.reduce((m, e) => (e.elapsed_sec < m.elapsed_sec ? e : m), list[0])
+    const prior = list.filter(e => hvWhen(e) < hvWhen(best))
+    const old = prior.length ? prior.reduce((m, e) => (e.elapsed_sec < m.elapsed_sec ? e : m), prior[0]) : null
+    recs.push({
+      kind: 'seg', id: s.id, name: hvSegName(s), date: best.date, m: (best.date || '').slice(0, 7),
+      val: best.elapsed_str || fmtIttElapsed(best.elapsed_sec), unit: '',
+      gain: old ? old.elapsed_sec - best.elapsed_sec : null,
+      gainStr: old ? '−' + fmtIttElapsed(old.elapsed_sec - best.elapsed_sec) : null,
+      prev: old ? (old.elapsed_str || fmtIttElapsed(old.elapsed_sec)) : null,
+      prevDate: old ? old.date : null, tries: list.length, before: prior.length, first: !old,
+    })
+  })
+  ;(data.power_prs || []).forEach(p => {
+    const runner = (p.top3 || [])[1] || null
+    recs.push({
+      kind: 'pwr', id: p.duration_sec, name: `${p.duration_label} 最大功率`,
+      date: p.date, m: (p.date || '').slice(0, 7), val: String(p.watts), unit: 'W',
+      gain: runner ? p.watts - runner.watts : null,
+      gainStr: runner ? `+${p.watts - runner.watts} W` : null,
+      prev: runner ? `${runner.watts} W` : null, prevDate: runner ? runner.date : null,
+      tries: null, before: null, first: false,
+    })
+  })
+  recs.sort((a, b) => (b.date || '').localeCompare(a.date || '') || a.name.localeCompare(b.name))
+  const recByMonth = {}
+  recs.forEach(r => (recByMonth[r.m] = recByMonth[r.m] || []).push(r))
+
+  // ── 刷新率：那一刻它就是歷來最佳的次數 ÷ 當月計時段嘗試次數 ──
+  const conv = {}
+  ;(data.segments || []).forEach(s => {
+    let best = Infinity
+    ;(s.efforts || []).slice().sort((a, b) => hvWhen(a).localeCompare(hvWhen(b))).forEach(e => {
+      const k = (e.date || '').slice(0, 7); if (!k) return
+      const c = conv[k] || (conv[k] = { tries: 0, hits: 0 })
+      c.tries++
+      if (e.elapsed_sec < best) { best = e.elapsed_sec; c.hits++ }
+    })
+  })
+
+  // ── 每月一列 ──
+  let prevE = null
+  const months = keys.map(k => {
+    const v = mv[k] || { out: 0, vir: 0 }
+    const tot = v.out + v.vir
+    const e = eftpEnd[k] != null ? eftpEnd[k] : null
+    const row = {
+      m: k, out: v.out, vir: v.vir, tot, over: tot >= HV_BREAKEVEN,
+      eftp: e, dEftp: (e != null && prevE != null) ? e - prevE : null,
+      bench: benchBest[k] || null,
+      recs: recByMonth[k] || [], conv: conv[k] || null,
+    }
+    if (e != null) prevE = e
+    return row
+  })
+
+  // 收成窗＝超線的月份，加上它們的次月（他的 PR 都出現在投入的 3–5 週後）
+  const win = new Set()
+  months.forEach(r => { if (r.over) { win.add(r.m); win.add(hvNextMonth(r.m)) } })
+  const inWin = recs.filter(r => win.has(r.m)).length
+  const winKeys = keys.filter(k => win.has(k))
+
+  // 本月進度（跟 coach-brief.py 印的同一套算式）
+  const cur = months[months.length - 1]
+  const now = new Date(Date.now() + 8 * 3600e3)
+  const dom = now.getUTCDate(), dim = hvDaysIn(cur.m)
+  const isThis = cur.m === today.slice(0, 7)
+
+  return {
+    months, keys, recs, recByMonth, eftp, win, winKeys,
+    max: Math.max(30, Math.ceil(Math.max(...months.map(r => r.tot)) / 5) * 5),
+    stats: {
+      n: months.length,
+      avg: months.reduce((a, r) => a + r.tot, 0) / months.length,
+      over: months.filter(r => r.over).length,
+      nRec: recs.length, nSeg: recs.filter(r => r.kind === 'seg').length,
+      nPwr: recs.filter(r => r.kind === 'pwr').length,
+      nFirst: recs.filter(r => r.first).length,
+      inWin, winPct: recs.length ? Math.round(inWin / recs.length * 100) : 0,
+      cur: cur.m, curH: cur.tot, curGap: HV_BREAKEVEN - cur.tot,
+      curPace: isThis ? cur.tot / Math.max(dom, 1) * dim : cur.tot, isThis,
+    },
+  }
+}
+
+const hvH = v => (Math.round(v * 10) / 10).toFixed(1)
+const hvPct = (v, max) => (v / max * 100).toFixed(2)
+
+/** 讀數條。沒有游標時講整體，有游標時講那一個月。 */
+function hvReadHtml(H, i) {
+  const st = H.stats
+  if (i == null) return `<span class="k">${st.n} 個月</span>
+    <span><b>${hvH(st.avg)}</b>h 月均</span>
+    <span><b>${st.over}</b>／${st.n} 個月過線</span>
+    <span class="gold"><b>${st.nRec}</b>項現存紀錄</span>
+    <span>其中 <b>${st.inWin}</b>項（${st.winPct}%）落在過線那幾個月與它們的次月</span>`
+  const r = H.months[i]
+  const gap = HV_BREAKEVEN - r.tot
+  return `<span class="k">${r.m}</span>
+    <span><b>${hvH(r.tot)}</b>h　戶外 ${hvH(r.out)}／室內 ${hvH(r.vir)}</span>
+    <span class="${gap > 0 ? 'dn' : 'up'}">${gap > 0 ? `距線 −${hvH(gap)}h` : `過線 +${hvH(-gap)}h`}</span>
+    <span>eFTP ${r.eftp != null ? `<b>${r.eftp}</b>W` : '<b>—</b>'}${
+      r.dEftp != null ? ` <em class="${r.dEftp > 0 ? 'up' : r.dEftp < 0 ? 'dn' : ''}">${r.dEftp > 0 ? '+' : ''}${r.dEftp}</em>` : ''}</span>
+    <span>中社 <b>${r.bench ? r.bench.str : '—'}</b></span>
+    <span class="gold"><b>${r.recs.length}</b>項紀錄</span>`
+}
+
+/** 折線：viewBox 寬＝月數，一格一個月，x 落在格內的哪一天。
+ *  preserveAspectRatio="none" 會把它橫向拉扁 —— 線可以，字與圓點不行，
+ *  所以這裡只放 path，端點與標籤都在外面用 HTML 百分比定位。 */
+/** 標籤貼哪一邊：點靠近 lane 上緣就翻到下面，靠近下緣就翻到上面。
+ *  不這樣做的話峰值標籤會壓到 lane 標題（手機上 16:25 蓋掉「每月最佳」實測過）。 */
+function hvTagAt(yPct) {
+  const y = parseFloat(yPct)
+  return `calc(${yPct} ${y < 30 ? '+' : '-'} 14px)`
+}
+function hvLinePath(pts, n, lo, hi, close) {
+  if (!pts.length) return ''
+  const y = v => ((hi - v) / (hi - lo) * 100).toFixed(2)
+  let d = '', open = false
+  pts.forEach(p => {
+    if (p == null) { open = false; return }
+    d += `${open ? 'L' : 'M'}${p.x.toFixed(3)} ${y(p.v)}`
+    open = true
+  })
+  if (close && d) {
+    const a = pts.filter(Boolean)
+    d += `L${a[a.length - 1].x.toFixed(3)} 100L${a[0].x.toFixed(3)} 100Z`
+  }
+  return d
+}
+
+function renderHarvest(H) {
+  if (!H) return '<div class="nil">還沒有騎乘資料。</div>'
+  const N = H.keys.length, st = H.stats
+  const colL = i => (i / N * 100).toFixed(3) + '%'
+  const colW = (len => (len / N * 100).toFixed(3) + '%')
+  const mid = i => ((i + 0.5) / N * 100).toFixed(3) + '%'
+
+  // ── lane 1 · 投入 ──
+  const volCells = H.months.map((r, i) => {
+    const totP = hvPct(r.tot, H.max)
+    const need = HV_BREAKEVEN - r.tot
+    return `<span class="hv-c">${r.tot > 0 ? `<i class="hv-bar${r.over ? ' is-over' : ''}" data-i="${i}" style="height:${totP}%">${
+      r.vir > 0 ? `<i class="v" style="height:${(r.vir / r.tot * 100).toFixed(2)}%"></i>` : ''}${
+      r.out > 0 ? `<i class="o" style="height:${(r.out / r.tot * 100).toFixed(2)}%"></i>` : ''}</i>` : ''}${
+      need > 0 ? `<i class="hv-need" style="bottom:${totP}%;height:${hvPct(need, H.max)}%"></i>` : ''}</span>`
+  }).join('')
+
+  // ── lane 2 · eFTP ──
+  const ev = H.eftp.map(p => p.v)
+  const eLo = ev.length ? Math.min(...ev) - 3 : 0, eHi = ev.length ? Math.max(...ev) + 3 : 1
+  const idx = Object.fromEntries(H.keys.map((k, i) => [k, i]))
+  const ePts = H.eftp.map(p => {
+    const i = idx[p.d.slice(0, 7)]
+    if (i == null) return null
+    return { x: i + (+p.d.slice(8, 10) - 0.5) / hvDaysIn(p.d.slice(0, 7)), v: p.v }
+  }).filter(Boolean)
+  const ePeak = ePts.length ? ePts.reduce((m, p) => (p.v > m.v ? p : m), ePts[0]) : null
+  const eLast = ePts.length ? ePts[ePts.length - 1] : null
+  const eY = v => ((eHi - v) / (eHi - eLo) * 100).toFixed(2) + '%'
+  const eftpLane = ePts.length ? `
+      <svg class="hv-line" viewBox="0 0 ${N} 100" preserveAspectRatio="none" aria-hidden="true">
+        <path class="fill" d="${hvLinePath(ePts, N, eLo, eHi, true)}" fill="rgba(255,176,32,.10)"/>
+        <path d="${hvLinePath(ePts, N, eLo, eHi)}" stroke="#ffb020" stroke-width="1.8"/>
+      </svg>
+      <i class="hv-dot" style="left:${(ePeak.x / N * 100).toFixed(3)}%;top:${eY(ePeak.v)};background:#ffb020"></i>
+      <i class="hv-tag" style="left:${(ePeak.x / N * 100).toFixed(3)}%;top:${hvTagAt(eY(ePeak.v))};color:#ffb020">${ePeak.v}</i>
+      <i class="hv-dot" style="left:${(eLast.x / N * 100).toFixed(3)}%;top:${eY(eLast.v)};background:#ffb020"></i>
+      <i class="hv-tag" style="left:${(eLast.x / N * 100).toFixed(3)}%;top:${hvTagAt(eY(eLast.v))};color:#ffb020">${eLast.v}</i>`
+    : '<i class="hv-tag" style="left:50%;top:50%;color:var(--ink-3);font-family:var(--f-ui);font-size:10px">沒有 eFTP 序列（wellness 未載入）</i>'
+
+  // ── lane 3 · 中社 ──
+  const bs = H.months.filter(r => r.bench).map(r => r.bench.sec)
+  const bLo = bs.length ? Math.min(...bs) - 25 : 0, bHi = bs.length ? Math.max(...bs) + 25 : 1
+  // 快＝高：把秒數反過來放，圖上往上就是變快
+  const bPts = H.months.map((r, i) => (r.bench ? { x: i + 0.5, v: bHi + bLo - r.bench.sec } : null))
+  const bY = sec => ((sec - bLo) / (bHi - bLo) * 100).toFixed(2) + '%'
+  const benchLane = bs.length ? `
+      <svg class="hv-line" viewBox="0 0 ${N} 100" preserveAspectRatio="none" aria-hidden="true">
+        <path d="${hvLinePath(bPts, N, bLo, bHi)}" stroke="#4AB4FF" stroke-width="1.6"/>
+      </svg>${H.months.map((r, i) => r.bench
+        ? `<i class="hv-dot${r.bench.sec === Math.min(...bs) ? '' : ' hollow'}" style="left:${mid(i)};top:${bY(r.bench.sec)};background:#4AB4FF;color:#4AB4FF"></i>`
+        : '').join('')}
+      <i class="hv-tag" style="left:${mid(H.months.findIndex(r => r.bench && r.bench.sec === Math.min(...bs)))};top:${hvTagAt(bY(Math.min(...bs)))};color:#4AB4FF">${
+        (H.months.find(r => r.bench && r.bench.sec === Math.min(...bs)) || {}).bench.str}</i>${
+      (li => li < 0 || H.months[li].bench.sec === Math.min(...bs) ? ''
+        : `<i class="hv-tag" style="left:${mid(li)};top:${hvTagAt(bY(H.months[li].bench.sec))};color:#4AB4FF;opacity:.8">${H.months[li].bench.str}</i>`
+      )(H.months.reduce((a, r, i) => (r.bench ? i : a), -1))}`
+    : '<i class="hv-tag" style="left:50%;top:50%;color:var(--ink-3);font-family:var(--f-ui);font-size:10px">還沒有中社路成績</i>'
+
+  // ── lane 4 · 收成 ──
+  const maxStack = Math.max(1, ...H.months.map(r => r.recs.length))
+  const recCells = H.months.map(r => `<span class="hv-c"><i class="hv-stack">${
+    r.recs.map(x => `<i class="hv-m${x.kind === 'pwr' ? ' pwr' : ''}${x.first ? ' first' : ''}"></i>`).join('')}</i></span>`).join('')
+  // 收成窗的括號：連續的那一段畫一次就好
+  const wi = H.winKeys.map(k => idx[k]).filter(v => v != null).sort((a, b) => a - b)
+  const brk = wi.length ? `<i class="hv-brk" style="left:${colL(wi[0])};width:${colW(wi[wi.length - 1] - wi[0] + 1)}"><em>${st.inWin}／${st.nRec} 項在這裡</em></i>` : ''
+
+  // 超線月份的底色帶（連續的合成一條）
+  const seeds = []
+  H.months.forEach((r, i) => {
+    if (!r.over) return
+    const last = seeds[seeds.length - 1]
+    if (last && last.b === i - 1) last.b = i; else seeds.push({ a: i, b: i })
+  })
+
+  const xAxis = H.keys.map((k, i) => {
+    const y = k.slice(0, 4), newY = i === 0 || y !== H.keys[i - 1].slice(0, 4)
+    return `<span class="${H.months[i].over ? 'on' : ''}${i % 2 && !newY ? ' off' : ''}">${k.slice(5)}${newY ? `<em>${y}</em>` : ''}</span>`
+  }).join('')
+
+  const chart = `
+    <div class="hv-read is-idle" id="hv-read">${hvReadHtml(H, null)}</div>
+    <div class="hv-body" id="hv-body" style="--hv-n:${N}">
+      ${seeds.map(s => `<i class="hv-seed" style="left:${colL(s.a)};width:${colW(s.b - s.a + 1)}"><b></b></i>`).join('')}
+      <i class="hv-cursor" id="hv-cursor" hidden></i>
+
+      <div class="hv-lane" style="--h:174px">
+        <div class="hv-lane-k">投入<b>月騎乘時數</b><i>0 – ${H.max} h</i></div>
+        <div class="hv-plot">
+          <i class="hv-rule" style="bottom:${hvPct(HV_BREAKEVEN, H.max)}%"><b>損益線 ${HV_BREAKEVEN} h</b></i>
+          ${volCells}
+        </div>
+      </div>
+
+      <div class="hv-lane" style="--h:66px">
+        <div class="hv-lane-k">引擎<b>eFTP</b><i>${ev.length
+          ? `${Math.min(...ev)} – ${Math.max(...ev)} W　${H.eftp[0].d.slice(0, 7)} 起` : '—'}</i></div>
+        <div class="hv-plot">${eftpLane}</div>
+      </div>
+
+      <div class="hv-lane" style="--h:62px">
+        <div class="hv-lane-k">同一條路<b>中社路 全段 每月最佳</b><i>上＝快</i></div>
+        <div class="hv-plot">${benchLane}</div>
+      </div>
+
+      <div class="hv-lane" style="--h:${Math.max(58, maxStack * 11 + 8)}px">
+        <div class="hv-lane-k">收成<b>至今仍站著的紀錄</b><i>${st.nSeg} 段 ＋ ${st.nPwr} 功率</i></div>
+        <div class="hv-plot">${recCells}${brk}</div>
+      </div>
+
+      <div class="hv-x">${xAxis}</div>
+      <div class="hv-hit" id="hv-hit">${H.keys.map((k, i) =>
+        `<button type="button" data-hvi="${i}" data-hvm="${k}" aria-label="${k}"></button>`).join('')}</div>
+    </div>
+    <div class="hv-leg">
+      <span><i class="o"></i>戶外</span>
+      <span><i class="v"></i>室內／訓練台</span>
+      <span><i class="g"></i>路段紀錄</span>
+      <span><i class="gd"></i>功率紀錄</span>
+      <span><i class="gh"></i>首登（之前沒騎過，第一次就是最佳）</span>
+      <span style="color:#ffb020"><i class="ln"></i>eFTP</span>
+      <span style="color:#4AB4FF"><i class="ln"></i>中社路</span>
+    </div>
+    <p class="cap-note">淡橘色的直帶＝那個月過了損益線；柱子上方那截虛線＝距線還差多少。點任何一個月看細目。<br>
+      損益線 ${HV_BREAKEVEN} h／月與斜率 +${HV_SLOPE} W/h 沿用 scripts/coach-brief.py 的常數，
+      站上與 CLI 講同一個數字。但用現在的資料重跑，四種算法全部落在
+      <b>斜率 +0.47～+0.53、損益線 16.4～17.4 h</b>（r 0.80–0.88、n 9–10）——
+      真正的門檻可能比這條線再高 1～2 小時。它是量級參考，不是精確門檻。
+      eFTP 是 intervals.icu 反推的估計值，「最近有沒有全力過」也會推動它 ——
+      2025-12 那次 +18 W 就是一趟測試造成的偵測跳動，不是體能一個月長了 18 W。</p>`
+
+  // ── 現存紀錄清單 ──
+  const listBlock = `
+    <div class="section-title">現存紀錄 <span class="muted">· STANDING RECORDS</span>
+      <span class="section-title-text"></span></div>
+    <p class="view-sub" style="margin:2px 0 14px">${st.nRec} 項至今沒有被自己刷掉的成績，掛在它被立下的那個月。
+      進步幅度比的是<b>在那之前</b>的個人最佳，不是第二名。
+      一個月留不留得下紀錄，也取決於那個月有沒有去騎那條路 ——
+      2026-07 的三項碧山紀錄是因為他七月才第一次去探那條路，不是那個月特別強；
+      要把「踩了幾次」和「刷了幾次」分開看，往下捲到刷新率。</p>
+    <div class="ctl">
+      <div class="seg" data-ctl="hvfilter">
+        <button type="button" data-hvf="all" aria-selected="true">全部<i>${st.nRec}</i></button>
+        <button type="button" data-hvf="seg" aria-selected="false">路段<i>${st.nSeg}</i></button>
+        <button type="button" data-hvf="pwr" aria-selected="false">功率<i>${st.nPwr}</i></button>
+        <button type="button" data-hvf="first" aria-selected="false">首登<i>${st.nFirst}</i></button>
+      </div>
+    </div>
+    <div id="hv-list">${hvListHtml(H, 'all')}</div>`
+
+  // ── 刷新率 ──
+  const cRows = H.months.filter(r => r.conv).reverse()
+  const maxTry = Math.max(1, ...cRows.map(r => r.conv.tries))
+  const convBlock = cRows.length ? `
+    <div class="section-title">刷新率 <span class="muted">· CONVERSION</span></div>
+    <p class="view-sub" style="margin:2px 0 14px">灰＝當月踩過幾次計時段，金＝其中有幾次「當下就是歷來最佳」。</p>
+    <div class="hv-conv">${cRows.map(r => {
+      const pct = Math.round(r.conv.hits / r.conv.tries * 100)
+      const thin = r.conv.tries < 10          // 2/2＝100% 不是成績，是樣本太小
+      return `<div class="hv-crow">
+        <span class="hv-ck">${r.m}</span>
+        <span class="hv-ctrack"><i class="hv-ctry" style="width:${(r.conv.tries / maxTry * 100).toFixed(1)}%"></i><i class="hv-chit" style="width:${(r.conv.hits / maxTry * 100).toFixed(1)}%"></i></span>
+        <span class="hv-cv">${r.conv.hits}<small>／${r.conv.tries}</small></span>
+        <span class="hv-cp${thin ? ' thin' : pct >= 30 ? ' hi' : ''}"${thin ? ' title="嘗試次數太少，百分比參考價值低"' : ''}>${pct}<small>%</small></span>
+      </div>`
+    }).join('')}</div>
+    <p class="cap-note">${hvConvNote(H)}</p>` : ''
+
+  return `<div class="block">${chart}</div>
+    <div class="block">${listBlock}</div>
+    ${convBlock ? `<div class="block">${convBlock}</div>` : ''}`
+}
+
+/** 刷新率天生會往下掉 —— 你自己的最佳成績就是下一次的門檻。所以這句話要把
+ *  「近幾個月踩了幾次、換到幾次」講出來，而不是只丟一個下降的百分比。 */
+function hvConvNote(H) {
+  const last = H.months.filter(r => r.conv).slice(-5)
+  if (!last.length) return ''
+  const t = last.reduce((a, r) => a + r.conv.tries, 0), h = last.reduce((a, r) => a + r.conv.hits, 0)
+  const e0 = [...H.months].reverse().find(r => r.eftp != null && r.m < last[0].m)
+  const e1 = [...H.months].reverse().find(r => r.eftp != null)
+  return `刷新率本來就會隨時間下降 —— 門檻是自己的最佳成績，愈練愈高。
+    但近 5 個月（${last[0].m} 起）共 ${t} 次計時段嘗試只換到 ${h} 次刷新（${Math.round(h / t * 100)}%）${
+    e0 && e1 ? `，同期 eFTP 從 ${e0.eftp} 掉到 ${e1.eftp} W` : ''}：
+    不是沒在騎，是騎的量沒把引擎推上去。`
+}
+
+function hvListHtml(H, f) {
+  const keep = r => f === 'all' || (f === 'first' ? r.first : r.kind === f)
+  const out = []
+  H.keys.slice().reverse().forEach(k => {
+    const rows = (H.recByMonth[k] || []).filter(keep)
+    if (!rows.length) return
+    const mo = H.months.find(r => r.m === k)
+    out.push(`<div class="hv-mh${mo && mo.over ? ' hot' : ''}"><b>${k}</b><span>${rows.length} 項</span>
+      <i>那個月騎了 ${hvH(mo ? mo.tot : 0)} h${mo && mo.over ? '　過線' : ''}</i></div>
+      <div class="rows">${rows.map(r => `
+        <div class="row" style="--row-cols:auto minmax(0,1fr) auto auto">
+          <span class="row-k">${hvMd(r.date)}</span>
+          <span class="row-p">${r.kind === 'pwr' ? '⚡ ' : ''}${r.name}</span>
+          <span class="row-s">${r.first
+            ? `首登 · 之前沒騎過這一段，之後又跑了 ${r.tries - 1} 次都沒更快`
+            : `前一次最佳 ${r.prev}（${hvMd(r.prevDate)}）${r.tries ? ` · 第 ${r.before + 1} 次挑戰、至今共 ${r.tries} 次` : ''}`}</span>
+          <span class="row-gain${r.gainStr ? '' : ' nil2'}">${r.gainStr || '—'}</span>
+          <span class="row-v">${r.val}${r.unit ? `<small>${r.unit}</small>` : ''}</span>
+        </div>`).join('')}</div>`)
+  })
+  return out.join('') || '<div class="nil">這個篩選沒有紀錄。</div>'
+}
+
+/** 某一個月的細目 —— 走全站共用的右側抽屜，不是 Modal（清單還看得見）。 */
+function openHarvestMonth(m) {
+  const H = window.__harvest
+  const r = H && H.months.find(x => x.m === m)
+  if (!r) return
+  const gap = HV_BREAKEVEN - r.tot
+  const line = (k, v, s) => `<div class="row" style="--row-cols:auto minmax(0,1fr) auto">
+    <span class="row-k">${k}</span><span class="row-p" style="color:var(--ink-3);font-weight:400">${s || ''}</span>
+    <span class="row-v">${v}</span></div>`
+  const body = `<div class="rows">
+      ${line('戶外', hvH(r.out) + '<small>h</small>', '')}
+      ${line('室內', hvH(r.vir) + '<small>h</small>', '訓練台／虛擬')}
+      ${line('損益線', (gap > 0 ? '−' : '+') + hvH(Math.abs(gap)) + '<small>h</small>',
+        gap > 0 ? `差 ${hvH(gap)} h，換算約 ${(gap * HV_SLOPE).toFixed(1)} W` : `多出來的約值 ${(-gap * HV_SLOPE).toFixed(1)} W`)}
+      ${r.eftp != null ? line('eFTP 月末', r.eftp + '<small>W</small>',
+        r.dEftp != null ? `比上月 ${r.dEftp > 0 ? '+' : ''}${r.dEftp} W` : '') : ''}
+      ${r.bench ? line('中社路', r.bench.str, `${r.bench.date}${r.bench.w ? ` · ${r.bench.w} W` : ''}`) : ''}
+      ${r.conv ? line('計時段', `${r.conv.hits}<small>／${r.conv.tries}</small>`, '當下刷新／嘗試') : ''}
+    </div>
+    ${r.recs.length ? `<div class="hv-mh"><b>現存紀錄</b><span>${r.recs.length} 項</span></div>
+      <div class="rows">${r.recs.map(x => `
+        <div class="row" style="--row-cols:auto minmax(0,1fr) auto">
+          <span class="row-k">${hvMd(x.date)}</span>
+          <span class="row-p">${x.kind === 'pwr' ? '⚡ ' : ''}${x.name}</span>
+          <span class="row-s">${x.first ? '首登' : `前一次最佳 ${x.prev}`}${x.gainStr ? ` · ${x.gainStr}` : ''}</span>
+          <span class="row-v">${x.val}${x.unit ? `<small>${x.unit}</small>` : ''}</span>
+        </div>`).join('')}</div>`
+      : '<div class="nil">這個月沒有留下至今仍站著的紀錄。</div>'}`
+  openDrawer({ label: 'HARVEST ' + m, title: hvH(r.tot) + ' 小時',
+    sub: r.over ? `過線 +${hvH(-gap)} h` : `距損益線 ${hvH(gap)} h`, body })
+  const h = `#harvest/month/${m}`
+  if (location.hash !== h) history.replaceState({ view: 'harvest', hvm: m }, '', h)
+}
+
+/** 游標：一條垂直帶 ＋ 讀數條。位置全用百分比算，不量任何寬度 ——
+ *  這個 view 在 display:none 的時候一樣是對的。 */
+function initHarvest() {
+  const H = window.__harvest
+  const hit = document.getElementById('hv-hit')
+  if (!H || !hit) return
+  const cur = document.getElementById('hv-cursor')
+  const read = document.getElementById('hv-read')
+  const N = H.keys.length
+  const show = i => {
+    if (cur) {
+      cur.hidden = false
+      cur.style.left = (i / N * 100).toFixed(3) + '%'
+      cur.style.width = (100 / N).toFixed(3) + '%'
+    }
+    if (read) { read.classList.remove('is-idle'); read.innerHTML = hvReadHtml(H, i) }
+  }
+  const clear = () => {
+    if (cur) cur.hidden = true
+    if (read) { read.classList.add('is-idle'); read.innerHTML = hvReadHtml(H, null) }
+  }
+  hit.addEventListener('pointerover', e => {
+    const b = e.target.closest('[data-hvi]'); if (b) show(+b.dataset.hvi)
+  })
+  hit.addEventListener('focusin', e => {
+    const b = e.target.closest('[data-hvi]'); if (b) show(+b.dataset.hvi)
+  })
+  hit.addEventListener('pointerleave', clear)
+  hit.addEventListener('focusout', clear)
+
+  const box = document.getElementById('hv-list')
+  document.querySelector('[data-ctl="hvfilter"]')?.addEventListener('click', e => {
+    const b = e.target.closest('[data-hvf]'); if (!b || !box) return
+    b.parentElement.querySelectorAll('button').forEach(x => x.setAttribute('aria-selected', String(x === b)))
+    box.innerHTML = hvListHtml(H, b.dataset.hvf)
   })
 }
 
@@ -9310,6 +9980,9 @@ const VIEWS = [
   { id: 'itt',      zh: 'ITT',      en: 'ITT'      },
   { id: 'atlas',    zh: '地圖',     en: 'Atlas'    },
   { id: 'trends',   zh: '趨勢',     en: 'Trends'   },
+  // 趨勢是「這個月比上個月多多少」，收成是「那幾個月的量換到了什麼」。
+  // 後者要把投入與產出擺在同一根 x 軸上才成立，所以它是一頁不是一個區塊。
+  { id: 'harvest',  zh: '收成',     en: 'Harvest'  },
   // 趨勢講的是訓練輸出（量、功率曲線、總計），身體講的是恢復。兩件事，兩頁。
   { id: 'body',     zh: '身體',     en: 'Body'     },
 ]
@@ -9372,6 +10045,14 @@ function updateNavBadges(data) {
     const last = [...days].reverse().find(d => w[d]?.ctl != null)
     const ctl = last ? w[last].ctl : null
     if (ctl != null) set('trends', `CTL ${Math.round(ctl)}`)
+  }
+
+  // 收成：本月離損益線還有多遠。這顆徽章的用處是「今天要不要多騎一趟」，
+  // 所以放差距不放累積值 —— 11.2 h 本身說不出夠不夠。
+  const H = window.__harvest
+  if (H && H.stats.isThis) {
+    const g = H.stats.curGap
+    set('harvest', g > 0 ? `差 ${g.toFixed(1)}h` : `過線 +${(-g).toFixed(1)}h`)
   }
 }
 
@@ -9971,6 +10652,7 @@ function routeFromHash() {
   if (v === 'itt'  && kind === 'segment')  selectSegment(key, { silent: true, reveal: true })
   if (v === 'log'  && kind === 'activity') focusActivity(key)
   if (v === 'plan' && kind === 'session')  openSessionDrawer(key)
+  if (v === 'harvest' && kind === 'month')  openHarvestMonth(key)
 }
 
 function initRouter() {
@@ -9985,6 +10667,8 @@ function initRouter() {
     if (ses) { openSessionDrawer(ses.dataset.ses); return }
     const iday = e.target.closest('[data-ittday]')
     if (iday) { openIttDayDrawer(iday.dataset.ittday); return }
+    const hvm = e.target.closest('[data-hvm]')
+    if (hvm) { openHarvestMonth(hvm.dataset.hvm); return }
     const pw = e.target.closest('[data-power]')
     if (pw && !pw.disabled) {
       const prs = window.__powerPrs
