@@ -8,10 +8,17 @@
   .mrc  同上但用 FTP 百分比
   .zwo  Zwift workout XML，部分 App（含 Rouvy 的匯入）走這個
 
-**為什麼要 --offset**：這個區塊所有的數字都是**曲柄功率計**量的（FTP 238、8/13 前測、
-9/10 後測）。直驅訓練台量的是鏈條之後，天生比曲柄低 2–3%（傳動損失）。
-所以「戶外處方 185W」在訓練台上要設 185 × (1 − offset) 才是同一個努力。
-量到實際差值之前，預設 3%。
+**為什麼要換算**：這個區塊所有的數字都是**曲柄功率計**量的（FTP 238、8/13 前測、
+9/10 後測），而訓練台是另一顆獨立的功率計（訓練台走藍牙給 Rouvy、曲柄走 ANT+ 給手錶）。
+
+2026-08-20 用 4920 個同時取樣點量出來：**訓練台固定少讀 ~25W，不隨功率放大**
+（60-100W 帶 +25.7、100-130 +26.6、130-160 +26.5、160-190 +23.4）。
+固定偏移是歸零/校正的特徵；傳動損失是比例性的（3%：100W 差 3W、200W 差 6W）。
+**所以舊的 --offset 3% 模型是錯的**，改用 --offset-w 固定瓦數扣減，預設讀
+plan.json 的 baseline.trainer_offset_w。兩者可並存但正常只該用其中一個。
+
+⚠️ 25W 只在 85-170W 驗證過，190W 以上只有 108 秒樣本。先套是因為「稍微輕一點」
+遠優於「硬到做不完」。階梯測完再改 baseline 那個數字，這裡不用動。
 
 --adjust 是當天的臨時修正（例如痠痛或 HRV 掉了就 -5），只作用在 work / allout 段，
 熱身與收操不動。
@@ -44,7 +51,10 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('date', nargs='?', help='plan.json 裡的日期 YYYY-MM-DD（給 --all 時可省略）')
     ap.add_argument('--all', action='store_true', help='產生 plan.json 裡今天（含）以後的每一堂')
-    ap.add_argument('--offset', type=float, default=3.0, help='訓練台比曲柄低幾 %%（預設 3）')
+    ap.add_argument('--offset', type=float, default=0.0,
+                    help='比例式扣減 %%（舊模型，已證實錯誤，預設 0）')
+    ap.add_argument('--offset-w', type=float, default=None,
+                    help='固定瓦數扣減，訓練台比曲柄少讀多少（預設讀 plan.json 的 baseline.trainer_offset_w）')
     ap.add_argument('--adjust', type=float, default=0, help='主課表段的當天修正瓦數（例如 -5）')
     ap.add_argument('--warmup', type=float, help='覆寫熱身分鐘數')
     ap.add_argument('--cooldown', type=float, help='覆寫收操分鐘數')
@@ -76,8 +86,14 @@ def emit(plan, date, a):
     if not day:
         print(f'plan.json 裡沒有 {date}', file=sys.stderr)
         return 1
-    ftp = (plan.get('baseline') or {}).get('ftp_w') or 238
+    base = plan.get('baseline') or {}
+    ftp = base.get('ftp_w') or 238
+    off_w = base.get('trainer_offset_w', 0) if a.offset_w is None else a.offset_w
     k = 1 - a.offset / 100.0
+
+    def to_trainer(w):
+        """曲柄瓦 → 訓練台該顯示的瓦。先比例後固定值,下限 50W。"""
+        return max(50, round(w * k - off_w))
     allout = any(s.get('role') == 'allout' for s in day.get('segments', []))
 
     segs = []
@@ -89,7 +105,7 @@ def emit(plan, date, a):
             mins = a.cooldown
         w0, w1 = watts(s, a.adjust)
         segs.append({'name': s['name'], 'role': s.get('role'), 'min': mins,
-                     'w0': round(w0 * k), 'w1': round(w1 * k),
+                     'w0': to_trainer(w0), 'w1': to_trainer(w1),
                      'crank0': round(w0), 'crank1': round(w1),
                      'cad': s.get('target_cadence'), 'note': s.get('note')})
 
@@ -98,9 +114,12 @@ def emit(plan, date, a):
     # 檔案內容一律 ASCII —— 這幾個檔是餵訓練台 App 的，不是給人讀的。
     # 中文檔頭有些匯入器會卡住或顯示成亂碼（實測 Rouvy 吃得下的那個檔名也是純 ASCII）。
     work = next((x for x in segs if x['role'] == 'work'), segs[0])
+    conv = (f"-{off_w:.0f}W trainer offset" if off_w else '') + \
+           (f", -{a.offset:.0f}%" if a.offset else '')
     desc = (f"{date} target {work['w0']}W on trainer = {work['crank0']}W at crank "
-            f"(-{a.offset:.0f}% drivetrain"
+            f"({conv or 'no conversion'}"
             + (f", {a.adjust:+.0f}W same-day adjust" if a.adjust else '') + f"). Crank FTP {ftp}W. "
+            "Trainer under-reads vs crank by a fixed ~25W (measured 2026-08-20). "
             "Hold the watts, do not drop. Indoor HR runs 5-10bpm higher, that is heat not fitness.")
     outdir = os.path.join(ROOT, a.out)
     os.makedirs(outdir, exist_ok=True)
