@@ -296,15 +296,8 @@ def sync_wellness(oldest: str, newest: str) -> int:
             added += 1
         data[day] = rec
 
-    purged = [k for k in data if k in ignore]
-    for k in purged:
-        del data[k]
-        f = next(iter(OUT_DIR.glob(f"*_{k}_*.fit")), None)
-        if f:
-            f.unlink()
-            log.info("  忽略清單:刪除 %s", f.name)
-    if purged:
-        log.info("忽略清單:排除 %d 筆(%s)", len(purged), ", ".join(purged))
+    # 註:忽略清單只作用在活動(save_activities),不碰 wellness ——
+    # wellness 的鍵是日期,不是活動 id,兩者的命名空間不一樣。
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(".tmp")
     tmp.write_text(json.dumps(data, ensure_ascii=False, indent=1, sort_keys=True),
