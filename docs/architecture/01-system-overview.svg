@@ -1,0 +1,256 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1542.7849999999999 1747.1" width="1542.7849999999999" height="1747.1" style="--bg:#1a1b26;--fg:#a9b1d6;--line:#3d59a1;--accent:#7aa2f7;--muted:#565f89;background:var(--bg)">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap');
+  text { font-family: 'Inter', system-ui, sans-serif; }
+  svg {
+    /* Derived from --bg and --fg (overridable via --line, --accent, etc.) */
+    --_text:          var(--fg);
+    --_text-sec:      var(--muted, color-mix(in srgb, var(--fg) 60%, var(--bg)));
+    --_text-muted:    var(--muted, color-mix(in srgb, var(--fg) 40%, var(--bg)));
+    --_text-faint:    color-mix(in srgb, var(--fg) 25%, var(--bg));
+    --_line:          var(--line, color-mix(in srgb, var(--fg) 50%, var(--bg)));
+    --_arrow:         var(--accent, color-mix(in srgb, var(--fg) 85%, var(--bg)));
+    --_node-fill:     var(--surface, color-mix(in srgb, var(--fg) 3%, var(--bg)));
+    --_node-stroke:   var(--border, color-mix(in srgb, var(--fg) 20%, var(--bg)));
+    --_group-fill:    var(--bg);
+    --_group-hdr:     color-mix(in srgb, var(--fg) 5%, var(--bg));
+    --_inner-stroke:  color-mix(in srgb, var(--fg) 12%, var(--bg));
+    --_key-badge:     color-mix(in srgb, var(--fg) 10%, var(--bg));
+  }
+</style>
+<defs>
+  <marker id="arrowhead" markerWidth="8" markerHeight="5" refX="7" refY="2.5" orient="auto">
+    <polygon points="0 0, 8 2.5, 0 5" fill="var(--_arrow)" stroke="var(--_arrow)" stroke-width="0.75" stroke-linejoin="round" />
+  </marker>
+  <marker id="arrowhead-start" markerWidth="8" markerHeight="5" refX="1" refY="2.5" orient="auto-start-reverse">
+    <polygon points="8 0, 0 2.5, 8 5" fill="var(--_arrow)" stroke="var(--_arrow)" stroke-width="0.75" stroke-linejoin="round" />
+  </marker>
+</defs>
+<g class="subgraph" data-id="S1" data-label="1. 邊緣硬體與感測 (Edge Data Collection)">
+  <rect x="580.9546666666668" y="40" width="320.703" height="113.80000000000001" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <rect x="580.9546666666668" y="40" width="320.703" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="592.9546666666668" y="54" font-size="12" font-weight="600" fill="var(--_text-sec)" dy="4.199999999999999">1. 邊緣硬體與感測 (Edge Data Collection)</text>
+</g>
+<g class="subgraph" data-id="S2" data-label="2. 雲端中繼與開放 API (Relay &amp; Partner Layer)">
+  <rect x="583.9186666666668" y="282.1" width="314.775" height="300.8" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <rect x="583.9186666666668" y="282.1" width="314.775" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="595.9186666666668" y="296.1" font-size="12" font-weight="600" fill="var(--_text-sec)" dy="4.199999999999999">2. 雲端中繼與開放 API (Relay &amp; Partner Layer)</text>
+</g>
+<g class="subgraph" data-id="S3" data-label="3. 本機運算核心 (GitHub Actions CI - Python 3.12)">
+  <rect x="259.1791666666669" y="723.2" width="913.7721666666664" height="215.60000000000002" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <rect x="259.1791666666669" y="723.2" width="913.7721666666664" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="271.1791666666669" y="737.2" font-size="12" font-weight="600" fill="var(--_text-sec)" dy="4.199999999999999">3. 本機運算核心 (GitHub Actions CI - Python 3.12)</text>
+</g>
+<g class="subgraph" data-id="S4" data-label="4. 靜態儲存與資料庫 (Git Repository - Versioned Storage)">
+  <rect x="77.04999999999998" y="998.8" width="1371.735" height="163.8" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <rect x="77.04999999999998" y="998.8" width="1371.735" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="89.04999999999998" y="1012.8" font-size="12" font-weight="600" fill="var(--_text-sec)" dy="4.199999999999999">4. 靜態儲存與資料庫 (Git Repository - Versioned Storage)</text>
+</g>
+<g class="subgraph" data-id="S5" data-label="5. 前端多重世界呈現層 (GitHub Pages - Pure Static SPA)">
+  <rect x="40" y="1270.6" width="1155.4327499999997" height="436.5" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <rect x="40" y="1270.6" width="1155.4327499999997" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="52" y="1284.6" font-size="12" font-weight="600" fill="var(--_text-sec)" dy="4.199999999999999">5. 前端多重世界呈現層 (GitHub Pages - Pure Static SPA)</text>
+<g class="subgraph" data-id="Worlds" data-label="運動儀表板 (四大視覺世界共用同一份資料)">
+  <rect x="178.74024999999995" y="1524.3999999999999" width="957.3689999999999" height="166.7" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <rect x="178.74024999999995" y="1524.3999999999999" width="957.3689999999999" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="190.74024999999995" y="1538.3999999999999" font-size="12" font-weight="600" fill="var(--_text-sec)" dy="4.199999999999999">運動儀表板 (四大視覺世界共用同一份資料)</text>
+</g>
+<g class="subgraph" data-id="Engines" data-label="靜態前端視覺引擎">
+  <rect x="390.6167499999999" y="1314.6" width="751.8159999999998" height="113.80000000000001" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <rect x="390.6167499999999" y="1314.6" width="751.8159999999998" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="402.6167499999999" y="1328.6" font-size="12" font-weight="600" fill="var(--_text-sec)" dy="4.199999999999999">靜態前端視覺引擎</text>
+</g>
+</g>
+<polyline class="edge" data-from="Garmin" data-to="GC" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="藍牙同步" points="741.3061666666667,137.8 741.3061666666667,326.1" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="Intervals" data-to="Sync" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="REST API 抓取原始 FIT" points="741.3061666666667,566.9000000000001 741.3061666666667,767.2" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="Sync" data-to="FitDir" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="741.3061666666667,821 741.3061666666667,931.9 1362.163,931.9 1362.163,1042.8" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="Sync" data-to="Wellness" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="741.3061666666667,821 741.3061666666667,931.9 367.00199999999995,931.9 367.00199999999995,1042.8" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="FitDir" data-to="SegmentEng" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="1326.8519999999999,1110.6 1326.8519999999999,1204.6 1482.7849999999999,1204.6 1482.7849999999999,705.1999999999999 1037.2793333333334,705.1999999999999 1037.2793333333334,767.2" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="FitDir" data-to="ScoreEng" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="1362.163,1110.6 1362.163,1192.6 1470.7849999999999,1192.6 1470.7849999999999,693.1999999999999 544.7208333333334,693.1999999999999 544.7208333333334,767.2" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="FitDir" data-to="ReportGen" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="1397.474,1110.6 1397.474,1180.6 1458.7849999999999,1180.6 1458.7849999999999,681.1999999999999 339.85500000000025,681.1999999999999 339.85500000000013,833 344.7375000000002,833 344.7375000000002,869" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="PlanSpec" data-to="ScoreEng" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="1175.876,1110.6 1175.876,1216.6 1494.7849999999999,1216.6 1494.7849999999999,669.1999999999999 476.39750000000015,669.1999999999999 476.39750000000004,767.2" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="ReportGen" data-to="RidesHTML" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="379.51666666666677,922.8000000000001 379.5166666666669,968.8000000000002 173.30500000000006,968.8000000000002 173.30499999999972,1042.8" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="Backfill" data-to="ITTSegments" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="951.842,922.8 951.842,982.8 768.1044999999999,982.8 768.1044999999999,1042.8" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="TagSource" data-to="ITTSegments" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="702.1995000000002,922.8 702.1995000000002,982.8 768.1044999999999,982.8 768.1044999999999,1042.8" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="ScoreEng" data-to="TrainingBlock" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="510.5591666666669,821 510.5591666666669,845 970.323,845 970.323,1042.8" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="ITTSegments" data-to="Obs" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="768.1044999999999,1110.6 768.1044999999999,1258.6 536.1232499999999,1258.6 536.1232499999999,1604.3999999999999" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="ITTSegments" data-to="Pit" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="768.1044999999999,1110.6 768.1044999999999,1258.6 785.7657499999998,1258.6 785.7657499999998,1604.3999999999999" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="ITTSegments" data-to="Helicorder" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="768.1044999999999,1110.6 768.1044999999999,1258.6 290.9267499999999,1258.6 290.9267499999999,1604.3999999999999" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="ITTSegments" data-to="Opus" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="768.1044999999999,1110.6 768.1044999999999,1258.6 1017.2537499999999,1258.6 1017.2537499999999,1604.3999999999999" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="Wellness" data-to="Obs" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="367.00199999999995,1110.6 367.00199999999995,1258.6 536.1232499999999,1258.6 536.1232499999999,1604.3999999999999" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="Wellness" data-to="Pit" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="367.00199999999995,1110.6 367.00199999999995,1258.6 785.7657499999998,1258.6 785.7657499999998,1604.3999999999999" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="RidesHTML" data-to="Portal" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="173.30499999999998,1110.6 173.305,1314.6" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="Three3D" data-to="Obs" data-style="dotted" data-arrow-start="false" data-arrow-end="true" points="492.7997499999999,1412.3999999999999 492.7997499999999,1508.3999999999999 536.1232499999999,1508.3999999999999 536.1232499999999,1604.3999999999999" fill="none" stroke="var(--_line)" stroke-width="1" stroke-dasharray="4 4" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="Weight3D" data-to="Obs" data-style="dotted" data-arrow-start="false" data-arrow-end="true" points="1009.4982499999998,1412.3999999999999 1009.4982499999998,1508.3999999999999 536.1232499999999,1508.3999999999999 536.1232499999999,1604.3999999999999" fill="none" stroke="var(--_line)" stroke-width="1" stroke-dasharray="4 4" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="ModalEng" data-to="Obs" data-style="dotted" data-arrow-start="false" data-arrow-end="true" points="735.7732499999998,1412.3999999999999 735.7732499999998,1508.3999999999999 536.1232499999999,1508.3999999999999 536.1232499999999,1604.3999999999999" fill="none" stroke="var(--_line)" stroke-width="1" stroke-dasharray="4 4" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="ModalEng" data-to="Pit" data-style="dotted" data-arrow-start="false" data-arrow-end="true" points="735.7732499999998,1412.3999999999999 735.7732499999998,1508.3999999999999 785.7657499999998,1508.3999999999999 785.7657499999998,1604.3999999999999" fill="none" stroke="var(--_line)" stroke-width="1" stroke-dasharray="4 4" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="GC" data-to="Intervals" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="官方 Webhook 主動 Push" points="741.3061666666667,363 741.3061666666667,479.3" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="ScoreEng" data-to="ReportGen" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="510.5591666666669,821 510.5591666666669,845 379.5166666666669,845 379.5166666666669,869" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="SegmentEng" data-to="Backfill" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="1037.2793333333334,821 1037.2793333333334,845 951.8420000000001,845 951.8420000000001,869" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<g class="edge-label" data-from="Garmin" data-to="GC" data-label="藍牙同步">
+  <rect x="708.3061666666667" y="202.8" width="65.17" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="740.8911666666668" y="217.95000000000002" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">藍牙同步</text>
+</g>
+<g class="edge-label" data-from="Intervals" data-to="Sync" data-label="REST API 抓取原始 FIT">
+  <rect x="674.8061666666667" y="631.9000000000001" width="132.29200000000003" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="740.9521666666667" y="647.0500000000001" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">REST API 抓取原始 FIT</text>
+</g>
+<g class="edge-label" data-from="GC" data-to="Intervals" data-label="官方 Webhook 主動 Push">
+  <rect x="670.8061666666667" y="406.00000000000006" width="140.014" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="740.8131666666668" y="421.15000000000003" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">官方 Webhook 主動 Push</text>
+</g>
+<g class="node" data-id="Garmin" data-label="⌚ Garmin 運動手錶
+(逐秒 GPS / 功率 / 踏頻 / 心率 / 左右平衡)" data-shape="rectangle">
+  <rect x="596.9546666666668" y="84" width="288.703" height="53.800000000000004" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="741.3061666666667" y="110.9" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)"><tspan x="741.3061666666667" dy="-3.9000000000000012">⌚ Garmin 運動手錶</tspan><tspan x="741.3061666666667" dy="16.900000000000002">(逐秒 GPS / 功率 / 踏頻 / 心率 / 左右平衡)</tspan></text>
+</g>
+<g class="node" data-id="GC" data-label="Garmin Connect Cloud" data-shape="rectangle">
+  <rect x="655.8641666666668" y="326.1" width="170.884" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="741.3061666666669" y="344.55" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Garmin Connect Cloud</text>
+</g>
+<g class="node" data-id="Intervals" data-label="⚡ intervals.icu (官方授權 Partner)
+• 接收 Garmin Webhook Push
+• 開放 API: GET /activity/{id}/file
+• 每日 Wellness 快照 (HRV / RHR / eFTP)" data-shape="rectangle">
+  <rect x="599.9186666666668" y="479.3" width="282.775" height="87.60000000000001" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="741.3061666666667" y="523.1" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)"><tspan x="741.3061666666667" dy="-20.8">⚡ intervals.icu (官方授權 Partner)</tspan><tspan x="741.3061666666667" dy="16.900000000000002">• 接收 Garmin Webhook Push</tspan><tspan x="741.3061666666667" dy="16.900000000000002">• 開放 API: GET /activity/{id}/file</tspan><tspan x="741.3061666666667" dy="16.900000000000002">• 每日 Wellness 快照 (HRV / RHR / eFTP)</tspan></text>
+</g>
+<g class="node" data-id="Sync" data-label="scripts/sync-intervals.py
+增量抓取 14 天 FIT 原始檔" data-shape="rectangle">
+  <rect x="641.0441666666668" y="767.2" width="200.524" height="53.800000000000004" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="741.3061666666667" y="794.1" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)"><tspan x="741.3061666666667" dy="-3.9000000000000012">scripts/sync-intervals.py</tspan><tspan x="741.3061666666667" dy="16.900000000000002">增量抓取 14 天 FIT 原始檔</tspan></text>
+</g>
+<g class="node" data-id="SegmentEng" data-label="tools/tcx/segments.py
+自建 ITT 閘門通過偵測演算法" data-shape="rectangle">
+  <rect x="922.1973333333334" y="767.2" width="230.16399999999996" height="53.800000000000004" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1037.2793333333334" y="794.1" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)"><tspan x="1037.2793333333334" dy="-3.9000000000000012">tools/tcx/segments.py</tspan><tspan x="1037.2793333333334" dy="16.900000000000002">自建 ITT 閘門通過偵測演算法</tspan></text>
+</g>
+<g class="node" data-id="ScoreEng" data-label="tools/tcx/score.py
+課表處方逐秒對帳評分器" data-shape="rectangle">
+  <rect x="408.0741666666669" y="767.2" width="204.96999999999997" height="53.800000000000004" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="510.5591666666669" y="794.1" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)"><tspan x="510.5591666666669" dy="-3.9000000000000012">tools/tcx/score.py</tspan><tspan x="510.5591666666669" dy="16.900000000000002">課表處方逐秒對帳評分器</tspan></text>
+</g>
+<g class="node" data-id="ReportGen" data-label="scripts/build-ride-reports.py
+單日 HTML 報告生成器" data-shape="rectangle">
+  <rect x="275.1791666666669" y="869" width="208.67499999999998" height="53.800000000000004" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="379.5166666666669" y="895.9" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)"><tspan x="379.5166666666669" dy="-3.9000000000000012">scripts/build-ride-reports.py</tspan><tspan x="379.5166666666669" dy="16.900000000000002">單日 HTML 報告生成器</tspan></text>
+</g>
+<g class="node" data-id="Backfill" data-label="scripts/backfill-itt-efforts.py
+全量 ITT 成績重算與回補" data-shape="rectangle">
+  <rect x="851.58" y="869" width="200.52399999999997" height="53.800000000000004" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="951.842" y="895.9" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)"><tspan x="951.842" dy="-3.9000000000000012">scripts/backfill-itt-efforts.py</tspan><tspan x="951.842" dy="16.900000000000002">全量 ITT 成績重算與回補</tspan></text>
+</g>
+<g class="node" data-id="TagSource" data-label="scripts/tag-itt-sources.py
+來源標記 (自建計時 vs STRAVA)" data-shape="rectangle">
+  <rect x="580.8190000000002" y="869" width="242.76099999999994" height="53.800000000000004" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="702.1995000000002" y="895.9" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)"><tspan x="702.1995000000002" dy="-3.9000000000000012">scripts/tag-itt-sources.py</tspan><tspan x="702.1995000000002" dy="16.900000000000002">來源標記 (自建計時 vs STRAVA)</tspan></text>
+</g>
+<g class="node" data-id="FitDir" data-label="data/fit/*.fit
+原始 FIT 檔案庫" data-shape="cylinder">
+  <rect x="1291.541" y="1049.8" width="141.244" height="53.80000000000001" fill="var(--_node-fill)" stroke="none" />
+  <line x1="1291.541" y1="1049.8" x2="1291.541" y2="1103.6" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <line x1="1432.7849999999999" y1="1049.8" x2="1432.7849999999999" y2="1103.6" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <ellipse cx="1362.163" cy="1103.6" rx="70.622" ry="7" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <ellipse cx="1362.163" cy="1049.8" rx="70.622" ry="7" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1362.163" y="1076.7" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)"><tspan x="1362.163" dy="-3.9000000000000012">data/fit/*.fit</tspan><tspan x="1362.163" dy="16.900000000000002">原始 FIT 檔案庫</tspan></text>
+</g>
+<g class="node" data-id="Wellness" data-label="data/fit/_wellness.json
+生理與負荷指標" data-shape="cylinder">
+  <rect x="281.55999999999995" y="1049.8" width="170.884" height="53.80000000000001" fill="var(--_node-fill)" stroke="none" />
+  <line x1="281.55999999999995" y1="1049.8" x2="281.55999999999995" y2="1103.6" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <line x1="452.44399999999996" y1="1049.8" x2="452.44399999999996" y2="1103.6" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <ellipse cx="367.00199999999995" cy="1103.6" rx="85.442" ry="7" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <ellipse cx="367.00199999999995" cy="1049.8" rx="85.442" ry="7" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="367.00199999999995" y="1076.7" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)"><tspan x="367.00199999999995" dy="-3.9000000000000012">data/fit/_wellness.json</tspan><tspan x="367.00199999999995" dy="16.900000000000002">生理與負荷指標</tspan></text>
+</g>
+<g class="node" data-id="ITTSegments" data-label="data/itt-segments.json
+ITT 計時成績權威檔" data-shape="cylinder">
+  <rect x="683.7739999999999" y="1049.8" width="168.661" height="53.80000000000001" fill="var(--_node-fill)" stroke="none" />
+  <line x1="683.7739999999999" y1="1049.8" x2="683.7739999999999" y2="1103.6" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <line x1="852.435" y1="1049.8" x2="852.435" y2="1103.6" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <ellipse cx="768.1044999999999" cy="1103.6" rx="84.3305" ry="7" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <ellipse cx="768.1044999999999" cy="1049.8" rx="84.3305" ry="7" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="768.1044999999999" y="1076.7" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)"><tspan x="768.1044999999999" dy="-3.9000000000000012">data/itt-segments.json</tspan><tspan x="768.1044999999999" dy="16.900000000000002">ITT 計時成績權威檔</tspan></text>
+</g>
+<g class="node" data-id="PlanSpec" data-label="data/plan.json
+訓練課表處方與規則" data-shape="cylinder">
+  <rect x="1088.211" y="1049.8" width="175.32999999999998" height="53.80000000000001" fill="var(--_node-fill)" stroke="none" />
+  <line x1="1088.211" y1="1049.8" x2="1088.211" y2="1103.6" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <line x1="1263.541" y1="1049.8" x2="1263.541" y2="1103.6" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <ellipse cx="1175.876" cy="1103.6" rx="87.66499999999999" ry="7" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <ellipse cx="1175.876" cy="1049.8" rx="87.66499999999999" ry="7" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1175.876" y="1076.7" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)"><tspan x="1175.876" dy="-3.9000000000000012">data/plan.json</tspan><tspan x="1175.876" dy="16.900000000000002">訓練課表處方與規則</tspan></text>
+</g>
+<g class="node" data-id="ITTConfig" data-label="data/itt-config.json
+路段設定與配色語意" data-shape="cylinder">
+  <rect x="480.44399999999996" y="1049.8" width="175.32999999999998" height="53.80000000000001" fill="var(--_node-fill)" stroke="none" />
+  <line x1="480.44399999999996" y1="1049.8" x2="480.44399999999996" y2="1103.6" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <line x1="655.7739999999999" y1="1049.8" x2="655.7739999999999" y2="1103.6" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <ellipse cx="568.1089999999999" cy="1103.6" rx="87.66499999999999" ry="7" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <ellipse cx="568.1089999999999" cy="1049.8" rx="87.66499999999999" ry="7" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="568.1089999999999" y="1076.7" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)"><tspan x="568.1089999999999" dy="-3.9000000000000012">data/itt-config.json</tspan><tspan x="568.1089999999999" dy="16.900000000000002">路段設定與配色語意</tspan></text>
+</g>
+<g class="node" data-id="TrainingBlock" data-label="data/training-block.json
+週期計畫與回填評分" data-shape="cylinder">
+  <rect x="880.435" y="1049.8" width="179.77599999999998" height="53.80000000000001" fill="var(--_node-fill)" stroke="none" />
+  <line x1="880.435" y1="1049.8" x2="880.435" y2="1103.6" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <line x1="1060.211" y1="1049.8" x2="1060.211" y2="1103.6" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <ellipse cx="970.323" cy="1103.6" rx="89.88799999999999" ry="7" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <ellipse cx="970.323" cy="1049.8" rx="89.88799999999999" ry="7" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="970.323" y="1076.7" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)"><tspan x="970.323" dy="-3.9000000000000012">data/training-block.json</tspan><tspan x="970.323" dy="16.900000000000002">週期計畫與回填評分</tspan></text>
+</g>
+<g class="node" data-id="RidesHTML" data-label="rides/*.html
+單日深度分析報告" data-shape="cylinder">
+  <rect x="93.04999999999998" y="1049.8" width="160.51" height="53.80000000000001" fill="var(--_node-fill)" stroke="none" />
+  <line x1="93.04999999999998" y1="1049.8" x2="93.04999999999998" y2="1103.6" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <line x1="253.55999999999997" y1="1049.8" x2="253.55999999999997" y2="1103.6" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <ellipse cx="173.30499999999998" cy="1103.6" rx="80.255" ry="7" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <ellipse cx="173.30499999999998" cy="1049.8" rx="80.255" ry="7" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="173.30499999999998" y="1076.7" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)"><tspan x="173.30499999999998" dy="-3.9000000000000012">rides/*.html</tspan><tspan x="173.30499999999998" dy="16.900000000000002">單日深度分析報告</tspan></text>
+</g>
+<g class="node" data-id="Portal" data-label="🏠 linkTreeIndex.html
+• Canvas 星空 / 流星 / 粒子動畫
+• 個人簡歷 Resume (SPA 內頁)" data-shape="rectangle">
+  <rect x="56" y="1314.6" width="234.61" height="70.7" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="173.305" y="1349.9499999999998" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)"><tspan x="173.305" dy="-12.350000000000001">🏠 linkTreeIndex.html</tspan><tspan x="173.305" dy="16.900000000000002">• Canvas 星空 / 流星 / 粒子動畫</tspan><tspan x="173.305" dy="16.900000000000002">• 個人簡歷 Resume (SPA 內頁)</tspan></text>
+</g>
+<g class="node" data-id="Obs" data-label="🔭 strava.html
+深空觀測站
+(Liquid Glass / Bento / Three.js 3D)" data-shape="rectangle">
+  <rect x="415.1132499999999" y="1604.3999999999999" width="242.01999999999998" height="70.7" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="536.1232499999999" y="1639.7499999999998" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)"><tspan x="536.1232499999999" dy="-12.350000000000001">🔭 strava.html</tspan><tspan x="536.1232499999999" dy="16.900000000000002">深空觀測站</tspan><tspan x="536.1232499999999" dy="16.900000000000002">(Liquid Glass / Bento / Three.js 3D)</tspan></text>
+</g>
+<g class="node" data-id="Pit" data-label="🏎️ strava_pitwall.html
+賽車維修站
+(板牌 / 計時紙 / 四色 Delta)" data-shape="rectangle">
+  <rect x="685.1332499999999" y="1604.3999999999999" width="201.265" height="70.7" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="785.7657499999998" y="1639.7499999999998" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)"><tspan x="785.7657499999998" dy="-12.350000000000001">🏎️ strava_pitwall.html</tspan><tspan x="785.7657499999998" dy="16.900000000000002">賽車維修站</tspan><tspan x="785.7657499999998" dy="16.900000000000002">(板牌 / 計時紙 / 四色 Delta)</tspan></text>
+</g>
+<g class="node" data-id="Helicorder" data-label="📈 strava_helicorder.html
+記震紙
+(連續走紙地震波形)" data-shape="rectangle">
+  <rect x="194.74024999999995" y="1604.3999999999999" width="192.37299999999996" height="70.7" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="290.9267499999999" y="1639.7499999999998" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)"><tspan x="290.9267499999999" dy="-12.350000000000001">📈 strava_helicorder.html</tspan><tspan x="290.9267499999999" dy="16.900000000000002">記震紙</tspan><tspan x="290.9267499999999" dy="16.900000000000002">(連續走紙地震波形)</tspan></text>
+</g>
+<g class="node" data-id="Opus" data-label="🛰️ strava_opus5_max.html
+遙測 OPUS MAX
+(Cyan Telemetry)" data-shape="rectangle">
+  <rect x="914.3982499999998" y="1604.3999999999999" width="205.71099999999996" height="70.7" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1017.2537499999999" y="1639.7499999999998" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)"><tspan x="1017.2537499999999" dy="-12.350000000000001">🛰️ strava_opus5_max.html</tspan><tspan x="1017.2537499999999" dy="16.900000000000002">遙測 OPUS MAX</tspan><tspan x="1017.2537499999999" dy="16.900000000000002">(Cyan Telemetry)</tspan></text>
+</g>
+<g class="node" data-id="Three3D" data-label="Three.js 3D 軌跡引擎
+(vendor-three-r128.js)" data-shape="rectangle">
+  <rect x="406.6167499999999" y="1358.6" width="172.36599999999999" height="53.800000000000004" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="492.7997499999999" y="1385.5" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)"><tspan x="492.7997499999999" dy="-3.9000000000000012">Three.js 3D 軌跡引擎</tspan><tspan x="492.7997499999999" dy="16.900000000000002">(vendor-three-r128.js)</tspan></text>
+</g>
+<g class="node" data-id="Weight3D" data-label="InBody 體重/體態地圖
+(weight-3d.js / weight-bodymap.js)" data-shape="rectangle">
+  <rect x="892.5637499999998" y="1358.6" width="233.86899999999997" height="53.800000000000004" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1009.4982499999998" y="1385.5" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)"><tspan x="1009.4982499999998" dy="-3.9000000000000012">InBody 體重/體態地圖</tspan><tspan x="1009.4982499999998" dy="16.900000000000002">(weight-3d.js / weight-bodymap.js)</tspan></text>
+</g>
+<g class="node" data-id="ModalEng" data-label="詳細活動彈窗 &amp; 成就系統
+(activity-modal.js / itt-achievements.js)" data-shape="rectangle">
+  <rect x="606.9827499999999" y="1358.6" width="257.5809999999999" height="53.800000000000004" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="735.7732499999998" y="1385.5" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)"><tspan x="735.7732499999998" dy="-3.9000000000000012">詳細活動彈窗 &amp; 成就系統</tspan><tspan x="735.7732499999998" dy="16.900000000000002">(activity-modal.js / itt-achievements.js)</tspan></text>
+</g>
+</svg>

@@ -5,12 +5,14 @@
 > 核心是一條**把 Garmin 手錶的原始訓練檔自動變成每日訓練報告與計時成績**的管線 ——
 > 全自動、免費、**沒有任何 LLM 參與、零推論成本**。
 
-🔗 **Live：** https://chenhan20.github.io/linkTree/linkTreeIndex.html
+🔗 **Live：** https://chenhan20.github.io/linkTree/linkTreeIndex.html  
+🏛️ **系統架構圖與說明書：** [ARCHITECTURE.md](ARCHITECTURE.md) *(使用 [beautiful-mermaid](https://github.com/lukilabs/beautiful-mermaid) 繪製向量圖表)*
 
 ---
 
 ## 目錄
 
+- [系統架構圖與說明 (ARCHITECTURE.md)](ARCHITECTURE.md)
 - [這條管線在做什麼](#這條管線在做什麼)
 - [為什麼是 intervals.icu](#為什麼是-intervalsicu)
 - [完整串接教學（Garmin → intervals.icu → 這個 repo）](#完整串接教學garmin--intervalsicu--這個-repo)
@@ -37,7 +39,7 @@
         ▼
    GitHub Actions（每天 10:30 / 22:30 台灣時間）
         │
-        ├──► data/fit/*.fit            原始訓練檔（目前 254 個，約 50 MB / 一年份）
+        ├──► data/fit/*.fit            原始訓練檔（目前 259 個，約 50 MB / 一年份）
         ├──► data/fit/_wellness.json   每日 HRV / 靜息心率 / 睡眠 / eFTP
         ├──► rides/<date>.html         單日訓練報告（含課表對帳評分）
         ├──► data/itt-segments.json    ITT 計時成績（自建偵測器算的）
@@ -146,7 +148,7 @@
 跑完之後 `data/fit/`、`rides/`、`data/itt-segments.json` 會被 commit 回你的 repo，
 之後每天台灣時間 **10:30 / 22:30** 自動增量更新。
 
-> 📦 一年份大約是 **254 個 FIT、50 MB**。這是 repo 裡最大的一塊，但換來的是
+> 📦 一年份大約是 **259 個 FIT、50 MB**。這是 repo 裡最大的一塊，但換來的是
 > 「重跑任何分析都不用再打任何 API」—— 評分邏輯改了就重掃本機檔案，成本是零。
 
 ### Step 6 · 設定課表對帳（選用）
@@ -303,7 +305,7 @@ python3 scripts/backfill-itt-efforts.py --compare -q
 | `STRAVA` | Strava 官方配對的成績（需付費訂閱，舊管線留下的歷史資料） |
 | `自建計時` | 由 Garmin 原始 FIT 逐秒座標自行判定閘門通過 —— **我自己算的** |
 
-目前 **102 筆成績 / 9 條路段**，其中 93 筆是 Strava 時代的歷史資料、9 筆是自建計時。
+目前 **542 筆成績 / 35 條路段（11 個群組）**，其中 93 筆是 Strava 時代的歷史資料、449 筆是自建計時。
 **今天之後新增的每一筆都會是自建計時。**
 
 > 2026-08-14 以前寫入的紀錄沒有 `source` 欄位（那時只有一個來源）。
@@ -482,10 +484,14 @@ python3 tools/tcx/score.py data/fit/2026-08-13_*.fit --date 2026-08-13
 
 | 文件 | 內容 |
 |---|---|
+| [ARCHITECTURE.md](ARCHITECTURE.md) | **全系統端到端架構、資料管線與自建演算法說明書（含 beautiful-mermaid 向量圖表）** |
 | [docs/fit-pipeline.md](docs/fit-pipeline.md) | FIT 管線全貌與驗證紀錄 |
 | [docs/intervals-api-survey.md](docs/intervals-api-survey.md) | intervals.icu API 盤點（還有哪些欄位沒挖） |
 | [docs/ride-report-pipeline.md](docs/ride-report-pipeline.md) | 單日訓練報告的產生流程 |
+| [DESIGN.md](DESIGN.md) | `strava.html`（深空觀測站）的設計系統（**只管這一個檔**） |
+| [DESIGN.helicorder.md](DESIGN.helicorder.md) | `strava_helicorder.html`（記震紙世界）專屬設計規範 |
+| [DESIGN.rides.md](DESIGN.rides.md) | 單日訓練報告（`rides/<date>.html`）視覺與排版規範 |
+| [docs/strava-goals-prd.md](docs/strava-goals-prd.md) | 月度目標與紀律追蹤 PRD |
 | [docs/strava-pipeline.md](docs/strava-pipeline.md) | **已棄用**的 Strava 路線，完整教學保留 |
 | [docs/data-flow.md](docs/data-flow.md) | Strava 時代的資料流程圖（**歷史文件**） |
-| [DESIGN.md](DESIGN.md) | `strava.html` 的設計系統（**只管這一個檔**） |
 | [PRODUCT.md](PRODUCT.md) | 產品事實與方向契約 |

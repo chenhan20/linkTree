@@ -1,0 +1,165 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 671.3269999999999 2632.5690000000004" width="671.3269999999999" height="2632.5690000000004" style="--bg:#1a1b26;--fg:#a9b1d6;--line:#3d59a1;--accent:#7aa2f7;--muted:#565f89;background:var(--bg)">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap');
+  text { font-family: 'Inter', system-ui, sans-serif; }
+  svg {
+    /* Derived from --bg and --fg (overridable via --line, --accent, etc.) */
+    --_text:          var(--fg);
+    --_text-sec:      var(--muted, color-mix(in srgb, var(--fg) 60%, var(--bg)));
+    --_text-muted:    var(--muted, color-mix(in srgb, var(--fg) 40%, var(--bg)));
+    --_text-faint:    color-mix(in srgb, var(--fg) 25%, var(--bg));
+    --_line:          var(--line, color-mix(in srgb, var(--fg) 50%, var(--bg)));
+    --_arrow:         var(--accent, color-mix(in srgb, var(--fg) 85%, var(--bg)));
+    --_node-fill:     var(--surface, color-mix(in srgb, var(--fg) 3%, var(--bg)));
+    --_node-stroke:   var(--border, color-mix(in srgb, var(--fg) 20%, var(--bg)));
+    --_group-fill:    var(--bg);
+    --_group-hdr:     color-mix(in srgb, var(--fg) 5%, var(--bg));
+    --_inner-stroke:  color-mix(in srgb, var(--fg) 12%, var(--bg));
+    --_key-badge:     color-mix(in srgb, var(--fg) 10%, var(--bg));
+  }
+</style>
+<defs>
+  <marker id="arrowhead" markerWidth="8" markerHeight="5" refX="7" refY="2.5" orient="auto">
+    <polygon points="0 0, 8 2.5, 0 5" fill="var(--_arrow)" stroke="var(--_arrow)" stroke-width="0.75" stroke-linejoin="round" />
+  </marker>
+  <marker id="arrowhead-start" markerWidth="8" markerHeight="5" refX="1" refY="2.5" orient="auto-start-reverse">
+    <polygon points="8 0, 0 2.5, 8 5" fill="var(--_arrow)" stroke="var(--_arrow)" stroke-width="0.75" stroke-linejoin="round" />
+  </marker>
+</defs>
+<g class="subgraph" data-id="GateDetection" data-label="垂直閘門判定與線性插值 (Sub-second Accuracy)">
+  <rect x="48.49024999999992" y="448.31" width="493.8" height="1747.9589999999998" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <rect x="48.49024999999992" y="448.31" width="493.8" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="60.49024999999992" y="462.31" font-size="12" font-weight="600" fill="var(--_text-sec)" dy="4.199999999999999">垂直閘門判定與線性插值 (Sub-second Accuracy)</text>
+</g>
+<polyline class="edge" data-from="Start" data-to="Parse" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="196.94849999999997,76.9 196.94849999999997,116.45" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="Ref" data-to="MatchLoop" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="506.6119999999999,170.25 506.6119999999999,190.025 351.7802499999999,190.025 351.7802499999999,209.8" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="Parse" data-to="MatchLoop" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="196.94849999999997,153.35000000000002 196.94849999999997,190.025 351.7802499999999,190.025 351.7802499999999,209.8" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="CalcMetrics" data-to="CompareScore" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="322.1402499999999,2304.069 322.1402499999999,2352.069" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="CompareScore" data-to="OutputEffort" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="322.1402499999999,2405.869 322.1402499999999,2453.869" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="OutputEffort" data-to="End" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="322.1402499999999,2507.6690000000003 322.1402499999999,2555.6690000000003" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="MatchLoop" data-to="CheckStart" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="351.7802499999999,394.31 351.7802499999999,492.31" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="InterpEnd" data-to="CalcMetrics" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="322.1402499999999,2180.269 322.1402499999999,2250.269" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="CheckStart" data-to="DirCheck" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="351.7802499999999,529.21 351.7802499999999,577.21" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="DirCheck" data-to="Ignore" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="否: 反向路過" points="399.6984166666666,816.8008333333333 399.6984166666666,876.719 468.2652499999999,876.719 468.2652499999999,981.019" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="DirCheck" data-to="InterpStart" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="是: 正向穿越" points="303.8620833333332,816.8008333333333 303.8620833333332,876.719 235.29524999999987,876.719 235.29524999999992,981.019" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="InterpStart" data-to="MultiStartCheck" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="235.29524999999992,1034.819 235.29524999999992,1082.819" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="MultiStartCheck" data-to="KeepLastStart" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="是" points="276.0504166666666,1286.594833333333 276.0504166666666,1339.35 340.6652499999999,1339.35 340.6652499999999,1447.875" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="MultiStartCheck" data-to="SetStart" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="否" points="194.54008333333323,1286.5948333333333 194.54008333333323,1339.35 129.92524999999992,1339.35 129.92524999999992,1447.875" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="KeepLastStart" data-to="MonitorMid" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="340.6652499999999,1501.675 340.6652499999999,1523.5625 235.29524999999995,1523.5625 235.29524999999995,1545.4499999999998" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="SetStart" data-to="MonitorMid" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="129.92524999999992,1484.775 129.92524999999992,1523.5625 235.29524999999995,1523.5625 235.29524999999995,1545.4499999999998" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="MonitorMid" data-to="CheckMid" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="235.29524999999992,1582.35 235.29524999999992,1630.35" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="CheckMid" data-to="Invalidate" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="否: 抄捷徑/折返" points="186.14208333333326,1876.115833333333 186.14208333333326,1937.2689999999998 148.45024999999993,1937.2689999999998 148.45024999999993,2041.5689999999997" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="CheckMid" data-to="CheckEnd" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="是: 合規通過" points="284.4484166666666,1876.115833333333 284.4484166666666,1937.2689999999998 322.1402499999999,1937.2689999999998 322.1402499999999,2041.5689999999997" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="CheckEnd" data-to="InterpEnd" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="322.1402499999999,2078.469 322.1402499999999,2126.469" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<g class="edge-label" data-from="DirCheck" data-to="Ignore" data-label="否: 反向路過">
+  <rect x="427.26524999999987" y="907.7189999999999" width="81.208" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="467.86924999999985" y="922.8689999999999" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">否: 反向路過</text>
+</g>
+<g class="edge-label" data-from="DirCheck" data-to="InterpStart" data-label="是: 正向穿越">
+  <rect x="194.29524999999984" y="907.7189999999999" width="81.208" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="234.89924999999985" y="922.8689999999999" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">是: 正向穿越</text>
+</g>
+<g class="edge-label" data-from="MultiStartCheck" data-to="KeepLastStart" data-label="是">
+  <rect x="325.6652499999999" y="1370.35" width="29.53" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="340.4302499999999" y="1385.5" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">是</text>
+</g>
+<g class="edge-label" data-from="MultiStartCheck" data-to="SetStart" data-label="否">
+  <rect x="114.92524999999993" y="1370.35" width="29.53" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="129.69024999999993" y="1385.5" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">否</text>
+</g>
+<g class="edge-label" data-from="CheckMid" data-to="Invalidate" data-label="否: 抄捷徑/折返">
+  <rect x="99.95024999999995" y="1968.2689999999998" width="96.058" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="147.97924999999995" y="1983.4189999999999" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">否: 抄捷徑/折返</text>
+</g>
+<g class="edge-label" data-from="CheckMid" data-to="CheckEnd" data-label="是: 合規通過">
+  <rect x="281.14025" y="1968.2689999999998" width="81.208" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="321.74424999999997" y="1983.4189999999999" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">是: 合規通過</text>
+</g>
+<g class="node" data-id="Start" data-label="讀取 Garmin 原始 FIT 檔" data-shape="stadium">
+  <rect x="103.35549999999998" y="40" width="187.18599999999998" height="36.900000000000006" rx="18.450000000000003" ry="18.450000000000003" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="196.94849999999997" y="58.45" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">讀取 Garmin 原始 FIT 檔</text>
+</g>
+<g class="node" data-id="Parse" data-label="逐秒解析: 時間戳記, GPS 經緯度, 瓦數, 踏頻" data-shape="rectangle">
+  <rect x="40" y="116.45" width="313.89699999999993" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="196.94849999999997" y="134.9" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">逐秒解析: 時間戳記, GPS 經緯度, 瓦數, 踏頻</text>
+</g>
+<g class="node" data-id="Ref" data-label="載入路段參考折線與起終點座標
+data/segment-streams.json" data-shape="rectangle">
+  <rect x="381.89699999999993" y="116.45" width="249.42999999999998" height="53.800000000000004" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="506.6119999999999" y="143.35" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)"><tspan x="506.6119999999999" dy="-3.9000000000000012">載入路段參考折線與起終點座標</tspan><tspan x="506.6119999999999" dy="16.900000000000002">data/segment-streams.json</tspan></text>
+</g>
+<g class="node" data-id="MatchLoop" data-label="掃描全軌跡座標點" data-shape="diamond">
+  <polygon points="351.7802499999999,209.8 444.0352499999999,302.055 351.7802499999999,394.31 259.5252499999999,302.055" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="351.7802499999999" y="302.055" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">掃描全軌跡座標點</text>
+</g>
+<g class="node" data-id="CalcMetrics" data-label="計算路段總耗時 Duration = t_end - t_start
+提取區段平均功率, 加權功率, 踏頻, 心率, 爬升" data-shape="rectangle">
+  <rect x="157.41125" y="2250.269" width="329.4579999999999" height="53.800000000000004" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="322.1402499999999" y="2277.169" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)"><tspan x="322.1402499999999" dy="-3.9000000000000012">計算路段總耗時 Duration = t_end - t_start</tspan><tspan x="322.1402499999999" dy="16.900000000000002">提取區段平均功率, 加權功率, 踏頻, 心率, 爬升</tspan></text>
+</g>
+<g class="node" data-id="CompareScore" data-label="計算 segScore: 70% 功率得分 + 30% 時間得分
+對比 90 天最佳 TOP5 AVG 與 歷史 PR" data-shape="rectangle">
+  <rect x="161.85724999999994" y="2352.069" width="320.56600000000003" height="53.800000000000004" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="322.1402499999999" y="2378.969" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)"><tspan x="322.1402499999999" dy="-3.9000000000000012">計算 segScore: 70% 功率得分 + 30% 時間得分</tspan><tspan x="322.1402499999999" dy="16.900000000000002">對比 90 天最佳 TOP5 AVG 與 歷史 PR</tspan></text>
+</g>
+<g class="node" data-id="OutputEffort" data-label="寫入 data/itt-segments.json
+標註 source: 自建計時" data-shape="rectangle">
+  <rect x="222.24874999999997" y="2453.869" width="199.78299999999996" height="53.800000000000004" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="322.1402499999999" y="2480.7690000000002" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)"><tspan x="322.1402499999999" dy="-3.9000000000000012">寫入 data/itt-segments.json</tspan><tspan x="322.1402499999999" dy="16.900000000000002">標註 source: 自建計時</tspan></text>
+</g>
+<g class="node" data-id="End" data-label="完成計時判定 - 91 筆 Strava 對帳平均差 0.75s" data-shape="stadium">
+  <rect x="162.22774999999996" y="2555.6690000000003" width="319.825" height="36.900000000000006" rx="18.450000000000003" ry="18.450000000000003" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="322.1402499999999" y="2574.119" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">完成計時判定 - 91 筆 Strava 對帳平均差 0.75s</text>
+</g>
+<g class="node" data-id="CheckStart" data-label="偵測起點閘門穿越" data-shape="rectangle">
+  <rect x="271.5252499999999" y="492.31" width="160.51" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="351.7802499999999" y="510.76" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">偵測起點閘門穿越</text>
+</g>
+<g class="node" data-id="DirCheck" data-label="行進方位角與路段起段夾角 &lt; 90° ?" data-shape="diamond">
+  <polygon points="351.7802499999999,577.21 495.5347499999999,720.9645 351.7802499999999,864.719 208.0257499999999,720.9645" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="351.7802499999999" y="720.9645" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">行進方位角與路段起段夾角 &lt; 90° ?</text>
+</g>
+<g class="node" data-id="Ignore" data-label="忽略此穿越" data-shape="rectangle">
+  <rect x="410.24024999999995" y="981.019" width="116.05" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="468.2652499999999" y="999.469" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">忽略此穿越</text>
+</g>
+<g class="node" data-id="InterpStart" data-label="前後相鄰兩點與垂直閘門線作線性插值
+求得精確小數秒起跑時刻 t_start" data-shape="rectangle">
+  <rect x="88.3502499999999" y="981.019" width="293.89" height="53.800000000000004" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="235.2952499999999" y="1007.919" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)"><tspan x="235.2952499999999" dy="-3.9000000000000012">前後相鄰兩點與垂直閘門線作線性插值</tspan><tspan x="235.2952499999999" dy="16.900000000000002">求得精確小數秒起跑時刻 t_start</tspan></text>
+</g>
+<g class="node" data-id="MultiStartCheck" data-label="是否有多次起跑 / 折返重起?" data-shape="diamond">
+  <polygon points="235.2952499999999,1082.819 357.56074999999987,1205.0845 235.2952499999999,1327.35 113.02974999999991,1205.0845" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="235.2952499999999" y="1205.0845" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">是否有多次起跑 / 折返重起?</text>
+</g>
+<g class="node" data-id="KeepLastStart" data-label="取「最後一次」正向穿越時刻
+(符合真實起跑慣例)" data-shape="rectangle">
+  <rect x="223.36024999999992" y="1447.875" width="234.60999999999999" height="53.800000000000004" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="340.6652499999999" y="1474.775" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)"><tspan x="340.6652499999999" dy="-3.9000000000000012">取「最後一次」正向穿越時刻</tspan><tspan x="340.6652499999999" dy="16.900000000000002">(符合真實起跑慣例)</tspan></text>
+</g>
+<g class="node" data-id="SetStart" data-label="確立起跑時間" data-shape="rectangle">
+  <rect x="64.49024999999992" y="1447.875" width="130.87" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="129.92524999999992" y="1466.325" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">確立起跑時間</text>
+</g>
+<g class="node" data-id="MonitorMid" data-label="中途檢查點檢核 (路段 50% 處)" data-shape="rectangle">
+  <rect x="121.32474999999995" y="1545.4499999999998" width="227.94099999999997" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="235.29524999999995" y="1563.8999999999999" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">中途檢查點檢核 (路段 50% 處)</text>
+</g>
+<g class="node" data-id="CheckMid" data-label="軌跡通過 50% 檢查點且半徑 &lt;= 50m ?" data-shape="diamond">
+  <polygon points="235.29524999999995,1630.35 382.75474999999994,1777.8094999999998 235.29524999999995,1925.2689999999998 87.83574999999996,1777.8094999999998" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="235.29524999999995" y="1777.8094999999998" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">軌跡通過 50% 檢查點且半徑 &lt;= 50m ?</text>
+</g>
+<g class="node" data-id="Invalidate" data-label="作廢該次成績" data-shape="rectangle">
+  <rect x="83.01524999999994" y="2041.5689999999997" width="130.87" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="148.45024999999993" y="2060.019" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">作廢該次成績</text>
+</g>
+<g class="node" data-id="CheckEnd" data-label="偵測終點閘門穿越" data-shape="rectangle">
+  <rect x="241.88524999999996" y="2041.5689999999997" width="160.51" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="322.1402499999999" y="2060.019" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">偵測終點閘門穿越</text>
+</g>
+<g class="node" data-id="InterpEnd" data-label="終點垂直閘門相鄰兩點線性插值
+求得精確小數秒抵達時刻 t_end" data-shape="rectangle">
+  <rect x="197.42524999999998" y="2126.469" width="249.42999999999998" height="53.800000000000004" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="322.14025" y="2153.369" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)"><tspan x="322.14025" dy="-3.9000000000000012">終點垂直閘門相鄰兩點線性插值</tspan><tspan x="322.14025" dy="16.900000000000002">求得精確小數秒抵達時刻 t_end</tspan></text>
+</g>
+</svg>

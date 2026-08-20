@@ -1,0 +1,143 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1684.2654999999997 955" width="1684.2654999999997" height="955" style="--bg:#1a1b26;--fg:#a9b1d6;--line:#3d59a1;--accent:#7aa2f7;--muted:#565f89;background:var(--bg)">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap');
+  text { font-family: 'Inter', system-ui, sans-serif; }
+  svg {
+    /* Derived from --bg and --fg (overridable via --line, --accent, etc.) */
+    --_text:          var(--fg);
+    --_text-sec:      var(--muted, color-mix(in srgb, var(--fg) 60%, var(--bg)));
+    --_text-muted:    var(--muted, color-mix(in srgb, var(--fg) 40%, var(--bg)));
+    --_text-faint:    color-mix(in srgb, var(--fg) 25%, var(--bg));
+    --_line:          var(--line, color-mix(in srgb, var(--fg) 50%, var(--bg)));
+    --_arrow:         var(--accent, color-mix(in srgb, var(--fg) 85%, var(--bg)));
+    --_node-fill:     var(--surface, color-mix(in srgb, var(--fg) 3%, var(--bg)));
+    --_node-stroke:   var(--border, color-mix(in srgb, var(--fg) 20%, var(--bg)));
+    --_group-fill:    var(--bg);
+    --_group-hdr:     color-mix(in srgb, var(--fg) 5%, var(--bg));
+    --_inner-stroke:  color-mix(in srgb, var(--fg) 12%, var(--bg));
+    --_key-badge:     color-mix(in srgb, var(--fg) 10%, var(--bg));
+  }
+</style>
+<defs>
+  <marker id="seq-arrow" markerWidth="8" markerHeight="5" refX="8" refY="2.5" orient="auto-start-reverse">
+    <polygon points="0 0, 8 2.5, 0 5" fill="var(--_arrow)" />
+  </marker>
+  <marker id="seq-arrow-open" markerWidth="8" markerHeight="5" refX="8" refY="2.5" orient="auto-start-reverse">
+    <polyline points="0 0, 8 2.5, 0 5" fill="none" stroke="var(--_arrow)" stroke-width="1" />
+  </marker>
+</defs>
+<line class="lifeline" data-actor="GA" x1="187.76499999999993" y1="70" x2="187.76499999999993" y2="925" stroke="var(--_line)" stroke-width="0.75" stroke-dasharray="6 4" />
+<line class="lifeline" data-actor="INT" x1="458.82099999999986" y1="70" x2="458.82099999999986" y2="925" stroke="var(--_line)" stroke-width="0.75" stroke-dasharray="6 4" />
+<line class="lifeline" data-actor="FIT" x1="656.8884999999998" y1="70" x2="656.8884999999998" y2="925" stroke="var(--_line)" stroke-width="0.75" stroke-dasharray="6 4" />
+<line class="lifeline" data-actor="RPT" x1="859.0314999999998" y1="70" x2="859.0314999999998" y2="925" stroke="var(--_line)" stroke-width="0.75" stroke-dasharray="6 4" />
+<line class="lifeline" data-actor="ITT" x1="1068.5845" y1="70" x2="1068.5845" y2="925" stroke="var(--_line)" stroke-width="0.75" stroke-dasharray="6 4" />
+<line class="lifeline" data-actor="GIT" x1="1308.148" y1="70" x2="1308.148" y2="925" stroke="var(--_line)" stroke-width="0.75" stroke-dasharray="6 4" />
+<line class="lifeline" data-actor="PAGES" x1="1535.1145" y1="70" x2="1535.1145" y2="925" stroke="var(--_line)" stroke-width="0.75" stroke-dasharray="6 4" />
+<g class="message" data-from="GA" data-to="INT" data-label="1. 執行 sync-intervals.py (檢查最近 14 天活動)" data-line-style="solid" data-arrow-head="filled" data-self="false">
+  <line x1="187.76499999999993" y1="90" x2="458.82099999999986" y2="90" stroke="var(--_line)" stroke-width="1" marker-end="url(#seq-arrow)" />
+  <text x="323.2929999999999" y="80" font-size="11" text-anchor="middle" font-weight="400" fill="var(--_text-muted)" dy="3.8499999999999996">1. 執行 sync-intervals.py (檢查最近 14 天活動)</text>
+</g>
+<g class="message" data-from="INT" data-to="GA" data-label="回傳新活動原始 FIT 檔 (gzip) 與 Wellness 數據" data-line-style="dashed" data-arrow-head="filled" data-self="false">
+  <line x1="458.82099999999986" y1="130" x2="187.76499999999993" y2="130" stroke="var(--_line)" stroke-width="1" stroke-dasharray="6 4" marker-end="url(#seq-arrow)" />
+  <text x="323.2929999999999" y="120" font-size="11" text-anchor="middle" font-weight="400" fill="var(--_text-muted)" dy="3.8499999999999996">回傳新活動原始 FIT 檔 (gzip) 與 Wellness 數據</text>
+</g>
+<g class="message" data-from="GA" data-to="FIT" data-label="寫入 data/fit/{date}_{id}.fit 與 _wellness.json" data-line-style="solid" data-arrow-head="filled" data-self="false">
+  <line x1="187.76499999999993" y1="170" x2="656.8884999999998" y2="170" stroke="var(--_line)" stroke-width="1" marker-end="url(#seq-arrow)" />
+  <text x="422.32674999999983" y="160" font-size="11" text-anchor="middle" font-weight="400" fill="var(--_text-muted)" dy="3.8499999999999996">寫入 data/fit/{date}_{id}.fit 與 _wellness.json</text>
+</g>
+<g class="message" data-from="GA" data-to="GA" data-label="2. 執行 build-ride-reports.py (篩選 TSS &gt;= 100 / 教練評語 / ITT)" data-line-style="solid" data-arrow-head="filled" data-self="true">
+  <polyline points="187.76499999999993,210 217.76499999999993,210 217.76499999999993,230 187.76499999999993,230" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#seq-arrow)" />
+  <text x="225.76499999999993" y="220" font-size="11" text-anchor="start" font-weight="400" fill="var(--_text-muted)" dy="3.8499999999999996">2. 執行 build-ride-reports.py (篩選 TSS &gt;= 100 / 教練評語 / ITT)</text>
+</g>
+<g class="message" data-from="GA" data-to="GA" data-label="呼叫 tools/tcx/score.py 逐秒對帳 data/plan.json" data-line-style="solid" data-arrow-head="filled" data-self="true">
+  <polyline points="187.76499999999993,280 217.76499999999993,280 217.76499999999993,300 187.76499999999993,300" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#seq-arrow)" />
+  <text x="225.76499999999993" y="290" font-size="11" text-anchor="start" font-weight="400" fill="var(--_text-muted)" dy="3.8499999999999996">呼叫 tools/tcx/score.py 逐秒對帳 data/plan.json</text>
+</g>
+<g class="message" data-from="GA" data-to="RPT" data-label="生成獨立靜態報告 rides/{date}.html" data-line-style="solid" data-arrow-head="filled" data-self="false">
+  <line x1="187.76499999999993" y1="350" x2="859.0314999999998" y2="350" stroke="var(--_line)" stroke-width="1" marker-end="url(#seq-arrow)" />
+  <text x="523.3982499999998" y="340" font-size="11" text-anchor="middle" font-weight="400" fill="var(--_text-muted)" dy="3.8499999999999996">生成獨立靜態報告 rides/{date}.html</text>
+</g>
+<g class="message" data-from="GA" data-to="GIT" data-label="git add data/fit rides &amp;&amp; git commit &quot;chore: fit sync&quot;" data-line-style="solid" data-arrow-head="filled" data-self="false">
+  <line x1="187.76499999999993" y1="405" x2="1308.148" y2="405" stroke="var(--_line)" stroke-width="1" marker-end="url(#seq-arrow)" />
+  <text x="747.9564999999999" y="395" font-size="11" text-anchor="middle" font-weight="400" fill="var(--_text-muted)" dy="3.8499999999999996">git add data/fit rides &amp;&amp; git commit &quot;chore: fit sync&quot;</text>
+</g>
+<g class="message" data-from="GA" data-to="GIT" data-label="git pull --rebase (合併潛在的遠端變更)" data-line-style="solid" data-arrow-head="filled" data-self="false">
+  <line x1="187.76499999999993" y1="445" x2="1308.148" y2="445" stroke="var(--_line)" stroke-width="1" marker-end="url(#seq-arrow)" />
+  <text x="747.9564999999999" y="435" font-size="11" text-anchor="middle" font-weight="400" fill="var(--_text-muted)" dy="3.8499999999999996">git pull --rebase (合併潛在的遠端變更)</text>
+</g>
+<g class="message" data-from="GA" data-to="GA" data-label="3. 執行 backfill-itt-efforts.py (純本機掃描 FIT)" data-line-style="solid" data-arrow-head="filled" data-self="true">
+  <polyline points="187.76499999999993,485 217.76499999999993,485 217.76499999999993,505 187.76499999999993,505" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#seq-arrow)" />
+  <text x="225.76499999999993" y="495" font-size="11" text-anchor="start" font-weight="400" fill="var(--_text-muted)" dy="3.8499999999999996">3. 執行 backfill-itt-efforts.py (純本機掃描 FIT)</text>
+</g>
+<g class="message" data-from="GA" data-to="GA" data-label="執行 tools/tcx/segments.py 垂直閘門線性插值計算" data-line-style="solid" data-arrow-head="filled" data-self="true">
+  <polyline points="187.76499999999993,555 217.76499999999993,555 217.76499999999993,575 187.76499999999993,575" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#seq-arrow)" />
+  <text x="225.76499999999993" y="565" font-size="11" text-anchor="start" font-weight="400" fill="var(--_text-muted)" dy="3.8499999999999996">執行 tools/tcx/segments.py 垂直閘門線性插值計算</text>
+</g>
+<g class="message" data-from="GA" data-to="ITT" data-label="寫入自建計時成績 (標記 source: 自建計時)" data-line-style="solid" data-arrow-head="filled" data-self="false">
+  <line x1="187.76499999999993" y1="625" x2="1068.5845" y2="625" stroke="var(--_line)" stroke-width="1" marker-end="url(#seq-arrow)" />
+  <text x="628.1747499999999" y="615" font-size="11" text-anchor="middle" font-weight="400" fill="var(--_text-muted)" dy="3.8499999999999996">寫入自建計時成績 (標記 source: 自建計時)</text>
+</g>
+<g class="message" data-from="GA" data-to="GA" data-label="4. 執行 tag-itt-sources.py 補齊標籤並同步副本" data-line-style="solid" data-arrow-head="filled" data-self="true">
+  <polyline points="187.76499999999993,665 217.76499999999993,665 217.76499999999993,685 187.76499999999993,685" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#seq-arrow)" />
+  <text x="225.76499999999993" y="675" font-size="11" text-anchor="start" font-weight="400" fill="var(--_text-muted)" dy="3.8499999999999996">4. 執行 tag-itt-sources.py 補齊標籤並同步副本</text>
+</g>
+<g class="message" data-from="GA" data-to="GIT" data-label="git add data/itt-segments.json data/strava.json" data-line-style="solid" data-arrow-head="filled" data-self="false">
+  <line x1="187.76499999999993" y1="750" x2="1308.148" y2="750" stroke="var(--_line)" stroke-width="1" marker-end="url(#seq-arrow)" />
+  <text x="747.9564999999999" y="740" font-size="11" text-anchor="middle" font-weight="400" fill="var(--_text-muted)" dy="3.8499999999999996">git add data/itt-segments.json data/strava.json</text>
+</g>
+<g class="message" data-from="GA" data-to="GIT" data-label="git commit &quot;chore: 回補自建 ITT 成績&quot;" data-line-style="solid" data-arrow-head="filled" data-self="false">
+  <line x1="187.76499999999993" y1="790" x2="1308.148" y2="790" stroke="var(--_line)" stroke-width="1" marker-end="url(#seq-arrow)" />
+  <text x="747.9564999999999" y="780" font-size="11" text-anchor="middle" font-weight="400" fill="var(--_text-muted)" dy="3.8499999999999996">git commit &quot;chore: 回補自建 ITT 成績&quot;</text>
+</g>
+<g class="message" data-from="GA" data-to="GIT" data-label="git push origin main" data-line-style="solid" data-arrow-head="filled" data-self="false">
+  <line x1="187.76499999999993" y1="830" x2="1308.148" y2="830" stroke="var(--_line)" stroke-width="1" marker-end="url(#seq-arrow)" />
+  <text x="747.9564999999999" y="820" font-size="11" text-anchor="middle" font-weight="400" fill="var(--_text-muted)" dy="3.8499999999999996">git push origin main</text>
+</g>
+<g class="message" data-from="GIT" data-to="PAGES" data-label="觸發 GitHub Pages 靜態自動部署" data-line-style="solid" data-arrow-head="filled" data-self="false">
+  <line x1="1308.148" y1="870" x2="1535.1145" y2="870" stroke="var(--_line)" stroke-width="1" marker-end="url(#seq-arrow)" />
+  <text x="1421.63125" y="860" font-size="11" text-anchor="middle" font-weight="400" fill="var(--_text-muted)" dy="3.8499999999999996">觸發 GitHub Pages 靜態自動部署</text>
+</g>
+<g class="note" data-position="over" data-actors="GA,GIT">
+  <polygon points="632.6664999999999,358 857.2465,358 863.2465,364 863.2465,381 632.6664999999999,381" fill="var(--bg)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <polygon points="857.2465,358 863.2465,364 857.2465,364" fill="var(--_inner-stroke)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="747.9564999999999" y="369.5" font-size="11" text-anchor="middle" font-weight="400" fill="var(--_text-muted)" dy="3.8499999999999996">階段一防衝突 Commit: 鎖定 FIT 與 Reports</text>
+</g>
+<g class="note" data-position="over" data-actors="GA,GIT">
+  <polygon points="646.6254999999999,703 843.2874999999999,703 849.2874999999999,709 849.2874999999999,726 646.6254999999999,726" fill="var(--bg)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <polygon points="843.2874999999999,703 849.2874999999999,709 843.2874999999999,709" fill="var(--_inner-stroke)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="747.9564999999999" y="714.5" font-size="11" text-anchor="middle" font-weight="400" fill="var(--_text-muted)" dy="3.8499999999999996">階段二 Commit: 鎖定 ITT 成績與統計</text>
+</g>
+<g class="note" data-position="over" data-actors="PAGES">
+  <polygon points="1415.9634999999998,878 1648.2654999999997,878 1654.2654999999997,884 1654.2654999999997,901 1415.9634999999998,901" fill="var(--bg)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <polygon points="1648.2654999999997,878 1654.2654999999997,884 1648.2654999999997,884" fill="var(--_inner-stroke)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1535.1145" y="889.5" font-size="11" text-anchor="middle" font-weight="400" fill="var(--_text-muted)" dy="3.8499999999999996">前端儀表板 fetch 最新 JSON 渲染最新狀態</text>
+</g>
+<g class="actor" data-id="GA" data-label="🤖 GitHub Actions (.github/workflows/fit-sync.yml)" data-type="participant">
+  <rect x="30" y="30" width="315.52999999999986" height="40" rx="4" ry="4" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="187.76499999999993" y="50" font-size="13" text-anchor="middle" font-weight="500" fill="var(--_text)" dy="4.55">🤖 GitHub Actions (.github/workflows/fit-sync.yml)</text>
+</g>
+<g class="actor" data-id="INT" data-label="⚡ intervals.icu API" data-type="participant">
+  <rect x="385.52999999999986" y="30" width="146.582" height="40" rx="4" ry="4" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="458.82099999999986" y="50" font-size="13" text-anchor="middle" font-weight="500" fill="var(--_text)" dy="4.55">⚡ intervals.icu API</text>
+</g>
+<g class="actor" data-id="FIT" data-label="📦 data/fit/ (FIT 檔案庫)" data-type="participant">
+  <rect x="572.1119999999999" y="30" width="169.55299999999997" height="40" rx="4" ry="4" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="656.8884999999998" y="50" font-size="13" text-anchor="middle" font-weight="500" fill="var(--_text)" dy="4.55">📦 data/fit/ (FIT 檔案庫)</text>
+</g>
+<g class="actor" data-id="RPT" data-label="📄 rides/ (單日報告)" data-type="participant">
+  <rect x="781.6649999999998" y="30" width="154.733" height="40" rx="4" ry="4" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="859.0314999999998" y="50" font-size="13" text-anchor="middle" font-weight="500" fill="var(--_text)" dy="4.55">📄 rides/ (單日報告)</text>
+</g>
+<g class="actor" data-id="ITT" data-label="⏱️ data/itt-segments.json" data-type="participant">
+  <rect x="976.3979999999999" y="30" width="184.37299999999996" height="40" rx="4" ry="4" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="1068.5845" y="50" font-size="13" text-anchor="middle" font-weight="500" fill="var(--_text)" dy="4.55">⏱️ data/itt-segments.json</text>
+</g>
+<g class="actor" data-id="GIT" data-label="🌿 Git Repository (main branch)" data-type="participant">
+  <rect x="1200.771" y="30" width="214.754" height="40" rx="4" ry="4" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="1308.148" y="50" font-size="13" text-anchor="middle" font-weight="500" fill="var(--_text)" dy="4.55">🌿 Git Repository (main branch)</text>
+</g>
+<g class="actor" data-id="PAGES" data-label="🌐 GitHub Pages CDN" data-type="participant">
+  <rect x="1455.5249999999999" y="30" width="159.17899999999997" height="40" rx="4" ry="4" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="1535.1145" y="50" font-size="13" text-anchor="middle" font-weight="500" fill="var(--_text)" dy="4.55">🌐 GitHub Pages CDN</text>
+</g>
+</svg>

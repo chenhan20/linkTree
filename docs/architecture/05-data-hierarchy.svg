@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 772.4 784.6" width="772.4" height="784.6" style="--bg:#1a1b26;--fg:#a9b1d6;--line:#3d59a1;--accent:#7aa2f7;--muted:#565f89;background:var(--bg)">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&amp;display=swap');
+  text { font-family: 'Inter', system-ui, sans-serif; }
+  .mono { font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', ui-monospace, monospace; }
+  svg {
+    /* Derived from --bg and --fg (overridable via --line, --accent, etc.) */
+    --_text:          var(--fg);
+    --_text-sec:      var(--muted, color-mix(in srgb, var(--fg) 60%, var(--bg)));
+    --_text-muted:    var(--muted, color-mix(in srgb, var(--fg) 40%, var(--bg)));
+    --_text-faint:    color-mix(in srgb, var(--fg) 25%, var(--bg));
+    --_line:          var(--line, color-mix(in srgb, var(--fg) 50%, var(--bg)));
+    --_arrow:         var(--accent, color-mix(in srgb, var(--fg) 85%, var(--bg)));
+    --_node-fill:     var(--surface, color-mix(in srgb, var(--fg) 3%, var(--bg)));
+    --_node-stroke:   var(--border, color-mix(in srgb, var(--fg) 20%, var(--bg)));
+    --_group-fill:    var(--bg);
+    --_group-hdr:     color-mix(in srgb, var(--fg) 5%, var(--bg));
+    --_inner-stroke:  color-mix(in srgb, var(--fg) 12%, var(--bg));
+    --_key-badge:     color-mix(in srgb, var(--fg) 10%, var(--bg));
+  }
+</style>
+<defs>
+  <marker id="cls-inherit" markerWidth="12" markerHeight="10" refX="12" refY="5" orient="auto-start-reverse">
+    <polygon points="0 0, 12 5, 0 10" fill="var(--bg)" stroke="var(--_arrow)" stroke-width="1.5" />
+  </marker>
+  <marker id="cls-composition" markerWidth="12" markerHeight="10" refX="0" refY="5" orient="auto-start-reverse">
+    <polygon points="6 0, 12 5, 6 10, 0 5" fill="var(--_arrow)" stroke="var(--_arrow)" stroke-width="1" />
+  </marker>
+  <marker id="cls-aggregation" markerWidth="12" markerHeight="10" refX="0" refY="5" orient="auto-start-reverse">
+    <polygon points="6 0, 12 5, 6 10, 0 5" fill="var(--bg)" stroke="var(--_arrow)" stroke-width="1.5" />
+  </marker>
+  <marker id="cls-arrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto-start-reverse">
+    <polyline points="0 0, 8 3, 0 6" fill="none" stroke="var(--_arrow)" stroke-width="1.5" />
+  </marker>
+</defs>
+<polyline class="class-relationship" data-from="原始資料與感測檔" data-to="自動運算權威檔" data-type="association" data-marker-at="to" data-label="Python CI 每日解析運算" points="562.7,456.3 562.7,566.6 309.6333333333333,566.6 309.6333333333333,616.6" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#cls-arrow)" />
+<polyline class="class-relationship" data-from="手動設定與處方規則" data-to="自動運算權威檔" data-type="association" data-marker-at="to" data-label="注入處方評分與路段定義" points="196.5,476.3 196.5,616.6" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#cls-arrow)" />
+<polyline class="class-relationship" data-from="車手能力基準資料" data-to="原始資料與感測檔" data-type="association" data-marker-at="to" data-label="提供 FTP 與功率分區基準" points="562.7,168 562.7,328.3" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#cls-arrow)" />
+<g class="class-node" data-id="原始資料與感測檔" data-label="原始資料與感測檔">
+  <rect x="393" y="328.3" width="339.4" height="128" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <rect x="393" y="328.3" width="339.4" height="32" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="562.7" y="344.3" text-anchor="middle" font-size="13" font-weight="700" fill="var(--_text)" dy="4.55">原始資料與感測檔</text>
+  <line x1="393" y1="360.3" x2="732.4" y2="360.3" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="401" y="374.3" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-faint)">+ </tspan><tspan fill="var(--_text-sec)">: 活動 metadata 與標題映射</tspan><tspan fill="var(--_text-faint)">: </tspan><tspan fill="var(--_text-muted)">data/fit/_activities.json</tspan></text>
+  <text x="401" y="394.3" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-faint)">+ </tspan><tspan fill="var(--_text-sec)">: 報告產製歷史紀錄</tspan><tspan fill="var(--_text-faint)">: </tspan><tspan fill="var(--_text-muted)">data/fit/_reports.json</tspan></text>
+  <line x1="393" y1="408.3" x2="732.4" y2="408.3" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="401" y="422.3" class="mono" dy="0.35em" font-size="11" font-weight="400" font-style="italic"><tspan fill="var(--_text-faint)">+ </tspan><tspan fill="var(--_text-sec)">data/fit/*.fit : Garmin 原始訓練檔(1Hz 座標/功率)</tspan></text>
+  <text x="401" y="442.3" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-faint)">+ </tspan><tspan fill="var(--_text-sec)">data/fit/_wellness.json : 每日生理快照(HRV/靜息心率/eFTP)</tspan></text>
+</g>
+<g class="class-node" data-id="自動運算權威檔" data-label="自動運算權威檔">
+  <rect x="83.36666666666667" y="616.6" width="339.4" height="128" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <rect x="83.36666666666667" y="616.6" width="339.4" height="32" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="253.06666666666666" y="632.6" text-anchor="middle" font-size="13" font-weight="700" fill="var(--_text)" dy="4.55">自動運算權威檔</text>
+  <line x1="83.36666666666667" y1="648.6" x2="422.76666666666665" y2="648.6" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="91.36666666666667" y="662.6" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-faint)">+ </tspan><tspan fill="var(--_text-sec)">: 儀表板總覽與年度統計快照</tspan><tspan fill="var(--_text-faint)">: </tspan><tspan fill="var(--_text-muted)">data/strava.json</tspan></text>
+  <text x="91.36666666666667" y="682.6" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-faint)">+ </tspan><tspan fill="var(--_text-sec)">: 單日深度訓練與對帳報告</tspan><tspan fill="var(--_text-faint)">: </tspan><tspan fill="var(--_text-muted)">rides/*.html</tspan></text>
+  <text x="91.36666666666667" y="702.6" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-faint)">+ </tspan><tspan fill="var(--_text-sec)">: 功率 PR 紀錄快取</tspan><tspan fill="var(--_text-faint)">: </tspan><tspan fill="var(--_text-muted)">data/power-prs.json</tspan></text>
+  <line x1="83.36666666666667" y1="716.6" x2="422.76666666666665" y2="716.6" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="91.36666666666667" y="730.6" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-faint)">+ </tspan><tspan fill="var(--_text-sec)">data/itt-segments.json : ITT 成績權威檔(自建+Strava歷史)</tspan></text>
+</g>
+<g class="class-node" data-id="手動設定與處方規則" data-label="手動設定與處方規則">
+  <rect x="40" y="308.3" width="313" height="168" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <rect x="40" y="308.3" width="313" height="32" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="196.5" y="324.3" text-anchor="middle" font-size="13" font-weight="700" fill="var(--_text)" dy="4.55">手動設定與處方規則</text>
+  <line x1="40" y1="340.3" x2="353" y2="340.3" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="48" y="354.3" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-faint)">+ </tspan><tspan fill="var(--_text-sec)">: ITT 路段名稱/類型/配色/3D開關</tspan><tspan fill="var(--_text-faint)">: </tspan><tspan fill="var(--_text-muted)">data/itt-config.json</tspan></text>
+  <text x="48" y="374.3" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-faint)">+ </tspan><tspan fill="var(--_text-sec)">: 訓練處方規格與可執行規則引擎</tspan><tspan fill="var(--_text-faint)">: </tspan><tspan fill="var(--_text-muted)">data/plan.json</tspan></text>
+  <text x="48" y="394.3" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-faint)">+ </tspan><tspan fill="var(--_text-sec)">: 同事與車友對戰名單</tspan><tspan fill="var(--_text-faint)">: </tspan><tspan fill="var(--_text-muted)">data/rivals.json</tspan></text>
+  <text x="48" y="414.3" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-faint)">+ </tspan><tspan fill="var(--_text-sec)">: 3D 路線地標標記</tspan><tspan fill="var(--_text-faint)">: </tspan><tspan fill="var(--_text-muted)">data/landmarks.json</tspan></text>
+  <line x1="40" y1="428.3" x2="353" y2="428.3" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="48" y="442.3" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-faint)">+ </tspan><tspan fill="var(--_text-sec)">data/training-block.json : 訓練週期規劃(實際分數自動回填)</tspan></text>
+  <text x="48" y="462.3" class="mono" dy="0.35em" font-size="11" font-weight="400" font-style="italic"><tspan fill="var(--_text-faint)">+ </tspan><tspan fill="var(--_text-sec)">rides/notes/*.json : 教練評語與自訂標題(覆寫優先)</tspan></text>
+</g>
+<g class="class-node" data-id="車手能力基準資料" data-label="車手能力基準資料">
+  <rect x="426" y="40" width="273.4" height="128" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <rect x="426" y="40" width="273.4" height="32" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="562.7" y="56" text-anchor="middle" font-size="13" font-weight="700" fill="var(--_text)" dy="4.55">車手能力基準資料</text>
+  <line x1="426" y1="72" x2="699.4" y2="72" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="434" y="86" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-faint)">+ </tspan><tspan fill="var(--_text-sec)">: 歷史功率區間基準</tspan><tspan fill="var(--_text-faint)">: </tspan><tspan fill="var(--_text-muted)">athlete/公路車-功率區段最高紀錄.json</tspan></text>
+  <text x="434" y="106" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-faint)">+ </tspan><tspan fill="var(--_text-sec)">: 跑步配速與心率區間</tspan><tspan fill="var(--_text-faint)">: </tspan><tspan fill="var(--_text-muted)">athlete/跑步能力資料.json</tspan></text>
+  <text x="434" y="126" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-faint)">+ </tspan><tspan fill="var(--_text-sec)">: 游泳百米配速基準</tspan><tspan fill="var(--_text-faint)">: </tspan><tspan fill="var(--_text-muted)">athlete/游泳能力資料.json</tspan></text>
+  <line x1="426" y1="140" x2="699.4" y2="140" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="434" y="154" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-faint)">+ </tspan><tspan fill="var(--_text-sec)">athlete/基本資料.json : 車手生理常數(身高/體重/FTP)</tspan></text>
+</g>
+<text x="629.331" y="538.4499999999999" font-size="11" text-anchor="middle" font-weight="400" fill="var(--_text-muted)" dy="3.8499999999999996">Python CI 每日解析運算</text>
+<text x="124.335" y="538.4499999999999" font-size="11" text-anchor="middle" font-weight="400" fill="var(--_text-muted)" dy="3.8499999999999996">注入處方評分與路段定義</text>
+<text x="489.94100000000003" y="230.15" font-size="11" text-anchor="middle" font-weight="400" fill="var(--_text-muted)" dy="3.8499999999999996">提供 FTP 與功率分區基準</text>
+</svg>
