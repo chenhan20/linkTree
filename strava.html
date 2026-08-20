@@ -1040,6 +1040,35 @@ body.dw-open #to-top-btn{display:none!important}
 /* ══ SESSION ROWS（Plan）══════════════════════════════════════════════
    §23：三個層級。過去低對比、未來低對比、下一堂最高優先。
    不是每一堂都要 border + 圓角卡 + badge + 投影 —— 那樣九堂課一樣重，等於沒有層級。 */
+/* ══ 課表指南（gu-）══ 不綁日期的查表資料
+   前綴不用 gd- —— HARVEST 圖例已經有 <i class="gd"> 佔用了那個名字。
+  （training-block.json 的 guide[]）。
+   課表列表回答「今天做什麼」,這一區回答「在健身房臨時要查什麼」——
+   兩者都住在計畫章,因為使用者會在同一個時刻想到它們。預設全部收合:
+   它是參考資料不是主線,展開的預設會把「下一堂」擠到摺線以下。 */
+.gu-list{border-top:1px solid var(--hair)}
+.gu{border-bottom:1px solid var(--hair)}
+.gu>summary{display:flex;align-items:baseline;gap:0 8px;flex-wrap:wrap;
+  padding:11px 2px;cursor:pointer;list-style:none;font-size:13px;color:var(--ink-1)}
+.gu>summary::-webkit-details-marker{display:none}
+.gu>summary::before{content:"+";flex:none;width:.9em;color:var(--ink-3);font-weight:700}
+.gu[open]>summary::before{content:"−"}
+.gu>summary b{font-weight:700}
+.gu>summary i{font-style:normal;font-size:11.5px;color:var(--ink-3)}
+.gu>summary:focus-visible{outline:1px solid rgba(252,76,2,.6);outline-offset:2px}
+.gu-body{padding:2px 0 15px calc(.9em + 8px)}
+.gu-body .dw-p+.dw-p{margin-top:9px}
+.gu-pre{margin:9px 0;padding:9px 11px;border-left:1px solid rgba(252,76,2,.22);
+  font-size:12px;line-height:1.7;color:var(--ink-2);white-space:pre;overflow-x:auto;
+  font-variant-numeric:tabular-nums}
+/* 表格橫向自己捲,頁面本體永遠不橫向捲 */
+.gu-tw{margin:9px 0;overflow-x:auto}
+.gu-tb{width:100%;border-collapse:collapse;font-size:12px;color:var(--ink-2)}
+.gu-tb th,.gu-tb td{padding:6px 10px 6px 0;text-align:left;vertical-align:baseline;
+  border-bottom:1px solid var(--hair);white-space:nowrap}
+.gu-tb th{color:var(--ink-3);font-weight:600;font-size:11px;letter-spacing:.4px}
+.gu-tb td b{color:var(--ink-1);font-weight:700}
+.gu-tb tr:last-child td{border-bottom:0}
 .ses-list{border-top:1px solid var(--hair)}
 .ses{
   display:grid;grid-template-columns:2.4rem minmax(0,1fr) 4.6rem 5.4rem 1rem;
@@ -4219,6 +4248,34 @@ function renderMesocycle(block) {
       <div class="section-title">全部課表 <span class="muted">· ${S.length} SESSIONS · 點一列看細節</span></div>
       <div class="ses-list">${rows}</div>
       ${block.note ? `<p class="view-sub" style="margin:14px 0 0">${block.note}</p>` : ''}
+    </div>
+    ${renderGuide(block)}`
+}
+
+/* 課表指南：不綁日期的查表資料（training-block.json 的 guide[]）。
+   blocks 的元素只有三種：{p} 段落、{pre} 等寬區塊、{table:{head,rows}}。
+   全部走 mdBold —— 先跳脫再還原 **粗體**，所以 JSON 裡的文字不會被當成 HTML。
+   刻意不做搜尋或篩選：八則而已，展開比找還快。 */
+function renderGuide(block) {
+  const G = block && block.guide
+  if (!Array.isArray(G) || !G.length) return ''
+  const cell = (v, tag) => `<${tag}>${mdBold(v)}</${tag}>`
+  const bl = b =>
+      b.p     ? `<div class="dw-p">${mdBold(b.p)}</div>`
+    : b.pre   ? `<div class="gu-pre">${mdBold(b.pre)}</div>`
+    : b.table ? `<div class="gu-tw"><table class="gu-tb">
+        <thead><tr>${(b.table.head || []).map(h => cell(h, 'th')).join('')}</tr></thead>
+        <tbody>${(b.table.rows || []).map(r =>
+          `<tr>${r.map(c => cell(c, 'td')).join('')}</tr>`).join('')}</tbody></table></div>`
+    : ''
+  return `
+    <div class="block">
+      <div class="section-title">課表指南 <span class="muted">· ${G.length} 則 · 不綁日期，點開查</span></div>
+      <div class="gu-list">${G.map(g => `
+        <details class="gu">
+          <summary><b>${mdBold(g.title || '')}</b>${g.sub ? `<i>${mdBold(g.sub)}</i>` : ''}</summary>
+          <div class="gu-body">${(g.blocks || []).map(bl).join('')}</div>
+        </details>`).join('')}</div>
     </div>`
 }
 
