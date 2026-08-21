@@ -1733,6 +1733,29 @@ button.ov-cell:focus-visible{outline:1px solid rgba(252,76,2,.6);outline-offset:
 .fc-3d{display:block;width:100%;height:250px;margin-bottom:4px;border-radius:8px;cursor:grab;touch-action:pan-y}
 .fc-3d:active{cursor:grabbing}
 @media(max-width:640px){.fc-3d{height:160px}}
+
+/* 手機／平板：3D 立體圖預設收起。
+   直式卡片裡塞一張 160px 的立體地形、再加上號誌燈條、對戰條與兩個面板，
+   一進詳情就全部攤開 —— 資訊沒錯但擠。改成先給 2D 坡度縮圖（跟平路段的卡一致），
+   要看立體再點開。順帶省電：setupSeg3D 靠 offsetParent 判斷要不要建場景，
+   display:none 的畫布連 WebGL context 都不會開。桌機維持原樣。 */
+.fc-3d-toggle{display:none}
+.fc-spark-block .fc-mini{display:none}
+@media(max-width:1023px){
+  .fc-spark-block:not(.is-3d) .fc-3d,
+  .fc-spark-block:not(.is-3d) .fc-lights,
+  .fc-spark-block:not(.is-3d) .fc-race-bar,
+  .fc-spark-block:not(.is-3d) .fc-pk-panel{display:none}
+  .fc-spark-block:not(.is-3d) .fc-mini{display:block}
+  .fc-3d-toggle{
+    display:inline-flex;align-items:center;gap:5px;flex:none;
+    padding:4px 9px;border-radius:6px;border:1px solid var(--hair-2);
+    background:transparent;color:var(--ink-2);cursor:pointer;
+    font-family:var(--f-mono);font-size:9.5px;letter-spacing:1.2px;white-space:nowrap;
+  }
+  .fc-3d-toggle:hover{color:#FC4C02;border-color:rgba(252,76,2,.5)}
+  .fc-spark-block.is-3d .fc-3d-toggle{color:#FC4C02;border-color:rgba(252,76,2,.45)}
+}
 .fc-spark{display:block;width:100%;height:54px;margin-bottom:4px;overflow:visible}
 .fc-spark path:not(.fc-spark-fill){stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset 1.5s cubic-bezier(.16,.7,.2,1)}
 .fc-revealed .fc-spark path:not(.fc-spark-fill){stroke-dashoffset:0;transition-delay:.25s}
@@ -3752,7 +3775,10 @@ const BIKE_TAG   = '<span class="bike-tag"><svg width="10" height="10" viewBox="
 /* ── helpers ── */
 /* 通用的展開/收合。收合時的文字掛在按鈕的 data-more 上，這樣同一支函式可以服務不同的清單。 */
 function toggleMore(btn) {
-  const els = [...document.querySelectorAll('[data-grp="' + btn.dataset.grp + '"]')]
+  // 鈕本身也要帶 data-grp（函式靠它找群組），所以一定要把自己排除掉：不排除的話
+  // els[0] 就是鈕，它的 display 不是 none → show 判成 false → 第一次點反而把整組
+  // 連同鈕一起藏起來，畫面上看起來像「點了沒反應」。
+  const els = [...document.querySelectorAll('[data-grp="' + btn.dataset.grp + '"]')].filter(e => e !== btn)
   if (!els.length) return
   const show = els[0].style.display === 'none'
   els.forEach(e => { e.style.display = show ? '' : 'none' })
@@ -4256,7 +4282,19 @@ function renderMesocycle(block) {
     <div class="block">
       <div class="section-title">全部課表 <span class="muted">· ${S.length} SESSIONS · 點一列看細節</span></div>
       <div class="ses-list">${rows}</div>
-      ${block.note ? `<p class="view-sub" style="margin:14px 0 0">${block.note}</p>` : ''}
+      ${block.note ? `<p class="view-sub" style="margin:14px 0 0">${mdBold(block.note)}</p>` : ''}
+      ${/* 修訂紀錄預設收起來：它是「為什麼變成現在這樣」的歷程，不是每次打開計畫都要讀的東西。
+            先前五次修訂全部串進 block.note 用一個 <p> 印到底，本人回報「誰看得動」——
+            現行規則留在 note，歷程搬到 block.revisions[] 收在一顆鈕後面。 */
+        (block.revisions || []).length ? `
+        <button class="row-more" type="button" data-grp="blkrev" aria-expanded="false"
+          data-more="▼ 課表修訂紀錄 · ${block.revisions.length} 次"
+          onclick="toggleMore(this)">▼ 課表修訂紀錄 · ${block.revisions.length} 次</button>
+        <div class="rows">${block.revisions.map(r => `
+          <div class="row" data-grp="blkrev" style="display:none;--row-cols:auto minmax(0,1fr)">
+            <span class="row-k">${(r.date || '').slice(5).replace('-', '/')}</span>
+            <span class="row-p" style="white-space:normal;font-weight:400;font-size:12px;line-height:1.65;color:var(--ink-2)">${mdBold(r.what || '')}</span>
+          </div>`).join('')}</div>` : ''}
     </div>
     ${renderGuide(block)}`
 }
@@ -4951,8 +4989,18 @@ function renderSegments(segs) {
           </div>` : ''}
           ${renderPkPanel(seg.id, pr)}
           ${renderSelfPanel(seg.id)}
+          ${sparkPath ? `<svg class="fc-spark fc-mini" viewBox="0 0 100 42" preserveAspectRatio="none" aria-hidden="true">
+            <defs><linearGradient id="${fillId}" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="${accent}" stop-opacity=".5"/>
+              <stop offset="100%" stop-color="${accent}" stop-opacity="0"/></linearGradient></defs>
+            <line x1="0" y1="40" x2="100" y2="40" stroke="rgba(255,255,255,.14)" stroke-width="1"/>
+            <path d="${sparkFill}" fill="url(#${fillId})" stroke="none"/>
+            <path d="${sparkPath}" fill="none" stroke="${accent}" stroke-width="3" stroke-linecap="round"/>
+          </svg>` : ''}
           <div class="fc-spark-row">
             <span class="fc-spark-lbl">${segFlat ? 'Route Map · 北在上' : 'Route 3D · 拖曳旋轉'}</span>
+            <button class="fc-3d-toggle" type="button" data-seg3dtoggle
+              aria-expanded="false">▸ ${segFlat ? '路線圖' : '立體圖'}</button>
             <a class="fc-spark-grade" href="https://www.strava.com/segments/${seg.id}" target="_blank" rel="noopener" title="在 Strava 查看官方路段資料" style="text-decoration:none">${gradeLabel}<span class="fc-spark-linkicon">↗</span></a>
           </div>
         </div>
@@ -10554,6 +10602,20 @@ document.addEventListener('click', e => {
   if (mt) { _bodyMetric = mt.dataset.bodymetric; paintBodyView(); return }
   const rg = e.target.closest('[data-wlrange]')
   if (rg) { _wellnessRange = +rg.dataset.wlrange; paintBodyView() }
+  // 手機／平板的 3D 展開鈕。收起狀態下畫布是 display:none，
+  // setupSeg3D 的 offsetParent 檢查會直接跳過它 —— 所以展開之後一定要再叫一次。
+  const t3 = e.target.closest('[data-seg3dtoggle]')
+  if (t3) {
+    const block = t3.closest('.fc-spark-block')
+    if (!block) return
+    const on = block.classList.toggle('is-3d')
+    t3.setAttribute('aria-expanded', String(on))
+    t3.textContent = (on ? '▾ ' : '▸ ') + t3.textContent.slice(2)
+    if (on) {
+      if (typeof THREE !== 'undefined') setupSeg3D()
+      else loadThreeJS().then(setupSeg3D).catch(() => {})
+    }
+  }
 })
 
 /* 點側欄的量測列 → 切到「身體」頁並選中那個指標。
