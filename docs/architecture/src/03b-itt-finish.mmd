@@ -1,0 +1,15 @@
+flowchart TB
+  A["起跑時刻 t_start 已確立"]
+  B{"軌跡是否通過 50% 檢查點<br/>且半徑 ≤ 50 m？"}
+  C["抄捷徑或折返 · 作廢該次成績"]
+  D["終點垂直閘門
+  相鄰兩點線性插值 → t_end"]
+  E["Duration = t_end − t_start
+  提取均功率、加權功率、踏頻、心率、爬升"]
+  F["segScore = 70% 功率 + 30% 時間
+  對比 90 天 TOP5 平均與歷史 PR"]
+  G["寫入 data/itt-segments.json
+  標註 source: 自建計時"]
+  A --> B
+  B -- "否" --> C
+  B -- "是" --> D --> E --> F --> G

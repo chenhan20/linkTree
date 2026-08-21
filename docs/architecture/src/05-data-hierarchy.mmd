@@ -1,0 +1,23 @@
+flowchart TB
+  M["✋ 手寫檔 · 人維護，CI 不碰
+  ─────────────────────
+  data/itt-config.json · ITT 路段定義與配色
+  data/plan.json · 訓練處方與規則引擎
+  data/training-block.json · 訓練週期規劃
+  rides/notes/*.json · 教練評語與標題
+  athlete/*.json · 能力基準與生理常數"]
+  R["📥 原始檔 · 外部來源，只進不改
+  ─────────────────────
+  data/fit/*.fit · Garmin 原始訓練檔
+  data/fit/_wellness.json · 每日 HRV／睡眠／CTL
+  data/fit/_activities.json · intervals.icu 計算欄位
+  data/fit/_power_hr.json · 功率-心率曲線"]
+  G["⚙️ 產生檔 · CI 重算，不要手改
+  ─────────────────────
+  data/itt-segments.json · ITT 成績權威檔
+  rides/*.html · 單日深度報告
+  data/strava.json · 總覽與年度統計
+  data/power-prs.json · 功率 PR 快取"]
+  M -- "處方與路段定義" --> G
+  R -- "Python CI 每日解析" --> G
+  M ~~~ R

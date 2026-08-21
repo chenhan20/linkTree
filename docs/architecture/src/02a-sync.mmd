@@ -1,0 +1,10 @@
+sequenceDiagram
+  autonumber
+  participant A as 🤖 Actions
+  participant I as ⚡ intervals.icu
+  participant F as 📦 data/fit/
+  A->>I: sync-intervals.py<br/>查最近 14 天活動
+  I-->>A: 原始 FIT（gzip）
+  I-->>A: wellness · 活動計算欄位<br/>功率-心率曲線
+  A->>F: 寫入 {date}_{id}.fit
+  A->>F: _wellness.json · _activities.json<br/>_power_hr.json

@@ -22,9 +22,22 @@
 
 整套系統由五大層級構成：**邊緣硬體感測 ➔ 雲端中繼開放 API ➔ GitHub Actions 本機計算 ➔ Git 版本化儲存庫 ➔ GitHub Pages 靜態多重世界呈現**。
 
-### 📊 架構圖 (使用 `beautiful-mermaid` 渲染)
+### 📊 架構圖
 
-![全系統端到端架構圖](docs/architecture/01-system-overview.svg)
+拆成三段，每張都在 GitHub 內文欄的原尺寸內，不必點開放大。
+原始碼在 `docs/architecture/src/*.mmd`，改完跑 `node tools/architecture/render.mjs` 重畫。
+
+**① 資料怎麼進來** —— 從手錶到 CI，全程沒有自架伺服器
+
+![資料採集鏈路](docs/architecture/01a-collect.svg)
+
+**② CI 裡發生什麼** —— 四支腳本依序跑，後面的吃前面的產出
+
+![CI 運算鏈路](docs/architecture/01b-compute.svg)
+
+**③ 怎麼出去** —— push 即部署，前端沒有 build step
+
+![發佈鏈路](docs/architecture/01c-publish.svg)
 
 <details>
 <summary>點擊展開 ASCII / Unicode 終端機純文字圖</summary>
@@ -82,9 +95,25 @@
 
 專案完全摒棄傳統伺服器與資料庫，將排程運算完全交由 GitHub Actions（`.github/workflows/fit-sync.yml`）執行，每天於台灣時間 **10:30 與 22:30** 定時跑批。
 
-### 🔄 管線時序流程圖 (使用 `beautiful-mermaid` 渲染)
+### 🔄 管線時序流程
 
-![每日自動化管線時序圖](docs/architecture/02-data-pipeline.svg)
+原本是一張七個 participant 的時序圖，寬到 1684px。按步驟拆成四張：
+
+**① 同步** —— 抓 FIT 與生理數據
+
+![同步階段](docs/architecture/02a-sync.svg)
+
+**② 產報告** —— 逐秒解析並與課表處方對帳
+
+![報告階段](docs/architecture/02b-reports.svg)
+
+**③ ITT 回補** —— 純本機掃描，不打任何外部 API
+
+![ITT 回補階段](docs/architecture/02c-itt.svg)
+
+**④ 兩階段 commit 與部署**
+
+![提交階段](docs/architecture/02d-commit.svg)
 
 ### 關鍵運作機制
 
@@ -107,9 +136,15 @@
 
 傳統第三方服務（如 Strava）的路段成績配對為付費功能且無法自訂演算法。本專案建置完全去外部依賴的獨立計時引擎（`tools/tcx/segments.py`）。
 
-#### 📐 演算法流程圖 (使用 `beautiful-mermaid` 渲染)
+#### 📐 演算法流程
 
-![自建 ITT 閘門通過計時演算法](docs/architecture/03-itt-algorithm.svg)
+**① 起跑時刻怎麼定** —— 方位角過濾反向路過，多次起跑取最後一次
+
+![ITT 起跑判定](docs/architecture/03a-itt-start.svg)
+
+**② 終點與計分** —— 中途檢查點擋抄捷徑
+
+![ITT 終點與計分](docs/architecture/03b-itt-finish.svg)
 
 #### 核心技術細節
 
@@ -154,9 +189,19 @@
 
 前端全面採用 **原生 HTML5 + Vanilla JS + 現代 CSS 變數**，堅持 **無 Webpack/Vite 等 Build Step**，各世界頁面均可直接以靜態檔案運行。
 
-### 🎨 前端多世界與模組架構圖 (使用 `beautiful-mermaid` 渲染)
+### 🎨 前端多世界與模組架構
 
-![前端多重視覺世界架構圖](docs/architecture/04-frontend-worlds.svg)
+**① 入口與四大世界** —— 每個世界是單一 HTML 檔，互不共用 bundle
+
+![四大視覺世界](docs/architecture/04a-worlds.svg)
+
+**② 共通資料快取** —— 四個世界讀同一批靜態 JSON
+
+![共通資料快取](docs/architecture/04b-shared-data.svg)
+
+**③ 共用互動引擎**
+
+![共用互動引擎](docs/architecture/04c-shared-engines.svg)
 
 ### 四大運動儀表板世界（共享同一份資料庫）
 
@@ -173,9 +218,11 @@
 
 專案資料庫由本機 Git 檔案系統具體實現，明確切割為四種責任階層：
 
-### 📁 資料結構階層圖 (使用 `beautiful-mermaid` 渲染)
+### 📁 資料結構階層圖
 
-![資料結構分類與檔案責任階層圖](docs/architecture/05-data-hierarchy.svg)
+三類檔案的責任邊界。**產生檔不要手改** —— CI 會重算蓋掉。
+
+![資料結構分類與檔案責任](docs/architecture/05-data-hierarchy.svg)
 
 ### 檔案職責清單
 
@@ -214,7 +261,7 @@ linkTree/
 │ 視覺與 3D    │ HTML5 Canvas API, Three.js (r128), CSS3 Transforms                     │
 │ 後端與管線   │ Python 3.12 (fitdecode), Node.js, GitHub Actions                       │
 │ 數據串接     │ intervals.icu Open REST API (Garmin Partner Webhook)                   │
-│ 圖表繪製     │ beautiful-mermaid (Zero-DOM SVG & Unicode ASCII Rendering)             │
+│ 圖表繪製     │ mermaid 11 → headless Chrome → 窄版 SVG (tools/architecture/render.mjs) │
 │ 託管與部署   │ GitHub Pages (Global CDN, 100% 靜態供檔, 零伺服器維護)                 │
 └──────────────┴────────────────────────────────────────────────────────────────────────┘
 ```

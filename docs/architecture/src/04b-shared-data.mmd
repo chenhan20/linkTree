@@ -1,0 +1,19 @@
+flowchart TB
+  subgraph D["共通前端資料快取 · 純靜態 JSON，各世界自行 fetch"]
+    direction TB
+    D1["data/strava.json
+    活動列表 · 年度統計 · PR 快取"]
+    D2["data/itt-segments.json
+    ITT 計時權威檔"]
+    D3["data/fit/_wellness.json
+    HRV · 睡眠 · CTL／ATL · 每日 eFTP"]
+    D4["data/fit/_activities.json
+    EF · Pw:HR 脫鉤 · VI · 左右平衡"]
+    D5["data/fit/_power_hr.json
+    功率-心率曲線 · 4 段 × 91 天"]
+    D6["steve-quotes CDN
+    每日一句哲學語錄"]
+    D1 ~~~ D2 ~~~ D3 ~~~ D4 ~~~ D5 ~~~ D6
+  end
+  V["四大視覺世界"]
+  D6 --> V

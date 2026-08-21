@@ -1,0 +1,14 @@
+flowchart TB
+  IN["🤖 GitHub Actions · Python 3.12"]
+  S1["sync-intervals.py
+  抓 FIT、wellness、活動計算欄位、功率-心率曲線"]
+  S2["build-ride-reports.py
+  → analyze_tcx.py → render_dashboard.py
+  逐秒解析、齒比分布、EF、功率曲線"]
+  S3["backfill-itt-efforts.py
+  → segments.py 自建 ITT 閘門計時"]
+  S4["tag-itt-sources.py
+  標記自建計時 vs Strava 歷史"]
+  OUT["🌿 Git Repository
+  版本化存檔，兩階段 commit 防衝突"]
+  IN --> S1 --> S2 --> S3 --> S4 --> OUT

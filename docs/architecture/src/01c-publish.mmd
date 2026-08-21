@@ -1,0 +1,13 @@
+flowchart TB
+  G["🌿 Git Repository
+  data/ · rides/ · *.html"]
+  P["🌐 GitHub Pages CDN
+  純靜態 · 零後端 · 零 build step"]
+  subgraph O["對外的三個入口"]
+    direction TB
+    H["🏠 linkTreeIndex.html · 入口與導覽"]
+    W["🔭 四大視覺世界 · strava / pitwall / helicorder / opus5"]
+    R["📄 rides/*.html · 單日深度報告，各自獨立可分享"]
+    H ~~~ W ~~~ R
+  end
+  G -- "push 即部署" --> P --> H

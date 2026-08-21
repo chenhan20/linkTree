@@ -1,0 +1,15 @@
+flowchart TB
+  subgraph E["共用互動引擎 · 以 script 標籤直接引入，沒有打包步驟"]
+    direction TB
+    E1["vendor-three-r128.js
+    Three.js 3D 路線地形渲染"]
+    E2["weight-3d.js · weight-bodymap.js
+    InBody 3D 體態與體重趨勢"]
+    E3["activity-modal.js
+    活動分析彈窗與功耗明細"]
+    E4["itt-achievements.js
+    ITT 成就徽章與挑戰晉級"]
+    E1 ~~~ E2 ~~~ E3 ~~~ E4
+  end
+  V["四大視覺世界"]
+  E4 --> V
