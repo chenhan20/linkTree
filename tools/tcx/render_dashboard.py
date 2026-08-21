@@ -534,6 +534,7 @@ footer{color:var(--ink-3);font-size:11.5px;margin-top:56px;padding-top:18px;bord
   <div class="body">
     <div class="dev" id="fit-tiles"></div>
     <div id="fit-lr" class="sub"></div>
+    <div id="fit-gear" class="sub"></div>
     <div id="fit-zones"></div>
   </div>
 </section>
@@ -1104,6 +1105,9 @@ if(REPS){
   const dc=R.hr.decoupling;
   if(dc&&dc.pct!=null) add('心率脫鉤',(dc.pct>0?'+':'')+dc.pct,'%',
     dc.reliable?'前後半 功率/心率 比值變化':'樣本不足，僅供參考');
+  // EF = NP / 平均心率。跟脫鉤放在一起：脫鉤看「這一趟之內」有沒有掉，
+  // EF 看「跟以前比」同樣心率能不能出更多功率。兩個都要同型路線才比得準。
+  if(R.hr.ef!=null) add('效率因子 EF',R.hr.ef.toFixed(2),'','NP ÷ 平均心率 · 同型路線比才準');
   if(R.cadence&&R.cadence.avg) add('平均踏頻',R.cadence.avg,'rpm',
     `最高 ${R.cadence.max} · 有踩踏 ${R.cadence.pedaling_pct}%`);
   if(R.power.np_w) add('NP / 均瓦',R.power.np_w+' / '+Math.round(R.power.avg_w_moving),'W',`VI ${R.power.vi}`);
@@ -1242,6 +1246,58 @@ if(REPS){
        </div>
        <p class="cap">${verdict}。這個數字只有雙邊功率計的原始檔有，Strava 匯出與 TCX 都拿不到。</p>`;
   }
+
+  // 齒比分布。資料來自電子變速的換檔事件（front/rear_gear_change），
+  // 已經在 analyze_tcx 把狀態往後填成時間，這裡只負責畫。
+  (function(){
+    const G = F.gears;
+    const gEl = document.getElementById('fit-gear');
+    if(!G || !G.combos || !G.combos.length){
+      // 沒有齒比資料時要講清楚是「沒有電變」還是「電變沒連上」——
+      // 這兩件事看起來一樣，但只有後者是要去修的。
+      if(F.shifting_seen === false && R.power && R.power.has_power){
+        gEl.innerHTML = `<div class="sub-h"><span class="lab">Gearing</span><h3>齒比分布</h3>
+          <span class="meta">這趟沒有資料</span></div>
+          <p class="cap">這份 FIT 裡沒有任何換檔事件，也沒有變速系統的電池回報 ——
+          錶在這趟完全沒看到電子變速。如果車上有，去錶上的「感測器與配件」確認配對還在。</p>`;
+      }
+      return;
+    }
+    const mmg=s=>{const r=Math.round(s);return Math.floor(r/60)+':'+String(r%60).padStart(2,'0')};
+    const rs=G.combos.map(c=>c.ratio), rMin=Math.min(...rs), rMax=Math.max(...rs);
+    const q=r=>'q'+Math.min(5,Math.max(1,Math.round(1+(r-rMin)/((rMax-rMin)||1)*4)));
+    const top=G.combos.slice(0,10), rest=G.combos.slice(10);
+    const mx=Math.max(...top.map(c=>c.pct));
+    const rows=top.map(c=>
+      `<tr><td class="z"><span class="sw" style="background:var(--${q(c.ratio)})"></span>${c.f}×${c.r}</td>`+
+      `<td class="rg">${c.ratio.toFixed(2)}　${c.dev_m.toFixed(2)} m/圈</td>`+
+      `<td class="tm">${mmg(c.secs)}</td><td class="pc">${c.pct.toFixed(1)}%</td>`+
+      `<td class="bb"><div class="b" style="width:${c.pct/mx*100}%;background:var(--${q(c.ratio)})"></div></td></tr>`
+    ).join('') + (rest.length
+      ? `<tr><td class="z" style="opacity:.6">其餘 ${rest.length} 組</td><td class="rg"></td>`+
+        `<td class="tm">${mmg(rest.reduce((a,c)=>a+c.secs,0))}</td>`+
+        `<td class="pc">${rest.reduce((a,c)=>a+c.pct,0).toFixed(1)}%</td><td class="bb"></td></tr>` : '');
+
+    // 最輕的那一檔如果又待很久、踏頻又低，代表齒比已經見底 —— 這是器材結論，不是體能結論。
+    const easiest = G.combos.reduce((a,c)=>c.ratio<a.ratio?c:a);
+    const notes=[];
+    if(G.combos.length>=5 && easiest.pct>=15 && easiest.avg_cad!=null && easiest.avg_cad<75)
+      notes.push(`最輕的 ${easiest.f}×${easiest.r} 佔了 ${easiest.pct.toFixed(0)}% 的時間、平均踏頻只有 `+
+        `${easiest.avg_cad} rpm —— 已經沒有更輕的檔可以下，爬坡是被齒比卡住而不是被腿卡住。`+
+        `想維持 80+ rpm 要換更大的飛輪或更小的前盤。`);
+    if(G.cross_chain_pct>=8)
+      notes.push(`交叉鏈（大盤配大齒／小盤配小齒）佔 ${G.cross_chain_pct.toFixed(0)}%，傳動效率會掉、鏈條磨得快。`);
+    if(G.coverage_pct!=null && G.coverage_pct<90)
+      notes.push(`第一次換檔之前的 ${(100-G.coverage_pct).toFixed(0)}% 移動時間無從得知檔位，未計入。`);
+
+    gEl.innerHTML =
+      `<div class="sub-h"><span class="lab">Gearing</span><h3>齒比分布</h3>
+         <span class="meta">前 ${G.front_teeth.slice().reverse().join('/')}　飛輪 ${G.rear_teeth[0]}–${G.rear_teeth[G.rear_teeth.length-1]}（${G.rear_teeth.length} 速）</span></div>
+       <p class="cap" style="margin-top:0">換檔 ${G.shifts_front+G.shifts_rear} 次（前 ${G.shifts_front}、後 ${G.shifts_rear}），`+
+      `平均 ${G.shifts_per_hour} 次/小時。下面是<b>待在</b>各檔位的時間，不是切進去的次數 —— 爬坡檔切一次就待很久，兩者差很多。</p>
+       <table class="zt"><tbody>${rows}</tbody></table>`+
+      (notes.length?`<p class="cap">${notes.join('<br>')}</p>`:'');
+  })();
 
   // Garmin 自己算的區間時間（用錶上真正設定的邊界，不是這份腳本推的）
   const mm=s=>{const r=Math.round(s);return Math.floor(r/60)+':'+String(r%60).padStart(2,'0')};

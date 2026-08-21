@@ -121,6 +121,28 @@
 > **但兩者都還沒接到畫面上**，而且本機沒有 API key，是離線單元測試（模擬回應）驗的，
 > 實際 schema 要等第一班 Action 跑完看 `_wellness.json` 才算數。
 > 第 3、4、5 項未動。
+>
+> **落地進度（2026-08-21）**：schema 已由真實資料驗證（374 天 wellness、259 筆活動）。
+>
+> - **wellness 接上畫面了**：`renderReadiness` 側欄 + 趨勢抽屜（`WELLNESS_METRICS`）。
+>   新增 `rampRate` 頁籤（369 天）—— 標成 `neutral`，因為它沒有「越高越好」，
+>   太高是把體能拉太快、太低是在掉，塗好壞色會給錯訊號。
+> - **`_activities.json` 接上畫面了**：`strava.html` 先前一行都沒讀它。現在趨勢抽屜多了
+>   三個「一趟一筆」的指標（`WELLNESS_METRICS[*].src === 'act'`）：
+>   `ef`（EF，76 趟）、`decoupling`（Pw:HR，13 趟）、`lrb`（左右平衡，等下一班同步）。
+>   日軸稀疏，所以平滑窗 28 天、最少樣本數放寬到 3（見 `rollingMean` 的 `minPts`）。
+> - **脫鉤一定要篩 VI**：全部收進來中位數 10.4%、範圍 -64~+59%（畫的是課表結構）；
+>   篩掉 `icu_variability_index > 1.2` 之後中位數 2.9%、範圍 -15~+15%。
+>   常數在 `ACT_STEADY_VI`。**不要拿掉這個篩子**。
+> - **`avg_lr_balance` 加進 `ACTIVITY_FIELDS`**（第 6 節漏掉的欄位，Activity schema 有）。
+>   單日報告的逐秒加權版比它準，這個只用來畫跨趟趨勢。
+>
+> **實測不到的欄位（Garmin 沒餵這個帳號，374 天全 0 筆）**：`readiness`（Body Battery /
+> Training Readiness）、`hrvSDNN`、`avgSleepingHR`、`spO2`、`respiration`。
+> `WELLNESS_FIELDS` 有在要，回來就是空的 —— 這是來源問題不是管線問題，別再查一次。
+> `weight` 只有 5 天、`vo2max` 37 天，都不夠密，W/kg 仍靠手抄基線。
+>
+> 第 3 項（CTL/ATL 序列）等於已由 wellness 涵蓋。第 4、5 項仍未動。
 
 1. sync-intervals.py 加一支 wellness 增量抓取(1 call/日)→ 淘汰 athlete/ 手抄 HRV/體重/FTP,並順手拿到官方 CTL/ATL 序列(問題 1+3 一起解)。
 2. 活動列表 call 加 `fields=`,把 `icu_training_load`、`icu_zone_times`、`icu_intensity`、`icu_pm_ftp`、裝置欄位存進 ride-meta → 報告「強度分布」「四週負荷」「裝置原始數據」有官方對帳源。

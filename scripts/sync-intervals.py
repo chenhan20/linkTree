@@ -158,6 +158,9 @@ ACTIVITY_FIELDS = (
     # 裝置（報告的「裝置原始數據」目前只有 FIT 裡的欄位）
     "device_name", "power_meter", "power_meter_serial", "power_meter_battery",
     "crank_length", "file_type",
+    # 左右功率平衡。單日報告已經從 FIT 逐點自己算了（比這個準），這裡拿官方的
+    # 平均值是為了**總覽層的跨趟趨勢** —— 不必為了畫一條線去解 100 個 FIT。
+    "avg_lr_balance",
     # 只有 intervals 有、FIT 算不出來的
     "icu_joules_above_ftp", "icu_max_wbal_depletion", "icu_hrr", "coasting_time",
 )
@@ -338,6 +341,53 @@ def safe_name(activity: dict) -> str:
     return f"{day}_{aid}_{slug}"
 
 
+# 功率-心率曲線的取樣窗。每段 91 天，往回四段 ≈ 一年。
+# 為什麼要分段而不是拉一條總曲線：這條曲線的價值在**比較**——
+# 同一個功率下心率有沒有下來，才是有氧基礎進步的直接證據。
+# 一條涵蓋一年的曲線把進步和退步平均掉了，什麼都看不出來。
+PHR_WINDOW_DAYS = 91
+PHR_WINDOWS = 4
+
+
+def sync_power_hr() -> int:
+    """athlete 級的功率 vs 心率曲線（每 5W 一桶，回該桶的平均心率、踏頻、累計分鐘）。
+
+    這是 Pw:HR 那條線的正解：逐趟的 decoupling 受課表結構影響太大（要篩 VI 才能看），
+    這個端點是把整段期間的資料重新分桶，地形與課表的影響會被大量樣本稀釋掉。
+
+    跟 wellness 一樣**刻意不讓它擋整班**：FIT 下載才是本業。
+    """
+    path = OUT_DIR / "_power_hr.json"
+    today = date.today()
+    out = {"generated": today.isoformat(), "windows": []}
+    for i in range(PHR_WINDOWS):
+        end = today - timedelta(days=i * PHR_WINDOW_DAYS)
+        start = end - timedelta(days=PHR_WINDOW_DAYS - 1)
+        try:
+            d = _request(
+                f"/athlete/{ATHLETE}/power-hr-curve"
+                f"?start={start.isoformat()}&end={end.isoformat()}"
+            )
+        except Exception as e:  # noqa: BLE001
+            log.warning("power-hr-curve %s~%s 失敗(不影響 FIT 同步): %s", start, end, e)
+            continue
+        if not isinstance(d, dict) or not d.get("bpm"):
+            continue
+        # minutes 為 0 的桶是「那個功率沒騎過」，不是心率 0。留著會把線拉到地板。
+        out["windows"].append({
+            "start": start.isoformat(), "end": end.isoformat(),
+            "bucket": d.get("bucketSize"), "minWatts": d.get("minWatts"),
+            "bpm": d.get("bpm"), "minutes": d.get("minutes"), "cadence": d.get("cadence"),
+            "ftp": d.get("ftp"), "lthr": d.get("lthr"), "max_hr": d.get("max_hr"),
+        })
+    if not out["windows"]:
+        log.warning("power-hr-curve 一段都沒拿到,保留舊檔")
+        return 0
+    path.write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
+    log.info("功率-心率曲線 %d 段 → %s", len(out["windows"]), path.name)
+    return len(out["windows"])
+
+
 # ------------------------------------------------------------ 主流程 ----
 
 
@@ -358,6 +408,9 @@ def sync(backfill_days: int | None = None) -> int:
 
     # 每日身體狀態。放在下載迴圈之前，同理：就算沒有新 FIT 也要更新。
     sync_wellness(oldest, newest)
+
+    # 功率-心率曲線（4 call）。同樣不依賴這次有沒有新 FIT。
+    sync_power_hr()
 
     # DOMS 預估（data/fit/_doms.json）。純衍生資料，只讀 _activities.json，
     # 所以放在 metadata 存檔之後、不依賴這次有沒有下載到新 FIT。算壞了不該擋同步。

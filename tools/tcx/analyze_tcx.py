@@ -136,6 +136,7 @@ def parse_fit(path):
         )
 
     recs, fit_laps, sess, tiz, devices = [], [], None, None, []
+    gear_evs, aux_batt = [], 0
     with fitdecode.FitReader(path) as fr:
         for frame in fr:
             if not isinstance(frame, fitdecode.FitDataMessage):
@@ -152,6 +153,15 @@ def parse_fit(path):
             elif frame.name == "device_info":
                 if d.get("manufacturer"):
                     devices.append(d)
+            elif frame.name == "event":
+                # 電子變速每次換檔寫一筆，且**兩個檔位都帶齊**（不是只帶動的那邊），
+                # 所以單一事件就是完整狀態，不必自己維護前一次的前盤。
+                if "gear_change" in str(d.get("event") or ""):
+                    gear_evs.append(d)
+            elif frame.name == "device_aux_battery_info":
+                # 電變的副電池回報。它跟換檔事件是同生共死的：錶看不到變速系統時
+                # 兩者一起消失，可以用來分辨「沒換檔」與「沒連上」。
+                aux_batt += 1
     if not recs:
         raise SystemExit("FIT 裡沒有 record 訊息，這可能不是活動檔。")
     sess = sess or {}
@@ -223,12 +233,12 @@ def parse_fit(path):
         "sport": (sess.get("sport") or "").title() or None,
         "id": str(sess.get("start_time") or points[0]["t"]),
         "device": dev,
-        "fit": _fit_extras(sess, tiz, points, devices),
+        "fit": _fit_extras(sess, tiz, points, devices, gear_evs, aux_batt),
     }
     return meta, laps, points
 
 
-def _fit_extras(sess, tiz, points, devices):
+def _fit_extras(sess, tiz, points, devices, gear_evs=(), aux_batt=0):
     """只有 FIT 有、TCX 與 Strava API 都拿不到的東西。"""
     tiz = tiz or {}
     lrb = _lrb_right_pct(sess.get("left_right_balance"))
@@ -275,8 +285,110 @@ def _fit_extras(sess, tiz, points, devices):
         "training_load_peak":   sess.get("training_load_peak"),
         "min_temperature":      sess.get("min_temperature"),
         "devices":              sorted({_mfr(d.get("manufacturer")) for d in devices if d.get("manufacturer")}),
+        "gears":                (_gear_report(gear_evs, points)
+                                 if str(sess.get("sport") or "").lower() == "cycling" else None),
+        "shifting_seen":        ((bool(gear_evs) or aux_batt > 0)
+                                 if str(sess.get("sport") or "").lower() == "cycling" else None),
     }
     return {k: v for k, v in ex.items() if v not in (None, [], ())}
+
+
+# 700x25c 的實測滾動周長。只拿來把齒比換算成「踩一圈前進幾公尺」，
+# 換輪換胎頂多差 1~2%，不影響齒比之間的相對關係。
+WHEEL_CIRC_M = 2.105
+
+
+def _gear_report(gear_evs, points):
+    """電子變速的齒比分布。
+
+    FIT 只在**換檔的瞬間**寫事件，中間是沉默的，所以要把狀態往後填到下一次換檔，
+    再用逐點的時間去累積 —— 直接數事件次數只會告訴你「哪一檔最常被切進去」，
+    不是「哪一檔騎最久」，兩者差很多（爬坡檔位切進去就待很久）。
+
+    只累積移動中的時間：停紅燈時掛在哪一檔不是踩踏行為。
+    """
+    if not gear_evs or not points:
+        return None
+    from bisect import bisect_right
+
+    states = []
+    n_front = n_rear = 0
+    for d in gear_evs:
+        ts = d.get("timestamp")
+        f, r = d.get("front_gear"), d.get("rear_gear")
+        if ts is None or not f or not r:
+            continue
+        if ts.tzinfo is None:
+            ts = ts.replace(tzinfo=timezone.utc)
+        if str(d.get("event")) == "front_gear_change":
+            n_front += 1
+        else:
+            n_rear += 1
+        states.append((ts, int(f), int(r)))
+    if len(states) < 2:
+        return None
+    states.sort(key=lambda x: x[0])
+    stimes = [x[0] for x in states]
+
+    acc = {}                       # (front, rear) -> [secs, cad_sec, w_sec, cad_n, w_n]
+    covered = moving = 0.0
+    for i, p in enumerate(points):
+        spd = p.get("spd")
+        if spd is None or spd < 0.5:          # 停著不算
+            continue
+        nxt = points[i + 1]["t"] if i + 1 < len(points) else None
+        dt = min((nxt - p["t"]).total_seconds(), 10.0) if nxt else 1.0
+        if dt <= 0:
+            continue
+        moving += dt
+        j = bisect_right(stimes, p["t"]) - 1
+        if j < 0:                              # 第一次換檔之前無從得知掛哪一檔
+            continue
+        covered += dt
+        _, f, r = states[j]
+        a = acc.setdefault((f, r), [0.0, 0.0, 0.0, 0.0, 0.0])
+        a[0] += dt
+        if p.get("cad"):
+            a[1] += p["cad"] * dt; a[3] += dt
+        if p.get("w"):
+            a[2] += p["w"] * dt;   a[4] += dt
+
+    if not acc or covered <= 0:
+        return None
+
+    fronts = sorted({f for f, _ in acc})
+    rears = sorted({r for _, r in acc})
+    big, small = max(fronts), min(fronts)
+    # 交叉鏈：大盤配最大的兩片、或小盤配最小的兩片。傳動效率差、鏈條磨損快。
+    cross = sum(
+        v[0] for (f, r), v in acc.items()
+        if (f == big and r in sorted(rears)[-2:]) or (f == small and r in sorted(rears)[:2])
+    ) if len(fronts) > 1 else 0.0
+
+    combos = []
+    for (f, r), v in sorted(acc.items(), key=lambda kv: -kv[1][0]):
+        combos.append({
+            "f": f, "r": r,
+            "ratio": round(f / r, 2),
+            "dev_m": round(f / r * WHEEL_CIRC_M, 2),
+            "secs": int(v[0]),
+            "pct": round(v[0] / covered * 100, 1),
+            "avg_cad": round(v[1] / v[3]) if v[3] else None,
+            "avg_w": round(v[2] / v[4]) if v[4] else None,
+        })
+    hours = moving / 3600 or None
+    return {
+        "front_teeth": fronts,
+        "rear_teeth": rears,
+        "shifts_front": n_front,
+        "shifts_rear": n_rear,
+        "shifts_per_hour": round((n_front + n_rear) / hours) if hours else None,
+        "coverage_pct": round(covered / moving * 100, 1) if moving else None,
+        "cross_chain_pct": round(cross / covered * 100, 1) if cross else 0.0,
+        "combos": combos,
+        "ratio_range": [combos and min(c["ratio"] for c in combos),
+                        combos and max(c["ratio"] for c in combos)],
+    }
 
 
 def parse_ride(path):
@@ -706,6 +818,10 @@ def analyze(path, ftp=None, weight=None, height=None, age=None, maxhr=None,
         },
         "hr": {"avg": avg_hr, "max": max_hr_obs,
                "pct_of_max": round(avg_hr / maxhr * 100) if (avg_hr and maxhr) else None,
+               # EF（效率因子）＝ NP ÷ 平均心率。同一個人、同一種地形下，
+               # 這個數字往上走＝同樣心率能出更多功率，是有氧基礎進步最直接的證據。
+               # 跨地形／跨天氣比沒有意義，所以趨勢要看同型路線。
+               "ef": round(np_w / avg_hr, 3) if (np_w and avg_hr) else None,
                "decoupling": decoupling([p for p, m in zip(pts, mask) if m])},
         "cadence": {"avg": avg_cad, "max": max(cad_vals) if cad_vals else None,
                     "pedaling_pct": pedal_pct},

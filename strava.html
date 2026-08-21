@@ -10258,6 +10258,24 @@ const WELLNESS_METRICS = {
   eftp:      { zh: 'eFTP',     en: 'ESTIMATED FTP', unit: 'W', better: 'high',
                fmt: v => String(Math.round(v)), disp: v => Math.round(v),
                note: 'intervals.icu 從實際功率資料反推的 FTP，不是測出來的。它會慢慢跟著騎乘紀錄漂移，所以看的是月與月之間的走向，不是單日跳動。' },
+  rampRate:  { zh: '負荷爬升', en: 'RAMP RATE',  unit: '/週', better: 'high', neutral: true,
+               fmt: v => { const t = +v.toFixed(1); return (t > 0 ? '+' : '') + t.toFixed(1) },
+               afmt: v => v.toFixed(1), disp: v => +v.toFixed(1),
+               note: 'CTL 一週的變化量，intervals.icu 直接給的。這是受傷風險最直接的單一數字：長期壓在 +5~+8 以上是把體能拉太快，長期負值代表在掉。它跟 CTL 的差別是「速度 vs 高度」—— CTL 說你現在在哪，這個說你正用多快的速度往那裡去。' },
+  // ↓ 以下三個來自 _activities.json，一趟一筆（不是每天），所以平滑窗要拉寬。
+  ef:        { zh: '效率因子', en: 'EFFICIENCY FACTOR', unit: '', better: 'high', src: 'act', per: '趟',
+               win: 28, winLong: 90,
+               fmt: v => v.toFixed(2), disp: v => +v.toFixed(2),
+               note: 'NP ÷ 平均心率。同樣心率能出更多功率＝有氧基礎在進步，這是驗證 Base 期最客觀的數字。但它對地形與天氣很敏感：爬坡日和平路日不能直接比，要看的是幾個月的重心有沒有往上移。' },
+  decoupling:{ zh: 'Pw:HR 脫鉤', en: 'AEROBIC DECOUPLING', unit: '%', better: 'low', src: 'act', per: '趟',
+               win: 28, winLong: 90, steadyOnly: true,
+               fmt: v => { const t = +v.toFixed(1); return (t > 0 ? '+' : '') + t.toFixed(1) },
+               afmt: v => v.toFixed(1), disp: v => +v.toFixed(1),
+               note: '後半段的功率/心率比值相對前半段掉了多少。只收 VI ≤ 1.2 的穩定趟 —— 全部收進來的話中位數是 10.4%、範圍 -64~+59%，那反映的是課表結構不是有氧耐力；篩過之後中位數 2.9%、範圍 -15~+15%，才是能讀的數字。一般認為穩定有氧騎低於 5% 代表有氧基礎撐得住。' },
+  lrb:       { zh: '左右平衡', en: 'L/R BALANCE', unit: '% 右', better: 'high', src: 'act', per: '趟',
+               win: 28, winLong: 90,
+               fmt: v => v.toFixed(1), disp: v => +v.toFixed(1),
+               note: '整趟的右腳功率佔比，50 就是完全對稱。單日報告裡有更準的逐秒加權版本，這裡放的是跨趟趨勢：偏一側本身不一定是問題，但「持續往同一邊漂」值得看 bike fit 或查有沒有舊傷。' },
   sleepSecs: { zh: '睡眠',     en: 'SLEEP',      unit: '',    better: 'high',
                // 先取整到分再拆時分。先拆再 round 的話 3599 秒會變成 "0:60"（實際踩過）
                fmt: v => { const t = Math.round(v / 60); return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}` },
@@ -10267,11 +10285,44 @@ const WELLNESS_METRICS = {
 const WELLNESS_RANGES = [30, 90, 365]
 let _wellnessRange = 90
 
+/* 活動來源的指標（_activities.json）：一趟一筆，不是一天一筆。
+   同一天騎兩趟就取訓練負荷高的那筆 —— 主課表才是那天的代表，
+   通勤或熱身趟會把數字往下拉。只收騎乘（重訓沒有功率、跑步的 EF 不同尺度）。
+
+   VI ≤ 1.2 的篩子只給脫鉤用，理由寫在 WELLNESS_METRICS.decoupling.note：
+   不篩的話那條線畫的是課表結構，不是有氧耐力。 */
+const ACT_FIELD = { ef: 'icu_efficiency_factor', decoupling: 'decoupling', lrb: 'avg_lr_balance' }
+const ACT_STEADY_VI = 1.2
+
+function activityDayMap(key) {
+  const A = window._activities
+  const field = ACT_FIELD[key]
+  if (!A || !field) return {}
+  const steadyOnly = !!(WELLNESS_METRICS[key] && WELLNESS_METRICS[key].steadyOnly)
+  const out = {}
+  Object.values(A).forEach(a => {
+    if (!a || (a.type !== 'Ride' && a.type !== 'VirtualRide')) return
+    const v = a[field]
+    if (v == null) return
+    if (steadyOnly && !(a.icu_variability_index != null && a.icu_variability_index <= ACT_STEADY_VI)) return
+    const d = String(a.start_date_local || '').slice(0, 10)
+    if (d.length !== 10) return
+    const tl = a.icu_training_load || 0
+    if (!out[d] || tl > out[d][1]) out[d] = [v, tl]
+  })
+  return Object.fromEntries(Object.entries(out).map(([d, [v]]) => [d, v]))
+}
+
 /** [date, value] 序列，含缺值的日子（值為 null），這樣線才斷得掉。 */
 function wellnessSeries(key, nDays) {
   const w = window._wellness
   if (!w) return []
   const days = wellnessDays(w).slice(-nDays)
+  const m = WELLNESS_METRICS[key]
+  if (m && m.src === 'act') {
+    const map = activityDayMap(key)
+    return days.map(d => [d, map[d] != null ? map[d] : null])
+  }
   // eFTP 不在頂層，躺在 sportInfo 陣列裡那筆 type==='Ride' 的物件上
   const pick = d => {
     const rec = w[d]
@@ -10286,10 +10337,11 @@ function wellnessSeries(key, nDays) {
 }
 
 /** 只用有值的日子算移動平均；連續缺值就不給平均，不要拿舊值硬撐。 */
-function rollingMean(series, win) {
+function rollingMean(series, win, minPts) {
+  const need = minPts || Math.ceil(win / 2)
   return series.map((_, i) => {
     const slice = series.slice(Math.max(0, i - win + 1), i + 1).map(p => p[1]).filter(v => v != null)
-    return slice.length >= Math.ceil(win / 2) ? slice.reduce((a, b) => a + b, 0) / slice.length : null
+    return slice.length >= need ? slice.reduce((a, b) => a + b, 0) / slice.length : null
   })
 }
 
@@ -10425,7 +10477,8 @@ function wellnessPlot(series, avg, m, band, nDays, gaps) {
   <div class="wl-axis">${axis}</div>`
 }
 
-const BODY_METRICS = ['hrv', 'restingHR', 'sleepSecs', 'sleepScore', 'eftp']
+const BODY_METRICS = ['hrv', 'restingHR', 'sleepSecs', 'sleepScore', 'eftp',
+                      'rampRate', 'ef', 'decoupling', 'lrb']
 let _bodyMetric = 'hrv'
 
 function wellnessPanel(key) {
@@ -10435,7 +10488,9 @@ function wellnessPanel(key) {
   const series = wellnessSeries(key, n)
   const vals = series.map(p => p[1]).filter(v => v != null)
   if (!vals.length) return '<div class="nil">還沒有這個指標的資料。</div>'
-  const avg7 = rollingMean(series, 7)
+  // 一趟一筆的指標（EF、脫鉤、左右平衡）在日軸上是稀疏的，窗要拉寬、門檻要放低
+  const W1 = m.win || 7, W2 = m.winLong || 28
+  const avg7 = rollingMean(series, W1, m.src === 'act' ? 3 : undefined)
   // 基準帶只給 HRV 與靜息心率：那兩個的判讀方式就是「相對自己平常」。
   // 睡眠時數、分數、eFTP 有絕對意義（睡 8 小時就是比 4 小時好），畫帶子只會多一層雜訊。
   const band = (key === 'hrv' || key === 'restingHR') ? rollingBand(series, 60) : null
@@ -10450,40 +10505,43 @@ function wellnessPanel(key) {
   const loDate = (series.find(p => p[1] === lo) || [])[0]
   const hiDate = (series.find(p => p[1] === hi) || [])[0]
   const missing = series.length - vals.length
-  const gaps = nullRuns(series, 3)
+  const gaps = m.src === 'act' ? [] : nullRuns(series, 3)
   const gapDays = gaps.reduce((n, [a, b]) => n + (b - a + 1), 0)
   const md = d => d ? d.slice(5).replace('-', '/') : '—'
   // 「好」的方向不同：靜息越低越好、HRV 與睡眠越高越好。
   // 所以箭頭方向講的是數值升降，顏色講的是好壞 —— 靜息往下是綠色的 ▼，這是對的。
   // 差距一律用「四捨五入到顯示精度之後」的值去算。拿原始值算的話 HRV 兩格都印 55、
   // 箭頭卻寫 ▼ 1（實際踩過：原始差 -0.7）。箭頭必須跟它上面那兩格永遠對得起來。
-  const d7 = tailMean(7), d28 = tailMean(28)
+  const d7 = tailMean(W1), d28 = tailMean(W2)
   const delta = (d7 != null && d28 != null && m.disp(d7) !== m.disp(d28))
     ? m.disp(d7) - m.disp(d28) : null
-  const good = delta == null ? null : (m.better === 'low' ? delta < 0 : delta > 0)
+  // 中性指標（負荷爬升）不塗好壞色：太高是把體能拉太快、太低是在掉，兩邊都不是「好」
+  const good = (delta == null || m.neutral) ? null : (m.better === 'low' ? delta < 0 : delta > 0)
   const stat = (k, v, sub) => `<div class="wl-st"><span>${k}</span><b>${v}</b>${sub ? `<em>${sub}</em>` : ''}</div>`
 
   return `
     <div class="wl-now">
       <b>${m.fmt(latest[1])}</b>${m.unit ? `<u>${m.unit}</u>` : ''}
       <span>${md(latest[0])}${delta == null ? '' :
-        ` · 近 7 天比近 28 天 <i class="${good ? 'good' : 'bad'}">${delta > 0 ? '▲' : '▼'} ${m.fmt(Math.abs(delta))}</i>`}</span>
+        ` · 近 ${W1} 天比近 ${W2} 天 <i class="${good == null ? '' : good ? 'good' : 'bad'}">${delta > 0 ? '▲' : '▼'} ${(m.afmt || m.fmt)(Math.abs(delta))}</i>`}</span>
     </div>
     <div class="wl-tabs" role="tablist">
       ${WELLNESS_RANGES.map(r => `<button class="wl-tab${r === n ? ' on' : ''}" type="button"
         data-wlrange="${r}" role="tab" aria-selected="${r === n}">${r} 天</button>`).join('')}
     </div>
     ${wellnessPlot(series, avg7, m, band, n, gaps)}
-    <div class="wl-legend"><i class="raw"></i>每日<i class="avg"></i>7 日平均${
+    <div class="wl-legend"><i class="raw"></i>${m.src === 'act' ? '每趟' : '每日'}<i class="avg"></i>${W1} 日平均${
       bNow ? '<i class="band"></i>個人基準帶 ' + m.fmt(bNow[0]) + '~' + m.fmt(bNow[1]) : ''}${
       gaps.length ? '<i class="gap"></i>無資料' : ''}</div>
     <div class="wl-stats">
-      ${stat('近 7 天', d7 == null ? '—' : m.fmt(d7))}
-      ${stat('近 28 天', d28 == null ? '—' : m.fmt(d28))}
-      ${stat(m.better === 'low' ? '最低（最好）' : '最低', m.fmt(lo), md(loDate))}
-      ${stat(m.better === 'low' ? '最高' : '最高（最好）', m.fmt(hi), md(hiDate))}
+      ${stat(`近 ${W1} 天`, d7 == null ? '—' : m.fmt(d7))}
+      ${stat(`近 ${W2} 天`, d28 == null ? '—' : m.fmt(d28))}
+      ${stat(m.neutral ? '最低' : m.better === 'low' ? '最低（最好）' : '最低', m.fmt(lo), md(loDate))}
+      ${stat(m.neutral ? '最高' : m.better === 'low' ? '最高' : '最高（最好）', m.fmt(hi), md(hiDate))}
     </div>
-    <div class="wl-note">${m.note}${missing ? `<br>這 ${n} 天裡有 <b>${missing}</b> 天沒有資料，線是斷開的${
+    <div class="wl-note">${m.note}${m.src === 'act'
+      ? `<br>這 ${n} 天裡有 <b>${vals.length}</b> 趟符合條件的騎乘。沒有值的日子是沒騎（或不符條件），不是缺資料。`
+      : ''}${(missing && m.src !== 'act') ? `<br>這 ${n} 天裡有 <b>${missing}</b> 天沒有資料，線是斷開的${
       gaps.length ? `；其中 <b>${gapDays}</b> 天落在 ${gaps.length} 段連續三天以上的空窗，圖上用灰底標出來 —— 空窗結束後那幾天的 7 日平均只有零星幾筆撐著，別當成趨勢讀` : ''}。` : ''}</div>`
 }
 
@@ -10572,6 +10630,92 @@ function domsPanel() {
   </div>`
 }
 
+/* ══ 功率-心率曲線 ═══════════════════════════════════════════════════════
+   Pw:HR 的正解。逐趟的 decoupling 受課表結構影響太大（所以 WELLNESS_METRICS
+   那邊要篩 VI ≤ 1.2 才敢畫），這裡是把整段 91 天的資料**依功率重新分桶**，
+   地形、天氣、課表結構的影響被大量樣本稀釋掉。
+
+   判讀只有一句話：同一個功率，線越低代表心率越低＝有氧基礎越好。
+   四條線疊在一起就是「這一年到底有沒有進步」的直接答案。 */
+const PHR_MIN_MIN = 5      // 桶內累計不足 5 分鐘就是雜訊，不畫
+const PHR_MIN_W = 100      // 100W 以下多半是滑行與紅燈，心率跟功率沒有關係
+
+function powerHrPanel() {
+  const D = window._powerHr
+  if (!D || !Array.isArray(D.windows) || !D.windows.length) return ''
+  // 舊 → 新，這樣最新那條畫在最上層
+  const ws = D.windows.slice().sort((a, b) => a.start < b.start ? -1 : 1)
+  const pts = w => {
+    const out = []
+    for (let i = 0; i < w.bpm.length; i++) {
+      const watts = w.minWatts + i * w.bucket
+      if (watts < PHR_MIN_W || !(w.minutes[i] >= PHR_MIN_MIN) || !w.bpm[i]) continue
+      out.push([watts, w.bpm[i]])
+    }
+    return out
+  }
+  const series = ws.map(w => ({ w, p: pts(w) })).filter(x => x.p.length >= 4)
+  if (series.length < 1) return ''
+  const all = series.flatMap(x => x.p)
+  const wLo = Math.min(...all.map(p => p[0])), wHi = Math.max(...all.map(p => p[0]))
+  const bLo = Math.min(...all.map(p => p[1])), bHi = Math.max(...all.map(p => p[1]))
+  const W = 820, H = 190, PAD = 6
+  const X = v => ((v - wLo) / ((wHi - wLo) || 1) * W).toFixed(1)
+  const Y = v => (H - (v - (bLo - PAD)) / ((bHi - bLo + PAD * 2) || 1) * H).toFixed(1)
+  const line = p => p.map((q, i) => (i ? 'L' : 'M') + X(q[0]) + ' ' + Y(q[1])).join(' ')
+  const md = d => d.slice(2, 7).replace('-', '/')
+
+  // 最新 vs 最舊：只比兩邊都有足夠樣本的功率桶，否則是拿不同的功率區間互比
+  const a = series[0], b = series[series.length - 1]
+  const mapB = new Map(b.p)
+  const common = a.p.filter(q => mapB.has(q[0]))
+  const diff = common.length >= 6
+    ? common.reduce((s, q) => s + (mapB.get(q[0]) - q[1]), 0) / common.length : null
+
+  // 顏色沿用 wellness 圖的金：DESIGN.md 把金綁在「時數／HR」維度上，這條線也是心率衍生，
+  // 不是新維度所以不新增顏色。舊的窗用透明度往後退，最新那條用實心 wl-avg 的粗細。
+  const fade = i => (0.22 + i * 0.2).toFixed(2)
+  const paths = series.map((x, i) => {
+    const last = i === series.length - 1
+    return `<path class="${last ? 'wl-avg' : 'wl-raw'}" d="${line(x.p)}" fill="none"
+      stroke-linejoin="round"${last ? '' : ` opacity="${fade(i)}"`}/>`
+  }).join('')
+  const legend = series.map((x, i) => {
+    const last = i === series.length - 1
+    return `<span style="opacity:${last ? 1 : fade(i)}"><i class="${last ? 'avg' : 'raw'}"></i>${
+      md(x.w.start)}–${md(x.w.end)}</span>`
+  }).join('')
+  const ticks = []
+  for (let v = Math.ceil(wLo / 50) * 50; v <= wHi; v += 50) ticks.push(v)
+
+  return `<div class="block wl-panel">
+    <div class="section-title">功率-心率曲線 <span class="muted">· Power vs HR · 每 ${ws[0].bucket}W 一桶</span></div>
+    <div class="wl-now"><b>${diff == null ? '—' : (diff > 0 ? '+' : '') + diff.toFixed(1)}</b><u>bpm</u>
+      <span>最近 91 天比一年前同期，同功率下的平均心率${
+        diff == null ? '' : diff < -2 ? ' · <i class="good">有氧基礎在進步</i>'
+        : diff > 2 ? ' · <i class="bad">同功率心率變高了</i>' : ' · 幾乎沒有變化'}</span></div>
+    <div class="wl-plot">
+      <svg class="wl-chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">
+        ${ticks.map(v => `<line class="wl-grid" x1="${X(v)}" x2="${X(v)}" y1="0" y2="${H}"/>`).join('')}
+        ${paths}
+      </svg>
+    </div>
+    <div class="wl-axis">${ticks.map(v =>
+      `<i style="left:${X(v) / W * 100}%"></i><span style="left:${X(v) / W * 100}%">${v}W</span>`).join('')}</div>
+    <div class="wl-legend">${legend}</div>
+    <div class="wl-stats">
+      ${series.slice(-1).map(x => `<div class="wl-st"><span>心率範圍</span><b>${
+        Math.min(...x.p.map(q => q[1]))}–${Math.max(...x.p.map(q => q[1]))}</b><em>bpm</em></div>`).join('')}
+      <div class="wl-st"><span>功率範圍</span><b>${wLo}–${wHi}</b><em>W</em></div>
+      <div class="wl-st"><span>比較的功率桶</span><b>${common.length}</b><em>兩期都有樣本</em></div>
+      <div class="wl-st"><span>LTHR / FTP</span><b>${ws[ws.length - 1].lthr || '—'} / ${ws[ws.length - 1].ftp || '—'}</b><em>bpm / W</em></div>
+    </div>
+    <div class="wl-note">同一個功率，線越低＝心率越低＝有氧基礎越好。這條比逐趟的 Pw:HR 脫鉤可靠：
+      整段 91 天依功率重新分桶，地形與課表結構的影響被樣本量稀釋掉了。
+      只畫 ≥${PHR_MIN_W}W、且該桶累計 ≥${PHR_MIN_MIN} 分鐘的點 —— 低功率多半是滑行與紅燈，心率跟功率沒有關係。</div>
+  </div>`
+}
+
 function renderBodyView() {
   // 痠痛跟 wellness 是兩份檔案，缺一份不該讓另一份跟著消失
   if (!window._wellness) return domsPanel() || '<div class="nil">還沒有 wellness 資料。</div>'
@@ -10583,11 +10727,12 @@ function renderBodyView() {
     const days = wellnessSeries(k, 9999).filter(p => p[1] != null).length
     return `<button class="wl-mtab${k === _bodyMetric ? ' on' : ''}" type="button"
       data-bodymetric="${k}" role="tab" aria-selected="${k === _bodyMetric}">
-      ${m.zh}<em>${days} 天</em></button>`
+      ${m.zh}<em>${days} ${m.per || '天'}</em></button>`
   }).join('')
   return domsPanel()
     + `<div class="wl-mtabs" id="body-tabs" role="tablist" aria-label="身體指標">${tabs}</div>
     <div class="block wl-panel" id="body-panel">${wellnessPanel(_bodyMetric)}</div>`
+    + powerHrPanel()
 }
 
 /** 週期進度 + 下一課。沒有 training-block.json 就整塊不出現。 */
@@ -10875,11 +11020,19 @@ Promise.all([
   fetchData('data/fit/_wellness.json').then(r => r.ok ? r.json() : null).catch(() => null),
   // 痠痛預估（scripts/doms.py 在每次 fit sync 之後重算）。純衍生資料，缺檔就整塊不顯示。
   fetchData('data/fit/_doms.json').then(r => r.ok ? r.json() : null).catch(() => null),
+  // 逐活動的 intervals.icu 計算欄位（EF、Pw:HR 脫鉤、VI、左右平衡…）。
+  // sync-intervals.py 從 2026-08-13 起每班都在寫，但這一頁到 2026-08-21 為止一行都沒讀。
+  // 缺檔就回 null → 只有那幾個指標的頁籤不出現，其他不受影響。
+  fetchData('data/fit/_activities.json').then(r => r.ok ? r.json() : null).catch(() => null),
+  // athlete 級的功率-心率曲線，一段 91 天、往回四段（scripts/sync-intervals.py 的 sync_power_hr）。
+  fetchData('data/fit/_power_hr.json').then(r => r.ok ? r.json() : null).catch(() => null),
 ])
-  .then(([data, ittConfig, segStreams, segTerrain, landmarks, rivals, taipeiOutline, quotesData, trainingBlock, ittSegments, wellness, doms]) => {
+  .then(([data, ittConfig, segStreams, segTerrain, landmarks, rivals, taipeiOutline, quotesData, trainingBlock, ittSegments, wellness, doms, activities, powerHr]) => {
     mergeIttSegments(data, ittSegments)
     window._wellness = wellness || null
     window._doms = doms || null
+    window._activities = activities || null
+    window._powerHr = powerHr || null
     // 建立 SEG_META lookup，下面 renderSegments 用
     // _idx = itt-config.json 裡的排列順序（全段 → 1/4 → 2/4 …）。
     // 物件的數字字串鍵會被引擎重排成遞增，所以順序一定要自己存，不能靠 Object.keys。
