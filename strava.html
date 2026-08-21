@@ -4093,20 +4093,25 @@ function renderTrainingBlock(data) {
     </div>`
 }
 
-/* ── 節奏：日曆熱圖（每一天）＋ 本週/本月矩陣，合成一章 ─────────────
-   這兩塊原本是兩章，但它們是同一個問題的兩種放大倍率：日曆答「哪幾天有練」，
-   矩陣答「這週這個月夠不夠」。拆兩章等於把同一段時間切兩刀，捲兩屏才看得完。
-   由粗到細擺不對 —— 先看每一天的分布，再收斂到本週本月的達標，才是自然的閱讀順序。 */
-function renderRhythm(data) {
+/* ── 節奏：日曆熱圖與本週/本月矩陣 ────────────────────────────────
+   2026-08-21 之前這兩塊合成一章、都住在「計畫」view，理由是同一段時間的兩種
+   放大倍率。實際使用下來不成立：日曆是「我這陣子到底有沒有在動」，屬於現況；
+   矩陣是「這週這個月對不對得起課表」，屬於計畫。前者每天都想看一眼、後者一週看一次，
+   頻率差一個量級，綁在一起等於把高頻的東西藏在低頻的頁籤後面。
+
+   所以拆成兩支：日曆搬到 #overview 當門面（GitHub 貢獻圖那個位置），
+   矩陣留在 #plan 跟週期作伴。兩支都自帶 .console 框，不共用外層。 */
+function renderRhythmCalendar(data) {
   const cal = renderTrainingCalendar(data)
-  const tb  = renderTrainingBlock(data)
-  if (!cal && !tb) return ''
-  const parts = []
-  if (cal) parts.push(cal)
-  if (cal && tb) parts.push('<div class="console-tape"></div>')
-  if (tb) parts.push('<div class="sub-label">本週 × 本月 <span>THIS WEEK × MONTH</span></div>' + tb)
+  if (!cal) return ''
   return '<div class="section-title">節奏 <span class="muted">· RHYTHM</span></div>' +
-    `<div class="rh console">${parts.join('')}</div>`
+    `<div class="rh console">${cal}</div>`
+}
+function renderRhythm(data) {
+  const tb = renderTrainingBlock(data)
+  if (!tb) return ''
+  return '<div class="section-title">本週 × 本月 <span class="muted">· THIS WEEK × MONTH</span></div>' +
+    `<div class="rh console">${tb}</div>`
 }
 
 /* ── 週期：手寫課表 vs FIT 實際值 ──────────────────────────────────
@@ -4535,8 +4540,8 @@ function initTrainingCalendarNav() {
   }
   requestAnimationFrame(() => { toEnd(); requestAnimationFrame(toEnd) })
   setTimeout(toEnd, 300)
-  // Plan view 一開始是 display:none，scrollWidth 量到 0 → 捲不到今天。
-  // 所以把「捲到底」開出去，view 真的顯示出來的那一刻再補一次。
+  // view 一開始是 display:none，scrollWidth 量到 0 → 捲不到今天。
+  // 所以把「捲到底」開出去，view 真的顯示出來的那一刻再補一次（見 setView）。
   window.__tcalRefresh = () => { toEnd(); requestAnimationFrame(toEnd) }
 }
 
@@ -8262,6 +8267,7 @@ function render(data) {
       ${viewH('現況', 'Overview', `${tY} SEASON`)}
       <div id="rdy-mobile"></div>
       <div class="block">${seasonHtml}</div>
+      ${renderRhythmCalendar(data)}
       ${blockHtml}
       ${weekHtml}
       ${attnHtml}
@@ -8272,8 +8278,9 @@ function render(data) {
 
     <section class="view" data-view="plan">
       ${viewH('計畫', 'Plan', blkWin)}
-      <p class="view-sub">週期是「接下來四週要做什麼」，節奏是「這段時間到底練了多少」。
-        兩者都對照手寫課表（data/training-block.json），計算方式沒有改變。</p>
+      <p class="view-sub">週期是「接下來四週要做什麼」，本週 × 本月是「到目前為止對不對得起它」。
+        兩者都對照手寫課表（data/training-block.json），計算方式沒有改變。
+        逐日的訓練日曆搬到<b>現況</b>了 —— 那是每天看一眼的東西。</p>
       ${renderMesocycle(blk) || '<div class="nil">目前沒有進行中的訓練週期。</div>'}
       ${renderRhythm(data)}
     </section>
@@ -10901,8 +10908,10 @@ function setView(name, opts) {
   if (v === 'itt') mountItt()
   // 地圖：ride-atlas.json 有 1.25 MB，同樣是進到這個 view 才載入
   if (v === 'atlas') mountAtlas()
-  // 隱藏的窗格量不到寬度：日曆要在真的顯示之後才捲得到「今天」
-  if (v === 'plan' && typeof window.__tcalRefresh === 'function') window.__tcalRefresh()
+  // 隱藏的窗格量不到寬度：日曆要在真的顯示之後才捲得到「今天」。
+  // 2026-08-21 日曆從 plan 搬到 overview，這條跟著搬 —— 忘了改的話進站
+  // 看到的會是最舊的那幾週，今天在畫面外，而且不會有任何錯誤訊息。
+  if (v === 'overview' && typeof window.__tcalRefresh === 'function') window.__tcalRefresh()
 }
 
 let _ittMounted = false
