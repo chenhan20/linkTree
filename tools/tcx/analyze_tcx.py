@@ -189,6 +189,24 @@ def parse_fit(path):
         })
     points.sort(key=lambda p: p["t"])
 
+    # 把換檔事件往後填成「每一點掛在哪一檔」。FIT 只在換檔那一瞬間寫事件，中間是
+    # 沉默的 —— 不填的話逐點資料裡根本沒有檔位這個欄位，也就畫不出隨路線變化的軌跡。
+    # 第一次換檔之前一律留空（那時候掛哪一檔無從得知），不要用第一筆往前補。
+    _gs = []
+    for _d in gear_evs:
+        _ts, _f, _r = _d.get("timestamp"), _d.get("front_gear"), _d.get("rear_gear")
+        if _ts is None or not _f or not _r:
+            continue
+        _gs.append((_ts if _ts.tzinfo else _ts.replace(tzinfo=timezone.utc), int(_f), int(_r)))
+    _gs.sort(key=lambda x: x[0])
+    if _gs:
+        _k = 0
+        for p in points:
+            while _k + 1 < len(_gs) and _gs[_k + 1][0] <= p["t"]:
+                _k += 1
+            if _gs[_k][0] <= p["t"]:
+                p["gf"], p["gr"] = _gs[_k][1], _gs[_k][2]
+
     # lap 的起訖用時間戳對回 points，避免依賴訊息順序
     ptimes = [p["t"] for p in points]
     laps = []
@@ -1076,10 +1094,15 @@ def training_quality(blocks, total_moving):
     }
 
 
-def chart_series(path, target_points=480):
+def chart_series(path, target_points=480, gear_min_w=150.0):
     """輸出畫圖用的降採樣序列：[距離km, 海拔m, 功率W, 心率bpm]，外加每個分圈的距離區間。
 
     功率／心率先做 45 秒平滑，否則逐秒噪訊會讓折線變成一團毛球。
+
+    另外輸出**齒比軌跡**（gear_runs）：只保留「有在出力」的區段。整趟不篩的話，
+    滑行、紅燈、下坡全部混進來，畫出來像一直在換檔，其實是在放空 —— 而這張圖要
+    回答的是「他是一直加重，還是掛最輕一路磨」，那只有出力的時候才算數。
+    門檻用**平滑後**的功率（逐秒原始值會把同一段路切成幾十截）。
     """
     meta, laps, raw = parse_ride(path)
     pts = resample_1hz(raw)
@@ -1094,8 +1117,38 @@ def chart_series(path, target_points=480):
             for i in range(0, n, step)]
     prof.append([round(dist[-1], 3), round(alt[-1], 1), round(pw[-1]), round(hr[-1])])
     lap_km = [[round(dist[l["i0"]], 2), round(dist[min(l["i1"], n - 1)], 2)] for l in laps]
-    return {"profile": prof, "lap_km": lap_km,
-            "sport": meta.get("sport"), "total_km": round(dist[-1], 2)}
+
+    # ── 齒比軌跡：連續「有出力且同一檔」的區段，每段一筆 [起km, 迄km, 前盤, 飛輪] ──
+    runs, cur = [], None
+    moving = loaded = 0
+    for i, p in enumerate(pts):
+        if p.get("_gap"):
+            continue
+        moving += 1
+        key = (p.get("gf"), p.get("gr")) if (p.get("gr") and pw[i] >= gear_min_w) else None
+        if key:
+            loaded += 1
+        if cur is not None and cur[2] == key:
+            cur[1] = dist[i]
+        else:
+            if cur is not None and cur[2] is not None and cur[1] > cur[0]:
+                runs.append([round(cur[0], 3), round(cur[1], 3), cur[2][0], cur[2][1]])
+            cur = [dist[i], dist[i], key]
+    if cur is not None and cur[2] is not None and cur[1] > cur[0]:
+        runs.append([round(cur[0], 3), round(cur[1], 3), cur[2][0], cur[2][1]])
+
+    out = {"profile": prof, "lap_km": lap_km,
+           "sport": meta.get("sport"), "total_km": round(dist[-1], 2)}
+    if runs:
+        out["gear"] = {
+            "runs": runs,
+            "cogs": sorted({r[3] for r in runs}),
+            "rings": sorted({r[2] for r in runs}),
+            "min_w": gear_min_w,
+            # 出力時間佔移動時間多少 —— 低於一半的話這張圖只代表一小段路，要講出來
+            "load_pct": round(loaded / moving * 100, 1) if moving else None,
+        }
+    return out
 
 
 def main():

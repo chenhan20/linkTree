@@ -179,6 +179,7 @@ h1{font-size:34px;font-weight:700;letter-spacing:-.024em;line-height:1.16;margin
  .g2>div+div{border-left:0;padding-left:0;border-top:1px solid var(--rule);padding-top:30px}}
 
 svg{display:block;width:100%;height:auto;overflow:visible}
+#c-gear{margin-top:14px}
 svg text{font-family:var(--mono);letter-spacing:.02em}
 .legend{display:flex;gap:18px;flex-wrap:wrap;font-size:11.5px;color:var(--ink-2);margin-bottom:12px;
  font-variant-numeric:tabular-nums}
@@ -1296,7 +1297,78 @@ if(REPS){
        <p class="cap" style="margin-top:0">換檔 ${G.shifts_front+G.shifts_rear} 次（前 ${G.shifts_front}、後 ${G.shifts_rear}），`+
       `平均 ${G.shifts_per_hour} 次/小時。下面是<b>待在</b>各檔位的時間，不是切進去的次數 —— 爬坡檔切一次就待很久，兩者差很多。</p>
        <table class="zt"><tbody>${rows}</tbody></table>`+
+      (CH.gear ? `<svg id="c-gear" viewBox="0 0 960 190"></svg>
+         <p class="cap" id="c-gear-cap"></p>` : '')+
       (notes.length?`<p class="cap">${notes.join('<br>')}</p>`:'');
+
+    /* ── 換檔軌跡 ────────────────────────────────────────────────────
+       上面那張表回答「哪一檔待最久」，這張圖回答「什麼時候待在那一檔」——
+       50% 的時間在 34x34，可能是一段長爬坡一路磨，也可能散在整趟裡，
+       表分不出來，圖分得出來。
+
+       只畫**有在出力**的區段（平滑後功率 >= 門檻）。整趟不篩的話滑行、紅燈、
+       下坡全混進來，看起來像一直在換檔，其實是在放空。x 軸與上面的剖面圖
+       共用距離刻度，所以哪一段爬坡對到哪一檔可以直接對著看。 */
+    const G2 = CH.gear;
+    if (G2 && G2.runs && G2.runs.length) {
+      const sv = document.getElementById('c-gear');
+      const cogs = G2.cogs.slice().sort((a,b)=>a-b);      // 小齒（重）在上、大齒（輕）在下
+      const rowH = 15, L2 = 34, R2 = 14, T3 = 20;
+      const H2 = T3 + cogs.length*rowH + 40;
+      sv.setAttribute('viewBox', '0 0 960 ' + H2);
+      const iw2 = 960 - L2 - R2;
+      const maxX2 = CH.profile[CH.profile.length-1][0];
+      const X2 = v => L2 + iw2*v/maxX2;
+      const Y3 = c => T3 + cogs.indexOf(c)*rowH + rowH/2;
+      const bigRing = Math.max(...G2.rings), maxCog = cogs[cogs.length-1];
+      const base = T3 + cogs.length*rowH;
+
+      // 海拔當底圖：知道那一檔是踩在哪一段坡上，這張圖才有判讀價值
+      const pb = CH.profile, aL = Math.min(...pb.map(x=>x[1])), aH = Math.max(...pb.map(x=>x[1]));
+      const yA = a => base + 34 - 30*(a-aL)/Math.max(aH-aL,1);
+      let ap = 'M'+X2(pb[0][0])+' '+yA(pb[0][1]);
+      pb.forEach(x=>{ ap += ' L'+X2(x[0]).toFixed(1)+' '+yA(x[1]).toFixed(1); });
+      sv.appendChild(el('path',{d:ap+' L'+X2(maxX2)+' '+(base+34)+' L'+X2(0)+' '+(base+34)+' Z',
+        fill:C('ink-3'),opacity:.10}));
+
+      // 爬坡分圈：跟剖面圖同一套判斷（爬升 >= 80 m 的分圈）
+      R.laps.forEach((l,i)=>{ if(l.elev_gain_m>=80&&CH.lap_km[i]){
+        const a2=CH.lap_km[i][0], b2=CH.lap_km[i][1];
+        sv.appendChild(el('rect',{x:X2(a2),y:T3,width:Math.max(2,X2(b2)-X2(a2)),
+          height:cogs.length*rowH,fill:C('s2'),opacity:.07}));}});
+
+      cogs.forEach(c=>{
+        if(c===maxCog) sv.appendChild(el('rect',{x:L2,y:Y3(c)-rowH/2,width:iw2,height:rowH,
+          fill:C('s2'),opacity:.09}));
+        sv.appendChild(el('line',{x1:L2,y1:Y3(c),x2:960-R2,y2:Y3(c),stroke:C('grid')}));
+        sv.appendChild(txt(L2-7,Y3(c)+3.5,c,{anchor:'end',fs:9.5,fill:C('ink-3')}));
+      });
+      sv.appendChild(txt(L2,T3-7,'飛輪齒數（下面＝輕）',{fs:9.5,fill:C('ink-3')}));
+
+      let prev=null;
+      G2.runs.forEach(rn=>{
+        const d0=rn[0], d1=rn[1], f2=rn[2], r2=rn[3];
+        const y=Y3(r2), big=(f2===bigRing && G2.rings.length>1), col=C(q(f2/r2));
+        // 前一段的終點與這一段的起點相接才畫垂直換檔線；中間被篩掉的不要連起來騙人
+        if(prev && Math.abs(prev.d1-d0)<0.02 && prev.y!==y)
+          sv.appendChild(el('line',{x1:X2(d0),y1:prev.y,x2:X2(d0),y2:y,
+            stroke:col,'stroke-width':1.4,opacity:big?.45:.9}));
+        sv.appendChild(el('line',{x1:X2(d0),y1:y,x2:Math.max(X2(d1),X2(d0)+0.8),y2:y,
+          stroke:col,'stroke-width':3.2,'stroke-linecap':'round',opacity:big?.45:1}));
+        prev={d1:d1,y:y};
+      });
+
+      const runKm = G2.runs.reduce((a2,x)=>a2+(x[1]-x[0]),0);
+      const botKm = G2.runs.filter(x=>x[3]===maxCog).reduce((a2,x)=>a2+(x[1]-x[0]),0);
+      const lg = G2.runs.reduce((a2,x)=>(x[1]-x[0])>(a2[1]-a2[0])?x:a2);
+      document.getElementById('c-gear-cap').innerHTML =
+        '只畫<b>功率 &ge; '+Math.round(G2.min_w)+' W</b> 的區段（佔移動時間 '+G2.load_pct+'%）—— '+
+        '滑行、紅燈、下坡不算，不然看起來像一直在換檔，其實是在放空。'+
+        '出力路程 '+runKm.toFixed(1)+' km，其中 <b>'+(botKm/runKm*100).toFixed(0)+'%</b> '+
+        '掛在最輕的 '+maxCog+' 齒；待最久的一段是 '+lg[2]+'&times;'+lg[3]+
+        ' 連續 <b>'+(lg[1]-lg[0]).toFixed(2)+' km</b>。'+
+        (G2.rings.length>1?'　淡色＝掛在大盤 '+bigRing+'T。':'')+'　底下的灰是海拔。';
+    }
   })();
 
   // Garmin 自己算的區間時間（用錶上真正設定的邊界，不是這份腳本推的）

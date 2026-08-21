@@ -2140,6 +2140,151 @@ button.ov-cell:focus-visible{outline:1px solid rgba(252,76,2,.6);outline-offset:
 }
 @media (prefers-reduced-motion:reduce){.vfill{transition:none}}
 
+/* ══ PLAYBOOK · 破 PR 攻略 ═══════════════════════════════════════════
+   一條坡一張卡：現況 → 目標、診斷、換檔軌跡、兩期彙總、逐段、處方、中止條件。
+   資料全部來自 data/playbook.json（scripts/build-playbook.py 產生數字，文字手寫）。
+
+   換檔軌跡圖沿用收成頁那套：會變形的東西（列標、刻度、標籤）走 HTML 百分比定位，
+   只有階梯線交給 preserveAspectRatio="none" 的 SVG，線寬用 vector-effect 鎖住。
+   所以這一頁一次寬度都不用量，隱藏窗格照樣正確。 */
+/* 一張卡兩種寬度：結構線（表頭、小節線、圖、儀表列）吃滿主區，
+   可讀的內容（三聯、段落、逐段表、處方、文章）收在 --pb-col。
+   這跟站上既有的 .view-h（滿版）＋ .view-sub（70ch）是同一套規矩 ——
+   在 1140／1280／1440 三檔主區寬度下，行長都不會跟著主區一起長。 */
+:root{--pb-col:560px}
+.pb-climb{margin-bottom:44px}
+.pb-h{display:flex;align-items:baseline;gap:0 12px;flex-wrap:wrap;
+  padding-bottom:9px;border-bottom:1px solid var(--hair-2)}
+.pb-h b{font-size:17px;font-weight:800;letter-spacing:.3px;color:var(--ink-1)}
+.pb-h i{font-style:normal;font-family:var(--f-mono);font-size:10px;letter-spacing:.9px;color:var(--ink-3);
+  font-variant-numeric:tabular-nums}
+.pb-vd{font-size:10px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;
+  color:#FC4C02;background:rgba(252,76,2,.13);padding:4px 10px;border-radius:100px;white-space:nowrap}
+.pb-arc{display:flex;align-items:flex-end;gap:0;flex-wrap:wrap;margin:16px 0 4px;max-width:var(--pb-col)}
+.pb-arc>div{flex:1 1 96px;min-width:0;padding-right:14px}
+.pb-arc .k{display:block;font-size:8.5px;font-weight:700;letter-spacing:2.2px;text-transform:uppercase;color:var(--ink-3)}
+.pb-arc .v{display:block;margin-top:4px;font-family:var(--f-num);font-size:30px;font-weight:800;line-height:.92;
+  letter-spacing:-.8px;font-variant-numeric:tabular-nums}
+.pb-arc .n{display:block;margin-top:3px;font-family:var(--f-mono);font-size:9px;color:var(--ink-3);letter-spacing:.4px}
+.pb-arc .a .v{color:#FFD700}
+.pb-arc .b .v{color:#4AB4FF}
+.pb-arc .c .v{color:#FC4C02}
+.pb-arc .ar{flex:0 0 26px;padding:0 0 9px;color:var(--ink-3);font-size:14px;text-align:center}
+.pb-p{font-size:12.5px;line-height:1.85;color:var(--ink-2);margin:14px 0 0;max-width:var(--pb-col)}
+.pb-p b{color:var(--ink-1);font-weight:700}
+.pb-sub{max-width:var(--pb-col);font-size:10px;font-weight:700;letter-spacing:2.2px;text-transform:uppercase;
+  color:var(--ink-3);margin:26px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--hair)}
+.pb-sub.wide{max-width:none}
+
+/* ── 換檔軌跡 ── */
+.pb-key{display:flex;align-items:baseline;gap:4px 16px;flex-wrap:wrap;margin-bottom:9px}
+.pb-key span{display:inline-flex;align-items:center;gap:7px;font-size:10.5px;font-weight:600;
+  letter-spacing:.3px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.pb-key i{display:block;width:20px;height:0;border-top:3px solid currentColor;border-radius:2px;flex:0 0 auto}
+.pb-key .a{color:#FFD700} .pb-key .b{color:#4AB4FF}
+.pb-key em{font-style:normal;font-family:var(--f-mono);font-size:9.5px;color:var(--ink-3);letter-spacing:.6px}
+.pb-chart{position:relative;padding-left:30px}
+.pb-grid{position:relative;height:200px;border-top:1px solid var(--hair-2);border-bottom:1px solid var(--hair-2)}
+.pb-grid>u{position:absolute;left:0;right:0;height:0;border-top:1px solid var(--hair);
+  transform:translateY(-.5px);text-decoration:none}
+.pb-floor{position:absolute;left:0;right:0;background:rgba(255,106,106,.10);pointer-events:none}
+.pb-floor b{position:absolute;right:5px;top:50%;transform:translateY(-50%);font-family:var(--f-mono);
+  font-size:9px;font-weight:400;letter-spacing:.7px;color:rgba(255,106,106,.85);white-space:nowrap;
+  background:rgba(10,4,8,.82);padding:0 4px;border-radius:2px}
+.pb-cogs{position:absolute;left:0;top:0;bottom:0;width:24px;z-index:3}
+.pb-cogs span{position:absolute;right:0;transform:translateY(-50%);font-family:var(--f-num);font-size:12px;
+  font-weight:700;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.pb-qm{position:absolute;top:0;bottom:0;width:0;border-left:1px dashed rgba(252,76,2,.32);pointer-events:none}
+.pb-svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.pb-svg path{fill:none;stroke-linejoin:round;stroke-linecap:butt;vector-effect:non-scaling-stroke}
+.pb-prof{position:relative;height:44px;margin-top:2px}
+.pb-prof svg{position:absolute;inset:0;width:100%;height:100%}
+.pb-prof .f{fill:rgba(244,240,234,.05);stroke:none}
+.pb-prof .l{fill:none;stroke:rgba(244,240,234,.26);stroke-width:1;vector-effect:non-scaling-stroke}
+.pb-xc{display:flex;justify-content:space-between;font-family:var(--f-mono);font-size:9px;color:var(--ink-3);
+  letter-spacing:.5px;margin-top:5px;padding-left:30px}
+
+/* ── 兩期彙總 ── */
+.pb-era{display:flex;flex-wrap:wrap;margin:0 -1px;overflow:hidden;
+  border-top:1px solid var(--hair);border-bottom:1px solid var(--hair)}
+.pb-e{flex:1 1 108px;padding:12px 0 13px 14px;border-left:1px solid var(--hair)}
+.pb-e .k{font-size:8.5px;font-weight:700;letter-spacing:2.2px;text-transform:uppercase;color:var(--ink-3);white-space:nowrap}
+.pb-e .r{display:flex;align-items:baseline;gap:6px;margin-top:6px;font-family:var(--f-num);font-size:21px;
+  font-weight:800;line-height:1;letter-spacing:-.4px;font-variant-numeric:tabular-nums}
+.pb-e .r .a{color:#FFD700} .pb-e .r .b{color:#4AB4FF}
+.pb-e .r em{font-style:normal;font-family:var(--f-ui);font-size:11px;font-weight:400;color:var(--ink-3)}
+.pb-e .r small{font-family:var(--f-ui);font-size:9px;font-weight:700;color:var(--ink-3);letter-spacing:.6px}
+
+/* ── 逐段 ── */
+.pb-tw{max-width:var(--pb-col);overflow-x:auto;-webkit-overflow-scrolling:touch}
+.pb-tb{width:100%;min-width:400px;border-collapse:collapse}
+.pb-tb th{font-size:8.5px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;color:var(--ink-3);
+  text-align:right;padding:0 8px 8px;border-bottom:1px solid var(--hair-2);white-space:nowrap}
+.pb-tb th:first-child{text-align:left}
+.pb-tb td{padding:11px 8px;border-bottom:1px solid var(--hair);text-align:right;white-space:nowrap;
+  font-family:var(--f-num);font-size:16px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.2px}
+.pb-tb td:first-child{text-align:left;font-family:var(--f-mono);font-size:11px;font-weight:700;color:var(--ink-2);letter-spacing:.8px}
+.pb-tb td:first-child em{font-style:normal;display:block;font-size:9px;font-weight:400;color:var(--ink-3);letter-spacing:.4px}
+.pb-tb .a{color:#FFD700} .pb-tb .b{color:#4AB4FF}
+.pb-tb .g{color:#FF6A6A} .pb-tb .g.ok{color:#5FD060}
+.pb-tb tr:last-child td{border-bottom:0}
+
+/* ── 處方 ── */
+.pb-rule{display:grid;grid-template-columns:5.6rem minmax(0,1fr);gap:0 16px;align-items:baseline;
+  max-width:var(--pb-col);padding:11px 4px;border-bottom:1px solid var(--hair)}
+.pb-rule .k{font-size:10px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:#FC4C02;white-space:nowrap}
+.pb-rule .v{font-size:12.5px;line-height:1.75;color:var(--ink-2)}
+.pb-rule .v b{color:var(--ink-1);font-weight:700}
+.pb-flag{display:grid;grid-template-columns:5.6rem minmax(0,1fr);gap:0 16px;
+  max-width:var(--pb-col);padding:12px 4px 0}
+.pb-flag .k{font-size:10px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;white-space:nowrap}
+.pb-flag.stop .k{color:#FF6A6A} .pb-flag.real .k{color:var(--ink-3)}
+.pb-flag .v{font-size:12px;line-height:1.75;color:var(--ink-3)}
+.pb-flag .v b{color:var(--ink-2);font-weight:700}
+.pb-go{display:inline-flex;align-items:center;gap:7px;margin-top:16px;padding:8px 14px;border-radius:6px;
+  border:1px solid rgba(252,76,2,.32);background:transparent;color:#FC4C02;font-family:inherit;
+  font-size:11px;font-weight:700;letter-spacing:1.2px;cursor:pointer;transition:background .13s}
+.pb-go:hover{background:rgba(252,76,2,.1)}
+.pb-go:focus-visible{outline:1px solid rgba(252,76,2,.7);outline-offset:2px}
+
+/* ── 文章 ── */
+.pb-art{max-width:var(--pb-col)}
+.pb-art .kick{font-size:9.5px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#FC4C02;margin:0 0 8px}
+.pb-art h3{font-size:22px;font-weight:800;letter-spacing:-.2px;line-height:1.25;margin:0 0 10px;text-wrap:balance}
+.pb-art .lede{font-size:13.5px;line-height:1.85;color:var(--ink-2);margin:0 0 6px}
+.pb-art h4{font-size:12.5px;font-weight:800;letter-spacing:.4px;color:var(--ink-1);margin:24px 0 0}
+.pb-art p{font-size:12.5px;line-height:1.9;color:var(--ink-2);margin:10px 0 0}
+.pb-art p b{color:var(--ink-1);font-weight:700}
+.pb-art .nt{border-left:2px solid var(--hair-2);padding-left:14px;margin-top:18px;
+  font-size:11.5px;line-height:1.8;color:var(--ink-3)}
+.pb-meth{max-width:var(--pb-col);font-size:10.5px;line-height:1.9;color:var(--ink-3);margin:0}
+.pb-meth li{margin-bottom:6px}
+.pb-meth code{font-family:var(--f-mono);font-size:10px;color:var(--ink-2)}
+
+@media(max-width:640px){
+  /* 三聯要塞進一行：日期＋瓦數那行是 18 個等寬字元，390px 下不縮字就會換行，
+     一換行 flex-end 對齊的箭頭就跟數字錯開。箭頭讓寬給欄位。 */
+  .pb-arc .v{font-size:24px} .pb-arc>div{flex:1 1 74px;padding-right:6px}
+  .pb-arc .ar{flex:0 0 18px;font-size:12px;padding-bottom:8px}
+  .pb-arc .n{font-size:8.5px;letter-spacing:.2px}
+  .pb-chart{padding-left:24px} .pb-cogs{width:19px} .pb-grid{height:168px}
+  .pb-xc{padding-left:24px}
+  /* 「差」是這張表的結論，不能被橫向捲軸推到畫面外 —— 縮 padding 讓四欄整個進來 */
+  .pb-tb{min-width:0}
+  .pb-tb th{padding:0 5px 8px;letter-spacing:1.2px}
+  .pb-tb td{padding:10px 5px;font-size:15px}
+  .pb-tb td:first-child em{letter-spacing:0}
+  .pb-rule,.pb-flag{grid-template-columns:1fr;gap:3px}
+  .pb-e{flex:1 1 44%;padding:11px 0 12px 12px}
+  .pb-art h3{font-size:19px}
+  .pb-h b{font-size:15px}
+}
+@media(max-width:400px){
+  .pb-arc>div{padding-right:4px}
+  .pb-arc .ar{flex:0 0 14px;font-size:11px}
+  .pb-arc .n{font-size:8px;letter-spacing:0}
+}
+
 /* ══ HARVEST · 收成 ═══════════════════════════════════════════════════
    四條共用同一根 x 軸的量尺：投入（月騎乘時數）、引擎（eFTP）、
    同一條路的成績（中社路 ITT）、以及至今仍站著的紀錄。
@@ -4210,7 +4355,7 @@ function renderMesocycle(block) {
       <span class="ses-dt">${md(s.date)} ${wd(s.date)}</span>
       <span class="ses-st">${st.txt || ST_TXT[st.cls] || ''}</span>
       <span class="ses-go">→</span>
-      <span class="ses-sub">${s.actual?.note || s.plan || st.sub}</span>
+      <span class="ses-sub">${mdBold(s.actual?.note || s.plan || st.sub)}</span>
       <span class="ses-num">${num}</span>
     </button>`
   }).join('')
@@ -4360,9 +4505,9 @@ function openSessionDrawer(date) {
       ${pass == null ? '' : `<span class="m ${pass ? 'ok' : 'no'}">${pass ? '達標' : '未達'}</span>`}
     </div>`
   const body =
-    (s.plan ? `<div class="dw-sec"><h4>處方 · Prescription</h4><div class="dw-p">${s.plan}</div></div>` : '') +
+    (s.plan ? `<div class="dw-sec"><h4>處方 · Prescription</h4><div class="dw-p">${mdBold(s.plan)}</div></div>` : '') +
     (s.support ? `<div class="dw-sec"><h4>輔助課表 · Support</h4>
-      <div class="dw-p">${s.metrics || ''}${s.why ? `<br><br>${s.why}` : ''}</div></div>` : '') +
+      <div class="dw-p">${mdBold(s.metrics || '')}${s.why ? `<br><br>${mdBold(s.why)}` : ''}</div></div>` : '') +
     (a?.substituted ? `<div class="dw-sec"><h4>替代執行 · Substituted</h4>
       <div class="dw-p"><b>${a.sub_name || ''}</b>${a.sub_metrics ? `<br>${a.sub_metrics}` : ''}</div></div>` : '') +
     (s.support ? '' : `<div class="dw-sec"><h4>${ac ? '實際 vs 目標 · Actual vs target' : '目標 · Target'}</h4>
@@ -8289,6 +8434,15 @@ function render(data) {
       ${(sHtml => viewH('ITT 區間', 'Individual time trial', window.__ittCount || '歷來最佳') + (sHtml || '<div class="nil">尚無路段成績。</div>'))(renderSegments(data.segments))}
     </section>
 
+    <section class="view" data-view="playbook">
+      ${viewH('攻略', 'Playbook', window._playbook ? `${(window._playbook.climbs || []).length} 條坡` : '')}
+      <p class="view-sub">ITT 頁講的是「我騎多快」，這一頁講的是<b>「要更快該改什麼」</b>。
+        一條坡一張卡：現況與目標、問題出在哪、換檔軌跡、逐段對帳、可執行的處方與中止條件。
+        數字由 <code style="font-family:var(--f-mono);font-size:11px">scripts/build-playbook.py</code>
+        從 FIT 算出來，判讀是手寫的。</p>
+      ${renderPlaybook(window._playbook)}
+    </section>
+
     <section class="view" data-view="atlas">
       ${viewH('地圖', 'Atlas', '<span id="at-kpi"></span>')}
       <p class="view-sub">每一條線都是真的 GPS 軌跡，顏色是<b>那一段路被幾趟不同的騎乘經過</b>；
@@ -8428,6 +8582,148 @@ function render(data) {
   })
 }
 
+
+/* ══ PLAYBOOK · 破 PR 攻略 ═══════════════════════════════════════════
+   一條坡一張攻略卡。這一頁不是「我騎多快」（那是 ITT 頁），是「要更快該改什麼」。
+
+   資料全部在 data/playbook.json：數字由 scripts/build-playbook.py 從 FIT 與
+   itt-segments.json 算出來，文字（診斷、處方、中止條件、文章）手寫。
+   加一條坡＝在 JSON 加一個 climbs 元素再重跑產生器，這裡一行都不用改。 */
+
+/** 換檔軌跡圖。收成頁那套的同一個做法：會變形的東西走 HTML 百分比定位，
+ *  只有階梯線交給 preserveAspectRatio="none" 的 SVG。整張圖不需要量寬度。 */
+function pbChart(c) {
+  const t = c.trace
+  if (!t || !t.rides || t.rides.length < 2) return ''
+  const TOT = t.total
+  // 縱軸只放兩趟真的用到的飛輪片：全部 12 片會把圖拉高一倍卻沒有多講任何事
+  const cogs = [...new Set(t.rides.flatMap(r => r.cogs))].sort((a, b) => a - b)
+  const RI = Object.fromEntries(cogs.map((v, i) => [v, i]))
+  const yOf = cog => (RI[cog] + 0.5) / cogs.length * 100
+  const COL = { pr: '#FFD700', now: '#4AB4FF' }
+
+  // 階梯線。front 指定時只畫掛在該前盤的區段，其餘斷開 —— 大盤那截要畫成虛線。
+  const path = (steps, front) => {
+    let d = '', open = false
+    steps.forEach((s, i) => {
+      const nd = i + 1 < steps.length ? steps[i + 1][0] : TOT
+      if (front != null && s[1] !== front) { open = false; return }
+      const y = yOf(s[2]).toFixed(2)
+      d += `${open ? 'L' : 'M'}${s[0]} ${y}L${nd} ${y}`
+      open = true
+    })
+    return d
+  }
+  const fronts = r => [...new Set(r.steps.map(s => s[1]))]
+  const lines = t.rides.map(r => {
+    const big = Math.max(...fronts(r)), small = Math.min(...fronts(r))
+    const solid = path(r.steps, small)
+    const dash = big !== small ? path(r.steps, big) : ''
+    return `<path d="${solid}" stroke="${COL[r.era]}" stroke-width="2.1"/>${
+      dash ? `<path d="${dash}" stroke="${COL[r.era]}" stroke-width="2.1" stroke-dasharray="5 4" opacity=".45"/>` : ''}`
+    // 大盤那幾截是平路引道，壓低不透明度讓爬坡段（小盤）主導畫面 ——
+    // 風櫃嘴 6 km 兩趟合計 200 多次換檔，不壓的話整張圖是一團線
+  }).join('')
+
+  const alts = t.prof.map(p => p[1])
+  const aLo = Math.min(...alts), aHi = Math.max(...alts)
+  const py = a => ((aHi - a) / Math.max(aHi - aLo, 1) * 100).toFixed(2)
+  const pl = 'M' + t.prof.map(p => `${p[0]} ${py(p[1])}`).join('L')
+  const pf = `${pl}L${TOT} 100L${t.prof[0][0]} 100Z`
+  const maxCog = Math.max(...cogs)
+
+  return `<div class="pb-key">${t.rides.map(r =>
+      `<span class="${r.era === 'pr' ? 'a' : 'b'}"><i></i>${r.date} · ${r.t}${
+        r.w ? ` · ${r.w} W` : ''} <em>換檔 ${r.nshift} 次 · ${r.cogs.length} 片飛輪</em></span>`).join('')}
+      <em style="color:var(--ink-3)">虛線＝掛在大盤 · 橘虛線＝子路段界線</em></div>
+    <div class="pb-chart">
+      <div class="pb-grid">
+        <div class="pb-cogs">${cogs.map(v => `<span style="top:${yOf(v).toFixed(3)}%">${v}</span>`).join('')}</div>
+        ${cogs.map(v => `<u style="top:${yOf(v).toFixed(3)}%"></u>`).join('')}
+        <div class="pb-floor" style="top:${(RI[maxCog] / cogs.length * 100).toFixed(3)}%;height:${(100 / cogs.length).toFixed(3)}%"><b>沒有更輕的檔了</b></div>
+        ${(t.bounds || []).map(b => `<i class="pb-qm" style="left:${(b / TOT * 100).toFixed(3)}%"></i>`).join('')}
+        <svg class="pb-svg" viewBox="0 0 ${TOT} 100" preserveAspectRatio="none" aria-hidden="true">${lines}</svg>
+      </div>
+      <div class="pb-prof"><svg viewBox="0 0 ${TOT} 100" preserveAspectRatio="none" aria-hidden="true">
+        <path class="f" d="${pf}"/><path class="l" d="${pl}"/></svg></div>
+    </div>
+    <div class="pb-xc"><span>起點 ${Math.round(t.prof[0][1])} m</span>
+      <span>${(TOT / 1000).toFixed(2)} km · 海拔剖面</span>
+      <span>坡頂 ${Math.round(t.prof[t.prof.length - 1][1])} m</span></div>`
+}
+
+function pbClimb(c) {
+  const e = c.era || {}, pr = e.pr, nw = e.now
+  const eraRow = (k, f, unit, dec) => {
+    if (!pr || !nw) return ''
+    // 時間欄是 "17:28" 這種字串，不能走數值格式化（走了就是 NaN → NaN）
+    const v = x => typeof x[f] === 'string' ? x[f]
+      : dec ? (+x[f]).toFixed(dec) : Math.round(x[f])
+    return `<div class="pb-e"><span class="k">${k}</span>
+      <span class="r"><span class="a">${v(pr)}</span><em>→</em><span class="b">${v(nw)}</span>${
+        unit ? `<small>${unit}</small>` : ''}</span></div>`
+  }
+  const splits = (c.splits || []).length ? `
+    <div class="pb-sub">逐段 · 兩期平均</div>
+    <div class="pb-tw"><table class="pb-tb">
+      <thead><tr><th>子路段</th><th>PR 期</th><th>最近</th><th>差</th></tr></thead>
+      <tbody>${c.splits.map(s => `<tr>
+        <td>${s.l}<em>${s.d} m · ${s.grade}%</em></td>
+        <td class="a">${s.prT}</td><td class="b">${s.nowT}</td>
+        <td class="g${s.gap <= 0 ? ' ok' : ''}">${s.gap > 0 ? '+' : ''}${s.gap}<small style="font-family:var(--f-ui);font-size:9px;color:var(--ink-3)">s</small></td>
+      </tr>`).join('')}</tbody>
+    </table></div>` : ''
+
+  return `<div class="pb-climb">
+    <div class="pb-h"><b>${c.name}</b><i>${(c.dist_m || 0).toLocaleString()} m · +${c.gain_m} m · 平均 ${c.grade}%</i>
+      ${c.verdict ? `<span class="pb-vd">${c.verdict}</span>` : ''}</div>
+    <div class="pb-arc">
+      <div class="a"><span class="k">PR</span><span class="v">${c.pr.t}</span><span class="n">${c.pr.date}${c.pr.w ? ` · ${c.pr.w} W` : ''}</span></div>
+      <div class="ar">→</div>
+      <div class="b"><span class="k">最近最好</span><span class="v">${(c.best_now || {}).t || '—'}</span><span class="n">${(c.best_now || {}).date || ''}${(c.best_now || {}).w ? ` · ${c.best_now.w} W` : ''}</span></div>
+      <div class="ar">→</div>
+      <div class="c"><span class="k">目標</span><span class="v">${c.target}</span><span class="n">${c.session ? c.session.slice(5).replace('-', '/') + ' 已排入課表' : ''}</span></div>
+    </div>
+    ${c.diag ? `<p class="pb-p">${mdBold(c.diag)}</p>` : ''}
+    ${c.cause ? `<p class="pb-p">${mdBold(c.cause)}</p>` : ''}
+    <div class="pb-sub wide">換檔軌跡</div>
+    ${pbChart(c)}
+    ${pr && nw ? `<div class="pb-sub wide">段內彙總 · PR 期 n=${pr.n} → 最近 n=${nw.n}</div>
+      <div class="pb-era">
+        ${eraRow('時間', 't', '')}${eraRow('功率', 'w', 'W')}${eraRow('心率', 'hr', 'bpm')}
+        ${eraRow('踏頻', 'cad', 'rpm')}${eraRow('平均齒比', 'ratio', '', 2)}
+        ${eraRow('最輕檔', 'bottom', '%')}${eraRow('換檔', 'shift', '／分', 1)}
+      </div>` : ''}
+    ${splits}
+    <div class="pb-sub">處方</div>
+    <div>${(c.rules || []).map(r => `<div class="pb-rule"><span class="k">${r.k}</span><span class="v">${mdBold(r.v)}</span></div>`).join('')}</div>
+    ${c.abort ? `<div class="pb-flag stop"><span class="k">中止條件</span><span class="v">${mdBold(c.abort)}</span></div>` : ''}
+    ${c.reality ? `<div class="pb-flag real"><span class="k">現實</span><span class="v">${mdBold(c.reality)}</span></div>` : ''}
+    ${c.session ? `<button class="pb-go" type="button" data-ses="${c.session}">看 ${c.session.slice(5).replace('-', '/')} 那一堂 →</button>` : ''}
+  </div>`
+}
+
+function pbArticle(a) {
+  const blk = b => b.h ? `<h4>${mdBold(b.h)}</h4>`
+    : b.note ? `<p class="nt">${mdBold(b.note)}</p>`
+    : `<p>${mdBold(b.p || '')}</p>`
+  return `<article class="pb-art">
+    <p class="kick">${a.kicker || ''}　${a.date || ''}</p>
+    <h3>${a.title}</h3>
+    ${a.lede ? `<p class="lede">${mdBold(a.lede)}</p>` : ''}
+    ${(a.blocks || []).map(blk).join('')}
+  </article>`
+}
+
+function renderPlaybook(pb) {
+  if (!pb || !Array.isArray(pb.climbs) || !pb.climbs.length)
+    return '<div class="nil">還沒有攻略資料。</div>'
+  return `<div class="block">${pb.climbs.map(pbClimb).join('')}</div>
+    ${(pb.articles || []).map(a => `<div class="block">${pbArticle(a)}</div>`).join('')}
+    ${(pb.method || []).length ? `<div class="block">
+      <div class="section-title">怎麼算的 <span class="muted">· METHOD</span></div>
+      <ul class="pb-meth">${pb.method.map(m => `<li>${mdBold(m)}</li>`).join('')}</ul></div>` : ''}`
+}
 
 /* ══ HARVEST · 收成 ═══════════════════════════════════════════════════
    這一頁只回答一個問題：那幾個月的量，最後換到了什麼。
@@ -8789,7 +9085,7 @@ function renderHarvest(H) {
     <p class="view-sub" style="margin:2px 0 14px">${st.nRec} 項至今沒有被自己刷掉的成績，掛在它被立下的那個月。
       進步幅度比的是<b>在那之前</b>的個人最佳，不是第二名。
       一個月留不留得下紀錄，也取決於那個月有沒有去騎那條路 ——
-      2026-07 的三項碧山紀錄是因為他七月才第一次去探那條路，不是那個月特別強；
+      2026-07 的三項碧山紀錄是因為你七月才第一次去探那條路，不是那個月特別強；
       要把「踩了幾次」和「刷了幾次」分開看，往下捲到刷新率。</p>
     <div class="ctl">
       <div class="seg" data-ctl="hvfilter">
@@ -10099,6 +10395,8 @@ const VIEWS = [
   { id: 'plan',     zh: '計畫',     en: 'Plan'     },
   { id: 'log',      zh: '活動紀錄', en: 'Log',     tab: '紀錄' },
   { id: 'itt',      zh: 'ITT',      en: 'ITT'      },
+  // ITT 講「我騎多快」，攻略講「要更快該改什麼」。兩件事，混在一頁會互相稀釋。
+  { id: 'playbook', zh: '攻略',     en: 'Playbook' },
   { id: 'atlas',    zh: '地圖',     en: 'Atlas'    },
   { id: 'trends',   zh: '趨勢',     en: 'Trends'   },
   // 趨勢是「這個月比上個月多多少」，收成是「那幾個月的量換到了什麼」。
@@ -10166,6 +10464,16 @@ function updateNavBadges(data) {
     const last = [...days].reverse().find(d => w[d]?.ctl != null)
     const ctl = last ? w[last].ctl : null
     if (ctl != null) set('trends', `CTL ${Math.round(ctl)}`)
+  }
+
+  // 攻略：下一趟排定的爬坡測驗還有幾天。沒排就顯示追蹤幾條坡。
+  const pbk = window._playbook
+  if (pbk && Array.isArray(pbk.climbs) && pbk.climbs.length) {
+    const nx = pbk.climbs.map(c => c.session).filter(d => d && d >= today).sort()[0]
+    set('playbook', nx
+      ? (d => d === 0 ? '今天' : d === 1 ? '明天' : `${d} 天後`)(
+          Math.round((Date.parse(nx) - Date.parse(today)) / 86400000))
+      : `${pbk.climbs.length} 條坡`)
   }
 
   // 收成：本月離損益線還有多遠。這顆徽章的用處是「今天要不要多騎一趟」，
@@ -11097,8 +11405,10 @@ Promise.all([
   fetchData('data/fit/_activities.json').then(r => r.ok ? r.json() : null).catch(() => null),
   // athlete 級的功率-心率曲線，一段 91 天、往回四段（scripts/sync-intervals.py 的 sync_power_hr）。
   fetchData('data/fit/_power_hr.json').then(r => r.ok ? r.json() : null).catch(() => null),
+  // 破 PR 攻略（scripts/build-playbook.py 產生）。缺檔只讓這一頁降級成空狀態，不影響其他 view。
+  fetchData('data/playbook.json').then(r => r.ok ? r.json() : null).catch(() => null),
 ])
-  .then(([data, ittConfig, segStreams, segTerrain, landmarks, rivals, taipeiOutline, quotesData, trainingBlock, ittSegments, wellness, doms, activities, powerHr]) => {
+  .then(([data, ittConfig, segStreams, segTerrain, landmarks, rivals, taipeiOutline, quotesData, trainingBlock, ittSegments, wellness, doms, activities, powerHr, playbook]) => {
     mergeIttSegments(data, ittSegments)
     window._wellness = wellness || null
     window._doms = doms || null
@@ -11121,6 +11431,7 @@ Promise.all([
       return [String(s.id), pr || null]
     }))
     window._trainingBlock = trainingBlock || null
+    window._playbook = playbook || null
     window._taipeiMiniMap = buildTaipeiMiniMap(taipeiOutline)
     window._quotePool = mapQuotes(quotesData)
     window.__powerPrs = data.power_prs || []
