@@ -56,6 +56,26 @@ python3 -c "import fitdecode"          # 已安裝，直接用；lap / record �
 python3 tools/tcx/score.py <檔案>.fit          # 逐段對帳 + 評分卡（compliance/discipline/durability/cadence）
 ```
 
+**爬坡踏頻低要先分辨是「沒檔可下」還是「沒下小盤」**，兩者的處方完全相反。
+一趟裡混了平路、下坡、好幾段不同坡度的爬坡，整趟平均看不出任何東西，
+所以要按 ITT 路段切開看（`analyze_tcx.py` 的 `_gear_report()` 算的是整趟，不要拿來回答這個問題）：
+
+```bash
+python3 scripts/itt-gears.py                       # 最近一趟中社的齒比分布
+python3 scripts/itt-gears.py --seg bishan --history # 某路段的歷史對照
+python3 scripts/itt-gears.py --seg zhongshe,fongguizui,bishan --history   # 跨坡度對照
+python3 scripts/itt-gears.py --list                # 有哪些路段/日子可看
+```
+
+判讀分三種，**一定要看展開（公尺）不是飛輪齒數** —— 掛在大盤沒下小盤時，
+那段用到的「最大飛輪」看起來很輕，其實還有輕 47% 的檔沒用：
+- **沒檔可下**：掛在車上最輕檔（34×34，展開 2.10 m）且踏頻 <70 → 器材問題，換飛輪才有解
+- **沒下小盤**：整段沒下到最輕檔、交叉鏈佔比高 → 換檔習慣問題，免費就能改
+- **齒比還有餘裕**：最輕檔佔比低，或雖然常掛但踏頻 ≥70 → 不是齒比在限制
+
+⚠️ 齒比資料唯一來源是「電變 → 私有 ANT → 手錶」，2026-08-11 起斷線（換檔事件與
+`device_aux_battery_info` 一起歸零＝錶沒看到那個裝置）。腳本會明講沒資料，不會靜默留白。
+
 **要看的四件事**（每趟固定回報）：
 1. **VI**（NP ÷ 平均瓦）—— 這個數字比 IF 誠實。現況平路 1.19–1.27＝一直在滑行；W1 目標 ≤1.10、W3 ≤1.06
 2. **功率衰減** —— 課表 A 看組間掉多少、每組最後 3 分鐘有沒有掉；課表 B 看前半 vs 後半
