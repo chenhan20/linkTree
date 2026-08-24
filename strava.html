@@ -4300,6 +4300,9 @@ function renderMesocycle(block) {
   const state = (s, i) => {
     if (s.support) {
       const sub = s.actual?.note || s.plan || ''
+      /* actual.skipped：輔助課表「沒做，但有話要說」。沒有這個旗標的話，
+         只要為了掛教練評而補一個 actual，這裡就會判成「已做 ✓」—— 站上等於謊報。 */
+      if (s.actual?.skipped) return { cls: 'sched', extra: 'is-sup', txt: '未做', badge: '➖ SUPPORT', sub }
       if (s.actual)      return { cls: 'sched', extra: 'is-sup', txt: '已做', badge: '✓ SUPPORT', sub }
       if (s.date < today) return { cls: 'sched', extra: 'is-sup', txt: '未做', badge: '➖ SUPPORT', sub: sub + '（沒做不算欠帳）' }
       return { cls: 'sched', extra: 'is-sup', txt: '輔助', badge: '➖ SUPPORT', sub }

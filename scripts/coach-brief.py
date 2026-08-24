@@ -151,7 +151,11 @@ def main():
     print('  目標：{}'.format(b.get('goal')))
     for s in S:
         act = s.get('actual') or None
-        if act and act.get('substituted'):
+        # actual.skipped：輔助課表沒做，但掛了教練評。沒有這個分支的話下面會印成「做了」——
+        # 簡報是每次判讀的第一手資料，在這裡說謊會一路錯下去（跟站上 state() 同一套判斷）。
+        if act and act.get('skipped'):
+            st = '未執行'
+        elif act and act.get('substituted'):
             st = '替代：' + (act.get('sub_name') or '')
         elif act:
             st = '做了 IF {} / TSS {} / VI {}'.format(act.get('if'), act.get('tss'), act.get('vi'))
