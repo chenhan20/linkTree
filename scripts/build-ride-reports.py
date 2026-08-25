@@ -154,7 +154,23 @@ def fill_training_block(date: str, score_path: Path) -> None:
     note = f"主課表對帳 {total.get('score')} 分（{total.get('grade')}）"
     if isinstance(pct, (int, float)):
         note += f" · 主課表做到處方的 {pct:.0f}%"
+    # 只覆寫這支算得出來的欄位，其餘原封不動。actual 裡還住著手寫的東西：
+    # coach[]（教練評語）、substituted / sub_name / sub_metrics（替代課表）。
+    # 先前這裡是整顆 actual 直接指派，於是重生一次報告就把當天的評語洗掉 ——
+    # 全量 --overwrite 會把整個區塊的評語一次清空。實測撞過（2026-08-25）。
+    prev = sess.get("actual") or {}
+    # note 的慣例是「自動前綴（對帳分數 · 處方百分比）＋ 人工補的尾巴」，
+    # 尾巴用 ' · ' 接在後面。分數會隨演算法改變，所以前綴每次重生，尾巴留著。
+    auto_n = 2 if isinstance(pct, (int, float)) else 1
+    prev_note = prev.get("note") or ""
+    if prev_note.startswith("主課表對帳"):
+        tail = " · ".join(prev_note.split(" · ")[auto_n:])
+    else:
+        tail = prev_note          # 整句都是人寫的，全部當尾巴留下
+    if tail:
+        note += " · " + tail
     actual = {
+        **prev,
         "if": ride.get("if"),
         "tss": ride.get("tss"),
         "vi": ride.get("vi"),

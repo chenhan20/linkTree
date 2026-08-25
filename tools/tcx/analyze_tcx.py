@@ -1112,11 +1112,15 @@ def chart_series(path, target_points=480, gear_min_w=150.0):
     pw = smooth([p["w"] or 0 for p in pts], 45)
     hr = smooth([p["hr"] or 0 for p in pts], 45)
     dist = [(p["dist"] or 0) / 1000 for p in pts]
+    # 訓練台沒有距離（逐秒 dist 全是 0），拿它當 X 軸會讓剖面圖整張除以零畫成 NaN。
+    # 這種日子改用經過分鐘當 X 軸 —— 室內課表本來就是照時間開的，時間軸才是對的軸。
+    indoor_x = (dist[-1] or 0) < 0.05
+    xs = [i / 60 for i in range(n)] if indoor_x else dist
     step = max(1, n // target_points)
-    prof = [[round(dist[i], 3), round(alt[i], 1), round(pw[i]), round(hr[i])]
+    prof = [[round(xs[i], 3), round(alt[i], 1), round(pw[i]), round(hr[i])]
             for i in range(0, n, step)]
-    prof.append([round(dist[-1], 3), round(alt[-1], 1), round(pw[-1]), round(hr[-1])])
-    lap_km = [[round(dist[l["i0"]], 2), round(dist[min(l["i1"], n - 1)], 2)] for l in laps]
+    prof.append([round(xs[-1], 3), round(alt[-1], 1), round(pw[-1]), round(hr[-1])])
+    lap_km = [[round(xs[l["i0"]], 2), round(xs[min(l["i1"], n - 1)], 2)] for l in laps]
 
     # ── 齒比軌跡：連續「有出力且同一檔」的區段，每段一筆 [起km, 迄km, 前盤, 飛輪] ──
     runs, cur = [], None
@@ -1129,15 +1133,15 @@ def chart_series(path, target_points=480, gear_min_w=150.0):
         if key:
             loaded += 1
         if cur is not None and cur[2] == key:
-            cur[1] = dist[i]
+            cur[1] = xs[i]
         else:
             if cur is not None and cur[2] is not None and cur[1] > cur[0]:
                 runs.append([round(cur[0], 3), round(cur[1], 3), cur[2][0], cur[2][1]])
-            cur = [dist[i], dist[i], key]
+            cur = [xs[i], xs[i], key]
     if cur is not None and cur[2] is not None and cur[1] > cur[0]:
         runs.append([round(cur[0], 3), round(cur[1], 3), cur[2][0], cur[2][1]])
 
-    out = {"profile": prof, "lap_km": lap_km,
+    out = {"profile": prof, "lap_km": lap_km, "x_axis": "min" if indoor_x else "km",
            "sport": meta.get("sport"), "total_km": round(dist[-1], 2)}
     if runs:
         out["gear"] = {
