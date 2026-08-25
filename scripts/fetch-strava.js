@@ -813,6 +813,106 @@ async function scanSegmentsHistory(token, activities, existingSegments) {
   return newSegEfforts
 }
 
+
+// ── 室內重複紀錄：同一趟被手錶與 Rouvy 各推一次到 Strava ────────────────
+//
+// 室內一堂課在 Strava 會留下兩筆：手錶錄的（曲柄功率，資料管線的正主）與
+// Rouvy 自己推的。兩筆都收會讓月時數、月距離、趟數全部灌水 —— 實測 2026-08
+// 帳面 17.7 h、去重後 14.4 h，而 eFTP 損益線是 15.3 h，結論從「已過線」
+// 翻成「還差 0.9 h」。這個數字是他這半年最重要的單一指標，不能錯。
+//
+// 規則刻意不是「一律信手錶」：2026-08-19 手錶只錄到 3 分鐘、Rouvy 那份才是
+// 完整的 36 分鐘 —— 兩邊都可能是漏錄的那一方。改成把同一天的室內活動分成
+// 手錶堆與 Rouvy 堆，**只留移動時間比較長的那一堆**。
+//
+// 這裡砍在最上游（剛從 API 拿到活動就砍），所以 monthly_history、recent_rides、
+// 功率 PR、路線串流全部一次乾淨，不必每個消費端各自去重。
+// Strava 訂閱到期後只剩手錶那一份，這支會自然退化成原樣通過。
+function dropDuplicateIndoor(list, acc) {
+  // 只看騎乘。重訓在 Strava 也可能帶 trainer=true，不限定型別的話會被算進
+  // 「手錶那一堆」，於是拿重訓的時數去跟 Rouvy 比長短，砍錯邊。實測撞過：
+  // 8/19 的 56 分鐘重訓讓手錶堆從 0.05 h 變成 0.99 h。
+  const isRide = a => !acc.rideType || acc.rideType(a)
+  const isRouvy = a => String(acc.name(a) || '').toUpperCase().startsWith('ROUVY')
+  const isIndoor = a => isRide(a) && (acc.trainer(a) === true || acc.virtual(a) || isRouvy(a))
+  const byDay = new Map()
+  for (const a of list) {
+    if (!isIndoor(a)) continue
+    const d = (acc.date(a) || '').slice(0, 10)
+    if (!d) continue
+    if (!byDay.has(d)) byDay.set(d, { watch: [], rouvy: [] })
+    byDay.get(d)[isRouvy(a) ? 'rouvy' : 'watch'].push(a)
+  }
+  const drop = new Set()
+  let droppedSec = 0
+  for (const [d, g] of byDay) {
+    if (!g.watch.length || !g.rouvy.length) continue      // 只有一邊就沒有重複
+    const sec = arr => arr.reduce((n, a) => n + (acc.secs(a) || 0), 0)
+    const keepWatch = sec(g.watch) >= sec(g.rouvy)
+    const loser = keepWatch ? g.rouvy : g.watch
+    const winner = keepWatch ? g.watch : g.rouvy
+    for (const a of loser) drop.add(a)
+    droppedSec += sec(loser)
+    // 距離要從被砍的那份接過來。手錶室內錄不到距離（訓練台沒配成速度來源，
+    // 曲柄功率計只廣播功率與迴轉，逐秒 distance 全是 0），而 Rouvy 那份有
+    // 虛擬路線的真實里程。時數用手錶的、距離用 Rouvy 的，才是這一趟的全貌。
+    // 砍掉不接的話里程會憑空消失 —— 8 月會少掉 108 km。
+    let grafted = 0
+    if (keepWatch && acc.dist && acc.setDist) {
+      const km = g.rouvy.reduce((n, a) => n + (acc.dist(a) || 0), 0)
+      const cur = winner.reduce((n, a) => n + (acc.dist(a) || 0), 0)
+      if (km > 0 && cur === 0 && winner.length) { acc.setDist(winner[0], km); grafted = km }
+    }
+    console.log(`   🧹 ${d} 室內重複：砍掉 ${keepWatch ? 'Rouvy' : '手錶'} 那份 `
+      + `${(sec(loser) / 3600).toFixed(2)} h（留下 ${(Math.max(sec(g.watch), sec(g.rouvy)) / 3600).toFixed(2)} h）`
+      + (grafted ? `，里程 ${grafted.toFixed(1)} km 從 Rouvy 接過來` : ''))
+  }
+  if (drop.size) {
+    console.log(`✅ 室內去重：砍掉 ${drop.size} 筆、合計 ${(droppedSec / 3600).toFixed(1)} 小時`)
+  }
+  // 把砍掉的東西記下來：summary 的 YTD 是 Strava 自己的 stats API 算的，
+  // 它照樣把兩筆都算進去，我們這邊砍了它不會知道。要手動扣掉才會跟
+  // monthly_history 對得起來（不扣的話儀表板會出現「62 趟 vs 59 趟」兩個數字）。
+  // 依呼叫端分開記：YTD 要對的是「Strava 自己那份原始清單裡有幾筆重複」，
+  // 也就是 raw 這一趟。合併後那一趟通常是 0（上游已經砍過了），拿它去扣會扣不到。
+  dropDuplicateIndoor.dropped = dropDuplicateIndoor.dropped || {}
+  dropDuplicateIndoor.dropped[acc.tag || 'unknown'] = {
+    count: drop.size,
+    hours: droppedSec / 3600,
+    byYear: [...drop].reduce((m, a) => {
+      const y = (acc.date(a) || '').slice(0, 4)
+      m[y] = m[y] || { count: 0, sec: 0 }
+      m[y].count += 1
+      m[y].sec += acc.secs(a) || 0
+      return m
+    }, {}),
+  }
+  return list.filter(a => !drop.has(a))
+}
+
+const RIDE_TYPE_NAMES = ['Ride', 'VirtualRide', 'EBikeRide', 'MountainBikeRide']
+const RAW_ACC = {
+  tag: 'raw',
+  name: a => a.name,
+  date: a => a.start_date_local || a.start_date,
+  secs: a => a.moving_time,
+  trainer: a => a.trainer,
+  virtual: a => a.sport_type === 'VirtualRide' || a.type === 'VirtualRide',
+  rideType: a => RIDE_TYPE_NAMES.includes(a.type) || RIDE_TYPE_NAMES.includes(a.sport_type),
+  dist: a => (a.distance || 0) / 1000,
+  setDist: (a, km) => { a.distance = km * 1000; a.distance_from_rouvy = true },
+}
+const RIDE_ACC = {
+  tag: 'ride',
+  name: a => a.name,
+  date: a => a.date,
+  secs: a => a.moving_time_sec,
+  trainer: a => a.trainer,
+  virtual: a => a.sport_type === 'VirtualRide' || a.type === 'VirtualRide',
+  dist: a => a.distance_km || 0,
+  setDist: (a, km) => { a.distance_km = Math.round(km * 100) / 100; a.distance_from_rouvy = true },
+}
+
 // ── Step 4：組合資料、處理 monthly_history ──
 function buildJSON(stats, activities) {
   const s = stats
@@ -927,6 +1027,9 @@ function buildJSON(stats, activities) {
       max_watts:      a.max_watts ? Math.round(a.max_watts) : null,
       np_watts:       np > 0 ? Math.round(np) : null,
       trainer:        a.trainer || false,
+      // 室內去重時把 Rouvy 那份的里程接過來的話，這裡留個記號，
+      // 免得半年後看到「室內 56 km」不知道那個數字打哪來。
+      ...(a.distance_from_rouvy ? { distance_from_rouvy: true } : {}),
       sport_type:     a.type,
       if_score:       ifScore,
       tss:            tss,
@@ -1004,9 +1107,11 @@ function buildJSON(stats, activities) {
     })
   }
 
-  const mergedRecentRides = fetchAll
+  // 合併之後再過一次：上游只管這次抓到的，舊 JSON 裡早就存下來的重複筆
+  // （8/19、8/20、8/25 的 Rouvy 那份）要在這裡才砍得掉。
+  const mergedRecentRides = dropDuplicateIndoor(fetchAll
     ? recentRides
-    : mergeActivityLists(recentRides, existing.recent_rides)
+    : mergeActivityLists(recentRides, existing.recent_rides), RIDE_ACC)
   const mergedRecentRuns = fetchAll
     ? recentRuns
     : mergeActivityLists(recentRuns, existing.recent_runs)
@@ -1108,13 +1213,24 @@ function buildJSON(stats, activities) {
     weight: { done: wWeightCt >= 1,                   count: wWeightCt,      target: 1, parts: wWeightParts },
   }
 
+  // YTD 來自 Strava 自己的 stats API，它把室內的兩筆都算進去。我們上游砍掉了
+  // 幾筆，這裡要照樣扣掉，否則同一個儀表板會出現「YTD 62 趟」與
+  // 「monthly_history 加總 59 趟」兩個互相矛盾的數字。距離不扣：手錶那份室內
+  // 是 0 km，Rouvy 的里程已經接到留下來的那筆上，總距離本來就沒變。
+  const thisYear = String(new Date(Date.now() + 8 * 3600 * 1000).getUTCFullYear())
+  const dropY = (((dropDuplicateIndoor.dropped || {}).raw || {}).byYear || {})[thisYear]
+                || { count: 0, sec: 0 }
+  if (dropY.count) {
+    console.log(`   ↩︎ YTD 扣掉 ${dropY.count} 趟、${(dropY.sec / 3600).toFixed(1)} h 的室內重複`)
+  }
+
   return {
     updated_at: new Date().toISOString(),
     summary: {
       ytd_distance_km:      Math.round(s.ytd_ride_totals.distance / 100) / 10,
       ytd_elevation_m:      Math.round(s.ytd_ride_totals.elevation_gain),
-      ytd_rides:            s.ytd_ride_totals.count,
-      ytd_moving_time_hr:   Math.round(s.ytd_ride_totals.moving_time / 360) / 10,
+      ytd_rides:            s.ytd_ride_totals.count - dropY.count,
+      ytd_moving_time_hr:   Math.round((s.ytd_ride_totals.moving_time - dropY.sec) / 360) / 10,
       ytd_run_distance_km:  Math.round(s.ytd_run_totals.distance / 100) / 10,
       ytd_runs:             s.ytd_run_totals.count,
       ytd_swim_distance_km: Math.round((s.ytd_swim_totals?.distance || 0) / 100) / 10,
@@ -1145,7 +1261,7 @@ async function main() {
 
   const token      = await getAccessToken()
   const stats      = await fetchStats(token)
-  const activities = await fetchRecentActivities(token)
+  const activities = dropDuplicateIndoor(await fetchRecentActivities(token), RAW_ACC)
 
   // 讀舊 JSON 供 lap 快取使用（buildJSON 內部也會讀，此處獨立讀取供 enrichRideLaps）
   let existingData = { recent_rides: [] }
