@@ -14,6 +14,9 @@
 """
 import json, argparse, datetime, os, sys
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import ride_hours   # noqa: E402  室內重複紀錄去重
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 J = lambda *p: json.load(open(os.path.join(ROOT, *p), encoding='utf-8'))
 DASH = '—'
@@ -112,14 +115,9 @@ def main():
         mth = today[:7]
         d0 = datetime.date.fromisoformat(today)
         eom = (d0.replace(day=28) + datetime.timedelta(days=4)).replace(day=1) - datetime.timedelta(days=1)
-        got = vh = 0.0
-        for r in rides:
-            if (r.get('date') or '')[:7] != mth or (r.get('date') or '') > today:
-                continue
-            h = (r.get('moving_time_sec') or 0) / 3600.0
-            got += h
-            if r.get('sport_type') == 'VirtualRide' or r.get('trainer') is True:
-                vh += h
+        # 室內一趟在 Strava 有兩筆（手錶＋Rouvy），見 scripts/ride_hours.py
+        got, vh, _out = ride_hours.month_hours(rides, mth, upto=today)
+        dropped = ride_hours.dropped_hours(rides, month=mth, upto=today)
         left = (eom - d0).days
         pace = got / max(d0.day, 1) * eom.day
         gap = BREAKEVEN - got
@@ -134,6 +132,9 @@ def main():
             print('  已過線 +{:.1f} h　→ 這個月預計 {:+.1f} W'.format(-gap, -gap * SLOPE))
         print('  照目前節奏推估月底 {:.1f} h（{}）'.format(
             pace, '過線' if pace >= BREAKEVEN else '不足 {:.1f} h'.format(BREAKEVEN - pace)))
+        if dropped > 0.05:
+            print('  ⚠️ 已扣掉 {:.1f} h 室內重複紀錄（同一趟被手錶與 Rouvy 各推一次到 Strava）'
+                  .format(dropped))
         print('  參考：2025-09 是 28.4 h，兩個 PR 就在它後面 3–5 週')
 
     # ── 週期 ──────────────────────────────────────────────────────────

@@ -16,6 +16,9 @@
 """
 import argparse, collections, datetime, json, os, re, sys
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import ride_hours   # noqa: E402  室內重複紀錄去重
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, 'athlete', 'coach-context.md')
 TPE = datetime.timezone(datetime.timedelta(hours=8))
@@ -116,14 +119,9 @@ def sec_volume(today):
     mth = today[:7]
     d0 = datetime.date.fromisoformat(today)
     eom = (d0.replace(day=28) + datetime.timedelta(days=4)).replace(day=1) - datetime.timedelta(days=1)
-    got = vh = 0.0
-    for r in rides:
-        if (r.get('date') or '')[:7] != mth or (r.get('date') or '') > today:
-            continue
-        h = (r.get('moving_time_sec') or 0) / 3600.0
-        got += h
-        if r.get('sport_type') == 'VirtualRide' or r.get('trainer') is True:
-            vh += h
+    # 室內一趟在 Strava 有兩筆（手錶＋Rouvy），直接加總會灌水，見 scripts/ride_hours.py
+    got, vh, _out = ride_hours.month_hours(rides, mth, upto=today)
+    dropped = ride_hours.dropped_hours(rides, month=mth, upto=today)
     gap = BREAKEVEN - got
     pace = got / max(d0.day, 1) * eom.day
     L = ['**月騎乘時數是這半年最重要的單一指標。** 損益線 %.1f h／月：低於它 eFTP 就在掉'
@@ -134,11 +132,14 @@ def sec_volume(today):
                        % (gap, gap / max((eom - d0).days / 7.0, 0.3)) if gap > 0
                        else '已過線 **+%.1f h**（約 %+.1f W）' % (-gap, -gap * SLOPE)))
     L.append('- 照目前節奏推估月底 %.1f h（%s）' % (pace, '過線' if pace >= BREAKEVEN else '不足'))
+    if dropped > 0.05:
+        L.append('- ⚠️ 已扣掉 **%.1f h** 的室內重複紀錄（同一趟被手錶與 Rouvy 各推一次到 Strava）'
+                 % dropped)
     L.append('')
     L.append('近 6 個月：')
     m = collections.defaultdict(float)
-    for r in rides:
-        m[(r.get('date') or '')[:7]] += (r.get('moving_time_sec') or 0) / 3600.0
+    for d, (ind, out) in ride_hours.hours_by_date(rides).items():
+        m[d[:7]] += ind + out
     keys = sorted(k for k in m if k)[-6:]
     L.append('| 月 | %s |' % ' | '.join(keys))
     L.append('|---|%s' % ('---|' * len(keys)))
