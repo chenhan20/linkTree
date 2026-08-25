@@ -999,6 +999,11 @@ def classify_blocks(pts, ftp, weight=80.0, win=180):
     t0 = pts[0]["t"]
     alts = smooth([p["alt"] for p in pts], 20)
     mass = (weight or 80.0) + 8.0
+    # 訓練台沒有速度感測（曲柄功率計只廣播功率與迴轉），逐秒 spd 全是 None。
+    # 先前這裡一律用 spd > 0.5 判「移動中」，於是室內每一格的 mov 都是空的 ——
+    # 均瓦 0、NP 0、IF 0，整趟被歸成一塊「平路巡航」。實測 2026-08-25 撞到。
+    has_speed = any(p.get("spd") is not None for p in pts)
+    indoor = not has_speed
     cells = []
     for a in range(0, n - 1, win):
         b = min(n - 1, a + win)
@@ -1007,18 +1012,26 @@ def classify_blocks(pts, ftp, weight=80.0, win=180):
         if sec < 30:
             continue
         dist = (seg[-1]["dist"] or 0) - (seg[0]["dist"] or 0)
-        stopped = sum(1 for p in seg if p["spd"] is not None and p["spd"] <= 0.5)
+        stopped = 0 if indoor else sum(1 for p in seg if p["spd"] is not None and p["spd"] <= 0.5)
         ws = [p["w"] for p in seg if p["w"] is not None]
         hs = [p["hr"] for p in seg if p["hr"]]
         avg_w = sum(ws) / len(ws) if ws else 0.0
-        mov = [p["w"] for p in seg if p["w"] is not None and p["spd"] and p["spd"] > 0.5]
+        mov = ([p["w"] for p in seg if p["w"] is not None] if indoor else
+               [p["w"] for p in seg if p["w"] is not None and p["spd"] and p["spd"] > 0.5])
         avg_w_mov = sum(mov) / len(mov) if mov else 0.0
         grade = (alts[b] - alts[a]) / dist if dist > 50 else 0.0
         v = dist / max(1, sec - stopped)
         npw = normalized_power([w or 0 for w in mov]) or avg_w_mov
         inten = (npw / ftp) if ftp else 0.0
         stop_ratio = stopped / sec
-        if stop_ratio > 0.55:
+        if indoor:
+            # 室內沒有地形，用「路段」分類沒有意義（坡度恆為 0，整趟都會是平路巡航）。
+            # 改用強度分段：那才是訓練台上唯一在變的東西。
+            kind = ("門檻以上" if inten >= 0.90 else
+                    "SST／Tempo" if inten >= 0.75 else
+                    "Z2 巡航" if inten >= 0.55 else
+                    "恢復／熱身")
+        elif stop_ratio > 0.55:
             kind = "停等／休息"
         elif stop_ratio > 0.18 and grade < 0.02:
             kind = "市區走停"

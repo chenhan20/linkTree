@@ -1406,9 +1406,16 @@ if(REPS){
     t+=`<tr><td${k?' class="hi"':''}>${l.n}</td><td>${l.hhmmss.replace(/^0:/,'')}</td><td>${l.km}</td><td>${l.kmh??'—'}</td><td${k?' class="hi"':''}>${l.avg_w??'—'}</td><td>${l.np_w??'—'}</td><td>${l.avg_hr??'—'}</td><td>${l.cad??'—'}</td><td>${l.elev_gain_m?'+'+l.elev_gain_m:'—'}</td></tr>`;});
   t+='</tbody></table></div>';
   if(R.blocks&&R.blocks.length){
-    t+='<div class="app-h">路段自動分類</div><div class="app-w"><table class="tbl"><thead><tr><th>起</th><th>類型</th><th>時長</th><th>距離</th><th>均速</th><th>均坡</th><th>均瓦</th><th>IF</th><th>心率</th><th>停等</th></tr></thead><tbody>';
+    /* 室內（訓練台）沒有距離、速度、坡度，那三欄全是 0，擺著只是誤導 ——
+       整張表的意義也不同：室內分的是強度不是地形，所以連標題一起換。 */
+    const IN = CH.x_axis === 'min';
+    t+='<div class="app-h">'+(IN?'強度自動分段':'路段自動分類')+'</div><div class="app-w"><table class="tbl"><thead><tr><th>起</th><th>類型</th><th>時長</th>'
+      +(IN?'':'<th>距離</th><th>均速</th><th>均坡</th>')+'<th>均瓦</th><th>IF</th><th>心率</th>'+(IN?'':'<th>停等</th>')+'</tr></thead><tbody>';
     R.blocks.forEach(b=>{const k=(b.if||0)>=0.75;
-      t+=`<tr><td>${hm(b.start_sec)}</td><td${k?' class="hi"':''}>${b.kind}</td><td>${hm(b.sec)}</td><td>${b.km}</td><td>${b.kmh}</td><td>${b.grade_pct}%</td><td${k?' class="hi"':''}>${b.avg_w}</td><td>${b.if??'—'}</td><td>${b.avg_hr??'—'}</td><td>${b.stopped_sec>30?ms(b.stopped_sec):'—'}</td></tr>`;});
+      t+=`<tr><td>${hm(b.start_sec)}</td><td${k?' class="hi"':''}>${b.kind}</td><td>${hm(b.sec)}</td>`
+        +(IN?'':`<td>${b.km}</td><td>${b.kmh}</td><td>${b.grade_pct}%</td>`)
+        +`<td${k?' class="hi"':''}>${b.avg_w}</td><td>${b.if??'—'}</td><td>${b.avg_hr??'—'}</td>`
+        +(IN?'':`<td>${b.stopped_sec>30?ms(b.stopped_sec):'—'}</td>`)+`</tr>`;});
     t+='</tbody></table></div>';}
   const bs=(R.stops||[]).filter(s=>s.dur_sec>=90).sort((a,b)=>b.dur_sec-a.dur_sec);
   if(bs.length){t+='<div class="app-h">停等 90 秒以上</div><div class="app-w"><table class="tbl"><thead><tr><th>位置</th><th>時間點</th><th>停多久</th><th>判定</th></tr></thead><tbody>';

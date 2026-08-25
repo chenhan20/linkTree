@@ -771,6 +771,62 @@ def _rule_min_power_hold(rule, segreps, S, P):
     }
 
 
+POWER_HR_FILE = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+    "data", "fit", "_power_hr.json",
+)
+
+
+def _rule_hr_vs_curve(rule, segreps, S, P):
+    """同瓦數心率 vs 他自己的常態曲線。**只報不扣分。**
+
+    為什麼要有這條：2026-08-25 那堂的失分全在功率，但「為什麼踩不出來」
+    要靠這個才看得見 —— 門檻組 186W 心率 143，而他在 185W 的常態是 149。
+    同瓦數心率壓低 5 下以上＝當天泵不上去（未恢復／睡眠被切斷），
+    那跟「設太高」或「不想踩」是完全不同的病，處方也完全相反。
+
+    資料源 data/fit/_power_hr.json（intervals 的 power-hr-curve，每 5W 一桶，
+    近三個月）。檔案不在就安靜跳過 —— 這是診斷不是門檻。
+    """
+    try:
+        with open(POWER_HR_FILE, encoding="utf-8") as f:
+            win = (json.load(f).get("windows") or [None])[0]
+    except (OSError, ValueError):
+        return None
+    if not win or not win.get("bpm"):
+        return None
+    bpm, mins = win["bpm"], win.get("minutes") or []
+    bucket = win.get("bucket") or 5
+    lo_min = rule.get("min_sample_min", 5)
+    rows = []
+    for r in _scope_segs(segreps, rule.get("scope", "work")):
+        act = r.get("actual") or {}
+        w, hr = act.get("avg_w"), act.get("avg_hr")
+        if not w or not hr:
+            continue
+        i = int(w // bucket)
+        if i >= len(bpm) or not bpm[i] or (i < len(mins) and mins[i] < lo_min):
+            continue
+        rows.append({"segment": r["name"], "avg_w": round(w), "avg_hr": hr,
+                     "expected_hr": bpm[i], "delta": hr - bpm[i]})
+    if not rows:
+        return None
+    worst = min(rows, key=lambda x: x["delta"])
+    lim = rule.get("low_bpm", 5)
+    low = [x for x in rows if x["delta"] <= -lim]
+    if low:
+        verdict = ("%d/%d 個工作段的心率低於常態 %d 下以上（最多「%s」低 %d：%dW 應為 %d、實際 %d）"
+                   " —— 當天泵不上去，不是處方設太高"
+                   % (len(low), len(rows), lim, worst["segment"], -worst["delta"],
+                      worst["avg_w"], worst["expected_hr"], worst["avg_hr"]))
+    else:
+        verdict = ("工作段心率都在常態範圍內（最低「%s」%+d 下）—— 沒有泵不上去的跡象"
+                   % (worst["segment"], worst["delta"]))
+    return {"score": None, "verdict": verdict,
+            "detail": {"rows": rows, "low_bpm": lim,
+                       "window": [win.get("start"), win.get("end")]}}
+
+
 def _rule_no_fade_last(rule, segreps, S, P):
     N = int(rule.get("minutes", 3)) * 60
     segs = _scope_segs(segreps, rule.get("scope", "work"))
@@ -850,6 +906,7 @@ def _rule_hr_note_above(rule, segreps, S, P):
 RULE_EVALUATORS = {
     "min_power_hold": _rule_min_power_hold,
     "no_fade_last": _rule_no_fade_last,
+    "hr_vs_curve": _rule_hr_vs_curve,
     "hr_note_above": _rule_hr_note_above,
 }
 
