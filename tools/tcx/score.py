@@ -261,6 +261,76 @@ def _edge_cost(actual, expected, weight):
     return weight * abs(actual - expected) / max(120.0, float(expected))
 
 
+# 手動 lap 是他自己按的段落邊界 —— 那是意圖，比我們用功率猜的準。
+# 容忍度：lap 長度跟處方差超過這個比例就不採用（那個 lap 多半是別的東西，
+# 例如「3 分工作 + 2 分恢復」包成一個 5 分鐘的 lap，這時 DP 切出來的
+# 3 分鐘工作段反而才是對的）。
+LAP_SNAP_TOL = 0.35
+
+
+def snap_to_laps(segments, spans, S):
+    """把主課表段的邊界吸附到手動 lap 上。回傳 (spans, 診斷)。
+
+    為什麼需要：align_segments 是用逐秒功率偏差做 DP 猜邊界的。當天實際瓦數
+    離處方很遠時（2026-08-25 門檻組處方 220-230W、實際 154W），DP 會把那段
+    砍短去讓成本好看 —— 實測把一個做滿 19.9 分鐘的 20 分鐘門檻組報成「7.5 分、
+    完成度 38%」。車手看 lap 就知道不對。FIT 裡他按的 lap 才是事實。
+
+    刻意做成**選用**：沒按 lap 的日子（2026-08-20 只有 1 個 manual lap）
+    完全不受影響，照舊走 DP，歷史成績不會因為這支上線就集體變動。
+    """
+    laps = [l for l in (S.get("laps") or []) if l.get("trigger") == "manual"]
+    diag = {"manual_laps": len(laps), "snapped": [], "dropped": []}
+    if not laps:
+        return spans, diag
+    used = set()
+    for i, (seg, sp) in enumerate(zip(segments, spans)):
+        if seg.get("role") not in WORK_ROLES or not sp:
+            continue
+        want = seg["minutes"] * 60.0
+        best = None
+        for k, l in enumerate(laps):
+            if k in used:
+                continue
+            ov = min(sp[1], l["i1"]) - max(sp[0], l["i0"])
+            if ov <= 0:
+                continue
+            dur = l["i1"] - l["i0"]
+            rel = abs(dur - want) / max(want, 1)
+            if rel > LAP_SNAP_TOL:
+                continue
+            key = (-ov, rel)
+            if best is None or key < best[0]:
+                best = (key, k)
+        if best is not None:
+            k = best[1]
+            used.add(k)
+            spans[i] = (laps[k]["i0"], laps[k]["i1"])
+            diag["snapped"].append({"segment": seg["name"], "lap": k + 1,
+                                    "sec": laps[k]["i1"] - laps[k]["i0"]})
+    # 吸附之後可能跟鄰居重疊：DP 有時會把某個沒做到的段塞進別段的時間裡
+    # （8/25 的「大盤扭力 4/4」被塞進門檻組 1 的前 3 分鐘 —— 他其實只做了 3 組）。
+    # 被搶走時間的那段判為沒對到，而不是兩段共用同一批秒數。
+    for i in range(len(spans)):
+        if not spans[i]:
+            continue
+        for j in range(len(spans)):
+            if i == j or not spans[j]:
+                continue
+            snapped_j = any(d["segment"] == segments[j]["name"] for d in diag["snapped"])
+            snapped_i = any(d["segment"] == segments[i]["name"] for d in diag["snapped"])
+            if not snapped_j or snapped_i:
+                continue
+            ov = min(spans[i][1], spans[j][1]) - max(spans[i][0], spans[j][0])
+            if ov > 0 and ov >= (spans[i][1] - spans[i][0]) * 0.5:
+                diag["dropped"].append({"segment": segments[i]["name"],
+                                        "reason": "時間被「%s」佔用（吸附到手動 lap 之後）"
+                                                  % segments[j]["name"]})
+                spans[i] = None
+                break
+    return spans, diag
+
+
 def align_segments(segments, S, ap, ftp):
     """兩階段對齊。回傳 (spans, 診斷字典)。spans[i] 是 (start,end) 或 None。
 
@@ -1025,6 +1095,8 @@ def score_ride(path, date=None, plan=None, plan_path=None):
     segments = day["segments"]
 
     spans, align_diag = align_segments(segments, S, ap, ftp)
+    spans, lap_diag = snap_to_laps(segments, spans, S)
+    align_diag["lap_snap"] = lap_diag
 
     segreps = []
     for i, (seg, sp) in enumerate(zip(segments, spans)):
