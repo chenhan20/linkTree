@@ -970,7 +970,8 @@ let HERO_IN_MASTHEAD=false;
   // 最後一格刻度跟「NN km」擠在一起會疊字，離終點太近就不畫
   for(let v=0;v<=maxX;v+=stepX)
     if(maxX-v>maxX*0.05) s.appendChild(txt(X(v),T2+h2+15,v,{anchor:'middle',fs:9.5}));
-  s.appendChild(txt(X(maxX),T2+h2+15,maxX.toFixed(0)+' km',{anchor:'end',fs:9.5,fill:C('ink-2')}));
+  const XU=CH.x_axis==='min'?' 分':' km';   // 訓練台那幾天 X 軸是時間不是距離
+  s.appendChild(txt(X(maxX),T2+h2+15,maxX.toFixed(0)+XU,{anchor:'end',fs:9.5,fill:C('ink-2')}));
 
   const cl=el('line',{x1:0,y1:T,x2:0,y2:T2+h2,stroke:C('axis'),opacity:0});
   const d1=el('circle',{r:3.5,fill:C('s1'),stroke:C('paper'),'stroke-width':1.5,opacity:0});
