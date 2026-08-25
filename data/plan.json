@@ -589,7 +589,7 @@
         {
           "name": "熱身",
           "role": "warmup",
-          "minutes": 20,
+          "minutes": 11,
           "target_w": {
             "lo": 130,
             "hi": 180,
@@ -598,10 +598,10 @@
           "target_cadence": null
         },
         {
-          "name": "大盤扭力 1/4",
+          "name": "大盤扭力 1/3",
           "role": "work",
           "rep": 1,
-          "of": 4,
+          "of": 3,
           "minutes": 3,
           "target_w": {
             "lo": 195,
@@ -622,14 +622,13 @@
             "hi": null,
             "about": 140
           },
-          "target_cadence": null,
-          "note": "課表未指定組間長度，此處假設 2 分"
+          "target_cadence": null
         },
         {
-          "name": "大盤扭力 2/4",
+          "name": "大盤扭力 2/3",
           "role": "work",
           "rep": 2,
-          "of": 4,
+          "of": 3,
           "minutes": 3,
           "target_w": {
             "lo": 195,
@@ -653,10 +652,10 @@
           "target_cadence": null
         },
         {
-          "name": "大盤扭力 3/4",
+          "name": "大盤扭力 3/3",
           "role": "work",
           "rep": 3,
-          "of": 4,
+          "of": 3,
           "minutes": 3,
           "target_w": {
             "lo": 195,
@@ -678,22 +677,6 @@
             "about": 140
           },
           "target_cadence": null
-        },
-        {
-          "name": "大盤扭力 4/4",
-          "role": "work",
-          "rep": 4,
-          "of": 4,
-          "minutes": 3,
-          "target_w": {
-            "lo": 195,
-            "hi": 210,
-            "about": 200
-          },
-          "target_cadence": {
-            "lo": 55,
-            "hi": 65
-          }
         },
         {
           "name": "門檻組 1/2",
@@ -741,7 +724,7 @@
         {
           "name": "轉換",
           "role": "recovery",
-          "minutes": 4,
+          "minutes": 3,
           "target_w": {
             "lo": null,
             "hi": null,
@@ -752,19 +735,18 @@
         {
           "name": "疲勞後續航",
           "role": "work",
-          "minutes": 35,
+          "minutes": 27,
           "target_w": {
             "lo": 185,
             "hi": 195,
             "about": 190
           },
-          "target_cadence": null,
-          "note": "比 W1 短 10 分但高 5W —— 門檻量往上，尾巴往上不往長"
+          "target_cadence": null
         },
         {
           "name": "收操",
           "role": "cooldown",
-          "minutes": 10,
+          "minutes": 6,
           "target_w": {
             "lo": null,
             "hi": null,
@@ -793,7 +775,15 @@
         "week_tss": 252
       },
       "venue": "indoor",
-      "venue_note": "2026-08-21 改場地：這堂搬進訓練台。理由是處方本身 —— 「功率不得低於 165W 超過 10 秒（含轉彎、逆風、路口前）」與 VI ≤1.08 在河濱是跟紅綠燈和逆風打仗，在訓練台是機器的預設行為；大盤扭力段（200W / 55-65 rpm）掛檔就有，河濱要靠大盤加逆風湊。附帶解決下雨。沒有全力段，可以開 ERG。**一定要用手錶錄**（訓練台走 ANT+ 配曲柄功率計，Rouvy 只當畫面）。 ⚠️ **這堂不准用 ERG，用 slope／level 看手錶配速**，並且**事後匯出 Rouvy 的 FIT**：訓練台偏移只在 85–170W 驗證過，這堂跨 190／200／225W 三個點，正好把 baseline.trainer_offset_confidence 的待辦 (b)「4×5 分階梯測」順手收掉，不必另外排一天。"
+      "venue_note": "2026-08-21 改場地：這堂搬進訓練台。理由是處方本身 —— 「功率不得低於 165W 超過 10 秒（含轉彎、逆風、路口前）」與 VI ≤1.08 在河濱是跟紅綠燈和逆風打仗，在訓練台是機器的預設行為；大盤扭力段（200W / 55-65 rpm）掛檔就有，河濱要靠大盤加逆風湊。附帶解決下雨。沒有全力段，可以開 ERG。**一定要用手錶錄**（訓練台走 ANT+ 配曲柄功率計，Rouvy 只當畫面）。 ⚠️ **這堂不准用 ERG，用 slope／level 看手錶配速**，並且**事後匯出 Rouvy 的 FIT**：訓練台偏移只在 85–170W 驗證過，這堂跨 190／200／225W 三個點，正好把 baseline.trainer_offset_confidence 的待辦 (b)「4×5 分階梯測」順手收掉，不必另外排一天。",
+      "revision": {
+        "revised_at": "2026-08-25 當天出發前",
+        "by": "外部 AI（車手自己請它改的）",
+        "what": "熱身 20→11 分、大盤扭力 4 組→3 組、續航 35→27 分、轉換 4→3 分、收操 10→6 分。瓦數處方全部不動。",
+        "original_ride_min": 135,
+        "revised_ride_min": 110,
+        "note": "這一格存在的理由：處方被當天改過而沒有記錄的話，評分會拿「沒發生的課表」去對帳 —— 第一版就把做滿的 2×20 報成完成度 38%、還憑空生出一組沒做的大盤扭力。區塊層的目標（training-block.json 的 target IF 0.81 / TSS 141）維持原設計不改，那是這個區塊要的東西；這裡記的是當天實際被交代的版本。"
+      }
     },
     "2026-08-27": {
       "type": "B_TEMPO",
