@@ -60,3 +60,56 @@ def dropped_hours(rides, month=None, upto=None):
         h = (r.get('moving_time_sec') or 0) / 3600.0
         days[d]['rouvy' if _rouvy(r) else 'watch'] += h
     return sum(min(v['watch'], v['rouvy']) for v in days.values())
+
+
+# ── 月騎乘時數：歷史吃凍結快照，當月與之後從 intervals 現算 ──────────────
+#
+# Strava 訂閱 2026-08-30 到期。歷史已經凍在 data/monthly-hours.json
+# （見 scripts/freeze-monthly-hours.py 的說明：intervals 的歷史不完整，
+# 2025-07 以前是 0 趟），之後的月份改從 data/fit/_activities.json 算。
+# 兩邊口徑實測一致：2025-11 之後逐月誤差 ≤0.06 h，因為都是同一份 Garmin FIT。
+
+import json
+import os
+
+_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+RIDE_TYPES = ('Ride', 'VirtualRide', 'GravelRide', 'MountainBikeRide')
+
+
+def _load(*p):
+    try:
+        return json.load(open(os.path.join(_ROOT, *p), encoding='utf-8'))
+    except (OSError, ValueError):
+        return None
+
+
+def monthly_series():
+    """回傳 {月: {'hours','km','rides','src'}}，歷史＋現況接好的一整條。"""
+    out = {}
+    frozen = _load('data', 'monthly-hours.json') or {}
+    through = frozen.get('frozen_through', '')
+    for m, v in (frozen.get('months') or {}).items():
+        out[m] = {**v, 'src': 'frozen'}
+
+    acts = _load('data', 'fit', '_activities.json') or {}
+    live = {}
+    for v in acts.values():
+        if v.get('type') not in RIDE_TYPES:
+            continue
+        m = str(v.get('start_date_local', ''))[:7]
+        if not m or (through and m <= through):
+            continue          # 凍結區間不重算，才不會讓損益線的基準漂掉
+        d = live.setdefault(m, {'hours': 0.0, 'km': 0.0, 'rides': 0, 'src': 'intervals'})
+        d['hours'] += (v.get('moving_time') or 0) / 3600.0
+        d['km'] += (v.get('distance') or 0) / 1000.0
+        d['rides'] += 1
+    for m, d in live.items():
+        d['hours'] = round(d['hours'], 2)
+        d['km'] = round(d['km'], 1)
+        out[m] = d
+    return dict(sorted(out.items()))
+
+
+def month_of(month):
+    """單一月份，找不到就回 0。"""
+    return monthly_series().get(month, {'hours': 0.0, 'km': 0.0, 'rides': 0, 'src': 'none'})

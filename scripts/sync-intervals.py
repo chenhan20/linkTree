@@ -163,6 +163,12 @@ ACTIVITY_FIELDS = (
     "avg_lr_balance",
     # 只有 intervals 有、FIT 算不出來的
     "icu_joules_above_ftp", "icu_max_wbal_depletion", "icu_hrr", "coasting_time",
+    # 量的三件事：時數、里程、爬升。2026-08-25 補的 —— 先前這裡一欄都沒留,
+    # 於是「月騎乘時數」這個他自己標成最重要的指標只能去讀 data/strava.json,
+    # 而 Strava 訂閱 2026-08-30 到期。實測 intervals 這三欄跟 Strava 逐趟一致
+    # (8/04~8/13 五趟距離與爬升完全相同,moving_time 也相同),因為兩邊都是從
+    # 同一份 Garmin FIT 算的。室內沒有距離與爬升(訓練台沒配成速度來源),會是 null。
+    "moving_time", "elapsed_time", "distance", "total_elevation_gain", "calories",
 )
 
 # wellness 想要的欄位。用 fields= 過濾，回傳小一點也少踩到 schema 變動。
@@ -348,6 +354,61 @@ def safe_name(activity: dict) -> str:
 PHR_WINDOW_DAYS = 91
 PHR_WINDOWS = 4
 
+# 要留下來的 duration（秒）。跟 data/strava.json 的 power_prs 對齊，
+# 這樣換源之後儀表板與教練脈絡的欄位不用改。
+PC_SECS = (5, 15, 30, 60, 300, 600, 1200, 1800, 3600)
+
+
+def sync_power_curve() -> int:
+    """個人最佳功率曲線（全史 PB，每個 duration 出自哪一趟）。
+
+    取代 data/strava.json 的 power_prs —— Strava API 訂閱 2026-08-30 到期。
+    實測（2026-08-25）兩邊數字一致：5m 321W、20m 252W、60m 190W，也就是
+    這個訓練區塊要填平的那個斷崖。一次 API call，不逐活動打。
+
+    跟 wellness／power-hr 一樣刻意不讓它擋整班：FIT 下載才是本業。
+    """
+    path = OUT_DIR / "_power_curve.json"
+    try:
+        d = _request(f"/athlete/{ATHLETE}/power-curves?type=Ride&curves=all")
+    except Exception as e:  # noqa: BLE001
+        log.warning("power-curves 失敗(不影響 FIT 同步): %s", e)
+        return 0
+    curves = (d.get("list") if isinstance(d, dict) else None) or []
+    if not curves:
+        log.warning("power-curves 回傳空的,跳過")
+        return 0
+    c = curves[0]
+    secs, vals = c.get("secs") or [], c.get("values") or []
+    aids, wkg = c.get("activity_id") or [], c.get("watts_per_kg") or []
+    # 活動 id → 日期與名稱，讓「這個 PB 是哪一天做的」看得出來
+    meta = {}
+    try:
+        meta = json.loads((OUT_DIR / "_activities.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        pass
+    rows = []
+    for want in PC_SECS:
+        if want not in secs:
+            continue
+        i = secs.index(want)
+        aid = aids[i] if i < len(aids) else None
+        m = meta.get(str(aid)) or {}
+        rows.append({
+            "secs": want,
+            "watts": round(vals[i]),
+            "w_per_kg": round(wkg[i], 2) if i < len(wkg) and wkg[i] else None,
+            "activity_id": aid,
+            "date": str(m.get("start_date_local", ""))[:10] or None,
+            "name": m.get("name"),
+        })
+    out = {"generated": date.today().isoformat(), "scope": "all", "type": "Ride",
+           "best": rows}
+    path.write_text(json.dumps(out, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+    log.info("個人最佳功率曲線 %d 個 duration → %s", len(rows), path.name)
+    return len(rows)
+
+
 
 def sync_power_hr() -> int:
     """athlete 級的功率 vs 心率曲線（每 5W 一桶，回該桶的平均心率、踏頻、累計分鐘）。
@@ -411,6 +472,7 @@ def sync(backfill_days: int | None = None) -> int:
 
     # 功率-心率曲線（4 call）。同樣不依賴這次有沒有新 FIT。
     sync_power_hr()
+    sync_power_curve()
 
     # DOMS 預估（data/fit/_doms.json）。純衍生資料，只讀 _activities.json，
     # 所以放在 metadata 存檔之後、不依賴這次有沒有下載到新 FIT。算壞了不該擋同步。

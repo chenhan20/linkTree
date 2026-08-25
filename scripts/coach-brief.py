@@ -107,17 +107,18 @@ def main():
     # 迴歸（17 個月、r=0.91、剔除 2025-11 的偵測離群）：eFTP 每多騎 1 小時 +0.64 W，
     # 不進不退的門檻是月騎 15.3 小時。低於它就是在掉功率，跟意志力無關。
     BREAKEVEN, SLOPE = 15.3, 0.64
-    try:
-        rides = J('data', 'strava.json').get('recent_rides') or []
-    except FileNotFoundError:
-        rides = []
-    if rides:
+    # 歷史吃 data/monthly-hours.json 凍結快照、當月從 intervals 現算，
+    # 見 scripts/ride_hours.py。Strava 訂閱 2026-08-30 到期，這裡不再讀它。
+    series = ride_hours.monthly_series()
+    if series:
         mth = today[:7]
         d0 = datetime.date.fromisoformat(today)
         eom = (d0.replace(day=28) + datetime.timedelta(days=4)).replace(day=1) - datetime.timedelta(days=1)
-        # 室內一趟在 Strava 有兩筆（手錶＋Rouvy），見 scripts/ride_hours.py
-        got, vh, _out = ride_hours.month_hours(rides, mth, upto=today)
-        dropped = ride_hours.dropped_hours(rides, month=mth, upto=today)
+        cur = series.get(mth, {'hours': 0.0, 'src': 'none'})
+        got = cur['hours']
+        acts = J('data', 'fit', '_activities.json')
+        vh = sum((v.get('moving_time') or 0) / 3600.0 for v in acts.values()
+                 if v.get('type') == 'VirtualRide' and str(v.get('start_date_local', ''))[:7] == mth)
         left = (eom - d0).days
         pace = got / max(d0.day, 1) * eom.day
         gap = BREAKEVEN - got
@@ -132,9 +133,8 @@ def main():
             print('  已過線 +{:.1f} h　→ 這個月預計 {:+.1f} W'.format(-gap, -gap * SLOPE))
         print('  照目前節奏推估月底 {:.1f} h（{}）'.format(
             pace, '過線' if pace >= BREAKEVEN else '不足 {:.1f} h'.format(BREAKEVEN - pace)))
-        if dropped > 0.05:
-            print('  ⚠️ 已扣掉 {:.1f} h 室內重複紀錄（同一趟被手錶與 Rouvy 各推一次到 Strava）'
-                  .format(dropped))
+        print('  資料源：{}'.format('intervals.icu（手錶 FIT）' if cur['src'] == 'intervals'
+                                    else 'Strava 歷史快照'))
         print('  參考：2025-09 是 28.4 h，兩個 PR 就在它後面 3–5 週')
 
     # ── 週期 ──────────────────────────────────────────────────────────

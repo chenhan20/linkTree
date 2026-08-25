@@ -113,15 +113,20 @@ def sec_state(today):
 
 
 def sec_volume(today):
-    rides = (J('data', 'strava.json', default={}) or {}).get('recent_rides') or []
-    if not rides:
+    # 歷史吃 data/monthly-hours.json 的凍結快照、當月從 intervals 現算，
+    # 見 scripts/ride_hours.py。不再讀 strava.json —— 訂閱 2026-08-30 到期。
+    series = ride_hours.monthly_series()
+    if not series:
         return '（沒有騎乘資料）'
     mth = today[:7]
     d0 = datetime.date.fromisoformat(today)
     eom = (d0.replace(day=28) + datetime.timedelta(days=4)).replace(day=1) - datetime.timedelta(days=1)
-    # 室內一趟在 Strava 有兩筆（手錶＋Rouvy），直接加總會灌水，見 scripts/ride_hours.py
-    got, vh, _out = ride_hours.month_hours(rides, mth, upto=today)
-    dropped = ride_hours.dropped_hours(rides, month=mth, upto=today)
+    cur = series.get(mth, {'hours': 0.0, 'km': 0.0, 'rides': 0, 'src': 'none'})
+    got = cur['hours']
+    # 室內時數：intervals 的室內活動沒有距離（訓練台沒配成速度來源），拿它當判準
+    vh = sum((v.get('moving_time') or 0) / 3600.0
+             for v in (J('data', 'fit', '_activities.json', default={}) or {}).values()
+             if v.get('type') == 'VirtualRide' and str(v.get('start_date_local', ''))[:7] == mth)
     gap = BREAKEVEN - got
     pace = got / max(d0.day, 1) * eom.day
     L = ['**月騎乘時數是這半年最重要的單一指標。** 損益線 %.1f h／月：低於它 eFTP 就在掉'
@@ -132,14 +137,11 @@ def sec_volume(today):
                        % (gap, gap / max((eom - d0).days / 7.0, 0.3)) if gap > 0
                        else '已過線 **+%.1f h**（約 %+.1f W）' % (-gap, -gap * SLOPE)))
     L.append('- 照目前節奏推估月底 %.1f h（%s）' % (pace, '過線' if pace >= BREAKEVEN else '不足'))
-    if dropped > 0.05:
-        L.append('- ⚠️ 已扣掉 **%.1f h** 的室內重複紀錄（同一趟被手錶與 Rouvy 各推一次到 Strava）'
-                 % dropped)
+    L.append('- 資料源：%s' % ('intervals.icu（手錶 FIT）' if cur['src'] == 'intervals'
+                              else 'Strava 歷史快照'))
     L.append('')
     L.append('近 6 個月：')
-    m = collections.defaultdict(float)
-    for d, (ind, out) in ride_hours.hours_by_date(rides).items():
-        m[d[:7]] += ind + out
+    m = {k: v['hours'] for k, v in series.items()}
     keys = sorted(k for k in m if k)[-6:]
     L.append('| 月 | %s |' % ' | '.join(keys))
     L.append('|---|%s' % ('---|' * len(keys)))
@@ -211,6 +213,20 @@ def sec_limits():
 
 
 def sec_power():
+    # 優先吃 intervals 的個人最佳曲線（_power_curve.json）。先前只有 strava.json
+    # 的 power_prs，而 Strava 訂閱 2026-08-30 到期。兩邊數字實測一致
+    # （5m 321W／20m 252W／60m 190W），換源不會讓這一節的結論變動。
+    pc = (J('data', 'fit', '_power_curve.json', default={}) or {}).get('best') or []
+    if pc:
+        def lab(n):
+            return '%d 秒' % n if n < 60 else ('%d 分' % (n // 60) if n < 3600 else '60 分')
+        L = ['| 時長 | %s |' % ' | '.join(lab(p['secs']) for p in pc),
+             '|---|%s' % ('---|' * len(pc)),
+             '| 最佳 | %s |' % ' | '.join('%s W' % p['watts'] for p in pc),
+             '| 日期 | %s |' % ' | '.join((p.get('date') or '—')[2:] for p in pc), '']
+        L.append('> **20 分 → 60 分之間是斷崖**，那才是限制因子。5 分鐘 321 W 是強項，'
+                 '**不要排 VO2 課表**。（全史個人最佳，來源 intervals.icu）')
+        return '\n'.join(L)
     d = J('data', 'strava.json', default={}) or {}
     prs = d.get('power_prs') or []
     if not prs:
@@ -302,16 +318,29 @@ def sec_routes():
 
     名稱取 Strava 上他自己打的 —— 那才是他腦子裡的路線單位，不是行政區。
     """
-    rides = (J('data', 'strava.json', default={}) or {}).get('recent_rides') or []
+    # 改吃 intervals（sync-intervals.py 現在會留 name/moving_time/distance/爬升），
+    # 不再讀 strava.json —— 訂閱 2026-08-30 到期。名稱一樣是他自己在錶上／
+    # Garmin 打的那個，跟 Strava 同一份。
+    acts = J('data', 'fit', '_activities.json', default={}) or {}
+    # 名稱優先用 Strava 上他自己打的（「劍 中中中中 劍」「露營場風櫃嘴」），
+    # intervals 那邊是 Garmin 自動命名的行政區（「內湖區 公路車」），
+    # 拿它當路線單位等於整節失去意義。Strava 停更後歷史名稱仍然留在檔案裡，
+    # 新的騎乘會退回 Garmin 名 —— 想要好名字就在 Garmin Connect 上改。
+    names = {r.get('date'): r.get('name') for r in
+             ((J('data', 'strava.json', default={}) or {}).get('recent_rides') or [])}
     out = []
-    for r in rides:
-        h = (r.get('moving_time_sec') or 0) / 3600.0
-        if h < 0.75 or (r.get('sport_type') == 'VirtualRide') or r.get('trainer') is True:
+    for r in acts.values():
+        if r.get('type') not in ('Ride', 'GravelRide', 'MountainBikeRide'):
+            continue                                   # VirtualRide 本來就排除
+        h = (r.get('moving_time') or 0) / 3600.0
+        if h < 0.75:
             continue
-        nm = re.sub(r'^(Morning|Evening|Afternoon|Night)\s+Ride\s*[-–—]?\s*', '', r.get('name') or '').strip()
+        dt = str(r.get('start_date_local', ''))[:10]
+        nm = re.sub(r'^(Morning|Evening|Afternoon|Night)\s+Ride\s*[-–—]?\s*', '',
+                    names.get(dt) or r.get('name') or '').strip()
         nm = re.sub(r'^(晨間|傍晚|午後|夜間)騎乘\s*[-–—]?\s*', '', nm).strip()
-        out.append({'h': h, 'nm': nm or '（未命名）', 'km': r.get('distance_km') or 0,
-                    'el': r.get('elevation_m') or 0, 'd': r.get('date') or ''})
+        out.append({'h': h, 'nm': nm or '（未命名）', 'km': (r.get('distance') or 0) / 1000,
+                    'el': r.get('total_elevation_gain') or 0, 'd': dt})
     if not out:
         return '（沒有可用的戶外騎乘紀錄）'
     BUCKETS = [(0.75, 1.25, '約 1 小時'), (1.25, 1.75, '約 1.5 小時'),
