@@ -43,6 +43,7 @@ TOOLS = ROOT / "tools/tcx"
 ITT = ROOT / "data/itt-segments.json"
 PLAN = ROOT / "data/plan.json"
 BLOCK = ROOT / "data/training-block.json"
+SCORES = ROOT / "data/fit/_scores"   # 逐段對帳留檔，給 coach-context 與外部 AI 讀
 
 # 個人參數；CLI 沒給時 analyze_tcx.py 會優先讀 FIT 裡錶上的設定值
 WEIGHT = os.getenv("ATHLETE_WEIGHT", "80")
@@ -114,6 +115,17 @@ def score(fit: Path, date: str, tmp: Path) -> Path | None:
         return None
     t = res.get("total") or {}
     log(f"[評分] {date} {res['plan'].get('label')} → {t.get('score')} 分（{t.get('grade')}）")
+    # 逐段對帳留檔。這份 JSON 本來寫在 tmp 資料夾，跟著程式結束一起消失 ——
+    # 於是「Python 解完 FIT 算出來的逐段結果」只活在 rides/*.html 的 HTML 裡，
+    # athlete/coach-context.md 拿不到，外部 AI 只看得到整趟的 TL/VI，
+    # 看不出「門檻組第二組只撐 7.5 分、落在區間 0%」這種決定性的細節。
+    try:
+        keep = SCORES / f"{date}.json"
+        keep.parent.mkdir(parents=True, exist_ok=True)
+        keep.write_text(json.dumps(res, ensure_ascii=False, separators=(",", ":")),
+                        encoding="utf-8")
+    except OSError as e:
+        log(f"[評分] {date} 留檔失敗（不影響報告）：{e}")
     return out
 
 

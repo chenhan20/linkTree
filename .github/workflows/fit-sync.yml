@@ -116,7 +116,13 @@ jobs:
           # 而 strava-sync（已棄用、隨時可能停跑）是唯一會把它們對齊的東西。實測撞過。
           python scripts/tag-itt-sources.py || \
             echo "::warning::ITT 來源標記失敗，這班先跳過"
-          git add data/itt-segments.json data/strava.json
+          # 給外部 AI 教練讀的單一檔案。純本機運算、不打 API、不到一秒。
+          # 一定要排在這裡（ITT 回補之後、commit 之前）：它會讀 training-block.json
+          # 的 actual 與 data/fit/_scores 的逐段對帳，兩者都是這一班剛更新完的。
+          # 沒有這步的話它會停在最後一次手動重跑那天 —— 貼給 GPT 的就是過期的身體狀態。
+          python scripts/build-coach-context.py || \
+            echo "::warning::教練脈絡重建失敗，這班先跳過"
+          git add data/itt-segments.json data/strava.json athlete/coach-context.md
           git diff --staged --quiet || \
             git commit -m "chore: 回補自建 ITT 成績 $(date -u '+%Y-%m-%d')"
           git push || (git pull --rebase && git push)

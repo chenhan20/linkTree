@@ -186,7 +186,9 @@ def sec_block(today):
          '- **前後測**：%s（%s）' % (b.get('test', {}).get('metric', '—'), b.get('test', {}).get('unit', '')),
          '', b.get('note', ''), '', '### 接下來的課表', '',
          '| 日期 | 週 | 名稱 | 目標 | 處方 |', '|---|---|---|---|---|']
-    for s in [x for x in S if x['date'] >= today][:8]:
+    # 已經有 actual 的就不是「接下來」了 —— 今天做完的那堂會留在這張表裡，
+    # 外部 AI 會以為它還沒發生。做完的細節在「最近三堂的逐段對帳」那一節。
+    for s in [x for x in S if x['date'] >= today and not x.get('actual')][:8]:
         t = s.get('target') or {}
         tgt = ('IF %s · TSS %s · VI ≤%s' % (t.get('if', '—'), t.get('tss', '—'), t.get('vi', '—'))
                if t else ('輔助課表' if s.get('support') else '—'))
@@ -409,6 +411,11 @@ SKELETON = """# 教練脈絡 · Steve Chuang
 <!-- auto:recent -->
 <!-- /auto:recent -->
 
+### 最近三堂的逐段對帳（有處方的日子）
+
+<!-- auto:sessions -->
+<!-- /auto:sessions -->
+
 ---
 
 ## 5. 當前訓練區塊
@@ -430,6 +437,11 @@ SKELETON = """# 教練脈絡 · Steve Chuang
 - 心率分區（錶上設定）：132 / 147 / 154 / 164 / 168 / 173 / 182
 - **跑步**閾值心率 167、閾值配速 5:03 /km（估算，信心低，只能趨勢判讀）
 - **室內心率天生比戶外高 5–10 bpm**，那是熱不是體能，不要據此下修強度
+
+### 同瓦數的常態心率（判斷「心率壓不上去」用）
+
+<!-- auto:powerhr -->
+<!-- /auto:powerhr -->
 
 ---
 
@@ -495,10 +507,131 @@ SKELETON = """# 教練脈絡 · Steve Chuang
 
 ---
 
+## 12. 原始資料在哪（需要深潛才用）
+
+<!-- auto:sources -->
+<!-- /auto:sources -->
+
+---
+
 *本檔由 `python3 scripts/build-coach-context.py` 產生。資料源：`data/fit/_activities.json`、
 `_wellness.json`、`_doms.json`、`data/strava.json`、`data/training-block.json`、`data/playbook.json`、
 `data/itt-segments.json`、`athlete/基本資料.json`。*
 """
+
+
+
+# ── 以下三段是 2026-08-25 補的：外部 AI 先前拿不到「逐段」與「同瓦數常態心率」，
+#    只看得到整趟的 TL/VI，於是判讀不出「哪一段崩了」與「心率壓不上去」。 ──
+
+def sec_sessions(today, n=3):
+    """最近 n 堂有處方的課表，逐段對帳。
+
+    資料源是 data/fit/_scores/<date>.json —— tools/tcx/score.py 解 FIT 算出來的
+    結果，由 build-ride-reports.py 留檔。這是整份脈絡裡唯一「逐段」的東西：
+    整趟的 IF/TSS/VI 會被熱身與恢復稀釋，看不出門檻組到底有沒有踩完。
+    """
+    dirp = os.path.join(ROOT, 'data', 'fit', '_scores')
+    if not os.path.isdir(dirp):
+        return '（還沒有逐段對帳留檔，跑一次 scripts/build-ride-reports.py 就會有）'
+    files = sorted((f for f in os.listdir(dirp) if f.endswith('.json') and f[:10] <= today),
+                   reverse=True)[:n]
+    if not files:
+        return '（還沒有逐段對帳留檔）'
+    blk = J('data', 'training-block.json', default={}) or {}
+    tgts = {x['date']: (x.get('target') or {}) for x in blk.get('sessions', [])}
+    out = []
+    for fn in files:
+        try:
+            d = json.load(open(os.path.join(dirp, fn), encoding='utf-8'))
+        except (OSError, ValueError):
+            continue
+        date, t, r = d.get('date', fn[:10]), d.get('total') or {}, d.get('ride') or {}
+        wt, tg = d.get('work_time') or {}, tgts.get(date, {})
+        # 沒有迴轉處方的日子 cadence 會是 null，不能直接 .get
+        dims = {k: (v or {}).get('score') for k, v in (d.get('dimensions') or {}).items()}
+        out.append('### %s · %s —— **%s 分（%s）**' % (
+            date, (d.get('plan') or {}).get('label', ''), t.get('score'), t.get('grade')))
+        out.append('')
+        out.append('整趟 %s 分 · IF %s（目標 %s）· TSS %s（目標 %s）· VI %s（目標 ≤%s）· 主課表做到處方的 %s%%'
+                   % (num((r.get('elapsed_sec') or 0) / 60, '{:.0f}'), num(r.get('if'), '{:.3f}'),
+                      tg.get('if', '—'), num(r.get('tss')), tg.get('tss', '—'),
+                      num(r.get('vi'), '{:.2f}'), tg.get('vi', '—'), num(wt.get('pct'))))
+        out.append('執行度 %s · 紀律 %s · 續航 %s · 迴轉 %s'
+                   % (num(dims.get('compliance')), num(dims.get('discipline')),
+                      num(dims.get('durability')), num(dims.get('cadence'))))
+        out.append('')
+        band = {x.get('name'): (x.get('steadiness') or {}).get('in_band_pct')
+                for x in (((d.get('dimensions') or {}).get('compliance') or {}) or {}).get('segments', [])}
+        out.append('| 段（只列主課表） | 處方 | 實際 | 做到 | 落在區間 | 前半→後半 | 心率 |')
+        out.append('|---|---|---|---|---|---|---|')
+        for g in d.get('segments', []):
+            if g.get('role') != 'work':
+                continue
+            a = g.get('actual') or {}
+            cad = g.get('target_cadence') or {}
+            pres = g.get('target_w_text') or '—'
+            if cad.get('lo'):
+                pres += ' @%d-%drpm' % (cad['lo'], cad['hi'])
+            out.append('| %s | %s分 %s | %sW / %srpm | %s%% | %s%% | %s→%s W | %s |' % (
+                g.get('name'), num(g.get('planned_min')), pres,
+                num(a.get('avg_w')), num(a.get('avg_cad')), num(g.get('completion_pct')),
+                num(band.get(g.get('name'))), num(a.get('first_half_w')),
+                num(a.get('second_half_w')), num(a.get('avg_hr'))))
+        out.append('')
+        for rl in d.get('rules', []):
+            if rl.get('verdict'):
+                out.append('- 規則「%s」**%s 分**：%s' % (rl.get('label'), num(rl.get('score')),
+                                                    rl['verdict']))
+        out.append('')
+    out.append('> 「落在區間」是逐秒落在處方瓦數帶裡的時間佔比（門檻 75%）。'
+               '**平均達標但佔比很低 ＝ 忽高忽低，不是照著處方踩。**')
+    return '\n'.join(out)
+
+
+def sec_powerhr():
+    """同一個瓦數，他平常心率是多少 —— 拿來判斷「心率壓不上去」。
+
+    沒有這張表就做不出那個判讀：8/25 門檻組 185W 的心率是 145，看起來很正常，
+    但他自己的常態是 149，而 165W 那段低了整整 10 bpm。
+    """
+    d = J('data', 'fit', '_power_hr.json', default=None)
+    w = ((d or {}).get('windows') or [None])[0]
+    if not w:
+        return '（沒有功率-心率曲線資料）'
+    bpm, mins, bucket = w.get('bpm') or [], w.get('minutes') or [], w.get('bucket') or 5
+    rows = []
+    for watts in (120, 150, 165, 180, 195, 210, 225, 240):
+        i = watts // bucket
+        if i < len(bpm) and bpm[i] and (mins[i] if i < len(mins) else 0) >= 5:
+            rows.append('| %s W | %s bpm | %s 分 |' % (watts, bpm[i], mins[i]))
+    if not rows:
+        return '（樣本不足）'
+    return '\n'.join(['| 功率 | 常態心率 | 樣本 |', '|---|---|---|'] + rows + ['',
+        '> 取樣區間 %s ~ %s。**同瓦數心率比這張表低很多 ＝ 心率壓不上去**，'
+        '那是未恢復／睡眠不足的訊號，不是「今天很輕鬆」。反過來高很多才是漂移或熱。'
+        % (w.get('start', '—'), w.get('end', '—'))])
+
+
+def sec_sources(today):
+    """原始資料的位置。push 一份摘要之後，這裡是深潛用的逃生門。"""
+    base = 'https://raw.githubusercontent.com/chenhan20/linkTree/master'
+    dirp = os.path.join(ROOT, 'data', 'fit', '_scores')
+    have = sorted((f[:-5] for f in os.listdir(dirp) if f.endswith('.json')), reverse=True) \
+        if os.path.isdir(dirp) else []
+    L = ['**這一份已經是摘要，正常情況下不需要再抓任何東西。** 下面是要深潛時的位置。',
+         '⚠️ **抓不到就直說抓不到，不要用一般常識補上去** —— 猜出來的數字比沒有數字更糟。', '',
+         '| 要什麼 | 位置 | 備註 |', '|---|---|---|',
+         '| 單堂逐段對帳（原始 JSON） | `%s/data/fit/_scores/<日期>.json` | 目前有 %s |'
+         % (base, '、'.join(have[:6]) or '（無）'),
+         '| 每日身體狀態（CTL/ATL/HRV/睡眠） | `%s/data/fit/_wellness.json` | 一年多，約 200 KB |' % base,
+         '| 每筆活動的 TL/NP/VI/心率分區 | `%s/data/fit/_activities.json` | key 是 intervals id 不是日期 |' % base,
+         '| 課表逐段處方 | `%s/data/plan.json` | 沒列在 days 裡的日期一律不評分 |' % base,
+         '| 區塊計畫與教練評語 | `%s/data/training-block.json` | |' % base,
+         '| 單堂完整報告（人看的） | `https://chenhan20.github.io/linkTree/rides/<日期>.html` | 有圖，AI 讀不到圖 |',
+         '', '**不要抓這些**：`data/strava.json`（2.3 MB）、`data/ride-atlas.json`（1.2 MB）、'
+         '`data/fit/*.fit`（二進位，讀不了 —— 解 FIT 這件事已經在產生器那端做完了）。']
+    return '\n'.join(L)
 
 
 def main():
@@ -509,11 +642,16 @@ def main():
 
     md = open(OUT, encoding='utf-8').read() if os.path.exists(OUT) else SKELETON
     blocks = {
-        'stamp': '> 資料截至 **%s**（台北時間）。過期就重跑產生器。' % today,
+        'stamp': ('> 資料截至 **%s**（台北時間）。\n'
+                  '> **今天的日期如果比這個戳記晚超過 2 天，先講明你在用舊資料**，'
+                  '再回答 —— 身體狀態一個晚上就會翻盤。' % today),
         'state': sec_state(today),
         'volume': sec_volume(today),
         'limits': sec_limits(),
         'recent': sec_recent(today),
+        'sessions': sec_sessions(today),
+        'powerhr': sec_powerhr(),
+        'sources': sec_sources(today),
         'block': sec_block(today),
         'power': sec_power(),
         'segments': sec_segments(),

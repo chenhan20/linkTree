@@ -1,0 +1,720 @@
+{
+  "scored": true,
+  "date": "2026-08-13",
+  "file": "2026-08-13_i175313324_內湖區-公路車.fit",
+  "plan": {
+    "type": "CALIBRATION",
+    "label": "校準日 · 兩小時基準測驗",
+    "block": "ghost-month-flat-2026-08",
+    "week": 0,
+    "weekday": "四",
+    "intent": "產出兩個可重複比較的數字：60 分 @185W 撐不撐得住、疲勞後 20 分功率。W4（9/10）用完全相同的協定重跑，直接得到配對比較。"
+  },
+  "ride": {
+    "start_local": "2026-08-13 06:36",
+    "sport": "Cycling",
+    "elapsed_sec": 6623,
+    "moving_sec": 6420,
+    "distance_km": 51.04,
+    "avg_w": 159.5,
+    "avg_w_moving": 164.5,
+    "np_w": 182.3,
+    "if": 0.766,
+    "tss": 105,
+    "vi": 1.11,
+    "ftp_used": 238.0,
+    "ftp_source": "data/plan.json baseline.ftp_w",
+    "device_ftp_w": 234
+  },
+  "alignment": {
+    "method": "先用 10 秒網格動態規劃釘住 2 個主課表段（成本＝時長偏差＋逐秒功率偏差，段間空檔長度也計價），再用 1 秒解析度微調邊界，最後把熱身／恢復／收操填進空檔",
+    "grid_sec": 10,
+    "total_cost": 0.834,
+    "miss_cost": 0.9,
+    "unaccounted_sec": 0,
+    "note": "matched_start_sec 是相對於檔案第一個取樣點的秒數，matched_clock 是當地時間，兩個都可以拿去查原始檔。對不上的段標 matched:false，不硬湊。"
+  },
+  "work_time": {
+    "planned_sec": 4800,
+    "matched_sec": 4510,
+    "planned_min": 80.0,
+    "matched_min": 75.2,
+    "pct": 94.0,
+    "note": "這一格取代 analyze_tcx 的 effective_pct。低功率的熱身／恢復是處方寫死的，不算「沒在練」。"
+  },
+  "segments": [
+    {
+      "idx": 1,
+      "name": "熱身",
+      "role": "warmup",
+      "rep": null,
+      "of": null,
+      "planned_min": 20,
+      "planned_sec": 1200,
+      "target_w": {
+        "lo": 130,
+        "hi": 180,
+        "about": 155,
+        "ramp": true
+      },
+      "target_w_text": "130-180W",
+      "target_cadence": null,
+      "note": "漸進 130→180W，最後 3 分做 3×20 秒開腿",
+      "matched": true,
+      "matched_start_sec": 0,
+      "matched_sec": 1220,
+      "matched_min": 20.3,
+      "matched_clock": "06:36:30-06:56:50",
+      "completion_pct": 101.7,
+      "align_cost": 0.132,
+      "actual": {
+        "avg_w": 115.3,
+        "np_w": 130.9,
+        "max_w": 347,
+        "if": 0.55,
+        "avg_hr": 126,
+        "max_hr": 143,
+        "avg_cad": 86.4,
+        "pedaling_pct": 86.3,
+        "stopped_sec": 82,
+        "first_half_w": 90.5,
+        "second_half_w": 140.0
+      },
+      "splits": [
+        {
+          "from_min": 0.0,
+          "to_min": 5.0,
+          "avg_w": 55,
+          "avg_cad": 82,
+          "avg_hr": 105
+        },
+        {
+          "from_min": 5.0,
+          "to_min": 10.0,
+          "avg_w": 124,
+          "avg_cad": 87,
+          "avg_hr": 127
+        },
+        {
+          "from_min": 10.0,
+          "to_min": 15.0,
+          "avg_w": 135,
+          "avg_cad": 90,
+          "avg_hr": 133
+        },
+        {
+          "from_min": 15.0,
+          "to_min": 20.0,
+          "avg_w": 145,
+          "avg_cad": 85,
+          "avg_hr": 139
+        },
+        {
+          "from_min": 20.0,
+          "to_min": 20.3,
+          "avg_w": 140,
+          "avg_cad": 88,
+          "avg_hr": 132
+        }
+      ],
+      "vs_target": {
+        "ref_w": 130,
+        "delta_w": -14.7,
+        "sec_below_ref": 654,
+        "pct_below_ref": 53.6
+      }
+    },
+    {
+      "idx": 2,
+      "name": "主測 1",
+      "role": "work",
+      "rep": null,
+      "of": null,
+      "planned_min": 60,
+      "planned_sec": 3600,
+      "target_w": {
+        "lo": 185,
+        "hi": null,
+        "about": 185
+      },
+      "target_w_text": ">=185W",
+      "target_cadence": {
+        "lo": 88,
+        "hi": 95
+      },
+      "note": "連續 185W，這是本區塊的核心測驗",
+      "matched": true,
+      "matched_start_sec": 1220,
+      "matched_sec": 3600,
+      "matched_min": 60.0,
+      "matched_clock": "06:56:50-07:56:50",
+      "completion_pct": 100.0,
+      "align_cost": 0.182,
+      "actual": {
+        "avg_w": 185.2,
+        "np_w": 190.8,
+        "max_w": 454,
+        "if": 0.802,
+        "avg_hr": 154,
+        "max_hr": 169,
+        "avg_cad": 85.3,
+        "pedaling_pct": 96.4,
+        "stopped_sec": 0,
+        "first_half_w": 173.1,
+        "second_half_w": 197.2
+      },
+      "splits": [
+        {
+          "from_min": 0.0,
+          "to_min": 10.0,
+          "avg_w": 176,
+          "avg_cad": 90,
+          "avg_hr": 147
+        },
+        {
+          "from_min": 10.0,
+          "to_min": 20.0,
+          "avg_w": 170,
+          "avg_cad": 88,
+          "avg_hr": 149
+        },
+        {
+          "from_min": 20.0,
+          "to_min": 30.0,
+          "avg_w": 174,
+          "avg_cad": 87,
+          "avg_hr": 149
+        },
+        {
+          "from_min": 30.0,
+          "to_min": 40.0,
+          "avg_w": 193,
+          "avg_cad": 85,
+          "avg_hr": 158
+        },
+        {
+          "from_min": 40.0,
+          "to_min": 50.0,
+          "avg_w": 197,
+          "avg_cad": 83,
+          "avg_hr": 160
+        },
+        {
+          "from_min": 50.0,
+          "to_min": 60.0,
+          "avg_w": 201,
+          "avg_cad": 80,
+          "avg_hr": 162
+        }
+      ],
+      "vs_target": {
+        "ref_w": 185,
+        "delta_w": 0.2,
+        "sec_below_ref": 1772,
+        "pct_below_ref": 49.2
+      }
+    },
+    {
+      "idx": 3,
+      "name": "緩衝",
+      "role": "recovery",
+      "rep": null,
+      "of": null,
+      "planned_min": 8,
+      "planned_sec": 480,
+      "target_w": {
+        "lo": null,
+        "hi": null,
+        "about": 140
+      },
+      "target_w_text": "~140W",
+      "target_cadence": null,
+      "note": "140W 輕轉",
+      "matched": true,
+      "matched_start_sec": 4820,
+      "matched_sec": 540,
+      "matched_min": 9.0,
+      "matched_clock": "07:56:50-08:05:50",
+      "completion_pct": 112.5,
+      "align_cost": 0.359,
+      "actual": {
+        "avg_w": 85.6,
+        "np_w": 98.8,
+        "max_w": 276,
+        "if": 0.415,
+        "avg_hr": 137,
+        "max_hr": 163,
+        "avg_cad": 69.3,
+        "pedaling_pct": 92.2,
+        "stopped_sec": 0,
+        "first_half_w": 88.3,
+        "second_half_w": 82.9
+      },
+      "splits": [
+        {
+          "from_min": 0.0,
+          "to_min": 2.2,
+          "avg_w": 90,
+          "avg_cad": 67,
+          "avg_hr": 149
+        },
+        {
+          "from_min": 2.2,
+          "to_min": 4.5,
+          "avg_w": 86,
+          "avg_cad": 68,
+          "avg_hr": 135
+        },
+        {
+          "from_min": 4.5,
+          "to_min": 6.8,
+          "avg_w": 95,
+          "avg_cad": 74,
+          "avg_hr": 134
+        },
+        {
+          "from_min": 6.8,
+          "to_min": 9.0,
+          "avg_w": 71,
+          "avg_cad": 68,
+          "avg_hr": 130
+        }
+      ],
+      "vs_target": {
+        "ref_w": 140,
+        "delta_w": -54.4,
+        "sec_below_ref": 518,
+        "pct_below_ref": 95.9
+      }
+    },
+    {
+      "idx": 4,
+      "name": "主測 2",
+      "role": "allout",
+      "rep": null,
+      "of": null,
+      "planned_min": 20,
+      "planned_sec": 1200,
+      "target_w": {
+        "allout": true,
+        "about": null
+      },
+      "target_w_text": "全力",
+      "target_cadence": null,
+      "note": "全力 —— 疲勞後 20 分功率，本區塊真正的前測",
+      "matched": true,
+      "matched_start_sec": 5360,
+      "matched_sec": 910,
+      "matched_min": 15.2,
+      "matched_clock": "08:05:50-08:21:00",
+      "completion_pct": 75.8,
+      "align_cost": 0.5,
+      "actual": {
+        "avg_w": 211.9,
+        "np_w": 215.1,
+        "max_w": 442,
+        "if": 0.904,
+        "avg_hr": 157,
+        "max_hr": 167,
+        "avg_cad": 83.6,
+        "pedaling_pct": 98.9,
+        "stopped_sec": 0,
+        "first_half_w": 204.3,
+        "second_half_w": 219.4
+      },
+      "splits": [
+        {
+          "from_min": 0.0,
+          "to_min": 5.0,
+          "avg_w": 203,
+          "avg_cad": 81,
+          "avg_hr": 151
+        },
+        {
+          "from_min": 5.0,
+          "to_min": 10.0,
+          "avg_w": 218,
+          "avg_cad": 85,
+          "avg_hr": 159
+        },
+        {
+          "from_min": 10.0,
+          "to_min": 15.0,
+          "avg_w": 214,
+          "avg_cad": 84,
+          "avg_hr": 161
+        }
+      ]
+    },
+    {
+      "idx": 5,
+      "name": "收操",
+      "role": "cooldown",
+      "rep": null,
+      "of": null,
+      "planned_min": 12,
+      "planned_sec": 720,
+      "target_w": {
+        "lo": null,
+        "hi": null,
+        "about": 130
+      },
+      "target_w_text": "~130W",
+      "target_cadence": null,
+      "note": "130W",
+      "matched": true,
+      "matched_start_sec": 6270,
+      "matched_sec": 353,
+      "matched_min": 5.9,
+      "matched_clock": "08:21:00-08:26:53",
+      "completion_pct": 49.0,
+      "align_cost": 0.978,
+      "actual": {
+        "avg_w": 28.0,
+        "np_w": 50.1,
+        "max_w": 175,
+        "if": 0.211,
+        "avg_hr": 140,
+        "max_hr": 162,
+        "avg_cad": 69.5,
+        "pedaling_pct": 34.0,
+        "stopped_sec": 121,
+        "first_half_w": 31.9,
+        "second_half_w": 24.1
+      },
+      "splits": [
+        {
+          "from_min": 0.0,
+          "to_min": 1.5,
+          "avg_w": 59,
+          "avg_cad": 82,
+          "avg_hr": 146
+        },
+        {
+          "from_min": 1.5,
+          "to_min": 2.9,
+          "avg_w": 5,
+          "avg_cad": 90,
+          "avg_hr": 143
+        },
+        {
+          "from_min": 2.9,
+          "to_min": 4.4,
+          "avg_w": 12,
+          "avg_cad": 51,
+          "avg_hr": 149
+        },
+        {
+          "from_min": 4.4,
+          "to_min": 5.9,
+          "avg_w": 36,
+          "avg_cad": 52,
+          "avg_hr": 124
+        }
+      ],
+      "vs_target": {
+        "ref_w": 130,
+        "delta_w": -102.0,
+        "sec_below_ref": 348,
+        "pct_below_ref": 98.6
+      }
+    }
+  ],
+  "rules": [
+    {
+      "kind": "min_power_hold",
+      "label": "主測 1 功率不得低於 165W 超過 10 秒",
+      "informational": false,
+      "score": 77.4,
+      "detail": {
+        "threshold_w": 165,
+        "max_below_sec": 10,
+        "violations": 16,
+        "violation_sec": 271,
+        "scope_sec": 3600,
+        "violation_pct": 7.53,
+        "worst_run_sec": 33,
+        "stopped_sec_in_violations": 0,
+        "worst": [
+          {
+            "segment": "主測 1",
+            "at_sec": 2526,
+            "at_min_in_seg": 21.8,
+            "dur_sec": 33,
+            "avg_w": 39,
+            "min_w": 0,
+            "stopped_sec": 0
+          },
+          {
+            "segment": "主測 1",
+            "at_sec": 2279,
+            "at_min_in_seg": 17.6,
+            "dur_sec": 24,
+            "avg_w": 130,
+            "min_w": 81,
+            "stopped_sec": 0
+          },
+          {
+            "segment": "主測 1",
+            "at_sec": 4432,
+            "at_min_in_seg": 53.5,
+            "dur_sec": 24,
+            "avg_w": 112,
+            "min_w": 0,
+            "stopped_sec": 0
+          },
+          {
+            "segment": "主測 1",
+            "at_sec": 2720,
+            "at_min_in_seg": 25.0,
+            "dur_sec": 20,
+            "avg_w": 56,
+            "min_w": 0,
+            "stopped_sec": 0
+          },
+          {
+            "segment": "主測 1",
+            "at_sec": 4502,
+            "at_min_in_seg": 54.7,
+            "dur_sec": 20,
+            "avg_w": 72,
+            "min_w": 1,
+            "stopped_sec": 0
+          },
+          {
+            "segment": "主測 1",
+            "at_sec": 2323,
+            "at_min_in_seg": 18.4,
+            "dur_sec": 17,
+            "avg_w": 105,
+            "min_w": 9,
+            "stopped_sec": 0
+          },
+          {
+            "segment": "主測 1",
+            "at_sec": 2304,
+            "at_min_in_seg": 18.1,
+            "dur_sec": 16,
+            "avg_w": 134,
+            "min_w": 99,
+            "stopped_sec": 0
+          },
+          {
+            "segment": "主測 1",
+            "at_sec": 2366,
+            "at_min_in_seg": 19.1,
+            "dur_sec": 15,
+            "avg_w": 65,
+            "min_w": 7,
+            "stopped_sec": 0
+          }
+        ]
+      },
+      "verdict": "16 次低於 165W 超過 10 秒，合計 271 秒（佔 7.5%）"
+    },
+    {
+      "kind": "hr_note_above",
+      "label": "60 分那段心率漂過 150 bpm 要記錄但不降瓦",
+      "informational": true,
+      "score": null,
+      "detail": {
+        "bpm": 150,
+        "segments": [
+          {
+            "segment": "主測 1",
+            "sec_above": 2327,
+            "pct_above": 64.6,
+            "max_hr": 169,
+            "first_sustained_cross_sec": 2123,
+            "cross_at_min_in_seg": 15.1,
+            "avg_w_before_cross": 176,
+            "avg_w_after_cross": 188,
+            "held_watts": true
+          }
+        ]
+      },
+      "verdict": "主測 1 有 2327 秒（65%）心率高於 150 bpm，最高 169；漂過去之後功率 176W -> 188W（沒有降瓦，照課表）"
+    }
+  ],
+  "dimensions": {
+    "compliance": {
+      "score": 95.0,
+      "segments": [
+        {
+          "name": "主測 1",
+          "planned_sec": 3600,
+          "steadiness": {
+            "in_band_pct": 80.3,
+            "moving_sec": 3600,
+            "coast_pct": 2.4,
+            "band_w": [
+              166,
+              null
+            ],
+            "smooth_sec": 30,
+            "target_pct": 75.0,
+            "factor": 1.0
+          },
+          "power_score": 100.0,
+          "duration_factor": 1.0,
+          "score": 100.0,
+          "completion_pct": 100.0,
+          "why": "平均 185W 在處方區間內"
+        },
+        {
+          "name": "主測 2",
+          "planned_sec": 1200,
+          "allout": {
+            "mean_w": 211.9,
+            "best_window_w": 211.9,
+            "ratio": 1.0
+          },
+          "power_score": 100.0,
+          "duration_factor": 0.798,
+          "score": 79.8,
+          "completion_pct": 75.8,
+          "why": "平均 212W 就是全趟最佳的 910 秒窗口（212W）"
+        }
+      ],
+      "method": "各 work/allout 段的（功率分 × 離散度因子 × 時間完成率），以處方秒數加權平均；全力段的功率分是跟全趟同長度最佳窗口相比"
+    },
+    "discipline": {
+      "score": 77.4,
+      "rules_scored": 1,
+      "method": "每條可計分規則各給 0-100，取平均"
+    },
+    "durability": {
+      "score": 79.5,
+      "segments": [
+        {
+          "name": "主測 1",
+          "sec": 3600,
+          "first_half_w": 173.1,
+          "second_half_w": 197.2,
+          "decay_pct": -13.9,
+          "score": 74.3,
+          "shape": "負分割，但前半沒踩到處方",
+          "why": "前半 173W 低於處方 185W（-6.4%），後半 197W 補回來 —— 這是起步太慢，不是撐得住"
+        },
+        {
+          "name": "主測 2",
+          "sec": 910,
+          "first_half_w": 204.3,
+          "second_half_w": 219.4,
+          "decay_pct": -7.4,
+          "score": 100.0,
+          "shape": "負分割（後半更強）"
+        }
+      ],
+      "method": "各 work/allout 段前半 vs 後半平均功率的衰減率，以實際秒數加權；後半更強且前半有踩到處方才給 100，前半欠瓦的負分割按欠的比例扣"
+    },
+    "cadence": {
+      "score": 56.3,
+      "segments": [
+        {
+          "name": "主測 1",
+          "target": [
+            88,
+            95
+          ],
+          "sec": 3600,
+          "pedaling_sec": 3472,
+          "avg_cad": 85.3,
+          "pedaling_pct": 96.4,
+          "in_band_pct": 37.3,
+          "near_band_pct": 38.0,
+          "score": 56.3
+        }
+      ],
+      "method": "目標區間內給滿分、區間外 5 rpm 內給半分；分母只算有踩踏的秒數（滑行由執行度的離散度負責罰，不重複計）"
+    }
+  },
+  "total": {
+    "score": 81.7,
+    "grade": "B+",
+    "weights": {
+      "compliance": 0.4,
+      "discipline": 0.25,
+      "durability": 0.2,
+      "cadence": 0.15
+    },
+    "weights_used": {
+      "compliance": 0.4,
+      "discipline": 0.25,
+      "durability": 0.2,
+      "cadence": 0.15
+    },
+    "contribution": {
+      "compliance": 38.0,
+      "discipline": 19.4,
+      "durability": 15.9,
+      "cadence": 8.4
+    }
+  },
+  "calibration": {
+    "hold_test": {
+      "segment": "主測 1",
+      "target_w": 185,
+      "planned_min": 60,
+      "actual_min": 60.0,
+      "completion_pct": 100.0,
+      "avg_w": 185.2,
+      "np_w": 190.8,
+      "first_half_w": 173.1,
+      "second_half_w": 197.2,
+      "avg_hr": 154,
+      "max_hr": 169,
+      "held": true,
+      "margin_w": 2.05,
+      "margin_on": "平均",
+      "marginal": true,
+      "verdict": "撐得住 —— 四週表數字照跑",
+      "criteria": "做滿 95% 時間、平均 >= 目標 99%、後半 >= 目標 97%，三條都過才算撐住",
+      "caveat": "擦邊過關：最緊的是「平均」，只差 2.05W。這個結論對切段位置很敏感，±2 分鐘的對齊位移就可能翻面 —— 務必確認當天有按手動 lap。"
+    },
+    "fatigued_20min": {
+      "segment": "主測 2",
+      "planned_min": 20,
+      "actual_min": 15.2,
+      "actual_avg_w": 211.9,
+      "np_w": 215.1,
+      "max_w": 442,
+      "avg_hr": 157,
+      "first_half_w": 204.3,
+      "second_half_w": 219.4,
+      "watts_20min": 208.4,
+      "estimated": true,
+      "method": "只做了 15.2 分（處方 20 分）；段內最佳 910 秒滾動平均 212W，依 P ∝ t^(-0.06) 外推到 20 分",
+      "vs_fresh": [
+        {
+          "period": "2025-09",
+          "fresh_w": 252,
+          "delta_w": -43.6,
+          "delta_pct": -17.3
+        },
+        {
+          "period": "2026-04",
+          "fresh_w": 240,
+          "delta_w": -31.6,
+          "delta_pct": -13.2
+        }
+      ]
+    },
+    "cliff": {
+      "fresh_20min_w": 252,
+      "hour1_w": 190,
+      "hour2_w": 169,
+      "fatigued_20min_w": 208.4
+    }
+  },
+  "notes": [
+    "主測 1 平均 185W，處方 >=185W，剛好壓在處方線上；前半 173W／後半 197W。",
+    "  └ 形狀：前 30 分 173W 欠 12W、後 30 分 197W 超 12W —— 平均達標是後段補回來的，不是全程守住。",
+    "主測 2 全力段做了 15.2 分（處方 20 分），平均 212W、最高 442W。",
+    "  └ 主測 2 只做到處方時間的 76%，執行度按比例打折。",
+    "規則「主測 1 功率不得低於 165W 超過 10 秒」：16 次低於 165W 超過 10 秒，合計 271 秒（佔 7.5%）",
+    "規則「60 分那段心率漂過 150 bpm 要記錄但不降瓦」：主測 1 有 2327 秒（65%）心率高於 150 bpm，最高 169；漂過去之後功率 176W -> 188W（沒有降瓦，照課表）（僅記錄，不扣分）",
+    "校準產出①　60 分 @185W：撐得住 —— 四週表數字照跑（實際 60.0 分、平均 185W、後半 197W）。",
+    "校準產出②　疲勞後 20 分功率 208W（外推），對照 2025-09 新鮮狀態 252W 為 -17.3%，對照 2026-04 新鮮狀態 240W 為 -13.2%。"
+  ]
+}
