@@ -256,16 +256,23 @@ table.led{width:100%;border-collapse:collapse;min-width:700px}
 .sp{margin-top:2px;max-width:470px}
 .sp-h{font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;
  color:var(--ink-3);margin-bottom:9px}
-.sp-plot{position:relative;display:flex;gap:3px;height:36px;align-items:flex-end}
+.sp-plot{position:relative;display:flex;gap:3px;height:36px;align-items:flex-end;
+ margin-left:28px}
 .sp-b{flex:1;height:100%;display:flex;align-items:flex-end}
 .sp-b i{display:block;width:100%;background:var(--s2);min-height:2px}
 .sp-b.lo i{background:var(--dim)}
 .sp-ref{position:absolute;left:0;right:0;border-top:1px dashed var(--ink-3);opacity:.85}
 .sp-ref span{position:absolute;right:0;top:-15px;font-family:var(--mono);font-size:9.5px;
  letter-spacing:.1em;color:var(--ink-3);background:var(--paper);padding-left:6px}
-.sp-v{display:flex;gap:4px;margin-top:6px}
+.sp-v{display:flex;gap:4px;margin-top:6px;align-items:baseline}
 .sp-v span{flex:1;text-align:center;font-family:var(--mono);font-size:10.5px;color:var(--ink-3);
  font-variant-numeric:tabular-nums}
+/* 分段值列的左側標籤：功率／心率／迴轉三行對齊同一組長條 */
+.sp-v b{flex:0 0 24px;text-align:left;font-family:var(--mono);font-size:9px;font-weight:400;
+ letter-spacing:.08em;color:var(--ink-3);opacity:.7}
+.sp-v.w span{color:var(--ink-1);font-weight:650;font-size:11px}
+.sp-v.hr{margin-top:2px}
+.sp-v.cad{margin-top:1px}
 .sp-n{font-size:11.5px;color:var(--ink-3);margin-top:10px;font-variant-numeric:tabular-nums}
 
 /* 分數拆解 */
@@ -822,7 +829,15 @@ let HERO_IN_MASTHEAD=false;
         s.splits.map(x=>`<div class="sp-b${ref!=null&&x.avg_w<ref?' lo':''}">`+
           `<i style="height:${Math.max(2,x.avg_w/top*100)}%"></i></div>`).join('')+
         (ref!=null?`<div class="sp-ref" style="bottom:${ref/top*100}%"><span>處方 ${ref} W</span></div>`:'')+
-        `</div><div class="sp-v">`+s.splits.map(x=>`<span>${w0(x.avg_w)}</span>`).join('')+`</div></div>`;
+        `</div>`+
+        /* 三行共用同一組欄位寬度，跟上面的長條對齊。心率是他指名要的：
+           光看瓦數看不出「同樣的功率心跳有沒有一路往上爬」。 */
+        `<div class="sp-v w"><b>W</b>`+s.splits.map(x=>`<span>${w0(x.avg_w)}</span>`).join('')+`</div>`+
+        (s.splits.some(x=>x.avg_hr)
+          ? `<div class="sp-v hr"><b>bpm</b>`+s.splits.map(x=>`<span>${x.avg_hr??'—'}</span>`).join('')+`</div>` : '')+
+        (s.splits.some(x=>x.avg_cad)
+          ? `<div class="sp-v cad"><b>rpm</b>`+s.splits.map(x=>`<span>${x.avg_cad??'—'}</span>`).join('')+`</div>` : '')+
+        `</div>`;
     }
     const note=[];
     if(a.first_half_w!=null) note.push(`前半 ${w0(a.first_half_w)} W → 後半 ${w0(a.second_half_w)} W`+
@@ -1241,7 +1256,14 @@ if(REPS){
   if(F.lr_balance_right_pct!=null){
     const r=F.lr_balance_right_pct, l=+(100-r).toFixed(1);
     const gap=Math.abs(r-50)*2;
-    const verdict = gap<4 ? '在一般範圍內（左右差 4% 以內）'
+    /* 超過 65/35 幾乎一定是量測異常而不是人。實測 2026-08-27 這一趟報「右 9.5%」，
+       但同一顆功率計前後七趟都是右 56-59% —— 那天是右側量測掉了，不是他的腿。
+       這種值不該去建議調坐墊，那會把人送去修一個不存在的問題。 */
+    const bogus = r<35 || r>65;
+    const verdict = bogus
+      ? '⚠ 這個數字幾乎確定是量測異常，不是踩踏問題 —— 左右差到這個程度在生理上等於單腳騎車。'
+        + '先看同一顆功率計最近幾趟：如果那幾趟正常，就是這天右側掉了（電池／配對／歸零）'
+      : gap<4 ? '在一般範圍內（左右差 4% 以內）'
       : gap<10 ? '略偏一側，值得留意但不必緊張'
       : '明顯偏一側，建議檢查坐墊高度／前後位置，或請人看踩踏';
     document.getElementById('fit-lr').innerHTML =
