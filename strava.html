@@ -4377,7 +4377,7 @@ function renderMesocycle(block) {
           <span class="nx-dt">${md(nx.date)} 週${wd(nx.date)} · ${days <= 0 ? '就是今天' : `還有 ${days} 天`}</span>
         </div>
         <div class="nx-nm">${nx.name || ''}</div>
-        ${nx.plan ? `<div class="nx-plan">${nx.plan}</div>` : ''}
+        ${nx.plan ? `<div class="nx-plan">${mdBold(nx.plan)}</div>` : ''}
         <div class="nx-cmp">
           <span></span><span>IF</span><span>TSS</span><span>VI</span>
           <span class="rl">Target</span>
@@ -4481,6 +4481,10 @@ function renderGuide(block) {
 
 /* 教練評是唯一帶行內強調的長文字。只支援 **粗體** 一種標記——
    先跳脫再還原，避免 JSON 裡的文字被當成 HTML。 */
+/* 處方與評語都用 **粗體** 寫。用到它的地方（ses-sub / dw-p / nx-plan / ov-plan）
+   全部在函式裡、執行期才求值，所以定義寫在這裡沒問題；但**不要**把呼叫端搬到
+   模組載入期，const 沒有提升，那樣會踩 TDZ。先前 nx-plan 與 ov-plan 漏掉這層，
+   於是「下一堂」卡片會直接把 ** 星號印在畫面上。 */
 const mdBold = txt => String(txt)
   .replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]))
   .replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
@@ -8262,7 +8266,7 @@ function render(data) {
           <span class="ov-k">NEXT SESSION</span>
           <b class="ov-b">${nextSes.name || ''}</b>
           <span class="ov-n">${mdOf(nextSes.date)} 週${wdOf(nextSes.date)}${nextSes.date === todayStr ? ' · 就是今天' : ''}</span>
-          <span class="ov-plan">${nextSes.plan || ''}</span>
+          <span class="ov-plan">${mdBold(nextSes.plan || '')}</span>
           <span class="ov-n">目標 IF ${n2_(nextSes.target?.if)} · TSS ${nextSes.target?.tss ?? '—'} · VI ≤${n2_(nextSes.target?.vi)}</span>
         </button>` : `
         <div class="ov-cell">
