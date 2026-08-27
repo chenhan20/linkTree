@@ -8354,28 +8354,64 @@ function render(data) {
   // ── NEEDS ATTENTION ──
   // 全部是既有欄位的門檻判讀，沒有新的計算：太久沒測的路段、本週還沒達標的項目、
   // 以及「下一堂是不是校準/驗收」。沒有任何一項成立時整塊不出現 —— 不寫「一切正常」。
-  const attn = []
   const dayMs = 86400000
-  ;(data.segments || []).forEach(seg => {
+  const attnRows = []
+
+  // 1. 今天有主課表還沒做 —— 最可執行的一項，擺第一
+  const todaySes = blkS.find(x => x.date === todayStr && !x.support && !x.actual)
+  if (todaySes) attnRows.push({ k: 'TODAY', p: `${todaySes.name}　${todaySes.plan || ''}`.trim(),
+                                v: '今天', s: '還沒做', c: 'next', go: 'plan' })
+
+  // 2. 過去的主課表沒有 actual ＝ 漏做。support 不算欠帳（區塊自己這樣定義的）
+  const missed = blkS.filter(x => !x.support && !x.actual && x.date < todayStr)
+  missed.slice(-2).forEach(x => attnRows.push({
+    k: 'MISSED', p: `${mdOf(x.date)} ${x.name} 沒有紀錄`,
+    v: `${Math.round((Date.parse(todayStr) - Date.parse(x.date)) / dayMs)} 天前`,
+    s: '未執行', c: 'no', go: 'plan' }))
+
+  // 3. 最近做完的一堂有沒有達標。三個維度用的是 MC_PASS，全站同一套規則，
+  //    不另立標準。附上評分卡的分數（寫在 note 的開頭）讓它可被追。
+  const lastDone = blkS.filter(x => x.actual && !x.support && !x.actual.substituted).pop()
+  if (lastDone) {
+    const t = lastDone.target || {}, a = lastDone.actual, pass = MC_PASS(a, t)
+    const miss = [
+      pass.if  === false ? `IF ${n2_(a.if)}／${n2_(t.if)}` : '',
+      pass.tss === false ? `TSS ${Math.round(a.tss ?? 0)}／${t.tss ?? '—'}` : '',
+      pass.vi  === false ? `VI ${n2_(a.vi)}／≤${n2_(t.vi)}` : '',
+    ].filter(Boolean)
+    const m = /對帳\s*([\d.]+)\s*分（([^）]+)）/.exec(a.note || '')
+    if (miss.length) attnRows.push({
+      k: 'LAST', p: `${mdOf(lastDone.date)} ${lastDone.name} · ${miss.join('　')}`,
+      v: m ? `${m[1]} 分` : mdOf(lastDone.date), s: m ? m[2] : '未達標',
+      c: 'no', go: 'plan' })
+  }
+
+  // 4. 區塊進度落後才講。已過天數的比例超過完成比例 15 個百分點以上算落後。
+  if (blkS.length && blk.start && blk.end) {
+    const span = Math.max(1, (Date.parse(blk.end) - Date.parse(blk.start)) / dayMs)
+    const gone = Math.min(1, Math.max(0, (Date.parse(todayStr) - Date.parse(blk.start)) / dayMs / span))
+    const keyN = blkS.filter(SES_KEY).length
+    const doneRatio = keyN ? doneN / keyN : 0
+    if (gone - doneRatio > 0.15) attnRows.push({
+      k: 'BLOCK', p: `${blk.title || '區塊'} 進度落後 · 時間過了 ${Math.round(gone * 100)}%`,
+      v: `${doneN} / ${keyN}`, s: '要補回來', c: 'no', go: 'plan' })
+  }
+
+  // 5. 前測／驗收的協定不能改（保留原本那條）
+  if (nextSes && (nextSes.code === 'CAL' || nextSes.code === 'POST')) attnRows.push({
+    k: 'PROTOCOL', p: `${nextSes.name} 是${nextSes.code === 'CAL' ? '前測' : '驗收'}，協定要照跑`,
+    v: mdOf(nextSes.date), s: '別亂改', c: 'next', go: 'plan' })
+
+  // 6. ITT 久未挑戰降到最後、門檻從 45 天拉到 60 天、只留一條。
+  //    區塊進行中的時候這不是重點，但完全拿掉又會讓路段悄悄放到過期。
+  const ittStale = (data.segments || []).map(seg => {
     const last = (seg.efforts || []).slice().sort((a, b) => effortTimeKey(b).localeCompare(effortTimeKey(a)))[0]
-    if (!last || !last.date) return
-    const days = Math.round((Date.parse(todayStr) - Date.parse(last.date.slice(0, 10))) / dayMs)
-    if (days > 45) attn.push({ k: 'ITT', p: (window._ittSegMeta?.[seg.id]?.nameZh) || seg.name,
-                               v: `${days} 天`, s: '久未挑戰', c: 'no', go: 'itt', d: days })
-  })
-  attn.sort((a, b) => (b.d || 0) - (a.d || 0))
-  const attnItt = attn.splice(0, 2)
-  const wq = data.weekly_quest || {}
-  const WQ_ZH = { ride: '單車', run: '跑步', swim: '游泳', weight: '重訓' }
-  const wqMiss = Object.keys(WQ_ZH).filter(k => wq[k] && !wq[k].done)
-  const attnRows = [
-    ...attnItt,
-    wqMiss.length ? { k: 'THIS WEEK', p: wqMiss.map(k => WQ_ZH[k]).join(' · ') + ' 本週還沒達標',
-                      v: `${4 - wqMiss.length} / 4`, s: '待完成', c: 'next', go: 'plan' } : null,
-    (nextSes && (nextSes.code === 'CAL' || nextSes.code === 'POST'))
-      ? { k: 'PROTOCOL', p: `${nextSes.name} 是${nextSes.code === 'CAL' ? '前測' : '驗收'}，協定要照跑`,
-          v: mdOf(nextSes.date), s: '別亂改', c: 'next', go: 'plan' } : null,
-  ].filter(Boolean)
+    if (!last || !last.date) return null
+    return { seg, d: Math.round((Date.parse(todayStr) - Date.parse(last.date.slice(0, 10))) / dayMs) }
+  }).filter(x => x && x.d > 60).sort((a, b) => b.d - a.d)[0]
+  if (ittStale) attnRows.push({
+    k: 'ITT', p: (window._ittSegMeta?.[ittStale.seg.id]?.nameZh) || ittStale.seg.name,
+    v: `${ittStale.d} 天`, s: '久未挑戰', c: 'no', go: 'itt' })
   const attnHtml = attnRows.length ? `
     <div class="block">
       <div class="section-title">需要注意 <span class="muted">· NEEDS ATTENTION</span></div>
@@ -11480,10 +11516,13 @@ Promise.all([
 </script>
 
 <!-- 跨主題共用：單車活動詳情彈窗 -->
-<link rel="stylesheet" href="activity-modal.css">
-<link rel="stylesheet" href="theme-strava.css">
+<!-- ?v= 是快取破壞用的。GitHub Pages 會把這些靜態檔快取住，改完部署後瀏覽器
+     常常還在跑舊的 —— 實測 2026-08-27：activity-modal.js 改好推上去，畫面
+     行為完全沒變，查了半天才發現載入的是舊檔。改這幾支的時候把日期一起往前推。 -->
+<link rel="stylesheet" href="activity-modal.css?v=20260827">
+<link rel="stylesheet" href="theme-strava.css?v=20260827">
 <style>:root{--am-accent:#FC4C02;--am-accent-soft:rgba(252,76,2,.18);--am-panel:#14100c;--am-panel-2:#1c160f}</style>
-<script src="itt-achievements.js" defer></script>
-<script src="activity-modal.js" defer></script>
+<script src="itt-achievements.js?v=20260827" defer></script>
+<script src="activity-modal.js?v=20260827" defer></script>
 </body>
 </html>

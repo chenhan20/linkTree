@@ -21,7 +21,11 @@
 
   function loadData() {
     if (dataPromise) return dataPromise
-    dataPromise = fetch(STRAVA_JSON, { cache: 'force-cache' })
+    // 不能用 force-cache：那會讓這支永遠讀到瀏覽器裡那份舊的 strava.json，
+    // rideMap 因此看不到最近幾天的活動 —— 症狀是新的騎乘完全長不出「報告」與
+    // 課表徽章（實測 2026-08-27：8/20、8/25、8/27 三堂都沒有，8/13 以前的才有）。
+    // strava.html 自己就是用 no-cache 抓同一個 URL，這裡跟它一致，實際不會多下載一次。
+    dataPromise = fetch(STRAVA_JSON, { cache: 'no-cache' })
       .then(r => r.json())
       .then(d => {
         rideMap = new Map()
@@ -546,27 +550,31 @@
       if (!m) return
       const id = m[1]
       const ride = rideMap.get(id)
-      // 只有：在 recent_rides 裡 且 非 trainer (室內飛輪)
       if (!ride) return
-      if (ride.trainer) return
-      const btn = document.createElement('button')
-      btn.type = 'button'
-      btn.className = 'act-detail-btn'
-      btn.innerHTML = `
-        <svg class="am-eye" viewBox="0 0 24 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path class="am-eye-lid" d="M1 8 Q12 -2 23 8 Q12 18 1 8 Z"/>
-          <circle class="am-eye-iris" cx="12" cy="8" r="3.2" fill="currentColor" stroke="none"/>
-          <circle class="am-eye-pupil" cx="13" cy="7" r="1" fill="#fff" stroke="none"/>
-        </svg>
-        <span class="am-label">詳情</span>
-        <span class="am-arrow">▾</span>`
-      btn.setAttribute('data-act-id', id)
-      btn.addEventListener('click', e => {
-        e.preventDefault()
-        e.stopPropagation()
-        openRide(id)
-      })
-      link.parentNode.insertBefore(btn, link)
+      // 室內飛輪只跳過「詳情」（那顆是 3D 路線回放，訓練台沒有座標可放），
+      // **報告與課表徽章要照樣注入** —— 室內反而更有東西看：逐段對帳、十分鐘平均功率、
+      // 規則執行。先前這裡是 `if (ride.trainer) return` 一次擋掉三個東西，
+      // 於是 8/20、8/25、8/27 三堂課表在活動紀錄裡完全連不到自己的報告。
+      if (!ride.trainer) {
+        const btn = document.createElement('button')
+        btn.type = 'button'
+        btn.className = 'act-detail-btn'
+        btn.innerHTML = `
+          <svg class="am-eye" viewBox="0 0 24 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path class="am-eye-lid" d="M1 8 Q12 -2 23 8 Q12 18 1 8 Z"/>
+            <circle class="am-eye-iris" cx="12" cy="8" r="3.2" fill="currentColor" stroke="none"/>
+            <circle class="am-eye-pupil" cx="13" cy="7" r="1" fill="#fff" stroke="none"/>
+          </svg>
+          <span class="am-label">詳情</span>
+          <span class="am-arrow">▾</span>`
+        btn.setAttribute('data-act-id', id)
+        btn.addEventListener('click', e => {
+          e.preventDefault()
+          e.stopPropagation()
+          openRide(id)
+        })
+        link.parentNode.insertBefore(btn, link)
+      }
 
       // 這天有訓練報告的話，再補一顆連過去的鈕
       const rep = reportMap && reportMap.get(ride.date)
