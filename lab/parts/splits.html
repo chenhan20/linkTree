@@ -1,0 +1,375 @@
+<style>
+.splits-wrap{--sp-in:#f4f0ea;--sp-lo:#FC4C02;--sp-hi:#5bc8f5;--sp-mute:rgba(244,240,234,.30)}
+
+/* ── 切換：一堂課一顆，按鈕裡就先給形狀 ── */
+.splits-tabs{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:16px}
+.splits-tab{
+  flex:1 1 168px;min-width:150px;max-width:270px;
+  padding:8px 10px 7px;border:1px solid var(--hair);border-radius:8px;
+  background:rgba(255,255,255,.018);color:var(--ink-2);
+  font-family:var(--f-ui);font-size:11px;text-align:left;cursor:pointer;
+  transition:border-color .15s,background .15s
+}
+.splits-tab:hover{border-color:rgba(255,255,255,.2)}
+.splits-tab[aria-selected="true"]{border-color:var(--sig);background:rgba(252,76,2,.07)}
+.splits-tab[aria-selected="true"] .splits-td{color:var(--ink-1)}
+.splits-td{display:flex;align-items:baseline;gap:7px;color:var(--ink-2)}
+.splits-td b{font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:800;font-size:14px;letter-spacing:.4px}
+.splits-td i{font-style:normal;font-size:10px;letter-spacing:1.4px;color:var(--ink-3);margin-left:auto}
+.splits-tn{margin-top:4px;font-size:10.5px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* 迷你形狀條：不用點進去就看得出兩種失敗長得不一樣 */
+.splits-mini{display:flex;gap:1px;height:5px;margin-top:6px;border-radius:2px;overflow:hidden}
+.splits-mini span{display:block;height:100%}
+
+/* ── 圖 ── */
+.splits-scroll{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch}
+.splits-hint{display:none;margin-top:6px;font-size:10px;letter-spacing:.8px;color:var(--ink-3)}
+.splits-inner{min-width:700px;position:relative;padding-left:48px}
+.splits-ax{position:absolute;left:0;top:0;width:44px;height:100%}
+.splits-axl{
+  position:absolute;right:0;transform:translateY(-50%);
+  font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:600;
+  font-size:10.5px;color:var(--ink-3);letter-spacing:.3px;white-space:nowrap
+}
+.splits-axr{position:absolute;right:0;transform:translateY(-50%);font-size:9.5px;letter-spacing:.6px;color:var(--ink-3);white-space:nowrap}
+.splits-plot{position:relative;height:326px}
+.splits-plot svg{display:block;width:100%;height:100%}
+.splits-ov{position:absolute;inset:0;pointer-events:none}
+.splits-chip{
+  position:absolute;transform:translate(-50%,-50%);
+  font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:800;
+  font-size:12.5px;letter-spacing:.4px;white-space:nowrap;
+  padding:0 4px;border-radius:3px;background:rgba(10,4,8,.72)
+}
+.splits-chip u{text-decoration:none;font-size:9.5px;font-weight:600;opacity:.8;margin-left:3px}
+.splits-bl{
+  position:absolute;transform:translateY(-50%);
+  font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:600;
+  font-size:9.5px;color:var(--ink-3);white-space:nowrap
+}
+.splits-hit{position:absolute;top:0;bottom:0;pointer-events:auto;cursor:help}
+.splits-ftp{position:absolute;transform:translateY(-50%);right:2px;font-size:9.5px;letter-spacing:.8px;color:rgba(252,76,2,.62);white-space:nowrap}
+
+/* 段名列：HTML，不塞進被拉伸的 SVG */
+.splits-names{display:flex;margin-top:5px;padding-left:48px;min-width:700px}
+.splits-nm{
+  overflow:hidden;white-space:nowrap;font-size:10px;line-height:1.5;
+  color:var(--ink-3);padding-right:4px;border-left:1px solid var(--hair);padding-left:4px
+}
+.splits-nm.k{color:var(--ink-2)}
+
+/* ── 圖例 ── */
+.splits-leg{display:flex;flex-wrap:wrap;gap:6px 15px;margin-top:13px;font-size:10.5px;color:var(--ink-3)}
+.splits-leg span{display:inline-flex;align-items:center;gap:5px}
+.splits-sw{width:15px;height:3px;border-radius:2px;display:inline-block}
+.splits-swb{width:13px;height:11px;border-radius:2px;display:inline-block;background:rgba(244,240,234,.06);border:1px solid rgba(244,240,234,.2)}
+
+/* ── 明細表 ── */
+.splits-tw{overflow-x:auto;margin-top:15px}
+.splits-tbl{width:100%;min-width:560px;border-collapse:collapse;font-size:11.5px}
+.splits-tbl th{
+  text-align:right;padding:0 0 6px;font-size:9.5px;font-weight:600;letter-spacing:1.2px;
+  color:var(--ink-3);border-bottom:1px solid var(--hair);white-space:nowrap
+}
+.splits-tbl th:first-child,.splits-tbl td:first-child{text-align:left}
+.splits-tbl td{
+  text-align:right;padding:7px 0;border-bottom:1px solid var(--hair);
+  color:var(--ink-2);white-space:nowrap
+}
+.splits-tbl td:first-child{color:var(--ink-1);white-space:normal;padding-right:10px}
+.splits-tbl td+td{padding-left:10px}
+.splits-tbl .n{font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:700;font-size:13px;letter-spacing:.3px}
+.splits-tbl tr.sup td{color:var(--ink-3)}
+.splits-tbl tr.sup td:first-child{color:var(--ink-3)}
+.splits-dlo{color:var(--sp-lo)}
+.splits-dhi{color:var(--sp-hi)}
+.splits-din{color:var(--ink-1)}
+
+@media(max-width:767px){
+  .splits-plot{height:262px}
+  .splits-tab{flex:1 1 100%;max-width:none}
+  .splits-hint{display:block}
+}
+</style>
+<section class="lab-card" id="card-splits">
+  <h2 class="lab-h">逐段對帳 <span>· SPLIT RECONCILIATION · 這堂課的每一段，時間做滿了沒？瓦數踩進處方帶了沒？</span></h2>
+  <div class="splits-root"></div>
+</section>
+<script>
+(function(){
+  window.LAB_PARTS = window.LAB_PARTS || [];
+
+  var KEY = { work:1, allout:1 };          // 主課段：要放大
+  var ROLE_TXT = { warmup:'熱身', work:'主課', recovery:'恢復', allout:'全力', cooldown:'收操' };
+  var C = { in:'#f4f0ea', lo:'#FC4C02', hi:'#5bc8f5', none:'rgba(244,240,234,.60)', sup:'rgba(244,240,234,.26)' };
+
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+  function mmss(s){ if(s==null) return '—'; s=Math.round(s); var m=Math.floor(s/60), q=s%60; return m+':'+(q<10?'0':'')+q; }
+  function r1(v){ return Math.round(v*10)/10; }
+  function isKey(g){ return !!KEY[g.role]; }
+  function plan(g){ var p=g.planned_sec; if(p==null) p=g.actual_sec; return p||0; }
+
+  // 實際 avg_w 對處方帶的關係 —— 這張圖的全部重點
+  function verdict(g){
+    if(!isKey(g)) return 'sup';
+    var b=g.band, w=g.avg_w;
+    if(!b || w==null) return 'none';
+    var lo=b[0], hi=b[1];
+    if(lo!=null && w<lo) return 'lo';
+    if(hi!=null && w>hi) return 'hi';
+    return 'in';
+  }
+  function bandTxt(b){ if(!b) return '—'; return (b[0]==null?'':b[0]) + '–' + (b[1]==null?'↑':b[1]); }
+
+  // ── 一句判讀：全部從資料算，不寫死 ──
+  function readOut(s){
+    var keys = s.segments.filter(isKey);
+    if(!keys.length) return '這堂課沒有標記主課段，無法對帳。';
+    var pT=0, aT=0;
+    keys.forEach(function(g){ pT+=plan(g); aT+=(g.actual_sec||0); });
+    var tp = pT ? aT/pT*100 : null;
+    var lo=[], hi=[], inb=[], nb=[];
+    keys.forEach(function(g){ var v=verdict(g); if(v==='lo') lo.push(g); else if(v==='hi') hi.push(g); else if(v==='in') inb.push(g); else nb.push(g); });
+    var banded = lo.length + hi.length + inb.length;
+
+    // 欠瓦以處方時間加權，短段不會把大段的洞洗掉
+    var dw=0, dws=0, worst=null;
+    lo.forEach(function(g){ var d=g.band[0]-g.avg_w, w=plan(g); dw+=d*w; dws+=w; if(!worst||d>worst.d) worst={g:g,d:d}; });
+    var mdef = dws ? dw/dws : 0;
+
+    // 時間缺口最大的那一段
+    var cut=null;
+    keys.forEach(function(g){ var pp=plan(g); if(!pp) return; var f=(g.actual_sec||0)/pp; if(f<0.95 && (!cut||f<cut.f)) cut={g:g,f:f}; });
+
+    var head = '<b>'+keys.length+' 段主課、處方共 '+Math.round(pT/60)+' 分</b>：';
+    var t = (tp==null) ? ''
+          : tp>=97 ? '時間<b>做滿 '+r1(tp)+'%</b>'
+          : tp>=88 ? '時間完成 <b>'+r1(tp)+'%</b>'+(cut?'（「'+esc(cut.g.name)+'」只做了 '+Math.round(cut.f*100)+'%）':'')
+          : '時間只做到 <span class="hot">'+r1(tp)+'%</span>'+(cut?'（「'+esc(cut.g.name)+'」提早收在 '+Math.round(cut.f*100)+'%）':'（提早收工）');
+
+    var one = (keys.length===1);
+    var p2;
+    if(!banded) p2 = '這些段沒有給處方帶，只能看時間';
+    else if(lo.length){
+      p2 = '但 <span class="hot">'+(one?'唯一的主課段落在帶下':lo.length+'/'+banded+' 個有帶的段落在帶下')+'</span>，以時間加權平均欠 <span class="hot">'+Math.round(mdef)+'W</span>';
+      if(worst && !one) p2 += '（最深的是「'+esc(worst.g.name)+'」'+Math.round(worst.g.avg_w)+'W vs 帶 '+bandTxt(worst.g.band)+'，欠 '+Math.round(worst.d)+'W）';
+      else if(worst) p2 += '（'+Math.round(worst.g.avg_w)+'W vs 帶 '+bandTxt(worst.g.band)+'）';
+      if(inb.length) p2 += '；另有 '+inb.length+' 段是踩在帶內的';
+    }
+    else if(hi.length) p2 = '有 '+hi.length+' 段衝出帶上（踩太用力）'+(inb.length?'，其餘在帶內':'');
+    else p2 = (one?'平均瓦落在處方帶內':'有處方帶的 '+banded+' 段，平均瓦全部落在帶內');
+    if(nb.length) p2 += '（另有 '+nb.length+' 段沒設帶，不列入對帳）';
+
+    // 形狀命名：讓 8/25 和 8/27 的差別有名字
+    var shape;
+    if(tp>=97 && !lo.length && banded) shape = '做滿且大致在帶內 —— 這是課表被執行完的樣子。';
+    else if(tp>=97 && lo.length) shape = '「時間做滿、瓦數沒到」—— 坐滿了時數，卻沒有付出處方要的張力。';
+    else if(tp<88 && lo.length) shape = '「撐不住就收」—— 強度先掉、然後時間也砍掉，兩邊一起漏。';
+    else if(tp<88) shape = '強度對，但沒撐完處方時間。';
+    else if(lo.length) shape = '時間大致完成，強度有缺口。';
+    else shape = '強度守住了，時間收了一點尾。';
+
+    var extra='';
+    var ib = keys.filter(function(g){ return g.in_band_pct!=null; });
+    if(ib.length){
+      var w2=0, s2=0;
+      ib.forEach(function(g){ var w=plan(g); s2+=g.in_band_pct*w; w2+=w; });
+      extra = ' 主課時間真正待在帶內的比例是 <b>'+r1(s2/w2)+'%</b>。';
+    }
+    return head + t + '，' + p2 + '。' + extra + ' ' + shape;
+  }
+
+  // ── SVG ──
+  var VW=1000, VH=400, Y0=12, Y1=318, R1=332, R2=348, RH=9;
+
+  function chart(s){
+    var segs = s.segments || [];
+    var tot = 0; segs.forEach(function(g){ tot += plan(g); });
+    if(!tot) return { svg:'<svg viewBox="0 0 1000 400"></svg>', ov:'', names:'' };
+
+    var pmax = 0;
+    segs.forEach(function(g){
+      if(g.avg_w!=null) pmax=Math.max(pmax,g.avg_w);
+      if(g.band){ if(g.band[0]!=null) pmax=Math.max(pmax,g.band[0]); if(g.band[1]!=null) pmax=Math.max(pmax,g.band[1]); }
+    });
+    pmax = Math.max(pmax*1.14, 120);
+    var Y = function(w){ return Y1 - (Math.max(0,Math.min(w,pmax))/pmax)*(Y1-Y0); };
+
+    var sv=[], ov=[], nm=[], x=0;
+    // 網格
+    var step = pmax>420?100:50;
+    var ticks=[];
+    for(var v=step; v<pmax; v+=step) ticks.push(v);
+    ticks.forEach(function(v){
+      sv.push('<line x1="0" y1="'+Y(v).toFixed(1)+'" x2="1000" y2="'+Y(v).toFixed(1)+'" stroke="rgba(255,255,255,.055)" stroke-width="1" vector-effect="non-scaling-stroke"/>');
+    });
+    sv.push('<line x1="0" y1="'+Y1+'" x2="1000" y2="'+Y1+'" stroke="rgba(255,255,255,.16)" stroke-width="1" vector-effect="non-scaling-stroke"/>');
+
+    var axis = ticks.map(function(v){
+      return '<div class="splits-axl" style="top:'+(Y(v)/VH*100).toFixed(2)+'%">'+v+'</div>';
+    }).join('');
+    axis += '<div class="splits-axl" style="top:'+(Y1/VH*100).toFixed(2)+'%">0</div>';
+    axis += '<div class="splits-axr" style="top:'+((R1+RH/2)/VH*100).toFixed(2)+'%">時間</div>';
+    axis += '<div class="splits-axr" style="top:'+((R2+RH/2)/VH*100).toFixed(2)+'%">帶內</div>';
+
+    var ftp = (LABREF.baseline && LABREF.baseline.ftp_w) || null;
+    if(ftp && ftp < pmax){
+      sv.push('<line x1="0" y1="'+Y(ftp).toFixed(1)+'" x2="1000" y2="'+Y(ftp).toFixed(1)+'" stroke="rgba(252,76,2,.34)" stroke-width="1" stroke-dasharray="5 5" vector-effect="non-scaling-stroke"/>');
+      ov.push('<div class="splits-ftp" style="top:'+(Y(ftp)/VH*100).toFixed(2)+'%">FTP '+ftp+'</div>');
+    }
+
+    segs.forEach(function(g, i){
+      var w = plan(g)/tot*VW, pct = w/VW*100, key = isKey(g), v = verdict(g);
+      var col = C[v] || C.sup;
+      var cx = x + w/2;
+
+      // 欄底
+      sv.push('<rect x="'+x.toFixed(2)+'" y="'+Y0+'" width="'+w.toFixed(2)+'" height="'+(Y1-Y0)+'" fill="rgba(255,255,255,'+(key?'.020':'.006')+')"/>');
+      if(i) sv.push('<line x1="'+x.toFixed(2)+'" y1="'+Y0+'" x2="'+x.toFixed(2)+'" y2="'+(R2+RH)+'" stroke="rgba(255,255,255,.075)" stroke-width="1" vector-effect="non-scaling-stroke"/>');
+
+      // 處方帶
+      if(key && g.band){
+        var lo=g.band[0], hi=g.band[1];
+        var yLo = lo==null ? Y1 : Y(lo);
+        var yHi = hi==null ? Y0 : Y(hi);
+        sv.push('<rect x="'+x.toFixed(2)+'" y="'+yHi.toFixed(1)+'" width="'+w.toFixed(2)+'" height="'+Math.max(0,yLo-yHi).toFixed(1)+'" fill="rgba(244,240,234,.10)"/>');
+        sv.push('<line x1="'+x.toFixed(2)+'" y1="'+yLo.toFixed(1)+'" x2="'+(x+w).toFixed(2)+'" y2="'+yLo.toFixed(1)+'" stroke="rgba(244,240,234,.38)" stroke-width="1" vector-effect="non-scaling-stroke"/>');
+        if(hi!=null) sv.push('<line x1="'+x.toFixed(2)+'" y1="'+yHi.toFixed(1)+'" x2="'+(x+w).toFixed(2)+'" y2="'+yHi.toFixed(1)+'" stroke="rgba(244,240,234,.38)" stroke-width="1" vector-effect="non-scaling-stroke"/>');
+        else sv.push('<line x1="'+x.toFixed(2)+'" y1="'+(Y0+1)+'" x2="'+(x+w).toFixed(2)+'" y2="'+(Y0+1)+'" stroke="rgba(244,240,234,.30)" stroke-width="1" stroke-dasharray="4 4" vector-effect="non-scaling-stroke"/>');
+
+        // 缺口／溢出：欠的那塊要有面積，才看得出「欠多少」
+        if(g.avg_w!=null && v==='lo'){
+          sv.push('<rect x="'+x.toFixed(2)+'" y="'+yLo.toFixed(1)+'" width="'+w.toFixed(2)+'" height="'+Math.max(0,Y(g.avg_w)-yLo).toFixed(1)+'" fill="rgba(252,76,2,.17)"/>');
+        } else if(g.avg_w!=null && v==='hi'){
+          sv.push('<rect x="'+x.toFixed(2)+'" y="'+Y(g.avg_w).toFixed(1)+'" width="'+w.toFixed(2)+'" height="'+Math.max(0,yHi-Y(g.avg_w)).toFixed(1)+'" fill="rgba(91,200,245,.17)"/>');
+        }
+      }
+
+      // 實際平均瓦
+      if(g.avg_w!=null){
+        var ya = Y(g.avg_w).toFixed(1);
+        sv.push('<line x1="'+x.toFixed(2)+'" y1="'+ya+'" x2="'+(x+w).toFixed(2)+'" y2="'+ya+'" stroke="'+col+'" stroke-width="'+(key?3:1.5)+'" stroke-opacity="'+(key?1:.5)+'" vector-effect="non-scaling-stroke"/>');
+      }
+
+      // 兩條軌：時間完成度、帶內時間比例
+      var tpct = (plan(g) ? Math.min(1,(g.actual_sec||0)/plan(g)) : 0);
+      sv.push('<rect x="'+x.toFixed(2)+'" y="'+R1+'" width="'+w.toFixed(2)+'" height="'+RH+'" fill="rgba(255,255,255,.05)"/>');
+      sv.push('<rect x="'+x.toFixed(2)+'" y="'+R1+'" width="'+(w*tpct).toFixed(2)+'" height="'+RH+'" fill="'+(key?'rgba(244,240,234,.55)':'rgba(244,240,234,.16)')+'"/>');
+      sv.push('<rect x="'+x.toFixed(2)+'" y="'+R2+'" width="'+w.toFixed(2)+'" height="'+RH+'" fill="rgba(255,255,255,.05)"/>');
+      if(g.in_band_pct!=null){
+        sv.push('<rect x="'+x.toFixed(2)+'" y="'+R2+'" width="'+(w*Math.min(1,g.in_band_pct/100)).toFixed(2)+'" height="'+RH+'" fill="'+(v==='lo'?'rgba(252,76,2,.62)':v==='hi'?'rgba(91,200,245,.6)':'rgba(244,240,234,.55)')+'"/>');
+      }
+
+      // 文字一律走 HTML 疊層
+      if(key && g.avg_w!=null && pct>=6){
+        var d = (g.band && g.band[0]!=null && v==='lo') ? '−'+Math.round(g.band[0]-g.avg_w)
+              : (g.band && g.band[1]!=null && v==='hi') ? '+'+Math.round(g.avg_w-g.band[1]) : '';
+        ov.push('<div class="splits-chip" style="left:'+(cx/VW*100).toFixed(2)+'%;top:'+((Y(g.avg_w)-13)/VH*100).toFixed(2)+'%;color:'+col+'">'+Math.round(g.avg_w)+(d?'<u>'+d+'W</u>':'<u>W</u>')+'</div>');
+      }
+      if(key && g.band && pct>=9){
+        ov.push('<div class="splits-bl" style="left:'+((x+2)/VW*100).toFixed(2)+'%;top:'+((Y(g.band[0])+7)/VH*100).toFixed(2)+'%">'+bandTxt(g.band)+'</div>');
+      }
+
+      var tip = g.name+'（'+(ROLE_TXT[g.role]||g.role)+'）\n處方 '+mmss(g.planned_sec)+' / 實際 '+mmss(g.actual_sec)
+              + (g.band?'\n處方帶 '+bandTxt(g.band)+' W':'')
+              + (g.avg_w!=null?'\n平均 '+r1(g.avg_w)+' W':'')
+              + (g.in_band_pct!=null?'\n帶內時間 '+r1(g.in_band_pct)+'%':'')
+              + (g.avg_hr!=null?'\n心率 '+g.avg_hr:'') + (g.avg_cad!=null?' · 迴轉 '+r1(g.avg_cad):'');
+      ov.push('<div class="splits-hit" title="'+esc(tip)+'" style="left:'+(x/VW*100).toFixed(2)+'%;width:'+pct.toFixed(2)+'%"></div>');
+
+      nm.push('<div class="splits-nm'+(key?' k':'')+'" style="flex:0 0 '+pct.toFixed(3)+'%">'+(pct>=5?esc(g.name):'·')+'</div>');
+      x += w;
+    });
+
+    return {
+      svg:'<svg viewBox="0 0 '+VW+' '+VH+'" preserveAspectRatio="none" aria-hidden="true">'+sv.join('')+'</svg>',
+      ov:ov.join(''), names:nm.join(''), axis:axis
+    };
+  }
+
+  function mini(s){
+    var segs=s.segments||[], tot=0; segs.forEach(function(g){ tot+=plan(g); });
+    if(!tot) return '';
+    return segs.map(function(g){
+      var v=verdict(g);
+      var bg = v==='sup' ? 'rgba(244,240,234,.10)' : v==='lo' ? 'rgba(252,76,2,.85)' : v==='hi' ? 'rgba(91,200,245,.8)' : v==='in' ? 'rgba(244,240,234,.85)' : 'rgba(244,240,234,.3)';
+      return '<span style="flex:0 0 '+(plan(g)/tot*100).toFixed(3)+'%;background:'+bg+'"></span>';
+    }).join('');
+  }
+
+  var LABREF = {};
+
+  window.LAB_PARTS.push({ id:'splits', render: function(root, LAB){
+    LABREF = LAB || {};
+    var all = (LAB && LAB.scores) || [];
+    var ss = all.filter(function(s){ return s && s.segments && s.segments.length; });
+    if(!ss.length){ root.innerHTML = '<p class="lab-nil">還沒有這個資料 —— lab.json 的 scores[] 裡沒有帶 segments 的課表。</p>'; return; }
+    ss = ss.slice().sort(function(a,b){ return a.date<b.date?-1:1; });
+
+    var wrap = document.createElement('div');
+    wrap.className = 'splits-wrap';
+    var tabs = document.createElement('div');
+    tabs.className = 'splits-tabs'; tabs.setAttribute('role','tablist');
+    var body = document.createElement('div');
+    wrap.appendChild(tabs); wrap.appendChild(body);
+    root.appendChild(wrap);
+
+    var cur = ss.length-1;
+    ss.forEach(function(s,i){
+      var b = document.createElement('button');
+      b.type='button'; b.className='splits-tab'; b.setAttribute('role','tab');
+      var nm = String(s.label||'').replace(/^【[^】]*】\s*/,'');
+      b.innerHTML = '<div class="splits-td"><b>'+esc(s.date.slice(5))+'</b><span>'+esc(s.grade||'')+'</span><i>'+(s.total!=null?r1(s.total):'')+'</i></div>'
+                  + '<div class="splits-tn">'+esc(nm)+'</div>'
+                  + '<div class="splits-mini">'+mini(s)+'</div>';
+      b.addEventListener('click', function(){ cur=i; paint(); });
+      tabs.appendChild(b);
+    });
+
+    function paint(){
+      Array.prototype.forEach.call(tabs.children, function(b,i){ b.setAttribute('aria-selected', i===cur?'true':'false'); });
+      var s = ss[cur], c = chart(s);
+      var rows = s.segments.map(function(g){
+        var v = verdict(g), key = isKey(g);
+        var d = '—', cls='';
+        if(key && g.band && g.avg_w!=null){
+          if(v==='lo'){ d = '−'+Math.round(g.band[0]-g.avg_w); cls='splits-dlo'; }
+          else if(v==='hi'){ d = '+'+Math.round(g.avg_w-g.band[1]); cls='splits-dhi'; }
+          else { d = '帶內'; cls='splits-din'; }
+        }
+        var tp = plan(g) ? (g.actual_sec||0)/plan(g)*100 : null;
+        return '<tr class="'+(key?'':'sup')+'">'
+          + '<td>'+esc(g.name)+' <span style="color:var(--ink-3);font-size:10px">'+(ROLE_TXT[g.role]||g.role)+'</span></td>'
+          + '<td class="n">'+mmss(g.planned_sec)+'</td>'
+          + '<td class="n">'+mmss(g.actual_sec)+(tp!=null&&tp<95?' <span style="color:var(--sig);font-size:10px">'+Math.round(tp)+'%</span>':'')+'</td>'
+          + '<td class="n">'+(g.band?bandTxt(g.band):'—')+'</td>'
+          + '<td class="n">'+(g.avg_w!=null?Math.round(g.avg_w):'—')+'</td>'
+          + '<td class="n '+cls+'">'+d+'</td>'
+          + '<td class="n">'+(g.in_band_pct!=null?r1(g.in_band_pct)+'%':'—')+'</td>'
+          + '</tr>';
+      }).join('');
+
+      body.innerHTML =
+        '<div class="splits-scroll"><div class="splits-inner">'
+        + '<div class="splits-ax">'+c.axis+'</div>'
+        + '<div class="splits-plot">'+c.svg+'<div class="splits-ov">'+c.ov+'</div></div>'
+        + '</div><div class="splits-names">'+c.names+'</div></div>'
+        + '<p class="splits-hint">← 圖可左右捲，看完整條時間軸 →</p>'
+        + '<div class="splits-leg">'
+        +   '<span><i class="splits-swb"></i>處方帶 band（灰塊上下緣＝帶的上下界）</span>'
+        +   '<span><i class="splits-sw" style="background:'+C['in']+'"></i>平均瓦在帶內</span>'
+        +   '<span><i class="splits-sw" style="background:'+C.lo+'"></i>帶下（欠瓦，橘色面積＝欠的量）</span>'
+        +   '<span><i class="splits-sw" style="background:'+C.hi+'"></i>帶上（超打）</span>'
+        +   '<span><i class="splits-sw" style="background:'+C.none+'"></i>主課但沒給帶（不對帳）</span>'
+        +   '<span><i class="splits-sw" style="background:rgba(244,240,234,.26)"></i>熱身／恢復／收操（弱化）</span>'
+        +   '<span>下方兩軌：時間完成度 · 帶內時間比例</span>'
+        + '</div>'
+        + '<div class="splits-tw"><table class="splits-tbl"><thead><tr>'
+        +   '<th>段</th><th>處方</th><th>實際</th><th>處方帶 W</th><th>平均 W</th><th>差</th><th>帶內</th>'
+        + '</tr></thead><tbody>'+rows+'</tbody></table></div>'
+        + '<p class="lab-say">'+readOut(s)+'</p>';
+    }
+    paint();
+  }});
+})();
+</script>

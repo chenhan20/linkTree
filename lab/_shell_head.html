@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Steve Chuang · 分析室</title>
+<link rel="icon" type="image/png" href="docs/strava_icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Saira+Condensed:wght@600;700;800&display=swap">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+[hidden]{display:none!important}
+:root{
+  --f-num:'Saira Condensed','Oswald','Arial Narrow',sans-serif;
+  --f-ui:'Archivo',-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang TC','Noto Sans TC','Microsoft JhengHei',sans-serif;
+  --f-mono:ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+  --ink-1:#f4f0ea;--ink-2:rgba(244,240,234,.66);--ink-3:rgba(244,240,234,.38);
+  --sig:#FC4C02;
+  --hair:rgba(255,255,255,.065);
+  --bg:#0a0408;--panel:rgba(255,255,255,.018);
+  --ok:#4ad07a;--warn:#ffb020;--cool:#5bc8f5;--vio:#a06bff;
+}
+html,body{height:100%}
+body{
+  font-family:var(--f-ui);color:var(--ink-2);
+  background:radial-gradient(120% 90% at 50% 0%,#0d0510 0%,#0a0408 46%,#050308 100%) fixed,#0a0408;
+  -webkit-font-smoothing:antialiased;line-height:1.6;
+}
+/* 數字一律走計時板字體並鎖等寬，跟 strava.html 同一條規矩 */
+.lab-n{font-family:var(--f-num);font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1;font-weight:800}
+
+.lab-wrap{max-width:1180px;margin:0 auto;padding:0 22px 90px}
+.lab-top{
+  position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  padding:13px 0 12px;margin-bottom:6px;
+  background:linear-gradient(#0a0408 72%,rgba(10,4,8,0));
+  font-size:11px;letter-spacing:2px;color:var(--ink-3)
+}
+.lab-top b{color:var(--ink-1);font-weight:700}
+.lab-top a{color:var(--ink-3);text-decoration:none;border-bottom:1px solid transparent}
+.lab-top a:hover{color:var(--sig);border-bottom-color:var(--sig)}
+.lab-top .sp{flex:1}
+
+.lab-hero{padding:26px 0 30px;border-bottom:1px solid var(--hair);margin-bottom:30px}
+.lab-hero h1{font-size:29px;font-weight:700;color:var(--ink-1);letter-spacing:-.4px;line-height:1.25}
+.lab-hero p{margin-top:12px;max-width:74ch;font-size:13px;line-height:1.85;color:var(--ink-2)}
+.lab-hero em{font-style:normal;color:var(--ink-3)}
+.lab-hero b{color:var(--ink-1);font-weight:700}
+
+/* 目錄：七張圖是七個獨立問題，先讓人知道有哪些 */
+.lab-toc{display:flex;flex-wrap:wrap;gap:7px;margin-top:20px}
+.lab-toc a{
+  padding:5px 11px;border:1px solid var(--hair);border-radius:999px;
+  font-size:11.5px;color:var(--ink-2);text-decoration:none;transition:.15s
+}
+.lab-toc a:hover{border-color:var(--sig);color:var(--sig)}
+
+.lab-card{
+  padding:24px 0 30px;border-bottom:1px solid var(--hair);
+  scroll-margin-top:56px
+}
+.lab-card:last-of-type{border-bottom:0}
+.lab-h{
+  font-size:17px;font-weight:700;color:var(--ink-1);letter-spacing:-.2px;
+  margin-bottom:17px;line-height:1.45
+}
+.lab-h span{
+  display:block;margin-top:4px;font-size:11px;font-weight:400;
+  letter-spacing:.5px;color:var(--ink-3)
+}
+/* 每個元件自己算出來的那句判讀 —— 統一長相，內容各自負責 */
+.lab-say{
+  margin-top:15px;padding:11px 0 0;border-top:1px solid var(--hair);
+  font-size:12.5px;line-height:1.8;color:var(--ink-2)
+}
+.lab-say b{color:var(--ink-1);font-weight:700}
+.lab-say .hot{color:var(--sig);font-weight:700}
+.lab-nil{padding:22px 0;font-size:12.5px;color:var(--ink-3)}
+
+.lab-foot{padding:34px 0 0;font-size:11px;line-height:1.9;color:var(--ink-3)}
+.lab-foot code{font-family:var(--f-mono);font-size:10.5px;color:var(--ink-2)}
+
+@media(max-width:767px){
+  .lab-wrap{padding:0 15px 70px}
+  .lab-hero h1{font-size:23px}
+  .lab-card{padding:20px 0 24px}
+}
+</style>

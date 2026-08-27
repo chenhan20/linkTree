@@ -1,0 +1,548 @@
+<style>
+/* ══ 睡眠 → 隔日表現 ══ 全部選擇器一律 .sleep- 前綴 */
+.sleep-root{--sleep-plot-h:196px}
+
+.sleep-kpis{display:flex;flex-wrap:wrap;gap:0;border-top:1px solid var(--hair);border-bottom:1px solid var(--hair)}
+.sleep-kpi{flex:1 1 132px;padding:11px 14px 12px;border-left:1px solid var(--hair)}
+.sleep-kpi:first-child{border-left:0;padding-left:0}
+.sleep-kpi-k{font-size:10px;letter-spacing:1.4px;color:var(--ink-3);text-transform:uppercase}
+.sleep-kpi-v{margin-top:3px;font-family:var(--f-num);font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1;
+  font-weight:800;font-size:27px;line-height:1;color:var(--ink-1)}
+.sleep-kpi-v small{font-family:var(--f-ui);font-weight:500;font-size:11px;color:var(--ink-3);letter-spacing:.3px;margin-left:4px}
+.sleep-kpi-s{margin-top:5px;font-size:10.5px;line-height:1.5;color:var(--ink-3)}
+.sleep-kpi.is-hot .sleep-kpi-v{color:var(--sig)}
+
+.sleep-sec{margin-top:22px}
+.sleep-cap{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;margin-bottom:9px}
+.sleep-cap b{font-size:12.5px;font-weight:700;color:var(--ink-1);letter-spacing:-.1px}
+.sleep-cap span{font-size:10.5px;color:var(--ink-3);letter-spacing:.3px}
+
+.sleep-legend{display:flex;flex-wrap:wrap;gap:5px 15px;margin:9px 0 0;font-size:10.5px;color:var(--ink-3)}
+.sleep-legend i{display:inline-block;vertical-align:-1px;margin-right:5px;font-style:normal}
+.sleep-sw{width:9px;height:9px;border-radius:2px;display:inline-block}
+.sleep-sw.line{width:15px;height:0;border-top:2px solid currentColor;border-radius:0;vertical-align:3px}
+.sleep-sw.dash{width:15px;height:0;border-top:1px dashed currentColor;border-radius:0;vertical-align:3px}
+
+.sleep-scroll{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch}
+.sleep-scroll svg{display:block}
+
+.sleep-tbl{margin-top:10px;border-top:1px solid var(--hair)}
+.sleep-row{display:grid;grid-template-columns:58px minmax(0,1fr) minmax(0,1fr);gap:0 12px;align-items:center;
+  padding:9px 0;border-bottom:1px solid var(--hair)}
+.sleep-row-d{font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:700;font-size:15px;color:var(--ink-2);letter-spacing:.4px}
+.sleep-row.is-hot .sleep-row-d{color:var(--sig)}
+.sleep-mini{position:relative}
+.sleep-mini-l{display:flex;align-items:baseline;justify-content:space-between;gap:8px;font-size:10px;color:var(--ink-3);margin-bottom:4px}
+.sleep-mini-l b{font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:800;font-size:14px;color:var(--ink-1);letter-spacing:.3px}
+.sleep-mini-t{height:6px;background:rgba(255,255,255,.045);border-radius:3px;overflow:hidden}
+.sleep-mini-f{height:100%;border-radius:3px;background:var(--ink-3)}
+.sleep-badge{display:inline-block;padding:1px 6px;border-radius:3px;font-family:var(--f-num);font-weight:800;
+  font-size:11.5px;letter-spacing:.6px;line-height:1.5}
+
+.sleep-note{margin-top:9px;font-size:11px;line-height:1.75;color:var(--ink-3)}
+
+@media(max-width:767px){
+  .sleep-root{--sleep-plot-h:164px}
+  .sleep-kpi{flex:1 1 46%;padding:10px 10px 11px}
+  .sleep-kpi:nth-child(odd){border-left:0;padding-left:0}
+  .sleep-kpi-v{font-size:23px}
+  .sleep-row{grid-template-columns:50px minmax(0,1fr);gap:0 10px}
+  .sleep-row .sleep-mini:last-child{grid-column:2}
+  .sleep-row .sleep-mini + .sleep-mini{margin-top:8px}
+}
+</style>
+<section class="lab-card" id="card-sleep">
+  <h2 class="lab-h">睡眠 → 隔日表現 <span>· SLEEP vs NEXT-DAY · 少睡的那一晚，隔天真的騎得比較差嗎？</span></h2>
+  <div class="sleep-root"></div>
+</section>
+<script>
+(function(){
+  window.LAB_PARTS = window.LAB_PARTS || [];
+
+  var SVGNS = 'http://www.w3.org/2000/svg';
+  function h(tag, cls, txt){
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (txt != null) e.textContent = txt;
+    return e;
+  }
+  function s(tag, attrs){
+    var e = document.createElementNS(SVGNS, tag);
+    for (var k in attrs) if (attrs[k] != null) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+  function num(v){ return typeof v === 'number' && isFinite(v); }
+  function mean(a){ var t=0,i; for(i=0;i<a.length;i++) t+=a[i]; return a.length ? t/a.length : null; }
+  function median(a){
+    if(!a.length) return null;
+    var b = a.slice().sort(function(x,y){return x-y;}), m = b.length>>1;
+    return b.length % 2 ? b[m] : (b[m-1]+b[m])/2;
+  }
+  function pearson(xs, ys){
+    var n = xs.length, i;
+    if (n < 3) return null;
+    var mx = mean(xs), my = mean(ys), sxy = 0, sxx = 0, syy = 0, dx, dy;
+    for (i=0;i<n;i++){ dx = xs[i]-mx; dy = ys[i]-my; sxy += dx*dy; sxx += dx*dx; syy += dy*dy; }
+    if (sxx <= 0 || syy <= 0) return null;
+    return sxy / Math.sqrt(sxx*syy);
+  }
+  function hm(secs){
+    var m = Math.round(secs/60);
+    var mm = m % 60;
+    return Math.floor(m/60) + ':' + (mm < 10 ? '0' : '') + mm;
+  }
+  function md(iso){
+    var p = String(iso).split('-');
+    return (+p[1]) + '/' + (+p[2]);
+  }
+  function fx(v, n){ return (Math.round(v*Math.pow(10,n))/Math.pow(10,n)).toFixed(n); }
+  function dnum(iso){ // 日期 → 天序號，只做整數天差
+    var p = String(iso).split('-');
+    return Math.round(Date.UTC(+p[0], +p[1]-1, +p[2]) / 86400000);
+  }
+  function gradeColor(g){
+    var c = String(g || '').charAt(0).toUpperCase();
+    if (c === 'A' || c === 'B') return 'var(--ok)';
+    if (c === 'C') return 'var(--warn)';
+    return 'var(--sig)';
+  }
+
+  window.LAB_PARTS.push({ id: 'sleep', render: function(root, LAB){
+    var sp = (LAB && LAB.sleep_perf) || [];
+    var withSleep = sp.filter(function(r){ return r && num(r.sleep_secs) && r.sleep_secs > 0; });
+    if (!sp.length || !withSleep.length){
+      root.innerHTML = '<div class="lab-nil">還沒有這個資料 —— <code>data/lab.json</code> 的 <code>sleep_perf</code> 是空的，或裡面沒有任何一晚有睡眠時數。</div>';
+      return;
+    }
+
+    /* ── 全部數字都在這裡算，沒有寫死的結論 ───────────────── */
+    var hrs = withSleep.map(function(r){ return r.sleep_secs/3600; });
+    var medH = median(hrs);
+    var shortest = withSleep.reduce(function(a,b){ return b.sleep_secs < a.sleep_secs ? b : a; });
+
+    var pairIF = withSleep.filter(function(r){ return r.ride && num(r.ride['if']); });
+    var rIF = pearson(pairIF.map(function(r){ return r.sleep_secs/3600; }),
+                      pairIF.map(function(r){ return r.ride['if']; }));
+    var pairEF = withSleep.filter(function(r){ return r.ride && num(r.ride.ef); });
+    var rEF = pearson(pairEF.map(function(r){ return r.sleep_secs/3600; }),
+                      pairEF.map(function(r){ return r.ride.ef; }));
+
+    var scored = sp.filter(function(r){ return r.score && num(r.score.total); });
+    var scoredSleep = scored.filter(function(r){ return num(r.sleep_secs); })
+                            .slice().sort(function(a,b){ return a.sleep_secs - b.sleep_secs; });
+
+    // 分組平均（睡眠三段）—— 邊界寫在這裡，數字全部現算
+    var cuts = [[0,4,'不到 4h'],[4,5.5,'4–5.5h'],[5.5,99,'5.5h 以上']];
+    var buckets = cuts.map(function(c){
+      var pool = pairIF.filter(function(r){ var x = r.sleep_secs/3600; return x >= c[0] && x < c[1]; });
+      return { lo:c[0], hi:c[1], label:c[2], n:pool.length,
+               mIF: mean(pool.map(function(r){ return r.ride['if']; })),
+               mEF: mean(pool.filter(function(r){ return num(r.ride.ef); }).map(function(r){ return r.ride.ef; })) };
+    }).filter(function(b){ return b.n > 0; });
+
+    /* ── 骨架 ─────────────────────────────────────────── */
+    var kpis = h('div','sleep-kpis');
+    function kpi(k, v, unit, sub, hot){
+      var d = h('div','sleep-kpi' + (hot ? ' is-hot' : ''));
+      d.appendChild(h('div','sleep-kpi-k', k));
+      var vv = h('div','sleep-kpi-v', v);
+      if (unit){ var u = h('small', null, unit); vv.appendChild(u); }
+      d.appendChild(vv);
+      d.appendChild(h('div','sleep-kpi-s', sub));
+      kpis.appendChild(d);
+    }
+    kpi('中位數睡眠', hm(medH*3600), '', withSleep.length + ' 個有睡眠紀錄的騎乘日', false);
+    kpi('最短的一晚', hm(shortest.sleep_secs), '', md(shortest.date) + '　睡眠分 ' + (num(shortest.sleep_score) ? shortest.sleep_score : '—'), true);
+    kpi('睡眠 × 當天 IF', (rIF == null ? '—' : (rIF > 0 ? '+' : '−') + fx(Math.abs(rIF),2)), 'r', 'n = ' + pairIF.length + '　相關係數', false);
+    kpi('睡眠 × 效率 EF', (rEF == null ? '—' : (rEF > 0 ? '+' : '−') + fx(Math.abs(rEF),2)), 'r', 'n = ' + pairEF.length + '　W/bpm', false);
+    root.appendChild(kpis);
+
+    /* ── 圖一：時間軸 ─────────────────────────────────── */
+    var sec1 = h('div','sleep-sec');
+    var cap1 = h('div','sleep-cap');
+    cap1.appendChild(h('b', null, '最近 9 週'));
+    cap1.appendChild(h('span', null, '長條＝前一晚睡眠時數（左軸）　折線＝當天騎乘 IF（右軸）　方塊＝逐段對帳成績'));
+    sec1.appendChild(cap1);
+    var scroll1 = h('div','sleep-scroll');
+    sec1.appendChild(scroll1);
+    var lg1 = h('div','sleep-legend');
+    [['var(--ink-3)','sw','睡眠時數'],
+     ['var(--sig)','sw','當晚 < 3 小時'],
+     ['var(--cool)','line','當天 IF'],
+     ['var(--ink-3)','dash','睡眠中位數 ' + hm(medH*3600)]].forEach(function(t){
+      var w = h('span'); var i = h('i');
+      i.className = 'sleep-sw' + (t[1] === 'line' ? ' line' : t[1] === 'dash' ? ' dash' : '');
+      if (t[1] === 'sw') i.style.background = t[0]; else i.style.color = t[0];
+      w.appendChild(i); w.appendChild(document.createTextNode(t[2]));
+      lg1.appendChild(w);
+    });
+    sec1.appendChild(lg1);
+    root.appendChild(sec1);
+
+    /* ── 圖二：四堂有對帳的課，照睡眠由少到多排 ──────────── */
+    if (scoredSleep.length){
+      var sec2 = h('div','sleep-sec');
+      var cap2 = h('div','sleep-cap');
+      cap2.appendChild(h('b', null, '有逐段對帳的 ' + scoredSleep.length + ' 堂　·　依前一晚睡眠由少到多'));
+      cap2.appendChild(h('span', null, '如果睡眠決定表現，右邊那排分數應該由低到高'));
+      sec2.appendChild(cap2);
+      var tbl = h('div','sleep-tbl');
+      var maxSleepH = Math.max.apply(null, scoredSleep.map(function(r){ return r.sleep_secs/3600; }));
+      var sleepFull = Math.max(6, Math.ceil(maxSleepH));
+      scoredSleep.forEach(function(r){
+        var hot = r.date === shortest.date;
+        var row = h('div','sleep-row' + (hot ? ' is-hot' : ''));
+        row.appendChild(h('div','sleep-row-d', md(r.date)));
+
+        var m1 = h('div','sleep-mini');
+        var l1 = h('div','sleep-mini-l');
+        l1.appendChild(h('span', null, '睡眠' + (num(r.sleep_score) ? ' · 睡眠分 ' + r.sleep_score : '')));
+        var l1b = h('span');
+        l1b.appendChild(h('b', null, hm(r.sleep_secs)));
+        l1.appendChild(l1b);
+        var t1 = h('div','sleep-mini-t'); var f1 = h('div','sleep-mini-f');
+        f1.style.width = Math.max(2, (r.sleep_secs/3600) / sleepFull * 100) + '%';
+        if (hot) f1.style.background = 'var(--sig)';
+        t1.appendChild(f1); m1.appendChild(l1); m1.appendChild(t1);
+        row.appendChild(m1);
+
+        var m2 = h('div','sleep-mini');
+        var l2 = h('div','sleep-mini-l');
+        l2.appendChild(h('span', null, '對帳分'));
+        var l2b = h('span');
+        l2b.appendChild(h('b', null, fx(r.score.total,1)));
+        var bg = h('span','sleep-badge', r.score.grade);
+        bg.style.color = gradeColor(r.score.grade);
+        bg.style.background = 'rgba(255,255,255,.05)';
+        bg.style.marginLeft = '6px';
+        l2b.appendChild(bg);
+        l2.appendChild(l2b);
+        var t2 = h('div','sleep-mini-t'); var f2 = h('div','sleep-mini-f');
+        f2.style.width = Math.max(2, Math.min(100, r.score.total)) + '%';
+        f2.style.background = gradeColor(r.score.grade);
+        t2.appendChild(f2); m2.appendChild(l2); m2.appendChild(t2);
+        row.appendChild(m2);
+
+        tbl.appendChild(row);
+      });
+      sec2.appendChild(tbl);
+
+      // 直接對照：睡最少的那一堂，跟它之後最近的一堂
+      var byDate = scoredSleep.slice().sort(function(a,b){ return dnum(a.date) - dnum(b.date); });
+      var least = scoredSleep[0];
+      var next = null;
+      for (var i = 0; i < byDate.length; i++){
+        if (dnum(byDate[i].date) > dnum(least.date)){ next = byDate[i]; break; }
+      }
+      if (next){
+        var dd = (dnum(next.date) - dnum(least.date));
+        var note = h('div','sleep-note');
+        note.innerHTML =
+          '同一台訓練台、同一種課表：<b style="color:var(--sig)">' + md(least.date) + '</b> 睡 ' + hm(least.sleep_secs) +
+          ' → ' + fx(least.score.total,1) + ' ' + least.score.grade + '，' + dd + ' 天後的 <b style="color:var(--ink-1)">' +
+          md(next.date) + '</b> 睡 ' + hm(next.sleep_secs) + ' → ' + fx(next.score.total,1) + ' ' + next.score.grade +
+          '。多睡 ' + hm(next.sleep_secs - least.sleep_secs) + '，分數差 ' + fx(Math.abs(next.score.total - least.score.total),1) + ' 分。';
+        sec2.appendChild(note);
+      }
+      root.appendChild(sec2);
+    }
+
+    /* ── 圖三：散布圖 ─────────────────────────────────── */
+    var sec3 = pairIF.length >= 3 ? h('div','sleep-sec') : null;
+    var scroll3 = null;
+    if (sec3){
+    var cap3 = h('div','sleep-cap');
+    cap3.appendChild(h('b', null, '全部 ' + pairIF.length + ' 個騎乘日'));
+    cap3.appendChild(h('span', null, '橫軸＝前一晚睡眠　直軸＝當天 IF　粗橫槓＝該睡眠區間的平均 IF'));
+    sec3.appendChild(cap3);
+    scroll3 = h('div','sleep-scroll');
+    sec3.appendChild(scroll3);
+    var lg3 = h('div','sleep-legend');
+    [['var(--ink-3)','sw','一般騎乘日'],
+     ['var(--sig)','sw','有逐段對帳的 ' + scored.length + ' 堂'],
+     ['var(--warn)','line','區間平均 IF'],
+     ['var(--cool)','dash','最小平方趨勢線']].forEach(function(t){
+      var w = h('span'); var i = h('i');
+      i.className = 'sleep-sw' + (t[1] === 'line' ? ' line' : t[1] === 'dash' ? ' dash' : '');
+      if (t[1] === 'sw') i.style.background = t[0]; else i.style.color = t[0];
+      w.appendChild(i); w.appendChild(document.createTextNode(t[2]));
+      lg3.appendChild(w);
+    });
+    sec3.appendChild(lg3);
+    root.appendChild(sec3);
+    }
+
+    /* ── 判讀（整句從上面算出來的數字組出來） ─────────────── */
+    var say = h('div','lab-say');
+    root.appendChild(say);
+
+    (function writeSay(){
+      var worst = scored.length ? scored.reduce(function(a,b){ return b.score.total < a.score.total ? b : a; }) : null;
+      var bits = [];
+
+      var flat = (rEF == null) ? '算不出來'
+        : (Math.abs(rEF) < 0.2 ? '幾乎沒有關係' : (Math.abs(rEF) < 0.4 ? '只有很弱的關係' : '有明顯關係'));
+      bits.push('<b>' + withSleep.length + '</b> 個有睡眠紀錄的騎乘日裡，睡眠時數跟當天效率因子 EF ' + flat +
+                '（r = ' + (rEF == null ? '—' : (rEF<0?'−':'+') + fx(Math.abs(rEF),2)) + '，n = ' + pairEF.length + '）');
+
+      if (rIF != null && rIF < -0.2){
+        var hi = buckets.length ? buckets[0] : null, lo = buckets.length ? buckets[buckets.length-1] : null;
+        bits.push('跟當天 IF 甚至是<b>負的</b>（r = −' + fx(Math.abs(rIF),2) + '）—— 睡不到 4 小時那些天平均 IF ' +
+                  (hi && hi.mIF != null ? fx(hi.mIF,2) : '—') + '，睡滿 5.5 小時以上反而只有 ' +
+                  (lo && lo.mIF != null ? fx(lo.mIF,2) : '—') +
+                  '。這不是「少睡更猛」，是長程騎乘都得早起，因果方向反了');
+      }
+      var p1 = bits.join('；') + '。';
+
+      var p2 = '';
+      if (scoredSleep.length >= 2){
+        var least = scoredSleep[0], most = scoredSleep[scoredSleep.length-1];
+        var best = scoredSleep.reduce(function(a,b){ return b.score.total > a.score.total ? b : a; });
+        p2 = '有逐段對帳的 ' + scoredSleep.length + ' 堂裡，被睡眠打到的只有極端那一晚：<span class="hot">' +
+             md(least.date) + ' 睡 ' + hm(least.sleep_secs) + '</span>（' + withSleep.length + ' 晚裡最短），對帳 ' +
+             fx(least.score.total,1) + ' ' + least.score.grade + '。';
+        if (most.date !== best.date){
+          p2 += '但睡最多的 <b>' + md(most.date) + '</b> 睡了 ' + hm(most.sleep_secs) + '（比中位數 ' + hm(medH*3600) +
+                ' 還長），拿到的是全場最低的 ' + fx(most.score.total,1) + ' ' + most.score.grade +
+                '；睡 ' + hm(best.sleep_secs) + ' 的 <b>' + md(best.date) + '</b> 反而拿了 ' +
+                fx(best.score.total,1) + ' ' + best.score.grade +
+                '。照睡眠排出來的順序跟照分數排出來的順序對不上，' +
+                (worst && worst.date !== least.date
+                  ? '<b>' + md(worst.date) + '</b> 那堂崩掉要去別的地方找原因。'
+                  : '睡眠不是唯一的解釋。');
+        }
+      }
+      say.innerHTML = p1 + (p2 ? ' ' + p2 : '') +
+        '<br><span style="color:var(--ink-3)">口徑：睡眠是當天早上 wellness 的 sleepSecs（前一晚），只取有功率的騎乘日；' +
+        '沒戴錶的 ' + (sp.length - withSleep.length) + ' 天不列入。相關係數是皮爾森 r，樣本是觀察不是實驗。</span>';
+    })();
+
+    /* ── 繪圖：像素座標，不做非等比拉伸，所以文字可以待在 SVG 裡 ── */
+    function drawTimeline(){
+      scroll1.innerHTML = '';
+      var avail = scroll1.clientWidth || root.clientWidth || 900;
+      var W = Math.max(600, avail);
+      var PH = parseInt(getComputedStyle(root).getPropertyValue('--sleep-plot-h'), 10) || 196;
+      var PAD = { t: 22, r: 40, b: 22, l: 32 };
+      var H = PH + PAD.t + PAD.b;
+      var plotW = W - PAD.l - PAD.r, plotH = PH;
+
+      var lastD = dnum(sp[sp.length-1].date);
+      var d0 = lastD - 62, d1 = lastD;
+      var win = withSleep.filter(function(r){ return dnum(r.date) >= d0; });
+      var winIF = sp.filter(function(r){ return dnum(r.date) >= d0 && r.ride && num(r.ride['if']); });
+      if (!win.length){ scroll1.appendChild(h('div','lab-nil','最近 9 週沒有帶睡眠紀錄的騎乘。')); return; }
+      // 視窗左邊如果一大段沒騎車，不要留一片空白 —— 往內縮到第一筆前 3 天
+      var firstD = Math.min.apply(null, win.concat(winIF).map(function(r){ return dnum(r.date); }));
+      if (firstD - d0 > 5) d0 = firstD - 3;
+
+      var days = d1 - d0;
+      function X(dd){ return PAD.l + (dd - d0) / days * plotW; }
+      var sleepMax = Math.max(8, Math.ceil(Math.max.apply(null, win.map(function(r){ return r.sleep_secs/3600; }))));
+      function YS(v){ return PAD.t + plotH - v / sleepMax * plotH; }
+      var ifVals = winIF.map(function(r){ return r.ride['if']; });
+      var ifLo = ifVals.length ? Math.max(0, Math.floor(Math.min.apply(null, ifVals) * 10) / 10 - 0.05) : 0.3;
+      var ifHi = ifVals.length ? Math.ceil(Math.max.apply(null, ifVals) * 10) / 10 + 0.05 : 1.0;
+      if (ifHi - ifLo < 0.05) ifHi = ifLo + 0.05;
+      function YI(v){ return PAD.t + plotH - (v - ifLo) / (ifHi - ifLo) * plotH; }
+
+      var svg = s('svg', { width: W, height: H, viewBox: '0 0 ' + W + ' ' + H, role: 'img',
+                           'aria-label': '最近 9 週的前一晚睡眠時數與當天騎乘強度' });
+
+      // 左軸格線
+      for (var v = 0; v <= sleepMax; v += 2){
+        svg.appendChild(s('line', { x1: PAD.l, x2: PAD.l + plotW, y1: YS(v), y2: YS(v),
+          stroke: 'rgba(255,255,255,.065)', 'shape-rendering': 'crispEdges' }));
+        svg.appendChild(s('text', { x: PAD.l - 6, y: YS(v) + 3.5, 'text-anchor': 'end',
+          fill: 'rgba(244,240,234,.38)', 'font-size': 9.5, 'font-family': 'var(--f-num)' })).textContent = v + 'h';
+      }
+      // 中位數
+      svg.appendChild(s('line', { x1: PAD.l, x2: PAD.l + plotW, y1: YS(medH), y2: YS(medH),
+        stroke: 'rgba(244,240,234,.38)', 'stroke-width': 1, 'stroke-dasharray': '3 4' }));
+
+      // 右軸刻度（IF）
+      (ifVals.length ? [ifLo, (ifLo+ifHi)/2, ifHi] : []).forEach(function(v){
+        svg.appendChild(s('text', { x: PAD.l + plotW + 6, y: YI(v) + 3.5, 'text-anchor': 'start',
+          fill: 'var(--cool)', opacity: .62, 'font-size': 9.5, 'font-family': 'var(--f-num)' })).textContent = fx(v,2);
+      });
+
+      // 日期刻度
+      for (var dd = d1; dd >= d0; dd -= 14){
+        var iso = new Date(dd * 86400000).toISOString().slice(0,10);
+        svg.appendChild(s('line', { x1: X(dd), x2: X(dd), y1: PAD.t + plotH, y2: PAD.t + plotH + 4,
+          stroke: 'rgba(255,255,255,.065)' }));
+        svg.appendChild(s('text', { x: X(dd), y: PAD.t + plotH + 15, 'text-anchor': 'middle',
+          fill: 'rgba(244,240,234,.38)', 'font-size': 9.5, 'font-family': 'var(--f-num)' })).textContent = md(iso);
+      }
+
+      // 睡眠長條
+      var bw = Math.max(4, Math.min(11, plotW / days * 0.7));
+      win.forEach(function(r){
+        var hh = r.sleep_secs/3600, x = X(dnum(r.date)) - bw/2, y = YS(hh);
+        var hot = hh < 3;
+        var rect = s('rect', { x: x, y: y, width: bw, height: PAD.t + plotH - y, rx: 1.5,
+          fill: hot ? 'var(--sig)' : 'rgba(244,240,234,.30)' });
+        rect.appendChild(s('title')).textContent =
+          r.date + '　睡 ' + hm(r.sleep_secs) + (num(r.sleep_score) ? '（睡眠分 ' + r.sleep_score + '）' : '') +
+          (r.ride ? '\n' + r.ride.name + '　IF ' + (num(r.ride['if']) ? fx(r.ride['if'],2) : '—') +
+                    '　TSS ' + (num(r.ride.tss) ? r.ride.tss : '—') : '') +
+          (r.score ? '\n對帳 ' + fx(r.score.total,1) + ' ' + r.score.grade : '');
+        svg.appendChild(rect);
+      });
+
+      // IF 折線（間隔超過 8 天就斷開，不要在沒騎車的空窗上拉直線）
+      var segs = [], cur = [];
+      winIF.slice().sort(function(a,b){ return dnum(a.date) - dnum(b.date); }).forEach(function(r){
+        if (cur.length && dnum(r.date) - dnum(cur[cur.length-1].date) > 8){ segs.push(cur); cur = []; }
+        cur.push(r);
+      });
+      if (cur.length) segs.push(cur);
+      segs.forEach(function(seg){
+        if (seg.length < 2) return;
+        var dpath = seg.map(function(r, i){ return (i ? 'L' : 'M') + fx(X(dnum(r.date)),1) + ' ' + fx(YI(r.ride['if']),1); }).join(' ');
+        svg.appendChild(s('path', { d: dpath, fill: 'none', stroke: 'var(--cool)', 'stroke-width': 1.6,
+          'stroke-linejoin': 'round', 'stroke-linecap': 'round', opacity: .85 }));
+      });
+      winIF.forEach(function(r){
+        svg.appendChild(s('circle', { cx: X(dnum(r.date)), cy: YI(r.ride['if']), r: 2.4,
+          fill: 'var(--cool)', stroke: 'var(--bg)', 'stroke-width': 1 }));
+      });
+
+      // 對帳成績方塊，貼在自己那根長條的頭上
+      win.filter(function(r){ return r.score && num(r.score.total); }).forEach(function(r){
+        var cx = Math.min(PAD.l + plotW - 17, Math.max(PAD.l + 17, X(dnum(r.date))));
+        var by = YS(r.sleep_secs/3600) - 16;
+        var g = s('g');
+        g.appendChild(s('rect', { x: cx - 16, y: by, width: 32, height: 13, rx: 2.5,
+          fill: 'var(--bg)', stroke: gradeColor(r.score.grade), 'stroke-width': 1 }));
+        var t = s('text', { x: cx, y: by + 10, 'text-anchor': 'middle', fill: gradeColor(r.score.grade),
+          'font-size': 9.5, 'font-weight': 800, 'font-family': 'var(--f-num)' });
+        t.textContent = r.score.grade + ' ' + Math.round(r.score.total);
+        g.appendChild(t);
+        g.appendChild(s('title')).textContent = r.date + '　逐段對帳 ' + fx(r.score.total,1) + ' ' + r.score.grade;
+        svg.appendChild(g);
+      });
+
+      scroll1.appendChild(svg);
+      // 窄螢幕看不完整條時間軸，預設停在最右邊 —— 最近的那幾天才是重點
+      if (scroll1.scrollWidth > scroll1.clientWidth) scroll1.scrollLeft = scroll1.scrollWidth;
+    }
+
+    function drawScatter(){
+      if (!scroll3) return;
+      scroll3.innerHTML = '';
+      var avail = scroll3.clientWidth || root.clientWidth || 900;
+      var W = Math.max(560, avail);
+      var PAD = { t: 16, r: 14, b: 26, l: 32 };
+      var plotH = 178, H = plotH + PAD.t + PAD.b, plotW = W - PAD.l - PAD.r;
+
+      var xs = pairIF.map(function(r){ return r.sleep_secs/3600; });
+      var ys = pairIF.map(function(r){ return r.ride['if']; });
+      var xMax = Math.max(9, Math.ceil(Math.max.apply(null, xs)));
+      var yLo = Math.max(0, Math.floor(Math.min.apply(null, ys)*10)/10 - 0.05);
+      var yHi = Math.ceil(Math.max.apply(null, ys)*10)/10 + 0.05;
+      function X(v){ return PAD.l + v / xMax * plotW; }
+      function Y(v){ return PAD.t + plotH - (v - yLo) / (yHi - yLo) * plotH; }
+
+      var svg = s('svg', { width: W, height: H, viewBox: '0 0 ' + W + ' ' + H, role: 'img',
+                           'aria-label': '前一晚睡眠時數與當天騎乘 IF 的散布圖' });
+
+      var step = (yHi - yLo) > 0.6 ? 0.2 : 0.1;
+      for (var v = Math.ceil(yLo/step)*step; v <= yHi + 1e-9; v += step){
+        svg.appendChild(s('line', { x1: PAD.l, x2: PAD.l + plotW, y1: Y(v), y2: Y(v),
+          stroke: 'rgba(255,255,255,.065)', 'shape-rendering': 'crispEdges' }));
+        svg.appendChild(s('text', { x: PAD.l - 6, y: Y(v) + 3.5, 'text-anchor': 'end',
+          fill: 'rgba(244,240,234,.38)', 'font-size': 9.5, 'font-family': 'var(--f-num)' })).textContent = fx(v,1);
+      }
+      for (var xv = 0; xv <= xMax; xv += 2){
+        svg.appendChild(s('text', { x: X(xv), y: PAD.t + plotH + 15, 'text-anchor': 'middle',
+          fill: 'rgba(244,240,234,.38)', 'font-size': 9.5, 'font-family': 'var(--f-num)' })).textContent = xv + 'h';
+      }
+      svg.appendChild(s('text', { x: PAD.l + plotW, y: PAD.t + plotH + 15, 'text-anchor': 'end',
+        fill: 'rgba(244,240,234,.38)', 'font-size': 9.5 })).textContent = '前一晚睡眠';
+
+      // 區間平均
+      buckets.forEach(function(b){
+        if (b.mIF == null) return;
+        var x1 = X(Math.max(0, b.lo)), x2 = X(Math.min(xMax, b.hi));
+        svg.appendChild(s('line', { x1: x1 + 2, x2: x2 - 2, y1: Y(b.mIF), y2: Y(b.mIF),
+          stroke: 'var(--warn)', 'stroke-width': 2.5, 'stroke-linecap': 'round', opacity: .9 }));
+        var t = s('text', { x: x1 + 4, y: Y(b.mIF) - 6, 'text-anchor': 'start',
+          fill: 'var(--warn)', 'font-size': 9.5, 'font-family': 'var(--f-num)', 'font-weight': 700 });
+        t.textContent = fx(b.mIF,2) + '  n=' + b.n;
+        svg.appendChild(t);
+      });
+
+      // 趨勢線
+      if (rIF != null){
+        var mx = mean(xs), my = mean(ys), sxy = 0, sxx = 0, i;
+        for (i=0;i<xs.length;i++){ sxy += (xs[i]-mx)*(ys[i]-my); sxx += (xs[i]-mx)*(xs[i]-mx); }
+        if (sxx > 0){
+          var slope = sxy/sxx, icpt = my - slope*mx;
+          var xa = Math.min.apply(null, xs), xb = Math.max.apply(null, xs);
+          svg.appendChild(s('line', { x1: X(xa), y1: Y(slope*xa+icpt), x2: X(xb), y2: Y(slope*xb+icpt),
+            stroke: 'var(--cool)', 'stroke-width': 1.4, 'stroke-dasharray': '5 4', opacity: .8 }));
+        }
+      }
+
+      // 點
+      pairIF.forEach(function(r){
+        var isScored = !!(r.score && num(r.score.total));
+        var c = s('circle', { cx: X(r.sleep_secs/3600), cy: Y(r.ride['if']),
+          r: isScored ? 4.5 : 2.6,
+          fill: isScored ? 'var(--sig)' : 'rgba(244,240,234,.34)',
+          stroke: isScored ? 'var(--bg)' : 'none', 'stroke-width': isScored ? 1.2 : 0 });
+        c.appendChild(s('title')).textContent =
+          r.date + '　睡 ' + hm(r.sleep_secs) + '　IF ' + fx(r.ride['if'],2) +
+          (isScored ? '　對帳 ' + fx(r.score.total,1) + ' ' + r.score.grade : '');
+        svg.appendChild(c);
+      });
+      // 有對帳的那幾堂標日期，最短的那晚一定要看得到。
+      // 這幾點常常擠在一起，所以標籤先算好位置再依序往下推開，並拉一條細引線回到點上。
+      var marks = pairIF.filter(function(r){ return r.score && num(r.score.total); })
+        .map(function(r){
+          var x = X(r.sleep_secs/3600), y = Y(r.ride['if']);
+          return { r: r, x: x, y: y, ly: y, end: x > PAD.l + plotW - 66 };
+        })
+        .sort(function(a,b){ return a.ly - b.ly; });
+      marks.forEach(function(m, i){
+        for (var j = 0; j < i; j++){
+          var p = marks[j];
+          if (Math.abs(p.x - m.x) < 62 && m.ly - p.ly < 12) m.ly = p.ly + 12;
+        }
+        m.ly = Math.max(PAD.t + 8, Math.min(PAD.t + plotH - 4, m.ly));
+      });
+      marks.forEach(function(m){
+        var tx = m.x + (m.end ? -8 : 8);
+        if (Math.abs(m.ly - m.y) > 3){
+          svg.appendChild(s('line', { x1: m.x, y1: m.y, x2: tx - (m.end ? -3 : 3), y2: m.ly,
+            stroke: 'var(--sig)', 'stroke-width': .8, opacity: .5 }));
+        }
+        var t = s('text', { x: tx, y: m.ly + 3.5, 'text-anchor': m.end ? 'end' : 'start',
+          fill: 'var(--sig)', 'font-size': 9.5, 'font-weight': 700, 'font-family': 'var(--f-num)' });
+        t.textContent = md(m.r.date) + ' ' + m.r.score.grade;
+        svg.appendChild(t);
+      });
+
+      scroll3.appendChild(svg);
+    }
+
+    function drawAll(){ drawTimeline(); drawScatter(); }
+    drawAll();
+
+    var lastW = root.clientWidth;
+    if (typeof ResizeObserver === 'function'){
+      var ro = new ResizeObserver(function(){
+        var w = root.clientWidth;
+        if (w && Math.abs(w - lastW) > 8){ lastW = w; drawAll(); }
+      });
+      ro.observe(root);
+    } else if (window.addEventListener){
+      window.addEventListener('resize', function(){
+        var w = root.clientWidth;
+        if (w && Math.abs(w - lastW) > 8){ lastW = w; drawAll(); }
+      });
+    }
+  }});
+})();
+</script>

@@ -1,0 +1,61 @@
+<script>
+(function () {
+  var main = document.getElementById('lab-main');
+  var toc = document.getElementById('lab-toc');
+
+  // 元件的 <section> 是直接寫在文件流裡的，先把它們搬進 main 並建目錄
+  var cards = [].slice.call(document.querySelectorAll('body > .lab-card, .lab-wrap > .lab-card'));
+  cards.forEach(function (c) { main.appendChild(c); });
+
+  function titleOf(card) {
+    var h = card.querySelector('.lab-h');
+    if (!h) return card.id;
+    var clone = h.cloneNode(true);
+    var sub = clone.querySelector('span');
+    if (sub) sub.remove();
+    return clone.textContent.trim();
+  }
+  cards.forEach(function (c) {
+    var a = document.createElement('a');
+    a.href = '#' + c.id;
+    a.textContent = titleOf(c);
+    toc.appendChild(a);
+  });
+
+  function fail(msg) {
+    main.insertAdjacentHTML('afterbegin',
+      '<div class="lab-nil">' + msg + '</div>');
+  }
+
+  fetch('data/lab.json', { cache: 'no-cache' })
+    .then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    })
+    .then(function (LAB) {
+      window.LAB = LAB;
+      var st = document.getElementById('lab-stamp');
+      if (st && LAB.generated_at) st.textContent = '· 資料 ' + String(LAB.generated_at).slice(0, 16).replace('T', ' ');
+
+      window.LAB_PARTS.forEach(function (p) {
+        var root = document.querySelector('#card-' + p.id + ' .' + p.id + '-root')
+                || document.querySelector('.' + p.id + '-root');
+        if (!root) return;
+        // 一個元件炸掉不可以把整頁帶走 —— 就地顯示錯誤，其餘照畫
+        try {
+          p.render(root, LAB);
+        } catch (e) {
+          root.innerHTML = '<div class="lab-nil">這張圖畫不出來：' +
+            String(e && e.message ? e.message : e) + '</div>';
+          if (window.console) console.error('[lab] part ' + p.id + ' failed', e);
+        }
+      });
+    })
+    .catch(function (e) {
+      fail('讀不到 <code>data/lab.json</code>（' + e.message + '）。' +
+           '先跑一次 <code>python3 scripts/build-lab.py</code> 產生它。');
+    });
+})();
+</script>
+</body>
+</html>

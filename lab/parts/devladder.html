@@ -1,0 +1,347 @@
+<style>
+.devladder-root{
+  --dl-a:#5bc8f5;                    /* 小盤 34T */
+  --dl-b:#a06bff;                    /* 大盤 50T */
+  --dl-a-w:rgba(91,200,245,.26);
+  --dl-b-w:rgba(160,107,255,.26);
+  --dl-lw:64px;                      /* 齒比欄 */
+  --dl-gap:8px;
+  --dl-rw:170px;                     /* 展開 46 + rpm 42 + 標註 58 + 三個 gap */
+  --dl-rh:23px;
+  font-size:12px;color:var(--ink-2)
+}
+
+/* ── 車速控制 ───────────────────────────────── */
+.devladder-ctl{
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  padding:11px 13px;margin-bottom:15px;
+  border:1px solid var(--hair);border-radius:5px;background:var(--panel)
+}
+.devladder-ctl-lab{font-size:10.5px;letter-spacing:1.6px;color:var(--ink-3);white-space:nowrap}
+.devladder-ctl input[type=range]{
+  flex:1;min-width:150px;accent-color:var(--sig);height:18px;cursor:pointer
+}
+.devladder-read{display:flex;align-items:baseline;gap:4px;white-space:nowrap}
+.devladder-read .devladder-v{
+  font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:800;
+  font-size:26px;line-height:1;color:var(--ink-1);letter-spacing:.5px
+}
+.devladder-read .devladder-u{font-size:10.5px;color:var(--ink-3);letter-spacing:.8px}
+.devladder-reset{
+  padding:4px 10px;border:1px solid var(--hair);border-radius:999px;background:none;
+  font-family:var(--f-ui);font-size:10.5px;color:var(--ink-3);cursor:pointer;transition:.15s;white-space:nowrap
+}
+.devladder-reset:hover{border-color:var(--sig);color:var(--sig)}
+
+/* ── 圖例 ───────────────────────────────────── */
+.devladder-key{display:flex;flex-wrap:wrap;gap:6px 15px;margin-bottom:11px;font-size:10.5px;color:var(--ink-3)}
+.devladder-key i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:-1px;font-style:normal}
+.devladder-key u{
+  display:inline-block;width:14px;height:9px;margin-right:5px;vertical-align:-1px;
+  border:1px dashed var(--sig);border-radius:2px;text-decoration:none
+}
+
+/* ── 階梯本體 ───────────────────────────────── */
+.devladder-scroll{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch}
+.devladder-plot{min-width:500px;position:relative}
+.devladder-rows{position:relative}
+
+.devladder-row,.devladder-head,.devladder-axis{
+  display:grid;gap:var(--dl-gap);align-items:center;
+  grid-template-columns:var(--dl-lw) 1fr 46px 42px 58px
+}
+.devladder-head{
+  height:20px;font-size:9.5px;letter-spacing:1.3px;color:var(--ink-3);
+  border-bottom:1px solid var(--hair);margin-bottom:5px
+}
+.devladder-head span:nth-child(3),.devladder-head span:nth-child(4){text-align:right}
+.devladder-row{height:var(--dl-rh);position:relative;z-index:1}
+.devladder-row:hover{background:rgba(255,255,255,.028)}
+
+.devladder-g{font-size:11px;color:var(--ink-2);white-space:nowrap}
+.devladder-g b{
+  font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:800;
+  font-size:13px;color:var(--ink-1)
+}
+.devladder-g s{text-decoration:none;color:var(--ink-3);padding:0 1px}
+
+.devladder-track{position:relative;height:var(--dl-rh)}
+.devladder-bar{
+  position:absolute;left:0;top:50%;transform:translateY(-50%);
+  height:7px;border-radius:0 2px 2px 0
+}
+.devladder-cap{position:absolute;top:50%;transform:translate(-50%,-50%);width:2px;height:15px;border-radius:1px}
+
+.devladder-dev,.devladder-rpm{
+  text-align:right;font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:800;
+  font-size:13px;color:var(--ink-2);letter-spacing:.3px
+}
+.devladder-rpm.is-torque{color:var(--sig)}
+.devladder-rpm.is-aero{color:var(--ok)}
+.devladder-rpm.is-off{color:var(--ink-3);font-weight:600}
+.devladder-tag{font-size:9.5px;letter-spacing:.6px;color:var(--ink-3);white-space:nowrap}
+.devladder-tag em,.devladder-key em{
+  font-style:normal;padding:1px 5px;border-radius:999px;
+  border:1px solid rgba(255,176,32,.4);color:var(--warn)
+}
+
+/* 兩盤共用的展開區間 */
+.devladder-band{
+  position:absolute;top:0;bottom:0;z-index:0;
+  background:rgba(255,255,255,.045);
+  border-left:1px solid var(--hair);border-right:1px solid var(--hair)
+}
+.devladder-bandlab{
+  position:absolute;z-index:2;font-size:9.5px;letter-spacing:1.2px;color:var(--ink-3);
+  white-space:nowrap;pointer-events:none
+}
+
+/* 50×34 ≈ 34×24 的那個框 */
+.devladder-pair{
+  position:absolute;z-index:2;border:1px dashed var(--sig);border-radius:3px;pointer-events:none
+}
+.devladder-pairlab{
+  position:absolute;z-index:3;white-space:nowrap;pointer-events:none;
+  font-size:10px;line-height:1.5;color:var(--sig)
+}
+.devladder-pairlab b{
+  display:block;font-family:var(--f-num);font-variant-numeric:tabular-nums;
+  font-weight:800;font-size:13px;letter-spacing:.3px
+}
+
+.devladder-axis{height:22px;margin-top:6px;border-top:1px solid var(--hair);padding-top:4px}
+.devladder-axwrap{position:relative;height:14px}
+.devladder-t{position:absolute;top:0;transform:translateX(-50%);font-size:9.5px;color:var(--ink-3);
+  font-family:var(--f-num);font-variant-numeric:tabular-nums}
+
+.devladder-say .devladder-hot{color:var(--sig);font-weight:700}
+.devladder-say .devladder-num{font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:800;font-size:14px;letter-spacing:.3px}
+
+@media(max-width:767px){
+  .devladder-ctl{gap:9px;padding:10px}
+  .devladder-read .devladder-v{font-size:22px}
+}
+</style>
+<section class="lab-card" id="card-devladder">
+  <h2 class="lab-h">展開階梯 <span>· DEVELOPMENT LADDER · 掛上大盤最大片，到底有沒有換到比較重的齒比？</span></h2>
+  <div class="devladder-root"></div>
+</section>
+<script>
+(function(){
+  window.LAB_PARTS = window.LAB_PARTS || [];
+  window.LAB_PARTS.push({ id: 'devladder', render: function(root, LAB){
+    var dt = (LAB && LAB.drivetrain) || {};
+    var rings = Array.isArray(dt.chainrings) ? dt.chainrings.slice() : [];
+    var cogs  = Array.isArray(dt.cassette)   ? dt.cassette.slice()   : [];
+    if (!rings.length || !cogs.length){
+      root.innerHTML = '<div class="lab-nil">還沒有這個資料</div>';
+      return;
+    }
+    var circ = (LAB.baseline && LAB.baseline.wheel_circ_m) || 2.105;
+
+    rings.sort(function(a,b){return a-b;});
+    cogs.sort(function(a,b){return a-b;});
+    var SMALL = rings[0], BIG = rings[rings.length-1];
+
+    // 交叉鏈：大盤配最大的兩片、小盤配最小的兩片（用完整卡式帶判定，不是當天用過的那幾片）
+    var bigWorst = cogs.slice(-2), smallWorst = cogs.slice(0,2);
+    function isCross(f,r){
+      if (f === BIG   && bigWorst.indexOf(r)   >= 0) return true;
+      if (f === SMALL && smallWorst.indexOf(r) >= 0) return true;
+      return false;
+    }
+
+    // ── 展開階梯 ────────────────────────────────
+    var G = [];
+    rings.forEach(function(f){ cogs.forEach(function(r){
+      G.push({ f:f, r:r, dev:f/r*circ, big:(f===BIG), cross:isCross(f,r) });
+    });});
+    G.sort(function(a,b){return a.dev-b.dev;});
+
+    var maxDev = G[G.length-1].dev, axMax = maxDev*1.035;
+    function px(d){ return d/axMax*100; }
+
+    // 重疊區＝大盤最輕的一檔 → 小盤最重的一檔
+    var bigs   = G.filter(function(g){return g.big;});
+    var smalls = G.filter(function(g){return !g.big;});
+    var lo = bigs[0].dev, hi = smalls[smalls.length-1].dev;
+    var overlapN = G.filter(function(g){return g.dev>=lo-1e-9 && g.dev<=hi+1e-9;}).length;
+
+    // 相鄰但分屬兩盤、且展開差 <6% 的「白換的」組合
+    var nearDup = 0;
+    for (var i=0;i<G.length-1;i++){
+      if (G[i].big !== G[i+1].big && (G[i+1].dev-G[i].dev)/G[i].dev <= 0.06) nearDup++;
+    }
+
+    // 主角：大盤最輕的那一檔，以及跟它展開最接近的小盤檔
+    var star = bigs[0], twin = null, best = 1e9;
+    smalls.forEach(function(g){ var d=Math.abs(g.dev-star.dev); if(d<best){best=d;twin=g;} });
+    var pairPct = (star.dev-twin.dev)/twin.dev*100;
+    var iA = G.indexOf(twin), iB = G.indexOf(star);
+    if (iA > iB){ var t=iA; iA=iB; iB=t; }
+
+    // ── 預設車速：中社那趟的實測均速（距離 ÷ 各檔停留秒數總和）──
+    var TORQUE=[55,65], AERO=[85,95];
+    var zs = (LAB.gears||[]).filter(function(g){ return g.group === 'zhongshe'; });
+    var zd=0, zs_sec=0;
+    zs.forEach(function(g){
+      var s=0; (g.mix||[]).forEach(function(m){ s += (m.secs||0); });
+      if (s>0 && g.dist_km){ zd += g.dist_km; zs_sec += s; }
+    });
+    var refKmh = zs_sec>0 ? zd/(zs_sec/3600) : 0;
+    var refName = zs.length ? (zs[0].name + ' ' + zs.length + ' 趟實測均速') : '';
+    var kmh = refKmh>0 ? Math.round(refKmh*10)/10 : 25;
+
+    function rpm(dev){ return kmh*1000/60/dev; }
+    function bandOf(v){
+      if (v>=TORQUE[0] && v<=TORQUE[1]) return 'is-torque';
+      if (v>=AERO[0]   && v<=AERO[1])   return 'is-aero';
+      return 'is-off';
+    }
+
+    // ── DOM ─────────────────────────────────────
+    var H = [];
+    H.push('<div class="devladder-ctl">');
+    H.push('<span class="devladder-ctl-lab">車速</span>');
+    H.push('<input type="range" class="devladder-slider" min="5" max="55" step="0.5" value="'+kmh+'">');
+    H.push('<span class="devladder-read"><span class="devladder-v">'+kmh.toFixed(1)+'</span><span class="devladder-u">km/h</span></span>');
+    if (refKmh>0) H.push('<button type="button" class="devladder-reset">回到 '+refKmh.toFixed(1)+' ・中社實測</button>');
+    H.push('</div>');
+
+    H.push('<div class="devladder-key">');
+    H.push('<span><i style="background:var(--dl-a)"></i>小盤 '+SMALL+'T</span>');
+    H.push('<span><i style="background:var(--dl-b)"></i>大盤 '+BIG+'T</span>');
+    H.push('<span><i style="background:rgba(255,255,255,.09);border:1px solid var(--hair)"></i>兩盤重疊區</span>');
+    H.push('<span><u></u>展開幾乎相同的一對</span>');
+    H.push('<span><i style="background:var(--sig)"></i>踏頻落在扭力帶 '+TORQUE[0]+'–'+TORQUE[1]+' rpm</span>');
+    H.push('<span><i style="background:var(--ok)"></i>落在有氧帶 '+AERO[0]+'–'+AERO[1]+' rpm</span>');
+    H.push('<span><em>交叉</em>&nbsp; 交叉鏈（'+BIG+'×'+bigWorst.join('/')+'、'+SMALL+'×'+smallWorst.join('/')+'）</span>');
+    H.push('</div>');
+
+    H.push('<div class="devladder-scroll"><div class="devladder-plot">');
+    H.push('<div class="devladder-head"><span>齒比</span><span>展開（0 – '+axMax.toFixed(1)+' m）</span><span>展開 m</span><span>rpm</span><span>標註</span></div>');
+    H.push('<div class="devladder-rows">');
+    H.push('<div class="devladder-band" style="left:0;width:0"></div>');
+    G.forEach(function(g){
+      var c = g.big ? 'var(--dl-b)' : 'var(--dl-a)';
+      var w = g.big ? 'var(--dl-b-w)' : 'var(--dl-a-w)';
+      H.push('<div class="devladder-row">');
+      H.push('<div class="devladder-g"><b>'+g.f+'</b><s>×</s><b>'+g.r+'</b></div>');
+      H.push('<div class="devladder-track">'
+        + '<div class="devladder-bar" style="width:'+px(g.dev).toFixed(3)+'%;background:linear-gradient(90deg,'+w+','+c+')"></div>'
+        + '<div class="devladder-cap" style="left:'+px(g.dev).toFixed(3)+'%;background:'+c+'"></div>'
+        + '</div>');
+      H.push('<div class="devladder-dev">'+g.dev.toFixed(2)+'</div>');
+      H.push('<div class="devladder-rpm" data-dev="'+g.dev+'"></div>');
+      H.push('<div class="devladder-tag">'+(g.cross?'<em>交叉</em>':'')+'</div>');
+      H.push('</div>');
+    });
+    H.push('</div>');
+    H.push('<div class="devladder-axis"><span></span><span class="devladder-axwrap"></span><span></span><span></span><span></span></div>');
+    H.push('</div></div>');
+    H.push('<div class="lab-say devladder-say"></div>');
+    root.innerHTML = H.join('');
+
+    // 重疊區的 band 用純 CSS calc 不好對齊，直接量軌道寬度來擺
+    var plot  = root.querySelector('.devladder-plot');
+    var rowsE = root.querySelector('.devladder-rows');
+    var band  = root.querySelector('.devladder-band');
+    var axw   = root.querySelector('.devladder-axwrap');
+
+    // 座標軸刻度
+    var step = axMax>12 ? 4 : (axMax>7 ? 2 : 1);
+    for (var v=0; v<=axMax; v+=step){
+      var t = document.createElement('span');
+      t.className='devladder-t'; t.style.left = px(v).toFixed(3)+'%'; t.textContent = String(v);
+      axw.appendChild(t);
+    }
+
+
+    function place(){
+      var track = axw.getBoundingClientRect().width;   // 軌道欄的實際寬度
+      if (!track){ if (window.requestAnimationFrame) requestAnimationFrame(place); return; }
+      var left0 = axw.getBoundingClientRect().left - rowsE.getBoundingClientRect().left;
+      band.style.left  = (left0 + track*px(lo)/100) + 'px';
+      band.style.width = (track*(px(hi)-px(lo))/100) + 'px';
+
+      var old = rowsE.querySelectorAll('.devladder-pair,.devladder-pairlab,.devladder-bandlab');
+      for (var k=0;k<old.length;k++) old[k].remove();
+
+      var rh = rowsE.children.length>1 ? rowsE.children[1].getBoundingClientRect().height : 23;
+      var xA = left0 + track*px(twin.dev)/100, xB = left0 + track*px(star.dev)/100;
+      var box = document.createElement('div');
+      box.className='devladder-pair';
+      box.style.left = (Math.min(xA,xB)-9)+'px';
+      box.style.width = (Math.abs(xB-xA)+18)+'px';
+      box.style.top = (iA*rh+2)+'px';
+      box.style.height = ((iB-iA+1)*rh-4)+'px';
+      rowsE.appendChild(box);
+
+      var lab = document.createElement('div');
+      lab.className='devladder-pairlab';
+      lab.innerHTML = '<b>只重 '+pairPct.toFixed(1)+'%</b>'
+        + BIG+'×'+star.r+' 幾乎等於 '+SMALL+'×'+twin.r+' —— 沒換到重齒比，只把鏈拉歪';
+      lab.style.left = (Math.max(xA,xB)+26)+'px';
+      lab.style.top  = (iA*rh-2)+'px';
+      rowsE.appendChild(lab);
+
+      var bl = document.createElement('div');
+      bl.className='devladder-bandlab';
+      bl.textContent = '重疊區 '+lo.toFixed(2)+'–'+hi.toFixed(2)+' m ・'+overlapN+' 檔';
+      bl.style.left = (left0 + track*px(lo)/100 + 5)+'px';
+      bl.style.top  = '4px';
+      rowsE.appendChild(bl);
+    }
+
+    var say = root.querySelector('.devladder-say');
+    var rpmEls = root.querySelectorAll('.devladder-rpm');
+
+    function paint(){
+      var nT=0, nA=0, aeroNames=[];
+      for (var k=0;k<rpmEls.length;k++){
+        var el = rpmEls[k], d = parseFloat(el.getAttribute('data-dev'));
+        var v = rpm(d), cls = bandOf(v);
+        el.className = 'devladder-rpm ' + cls;
+        el.textContent = v>=999 ? '999+' : String(Math.round(v));
+        if (cls==='is-torque') nT++;
+        if (cls==='is-aero'){ nA++; aeroNames.push(G[k].f+'×'+G[k].r); }
+      }
+      var aeroTxt = nA===0
+        ? '<b>沒有任何一檔</b>落在 '+AERO[0]+'–'+AERO[1]+' rpm 有氧帶'
+        : '落在 '+AERO[0]+'–'+AERO[1]+' rpm 有氧帶的只有 <b>'+aeroNames.slice(0,3).join('、')+'</b>'+(nA>3?' 等 '+nA+' 檔':'');
+      say.innerHTML =
+        BIG+'×'+star.r+' 展開 <span class="devladder-num">'+star.dev.toFixed(2)+'</span> m，'
+        + '只比 '+SMALL+'×'+twin.r+' 的 <span class="devladder-num">'+twin.dev.toFixed(2)+'</span> m 重 '
+        + '<span class="devladder-hot">'+pairPct.toFixed(1)+'%</span> —— '
+        + '掛大盤配最大飛輪並沒有換到比較重的齒比，只是把鏈條拉歪。'
+        + '整組 '+G.length+' 個組合裡有 <b>'+overlapN+' 個</b>落在兩盤重疊區（'+lo.toFixed(2)+'–'+hi.toFixed(2)+' m），'
+        + '其中 <b>'+nearDup+' 對</b>跨盤鄰居展開差不到 6%，等於白換。'
+        + '以 <span class="devladder-num">'+kmh.toFixed(1)+'</span> km/h'
+        + (Math.abs(kmh-refKmh)<0.05 && refName ? '（'+refName+'）算，' : ' 算，')
+        + aeroTxt+'，另有 <span class="devladder-hot">'+nT+' 檔</span>掉進 '+TORQUE[0]+'–'+TORQUE[1]+' rpm 扭力帶。';
+    }
+
+    var slider = root.querySelector('.devladder-slider');
+    var vEl = root.querySelector('.devladder-v');
+    slider.addEventListener('input', function(){
+      kmh = parseFloat(slider.value);
+      vEl.textContent = kmh.toFixed(1);
+      paint();
+    });
+    var rst = root.querySelector('.devladder-reset');
+    if (rst) rst.addEventListener('click', function(){
+      kmh = Math.round(refKmh*10)/10;
+      slider.value = kmh; vEl.textContent = kmh.toFixed(1); paint();
+    });
+
+    paint();
+    place();
+    if (window.ResizeObserver){
+      var ro = new ResizeObserver(function(){ place(); });
+      ro.observe(plot);
+    } else {
+      window.addEventListener('resize', place);
+    }
+  }});
+})();
+</script>

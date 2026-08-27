@@ -1,0 +1,619 @@
+<style>
+/* ── TSB 沙盤 ──────────────────────────────────────────────────────────
+   互動工具，不是圖。所有選擇器一律 .tsbsim- 前綴。
+   曲線用被拉伸的 SVG（vector-effect 保線寬），所有文字用 HTML 疊上去。 */
+.tsbsim-root{--ts-ctl:#5bc8f5;--ts-atl:#ffb020;--ts-tsb:#f4f0ea}
+
+/* ── 頂部：三個數字就是整個工具的結論 ── */
+.tsbsim-kpi{
+  display:flex;flex-wrap:wrap;gap:10px;align-items:stretch;margin-bottom:6px
+}
+.tsbsim-k{
+  flex:1 1 150px;min-width:132px;padding:11px 13px 10px;
+  border:1px solid var(--hair);border-radius:9px;background:rgba(255,255,255,.018)
+}
+.tsbsim-k.hero{border-color:rgba(252,76,2,.34);background:rgba(252,76,2,.055)}
+.tsbsim-kt{font-size:9.5px;letter-spacing:1.5px;color:var(--ink-3);white-space:nowrap}
+.tsbsim-kv{
+  margin-top:3px;font-family:var(--f-num);font-variant-numeric:tabular-nums;
+  font-weight:800;font-size:29px;line-height:1.05;letter-spacing:.5px;color:var(--ink-1)
+}
+.tsbsim-kv u{text-decoration:none;font-size:12px;font-weight:600;color:var(--ink-3);margin-left:5px;letter-spacing:.6px}
+.tsbsim-kv.ok{color:var(--ok)}
+.tsbsim-kv.off{color:var(--sig)}
+.tsbsim-kn{margin-top:3px;font-size:10.5px;line-height:1.5;color:var(--ink-3)}
+.tsbsim-note{margin:9px 0 16px;font-size:10.5px;line-height:1.7;color:var(--ink-3)}
+.tsbsim-note b{color:var(--ink-2);font-weight:600}
+
+/* ── 圖 ── */
+.tsbsim-read{
+  height:16px;margin-bottom:5px;font-size:11px;letter-spacing:.3px;color:var(--ink-3);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+}
+.tsbsim-read b{
+  font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:700;
+  color:var(--ink-1);letter-spacing:.4px
+}
+.tsbsim-read i{font-style:normal;color:var(--ink-3);margin:0 5px}
+.tsbsim-plots{position:relative;padding-left:40px}
+.tsbsim-strip{position:relative;width:100%}
+.tsbsim-strip svg{display:block;width:100%;height:100%}
+.tsbsim-s1{height:134px}
+.tsbsim-s2{height:44px;margin-top:3px}
+.tsbsim-s3{height:114px;margin-top:3px}
+.tsbsim-ov{position:absolute;inset:0;pointer-events:none}
+.tsbsim-gut{position:absolute;left:-40px;top:0;bottom:0;width:36px;pointer-events:none}
+.tsbsim-yl{
+  position:absolute;right:0;transform:translateY(-50%);
+  font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:600;
+  font-size:10px;color:var(--ink-3);letter-spacing:.3px;white-space:nowrap
+}
+.tsbsim-tag{
+  position:absolute;transform:translateY(-50%);
+  font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:800;
+  font-size:11.5px;letter-spacing:.4px;white-space:nowrap;
+  padding:0 4px;border-radius:3px;background:rgba(10,4,8,.74)
+}
+.tsbsim-tag u{text-decoration:none;font-size:9px;font-weight:600;opacity:.75;margin-right:3px}
+.tsbsim-base{
+  position:absolute;left:2px;transform:translateY(-50%);
+  font-size:9.5px;letter-spacing:.8px;color:rgba(252,76,2,.72);white-space:nowrap;
+  background:rgba(10,4,8,.7);padding:0 3px;border-radius:3px
+}
+.tsbsim-xr{position:relative;height:26px;margin-left:40px;margin-top:4px}
+.tsbsim-xl{
+  position:absolute;top:0;transform:translateX(-50%);
+  font-size:9.5px;line-height:1.35;letter-spacing:.5px;color:var(--ink-3);
+  white-space:nowrap;text-align:center
+}
+.tsbsim-xl b{display:block;font-family:var(--f-num);font-weight:700;font-size:10.5px;color:var(--ink-2)}
+.tsbsim-xl.hot{color:var(--sig)}
+.tsbsim-xl.hot b{color:var(--sig)}
+.tsbsim-hits{position:absolute;left:40px;right:0;top:0;bottom:0;display:flex}
+.tsbsim-hits span{flex:1 1 0;cursor:crosshair}
+.tsbsim-cur{
+  position:absolute;top:0;bottom:0;width:1px;background:rgba(244,240,234,.30);
+  pointer-events:none;opacity:0;transition:opacity .12s
+}
+
+/* ── 圖例 ── */
+.tsbsim-leg{display:flex;flex-wrap:wrap;gap:6px 15px;margin-top:12px;font-size:10.5px;color:var(--ink-3)}
+.tsbsim-leg span{display:inline-flex;align-items:center;gap:5px}
+.tsbsim-sw{width:15px;height:3px;border-radius:2px;display:inline-block}
+.tsbsim-swb{width:9px;height:11px;border-radius:1px;display:inline-block}
+
+/* ── 控制台 ── */
+.tsbsim-panel{margin-top:22px;border-top:1px solid var(--hair);padding-top:15px}
+.tsbsim-ph{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:4px}
+.tsbsim-ph h3{font-size:12px;font-weight:700;color:var(--ink-1);letter-spacing:.2px}
+.tsbsim-ph em{font-style:normal;font-size:10.5px;color:var(--ink-3)}
+.tsbsim-ph .sp{flex:1}
+.tsbsim-btn{
+  padding:5px 11px;border:1px solid var(--hair);border-radius:999px;
+  background:transparent;color:var(--ink-2);font-family:var(--f-ui);
+  font-size:10.5px;letter-spacing:.5px;cursor:pointer;transition:.15s;white-space:nowrap
+}
+.tsbsim-btn:hover{border-color:var(--sig);color:var(--sig)}
+.tsbsim-btn[disabled]{opacity:.34;cursor:default}
+.tsbsim-btn[disabled]:hover{border-color:var(--hair);color:var(--ink-2)}
+
+.tsbsim-row{
+  display:grid;grid-template-columns:158px 1fr 116px;gap:6px 14px;align-items:center;
+  padding:9px 0;border-bottom:1px solid var(--hair)
+}
+.tsbsim-row:last-child{border-bottom:0}
+.tsbsim-rl{min-width:0}
+.tsbsim-rl b{
+  font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:800;
+  font-size:13px;letter-spacing:.5px;color:var(--ink-1);margin-right:6px
+}
+.tsbsim-rl i{font-style:normal;font-size:10.5px;color:var(--ink-2)}
+.tsbsim-rl u{
+  display:block;text-decoration:none;margin-top:2px;
+  font-size:9.5px;letter-spacing:.4px;color:var(--ink-3);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+}
+.tsbsim-sl{position:relative;padding:0 1px}
+.tsbsim-tick{
+  position:absolute;top:50%;width:1px;height:13px;margin-top:-6px;
+  background:rgba(244,240,234,.30);pointer-events:none
+}
+.tsbsim-rg{
+  -webkit-appearance:none;appearance:none;display:block;
+  width:100%;height:22px;background:transparent;cursor:pointer;position:relative
+}
+.tsbsim-rg::-webkit-slider-runnable-track{height:3px;border-radius:2px;background:rgba(255,255,255,.12)}
+.tsbsim-rg::-webkit-slider-thumb{
+  -webkit-appearance:none;width:15px;height:15px;margin-top:-6px;border:0;border-radius:50%;
+  background:var(--sig);box-shadow:0 0 0 3px rgba(252,76,2,.15)
+}
+.tsbsim-rg::-moz-range-track{height:3px;border-radius:2px;background:rgba(255,255,255,.12)}
+.tsbsim-rg::-moz-range-thumb{width:15px;height:15px;border:0;border-radius:50%;background:var(--sig)}
+.tsbsim-rg:focus{outline:none}
+.tsbsim-rg:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 4px rgba(252,76,2,.34)}
+.tsbsim-rg:focus-visible::-moz-range-thumb{box-shadow:0 0 0 4px rgba(252,76,2,.34)}
+.tsbsim-rv{text-align:right;min-width:0}
+.tsbsim-rv b{
+  font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:800;
+  font-size:16px;letter-spacing:.4px;color:var(--ink-1)
+}
+.tsbsim-rv b.moved{color:var(--sig)}
+.tsbsim-rv u{
+  display:block;text-decoration:none;margin-top:1px;
+  font-size:9.5px;letter-spacing:.3px;color:var(--ink-3);white-space:nowrap
+}
+
+/* ── 週合計 ── */
+.tsbsim-wk{display:flex;flex-wrap:wrap;gap:9px;margin-top:16px}
+.tsbsim-w{
+  flex:1 1 172px;min-width:150px;padding:9px 11px 10px;
+  border:1px solid var(--hair);border-radius:8px;background:rgba(255,255,255,.014)
+}
+.tsbsim-wt{font-size:9.5px;letter-spacing:1.1px;color:var(--ink-3);white-space:nowrap}
+.tsbsim-wn{flex:1 1 100%;margin-top:-2px;font-size:10px;line-height:1.55;letter-spacing:.3px;color:var(--ink-3)}
+.tsbsim-wv{display:flex;align-items:baseline;gap:6px;margin-top:2px}
+.tsbsim-wv b{
+  font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:800;
+  font-size:19px;letter-spacing:.4px;color:var(--ink-1)
+}
+.tsbsim-wv b.hi{color:var(--sig)}
+.tsbsim-wv i{font-style:normal;font-size:10px;color:var(--ink-3);margin-left:auto;white-space:nowrap}
+.tsbsim-wb{position:relative;height:4px;margin-top:7px;border-radius:2px;background:rgba(255,255,255,.07);overflow:hidden}
+.tsbsim-wf{position:absolute;left:0;top:0;bottom:0;border-radius:2px;background:rgba(244,240,234,.36)}
+.tsbsim-wf.hi{background:var(--sig)}
+.tsbsim-wm{position:absolute;top:-2px;bottom:-2px;width:1px;background:rgba(244,240,234,.5)}
+
+@media(max-width:767px){
+  .tsbsim-kv{font-size:24px}
+  .tsbsim-s1{height:112px}
+  .tsbsim-s3{height:96px}
+  .tsbsim-row{grid-template-columns:1fr 92px;grid-template-areas:"lab val" "sld sld"}
+  .tsbsim-rl{grid-area:lab}
+  .tsbsim-rv{grid-area:val}
+  .tsbsim-sl{grid-area:sld}
+}
+</style>
+<section class="lab-card" id="card-tsbsim">
+  <h2 class="lab-h">TSB 沙盤 <span>· TSB SANDBOX · 9/10 後測那天，我會不會比前測那天新鮮太多，讓這次配對比較白做？</span></h2>
+  <div class="tsbsim-root"></div>
+</section>
+<script>
+(function(){
+  window.LAB_PARTS = window.LAB_PARTS || [];
+
+  var DAY = 86400000, MAXT = 200, SUP_DEF = 30, SUP_MAX = 60, OKBAND = 1.0;
+
+  function pad(n){ return (n < 10 ? '0' : '') + n; }
+  function pms(s){ var p = String(s).split('-'); return Date.UTC(+p[0], +p[1] - 1, +p[2]); }
+  function iso(ms){ var d = new Date(ms); return d.getUTCFullYear() + '-' + pad(d.getUTCMonth() + 1) + '-' + pad(d.getUTCDate()); }
+  function md(ms){ var d = new Date(ms); return pad(d.getUTCMonth() + 1) + '/' + pad(d.getUTCDate()); }
+  function num(v, d){ var s = (Math.abs(v)).toFixed(d == null ? 1 : d); return (v < 0 ? '−' : '') + s; }
+  function sgn(v, d){ var s = (Math.abs(v)).toFixed(d == null ? 1 : d); return (v < 0 ? '−' : '+') + s; }
+  function esc(s){ return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+  function el(tag, cls, html){ var n = document.createElement(tag); if (cls) n.className = cls; if (html != null) n.innerHTML = html; return n; }
+  function clamp(v, a, b){ return v < a ? a : (v > b ? b : v); }
+
+  window.LAB_PARTS.push({ id: 'tsbsim', render: function(root, LAB){
+    var P = (LAB && LAB.pmc) || null;
+    if (!P || !P.history || !P.history.length || !P.pre_test ||
+        P.pre_test.tsb == null || !P.post_test_date ||
+        P.ctl == null || P.atl == null){
+      root.innerHTML = '<div class="lab-nil">還沒有這個資料 —— TSB 沙盤要 <code>pmc</code> 裡的 CTL/ATL 歷史、前測 TSB 與後測日期，三者缺一就推不動。</div>';
+      return;
+    }
+
+    var BASE = P.pre_test.tsb;                 // 前測那天的 TSB（同日定義）
+    var T0   = pms(P.today);                   // 今天：CTL/ATL 的最後一個真值
+    var TEND = pms(P.post_test_date);          // 後測日
+    var NDAY = Math.round((TEND - T0) / DAY);
+    if (NDAY <= 0){
+      root.innerHTML = '<div class="lab-nil">後測日（' + esc(P.post_test_date) + '）已經過了，沒有可以推的未來。</div>';
+      return;
+    }
+
+    // ── 歷史：TSS 由 ATL 遞推式反解（intervals 只給 CTL/ATL） ──
+    var H = {}, hd = [];
+    (P.history || []).forEach(function(h){ if (h && h.d && h.ctl != null && h.atl != null){ H[h.d] = h; hd.push(h.d); } });
+    var START = Math.max(pms(P.pre_test.date) - 5 * DAY, T0 - 28 * DAY);
+    if (hd.length && pms(hd[0]) > START) START = pms(hd[0]);
+
+    var PAST = [];
+    for (var t = START; t <= T0; t += DAY){
+      var h = H[iso(t)]; if (!h) continue;
+      var pv = H[iso(t - DAY)];
+      var tss = pv ? Math.max(0, h.atl * 7 - pv.atl * 6) : null;
+      PAST.push({ ms: t, ctl: h.ctl, atl: h.atl, tsb: h.ctl - h.atl, tss: tss, future: false });
+    }
+    var histTss = {}; PAST.forEach(function(r){ if (r.tss != null) histTss[iso(r.ms)] = r.tss; });
+
+    // ── 未來這段的課表 ──
+    var SESS = (P.sessions || []).filter(function(s){ return s && s.date; });
+    var FUT = SESS.filter(function(s){ return pms(s.date) > T0 && pms(s.date) <= TEND; })
+                  .sort(function(a, b){ return a.date < b.date ? -1 : 1; });
+    var RIDES = [], SUPS = [];
+    FUT.forEach(function(s, i){ s._i = i; (s.support ? SUPS : RIDES).push(s); });
+
+    var plan = FUT.map(function(s){ return s.support ? null : (s.target_tss != null ? s.target_tss : 0); });
+    var vals = plan.slice(), sup = SUP_DEF;
+
+    // ── 遞推 ──
+    function simulate(v, sv){
+      var ctl = P.ctl, atl = P.atl, out = [];
+      for (var k = 1; k <= NDAY; k++){
+        var ms = T0 + k * DAY, key = iso(ms), tss = 0;
+        for (var i = 0; i < FUT.length; i++){
+          if (FUT[i].date === key) tss += FUT[i].support ? sv : v[i];
+        }
+        ctl += (tss - ctl) / 42;
+        atl += (tss - atl) / 7;
+        out.push({ ms: ms, ctl: ctl, atl: atl, tsb: ctl - atl, tss: tss, future: true });
+      }
+      return out;
+    }
+    function endTsb(v, sv){ var r = simulate(v, sv); return r[r.length - 1].tsb; }
+
+    // 對每一堂線性求解：要落在基準線上，那一堂該排多少 TSS
+    function solve(idx, v, sv){
+      var a = v.slice();
+      a[idx] = 0;    var f0 = endTsb(a, sv);
+      a[idx] = MAXT; var f1 = endTsb(a, sv);
+      if (Math.abs(f1 - f0) < 1e-9) return null;
+      return { x: MAXT * (BASE - f0) / (f1 - f0), per10: (f1 - f0) / MAXT * 10 };
+    }
+
+    // ── 骨架 ──
+    var kpi   = el('div', 'tsbsim-kpi');
+    var note  = el('div', 'tsbsim-note');
+    var read  = el('div', 'tsbsim-read');
+    var plots = el('div', 'tsbsim-plots');
+    var xrow  = el('div', 'tsbsim-xr');
+    var leg   = el('div', 'tsbsim-leg');
+    var panel = el('div', 'tsbsim-panel');
+    var wkbox = el('div', 'tsbsim-wk');
+    var say   = el('div', 'lab-say');
+
+    var s1 = el('div', 'tsbsim-strip tsbsim-s1'), s2 = el('div', 'tsbsim-strip tsbsim-s2'), s3 = el('div', 'tsbsim-strip tsbsim-s3');
+    plots.appendChild(s1); plots.appendChild(s2); plots.appendChild(s3);
+    var hits = el('div', 'tsbsim-hits'), cur = el('div', 'tsbsim-cur');
+    plots.appendChild(cur); plots.appendChild(hits);
+
+    root.appendChild(kpi); root.appendChild(note); root.appendChild(read);
+    root.appendChild(plots); root.appendChild(xrow); root.appendChild(leg);
+    root.appendChild(panel); root.appendChild(wkbox); root.appendChild(say);
+
+    note.innerHTML = 'TSB 一律用 intervals 的<b>同日定義</b>（CTL − ATL，含當天那堂課）—— 前測 ' +
+      md(pms(P.pre_test.date)) + ' 的 ' + num(BASE) + ' 也是同日值，兩邊同一把尺。' +
+      '未來段由遞推式推：<b>CTL += (TSS−CTL)/42、ATL += (TSS−ATL)/7</b>，起點是今天（' + md(T0) + '）的真值 CTL ' +
+      num(P.ctl) + ' / ATL ' + num(P.atl) + '。';
+
+    leg.innerHTML =
+      '<span><i class="tsbsim-sw" style="background:var(--ts-ctl)"></i>CTL 體能</span>' +
+      '<span><i class="tsbsim-sw" style="background:var(--ts-atl)"></i>ATL 疲勞</span>' +
+      '<span><i class="tsbsim-sw" style="background:var(--ts-tsb)"></i>TSB 狀態</span>' +
+      '<span><i class="tsbsim-sw" style="background:repeating-linear-gradient(90deg,var(--sig) 0 4px,transparent 4px 7px)"></i>前測基準 ' + num(BASE) + '</span>' +
+      '<span><i class="tsbsim-swb" style="background:rgba(252,76,2,.16)"></i>±1 貼齊帶</span>' +
+      '<span><i class="tsbsim-swb" style="background:rgba(244,240,234,.26)"></i>已發生的 TSS（由 ATL 反解，±2）</span>' +
+      '<span><i class="tsbsim-swb" style="background:var(--sig)"></i>你在調的 TSS</span>';
+
+    // ── 控制列 ──
+    var rowEls = [];
+    var ph = el('div', 'tsbsim-ph');
+    ph.innerHTML = '<h3>拖，把後測那天推回基準線</h3><em>' + RIDES.length + ' 堂有處方的課 · ' + SUPS.length + ' 堂輔助課</em><span class="sp"></span>';
+    var reset = el('button', 'tsbsim-btn', '重設回課表原值');
+    reset.type = 'button';
+    ph.appendChild(reset);
+    panel.appendChild(ph);
+
+    function mkRow(o){
+      var row = el('div', 'tsbsim-row');
+      var l = el('div', 'tsbsim-rl');
+      l.innerHTML = '<b>' + o.date + '</b><i>' + esc(o.name) + '</i><u>' + esc(o.sub) + '</u>';
+      var sl = el('div', 'tsbsim-sl');
+      var rg = document.createElement('input');
+      rg.className = 'tsbsim-rg'; rg.type = 'range';
+      rg.min = 0; rg.max = o.max; rg.step = 1; rg.value = o.val;
+      rg.setAttribute('aria-label', o.date + ' ' + o.name + ' TSS');
+      var tick = el('span', 'tsbsim-tick');
+      tick.style.left = (o.tick / o.max * 100) + '%';
+      sl.appendChild(tick); sl.appendChild(rg);
+      var v = el('div', 'tsbsim-rv', '<b class="lab-n">' + o.val + '</b><u></u>');
+      row.appendChild(l); row.appendChild(sl); row.appendChild(v);
+      panel.appendChild(row);
+      var rec = { rg: rg, b: v.querySelector('b'), u: v.querySelector('u'), o: o };
+      rg.addEventListener('input', function(){ o.set(+rg.value); draw(); });
+      rowEls.push(rec);
+      return rec;
+    }
+
+    RIDES.forEach(function(s){
+      var isPost = s.date === P.post_test_date;
+      mkRow({ date: md(pms(s.date)), name: s.name || s.code || '課表',
+              sub: (isPost ? '測驗本身 · 課表 ' + plan[s._i] + ' TSS · 改它等於改測驗'
+                            : (s.minutes ? s.minutes + ' 分 · ' : '') + '課表 ' + plan[s._i] + ' TSS'),
+              val: plan[s._i], tick: plan[s._i], max: MAXT, idx: s._i,
+              set: function(x){ vals[s._i] = x; } });
+    });
+    var supRow = null;
+    if (SUPS.length){
+      supRow = mkRow({
+        date: '輔助', name: '每堂當幾分算', max: SUP_MAX, val: SUP_DEF, tick: SUP_DEF, idx: -1,
+        sub: SUPS.map(function(s){ return md(pms(s.date)); }).join(' · '),
+        set: function(x){ sup = x; }
+      });
+    }
+
+    reset.addEventListener('click', function(){
+      vals = plan.slice(); sup = SUP_DEF;
+      rowEls.forEach(function(r){ r.rg.value = r.o.idx >= 0 ? plan[r.o.idx] : SUP_DEF; });
+      draw();
+    });
+
+    // ── x 軸：只標三個真的要看的日子 ──
+    var ROWS = [], NB = 0;
+    function xpct(i){ return (i + 0.5) / NB * 100; }
+
+    // ── 畫 ──
+    function stripSvg(h, body){
+      return '<svg viewBox="0 0 1000 100" preserveAspectRatio="none" aria-hidden="true">' + body + '</svg>';
+    }
+    function line(pts, color, w, dash){
+      if (pts.length < 2) return '';
+      return '<polyline points="' + pts.join(' ') + '" fill="none" stroke="' + color + '" stroke-width="' + w +
+             '" stroke-linejoin="round" stroke-linecap="round"' + (dash ? ' stroke-dasharray="' + dash + '"' : '') +
+             ' vector-effect="non-scaling-stroke"/>';
+    }
+    function hair(y){
+      return '<line x1="0" y1="' + y + '" x2="1000" y2="' + y + '" stroke="rgba(255,255,255,.065)" stroke-width="1" vector-effect="non-scaling-stroke"/>';
+    }
+    function vline(i, color, dash){
+      var x = (i + 0.5) / NB * 1000;
+      return '<line x1="' + x + '" y1="0" x2="' + x + '" y2="100" stroke="' + color + '" stroke-width="1"' +
+             (dash ? ' stroke-dasharray="' + dash + '"' : '') + ' vector-effect="non-scaling-stroke"/>';
+    }
+
+    function draw(){
+      var FUTR = simulate(vals, sup);
+      ROWS = PAST.concat(FUTR);
+      NB = ROWS.length;
+
+      var iToday = PAST.length - 1, iPre = -1, iEnd = NB - 1;
+      var preIso = P.pre_test.date;
+      ROWS.forEach(function(r, i){ if (iso(r.ms) === preIso) iPre = i; });
+      var last = ROWS[iEnd], gap = last.tsb - BASE, ok = Math.abs(gap) <= OKBAND;
+
+      // ── KPI ──
+      kpi.innerHTML =
+        '<div class="tsbsim-k"><div class="tsbsim-kt">前測基準 ' + md(pms(preIso)) + '</div>' +
+          '<div class="tsbsim-kv">' + num(BASE) + '</div>' +
+          '<div class="tsbsim-kn">' + esc((SESS.filter(function(s){ return s.date === preIso; })[0] || {}).name || '前測') + '</div></div>' +
+        '<div class="tsbsim-k hero"><div class="tsbsim-kt">後測預測 ' + md(TEND) + '</div>' +
+          '<div class="tsbsim-kv">' + num(last.tsb) + '</div>' +
+          '<div class="tsbsim-kn">CTL ' + num(last.ctl) + ' · ATL ' + num(last.atl) + ' · 前一天 ' + num(ROWS[iEnd - 1].tsb) + '</div></div>' +
+        '<div class="tsbsim-k"><div class="tsbsim-kt">跟前測差多少</div>' +
+          '<div class="tsbsim-kv ' + (ok ? 'ok' : 'off') + '">' + sgn(gap) + '<u>點</u></div>' +
+          '<div class="tsbsim-kn">' + (ok ? '在 ±1 內 —— 配對成立' : (gap > 0 ? '後測那天比前測新鮮' : '後測那天比前測更累')) + '</div></div>';
+
+      // ── 尺度 ──
+      var fMax = 10, tMax = 60, tsbLo = Math.min(BASE, 0), tsbHi = Math.max(BASE, 0);
+      ROWS.forEach(function(r){
+        fMax = Math.max(fMax, r.ctl, r.atl);
+        if (r.tss != null) tMax = Math.max(tMax, r.tss);
+        tsbLo = Math.min(tsbLo, r.tsb); tsbHi = Math.max(tsbHi, r.tsb);
+      });
+      fMax = Math.ceil(fMax / 10) * 10 + 4;
+      tMax = Math.ceil(tMax / 20) * 20;
+      var padT = Math.max(3, (tsbHi - tsbLo) * 0.10);
+      tsbHi += padT; tsbLo -= padT;
+
+      function yF(v){ return 100 - v / fMax * 100; }
+      function yT(v){ return 100 - v / tMax * 100; }
+      function yB(v){ return 100 - (v - tsbLo) / (tsbHi - tsbLo) * 100; }
+      function X(i){ return (i + 0.5) / NB * 1000; }
+
+      // ── 體能／疲勞 ──
+      var g1 = '', ctlP = [], atlP = [];
+      for (var v = 0; v <= fMax; v += 20) g1 += hair(yF(v));
+      ROWS.forEach(function(r, i){ ctlP.push(X(i) + ',' + yF(r.ctl)); atlP.push(X(i) + ',' + yF(r.atl)); });
+      g1 += vline(iToday, 'rgba(244,240,234,.24)', '3 3');
+      if (iPre >= 0) g1 += vline(iPre, 'rgba(252,76,2,.42)', '3 3');
+      g1 += vline(iEnd, 'rgba(252,76,2,.42)', '3 3');
+      // 未來段畫虛線，一眼看出哪裡開始是「推的」
+      var cut = PAST.length - 1;
+      g1 += line(atlP.slice(0, cut + 1), 'var(--ts-atl)', 1.6);
+      g1 += line(atlP.slice(cut), 'var(--ts-atl)', 1.6, '4 3');
+      g1 += line(ctlP.slice(0, cut + 1), 'var(--ts-ctl)', 1.6);
+      g1 += line(ctlP.slice(cut), 'var(--ts-ctl)', 1.6, '4 3');
+      s1.innerHTML = stripSvg(134, g1);
+
+      var ov1 = el('div', 'tsbsim-ov'), gut1 = el('div', 'tsbsim-gut');
+      for (var v2 = 0; v2 <= fMax - 4; v2 += 20){
+        var yl = el('div', 'tsbsim-yl', String(v2)); yl.style.top = yF(v2) + '%'; gut1.appendChild(yl);
+      }
+      ov1.appendChild(gut1);
+      var tagC = el('div', 'tsbsim-tag', '<u>CTL</u>' + num(last.ctl));
+      tagC.style.cssText += ';color:var(--ts-ctl);right:1px;top:' + yF(last.ctl) + '%';
+      var tagA = el('div', 'tsbsim-tag', '<u>ATL</u>' + num(last.atl));
+      tagA.style.cssText += ';color:var(--ts-atl);right:1px;top:' + yF(last.atl) + '%';
+      ov1.appendChild(tagC); ov1.appendChild(tagA);
+      s1.appendChild(ov1);
+
+      // ── 每日 TSS ──
+      var g2 = hair(100) + '', bw = 1000 / NB * 0.62, off = (1000 / NB - bw) / 2;
+      ROWS.forEach(function(r, i){
+        var val = r.tss; if (val == null || val <= 0) return;
+        var y = yT(val), x = i * (1000 / NB) + off;
+        var fill = r.future ? 'var(--sig)' : 'rgba(244,240,234,.26)';
+        g2 += '<rect x="' + x + '" y="' + y + '" width="' + bw + '" height="' + (100 - y) + '" fill="' + fill + '"/>';
+      });
+      s2.innerHTML = stripSvg(44, g2);
+      var ov2 = el('div', 'tsbsim-ov'), gut2 = el('div', 'tsbsim-gut');
+      // 上緣＝這段時間的單日最大 TSS，下緣＝0
+      var ylt = el('div', 'tsbsim-yl', String(tMax)); ylt.style.top = '16%'; gut2.appendChild(ylt);
+      var ylt2 = el('div', 'tsbsim-yl', 'TSS'); ylt2.style.top = '72%'; ylt2.style.opacity = '.65'; gut2.appendChild(ylt2);
+      ov2.appendChild(gut2); s2.appendChild(ov2);
+
+      // ── TSB ──
+      var g3 = '', tsbP = [];
+      ROWS.forEach(function(r, i){ tsbP.push(X(i) + ',' + yB(r.tsb)); });
+      var yb0 = yB(BASE + OKBAND), yb1 = yB(BASE - OKBAND);
+      g3 += '<rect x="0" y="' + yb0 + '" width="1000" height="' + (yb1 - yb0) + '" fill="rgba(252,76,2,.16)"/>';
+      if (tsbLo < 0 && tsbHi > 0) g3 += hair(yB(0));
+      g3 += vline(iToday, 'rgba(244,240,234,.24)', '3 3');
+      if (iPre >= 0) g3 += vline(iPre, 'rgba(252,76,2,.42)', '3 3');
+      g3 += vline(iEnd, 'rgba(252,76,2,.42)', '3 3');
+      g3 += '<line x1="0" y1="' + yB(BASE) + '" x2="1000" y2="' + yB(BASE) + '" stroke="var(--sig)" stroke-width="1.2" stroke-dasharray="5 4" vector-effect="non-scaling-stroke"/>';
+      g3 += line(tsbP.slice(0, cut + 1), 'var(--ts-tsb)', 1.6);
+      g3 += line(tsbP.slice(cut), 'var(--ts-tsb)', 1.6, '4 3');
+      s3.innerHTML = stripSvg(114, g3);
+
+      var ov3 = el('div', 'tsbsim-ov'), gut3 = el('div', 'tsbsim-gut');
+      var step = (tsbHi - tsbLo) > 34 ? 20 : 10;
+      for (var q = Math.ceil(tsbLo / step) * step; q <= tsbHi; q += step){
+        var y3 = yB(q); if (y3 < 5 || y3 > 96) continue;
+        var yl3 = el('div', 'tsbsim-yl', num(q, 0)); yl3.style.top = y3 + '%'; gut3.appendChild(yl3);
+      }
+      ov3.appendChild(gut3);
+      var bl = el('div', 'tsbsim-base', '前測 ' + num(BASE));
+      bl.style.top = yB(BASE) + '%'; ov3.appendChild(bl);
+      var tagB = el('div', 'tsbsim-tag', num(last.tsb));
+      tagB.style.cssText += ';color:' + (ok ? 'var(--ok)' : 'var(--sig)') + ';right:1px;top:' + clamp(yB(last.tsb), 6, 94) + '%';
+      ov3.appendChild(tagB);
+      s3.appendChild(ov3);
+
+      // ── x 軸標籤 ──
+      xrow.innerHTML = '';
+      var marks = [{ i: iPre, t: '前測', hot: true }, { i: iToday, t: '今天', hot: false }, { i: iEnd, t: '後測', hot: true }];
+      marks.forEach(function(m){
+        if (m.i < 0) return;
+        var px = xpct(m.i);
+        var x = el('div', 'tsbsim-xl' + (m.hot ? ' hot' : ''), '<b>' + md(ROWS[m.i].ms) + '</b>' + m.t);
+        // 兩端改成貼邊對齊，不然標籤自己的寬度會把版面撐出水平捲軸
+        if (px > 84){ x.style.right = '0'; x.style.transform = 'none'; }
+        else if (px < 6){ x.style.left = '0'; x.style.transform = 'none'; }
+        else { x.style.left = px + '%'; }
+        xrow.appendChild(x);
+      });
+
+      // ── 控制列數字 ──
+      rowEls.forEach(function(r){
+        var isSup = r.o.idx < 0;
+        var now = isSup ? sup : vals[r.o.idx], base = isSup ? SUP_DEF : plan[r.o.idx];
+        r.b.textContent = now;
+        r.b.className = 'lab-n' + (now !== base ? ' moved' : '');
+        var s = solve(isSup ? -1 : r.o.idx, vals, sup);
+        if (isSup){
+          var a = vals.slice(), f0 = endTsb(a, 0), f1 = endTsb(a, SUP_MAX);
+          r.u.textContent = '每 +10 → ' + sgn((f1 - f0) / SUP_MAX * 10) + ' 點';
+        } else {
+          r.u.textContent = s ? ('每 +10 → ' + sgn(s.per10) + ' 點') : '';
+        }
+      });
+
+      // ── 週 TSS 合計 ──
+      wkbox.innerHTML = '';
+      var maint = P.ctl * 7;
+      var w0 = T0 - ((new Date(T0).getUTCDay() + 6) % 7) * DAY;
+      for (var wk = w0; wk <= TEND; wk += 7 * DAY){
+        var tot = 0, done = 0, est = false;
+        for (var k2 = 0; k2 < 7; k2++){
+          var dms = wk + k2 * DAY, key = iso(dms);
+          if (dms <= T0){
+            if (histTss[key] != null){ tot += histTss[key]; done += histTss[key]; }
+            SESS.forEach(function(s){ if (s.date === key && s.support){ tot += sup; done += sup; est = true; } });
+          } else {
+            FUT.forEach(function(s){
+              if (s.date !== key) return;
+              tot += s.support ? sup : vals[s._i];
+              if (s.support) est = true;
+            });
+          }
+        }
+        var hot = tot > maint * 1.45;
+        var w = el('div', 'tsbsim-w');
+        w.innerHTML = '<div class="tsbsim-wt">' + md(wk) + ' – ' + md(wk + 6 * DAY) + (wk <= T0 && wk + 6 * DAY >= T0 ? ' · 本週' : '') + '</div>' +
+          '<div class="tsbsim-wv"><b class="lab-n' + (hot ? ' hi' : '') + '">' + Math.round(tot) + '</b>' +
+          '<i>已發生 ' + Math.round(done) + (est ? ' · 含輔助估值' : '') + '</i></div>' +
+          '<div class="tsbsim-wb"><span class="tsbsim-wf' + (hot ? ' hi' : '') + '" style="width:' + clamp(tot / (maint * 2) * 100, 0, 100) + '%"></span>' +
+          '<span class="tsbsim-wm" style="left:50%"></span></div>';
+        wkbox.appendChild(w);
+      }
+      var mnote = el('div', 'tsbsim-wn');
+      mnote.innerHTML = '白刻度＝維持量 ' + Math.round(maint) + ' TSS／週（CTL×7）。超過 1.45 倍轉橘 —— 沙盤上調得出來，不代表排得下去。';
+      wkbox.appendChild(mnote);
+
+      sayIt(last, gap, ok);
+      showRead(iEnd, true);
+    }
+
+    // ── 判讀：從當下這組設定算出來的一句話 ──
+    function sayIt(last, gap, ok){
+      var head = '目前這組設定下，<b>' + md(TEND) + ' 後測當天的 TSB 會落在 ' + num(last.tsb) + '</b>，' +
+                 '比前測那天（' + md(pms(P.pre_test.date)) + '，' + num(BASE) + '）' +
+                 (Math.abs(gap) < 0.05 ? '幾乎完全一樣' : (gap > 0 ? '<span class="hot">新鮮 ' + num(Math.abs(gap)) + ' 點</span>' : '<span class="hot">疲勞 ' + num(Math.abs(gap)) + ' 點</span>')) + '。';
+      if (ok){
+        say.innerHTML = head + ' 差距在 ±' + OKBAND.toFixed(0) + ' 點以內，<b>配對條件成立</b> —— 這次量到的差就是真的變強或變弱，不是誰比較新鮮。' +
+          '（輔助課目前每堂當 ' + sup + ' TSS 算；那是假設不是量測，拉動它整條預測都會跟著動。）';
+        return;
+      }
+      // 可調的槓桿：後測日之前、有處方的課，越靠近測驗那天槓桿越大
+      var cands = RIDES.filter(function(s){ return pms(s.date) < TEND; })
+                       .sort(function(a, b){ return a.date < b.date ? 1 : -1; });
+      var fix = null;
+      for (var i = 0; i < cands.length; i++){
+        var s = solve(cands[i]._i, vals, sup);
+        if (s && s.x >= 0 && s.x <= MAXT){ fix = { s: cands[i], x: Math.round(s.x) }; break; }
+      }
+      if (fix){
+        say.innerHTML = head + ' 把 <b>' + md(pms(fix.s.date)) + '「' + esc(fix.s.name || fix.s.code) + '」' +
+          '從 ' + vals[fix.s._i] + ' 排到 <span class="hot">TSS ' + fix.x + '</span></b>，後測就會落在前測的 ±' + OKBAND.toFixed(0) + ' 點內。' +
+          '（' + (fix.x > vals[fix.s._i] ? '往上加' : '往下砍') + ' ' + Math.abs(fix.x - vals[fix.s._i]) + ' TSS；越靠近測驗那天的課，每 1 TSS 的槓桿越大。）';
+        return;
+      }
+      // 一堂救不回來：把最靠近的那堂推到極限，再解第二堂
+      if (cands.length >= 2){
+        var a = vals.slice();
+        var need = gap > 0 ? MAXT : 0;
+        a[cands[0]._i] = need;
+        var s2 = solve(cands[1]._i, a, sup);
+        if (s2 && s2.x >= 0 && s2.x <= MAXT){
+          say.innerHTML = head + ' <b>一堂救不回來</b> —— 就算把 ' + md(pms(cands[0].date)) + ' 推到 ' + need +
+            '，還得把 ' + md(pms(cands[1].date)) + '「' + esc(cands[1].name || cands[1].code) + '」排到 <span class="hot">TSS ' + Math.round(s2.x) + '</span> 才貼得回基準線。' +
+            '這種量級排不排得下去是另一回事；排不下去就承認後測帶著 ' + num(Math.abs(gap)) + ' 點的新鮮度紅利，判讀時扣掉。';
+          return;
+        }
+      }
+      var b = vals.slice();
+      cands.forEach(function(s){ b[s._i] = gap > 0 ? MAXT : 0; });
+      var resid = endTsb(b, sup) - BASE;
+      say.innerHTML = head + ' <b>光靠這幾堂拉不回來</b> —— 把 ' + (cands.length || 0) + ' 堂全部推到' + (gap > 0 ? '上限 ' + MAXT : '零') +
+        '，' + md(TEND) + ' 也只到 ' + num(endTsb(b, sup)) + '（還差 ' + num(Math.abs(resid)) + ' 點）。' +
+        '要嘛在測驗前一天補一堂沒排的課，要嘛承認這次的配對帶著新鮮度紅利。';
+    }
+
+    // ── hover 讀數 ──
+    function showRead(i, isDefault){
+      var r = ROWS[i]; if (!r) return;
+      read.innerHTML = '<b>' + md(r.ms) + '</b><i>·</i>CTL <b>' + num(r.ctl) + '</b><i>·</i>ATL <b>' + num(r.atl) +
+        '</b><i>·</i>TSB <b>' + num(r.tsb) + '</b><i>·</i>TSS <b>' + (r.tss == null ? '—' : Math.round(r.tss)) + '</b>' +
+        '<i>·</i>' + (r.future ? '預測' : '已發生') + (isDefault ? '<i>·</i>滑過任何一天看當天的數字' : '');
+      cur.style.left = 'calc(40px + (100% - 40px) * ' + ((i + 0.5) / NB) + ')';
+      cur.style.opacity = isDefault ? '0' : '1';
+    }
+    hits.addEventListener('mousemove', function(e){
+      var b = hits.getBoundingClientRect();
+      if (!b.width) return;
+      showRead(clamp(Math.floor((e.clientX - b.left) / b.width * NB), 0, NB - 1), false);
+    });
+    hits.addEventListener('mouseleave', function(){ showRead(ROWS.length - 1, true); });
+    hits.addEventListener('touchmove', function(e){
+      var b = hits.getBoundingClientRect(), t = e.touches[0];
+      if (!b.width || !t) return;
+      showRead(clamp(Math.floor((t.clientX - b.left) / b.width * NB), 0, NB - 1), false);
+    }, { passive: true });
+
+    for (var q2 = 0; q2 < 64; q2++) hits.appendChild(document.createElement('span'));
+
+    draw();
+  }});
+})();
+</script>

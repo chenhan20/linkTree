@@ -1,0 +1,3321 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Steve Chuang · 分析室</title>
+<link rel="icon" type="image/png" href="docs/strava_icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Saira+Condensed:wght@600;700;800&display=swap">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+[hidden]{display:none!important}
+:root{
+  --f-num:'Saira Condensed','Oswald','Arial Narrow',sans-serif;
+  --f-ui:'Archivo',-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang TC','Noto Sans TC','Microsoft JhengHei',sans-serif;
+  --f-mono:ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+  --ink-1:#f4f0ea;--ink-2:rgba(244,240,234,.66);--ink-3:rgba(244,240,234,.38);
+  --sig:#FC4C02;
+  --hair:rgba(255,255,255,.065);
+  --bg:#0a0408;--panel:rgba(255,255,255,.018);
+  --ok:#4ad07a;--warn:#ffb020;--cool:#5bc8f5;--vio:#a06bff;
+}
+html,body{height:100%}
+body{
+  font-family:var(--f-ui);color:var(--ink-2);
+  background:radial-gradient(120% 90% at 50% 0%,#0d0510 0%,#0a0408 46%,#050308 100%) fixed,#0a0408;
+  -webkit-font-smoothing:antialiased;line-height:1.6;
+}
+/* 數字一律走計時板字體並鎖等寬，跟 strava.html 同一條規矩 */
+.lab-n{font-family:var(--f-num);font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1;font-weight:800}
+
+.lab-wrap{max-width:1180px;margin:0 auto;padding:0 22px 90px}
+.lab-top{
+  position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  padding:13px 0 12px;margin-bottom:6px;
+  background:linear-gradient(#0a0408 72%,rgba(10,4,8,0));
+  font-size:11px;letter-spacing:2px;color:var(--ink-3)
+}
+.lab-top b{color:var(--ink-1);font-weight:700}
+.lab-top a{color:var(--ink-3);text-decoration:none;border-bottom:1px solid transparent}
+.lab-top a:hover{color:var(--sig);border-bottom-color:var(--sig)}
+.lab-top .sp{flex:1}
+
+.lab-hero{padding:26px 0 30px;border-bottom:1px solid var(--hair);margin-bottom:30px}
+.lab-hero h1{font-size:29px;font-weight:700;color:var(--ink-1);letter-spacing:-.4px;line-height:1.25}
+.lab-hero p{margin-top:12px;max-width:74ch;font-size:13px;line-height:1.85;color:var(--ink-2)}
+.lab-hero em{font-style:normal;color:var(--ink-3)}
+.lab-hero b{color:var(--ink-1);font-weight:700}
+
+/* 目錄：七張圖是七個獨立問題，先讓人知道有哪些 */
+.lab-toc{display:flex;flex-wrap:wrap;gap:7px;margin-top:20px}
+.lab-toc a{
+  padding:5px 11px;border:1px solid var(--hair);border-radius:999px;
+  font-size:11.5px;color:var(--ink-2);text-decoration:none;transition:.15s
+}
+.lab-toc a:hover{border-color:var(--sig);color:var(--sig)}
+
+.lab-card{
+  padding:24px 0 30px;border-bottom:1px solid var(--hair);
+  scroll-margin-top:56px
+}
+.lab-card:last-of-type{border-bottom:0}
+.lab-h{
+  font-size:17px;font-weight:700;color:var(--ink-1);letter-spacing:-.2px;
+  margin-bottom:17px;line-height:1.45
+}
+.lab-h span{
+  display:block;margin-top:4px;font-size:11px;font-weight:400;
+  letter-spacing:.5px;color:var(--ink-3)
+}
+/* 每個元件自己算出來的那句判讀 —— 統一長相，內容各自負責 */
+.lab-say{
+  margin-top:15px;padding:11px 0 0;border-top:1px solid var(--hair);
+  font-size:12.5px;line-height:1.8;color:var(--ink-2)
+}
+.lab-say b{color:var(--ink-1);font-weight:700}
+.lab-say .hot{color:var(--sig);font-weight:700}
+.lab-nil{padding:22px 0;font-size:12.5px;color:var(--ink-3)}
+
+.lab-foot{padding:34px 0 0;font-size:11px;line-height:1.9;color:var(--ink-3)}
+.lab-foot code{font-family:var(--f-mono);font-size:10.5px;color:var(--ink-2)}
+
+@media(max-width:767px){
+  .lab-wrap{padding:0 15px 70px}
+  .lab-hero h1{font-size:23px}
+  .lab-card{padding:20px 0 24px}
+}
+</style>
+</head>
+<body>
+<div class="lab-wrap">
+
+  <div class="lab-top">
+    <b>STEVE</b> <span>/ 分析室 · LAB</span>
+    <span class="sp"></span>
+    <a href="strava.html">← 回主控台</a>
+    <span id="lab-stamp"></span>
+  </div>
+
+  <header class="lab-hero">
+    <h1>分析室</h1>
+    <p>主控台回答「我現在怎樣」。這一頁回答<b>「為什麼」</b>——把平常散在 FIT 檔、對帳報告與
+      wellness 紀錄裡、只有跑腳本才看得到的東西，做成看得見的形狀。
+      七張圖各自回答一個獨立的問題，沒有先後順序，挑要看的看。
+      <br><em>資料由 <code>scripts/build-lab.py</code> 從 repo 內的真實檔案產生，
+      沒有任何示意值。瀏覽器讀不到 .fit，所以凡是逐秒的東西都先在那支腳本裡算好。</em></p>
+    <nav class="lab-toc" id="lab-toc"></nav>
+  </header>
+
+  <main id="lab-main"></main>
+
+  <footer class="lab-foot">
+    資料源：<code>data/lab.json</code>（<code>scripts/build-lab.py</code> 產生）·
+    逐段對帳來自 <code>tools/tcx/score.py</code> ·
+    齒比視窗定位沿用 <code>scripts/itt-gears.py</code><br>
+    DOMS 與 TSB 預測都是<b>估計值不是量測值</b>；預測用的是課表的目標 TSS，實際做多少會不一樣。
+  </footer>
+</div>
+
+<script>
+/* 外殼只做三件事：載資料、依序呼叫每個元件的 render、把目錄接起來。
+   元件之間互不知道對方存在 —— 加一張圖就是多串一個 lab/parts/<key>.html 進來，
+   不必改這裡。沒有 build step，所以「串進來」字面上就是檔案接檔案。 */
+window.LAB_PARTS = window.LAB_PARTS || [];
+</script>
+
+<!-- ══ part: sleep ══ -->
+<style>
+/* ══ 睡眠 → 隔日表現 ══ 全部選擇器一律 .sleep- 前綴 */
+.sleep-root{--sleep-plot-h:196px}
+
+.sleep-kpis{display:flex;flex-wrap:wrap;gap:0;border-top:1px solid var(--hair);border-bottom:1px solid var(--hair)}
+.sleep-kpi{flex:1 1 132px;padding:11px 14px 12px;border-left:1px solid var(--hair)}
+.sleep-kpi:first-child{border-left:0;padding-left:0}
+.sleep-kpi-k{font-size:10px;letter-spacing:1.4px;color:var(--ink-3);text-transform:uppercase}
+.sleep-kpi-v{margin-top:3px;font-family:var(--f-num);font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1;
+  font-weight:800;font-size:27px;line-height:1;color:var(--ink-1)}
+.sleep-kpi-v small{font-family:var(--f-ui);font-weight:500;font-size:11px;color:var(--ink-3);letter-spacing:.3px;margin-left:4px}
+.sleep-kpi-s{margin-top:5px;font-size:10.5px;line-height:1.5;color:var(--ink-3)}
+.sleep-kpi.is-hot .sleep-kpi-v{color:var(--sig)}
+
+.sleep-sec{margin-top:22px}
+.sleep-cap{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;margin-bottom:9px}
+.sleep-cap b{font-size:12.5px;font-weight:700;color:var(--ink-1);letter-spacing:-.1px}
+.sleep-cap span{font-size:10.5px;color:var(--ink-3);letter-spacing:.3px}
+
+.sleep-legend{display:flex;flex-wrap:wrap;gap:5px 15px;margin:9px 0 0;font-size:10.5px;color:var(--ink-3)}
+.sleep-legend i{display:inline-block;vertical-align:-1px;margin-right:5px;font-style:normal}
+.sleep-sw{width:9px;height:9px;border-radius:2px;display:inline-block}
+.sleep-sw.line{width:15px;height:0;border-top:2px solid currentColor;border-radius:0;vertical-align:3px}
+.sleep-sw.dash{width:15px;height:0;border-top:1px dashed currentColor;border-radius:0;vertical-align:3px}
+
+.sleep-scroll{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch}
+.sleep-scroll svg{display:block}
+
+.sleep-tbl{margin-top:10px;border-top:1px solid var(--hair)}
+.sleep-row{display:grid;grid-template-columns:58px minmax(0,1fr) minmax(0,1fr);gap:0 12px;align-items:center;
+  padding:9px 0;border-bottom:1px solid var(--hair)}
+.sleep-row-d{font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:700;font-size:15px;color:var(--ink-2);letter-spacing:.4px}
+.sleep-row.is-hot .sleep-row-d{color:var(--sig)}
+.sleep-mini{position:relative}
+.sleep-mini-l{display:flex;align-items:baseline;justify-content:space-between;gap:8px;font-size:10px;color:var(--ink-3);margin-bottom:4px}
+.sleep-mini-l b{font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:800;font-size:14px;color:var(--ink-1);letter-spacing:.3px}
+.sleep-mini-t{height:6px;background:rgba(255,255,255,.045);border-radius:3px;overflow:hidden}
+.sleep-mini-f{height:100%;border-radius:3px;background:var(--ink-3)}
+.sleep-badge{display:inline-block;padding:1px 6px;border-radius:3px;font-family:var(--f-num);font-weight:800;
+  font-size:11.5px;letter-spacing:.6px;line-height:1.5}
+
+.sleep-note{margin-top:9px;font-size:11px;line-height:1.75;color:var(--ink-3)}
+
+@media(max-width:767px){
+  .sleep-root{--sleep-plot-h:164px}
+  .sleep-kpi{flex:1 1 46%;padding:10px 10px 11px}
+  .sleep-kpi:nth-child(odd){border-left:0;padding-left:0}
+  .sleep-kpi-v{font-size:23px}
+  .sleep-row{grid-template-columns:50px minmax(0,1fr);gap:0 10px}
+  .sleep-row .sleep-mini:last-child{grid-column:2}
+  .sleep-row .sleep-mini + .sleep-mini{margin-top:8px}
+}
+</style>
+<section class="lab-card" id="card-sleep">
+  <h2 class="lab-h">睡眠 → 隔日表現 <span>· SLEEP vs NEXT-DAY · 少睡的那一晚，隔天真的騎得比較差嗎？</span></h2>
+  <div class="sleep-root"></div>
+</section>
+<script>
+(function(){
+  window.LAB_PARTS = window.LAB_PARTS || [];
+
+  var SVGNS = 'http://www.w3.org/2000/svg';
+  function h(tag, cls, txt){
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (txt != null) e.textContent = txt;
+    return e;
+  }
+  function s(tag, attrs){
+    var e = document.createElementNS(SVGNS, tag);
+    for (var k in attrs) if (attrs[k] != null) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+  function num(v){ return typeof v === 'number' && isFinite(v); }
+  function mean(a){ var t=0,i; for(i=0;i<a.length;i++) t+=a[i]; return a.length ? t/a.length : null; }
+  function median(a){
+    if(!a.length) return null;
+    var b = a.slice().sort(function(x,y){return x-y;}), m = b.length>>1;
+    return b.length % 2 ? b[m] : (b[m-1]+b[m])/2;
+  }
+  function pearson(xs, ys){
+    var n = xs.length, i;
+    if (n < 3) return null;
+    var mx = mean(xs), my = mean(ys), sxy = 0, sxx = 0, syy = 0, dx, dy;
+    for (i=0;i<n;i++){ dx = xs[i]-mx; dy = ys[i]-my; sxy += dx*dy; sxx += dx*dx; syy += dy*dy; }
+    if (sxx <= 0 || syy <= 0) return null;
+    return sxy / Math.sqrt(sxx*syy);
+  }
+  function hm(secs){
+    var m = Math.round(secs/60);
+    var mm = m % 60;
+    return Math.floor(m/60) + ':' + (mm < 10 ? '0' : '') + mm;
+  }
+  function md(iso){
+    var p = String(iso).split('-');
+    return (+p[1]) + '/' + (+p[2]);
+  }
+  function fx(v, n){ return (Math.round(v*Math.pow(10,n))/Math.pow(10,n)).toFixed(n); }
+  function dnum(iso){ // 日期 → 天序號，只做整數天差
+    var p = String(iso).split('-');
+    return Math.round(Date.UTC(+p[0], +p[1]-1, +p[2]) / 86400000);
+  }
+  function gradeColor(g){
+    var c = String(g || '').charAt(0).toUpperCase();
+    if (c === 'A' || c === 'B') return 'var(--ok)';
+    if (c === 'C') return 'var(--warn)';
+    return 'var(--sig)';
+  }
+
+  window.LAB_PARTS.push({ id: 'sleep', render: function(root, LAB){
+    var sp = (LAB && LAB.sleep_perf) || [];
+    var withSleep = sp.filter(function(r){ return r && num(r.sleep_secs) && r.sleep_secs > 0; });
+    if (!sp.length || !withSleep.length){
+      root.innerHTML = '<div class="lab-nil">還沒有這個資料 —— <code>data/lab.json</code> 的 <code>sleep_perf</code> 是空的，或裡面沒有任何一晚有睡眠時數。</div>';
+      return;
+    }
+
+    /* ── 全部數字都在這裡算，沒有寫死的結論 ───────────────── */
+    var hrs = withSleep.map(function(r){ return r.sleep_secs/3600; });
+    var medH = median(hrs);
+    var shortest = withSleep.reduce(function(a,b){ return b.sleep_secs < a.sleep_secs ? b : a; });
+
+    var pairIF = withSleep.filter(function(r){ return r.ride && num(r.ride['if']); });
+    var rIF = pearson(pairIF.map(function(r){ return r.sleep_secs/3600; }),
+                      pairIF.map(function(r){ return r.ride['if']; }));
+    var pairEF = withSleep.filter(function(r){ return r.ride && num(r.ride.ef); });
+    var rEF = pearson(pairEF.map(function(r){ return r.sleep_secs/3600; }),
+                      pairEF.map(function(r){ return r.ride.ef; }));
+
+    var scored = sp.filter(function(r){ return r.score && num(r.score.total); });
+    var scoredSleep = scored.filter(function(r){ return num(r.sleep_secs); })
+                            .slice().sort(function(a,b){ return a.sleep_secs - b.sleep_secs; });
+
+    // 分組平均（睡眠三段）—— 邊界寫在這裡，數字全部現算
+    var cuts = [[0,4,'不到 4h'],[4,5.5,'4–5.5h'],[5.5,99,'5.5h 以上']];
+    var buckets = cuts.map(function(c){
+      var pool = pairIF.filter(function(r){ var x = r.sleep_secs/3600; return x >= c[0] && x < c[1]; });
+      return { lo:c[0], hi:c[1], label:c[2], n:pool.length,
+               mIF: mean(pool.map(function(r){ return r.ride['if']; })),
+               mEF: mean(pool.filter(function(r){ return num(r.ride.ef); }).map(function(r){ return r.ride.ef; })) };
+    }).filter(function(b){ return b.n > 0; });
+
+    /* ── 骨架 ─────────────────────────────────────────── */
+    var kpis = h('div','sleep-kpis');
+    function kpi(k, v, unit, sub, hot){
+      var d = h('div','sleep-kpi' + (hot ? ' is-hot' : ''));
+      d.appendChild(h('div','sleep-kpi-k', k));
+      var vv = h('div','sleep-kpi-v', v);
+      if (unit){ var u = h('small', null, unit); vv.appendChild(u); }
+      d.appendChild(vv);
+      d.appendChild(h('div','sleep-kpi-s', sub));
+      kpis.appendChild(d);
+    }
+    kpi('中位數睡眠', hm(medH*3600), '', withSleep.length + ' 個有睡眠紀錄的騎乘日', false);
+    kpi('最短的一晚', hm(shortest.sleep_secs), '', md(shortest.date) + '　睡眠分 ' + (num(shortest.sleep_score) ? shortest.sleep_score : '—'), true);
+    kpi('睡眠 × 當天 IF', (rIF == null ? '—' : (rIF > 0 ? '+' : '−') + fx(Math.abs(rIF),2)), 'r', 'n = ' + pairIF.length + '　相關係數', false);
+    kpi('睡眠 × 效率 EF', (rEF == null ? '—' : (rEF > 0 ? '+' : '−') + fx(Math.abs(rEF),2)), 'r', 'n = ' + pairEF.length + '　W/bpm', false);
+    root.appendChild(kpis);
+
+    /* ── 圖一：時間軸 ─────────────────────────────────── */
+    var sec1 = h('div','sleep-sec');
+    var cap1 = h('div','sleep-cap');
+    cap1.appendChild(h('b', null, '最近 9 週'));
+    cap1.appendChild(h('span', null, '長條＝前一晚睡眠時數（左軸）　折線＝當天騎乘 IF（右軸）　方塊＝逐段對帳成績'));
+    sec1.appendChild(cap1);
+    var scroll1 = h('div','sleep-scroll');
+    sec1.appendChild(scroll1);
+    var lg1 = h('div','sleep-legend');
+    [['var(--ink-3)','sw','睡眠時數'],
+     ['var(--sig)','sw','當晚 < 3 小時'],
+     ['var(--cool)','line','當天 IF'],
+     ['var(--ink-3)','dash','睡眠中位數 ' + hm(medH*3600)]].forEach(function(t){
+      var w = h('span'); var i = h('i');
+      i.className = 'sleep-sw' + (t[1] === 'line' ? ' line' : t[1] === 'dash' ? ' dash' : '');
+      if (t[1] === 'sw') i.style.background = t[0]; else i.style.color = t[0];
+      w.appendChild(i); w.appendChild(document.createTextNode(t[2]));
+      lg1.appendChild(w);
+    });
+    sec1.appendChild(lg1);
+    root.appendChild(sec1);
+
+    /* ── 圖二：四堂有對帳的課，照睡眠由少到多排 ──────────── */
+    if (scoredSleep.length){
+      var sec2 = h('div','sleep-sec');
+      var cap2 = h('div','sleep-cap');
+      cap2.appendChild(h('b', null, '有逐段對帳的 ' + scoredSleep.length + ' 堂　·　依前一晚睡眠由少到多'));
+      cap2.appendChild(h('span', null, '如果睡眠決定表現，右邊那排分數應該由低到高'));
+      sec2.appendChild(cap2);
+      var tbl = h('div','sleep-tbl');
+      var maxSleepH = Math.max.apply(null, scoredSleep.map(function(r){ return r.sleep_secs/3600; }));
+      var sleepFull = Math.max(6, Math.ceil(maxSleepH));
+      scoredSleep.forEach(function(r){
+        var hot = r.date === shortest.date;
+        var row = h('div','sleep-row' + (hot ? ' is-hot' : ''));
+        row.appendChild(h('div','sleep-row-d', md(r.date)));
+
+        var m1 = h('div','sleep-mini');
+        var l1 = h('div','sleep-mini-l');
+        l1.appendChild(h('span', null, '睡眠' + (num(r.sleep_score) ? ' · 睡眠分 ' + r.sleep_score : '')));
+        var l1b = h('span');
+        l1b.appendChild(h('b', null, hm(r.sleep_secs)));
+        l1.appendChild(l1b);
+        var t1 = h('div','sleep-mini-t'); var f1 = h('div','sleep-mini-f');
+        f1.style.width = Math.max(2, (r.sleep_secs/3600) / sleepFull * 100) + '%';
+        if (hot) f1.style.background = 'var(--sig)';
+        t1.appendChild(f1); m1.appendChild(l1); m1.appendChild(t1);
+        row.appendChild(m1);
+
+        var m2 = h('div','sleep-mini');
+        var l2 = h('div','sleep-mini-l');
+        l2.appendChild(h('span', null, '對帳分'));
+        var l2b = h('span');
+        l2b.appendChild(h('b', null, fx(r.score.total,1)));
+        var bg = h('span','sleep-badge', r.score.grade);
+        bg.style.color = gradeColor(r.score.grade);
+        bg.style.background = 'rgba(255,255,255,.05)';
+        bg.style.marginLeft = '6px';
+        l2b.appendChild(bg);
+        l2.appendChild(l2b);
+        var t2 = h('div','sleep-mini-t'); var f2 = h('div','sleep-mini-f');
+        f2.style.width = Math.max(2, Math.min(100, r.score.total)) + '%';
+        f2.style.background = gradeColor(r.score.grade);
+        t2.appendChild(f2); m2.appendChild(l2); m2.appendChild(t2);
+        row.appendChild(m2);
+
+        tbl.appendChild(row);
+      });
+      sec2.appendChild(tbl);
+
+      // 直接對照：睡最少的那一堂，跟它之後最近的一堂
+      var byDate = scoredSleep.slice().sort(function(a,b){ return dnum(a.date) - dnum(b.date); });
+      var least = scoredSleep[0];
+      var next = null;
+      for (var i = 0; i < byDate.length; i++){
+        if (dnum(byDate[i].date) > dnum(least.date)){ next = byDate[i]; break; }
+      }
+      if (next){
+        var dd = (dnum(next.date) - dnum(least.date));
+        var note = h('div','sleep-note');
+        note.innerHTML =
+          '同一台訓練台、同一種課表：<b style="color:var(--sig)">' + md(least.date) + '</b> 睡 ' + hm(least.sleep_secs) +
+          ' → ' + fx(least.score.total,1) + ' ' + least.score.grade + '，' + dd + ' 天後的 <b style="color:var(--ink-1)">' +
+          md(next.date) + '</b> 睡 ' + hm(next.sleep_secs) + ' → ' + fx(next.score.total,1) + ' ' + next.score.grade +
+          '。多睡 ' + hm(next.sleep_secs - least.sleep_secs) + '，分數差 ' + fx(Math.abs(next.score.total - least.score.total),1) + ' 分。';
+        sec2.appendChild(note);
+      }
+      root.appendChild(sec2);
+    }
+
+    /* ── 圖三：散布圖 ─────────────────────────────────── */
+    var sec3 = pairIF.length >= 3 ? h('div','sleep-sec') : null;
+    var scroll3 = null;
+    if (sec3){
+    var cap3 = h('div','sleep-cap');
+    cap3.appendChild(h('b', null, '全部 ' + pairIF.length + ' 個騎乘日'));
+    cap3.appendChild(h('span', null, '橫軸＝前一晚睡眠　直軸＝當天 IF　粗橫槓＝該睡眠區間的平均 IF'));
+    sec3.appendChild(cap3);
+    scroll3 = h('div','sleep-scroll');
+    sec3.appendChild(scroll3);
+    var lg3 = h('div','sleep-legend');
+    [['var(--ink-3)','sw','一般騎乘日'],
+     ['var(--sig)','sw','有逐段對帳的 ' + scored.length + ' 堂'],
+     ['var(--warn)','line','區間平均 IF'],
+     ['var(--cool)','dash','最小平方趨勢線']].forEach(function(t){
+      var w = h('span'); var i = h('i');
+      i.className = 'sleep-sw' + (t[1] === 'line' ? ' line' : t[1] === 'dash' ? ' dash' : '');
+      if (t[1] === 'sw') i.style.background = t[0]; else i.style.color = t[0];
+      w.appendChild(i); w.appendChild(document.createTextNode(t[2]));
+      lg3.appendChild(w);
+    });
+    sec3.appendChild(lg3);
+    root.appendChild(sec3);
+    }
+
+    /* ── 判讀（整句從上面算出來的數字組出來） ─────────────── */
+    var say = h('div','lab-say');
+    root.appendChild(say);
+
+    (function writeSay(){
+      var worst = scored.length ? scored.reduce(function(a,b){ return b.score.total < a.score.total ? b : a; }) : null;
+      var bits = [];
+
+      var flat = (rEF == null) ? '算不出來'
+        : (Math.abs(rEF) < 0.2 ? '幾乎沒有關係' : (Math.abs(rEF) < 0.4 ? '只有很弱的關係' : '有明顯關係'));
+      bits.push('<b>' + withSleep.length + '</b> 個有睡眠紀錄的騎乘日裡，睡眠時數跟當天效率因子 EF ' + flat +
+                '（r = ' + (rEF == null ? '—' : (rEF<0?'−':'+') + fx(Math.abs(rEF),2)) + '，n = ' + pairEF.length + '）');
+
+      if (rIF != null && rIF < -0.2){
+        var hi = buckets.length ? buckets[0] : null, lo = buckets.length ? buckets[buckets.length-1] : null;
+        bits.push('跟當天 IF 甚至是<b>負的</b>（r = −' + fx(Math.abs(rIF),2) + '）—— 睡不到 4 小時那些天平均 IF ' +
+                  (hi && hi.mIF != null ? fx(hi.mIF,2) : '—') + '，睡滿 5.5 小時以上反而只有 ' +
+                  (lo && lo.mIF != null ? fx(lo.mIF,2) : '—') +
+                  '。這不是「少睡更猛」，是長程騎乘都得早起，因果方向反了');
+      }
+      var p1 = bits.join('；') + '。';
+
+      var p2 = '';
+      if (scoredSleep.length >= 2){
+        var least = scoredSleep[0], most = scoredSleep[scoredSleep.length-1];
+        var best = scoredSleep.reduce(function(a,b){ return b.score.total > a.score.total ? b : a; });
+        p2 = '有逐段對帳的 ' + scoredSleep.length + ' 堂裡，被睡眠打到的只有極端那一晚：<span class="hot">' +
+             md(least.date) + ' 睡 ' + hm(least.sleep_secs) + '</span>（' + withSleep.length + ' 晚裡最短），對帳 ' +
+             fx(least.score.total,1) + ' ' + least.score.grade + '。';
+        if (most.date !== best.date){
+          p2 += '但睡最多的 <b>' + md(most.date) + '</b> 睡了 ' + hm(most.sleep_secs) + '（比中位數 ' + hm(medH*3600) +
+                ' 還長），拿到的是全場最低的 ' + fx(most.score.total,1) + ' ' + most.score.grade +
+                '；睡 ' + hm(best.sleep_secs) + ' 的 <b>' + md(best.date) + '</b> 反而拿了 ' +
+                fx(best.score.total,1) + ' ' + best.score.grade +
+                '。照睡眠排出來的順序跟照分數排出來的順序對不上，' +
+                (worst && worst.date !== least.date
+                  ? '<b>' + md(worst.date) + '</b> 那堂崩掉要去別的地方找原因。'
+                  : '睡眠不是唯一的解釋。');
+        }
+      }
+      say.innerHTML = p1 + (p2 ? ' ' + p2 : '') +
+        '<br><span style="color:var(--ink-3)">口徑：睡眠是當天早上 wellness 的 sleepSecs（前一晚），只取有功率的騎乘日；' +
+        '沒戴錶的 ' + (sp.length - withSleep.length) + ' 天不列入。相關係數是皮爾森 r，樣本是觀察不是實驗。</span>';
+    })();
+
+    /* ── 繪圖：像素座標，不做非等比拉伸，所以文字可以待在 SVG 裡 ── */
+    function drawTimeline(){
+      scroll1.innerHTML = '';
+      var avail = scroll1.clientWidth || root.clientWidth || 900;
+      var W = Math.max(600, avail);
+      var PH = parseInt(getComputedStyle(root).getPropertyValue('--sleep-plot-h'), 10) || 196;
+      var PAD = { t: 22, r: 40, b: 22, l: 32 };
+      var H = PH + PAD.t + PAD.b;
+      var plotW = W - PAD.l - PAD.r, plotH = PH;
+
+      var lastD = dnum(sp[sp.length-1].date);
+      var d0 = lastD - 62, d1 = lastD;
+      var win = withSleep.filter(function(r){ return dnum(r.date) >= d0; });
+      var winIF = sp.filter(function(r){ return dnum(r.date) >= d0 && r.ride && num(r.ride['if']); });
+      if (!win.length){ scroll1.appendChild(h('div','lab-nil','最近 9 週沒有帶睡眠紀錄的騎乘。')); return; }
+      // 視窗左邊如果一大段沒騎車，不要留一片空白 —— 往內縮到第一筆前 3 天
+      var firstD = Math.min.apply(null, win.concat(winIF).map(function(r){ return dnum(r.date); }));
+      if (firstD - d0 > 5) d0 = firstD - 3;
+
+      var days = d1 - d0;
+      function X(dd){ return PAD.l + (dd - d0) / days * plotW; }
+      var sleepMax = Math.max(8, Math.ceil(Math.max.apply(null, win.map(function(r){ return r.sleep_secs/3600; }))));
+      function YS(v){ return PAD.t + plotH - v / sleepMax * plotH; }
+      var ifVals = winIF.map(function(r){ return r.ride['if']; });
+      var ifLo = ifVals.length ? Math.max(0, Math.floor(Math.min.apply(null, ifVals) * 10) / 10 - 0.05) : 0.3;
+      var ifHi = ifVals.length ? Math.ceil(Math.max.apply(null, ifVals) * 10) / 10 + 0.05 : 1.0;
+      if (ifHi - ifLo < 0.05) ifHi = ifLo + 0.05;
+      function YI(v){ return PAD.t + plotH - (v - ifLo) / (ifHi - ifLo) * plotH; }
+
+      var svg = s('svg', { width: W, height: H, viewBox: '0 0 ' + W + ' ' + H, role: 'img',
+                           'aria-label': '最近 9 週的前一晚睡眠時數與當天騎乘強度' });
+
+      // 左軸格線
+      for (var v = 0; v <= sleepMax; v += 2){
+        svg.appendChild(s('line', { x1: PAD.l, x2: PAD.l + plotW, y1: YS(v), y2: YS(v),
+          stroke: 'rgba(255,255,255,.065)', 'shape-rendering': 'crispEdges' }));
+        svg.appendChild(s('text', { x: PAD.l - 6, y: YS(v) + 3.5, 'text-anchor': 'end',
+          fill: 'rgba(244,240,234,.38)', 'font-size': 9.5, 'font-family': 'var(--f-num)' })).textContent = v + 'h';
+      }
+      // 中位數
+      svg.appendChild(s('line', { x1: PAD.l, x2: PAD.l + plotW, y1: YS(medH), y2: YS(medH),
+        stroke: 'rgba(244,240,234,.38)', 'stroke-width': 1, 'stroke-dasharray': '3 4' }));
+
+      // 右軸刻度（IF）
+      (ifVals.length ? [ifLo, (ifLo+ifHi)/2, ifHi] : []).forEach(function(v){
+        svg.appendChild(s('text', { x: PAD.l + plotW + 6, y: YI(v) + 3.5, 'text-anchor': 'start',
+          fill: 'var(--cool)', opacity: .62, 'font-size': 9.5, 'font-family': 'var(--f-num)' })).textContent = fx(v,2);
+      });
+
+      // 日期刻度
+      for (var dd = d1; dd >= d0; dd -= 14){
+        var iso = new Date(dd * 86400000).toISOString().slice(0,10);
+        svg.appendChild(s('line', { x1: X(dd), x2: X(dd), y1: PAD.t + plotH, y2: PAD.t + plotH + 4,
+          stroke: 'rgba(255,255,255,.065)' }));
+        svg.appendChild(s('text', { x: X(dd), y: PAD.t + plotH + 15, 'text-anchor': 'middle',
+          fill: 'rgba(244,240,234,.38)', 'font-size': 9.5, 'font-family': 'var(--f-num)' })).textContent = md(iso);
+      }
+
+      // 睡眠長條
+      var bw = Math.max(4, Math.min(11, plotW / days * 0.7));
+      win.forEach(function(r){
+        var hh = r.sleep_secs/3600, x = X(dnum(r.date)) - bw/2, y = YS(hh);
+        var hot = hh < 3;
+        var rect = s('rect', { x: x, y: y, width: bw, height: PAD.t + plotH - y, rx: 1.5,
+          fill: hot ? 'var(--sig)' : 'rgba(244,240,234,.30)' });
+        rect.appendChild(s('title')).textContent =
+          r.date + '　睡 ' + hm(r.sleep_secs) + (num(r.sleep_score) ? '（睡眠分 ' + r.sleep_score + '）' : '') +
+          (r.ride ? '\n' + r.ride.name + '　IF ' + (num(r.ride['if']) ? fx(r.ride['if'],2) : '—') +
+                    '　TSS ' + (num(r.ride.tss) ? r.ride.tss : '—') : '') +
+          (r.score ? '\n對帳 ' + fx(r.score.total,1) + ' ' + r.score.grade : '');
+        svg.appendChild(rect);
+      });
+
+      // IF 折線（間隔超過 8 天就斷開，不要在沒騎車的空窗上拉直線）
+      var segs = [], cur = [];
+      winIF.slice().sort(function(a,b){ return dnum(a.date) - dnum(b.date); }).forEach(function(r){
+        if (cur.length && dnum(r.date) - dnum(cur[cur.length-1].date) > 8){ segs.push(cur); cur = []; }
+        cur.push(r);
+      });
+      if (cur.length) segs.push(cur);
+      segs.forEach(function(seg){
+        if (seg.length < 2) return;
+        var dpath = seg.map(function(r, i){ return (i ? 'L' : 'M') + fx(X(dnum(r.date)),1) + ' ' + fx(YI(r.ride['if']),1); }).join(' ');
+        svg.appendChild(s('path', { d: dpath, fill: 'none', stroke: 'var(--cool)', 'stroke-width': 1.6,
+          'stroke-linejoin': 'round', 'stroke-linecap': 'round', opacity: .85 }));
+      });
+      winIF.forEach(function(r){
+        svg.appendChild(s('circle', { cx: X(dnum(r.date)), cy: YI(r.ride['if']), r: 2.4,
+          fill: 'var(--cool)', stroke: 'var(--bg)', 'stroke-width': 1 }));
+      });
+
+      // 對帳成績方塊，貼在自己那根長條的頭上
+      win.filter(function(r){ return r.score && num(r.score.total); }).forEach(function(r){
+        var cx = Math.min(PAD.l + plotW - 17, Math.max(PAD.l + 17, X(dnum(r.date))));
+        var by = YS(r.sleep_secs/3600) - 16;
+        var g = s('g');
+        g.appendChild(s('rect', { x: cx - 16, y: by, width: 32, height: 13, rx: 2.5,
+          fill: 'var(--bg)', stroke: gradeColor(r.score.grade), 'stroke-width': 1 }));
+        var t = s('text', { x: cx, y: by + 10, 'text-anchor': 'middle', fill: gradeColor(r.score.grade),
+          'font-size': 9.5, 'font-weight': 800, 'font-family': 'var(--f-num)' });
+        t.textContent = r.score.grade + ' ' + Math.round(r.score.total);
+        g.appendChild(t);
+        g.appendChild(s('title')).textContent = r.date + '　逐段對帳 ' + fx(r.score.total,1) + ' ' + r.score.grade;
+        svg.appendChild(g);
+      });
+
+      scroll1.appendChild(svg);
+      // 窄螢幕看不完整條時間軸，預設停在最右邊 —— 最近的那幾天才是重點
+      if (scroll1.scrollWidth > scroll1.clientWidth) scroll1.scrollLeft = scroll1.scrollWidth;
+    }
+
+    function drawScatter(){
+      if (!scroll3) return;
+      scroll3.innerHTML = '';
+      var avail = scroll3.clientWidth || root.clientWidth || 900;
+      var W = Math.max(560, avail);
+      var PAD = { t: 16, r: 14, b: 26, l: 32 };
+      var plotH = 178, H = plotH + PAD.t + PAD.b, plotW = W - PAD.l - PAD.r;
+
+      var xs = pairIF.map(function(r){ return r.sleep_secs/3600; });
+      var ys = pairIF.map(function(r){ return r.ride['if']; });
+      var xMax = Math.max(9, Math.ceil(Math.max.apply(null, xs)));
+      var yLo = Math.max(0, Math.floor(Math.min.apply(null, ys)*10)/10 - 0.05);
+      var yHi = Math.ceil(Math.max.apply(null, ys)*10)/10 + 0.05;
+      function X(v){ return PAD.l + v / xMax * plotW; }
+      function Y(v){ return PAD.t + plotH - (v - yLo) / (yHi - yLo) * plotH; }
+
+      var svg = s('svg', { width: W, height: H, viewBox: '0 0 ' + W + ' ' + H, role: 'img',
+                           'aria-label': '前一晚睡眠時數與當天騎乘 IF 的散布圖' });
+
+      var step = (yHi - yLo) > 0.6 ? 0.2 : 0.1;
+      for (var v = Math.ceil(yLo/step)*step; v <= yHi + 1e-9; v += step){
+        svg.appendChild(s('line', { x1: PAD.l, x2: PAD.l + plotW, y1: Y(v), y2: Y(v),
+          stroke: 'rgba(255,255,255,.065)', 'shape-rendering': 'crispEdges' }));
+        svg.appendChild(s('text', { x: PAD.l - 6, y: Y(v) + 3.5, 'text-anchor': 'end',
+          fill: 'rgba(244,240,234,.38)', 'font-size': 9.5, 'font-family': 'var(--f-num)' })).textContent = fx(v,1);
+      }
+      for (var xv = 0; xv <= xMax; xv += 2){
+        svg.appendChild(s('text', { x: X(xv), y: PAD.t + plotH + 15, 'text-anchor': 'middle',
+          fill: 'rgba(244,240,234,.38)', 'font-size': 9.5, 'font-family': 'var(--f-num)' })).textContent = xv + 'h';
+      }
+      svg.appendChild(s('text', { x: PAD.l + plotW, y: PAD.t + plotH + 15, 'text-anchor': 'end',
+        fill: 'rgba(244,240,234,.38)', 'font-size': 9.5 })).textContent = '前一晚睡眠';
+
+      // 區間平均
+      buckets.forEach(function(b){
+        if (b.mIF == null) return;
+        var x1 = X(Math.max(0, b.lo)), x2 = X(Math.min(xMax, b.hi));
+        svg.appendChild(s('line', { x1: x1 + 2, x2: x2 - 2, y1: Y(b.mIF), y2: Y(b.mIF),
+          stroke: 'var(--warn)', 'stroke-width': 2.5, 'stroke-linecap': 'round', opacity: .9 }));
+        var t = s('text', { x: x1 + 4, y: Y(b.mIF) - 6, 'text-anchor': 'start',
+          fill: 'var(--warn)', 'font-size': 9.5, 'font-family': 'var(--f-num)', 'font-weight': 700 });
+        t.textContent = fx(b.mIF,2) + '  n=' + b.n;
+        svg.appendChild(t);
+      });
+
+      // 趨勢線
+      if (rIF != null){
+        var mx = mean(xs), my = mean(ys), sxy = 0, sxx = 0, i;
+        for (i=0;i<xs.length;i++){ sxy += (xs[i]-mx)*(ys[i]-my); sxx += (xs[i]-mx)*(xs[i]-mx); }
+        if (sxx > 0){
+          var slope = sxy/sxx, icpt = my - slope*mx;
+          var xa = Math.min.apply(null, xs), xb = Math.max.apply(null, xs);
+          svg.appendChild(s('line', { x1: X(xa), y1: Y(slope*xa+icpt), x2: X(xb), y2: Y(slope*xb+icpt),
+            stroke: 'var(--cool)', 'stroke-width': 1.4, 'stroke-dasharray': '5 4', opacity: .8 }));
+        }
+      }
+
+      // 點
+      pairIF.forEach(function(r){
+        var isScored = !!(r.score && num(r.score.total));
+        var c = s('circle', { cx: X(r.sleep_secs/3600), cy: Y(r.ride['if']),
+          r: isScored ? 4.5 : 2.6,
+          fill: isScored ? 'var(--sig)' : 'rgba(244,240,234,.34)',
+          stroke: isScored ? 'var(--bg)' : 'none', 'stroke-width': isScored ? 1.2 : 0 });
+        c.appendChild(s('title')).textContent =
+          r.date + '　睡 ' + hm(r.sleep_secs) + '　IF ' + fx(r.ride['if'],2) +
+          (isScored ? '　對帳 ' + fx(r.score.total,1) + ' ' + r.score.grade : '');
+        svg.appendChild(c);
+      });
+      // 有對帳的那幾堂標日期，最短的那晚一定要看得到。
+      // 這幾點常常擠在一起，所以標籤先算好位置再依序往下推開，並拉一條細引線回到點上。
+      var marks = pairIF.filter(function(r){ return r.score && num(r.score.total); })
+        .map(function(r){
+          var x = X(r.sleep_secs/3600), y = Y(r.ride['if']);
+          return { r: r, x: x, y: y, ly: y, end: x > PAD.l + plotW - 66 };
+        })
+        .sort(function(a,b){ return a.ly - b.ly; });
+      marks.forEach(function(m, i){
+        for (var j = 0; j < i; j++){
+          var p = marks[j];
+          if (Math.abs(p.x - m.x) < 62 && m.ly - p.ly < 12) m.ly = p.ly + 12;
+        }
+        m.ly = Math.max(PAD.t + 8, Math.min(PAD.t + plotH - 4, m.ly));
+      });
+      marks.forEach(function(m){
+        var tx = m.x + (m.end ? -8 : 8);
+        if (Math.abs(m.ly - m.y) > 3){
+          svg.appendChild(s('line', { x1: m.x, y1: m.y, x2: tx - (m.end ? -3 : 3), y2: m.ly,
+            stroke: 'var(--sig)', 'stroke-width': .8, opacity: .5 }));
+        }
+        var t = s('text', { x: tx, y: m.ly + 3.5, 'text-anchor': m.end ? 'end' : 'start',
+          fill: 'var(--sig)', 'font-size': 9.5, 'font-weight': 700, 'font-family': 'var(--f-num)' });
+        t.textContent = md(m.r.date) + ' ' + m.r.score.grade;
+        svg.appendChild(t);
+      });
+
+      scroll3.appendChild(svg);
+    }
+
+    function drawAll(){ drawTimeline(); drawScatter(); }
+    drawAll();
+
+    var lastW = root.clientWidth;
+    if (typeof ResizeObserver === 'function'){
+      var ro = new ResizeObserver(function(){
+        var w = root.clientWidth;
+        if (w && Math.abs(w - lastW) > 8){ lastW = w; drawAll(); }
+      });
+      ro.observe(root);
+    } else if (window.addEventListener){
+      window.addEventListener('resize', function(){
+        var w = root.clientWidth;
+        if (w && Math.abs(w - lastW) > 8){ lastW = w; drawAll(); }
+      });
+    }
+  }});
+})();
+</script>
+
+<!-- ══ part: quality ══ -->
+<style>
+/* ══ quality · 執行品質四維 ══ 選擇器一律 .quality- 前綴 */
+.quality-root{--q-h:14px}
+
+/* 圖例 */
+.quality-lg{display:flex;flex-wrap:wrap;gap:7px 18px;margin-bottom:16px;
+  font-size:10.5px;letter-spacing:.4px;color:var(--ink-3)}
+.quality-lg i{font-style:normal;display:inline-flex;align-items:center;gap:6px}
+.quality-lg .quality-sw{width:22px;height:8px;border-radius:2px;background:rgba(244,240,234,.28);flex:none}
+.quality-lg .quality-sw.is-hot{background:var(--sig)}
+.quality-lg .quality-sw.is-nil{background:repeating-linear-gradient(135deg,rgba(244,240,234,.14) 0 4px,transparent 4px 8px)}
+.quality-lg .quality-sw.is-prev{width:2px;height:12px;border-radius:0;
+  background:repeating-linear-gradient(180deg,var(--ink-3) 0 2px,transparent 2px 4px)}
+
+/* 一堂 = 一個區塊，直向排列 */
+.quality-s{padding:15px 0 16px;border-top:1px solid var(--hair)}
+.quality-s:first-of-type{border-top:0;padding-top:0}
+.quality-hd{display:flex;align-items:baseline;flex-wrap:wrap;gap:6px 11px;margin-bottom:10px}
+.quality-md{font-size:19px;color:var(--ink-1);flex:none}
+.quality-yr{font-size:10px;letter-spacing:1px;color:var(--ink-3);flex:none}
+.quality-lb{flex:1 1 180px;min-width:0;font-size:11.5px;color:var(--ink-3);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.quality-tot{display:flex;align-items:baseline;gap:8px;flex:none;margin-left:auto}
+.quality-num{font-size:20px;color:var(--ink-1)}
+.quality-g{font-family:var(--f-num);font-weight:800;font-size:12px;letter-spacing:.6px;
+  padding:1px 7px;border-radius:3px;border:1px solid currentColor;line-height:1.5}
+.quality-g[data-t="ok"]{color:var(--ok)}
+.quality-g[data-t="mid"]{color:var(--warn)}
+.quality-g[data-t="bad"]{color:var(--sig)}
+
+/* 加權組成條：段寬＝權重，填滿比例＝總分 */
+.quality-strip{display:flex;gap:3px;height:8px;margin-bottom:12px}
+.quality-seg{position:relative;background:rgba(255,255,255,.05);border-radius:2px;overflow:hidden;min-width:2px}
+.quality-seg span{position:absolute;left:0;top:0;bottom:0;background:rgba(244,240,234,.28)}
+.quality-seg.is-hot span{background:var(--sig)}
+
+/* 四維並排的水平條 */
+.quality-row{display:grid;grid-template-columns:104px 1fr 40px 54px;align-items:center;
+  gap:10px;padding:3px 0}
+.quality-nm{font-size:12px;color:var(--ink-1);line-height:1.25}
+.quality-nm em{font-style:normal;color:var(--sig);font-size:9.5px;font-weight:700;margin-left:4px;letter-spacing:.5px}
+.quality-nm i{display:block;font-style:normal;margin-top:2px;white-space:nowrap;min-height:11px;
+  font-size:9px;letter-spacing:.7px;color:var(--ink-3)}
+.quality-nm i b{font-weight:400}
+.quality-track{position:relative;height:var(--q-h);border-radius:2px;overflow:hidden;
+  background:rgba(255,255,255,.045);
+  background-image:linear-gradient(90deg,transparent calc(50% - .5px),rgba(255,255,255,.10) calc(50% - .5px),rgba(255,255,255,.10) calc(50% + .5px),transparent calc(50% + .5px))}
+.quality-fill{position:absolute;left:0;top:0;bottom:0;border-radius:2px;background:rgba(244,240,234,.28)}
+.quality-row.is-hot .quality-fill{background:var(--sig)}
+.quality-prev{position:absolute;top:0;bottom:0;width:2px;margin-left:-1px;
+  background:repeating-linear-gradient(180deg,var(--ink-3) 0 2px,transparent 2px 4px)}
+.quality-v{font-size:14px;color:var(--ink-1);text-align:right}
+.quality-d{font-size:10.5px;text-align:right;color:var(--ink-3);white-space:nowrap}
+.quality-d.is-up{color:var(--ok)}
+.quality-d.is-dn{color:var(--warn)}
+.quality-row.is-nil .quality-track{background-image:none;
+  background:repeating-linear-gradient(135deg,rgba(244,240,234,.055) 0 4px,transparent 4px 8px)}
+.quality-row.is-nil .quality-nm,.quality-row.is-nil .quality-v{color:var(--ink-3)}
+.quality-nilx{position:absolute;left:7px;top:0;line-height:var(--q-h);
+  font-size:9.5px;letter-spacing:.5px;color:var(--ink-3)}
+
+@media(max-width:767px){
+  .quality-lb{flex:1 1 100%;order:3;white-space:normal}
+  .quality-tot{margin-left:auto}
+  .quality-row{grid-template-columns:64px 1fr 36px 46px;gap:8px}
+  .quality-nm{font-size:11.5px}
+  .quality-nm i b{display:none}   /* 窄螢幕只留權重，英文名收掉 */
+  .quality-v{font-size:13px}
+  .quality-d{font-size:10px}
+}
+</style>
+<section class="lab-card" id="card-quality">
+  <h2 class="lab-h">執行品質四維 <span>· QUALITY · 課表到底有沒有照做——四個維度分開看，是哪一維在扣分</span></h2>
+  <div class="quality-root"></div>
+</section>
+<script>
+(function(){
+  window.LAB_PARTS = window.LAB_PARTS || [];
+
+  var DIMS = [
+    { k:'compliance', zh:'執行度', en:'COMPLIANCE', d:'work 段功率 vs 處方（平均 × 落在區間的時間佔比）' },
+    { k:'discipline', zh:'紀律',   en:'DISCIPLINE', d:'逐秒對帳課表規則（不准滑行、該做滿的時間）' },
+    { k:'durability', zh:'續航',   en:'DURABILITY', d:'work 段前半 vs 後半的衰減' },
+    { k:'cadence',    zh:'迴轉',   en:'CADENCE',    d:'踩踏秒數落在目標迴轉區間的佔比' }
+  ];
+  var DEFW = { compliance:0.40, discipline:0.25, durability:0.20, cadence:0.15 };
+  var ZH = {}; DIMS.forEach(function(d){ ZH[d.k] = d.zh; });
+
+  function isNum(v){ return typeof v === 'number' && isFinite(v); }
+  function f1(v){ return (Math.round(v*10)/10).toFixed(1); }
+  function esc(s){
+    return String(s == null ? '' : s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function clamp(v){ return Math.max(0, Math.min(100, v)); }
+  function gradeTone(g){
+    var c = String(g || '').charAt(0).toUpperCase();
+    if (c === 'A' || c === 'B') return 'ok';
+    if (c === 'C' || c === 'D') return 'mid';
+    return 'bad';
+  }
+  // 權重只算「當天真的有這個維度」的那幾維，再重新歸一 —— json 裡的 total 就是這樣算的
+  function effWeights(s){
+    var w = s.weights || {}, out = {}, tot = 0;
+    DIMS.forEach(function(d){
+      if (!isNum((s.dims||{})[d.k])) return;
+      var x = isNum(w[d.k]) ? w[d.k] : DEFW[d.k];
+      out[d.k] = x; tot += x;
+    });
+    if (tot > 0) { for (var k in out) out[k] = out[k] / tot; }
+    return out;
+  }
+  function weakest(s){
+    var best = null;
+    DIMS.forEach(function(d){
+      var v = (s.dims||{})[d.k];
+      if (!isNum(v)) return;
+      if (!best || v < best.v) best = { k:d.k, v:v };
+    });
+    return best;
+  }
+
+  window.LAB_PARTS.push({ id:'quality', render: function(root, LAB){
+    var raw = (LAB && LAB.scores) || [];
+    if (!raw.length){
+      root.innerHTML = '<div class="lab-nil">還沒有這個資料 —— <code>data/lab.json</code> 的 <code>scores</code> 是空的，' +
+        '要有逐段對帳過的課表（<code>tools/tcx/score.py</code>）才會出現。</div>';
+      return;
+    }
+
+    var rows = raw.slice().filter(function(s){ return s && s.dims; })
+      .sort(function(a,b){ return String(a.date) < String(b.date) ? -1 : 1; });
+    if (!rows.length){
+      root.innerHTML = '<div class="lab-nil">還沒有這個資料 —— scores 裡沒有帶維度的堂數。</div>';
+      return;
+    }
+
+    var html = '';
+
+    html += '<div class="quality-lg">' +
+      '<i><span class="quality-sw"></span>維度得分 0–100</i>' +
+      '<i><span class="quality-sw is-hot"></span>當天最弱的一維</i>' +
+      '<i><span class="quality-sw is-prev"></span>上一堂的位置</i>' +
+      '<i><span class="quality-sw is-nil"></span>當天沒有這個維度（不計分，權重分回其餘三維）</i>' +
+      '<i>頂端細條：段寬＝權重、填滿＝該維得分，整條填滿的比例就是總分</i>' +
+      '</div>';
+
+    rows.forEach(function(s, i){
+      var prev = i > 0 ? rows[i-1] : null;
+      var w = effWeights(s);
+      var wk = weakest(s);
+      var d = String(s.date || '');
+      var tone = gradeTone(s.grade);
+
+      html += '<article class="quality-s">';
+
+      html += '<header class="quality-hd">' +
+        '<span class="lab-n quality-md">' + esc(d.slice(5).replace('-','/')) + '</span>' +
+        '<span class="quality-yr">' + esc(d.slice(0,4)) + '</span>' +
+        '<span class="quality-lb" title="' + esc(s.label) + '">' + esc(s.label) + '</span>' +
+        '<span class="quality-tot">' +
+          '<span class="quality-g" data-t="' + tone + '">' + esc(s.grade) + '</span>' +
+          '<span class="lab-n quality-num">' + (isNum(s.total) ? f1(s.total) : '—') + '</span>' +
+        '</span></header>';
+
+      // 加權組成條
+      var stripe = '';
+      DIMS.forEach(function(dim){
+        var v = s.dims[dim.k];
+        if (!isNum(v) || !w[dim.k]) return;
+        stripe += '<div class="quality-seg' + (wk && wk.k === dim.k ? ' is-hot' : '') +
+          '" style="flex:' + (w[dim.k]*100).toFixed(2) + ' 0 0" title="' +
+          esc(dim.zh + ' ' + f1(v) + ' × 權重 ' + Math.round(w[dim.k]*100) + '% ＝ 對總分貢獻 ' + f1(v*w[dim.k]) + ' 分') +
+          '"><span style="width:' + clamp(v).toFixed(1) + '%"></span></div>';
+      });
+      if (stripe) html += '<div class="quality-strip">' + stripe + '</div>';
+
+      // 四維水平條
+      DIMS.forEach(function(dim){
+        var v = s.dims[dim.k];
+        var has = isNum(v);
+        var pv = prev && isNum((prev.dims||{})[dim.k]) ? prev.dims[dim.k] : null;
+        var cls = 'quality-row' + (has ? (wk && wk.k === dim.k ? ' is-hot' : '') : ' is-nil');
+        var tip = has
+          ? dim.zh + ' ' + f1(v) + '　' + dim.d + (w[dim.k] ? '　權重 ' + Math.round(w[dim.k]*100) + '%' : '')
+          : dim.zh + '：當天的課表沒有這個維度可對帳（' + dim.d + '）';
+
+        html += '<div class="' + cls + '" title="' + esc(tip) + '">';
+        html += '<div class="quality-nm">' + esc(dim.zh) +
+          (has && wk && wk.k === dim.k ? '<em>最弱</em>' : '') +
+          '<i><b>' + dim.en + (has && w[dim.k] ? ' ·' : '') + '</b>' +
+          (has && w[dim.k] ? ' ' + Math.round(w[dim.k]*100) + '%' : '') + '</i></div>';
+
+        html += '<div class="quality-track">';
+        if (has){
+          html += '<div class="quality-fill" style="width:' + clamp(v).toFixed(1) + '%"></div>';
+          if (pv !== null) html += '<div class="quality-prev" style="left:' + clamp(pv).toFixed(1) + '%"></div>';
+        } else {
+          html += '<span class="quality-nilx">本日無此維度</span>';
+        }
+        html += '</div>';
+
+        html += '<div class="lab-n quality-v">' + (has ? f1(v) : '—') + '</div>';
+
+        var dv = (has && pv !== null) ? v - pv : null;
+        var dcls = dv === null ? '' : (dv >= 0 ? ' is-up' : ' is-dn');
+        var dtxt = dv === null ? '—' : (dv >= 0 ? '▲ ' : '▼ ') + f1(Math.abs(dv));
+        html += '<div class="quality-d' + dcls + '">' + dtxt + '</div>';
+
+        html += '</div>';
+      });
+
+      html += '</article>';
+    });
+
+    // ── 判讀：全部從上面同一份資料現算 ───────────────────────────
+    var say = [];
+
+    // 1) 最新一堂 vs 上一堂，動最多的那一維
+    var last = rows[rows.length-1];
+    if (rows.length >= 2){
+      var pre = rows[rows.length-2], mv = null;
+      DIMS.forEach(function(dim){
+        var a = (pre.dims||{})[dim.k], b = (last.dims||{})[dim.k];
+        if (!isNum(a) || !isNum(b)) return;
+        var diff = b - a;
+        if (!mv || Math.abs(diff) > Math.abs(mv.diff)) mv = { k:dim.k, diff:diff, a:a, b:b };
+      });
+      var tot = (isNum(last.total) && isNum(pre.total)) ? last.total - pre.total : null;
+      say.push('最新一堂 <b>' + esc(String(last.date).slice(5).replace('-','/')) + '</b> 總分 <b>' +
+        f1(last.total) + '</b>（' + esc(last.grade) + '）' +
+        (tot === null ? '' : '，比上一堂 ' + esc(String(pre.date).slice(5).replace('-','/')) + ' 的 ' +
+          f1(pre.total) + (tot >= 0 ? ' 拉回 ' : ' 掉了 ') + f1(Math.abs(tot)) + ' 分') +
+        (mv ? '；動最多的是<b>' + ZH[mv.k] + '</b> ' + f1(mv.a) + ' → ' + f1(mv.b) +
+          '（' + (mv.diff >= 0 ? '+' : '−') + f1(Math.abs(mv.diff)) + '）' : '') + '。');
+    } else {
+      say.push('目前只有 <b>1</b> 堂對帳過的課表，還比不出趨勢。');
+    }
+
+    // 2) 同一個等第的幾堂，失分位置一不一樣
+    var lowest = rows.reduce(function(a,b){ return (isNum(b.total) && b.total < a.total) ? b : a; }, rows[0]);
+    var grp = rows.filter(function(s){ return String(s.grade) === String(lowest.grade); });
+    if (grp.length >= 2){
+      var A = grp[0], B = grp[grp.length-1];
+      var wa = weakest(A), wb = weakest(B), gap = null;
+      DIMS.forEach(function(dim){
+        var a = (A.dims||{})[dim.k], b = (B.dims||{})[dim.k];
+        if (!isNum(a) || !isNum(b)) return;
+        var diff = Math.abs(b - a);
+        if (!gap || diff > gap.diff) gap = { k:dim.k, diff:diff, a:a, b:b };
+      });
+      var dA = esc(String(A.date).slice(5).replace('-','/')), dB = esc(String(B.date).slice(5).replace('-','/'));
+      if (wa && wb && wa.k !== wb.k){
+        say.push('同樣拿 <b>' + esc(lowest.grade) + '</b> 的 ' + grp.length + ' 堂，<b>失分位置不一樣</b>：' +
+          dA + ' 最弱的是<span class="hot">' + ZH[wa.k] + '</span> ' + f1(wa.v) + '，' +
+          dB + ' 最弱的是<span class="hot">' + ZH[wb.k] + '</span> ' + f1(wb.v) +
+          (gap ? '；兩天落差最大的維度是<b>' + ZH[gap.k] + '</b>（' + f1(gap.a) + ' → ' + f1(gap.b) +
+            '，差 ' + f1(gap.diff) + ' 分）' : '') + '。同一個等第不代表同一種問題，要修的東西不同。');
+      } else if (wa){
+        say.push('同樣拿 <b>' + esc(lowest.grade) + '</b> 的 ' + grp.length + ' 堂最弱的都是<span class="hot">' +
+          ZH[wa.k] + '</span>' + (gap ? '；兩天落差最大的維度是<b>' + ZH[gap.k] + '</b>（' +
+          f1(gap.a) + ' → ' + f1(gap.b) + '，差 ' + f1(gap.diff) + ' 分）' : '') + '。');
+      }
+    }
+
+    // 3) 缺維度的堂數
+    var miss = {};
+    DIMS.forEach(function(dim){
+      var n = rows.filter(function(s){ return !isNum((s.dims||{})[dim.k]); }).length;
+      if (n) miss[dim.k] = n;
+    });
+    var mk = Object.keys(miss);
+    if (mk.length){
+      say.push(mk.map(function(k){
+        return '<b>' + miss[k] + '/' + rows.length + '</b> 堂沒有' + ZH[k] + '維度';
+      }).join('、') + '——那幾天的課表本來就沒開這個處方，<b>不是 0 分</b>，權重按比例分回其餘幾維。');
+    }
+
+    html += '<div class="lab-say">' + say.join('<br>') + '</div>';
+
+    root.innerHTML = html;
+  }});
+})();
+</script>
+
+<!-- ══ part: splits ══ -->
+<style>
+.splits-wrap{--sp-in:#f4f0ea;--sp-lo:#FC4C02;--sp-hi:#5bc8f5;--sp-mute:rgba(244,240,234,.30)}
+
+/* ── 切換：一堂課一顆，按鈕裡就先給形狀 ── */
+.splits-tabs{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:16px}
+.splits-tab{
+  flex:1 1 168px;min-width:150px;max-width:270px;
+  padding:8px 10px 7px;border:1px solid var(--hair);border-radius:8px;
+  background:rgba(255,255,255,.018);color:var(--ink-2);
+  font-family:var(--f-ui);font-size:11px;text-align:left;cursor:pointer;
+  transition:border-color .15s,background .15s
+}
+.splits-tab:hover{border-color:rgba(255,255,255,.2)}
+.splits-tab[aria-selected="true"]{border-color:var(--sig);background:rgba(252,76,2,.07)}
+.splits-tab[aria-selected="true"] .splits-td{color:var(--ink-1)}
+.splits-td{display:flex;align-items:baseline;gap:7px;color:var(--ink-2)}
+.splits-td b{font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:800;font-size:14px;letter-spacing:.4px}
+.splits-td i{font-style:normal;font-size:10px;letter-spacing:1.4px;color:var(--ink-3);margin-left:auto}
+.splits-tn{margin-top:4px;font-size:10.5px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* 迷你形狀條：不用點進去就看得出兩種失敗長得不一樣 */
+.splits-mini{display:flex;gap:1px;height:5px;margin-top:6px;border-radius:2px;overflow:hidden}
+.splits-mini span{display:block;height:100%}
+
+/* ── 圖 ── */
+.splits-scroll{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch}
+.splits-hint{display:none;margin-top:6px;font-size:10px;letter-spacing:.8px;color:var(--ink-3)}
+.splits-inner{min-width:700px;position:relative;padding-left:48px}
+.splits-ax{position:absolute;left:0;top:0;width:44px;height:100%}
+.splits-axl{
+  position:absolute;right:0;transform:translateY(-50%);
+  font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:600;
+  font-size:10.5px;color:var(--ink-3);letter-spacing:.3px;white-space:nowrap
+}
+.splits-axr{position:absolute;right:0;transform:translateY(-50%);font-size:9.5px;letter-spacing:.6px;color:var(--ink-3);white-space:nowrap}
+.splits-plot{position:relative;height:326px}
+.splits-plot svg{display:block;width:100%;height:100%}
+.splits-ov{position:absolute;inset:0;pointer-events:none}
+.splits-chip{
+  position:absolute;transform:translate(-50%,-50%);
+  font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:800;
+  font-size:12.5px;letter-spacing:.4px;white-space:nowrap;
+  padding:0 4px;border-radius:3px;background:rgba(10,4,8,.72)
+}
+.splits-chip u{text-decoration:none;font-size:9.5px;font-weight:600;opacity:.8;margin-left:3px}
+.splits-bl{
+  position:absolute;transform:translateY(-50%);
+  font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:600;
+  font-size:9.5px;color:var(--ink-3);white-space:nowrap
+}
+.splits-hit{position:absolute;top:0;bottom:0;pointer-events:auto;cursor:help}
+.splits-ftp{position:absolute;transform:translateY(-50%);right:2px;font-size:9.5px;letter-spacing:.8px;color:rgba(252,76,2,.62);white-space:nowrap}
+
+/* 段名列：HTML，不塞進被拉伸的 SVG */
+.splits-names{display:flex;margin-top:5px;padding-left:48px;min-width:700px}
+.splits-nm{
+  overflow:hidden;white-space:nowrap;font-size:10px;line-height:1.5;
+  color:var(--ink-3);padding-right:4px;border-left:1px solid var(--hair);padding-left:4px
+}
+.splits-nm.k{color:var(--ink-2)}
+
+/* ── 圖例 ── */
+.splits-leg{display:flex;flex-wrap:wrap;gap:6px 15px;margin-top:13px;font-size:10.5px;color:var(--ink-3)}
+.splits-leg span{display:inline-flex;align-items:center;gap:5px}
+.splits-sw{width:15px;height:3px;border-radius:2px;display:inline-block}
+.splits-swb{width:13px;height:11px;border-radius:2px;display:inline-block;background:rgba(244,240,234,.06);border:1px solid rgba(244,240,234,.2)}
+
+/* ── 明細表 ── */
+.splits-tw{overflow-x:auto;margin-top:15px}
+.splits-tbl{width:100%;min-width:560px;border-collapse:collapse;font-size:11.5px}
+.splits-tbl th{
+  text-align:right;padding:0 0 6px;font-size:9.5px;font-weight:600;letter-spacing:1.2px;
+  color:var(--ink-3);border-bottom:1px solid var(--hair);white-space:nowrap
+}
+.splits-tbl th:first-child,.splits-tbl td:first-child{text-align:left}
+.splits-tbl td{
+  text-align:right;padding:7px 0;border-bottom:1px solid var(--hair);
+  color:var(--ink-2);white-space:nowrap
+}
+.splits-tbl td:first-child{color:var(--ink-1);white-space:normal;padding-right:10px}
+.splits-tbl td+td{padding-left:10px}
+.splits-tbl .n{font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:700;font-size:13px;letter-spacing:.3px}
+.splits-tbl tr.sup td{color:var(--ink-3)}
+.splits-tbl tr.sup td:first-child{color:var(--ink-3)}
+.splits-dlo{color:var(--sp-lo)}
+.splits-dhi{color:var(--sp-hi)}
+.splits-din{color:var(--ink-1)}
+
+@media(max-width:767px){
+  .splits-plot{height:262px}
+  .splits-tab{flex:1 1 100%;max-width:none}
+  .splits-hint{display:block}
+}
+</style>
+<section class="lab-card" id="card-splits">
+  <h2 class="lab-h">逐段對帳 <span>· SPLIT RECONCILIATION · 這堂課的每一段，時間做滿了沒？瓦數踩進處方帶了沒？</span></h2>
+  <div class="splits-root"></div>
+</section>
+<script>
+(function(){
+  window.LAB_PARTS = window.LAB_PARTS || [];
+
+  var KEY = { work:1, allout:1 };          // 主課段：要放大
+  var ROLE_TXT = { warmup:'熱身', work:'主課', recovery:'恢復', allout:'全力', cooldown:'收操' };
+  var C = { in:'#f4f0ea', lo:'#FC4C02', hi:'#5bc8f5', none:'rgba(244,240,234,.60)', sup:'rgba(244,240,234,.26)' };
+
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+  function mmss(s){ if(s==null) return '—'; s=Math.round(s); var m=Math.floor(s/60), q=s%60; return m+':'+(q<10?'0':'')+q; }
+  function r1(v){ return Math.round(v*10)/10; }
+  function isKey(g){ return !!KEY[g.role]; }
+  function plan(g){ var p=g.planned_sec; if(p==null) p=g.actual_sec; return p||0; }
+
+  // 實際 avg_w 對處方帶的關係 —— 這張圖的全部重點
+  function verdict(g){
+    if(!isKey(g)) return 'sup';
+    var b=g.band, w=g.avg_w;
+    if(!b || w==null) return 'none';
+    var lo=b[0], hi=b[1];
+    if(lo!=null && w<lo) return 'lo';
+    if(hi!=null && w>hi) return 'hi';
+    return 'in';
+  }
+  function bandTxt(b){ if(!b) return '—'; return (b[0]==null?'':b[0]) + '–' + (b[1]==null?'↑':b[1]); }
+
+  // ── 一句判讀：全部從資料算，不寫死 ──
+  function readOut(s){
+    var keys = s.segments.filter(isKey);
+    if(!keys.length) return '這堂課沒有標記主課段，無法對帳。';
+    var pT=0, aT=0;
+    keys.forEach(function(g){ pT+=plan(g); aT+=(g.actual_sec||0); });
+    var tp = pT ? aT/pT*100 : null;
+    var lo=[], hi=[], inb=[], nb=[];
+    keys.forEach(function(g){ var v=verdict(g); if(v==='lo') lo.push(g); else if(v==='hi') hi.push(g); else if(v==='in') inb.push(g); else nb.push(g); });
+    var banded = lo.length + hi.length + inb.length;
+
+    // 欠瓦以處方時間加權，短段不會把大段的洞洗掉
+    var dw=0, dws=0, worst=null;
+    lo.forEach(function(g){ var d=g.band[0]-g.avg_w, w=plan(g); dw+=d*w; dws+=w; if(!worst||d>worst.d) worst={g:g,d:d}; });
+    var mdef = dws ? dw/dws : 0;
+
+    // 時間缺口最大的那一段
+    var cut=null;
+    keys.forEach(function(g){ var pp=plan(g); if(!pp) return; var f=(g.actual_sec||0)/pp; if(f<0.95 && (!cut||f<cut.f)) cut={g:g,f:f}; });
+
+    var head = '<b>'+keys.length+' 段主課、處方共 '+Math.round(pT/60)+' 分</b>：';
+    var t = (tp==null) ? ''
+          : tp>=97 ? '時間<b>做滿 '+r1(tp)+'%</b>'
+          : tp>=88 ? '時間完成 <b>'+r1(tp)+'%</b>'+(cut?'（「'+esc(cut.g.name)+'」只做了 '+Math.round(cut.f*100)+'%）':'')
+          : '時間只做到 <span class="hot">'+r1(tp)+'%</span>'+(cut?'（「'+esc(cut.g.name)+'」提早收在 '+Math.round(cut.f*100)+'%）':'（提早收工）');
+
+    var one = (keys.length===1);
+    var p2;
+    if(!banded) p2 = '這些段沒有給處方帶，只能看時間';
+    else if(lo.length){
+      p2 = '但 <span class="hot">'+(one?'唯一的主課段落在帶下':lo.length+'/'+banded+' 個有帶的段落在帶下')+'</span>，以時間加權平均欠 <span class="hot">'+Math.round(mdef)+'W</span>';
+      if(worst && !one) p2 += '（最深的是「'+esc(worst.g.name)+'」'+Math.round(worst.g.avg_w)+'W vs 帶 '+bandTxt(worst.g.band)+'，欠 '+Math.round(worst.d)+'W）';
+      else if(worst) p2 += '（'+Math.round(worst.g.avg_w)+'W vs 帶 '+bandTxt(worst.g.band)+'）';
+      if(inb.length) p2 += '；另有 '+inb.length+' 段是踩在帶內的';
+    }
+    else if(hi.length) p2 = '有 '+hi.length+' 段衝出帶上（踩太用力）'+(inb.length?'，其餘在帶內':'');
+    else p2 = (one?'平均瓦落在處方帶內':'有處方帶的 '+banded+' 段，平均瓦全部落在帶內');
+    if(nb.length) p2 += '（另有 '+nb.length+' 段沒設帶，不列入對帳）';
+
+    // 形狀命名：讓 8/25 和 8/27 的差別有名字
+    var shape;
+    if(tp>=97 && !lo.length && banded) shape = '做滿且大致在帶內 —— 這是課表被執行完的樣子。';
+    else if(tp>=97 && lo.length) shape = '「時間做滿、瓦數沒到」—— 坐滿了時數，卻沒有付出處方要的張力。';
+    else if(tp<88 && lo.length) shape = '「撐不住就收」—— 強度先掉、然後時間也砍掉，兩邊一起漏。';
+    else if(tp<88) shape = '強度對，但沒撐完處方時間。';
+    else if(lo.length) shape = '時間大致完成，強度有缺口。';
+    else shape = '強度守住了，時間收了一點尾。';
+
+    var extra='';
+    var ib = keys.filter(function(g){ return g.in_band_pct!=null; });
+    if(ib.length){
+      var w2=0, s2=0;
+      ib.forEach(function(g){ var w=plan(g); s2+=g.in_band_pct*w; w2+=w; });
+      extra = ' 主課時間真正待在帶內的比例是 <b>'+r1(s2/w2)+'%</b>。';
+    }
+    return head + t + '，' + p2 + '。' + extra + ' ' + shape;
+  }
+
+  // ── SVG ──
+  var VW=1000, VH=400, Y0=12, Y1=318, R1=332, R2=348, RH=9;
+
+  function chart(s){
+    var segs = s.segments || [];
+    var tot = 0; segs.forEach(function(g){ tot += plan(g); });
+    if(!tot) return { svg:'<svg viewBox="0 0 1000 400"></svg>', ov:'', names:'' };
+
+    var pmax = 0;
+    segs.forEach(function(g){
+      if(g.avg_w!=null) pmax=Math.max(pmax,g.avg_w);
+      if(g.band){ if(g.band[0]!=null) pmax=Math.max(pmax,g.band[0]); if(g.band[1]!=null) pmax=Math.max(pmax,g.band[1]); }
+    });
+    pmax = Math.max(pmax*1.14, 120);
+    var Y = function(w){ return Y1 - (Math.max(0,Math.min(w,pmax))/pmax)*(Y1-Y0); };
+
+    var sv=[], ov=[], nm=[], x=0;
+    // 網格
+    var step = pmax>420?100:50;
+    var ticks=[];
+    for(var v=step; v<pmax; v+=step) ticks.push(v);
+    ticks.forEach(function(v){
+      sv.push('<line x1="0" y1="'+Y(v).toFixed(1)+'" x2="1000" y2="'+Y(v).toFixed(1)+'" stroke="rgba(255,255,255,.055)" stroke-width="1" vector-effect="non-scaling-stroke"/>');
+    });
+    sv.push('<line x1="0" y1="'+Y1+'" x2="1000" y2="'+Y1+'" stroke="rgba(255,255,255,.16)" stroke-width="1" vector-effect="non-scaling-stroke"/>');
+
+    var axis = ticks.map(function(v){
+      return '<div class="splits-axl" style="top:'+(Y(v)/VH*100).toFixed(2)+'%">'+v+'</div>';
+    }).join('');
+    axis += '<div class="splits-axl" style="top:'+(Y1/VH*100).toFixed(2)+'%">0</div>';
+    axis += '<div class="splits-axr" style="top:'+((R1+RH/2)/VH*100).toFixed(2)+'%">時間</div>';
+    axis += '<div class="splits-axr" style="top:'+((R2+RH/2)/VH*100).toFixed(2)+'%">帶內</div>';
+
+    var ftp = (LABREF.baseline && LABREF.baseline.ftp_w) || null;
+    if(ftp && ftp < pmax){
+      sv.push('<line x1="0" y1="'+Y(ftp).toFixed(1)+'" x2="1000" y2="'+Y(ftp).toFixed(1)+'" stroke="rgba(252,76,2,.34)" stroke-width="1" stroke-dasharray="5 5" vector-effect="non-scaling-stroke"/>');
+      ov.push('<div class="splits-ftp" style="top:'+(Y(ftp)/VH*100).toFixed(2)+'%">FTP '+ftp+'</div>');
+    }
+
+    segs.forEach(function(g, i){
+      var w = plan(g)/tot*VW, pct = w/VW*100, key = isKey(g), v = verdict(g);
+      var col = C[v] || C.sup;
+      var cx = x + w/2;
+
+      // 欄底
+      sv.push('<rect x="'+x.toFixed(2)+'" y="'+Y0+'" width="'+w.toFixed(2)+'" height="'+(Y1-Y0)+'" fill="rgba(255,255,255,'+(key?'.020':'.006')+')"/>');
+      if(i) sv.push('<line x1="'+x.toFixed(2)+'" y1="'+Y0+'" x2="'+x.toFixed(2)+'" y2="'+(R2+RH)+'" stroke="rgba(255,255,255,.075)" stroke-width="1" vector-effect="non-scaling-stroke"/>');
+
+      // 處方帶
+      if(key && g.band){
+        var lo=g.band[0], hi=g.band[1];
+        var yLo = lo==null ? Y1 : Y(lo);
+        var yHi = hi==null ? Y0 : Y(hi);
+        sv.push('<rect x="'+x.toFixed(2)+'" y="'+yHi.toFixed(1)+'" width="'+w.toFixed(2)+'" height="'+Math.max(0,yLo-yHi).toFixed(1)+'" fill="rgba(244,240,234,.10)"/>');
+        sv.push('<line x1="'+x.toFixed(2)+'" y1="'+yLo.toFixed(1)+'" x2="'+(x+w).toFixed(2)+'" y2="'+yLo.toFixed(1)+'" stroke="rgba(244,240,234,.38)" stroke-width="1" vector-effect="non-scaling-stroke"/>');
+        if(hi!=null) sv.push('<line x1="'+x.toFixed(2)+'" y1="'+yHi.toFixed(1)+'" x2="'+(x+w).toFixed(2)+'" y2="'+yHi.toFixed(1)+'" stroke="rgba(244,240,234,.38)" stroke-width="1" vector-effect="non-scaling-stroke"/>');
+        else sv.push('<line x1="'+x.toFixed(2)+'" y1="'+(Y0+1)+'" x2="'+(x+w).toFixed(2)+'" y2="'+(Y0+1)+'" stroke="rgba(244,240,234,.30)" stroke-width="1" stroke-dasharray="4 4" vector-effect="non-scaling-stroke"/>');
+
+        // 缺口／溢出：欠的那塊要有面積，才看得出「欠多少」
+        if(g.avg_w!=null && v==='lo'){
+          sv.push('<rect x="'+x.toFixed(2)+'" y="'+yLo.toFixed(1)+'" width="'+w.toFixed(2)+'" height="'+Math.max(0,Y(g.avg_w)-yLo).toFixed(1)+'" fill="rgba(252,76,2,.17)"/>');
+        } else if(g.avg_w!=null && v==='hi'){
+          sv.push('<rect x="'+x.toFixed(2)+'" y="'+Y(g.avg_w).toFixed(1)+'" width="'+w.toFixed(2)+'" height="'+Math.max(0,yHi-Y(g.avg_w)).toFixed(1)+'" fill="rgba(91,200,245,.17)"/>');
+        }
+      }
+
+      // 實際平均瓦
+      if(g.avg_w!=null){
+        var ya = Y(g.avg_w).toFixed(1);
+        sv.push('<line x1="'+x.toFixed(2)+'" y1="'+ya+'" x2="'+(x+w).toFixed(2)+'" y2="'+ya+'" stroke="'+col+'" stroke-width="'+(key?3:1.5)+'" stroke-opacity="'+(key?1:.5)+'" vector-effect="non-scaling-stroke"/>');
+      }
+
+      // 兩條軌：時間完成度、帶內時間比例
+      var tpct = (plan(g) ? Math.min(1,(g.actual_sec||0)/plan(g)) : 0);
+      sv.push('<rect x="'+x.toFixed(2)+'" y="'+R1+'" width="'+w.toFixed(2)+'" height="'+RH+'" fill="rgba(255,255,255,.05)"/>');
+      sv.push('<rect x="'+x.toFixed(2)+'" y="'+R1+'" width="'+(w*tpct).toFixed(2)+'" height="'+RH+'" fill="'+(key?'rgba(244,240,234,.55)':'rgba(244,240,234,.16)')+'"/>');
+      sv.push('<rect x="'+x.toFixed(2)+'" y="'+R2+'" width="'+w.toFixed(2)+'" height="'+RH+'" fill="rgba(255,255,255,.05)"/>');
+      if(g.in_band_pct!=null){
+        sv.push('<rect x="'+x.toFixed(2)+'" y="'+R2+'" width="'+(w*Math.min(1,g.in_band_pct/100)).toFixed(2)+'" height="'+RH+'" fill="'+(v==='lo'?'rgba(252,76,2,.62)':v==='hi'?'rgba(91,200,245,.6)':'rgba(244,240,234,.55)')+'"/>');
+      }
+
+      // 文字一律走 HTML 疊層
+      if(key && g.avg_w!=null && pct>=6){
+        var d = (g.band && g.band[0]!=null && v==='lo') ? '−'+Math.round(g.band[0]-g.avg_w)
+              : (g.band && g.band[1]!=null && v==='hi') ? '+'+Math.round(g.avg_w-g.band[1]) : '';
+        ov.push('<div class="splits-chip" style="left:'+(cx/VW*100).toFixed(2)+'%;top:'+((Y(g.avg_w)-13)/VH*100).toFixed(2)+'%;color:'+col+'">'+Math.round(g.avg_w)+(d?'<u>'+d+'W</u>':'<u>W</u>')+'</div>');
+      }
+      if(key && g.band && pct>=9){
+        ov.push('<div class="splits-bl" style="left:'+((x+2)/VW*100).toFixed(2)+'%;top:'+((Y(g.band[0])+7)/VH*100).toFixed(2)+'%">'+bandTxt(g.band)+'</div>');
+      }
+
+      var tip = g.name+'（'+(ROLE_TXT[g.role]||g.role)+'）\n處方 '+mmss(g.planned_sec)+' / 實際 '+mmss(g.actual_sec)
+              + (g.band?'\n處方帶 '+bandTxt(g.band)+' W':'')
+              + (g.avg_w!=null?'\n平均 '+r1(g.avg_w)+' W':'')
+              + (g.in_band_pct!=null?'\n帶內時間 '+r1(g.in_band_pct)+'%':'')
+              + (g.avg_hr!=null?'\n心率 '+g.avg_hr:'') + (g.avg_cad!=null?' · 迴轉 '+r1(g.avg_cad):'');
+      ov.push('<div class="splits-hit" title="'+esc(tip)+'" style="left:'+(x/VW*100).toFixed(2)+'%;width:'+pct.toFixed(2)+'%"></div>');
+
+      nm.push('<div class="splits-nm'+(key?' k':'')+'" style="flex:0 0 '+pct.toFixed(3)+'%">'+(pct>=5?esc(g.name):'·')+'</div>');
+      x += w;
+    });
+
+    return {
+      svg:'<svg viewBox="0 0 '+VW+' '+VH+'" preserveAspectRatio="none" aria-hidden="true">'+sv.join('')+'</svg>',
+      ov:ov.join(''), names:nm.join(''), axis:axis
+    };
+  }
+
+  function mini(s){
+    var segs=s.segments||[], tot=0; segs.forEach(function(g){ tot+=plan(g); });
+    if(!tot) return '';
+    return segs.map(function(g){
+      var v=verdict(g);
+      var bg = v==='sup' ? 'rgba(244,240,234,.10)' : v==='lo' ? 'rgba(252,76,2,.85)' : v==='hi' ? 'rgba(91,200,245,.8)' : v==='in' ? 'rgba(244,240,234,.85)' : 'rgba(244,240,234,.3)';
+      return '<span style="flex:0 0 '+(plan(g)/tot*100).toFixed(3)+'%;background:'+bg+'"></span>';
+    }).join('');
+  }
+
+  var LABREF = {};
+
+  window.LAB_PARTS.push({ id:'splits', render: function(root, LAB){
+    LABREF = LAB || {};
+    var all = (LAB && LAB.scores) || [];
+    var ss = all.filter(function(s){ return s && s.segments && s.segments.length; });
+    if(!ss.length){ root.innerHTML = '<p class="lab-nil">還沒有這個資料 —— lab.json 的 scores[] 裡沒有帶 segments 的課表。</p>'; return; }
+    ss = ss.slice().sort(function(a,b){ return a.date<b.date?-1:1; });
+
+    var wrap = document.createElement('div');
+    wrap.className = 'splits-wrap';
+    var tabs = document.createElement('div');
+    tabs.className = 'splits-tabs'; tabs.setAttribute('role','tablist');
+    var body = document.createElement('div');
+    wrap.appendChild(tabs); wrap.appendChild(body);
+    root.appendChild(wrap);
+
+    var cur = ss.length-1;
+    ss.forEach(function(s,i){
+      var b = document.createElement('button');
+      b.type='button'; b.className='splits-tab'; b.setAttribute('role','tab');
+      var nm = String(s.label||'').replace(/^【[^】]*】\s*/,'');
+      b.innerHTML = '<div class="splits-td"><b>'+esc(s.date.slice(5))+'</b><span>'+esc(s.grade||'')+'</span><i>'+(s.total!=null?r1(s.total):'')+'</i></div>'
+                  + '<div class="splits-tn">'+esc(nm)+'</div>'
+                  + '<div class="splits-mini">'+mini(s)+'</div>';
+      b.addEventListener('click', function(){ cur=i; paint(); });
+      tabs.appendChild(b);
+    });
+
+    function paint(){
+      Array.prototype.forEach.call(tabs.children, function(b,i){ b.setAttribute('aria-selected', i===cur?'true':'false'); });
+      var s = ss[cur], c = chart(s);
+      var rows = s.segments.map(function(g){
+        var v = verdict(g), key = isKey(g);
+        var d = '—', cls='';
+        if(key && g.band && g.avg_w!=null){
+          if(v==='lo'){ d = '−'+Math.round(g.band[0]-g.avg_w); cls='splits-dlo'; }
+          else if(v==='hi'){ d = '+'+Math.round(g.avg_w-g.band[1]); cls='splits-dhi'; }
+          else { d = '帶內'; cls='splits-din'; }
+        }
+        var tp = plan(g) ? (g.actual_sec||0)/plan(g)*100 : null;
+        return '<tr class="'+(key?'':'sup')+'">'
+          + '<td>'+esc(g.name)+' <span style="color:var(--ink-3);font-size:10px">'+(ROLE_TXT[g.role]||g.role)+'</span></td>'
+          + '<td class="n">'+mmss(g.planned_sec)+'</td>'
+          + '<td class="n">'+mmss(g.actual_sec)+(tp!=null&&tp<95?' <span style="color:var(--sig);font-size:10px">'+Math.round(tp)+'%</span>':'')+'</td>'
+          + '<td class="n">'+(g.band?bandTxt(g.band):'—')+'</td>'
+          + '<td class="n">'+(g.avg_w!=null?Math.round(g.avg_w):'—')+'</td>'
+          + '<td class="n '+cls+'">'+d+'</td>'
+          + '<td class="n">'+(g.in_band_pct!=null?r1(g.in_band_pct)+'%':'—')+'</td>'
+          + '</tr>';
+      }).join('');
+
+      body.innerHTML =
+        '<div class="splits-scroll"><div class="splits-inner">'
+        + '<div class="splits-ax">'+c.axis+'</div>'
+        + '<div class="splits-plot">'+c.svg+'<div class="splits-ov">'+c.ov+'</div></div>'
+        + '</div><div class="splits-names">'+c.names+'</div></div>'
+        + '<p class="splits-hint">← 圖可左右捲，看完整條時間軸 →</p>'
+        + '<div class="splits-leg">'
+        +   '<span><i class="splits-swb"></i>處方帶 band（灰塊上下緣＝帶的上下界）</span>'
+        +   '<span><i class="splits-sw" style="background:'+C['in']+'"></i>平均瓦在帶內</span>'
+        +   '<span><i class="splits-sw" style="background:'+C.lo+'"></i>帶下（欠瓦，橘色面積＝欠的量）</span>'
+        +   '<span><i class="splits-sw" style="background:'+C.hi+'"></i>帶上（超打）</span>'
+        +   '<span><i class="splits-sw" style="background:'+C.none+'"></i>主課但沒給帶（不對帳）</span>'
+        +   '<span><i class="splits-sw" style="background:rgba(244,240,234,.26)"></i>熱身／恢復／收操（弱化）</span>'
+        +   '<span>下方兩軌：時間完成度 · 帶內時間比例</span>'
+        + '</div>'
+        + '<div class="splits-tw"><table class="splits-tbl"><thead><tr>'
+        +   '<th>段</th><th>處方</th><th>實際</th><th>處方帶 W</th><th>平均 W</th><th>差</th><th>帶內</th>'
+        + '</tr></thead><tbody>'+rows+'</tbody></table></div>'
+        + '<p class="lab-say">'+readOut(s)+'</p>';
+    }
+    paint();
+  }});
+})();
+</script>
+
+<!-- ══ part: cadence ══ -->
+<style>
+.cadence-root{--cad-bar:rgba(244,240,234,.26);--cad-bar-hi:rgba(244,240,234,.48)}
+
+/* ── 主圖 ───────────────────────────────────────── */
+.cadence-main{position:relative;margin-top:2px}
+.cadence-plot{
+  position:relative;height:236px;margin-left:44px;
+  border-bottom:1px solid rgba(255,255,255,.16)
+}
+.cadence-grid{position:absolute;inset:0;pointer-events:none}
+.cadence-gl{position:absolute;left:0;right:0;height:0;border-top:1px solid var(--hair)}
+.cadence-gl b{
+  position:absolute;right:100%;top:-8px;padding-right:8px;
+  font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:600;
+  font-size:10.5px;color:var(--ink-3);white-space:nowrap
+}
+.cadence-cells{position:absolute;inset:0;display:flex;align-items:flex-end}
+.cadence-cell{
+  position:relative;flex:1 1 0;height:100%;display:flex;align-items:flex-end;
+  justify-content:center;cursor:default;outline:none
+}
+.cadence-cell::before{content:"";position:absolute;inset:0;background:transparent;transition:background .12s}
+.cadence-cell:hover::before,.cadence-cell:focus-visible::before{background:rgba(255,255,255,.05)}
+.cadence-bar{
+  position:relative;width:calc(100% - 4px);min-height:1px;
+  background:var(--cad-bar);transition:background .12s
+}
+.cadence-cell:hover .cadence-bar,.cadence-cell:focus-visible .cadence-bar{background:var(--cad-bar-hi)}
+.cadence-cell.cadence-tail .cadence-bar{
+  background:repeating-linear-gradient(135deg,rgba(244,240,234,.20) 0 3px,rgba(244,240,234,.07) 3px 6px)
+}
+.cadence-ovl{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+.cadence-ovl path{vector-effect:non-scaling-stroke}
+.cadence-zone{
+  position:absolute;top:0;bottom:0;pointer-events:none;
+  background:linear-gradient(rgba(255,255,255,.030),rgba(255,255,255,0));
+  border-left:1px dashed rgba(244,240,234,.26)
+}
+.cadence-zone i{
+  position:absolute;top:5px;left:5px;font-style:normal;font-size:9.5px;
+  letter-spacing:1.4px;color:var(--ink-3);white-space:nowrap
+}
+.cadence-med{position:absolute;top:0;bottom:0;width:0;border-left:1px solid;pointer-events:none}
+.cadence-med u{
+  position:absolute;text-decoration:none;white-space:nowrap;
+  font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:800;
+  font-size:11px;letter-spacing:.4px;padding:1px 4px;border-radius:2px;
+  background:#0a0408
+}
+.cadence-xaxis{position:relative;height:17px;margin-left:44px}
+.cadence-xt{
+  position:absolute;top:4px;transform:translateX(-50%);
+  font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:600;
+  font-size:10.5px;color:var(--ink-3)
+}
+.cadence-xunit{
+  margin-left:44px;margin-top:1px;font-size:10px;letter-spacing:1.6px;color:var(--ink-3)
+}
+
+/* ── 讀數列（取代 tooltip，手機也能用） ───────────── */
+.cadence-read{
+  margin:13px 0 0 44px;min-height:34px;display:flex;flex-wrap:wrap;
+  align-items:baseline;gap:6px 16px;
+  padding:7px 11px;border:1px solid var(--hair);border-radius:3px;
+  background:var(--panel);font-size:11.5px;color:var(--ink-3)
+}
+.cadence-read k{font-style:normal;letter-spacing:1px;font-size:10px}
+.cadence-read v{
+  font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:800;
+  font-size:15px;color:var(--ink-1);margin-left:5px;letter-spacing:.3px
+}
+.cadence-read v.cadence-hot{color:var(--sig)}
+.cadence-read em{font-style:normal;color:var(--ink-2);font-size:11.5px}
+
+/* ── 圖例 ───────────────────────────────────────── */
+.cadence-leg{display:flex;flex-wrap:wrap;gap:6px 18px;margin:12px 0 0 44px;font-size:11px;color:var(--ink-3)}
+.cadence-leg span{display:inline-flex;align-items:center;gap:6px}
+.cadence-sw{width:15px;height:9px;flex:none;border-radius:1px}
+.cadence-sw.cadence-l{height:0;border-top:2px solid var(--sig)}
+.cadence-sw.cadence-d{height:0;border-top:1px dashed rgba(244,240,234,.5)}
+
+/* ── 小倍數 ─────────────────────────────────────── */
+.cadence-sub{
+  margin-top:30px;padding-top:16px;border-top:1px solid var(--hair);
+  display:flex;align-items:baseline;gap:10px;flex-wrap:wrap
+}
+.cadence-sub h3{font-size:12.5px;font-weight:700;color:var(--ink-1);letter-spacing:.2px}
+.cadence-sub p{font-size:11px;color:var(--ink-3)}
+.cadence-grid2{
+  display:grid;gap:12px;margin-top:13px;
+  grid-template-columns:repeat(auto-fit,minmax(196px,1fr))
+}
+.cadence-mini{
+  padding:10px 11px 9px;border:1px solid var(--hair);border-radius:3px;
+  background:var(--panel);min-width:0
+}
+.cadence-mini.cadence-key{border-color:rgba(252,76,2,.30)}
+.cadence-mh{display:flex;align-items:baseline;gap:7px;min-width:0}
+.cadence-mh b{
+  font-size:11.5px;font-weight:700;color:var(--ink-1);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0
+}
+.cadence-gr{
+  flex:none;font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:800;
+  font-size:11px;letter-spacing:.3px;color:var(--sig)
+}
+.cadence-gr.cadence-mute{color:var(--ink-3)}
+.cadence-mv{display:flex;align-items:baseline;gap:5px;margin:5px 0 5px}
+.cadence-mv strong{
+  font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:800;
+  font-size:27px;line-height:1;color:var(--ink-1);letter-spacing:.5px
+}
+.cadence-mv i{font-style:normal;font-size:10px;letter-spacing:1.2px;color:var(--ink-3)}
+.cadence-msvg{display:block;width:100%;height:48px;overflow:visible}
+.cadence-msvg line,.cadence-msvg .cadence-mmed{vector-effect:non-scaling-stroke}
+.cadence-mx{position:relative;height:13px;margin-top:1px}
+.cadence-mx b{
+  position:absolute;top:0;transform:translateX(-50%);font-weight:400;
+  font-family:var(--f-num);font-variant-numeric:tabular-nums;
+  font-size:9.5px;color:var(--ink-3)
+}
+.cadence-mf{margin-top:3px;font-size:10.5px;color:var(--ink-3);letter-spacing:.2px}
+.cadence-mf b{
+  font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:800;
+  color:var(--sig);letter-spacing:.3px
+}
+.cadence-mf b.cadence-mute{color:var(--ink-2)}
+
+@media(max-width:767px){
+  .cadence-plot{height:180px;margin-left:36px}
+  /* 窄螢幕上這行字會去撞中位數標籤；虛線＋X 軸的 90 已經說完同一件事 */
+  .cadence-zone i{display:none}
+  .cadence-xaxis,.cadence-read,.cadence-leg,.cadence-xunit{margin-left:36px}
+  .cadence-read{margin-right:0}
+  .cadence-grid2{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:9px}
+  .cadence-mv strong{font-size:23px}
+}
+</style>
+<section class="lab-card" id="card-cadence">
+  <h2 class="lab-h">踏頻分布 <span>· CADENCE · 他的高踏頻有氧能力，到底有沒有在坡上被練到？</span></h2>
+  <div class="cadence-root"></div>
+</section>
+<script>
+(function(){
+  window.LAB_PARTS = window.LAB_PARTS || [];
+  window.LAB_PARTS.push({ id: 'cadence', render: function(root, LAB){
+
+    var C = LAB && LAB.cadence;
+    function nil(msg){
+      var d = document.createElement('div');
+      d.className = 'lab-nil';
+      d.textContent = msg || '還沒有這個資料。';
+      root.appendChild(d);
+    }
+    if (!C || !C.bin_edges || !C.bin_edges.length ||
+        !C.overall || !C.overall.secs || !C.overall.secs.length){
+      nil('還沒有這個資料 —— data/lab.json 裡沒有 cadence 直方圖。');
+      return;
+    }
+
+    var E = C.bin_edges, N = E.length - 1;
+    var segsAll = (C.by_segment || []).filter(function(s){
+      return s && s.secs && s.secs.length === N && s.secs.some(function(v){ return v > 0; });
+    });
+
+    // ── 小工具 ───────────────────────────────────
+    var CAP = 125;                       // 最後一格是 120-999，畫圖／分位數時封頂
+    function edgeHi(i){ return Math.min(E[i+1], CAP); }
+    function sum(a){ var t=0; for (var i=0;i<a.length;i++) t += (a[i]||0); return t; }
+    function pcts(a){ var t=sum(a)||1; return a.map(function(v){ return 100*(v||0)/t; }); }
+    function pctAtLeast(a, thr){
+      var t = sum(a) || 1, s = 0;
+      for (var i=0;i<N;i++) if (E[i] >= thr) s += (a[i]||0);
+      return 100*s/t;
+    }
+    function secsAtLeast(a, thr){
+      var s = 0;
+      for (var i=0;i<N;i++) if (E[i] >= thr) s += (a[i]||0);
+      return s;
+    }
+    // 分位數：在所屬格內線性內插
+    function quant(a, p){
+      var t = sum(a); if (!t) return null;
+      var target = t*p, acc = 0;
+      for (var i=0;i<N;i++){
+        var v = a[i]||0; acc += v;
+        if (acc >= target && v > 0){
+          var lo = E[i], hi = edgeHi(i);
+          return lo + (hi-lo) * ((target-(acc-v))/v);
+        }
+      }
+      return E[N-1];
+    }
+    // 把某個踏頻值換成 0-1 的橫向位置（格子是等寬的類別軸）
+    function xOf(v){
+      for (var i=0;i<N;i++){
+        var lo = E[i], hi = edgeHi(i);
+        if (v >= lo && v < hi) return (i + (v-lo)/(hi-lo)) / N;
+      }
+      return v < E[0] ? 0 : 1;
+    }
+    function hm(sec){
+      var m = Math.round(sec/60);
+      if (m < 90) return m + ' 分';
+      var h = Math.floor(m/60), r = m%60;
+      return h + ' 小時' + (r ? ' ' + r + ' 分' : '');
+    }
+    function one(v){ return (Math.round(v*10)/10).toFixed(1); }
+    function el(tag, cls, txt){
+      var d = document.createElement(tag);
+      if (cls) d.className = cls;
+      if (txt != null) d.textContent = txt;
+      return d;
+    }
+    function binLabel(i){
+      if (i === 0) return '< ' + E[1];
+      if (i === N-1) return E[N-1] + '+';
+      return E[i] + '–' + E[i+1];
+    }
+
+    var OV = C.overall.secs.map(function(v){ return v||0; });
+    var ovTot = sum(OV);
+    if (!ovTot){ nil('還沒有這個資料 —— 戶外騎乘的踏頻累計是 0 秒。'); return; }
+    var ovP = pcts(OV);
+    var ovMed = quant(OV, .5);
+
+    // ── 有坡度的路段＝這張圖的主角 ────────────────
+    var graded = segsAll.filter(function(s){ return typeof s.grade === 'number'; })
+                        .sort(function(a,b){ return a.grade - b.grade; });
+    var flat   = segsAll.filter(function(s){ return typeof s.grade !== 'number'; })
+                        .sort(function(a,b){ return (b.median||0) - (a.median||0); });
+
+    var climb = null, clP = null, clTot = 0, clMed = null;
+    var clName = graded.length + ' 條坡';   // 有幾條就說幾條，別把 4 寫死
+    if (graded.length){
+      climb = new Array(N); for (var i=0;i<N;i++) climb[i] = 0;
+      graded.forEach(function(s){ for (var j=0;j<N;j++) climb[j] += (s.secs[j]||0); });
+      clTot = sum(climb); clP = pcts(climb); clMed = quant(climb, .5);
+    }
+
+    var maxP = Math.max.apply(null, ovP.concat(clP ? clP : [0]));
+    var yMax = Math.ceil(maxP/4)*4 || 4;
+
+    // ══ 主圖 ═════════════════════════════════════
+    var main = el('div','cadence-main');
+    var plot = el('div','cadence-plot');
+
+    // 橫格線（Y＝占各自總時間的百分比）
+    var grid = el('div','cadence-grid');
+    for (var g=1; g<=4; g++){
+      var val = yMax*g/4;
+      var gl = el('div','cadence-gl');
+      gl.style.bottom = (100*g/4) + '%';
+      gl.appendChild(el('b', null, one(val).replace(/\.0$/,'') + '%'));
+      grid.appendChild(gl);
+    }
+    plot.appendChild(grid);
+
+    // 90+ 區帶
+    if (E.indexOf(90) > -1){
+      var z = el('div','cadence-zone');
+      z.style.left = (100*xOf(90)) + '%';
+      z.style.right = '0';
+      z.appendChild(el('i', null, '90 RPM 以上'));
+      plot.appendChild(z);
+    }
+
+    // 柱子
+    var cells = el('div','cadence-cells');
+    var cellEls = [];
+    for (var b=0; b<N; b++){
+      var cell = el('div','cadence-cell' + ((b===0||b===N-1) ? ' cadence-tail' : ''));
+      cell.tabIndex = 0;
+      cell.setAttribute('role','img');
+      cell.setAttribute('aria-label', binLabel(b) + ' rpm，全部戶外 ' + one(ovP[b]) + '%'
+        + (clP ? '，' + clName + ' ' + one(clP[b]) + '%' : ''));
+      var bar = el('div','cadence-bar');
+      bar.style.height = Math.max(0.4, 100*ovP[b]/yMax) + '%';
+      cell.appendChild(bar);
+      cells.appendChild(cell);
+      cellEls.push(cell);
+    }
+    plot.appendChild(cells);
+
+    // 爬坡分布疊在上面（階梯外框，不放任何文字進 SVG）
+    if (clP){
+      var W = 1000, H = 1000, dd = '';
+      for (var k=0; k<N; k++){
+        var x0 = W*k/N, x1 = W*(k+1)/N, y = H - H*Math.min(1, clP[k]/yMax);
+        dd += (k===0 ? 'M'+x0.toFixed(1)+','+y.toFixed(1) : 'L'+x0.toFixed(1)+','+y.toFixed(1));
+        dd += 'L'+x1.toFixed(1)+','+y.toFixed(1);
+      }
+      var svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+      svg.setAttribute('class','cadence-ovl');
+      svg.setAttribute('viewBox','0 0 '+W+' '+H);
+      svg.setAttribute('preserveAspectRatio','none');
+      svg.setAttribute('aria-hidden','true');
+      var fillP = document.createElementNS('http://www.w3.org/2000/svg','path');
+      fillP.setAttribute('d', dd + 'L'+W+','+H+'L0,'+H+'Z');
+      fillP.setAttribute('fill','rgba(252,76,2,.065)');
+      var lineP = document.createElementNS('http://www.w3.org/2000/svg','path');
+      lineP.setAttribute('d', dd);
+      lineP.setAttribute('fill','none');
+      lineP.setAttribute('stroke','#FC4C02');
+      lineP.setAttribute('stroke-width','1.6');
+      lineP.setAttribute('stroke-linejoin','round');
+      svg.appendChild(fillP); svg.appendChild(lineP);
+      plot.appendChild(svg);
+    }
+
+    // 中位數刻度
+    function medMark(v, color, label, top){
+      var m = el('div','cadence-med');
+      m.style.left = (100*xOf(v)) + '%';
+      m.style.borderLeftColor = color;
+      m.style.borderLeftStyle = 'dashed';
+      var u = el('u', null, label);
+      u.style.color = color;
+      u.style.top = top + 'px';
+      if (xOf(v) > .62){ u.style.right = '4px'; } else { u.style.left = '4px'; }
+      m.appendChild(u);
+      plot.appendChild(m);
+    }
+    if (ovMed != null) medMark(ovMed, 'rgba(244,240,234,.55)', '全部 中位 ' + Math.round(ovMed), 4);
+    if (clMed != null) medMark(clMed, '#FC4C02', clName + ' 中位 ' + Math.round(clMed), 22);
+
+    main.appendChild(plot);
+
+    // X 軸
+    var xax = el('div','cadence-xaxis');
+    [40,50,60,70,80,90,100,110].forEach(function(v){
+      if (E.indexOf(v) < 0) return;
+      var t = el('div','cadence-xt', String(v));
+      t.style.left = (100*xOf(v)) + '%';
+      xax.appendChild(t);
+    });
+    main.appendChild(xax);
+    main.appendChild(el('div','cadence-xunit','RPM　·　兩端的斜紋格是 <'+E[1]+' 與 '+E[N-1]+'+ 的收攏格'));
+
+    // 讀數列
+    var read = el('div','cadence-read');
+    function setRead(i){
+      read.innerHTML = '';
+      if (i == null){
+        var s = el('em', null,
+          '滑過／點任一格看該踏頻區間的時間占比。' +
+          (clP ? '　橘線＝' + graded.length + ' 條有坡度的 ITT 合計 ' + hm(clTot) + '；灰柱＝全部戶外 ' + hm(ovTot) + '。' : ''));
+        read.appendChild(s);
+        return;
+      }
+      var k1 = el('k', null, binLabel(i) + ' RPM');
+      read.appendChild(k1);
+      var w1 = el('span'); w1.appendChild(el('k',null,'全部戶外'));
+      var v1 = el('v', null, one(ovP[i]) + '%'); w1.appendChild(v1);
+      w1.appendChild(el('k',null,'　' + hm(OV[i])));
+      w1.style.display = 'inline-flex'; w1.style.alignItems = 'baseline';
+      read.appendChild(w1);
+      if (clP){
+        var w2 = el('span'); w2.appendChild(el('k',null,clName));
+        var v2 = el('v','cadence-hot', one(clP[i]) + '%'); w2.appendChild(v2);
+        w2.appendChild(el('k',null,'　' + hm(climb[i])));
+        w2.style.display = 'inline-flex'; w2.style.alignItems = 'baseline';
+        read.appendChild(w2);
+      }
+    }
+    cellEls.forEach(function(c, i){
+      c.addEventListener('mouseenter', function(){ setRead(i); });
+      c.addEventListener('focus', function(){ setRead(i); });
+      c.addEventListener('click', function(){ setRead(i); });
+    });
+    cells.addEventListener('mouseleave', function(){ setRead(null); });
+    setRead(null);
+
+    // 圖例
+    var leg = el('div','cadence-leg');
+    function legItem(swCls, swStyle, txt){
+      var s = el('span');
+      var sw = el('i','cadence-sw' + (swCls ? ' ' + swCls : ''));
+      sw.style.cssText += swStyle || '';
+      s.appendChild(sw); s.appendChild(document.createTextNode(txt));
+      leg.appendChild(s);
+    }
+    legItem('', 'background:rgba(244,240,234,.26)', (C.overall.label || '全部戶外騎乘') + ' · ' + hm(ovTot));
+    if (clP) legItem('cadence-l', '', graded.length + ' 條有坡度的 ITT 合計 · ' + hm(clTot));
+    legItem('cadence-d', '', '中位數');
+    main.appendChild(read);
+    main.appendChild(leg);
+    root.appendChild(main);
+
+    // ══ 小倍數 ═══════════════════════════════════
+    function miniGrid(list, title, note, keyed){
+      if (!list.length) return;
+      var head = el('div','cadence-sub');
+      head.appendChild(el('h3', null, title));
+      head.appendChild(el('p', null, note));
+      root.appendChild(head);
+
+      var wrap = el('div','cadence-grid2');
+      list.forEach(function(s){
+        var p = pcts(s.secs), tot = sum(s.secs);
+        var mx = Math.max.apply(null, p) || 1;
+        var med = (typeof s.median === 'number') ? s.median : quant(s.secs, .5);
+        var hi = pctAtLeast(s.secs, 90);
+
+        var card = el('div','cadence-mini' + (keyed ? ' cadence-key' : ''));
+        var h = el('div','cadence-mh');
+        var nm = el('b', null, s.name || s.key); nm.title = s.name || s.key;
+        h.appendChild(nm);
+        h.appendChild(el('span','cadence-gr' + (typeof s.grade === 'number' ? '' : ' cadence-mute'),
+          typeof s.grade === 'number' ? one(s.grade) + '%' : '坡度未知'));
+        card.appendChild(h);
+
+        var mv = el('div','cadence-mv');
+        mv.appendChild(el('strong', null, med != null ? String(Math.round(med)) : '—'));
+        mv.appendChild(el('i', null, 'RPM 中位'));
+        card.appendChild(mv);
+
+        var W2 = 1000, H2 = 100;
+        var sv = document.createElementNS('http://www.w3.org/2000/svg','svg');
+        sv.setAttribute('class','cadence-msvg');
+        sv.setAttribute('viewBox','0 0 '+W2+' '+H2);
+        sv.setAttribute('preserveAspectRatio','none');
+        sv.setAttribute('aria-label', (s.name||s.key) + ' 踏頻中位數 ' + (med!=null?Math.round(med):'—')
+          + ' rpm，90 rpm 以上占 ' + one(hi) + '%');
+        // 60/80/100 的參考細線
+        [60,80,100].forEach(function(v){
+          if (E.indexOf(v) < 0) return;
+          var ln = document.createElementNS('http://www.w3.org/2000/svg','line');
+          var x = W2*xOf(v);
+          ln.setAttribute('x1',x); ln.setAttribute('x2',x);
+          ln.setAttribute('y1',0); ln.setAttribute('y2',H2);
+          ln.setAttribute('stroke','rgba(255,255,255,.065)');
+          ln.setAttribute('stroke-width','1');
+          sv.appendChild(ln);
+        });
+        for (var q=0;q<N;q++){
+          if (!p[q]) continue;
+          var r = document.createElementNS('http://www.w3.org/2000/svg','rect');
+          var bw = W2/N, hgt = Math.max(1.2, H2*p[q]/mx);
+          r.setAttribute('x', (W2*q/N + bw*0.14).toFixed(1));
+          r.setAttribute('width', (bw*0.72).toFixed(1));
+          r.setAttribute('y', (H2-hgt).toFixed(1));
+          r.setAttribute('height', hgt.toFixed(1));
+          r.setAttribute('fill', E[q] >= 90 ? '#FC4C02' : 'rgba(244,240,234,.26)');
+          sv.appendChild(r);
+        }
+        if (med != null){
+          var ml = document.createElementNS('http://www.w3.org/2000/svg','line');
+          var mxp = W2*xOf(med);
+          ml.setAttribute('class','cadence-mmed');
+          ml.setAttribute('x1',mxp); ml.setAttribute('x2',mxp);
+          ml.setAttribute('y1',-4); ml.setAttribute('y2',H2);
+          ml.setAttribute('stroke','rgba(244,240,234,.72)');
+          ml.setAttribute('stroke-width','1');
+          ml.setAttribute('stroke-dasharray','3 3');
+          sv.appendChild(ml);
+        }
+        card.appendChild(sv);
+
+        var mxr = el('div','cadence-mx');
+        [60,80,100].forEach(function(v){
+          if (E.indexOf(v) < 0) return;
+          var t = el('b', null, String(v));
+          t.style.left = (100*xOf(v)) + '%';
+          mxr.appendChild(t);
+        });
+        card.appendChild(mxr);
+
+        var f = el('div','cadence-mf');
+        f.appendChild(document.createTextNode((s.n_efforts||0) + ' 趟 · ' + hm(tot) + ' · 90+ '));
+        f.appendChild(el('b', 'cadence-mute', one(hi) + '%'));
+        card.appendChild(f);
+        wrap.appendChild(card);
+      });
+      root.appendChild(wrap);
+    }
+
+    miniGrid(graded, '有坡度的 ITT 路段 · 依坡度由緩到陡',
+      '橘色＝ 90 rpm 以上的時間；虛線＝中位數。每張各自正規化，看的是形狀不是高度。', true);
+    miniGrid(flat, '其餘路段 · 依中位踏頻由高到低',
+      '沒有登錄坡度，多半是平路或混合段 —— 拿來當對照組。', false);
+
+    // ══ 判讀（全部從上面算出來的數字生成） ════════
+    var say = el('div','lab-say');
+    var html = '';
+    var ovHi = pctAtLeast(OV, 90), ovHiSec = secsAtLeast(OV, 90);
+
+    html += '全部戶外 <b>' + hm(ovTot) + '</b>的踏頻中位數 <b>' + Math.round(ovMed) + ' rpm</b>，'
+          + '90 rpm 以上占 <b>' + one(ovHi) + '%</b>（' + hm(ovHiSec) + '）。';
+
+    if (clP){
+      var clHi = pctAtLeast(climb, 90), clHiSec = secsAtLeast(climb, 90);
+      var lo10 = quant(climb, .1), hi90 = quant(climb, .9);
+      html += '但那些高踏頻幾乎都不在坡上：' + graded.length + ' 條有坡度的 ITT 合計 <b>' + hm(clTot)
+            + '</b>，八成的時間擠在 <b>' + Math.round(lo10) + '–' + Math.round(hi90) + ' rpm</b>，'
+            + '90 以上只剩 <span class="hot">' + one(clHi) + '%</span>（' + hm(clHiSec) + '）——'
+            + '平均每爬 1 小時，只有 <b>' + Math.round(clHi*0.6) + ' 分鐘</b>踩在 90 以上。';
+
+      // 坡度 → 中位踏頻 的鏈條，以及它在哪裡斷掉
+      var gmed = graded.map(function(s){
+        return (typeof s.median === 'number') ? s.median : (quant(s.secs, .5) || 0);
+      });
+      var chain = graded.map(function(s, i){
+        return s.name.replace(/\s*全段$/,'') + ' ' + one(s.grade) + '% → ' + Math.round(gmed[i]) + ' rpm';
+      }).join('，');
+      html += '<br>坡度越陡踏頻越低：' + chain + '。';
+
+      var breaks = [];
+      for (var t=1;t<graded.length;t++){
+        if (gmed[t] > gmed[t-1]){
+          breaks.push(graded[t].name.replace(/\s*全段$/,'') + '（' + one(graded[t].grade) + '%，'
+            + Math.round(gmed[t]) + ' rpm）反而高過'
+            + graded[t-1].name.replace(/\s*全段$/,'') + '（' + one(graded[t-1].grade) + '%，'
+            + Math.round(gmed[t-1]) + ' rpm）');
+        }
+      }
+      if (breaks.length){
+        html += '唯一的例外是' + breaks.join('；') + '，'
+              + '這條鏈子是從 ' + one(graded[1].grade) + '% 起才單調往下的。';
+      }
+      var steep = graded[graded.length-1];
+      html += '最陡的' + steep.name.replace(/\s*全段$/,'') + '（' + one(steep.grade) + '%）'
+            + '的 90 以上只有 <span class="hot">' + one(pctAtLeast(steep.secs, 90)) + '%</span>，'
+            + '整段幾乎是空的 —— 而填平 60 分鐘功率斷崖，要的正是這一段。';
+    }
+    say.innerHTML = html;
+    root.appendChild(say);
+  }});
+})();
+</script>
+
+<!-- ══ part: gears ══ -->
+<style>
+/* ══ gears · 齒比與坡度 ══ 全部選擇器都掛 .gears- 前綴 */
+.gears-root{--gears-lo:var(--sig);--gears-mid:var(--warn);--gears-hi:var(--cool);--gears-x:var(--vio)}
+
+/* 圖例 */
+.gears-legend{display:flex;flex-wrap:wrap;gap:6px 18px;margin-bottom:16px;font-size:11px;line-height:1.5;color:var(--ink-2)}
+.gears-lg{display:flex;align-items:center;gap:7px}
+.gears-lgbox{display:flex;align-items:center;justify-content:center;width:20px;height:20px;flex:0 0 20px}
+.gears-lgt b{color:var(--ink-1);font-weight:700}
+.gears-lgt i{font-style:normal;color:var(--ink-3)}
+.gears-lgsep{width:100%;height:0;margin:-2px 0}
+
+/* 標記本體 */
+.gears-mk{display:block;border-radius:50%;box-sizing:border-box}
+.gears-mk-floor{border:0}                                   /* 沒檔可下：實心 */
+.gears-mk-edge{background:transparent;border-style:solid}    /* 接近見底：甜甜圈 */
+.gears-mk-room{background:transparent;border-style:solid;opacity:.55} /* 還有餘裕：細環 */
+.gears-mk-ring{background:transparent;border-style:solid;border-radius:2px;transform:rotate(45deg)} /* 沒下小盤：菱形 */
+.gears-cross{outline:1.5px dotted var(--gears-x);outline-offset:3px;border-radius:50%}
+.gears-mk-ring.gears-cross{outline-offset:4px;border-radius:2px}
+
+/* 點（外面包一層方便點到 / 可鍵盤 focus） */
+.gears-pt{position:absolute;width:24px;height:24px;margin:0;padding:0;border:0;background:none;
+  transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;
+  cursor:pointer;z-index:2}
+.gears-pt:hover,.gears-pt:focus-visible{z-index:6;outline:none}
+.gears-pt:hover .gears-mk,.gears-pt:focus-visible .gears-mk{filter:brightness(1.35)}
+.gears-pt:focus-visible::after{content:'';position:absolute;inset:1px;border:1px solid var(--ink-1);border-radius:50%}
+
+/* 主圖 */
+.gears-scroll{overflow-x:auto;overflow-y:visible;-webkit-overflow-scrolling:touch}
+.gears-plot{position:relative;min-width:300px;padding:6px 34px 46px 40px}
+.gears-area{position:relative;height:296px}
+.gears-grid{position:absolute;inset:0;width:100%;height:100%;display:block}
+.gears-ylab{position:absolute;right:calc(100% + 7px);transform:translateY(-50%);
+  font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:700;font-size:11px;
+  color:var(--ink-3);white-space:nowrap}
+.gears-yname{position:absolute;left:-2px;top:-2px;font-size:10.5px;letter-spacing:.3px;color:var(--ink-3)}
+.gears-rule{position:absolute;left:0;transform:translateY(-50%);font-size:10px;color:var(--ink-3);
+  background:linear-gradient(90deg,rgba(10,4,8,.92),rgba(10,4,8,0) 92%);padding:1px 14px 1px 3px;
+  pointer-events:none;z-index:3;white-space:nowrap}
+.gears-col{position:absolute;top:calc(100% + 9px);transform:translateX(-50%);text-align:center;
+  width:88px;font-size:10.5px;line-height:1.35;color:var(--ink-3)}
+.gears-col b{display:block;font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:800;
+  font-size:15px;color:var(--ink-2);letter-spacing:.2px}
+.gears-col span{display:block;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gears-xname{position:absolute;right:0;bottom:8px;font-size:10.5px;color:var(--ink-3)}
+
+/* 坡度未知的那 51 趟 */
+.gears-sub{margin-top:26px;padding-top:16px;border-top:1px solid var(--hair)}
+.gears-subh{font-size:11.5px;line-height:1.7;color:var(--ink-2);margin-bottom:12px}
+.gears-subh b{color:var(--ink-1);font-weight:700}
+.gears-lane{display:grid;grid-template-columns:118px 1fr;align-items:center;gap:0 10px;margin-bottom:2px}
+.gears-lanem{font-size:11px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right}
+.gears-lanem i{font-style:normal;color:var(--ink-3);font-family:var(--f-num);font-variant-numeric:tabular-nums}
+.gears-lanet{position:relative;height:30px}
+.gears-lanet::before{content:'';position:absolute;left:0;right:0;top:50%;height:1px;background:var(--hair)}
+.gears-laneaxis{display:grid;grid-template-columns:118px 1fr;gap:0 10px;margin-top:4px}
+.gears-lanescale{position:relative;height:14px;font-family:var(--f-num);font-variant-numeric:tabular-nums;font-size:10px;color:var(--ink-3)}
+.gears-lanescale span{position:absolute;transform:translateX(-50%)}
+
+/* 浮出的細節 */
+.gears-tip{position:absolute;z-index:20;width:250px;padding:10px 11px 11px;pointer-events:none;
+  background:#120810;border:1px solid rgba(255,255,255,.13);border-radius:5px;
+  box-shadow:0 14px 34px rgba(0,0,0,.6);font-size:11px;line-height:1.55;color:var(--ink-2);
+  opacity:0;transition:opacity .12s}
+.gears-tip.on{opacity:1}
+.gears-tiph{font-size:12px;color:var(--ink-1);font-weight:700;margin-bottom:1px}
+.gears-tipd{font-family:var(--f-num);font-variant-numeric:tabular-nums;font-size:11px;color:var(--ink-3);letter-spacing:.4px}
+.gears-tipv{display:inline-block;margin:6px 0 7px;padding:1px 7px;border-radius:3px;font-size:10.5px;
+  letter-spacing:.5px;border:1px solid currentColor}
+.gears-kv{display:flex;justify-content:space-between;gap:10px}
+.gears-kv span{color:var(--ink-3)}
+.gears-kv b{font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:700;color:var(--ink-1);font-size:12px}
+.gears-mix{margin-top:8px;padding-top:7px;border-top:1px solid var(--hair)}
+.gears-mixh{font-size:10px;letter-spacing:.8px;color:var(--ink-3);margin-bottom:4px}
+.gears-mr{display:grid;grid-template-columns:44px 40px 1fr 60px;align-items:center;gap:6px;margin-bottom:2px;
+  font-family:var(--f-num);font-variant-numeric:tabular-nums;font-size:11px;color:var(--ink-2)}
+.gears-mr u{text-decoration:none;color:var(--ink-3);font-size:10px}
+.gears-bar{position:relative;height:6px;background:rgba(255,255,255,.05);border-radius:2px;overflow:hidden}
+.gears-bar i{position:absolute;left:0;top:0;bottom:0;background:var(--ink-3);border-radius:2px}
+.gears-bar.is-low i{background:var(--sig)}
+.gears-mr em{font-style:normal;color:var(--ink-3);font-size:10px;text-align:right}
+
+.gears-note{margin-top:9px;font-size:11.5px;line-height:1.75;color:var(--ink-3)}
+.gears-note b{color:var(--ink-2);font-weight:700}
+
+@media(max-width:767px){
+  .gears-plot{padding:6px 26px 46px 34px;min-width:290px}
+  .gears-area{height:238px}
+  .gears-lane,.gears-laneaxis{grid-template-columns:92px 1fr}
+  .gears-lanem{font-size:10.5px}
+  .gears-tip{width:214px}
+  .gears-col{width:74px}
+}
+</style>
+<section class="lab-card" id="card-gears">
+  <h2 class="lab-h">齒比與坡度 <span>· GEARING vs GRADE · 爬不動的時候，是沒檔可下，還是自己沒下小盤？</span></h2>
+  <div class="gears-root"></div>
+</section>
+<script>
+(function(){
+  window.LAB_PARTS = window.LAB_PARTS || [];
+
+  window.LAB_PARTS.push({ id: 'gears', render: function(root, LAB){
+
+    var G = (LAB && LAB.gears) || [];
+    if (!G.length){
+      root.innerHTML = '<div class="lab-nil">還沒有這個資料 —— <code>data/lab.json</code> 的 ' +
+        '<code>gears</code> 是空陣列。齒比只有在電變跟手錶配對時才錄得到。</div>';
+      return;
+    }
+
+    /* ── 小工具 ───────────────────────────────────────────────── */
+    var esc = function(s){ return String(s == null ? '' : s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
+    var n1 = function(v){ return (v == null || isNaN(v)) ? '—' : (Math.round(v*10)/10).toFixed(1); };
+    var n2 = function(v){ return (v == null || isNaN(v)) ? '—' : (Math.round(v*100)/100).toFixed(2); };
+    var n0 = function(v){ return (v == null || isNaN(v)) ? '—' : String(Math.round(v)); };
+    var uniq = function(a){ var s = [], i; for (i=0;i<a.length;i++) if (s.indexOf(a[i])<0) s.push(a[i]); return s; };
+    var minOf = function(a){ return a.length ? Math.min.apply(null, a) : null; };
+    var maxOf = function(a){ return a.length ? Math.max.apply(null, a) : null; };
+    var med = function(a){ if(!a.length) return null; var b=a.slice().sort(function(x,y){return x-y;});
+      var m=b.length>>1; return b.length%2 ? b[m] : (b[m-1]+b[m])/2; };
+
+    /* ── 四種判讀的視覺語言（verdict 直接來自資料，不自己重新分類） ─ */
+    var KIND = {
+      '沒檔可下':     { cls:'floor', why:'器材',   blurb:'常掛最輕檔，而那個檔踏頻踩不上去' },
+      '接近見底':     { cls:'edge',  why:'分界線', blurb:'常掛最輕檔，但踏頻還撐得住' },
+      '沒下小盤':     { cls:'ring',  why:'習慣',   blurb:'整段沒用到最輕檔' },
+      '沒用到最輕檔': { cls:'ring',  why:'習慣',   blurb:'整段沒用到最輕檔' },
+      '齒比還有餘裕': { cls:'room',  why:'沒問題', blurb:'最輕檔用不到一半的時間' }
+    };
+    var kindOf = function(v){ return KIND[v] || { cls:'room', why:'', blurb:'' }; };
+
+    /* 踏頻分三段上色；分界點從資料本身量出來（見下方 CAD_CUT） */
+    var CAD_CUT = 70, CAD_HI = 80;
+    var cadColor = function(c){
+      if (c == null) return 'var(--ink-3)';
+      if (c < CAD_CUT) return 'var(--gears-lo)';
+      if (c < CAD_HI)  return 'var(--gears-mid)';
+      return 'var(--gears-hi)';
+    };
+    var cadSize = function(c){
+      if (c == null) return 11;
+      var t = Math.max(0, Math.min(1, (c - 55) / 30));
+      return 10 + t * 8;                       /* 踏頻越高點越大 */
+    };
+    var CROSS_CUT = 20;                        /* 交叉鏈佔比多少才算「掛著交叉鏈騎」 */
+
+    var markup = function(r){
+      var k = kindOf(r.verdict), d = cadSize(r.low_cad), col = cadColor(r.low_cad),
+          cross = (r.cross_pct >= CROSS_CUT) ? ' gears-cross' : '', st;
+      if (k.cls === 'floor') st = 'width:'+d+'px;height:'+d+'px;background:'+col+';';
+      else if (k.cls === 'edge') st = 'width:'+d+'px;height:'+d+'px;border-width:3px;border-color:'+col+';';
+      else if (k.cls === 'room') st = 'width:'+d+'px;height:'+d+'px;border-width:1.5px;border-color:'+col+';';
+      else st = 'width:'+(d*0.84)+'px;height:'+(d*0.84)+'px;border-width:2px;border-color:'+col+';';
+      return '<i class="gears-mk gears-mk-'+k.cls+cross+'" style="'+st+'"></i>';
+    };
+
+    /* ── 分堆 ─────────────────────────────────────────────────── */
+    var graded = G.filter(function(r){ return r.grade != null; });
+    var plain  = G.filter(function(r){ return r.grade == null; });
+    var byVerdict = {};
+    G.forEach(function(r){ (byVerdict[r.verdict] = byVerdict[r.verdict] || []).push(r); });
+
+    /* 最輕檔是哪一組：用 drivetrain 的完整卡式帶，不是「這趟看到過的齒」 */
+    var dt = (LAB && LAB.drivetrain) || {}, lowCombo = '';
+    if (dt.chainrings && dt.chainrings.length && dt.cassette && dt.cassette.length){
+      lowCombo = Math.min.apply(null, dt.chainrings) + '×' + Math.max.apply(null, dt.cassette);
+    }
+    var bikeMin = G[0].bike_min_dev;
+
+    /* 踏頻的真實分界：沒檔可下的最高踏頻 vs 接近見底的最低踏頻 */
+    var floorCads = (byVerdict['沒檔可下'] || []).map(function(r){ return r.low_cad; })
+                      .filter(function(v){ return v != null; });
+    var edgeCads  = (byVerdict['接近見底'] || []).map(function(r){ return r.low_cad; })
+                      .filter(function(v){ return v != null; });
+
+    /* ── 版面 ─────────────────────────────────────────────────── */
+    var H = [];
+    H.push('<div class="gears-legend">');
+    [['floor','沒檔可下'],['edge','接近見底'],['ring','沒下小盤'],['room','齒比還有餘裕']].forEach(function(p){
+      var rows = byVerdict[p[1]] || (p[1] === '沒下小盤' ? (byVerdict['沒用到最輕檔'] || []) : []);
+      var demo = { verdict:p[1], low_cad:(p[0]==='ring'?null:76), cross_pct:0 };
+      H.push('<span class="gears-lg"><span class="gears-lgbox">'+markup(demo)+'</span>' +
+        '<span class="gears-lgt"><b>'+esc(p[1])+'</b> <i>'+esc(kindOf(p[1]).why)+'·'+rows.length+' 趟</i></span></span>');
+    });
+    H.push('<span class="gears-lgsep"></span>');
+    H.push('<span class="gears-lg"><span class="gears-lgbox">' +
+      '<i class="gears-mk gears-mk-floor" style="width:11px;height:11px;background:var(--gears-lo)"></i></span>' +
+      '<span class="gears-lgt">該檔踏頻 <b>&lt;70</b></span></span>');
+    H.push('<span class="gears-lg"><span class="gears-lgbox">' +
+      '<i class="gears-mk gears-mk-floor" style="width:14px;height:14px;background:var(--gears-mid)"></i></span>' +
+      '<span class="gears-lgt"><b>70–79</b></span></span>');
+    H.push('<span class="gears-lg"><span class="gears-lgbox">' +
+      '<i class="gears-mk gears-mk-floor" style="width:17px;height:17px;background:var(--gears-hi)"></i></span>' +
+      '<span class="gears-lgt"><b>≥80 rpm</b> <i>點越大踏頻越高</i></span></span>');
+    H.push('<span class="gears-lg"><span class="gears-lgbox">' +
+      '<i class="gears-mk gears-mk-edge gears-cross" style="width:12px;height:12px;border-width:2px;border-color:var(--ink-3)"></i></span>' +
+      '<span class="gears-lgt">虛線圈＝<b>交叉鏈</b> <i>佔 '+CROSS_CUT+'% 以上時間</i></span></span>');
+    H.push('</div>');
+
+    /* 主圖：x 坡度、y 掛最輕檔的時間佔比 —— 只有 grade 有值的才畫得進來 */
+    var XMIN = 3.5, XMAX = 10.5;
+    var xp = function(g){ return (g - XMIN) / (XMAX - XMIN) * 100; };
+    var yp = function(p){ return 100 - Math.max(0, Math.min(100, p)); };
+
+    var cols = {};
+    graded.forEach(function(r){ (cols[r.grade] = cols[r.grade] || []).push(r); });
+    var colKeys = Object.keys(cols).map(Number).sort(function(a,b){ return a-b; });
+
+    if (graded.length){
+      H.push('<div class="gears-scroll"><div class="gears-plot"><div class="gears-area" id="gears-area">');
+      H.push('<svg class="gears-grid" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">');
+      [0,25,50,75,100].forEach(function(v){
+        H.push('<line x1="0" y1="'+yp(v)+'" x2="100" y2="'+yp(v)+'" stroke="var(--hair)" ' +
+               'stroke-width="1" vector-effect="non-scaling-stroke"/>');
+      });
+      colKeys.forEach(function(g){
+        H.push('<line x1="'+xp(g)+'" y1="0" x2="'+xp(g)+'" y2="100" stroke="rgba(255,255,255,.045)" ' +
+               'stroke-width="1" vector-effect="non-scaling-stroke"/>');
+      });
+      H.push('<line x1="0" y1="'+yp(45)+'" x2="100" y2="'+yp(45)+'" stroke="rgba(252,76,2,.42)" ' +
+             'stroke-width="1" stroke-dasharray="4 4" vector-effect="non-scaling-stroke"/>');
+      H.push('</svg>');
+      H.push('<div class="gears-yname">掛在最輕檔的時間佔比</div>');
+      [0,25,50,75,100].forEach(function(v){
+        H.push('<div class="gears-ylab" style="top:'+yp(v)+'%">'+v+'%</div>');
+      });
+      H.push('<div class="gears-rule" style="top:'+yp(45)+'%">45% ← 判「常掛最輕檔」的門檻</div>');
+      H.push('<div class="gears-rule" style="top:'+yp(0)+'%">0% ＝ 整段沒下到最輕檔</div>');
+
+      /* 同一條路的多趟左右錯開，不然會疊成一點 */
+      var pts = [];
+      colKeys.forEach(function(g){
+        var rows = cols[g].slice().sort(function(a,b){ return a.date < b.date ? -1 : 1; });
+        var span = 2.9, i;
+        for (i = 0; i < rows.length; i++){
+          var off = rows.length === 1 ? 0 : (i / (rows.length - 1) - 0.5) * span;
+          pts.push({ r: rows[i], x: xp(g + off * (XMAX-XMIN) / 100 * 3.2), y: yp(rows[i].low_pct) });
+        }
+      });
+      pts.forEach(function(p){
+        var idx = G.indexOf(p.r);
+        H.push('<button type="button" class="gears-pt" data-i="'+idx+'" ' +
+          'style="left:'+p.x.toFixed(2)+'%;top:'+p.y.toFixed(2)+'%" ' +
+          'aria-label="'+esc(p.r.name+' '+p.r.date+'，最輕檔佔 '+n1(p.r.low_pct)+'%，'+p.r.verdict)+'">' +
+          markup(p.r) + '</button>');
+      });
+      H.push('</div>');   /* /area */
+      colKeys.forEach(function(g){
+        var nm = uniq(cols[g].map(function(r){ return r.name; })).join('／');
+        H.push('<div class="gears-col" style="left:'+xp(g)+'%"><b>'+n1(g)+'%</b><span>' +
+               esc(nm) + '</span><span>'+cols[g].length+' 趟</span></div>');
+      });
+      H.push('<div class="gears-xname">路段平均坡度 →</div>');
+      H.push('</div></div>');
+    } else {
+      H.push('<div class="lab-nil">沒有任何一趟帶得出平均坡度，主圖畫不出來。</div>');
+    }
+
+    /* 坡度未知的：同一把尺橫過來，一條路一列 */
+    if (plain.length){
+      var lanes = {}, order;
+      plain.forEach(function(r){ (lanes[r.name] = lanes[r.name] || []).push(r); });
+      order = Object.keys(lanes).sort(function(a,b){
+        var ma = med(lanes[a].map(function(r){return r.low_pct;})),
+            mb = med(lanes[b].map(function(r){return r.low_pct;}));
+        return (mb - ma) || (lanes[b].length - lanes[a].length);
+      });
+      H.push('<div class="gears-sub">');
+      H.push('<div class="gears-subh">另外 <b>'+plain.length+' 趟</b>的路段設定檔裡沒有平均坡度，' +
+             '擺不進上圖的 x 軸。同一把尺橫過來：左邊 0%＝整段沒下到最輕檔，右邊 100%＝整段都掛在最輕檔。</div>');
+      order.forEach(function(nm){
+        var rows = lanes[nm];
+        H.push('<div class="gears-lane"><div class="gears-lanem">'+esc(nm)+' <i>'+rows.length+'</i></div>' +
+               '<div class="gears-lanet">');
+        rows.slice().sort(function(a,b){ return a.date < b.date ? -1 : 1; }).forEach(function(r){
+          var idx = G.indexOf(r);
+          H.push('<button type="button" class="gears-pt" data-i="'+idx+'" ' +
+            'style="left:'+Math.max(0, Math.min(100, r.low_pct)).toFixed(2)+'%;top:50%" ' +
+            'aria-label="'+esc(nm+' '+r.date+'，最輕檔佔 '+n1(r.low_pct)+'%，'+r.verdict)+'">' +
+            markup(r) + '</button>');
+        });
+        H.push('</div></div>');
+      });
+      H.push('<div class="gears-laneaxis"><div></div><div class="gears-lanescale">' +
+             '<span style="left:0">0%</span><span style="left:50%">50%</span>' +
+             '<span style="left:100%">100%</span></div></div>');
+      H.push('</div>');
+    }
+
+    H.push('<div class="gears-tip" id="gears-tip" role="status"></div>');
+
+    /* ── 判讀（全部從上面這批資料現算） ─────────────────────────── */
+    var say = [], note = [];
+    var allDates = G.map(function(r){ return r.date; }).sort();
+    var fl = byVerdict['沒檔可下'] || [];
+    if (fl.length){
+      var flBy = {}, flList;
+      fl.forEach(function(r){ (flBy[r.name] = flBy[r.name] || []).push(r); });
+      flList = Object.keys(flBy).sort(function(a,b){ return flBy[b].length - flBy[a].length; })
+        .map(function(nm){
+          var gr = flBy[nm][0].grade;
+          return (gr != null ? n1(gr) + '% 的' : '') + nm + ' ' + flBy[nm].length + ' 趟';
+        }).join('、');
+      say.push('有齒比資料的 <b class="hot">' + G.length + ' 趟</b>（' +
+        allDates[0].slice(0,7) + ' → ' + allDates[allDates.length-1].slice(0,7) + '）裡，<span class="hot">' + fl.length + ' 趟是「沒檔可下」</span>：最輕檔' +
+        (lowCombo ? ' ' + lowCombo : '') + '（展開 ' + n2(bikeMin) + ' m）就吃掉 45% 以上的時間，' +
+        '而那個檔的踏頻<b>沒有一趟超過 ' + n1(maxOf(floorCads)) + ' rpm</b>。落點：' + flList + '。');
+    }
+    if (edgeCads.length && floorCads.length){
+      var eg = (byVerdict['接近見底'] || []).filter(function(r){ return r.grade != null; });
+      var egName = eg.length ? uniq(eg.map(function(r){ return n1(r.grade) + '% 的' + r.name; }))[0] : null;
+      say.push('「接近見底」' + (byVerdict['接近見底']||[]).length + ' 趟的踏頻是 ' +
+        n1(minOf(edgeCads)) + '–' + n1(maxOf(edgeCads)) + ' rpm，跟沒檔可下的 ' +
+        n1(minOf(floorCads)) + '–' + n1(maxOf(floorCads)) + ' 之間<b>沒有一趟重疊</b>，' +
+        '被 ' + CAD_CUT + ' rpm 乾淨切開 —— 這就是分界線' +
+        (egName ? '，' + egName + ' ' + eg.length + ' 趟全部站在還撐得住的那一邊' : '') + '。');
+    }
+    var ringAll = (byVerdict['沒下小盤'] || []).concat(byVerdict['沒用到最輕檔'] || []);
+    var xchain = ringAll.filter(function(r){ return r.cross_pct >= CROSS_CUT; });
+    var flatish = ringAll.filter(function(r){ return r.cross_pct < CROSS_CUT; });
+    if (xchain.length){
+      var xn = uniq(xchain.map(function(r){ return (r.grade != null ? n1(r.grade) + '% 的' : '') + r.name; })).join('、');
+      say.push(xn + ' 這 ' + xchain.length + ' 趟則是<b>整段沒下小盤</b>，交叉鏈佔了 ' +
+        n1(minOf(xchain.map(function(r){ return r.cross_pct; }))) + '–' +
+        n1(maxOf(xchain.map(function(r){ return r.cross_pct; }))) + '% 的時間 —— ' +
+        '這台車有的檔他沒用，是<b>換檔習慣</b>不是器材。');
+    }
+    if (flatish.length){
+      note.push('另有 ' + flatish.length + ' 趟同樣被判「沒下小盤」，但那是平路：' +
+        uniq(flatish.map(function(r){ return r.name; })).join('、') + '，全段最輕只用到 ' +
+        n2(minOf(flatish.map(function(r){ return r.seg_min_dev; }))) + '–' +
+        n2(maxOf(flatish.map(function(r){ return r.seg_min_dev; }))) + ' m 展開、交叉鏈 ≤' +
+        n1(maxOf(flatish.map(function(r){ return r.cross_pct; }))) + '%。' +
+        '判讀字串一樣，病不一樣 —— 平路本來就沒有下小盤的必要。');
+    }
+    note.push('齒比只有在電變跟手錶配對時才錄得到，最新一趟有資料的是 ' +
+      allDates[allDates.length-1] + '。');
+
+    H.push('<div class="lab-say">' + say.join(' ') + '</div>');
+    if (note.length) H.push('<div class="gears-note">' + note.join('<br>') + '</div>');
+
+    root.innerHTML = H.join('');
+
+    /* ── hover / focus 顯示該趟細節 ───────────────────────────── */
+    root.style.position = 'relative';
+    var tip = root.querySelector('#gears-tip');
+
+    var tipHTML = function(r){
+      var k = kindOf(r.verdict), col = cadColor(r.low_cad);
+      var t = [];
+      t.push('<div class="gears-tiph">' + esc(r.name) + '</div>');
+      t.push('<div class="gears-tipd">' + esc(r.date) + ' · ' + n1(r.dist_km) + ' km' +
+             (r.grade != null ? ' · 均坡 ' + n1(r.grade) + '%' : ' · 均坡未知') + '</div>');
+      t.push('<div class="gears-tipv" style="color:' + col + '">' + esc(r.verdict) +
+             (k.why ? '　' + esc(k.why) : '') + '</div>');
+      t.push('<div class="gears-kv"><span>掛在最輕檔</span><b>' + n1(r.low_pct) + '%</b></div>');
+      t.push('<div class="gears-kv"><span>該檔踏頻</span><b>' +
+             (r.low_cad == null ? '沒用到' : n1(r.low_cad) + ' rpm') + '</b></div>');
+      t.push('<div class="gears-kv"><span>全段踏頻中位</span><b>' + n0(r.cad_med) + ' rpm</b></div>');
+      t.push('<div class="gears-kv"><span>交叉鏈</span><b>' + n1(r.cross_pct) + '%</b></div>');
+      t.push('<div class="gears-kv"><span>全段最輕展開</span><b>' + n2(r.seg_min_dev) + ' m</b></div>');
+      var mix = (r.mix || []).slice(0, 6);
+      if (mix.length){
+        t.push('<div class="gears-mix"><div class="gears-mixh">待在各檔的時間</div>');
+        mix.forEach(function(m){
+          var isLow = m.dev_m <= bikeMin * 1.02;
+          t.push('<div class="gears-mr"><span>' + m.f + '×' + m.r + '</span>' +
+            '<u>' + n2(m.dev_m) + 'm</u>' +
+            '<span class="gears-bar' + (isLow ? ' is-low' : '') + '"><i style="width:' +
+            Math.max(1.5, Math.min(100, m.pct)) + '%"></i></span>' +
+            '<em>' + n1(m.pct) + '% · ' + (m.cad == null ? '—' : m.cad) + 'rpm</em></div>');
+        });
+        t.push('</div>');
+      }
+      return t.join('');
+    };
+
+    var show = function(btn){
+      var i = +btn.getAttribute('data-i'), r = G[i];
+      if (!r) return;
+      tip.innerHTML = tipHTML(r);
+      tip.classList.add('on');
+      var rb = root.getBoundingClientRect(), pb = btn.getBoundingClientRect();
+      var w = tip.offsetWidth, h = tip.offsetHeight;
+      var left = pb.left - rb.left + pb.width / 2 - w / 2;
+      left = Math.max(2, Math.min(rb.width - w - 2, left));
+      var top = pb.top - rb.top - h - 10;
+      if (top < 2) top = pb.top - rb.top + pb.height + 10;
+      tip.style.left = left + 'px';
+      tip.style.top = top + 'px';
+    };
+    var hide = function(){ tip.classList.remove('on'); };
+
+    root.addEventListener('mouseover', function(e){
+      var b = e.target.closest ? e.target.closest('.gears-pt') : null;
+      if (b) show(b);
+    });
+    root.addEventListener('mouseout', function(e){
+      var b = e.target.closest ? e.target.closest('.gears-pt') : null;
+      if (b) hide();
+    });
+    root.addEventListener('focusin', function(e){
+      var b = e.target.closest ? e.target.closest('.gears-pt') : null;
+      if (b) show(b);
+    });
+    root.addEventListener('focusout', hide);
+    root.addEventListener('click', function(e){
+      var b = e.target.closest ? e.target.closest('.gears-pt') : null;
+      if (b) show(b); else hide();
+    });
+  }});
+})();
+</script>
+
+<!-- ══ part: devladder ══ -->
+<style>
+.devladder-root{
+  --dl-a:#5bc8f5;                    /* 小盤 34T */
+  --dl-b:#a06bff;                    /* 大盤 50T */
+  --dl-a-w:rgba(91,200,245,.26);
+  --dl-b-w:rgba(160,107,255,.26);
+  --dl-lw:64px;                      /* 齒比欄 */
+  --dl-gap:8px;
+  --dl-rw:170px;                     /* 展開 46 + rpm 42 + 標註 58 + 三個 gap */
+  --dl-rh:23px;
+  font-size:12px;color:var(--ink-2)
+}
+
+/* ── 車速控制 ───────────────────────────────── */
+.devladder-ctl{
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  padding:11px 13px;margin-bottom:15px;
+  border:1px solid var(--hair);border-radius:5px;background:var(--panel)
+}
+.devladder-ctl-lab{font-size:10.5px;letter-spacing:1.6px;color:var(--ink-3);white-space:nowrap}
+.devladder-ctl input[type=range]{
+  flex:1;min-width:150px;accent-color:var(--sig);height:18px;cursor:pointer
+}
+.devladder-read{display:flex;align-items:baseline;gap:4px;white-space:nowrap}
+.devladder-read .devladder-v{
+  font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:800;
+  font-size:26px;line-height:1;color:var(--ink-1);letter-spacing:.5px
+}
+.devladder-read .devladder-u{font-size:10.5px;color:var(--ink-3);letter-spacing:.8px}
+.devladder-reset{
+  padding:4px 10px;border:1px solid var(--hair);border-radius:999px;background:none;
+  font-family:var(--f-ui);font-size:10.5px;color:var(--ink-3);cursor:pointer;transition:.15s;white-space:nowrap
+}
+.devladder-reset:hover{border-color:var(--sig);color:var(--sig)}
+
+/* ── 圖例 ───────────────────────────────────── */
+.devladder-key{display:flex;flex-wrap:wrap;gap:6px 15px;margin-bottom:11px;font-size:10.5px;color:var(--ink-3)}
+.devladder-key i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:-1px;font-style:normal}
+.devladder-key u{
+  display:inline-block;width:14px;height:9px;margin-right:5px;vertical-align:-1px;
+  border:1px dashed var(--sig);border-radius:2px;text-decoration:none
+}
+
+/* ── 階梯本體 ───────────────────────────────── */
+.devladder-scroll{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch}
+.devladder-plot{min-width:500px;position:relative}
+.devladder-rows{position:relative}
+
+.devladder-row,.devladder-head,.devladder-axis{
+  display:grid;gap:var(--dl-gap);align-items:center;
+  grid-template-columns:var(--dl-lw) 1fr 46px 42px 58px
+}
+.devladder-head{
+  height:20px;font-size:9.5px;letter-spacing:1.3px;color:var(--ink-3);
+  border-bottom:1px solid var(--hair);margin-bottom:5px
+}
+.devladder-head span:nth-child(3),.devladder-head span:nth-child(4){text-align:right}
+.devladder-row{height:var(--dl-rh);position:relative;z-index:1}
+.devladder-row:hover{background:rgba(255,255,255,.028)}
+
+.devladder-g{font-size:11px;color:var(--ink-2);white-space:nowrap}
+.devladder-g b{
+  font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:800;
+  font-size:13px;color:var(--ink-1)
+}
+.devladder-g s{text-decoration:none;color:var(--ink-3);padding:0 1px}
+
+.devladder-track{position:relative;height:var(--dl-rh)}
+.devladder-bar{
+  position:absolute;left:0;top:50%;transform:translateY(-50%);
+  height:7px;border-radius:0 2px 2px 0
+}
+.devladder-cap{position:absolute;top:50%;transform:translate(-50%,-50%);width:2px;height:15px;border-radius:1px}
+
+.devladder-dev,.devladder-rpm{
+  text-align:right;font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:800;
+  font-size:13px;color:var(--ink-2);letter-spacing:.3px
+}
+.devladder-rpm.is-torque{color:var(--sig)}
+.devladder-rpm.is-aero{color:var(--ok)}
+.devladder-rpm.is-off{color:var(--ink-3);font-weight:600}
+.devladder-tag{font-size:9.5px;letter-spacing:.6px;color:var(--ink-3);white-space:nowrap}
+.devladder-tag em,.devladder-key em{
+  font-style:normal;padding:1px 5px;border-radius:999px;
+  border:1px solid rgba(255,176,32,.4);color:var(--warn)
+}
+
+/* 兩盤共用的展開區間 */
+.devladder-band{
+  position:absolute;top:0;bottom:0;z-index:0;
+  background:rgba(255,255,255,.045);
+  border-left:1px solid var(--hair);border-right:1px solid var(--hair)
+}
+.devladder-bandlab{
+  position:absolute;z-index:2;font-size:9.5px;letter-spacing:1.2px;color:var(--ink-3);
+  white-space:nowrap;pointer-events:none
+}
+
+/* 50×34 ≈ 34×24 的那個框 */
+.devladder-pair{
+  position:absolute;z-index:2;border:1px dashed var(--sig);border-radius:3px;pointer-events:none
+}
+.devladder-pairlab{
+  position:absolute;z-index:3;white-space:nowrap;pointer-events:none;
+  font-size:10px;line-height:1.5;color:var(--sig)
+}
+.devladder-pairlab b{
+  display:block;font-family:var(--f-num);font-variant-numeric:tabular-nums;
+  font-weight:800;font-size:13px;letter-spacing:.3px
+}
+
+.devladder-axis{height:22px;margin-top:6px;border-top:1px solid var(--hair);padding-top:4px}
+.devladder-axwrap{position:relative;height:14px}
+.devladder-t{position:absolute;top:0;transform:translateX(-50%);font-size:9.5px;color:var(--ink-3);
+  font-family:var(--f-num);font-variant-numeric:tabular-nums}
+
+.devladder-say .devladder-hot{color:var(--sig);font-weight:700}
+.devladder-say .devladder-num{font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:800;font-size:14px;letter-spacing:.3px}
+
+@media(max-width:767px){
+  .devladder-ctl{gap:9px;padding:10px}
+  .devladder-read .devladder-v{font-size:22px}
+}
+</style>
+<section class="lab-card" id="card-devladder">
+  <h2 class="lab-h">展開階梯 <span>· DEVELOPMENT LADDER · 掛上大盤最大片，到底有沒有換到比較重的齒比？</span></h2>
+  <div class="devladder-root"></div>
+</section>
+<script>
+(function(){
+  window.LAB_PARTS = window.LAB_PARTS || [];
+  window.LAB_PARTS.push({ id: 'devladder', render: function(root, LAB){
+    var dt = (LAB && LAB.drivetrain) || {};
+    var rings = Array.isArray(dt.chainrings) ? dt.chainrings.slice() : [];
+    var cogs  = Array.isArray(dt.cassette)   ? dt.cassette.slice()   : [];
+    if (!rings.length || !cogs.length){
+      root.innerHTML = '<div class="lab-nil">還沒有這個資料</div>';
+      return;
+    }
+    var circ = (LAB.baseline && LAB.baseline.wheel_circ_m) || 2.105;
+
+    rings.sort(function(a,b){return a-b;});
+    cogs.sort(function(a,b){return a-b;});
+    var SMALL = rings[0], BIG = rings[rings.length-1];
+
+    // 交叉鏈：大盤配最大的兩片、小盤配最小的兩片（用完整卡式帶判定，不是當天用過的那幾片）
+    var bigWorst = cogs.slice(-2), smallWorst = cogs.slice(0,2);
+    function isCross(f,r){
+      if (f === BIG   && bigWorst.indexOf(r)   >= 0) return true;
+      if (f === SMALL && smallWorst.indexOf(r) >= 0) return true;
+      return false;
+    }
+
+    // ── 展開階梯 ────────────────────────────────
+    var G = [];
+    rings.forEach(function(f){ cogs.forEach(function(r){
+      G.push({ f:f, r:r, dev:f/r*circ, big:(f===BIG), cross:isCross(f,r) });
+    });});
+    G.sort(function(a,b){return a.dev-b.dev;});
+
+    var maxDev = G[G.length-1].dev, axMax = maxDev*1.035;
+    function px(d){ return d/axMax*100; }
+
+    // 重疊區＝大盤最輕的一檔 → 小盤最重的一檔
+    var bigs   = G.filter(function(g){return g.big;});
+    var smalls = G.filter(function(g){return !g.big;});
+    var lo = bigs[0].dev, hi = smalls[smalls.length-1].dev;
+    var overlapN = G.filter(function(g){return g.dev>=lo-1e-9 && g.dev<=hi+1e-9;}).length;
+
+    // 相鄰但分屬兩盤、且展開差 <6% 的「白換的」組合
+    var nearDup = 0;
+    for (var i=0;i<G.length-1;i++){
+      if (G[i].big !== G[i+1].big && (G[i+1].dev-G[i].dev)/G[i].dev <= 0.06) nearDup++;
+    }
+
+    // 主角：大盤最輕的那一檔，以及跟它展開最接近的小盤檔
+    var star = bigs[0], twin = null, best = 1e9;
+    smalls.forEach(function(g){ var d=Math.abs(g.dev-star.dev); if(d<best){best=d;twin=g;} });
+    var pairPct = (star.dev-twin.dev)/twin.dev*100;
+    var iA = G.indexOf(twin), iB = G.indexOf(star);
+    if (iA > iB){ var t=iA; iA=iB; iB=t; }
+
+    // ── 預設車速：中社那趟的實測均速（距離 ÷ 各檔停留秒數總和）──
+    var TORQUE=[55,65], AERO=[85,95];
+    var zs = (LAB.gears||[]).filter(function(g){ return g.group === 'zhongshe'; });
+    var zd=0, zs_sec=0;
+    zs.forEach(function(g){
+      var s=0; (g.mix||[]).forEach(function(m){ s += (m.secs||0); });
+      if (s>0 && g.dist_km){ zd += g.dist_km; zs_sec += s; }
+    });
+    var refKmh = zs_sec>0 ? zd/(zs_sec/3600) : 0;
+    var refName = zs.length ? (zs[0].name + ' ' + zs.length + ' 趟實測均速') : '';
+    var kmh = refKmh>0 ? Math.round(refKmh*10)/10 : 25;
+
+    function rpm(dev){ return kmh*1000/60/dev; }
+    function bandOf(v){
+      if (v>=TORQUE[0] && v<=TORQUE[1]) return 'is-torque';
+      if (v>=AERO[0]   && v<=AERO[1])   return 'is-aero';
+      return 'is-off';
+    }
+
+    // ── DOM ─────────────────────────────────────
+    var H = [];
+    H.push('<div class="devladder-ctl">');
+    H.push('<span class="devladder-ctl-lab">車速</span>');
+    H.push('<input type="range" class="devladder-slider" min="5" max="55" step="0.5" value="'+kmh+'">');
+    H.push('<span class="devladder-read"><span class="devladder-v">'+kmh.toFixed(1)+'</span><span class="devladder-u">km/h</span></span>');
+    if (refKmh>0) H.push('<button type="button" class="devladder-reset">回到 '+refKmh.toFixed(1)+' ・中社實測</button>');
+    H.push('</div>');
+
+    H.push('<div class="devladder-key">');
+    H.push('<span><i style="background:var(--dl-a)"></i>小盤 '+SMALL+'T</span>');
+    H.push('<span><i style="background:var(--dl-b)"></i>大盤 '+BIG+'T</span>');
+    H.push('<span><i style="background:rgba(255,255,255,.09);border:1px solid var(--hair)"></i>兩盤重疊區</span>');
+    H.push('<span><u></u>展開幾乎相同的一對</span>');
+    H.push('<span><i style="background:var(--sig)"></i>踏頻落在扭力帶 '+TORQUE[0]+'–'+TORQUE[1]+' rpm</span>');
+    H.push('<span><i style="background:var(--ok)"></i>落在有氧帶 '+AERO[0]+'–'+AERO[1]+' rpm</span>');
+    H.push('<span><em>交叉</em>&nbsp; 交叉鏈（'+BIG+'×'+bigWorst.join('/')+'、'+SMALL+'×'+smallWorst.join('/')+'）</span>');
+    H.push('</div>');
+
+    H.push('<div class="devladder-scroll"><div class="devladder-plot">');
+    H.push('<div class="devladder-head"><span>齒比</span><span>展開（0 – '+axMax.toFixed(1)+' m）</span><span>展開 m</span><span>rpm</span><span>標註</span></div>');
+    H.push('<div class="devladder-rows">');
+    H.push('<div class="devladder-band" style="left:0;width:0"></div>');
+    G.forEach(function(g){
+      var c = g.big ? 'var(--dl-b)' : 'var(--dl-a)';
+      var w = g.big ? 'var(--dl-b-w)' : 'var(--dl-a-w)';
+      H.push('<div class="devladder-row">');
+      H.push('<div class="devladder-g"><b>'+g.f+'</b><s>×</s><b>'+g.r+'</b></div>');
+      H.push('<div class="devladder-track">'
+        + '<div class="devladder-bar" style="width:'+px(g.dev).toFixed(3)+'%;background:linear-gradient(90deg,'+w+','+c+')"></div>'
+        + '<div class="devladder-cap" style="left:'+px(g.dev).toFixed(3)+'%;background:'+c+'"></div>'
+        + '</div>');
+      H.push('<div class="devladder-dev">'+g.dev.toFixed(2)+'</div>');
+      H.push('<div class="devladder-rpm" data-dev="'+g.dev+'"></div>');
+      H.push('<div class="devladder-tag">'+(g.cross?'<em>交叉</em>':'')+'</div>');
+      H.push('</div>');
+    });
+    H.push('</div>');
+    H.push('<div class="devladder-axis"><span></span><span class="devladder-axwrap"></span><span></span><span></span><span></span></div>');
+    H.push('</div></div>');
+    H.push('<div class="lab-say devladder-say"></div>');
+    root.innerHTML = H.join('');
+
+    // 重疊區的 band 用純 CSS calc 不好對齊，直接量軌道寬度來擺
+    var plot  = root.querySelector('.devladder-plot');
+    var rowsE = root.querySelector('.devladder-rows');
+    var band  = root.querySelector('.devladder-band');
+    var axw   = root.querySelector('.devladder-axwrap');
+
+    // 座標軸刻度
+    var step = axMax>12 ? 4 : (axMax>7 ? 2 : 1);
+    for (var v=0; v<=axMax; v+=step){
+      var t = document.createElement('span');
+      t.className='devladder-t'; t.style.left = px(v).toFixed(3)+'%'; t.textContent = String(v);
+      axw.appendChild(t);
+    }
+
+
+    function place(){
+      var track = axw.getBoundingClientRect().width;   // 軌道欄的實際寬度
+      if (!track){ if (window.requestAnimationFrame) requestAnimationFrame(place); return; }
+      var left0 = axw.getBoundingClientRect().left - rowsE.getBoundingClientRect().left;
+      band.style.left  = (left0 + track*px(lo)/100) + 'px';
+      band.style.width = (track*(px(hi)-px(lo))/100) + 'px';
+
+      var old = rowsE.querySelectorAll('.devladder-pair,.devladder-pairlab,.devladder-bandlab');
+      for (var k=0;k<old.length;k++) old[k].remove();
+
+      var rh = rowsE.children.length>1 ? rowsE.children[1].getBoundingClientRect().height : 23;
+      var xA = left0 + track*px(twin.dev)/100, xB = left0 + track*px(star.dev)/100;
+      var box = document.createElement('div');
+      box.className='devladder-pair';
+      box.style.left = (Math.min(xA,xB)-9)+'px';
+      box.style.width = (Math.abs(xB-xA)+18)+'px';
+      box.style.top = (iA*rh+2)+'px';
+      box.style.height = ((iB-iA+1)*rh-4)+'px';
+      rowsE.appendChild(box);
+
+      var lab = document.createElement('div');
+      lab.className='devladder-pairlab';
+      lab.innerHTML = '<b>只重 '+pairPct.toFixed(1)+'%</b>'
+        + BIG+'×'+star.r+' 幾乎等於 '+SMALL+'×'+twin.r+' —— 沒換到重齒比，只把鏈拉歪';
+      lab.style.left = (Math.max(xA,xB)+26)+'px';
+      lab.style.top  = (iA*rh-2)+'px';
+      rowsE.appendChild(lab);
+
+      var bl = document.createElement('div');
+      bl.className='devladder-bandlab';
+      bl.textContent = '重疊區 '+lo.toFixed(2)+'–'+hi.toFixed(2)+' m ・'+overlapN+' 檔';
+      bl.style.left = (left0 + track*px(lo)/100 + 5)+'px';
+      bl.style.top  = '4px';
+      rowsE.appendChild(bl);
+    }
+
+    var say = root.querySelector('.devladder-say');
+    var rpmEls = root.querySelectorAll('.devladder-rpm');
+
+    function paint(){
+      var nT=0, nA=0, aeroNames=[];
+      for (var k=0;k<rpmEls.length;k++){
+        var el = rpmEls[k], d = parseFloat(el.getAttribute('data-dev'));
+        var v = rpm(d), cls = bandOf(v);
+        el.className = 'devladder-rpm ' + cls;
+        el.textContent = v>=999 ? '999+' : String(Math.round(v));
+        if (cls==='is-torque') nT++;
+        if (cls==='is-aero'){ nA++; aeroNames.push(G[k].f+'×'+G[k].r); }
+      }
+      var aeroTxt = nA===0
+        ? '<b>沒有任何一檔</b>落在 '+AERO[0]+'–'+AERO[1]+' rpm 有氧帶'
+        : '落在 '+AERO[0]+'–'+AERO[1]+' rpm 有氧帶的只有 <b>'+aeroNames.slice(0,3).join('、')+'</b>'+(nA>3?' 等 '+nA+' 檔':'');
+      say.innerHTML =
+        BIG+'×'+star.r+' 展開 <span class="devladder-num">'+star.dev.toFixed(2)+'</span> m，'
+        + '只比 '+SMALL+'×'+twin.r+' 的 <span class="devladder-num">'+twin.dev.toFixed(2)+'</span> m 重 '
+        + '<span class="devladder-hot">'+pairPct.toFixed(1)+'%</span> —— '
+        + '掛大盤配最大飛輪並沒有換到比較重的齒比，只是把鏈條拉歪。'
+        + '整組 '+G.length+' 個組合裡有 <b>'+overlapN+' 個</b>落在兩盤重疊區（'+lo.toFixed(2)+'–'+hi.toFixed(2)+' m），'
+        + '其中 <b>'+nearDup+' 對</b>跨盤鄰居展開差不到 6%，等於白換。'
+        + '以 <span class="devladder-num">'+kmh.toFixed(1)+'</span> km/h'
+        + (Math.abs(kmh-refKmh)<0.05 && refName ? '（'+refName+'）算，' : ' 算，')
+        + aeroTxt+'，另有 <span class="devladder-hot">'+nT+' 檔</span>掉進 '+TORQUE[0]+'–'+TORQUE[1]+' rpm 扭力帶。';
+    }
+
+    var slider = root.querySelector('.devladder-slider');
+    var vEl = root.querySelector('.devladder-v');
+    slider.addEventListener('input', function(){
+      kmh = parseFloat(slider.value);
+      vEl.textContent = kmh.toFixed(1);
+      paint();
+    });
+    var rst = root.querySelector('.devladder-reset');
+    if (rst) rst.addEventListener('click', function(){
+      kmh = Math.round(refKmh*10)/10;
+      slider.value = kmh; vEl.textContent = kmh.toFixed(1); paint();
+    });
+
+    paint();
+    place();
+    if (window.ResizeObserver){
+      var ro = new ResizeObserver(function(){ place(); });
+      ro.observe(plot);
+    } else {
+      window.addEventListener('resize', place);
+    }
+  }});
+})();
+</script>
+
+<!-- ══ part: tsbsim ══ -->
+<style>
+/* ── TSB 沙盤 ──────────────────────────────────────────────────────────
+   互動工具，不是圖。所有選擇器一律 .tsbsim- 前綴。
+   曲線用被拉伸的 SVG（vector-effect 保線寬），所有文字用 HTML 疊上去。 */
+.tsbsim-root{--ts-ctl:#5bc8f5;--ts-atl:#ffb020;--ts-tsb:#f4f0ea}
+
+/* ── 頂部：三個數字就是整個工具的結論 ── */
+.tsbsim-kpi{
+  display:flex;flex-wrap:wrap;gap:10px;align-items:stretch;margin-bottom:6px
+}
+.tsbsim-k{
+  flex:1 1 150px;min-width:132px;padding:11px 13px 10px;
+  border:1px solid var(--hair);border-radius:9px;background:rgba(255,255,255,.018)
+}
+.tsbsim-k.hero{border-color:rgba(252,76,2,.34);background:rgba(252,76,2,.055)}
+.tsbsim-kt{font-size:9.5px;letter-spacing:1.5px;color:var(--ink-3);white-space:nowrap}
+.tsbsim-kv{
+  margin-top:3px;font-family:var(--f-num);font-variant-numeric:tabular-nums;
+  font-weight:800;font-size:29px;line-height:1.05;letter-spacing:.5px;color:var(--ink-1)
+}
+.tsbsim-kv u{text-decoration:none;font-size:12px;font-weight:600;color:var(--ink-3);margin-left:5px;letter-spacing:.6px}
+.tsbsim-kv.ok{color:var(--ok)}
+.tsbsim-kv.off{color:var(--sig)}
+.tsbsim-kn{margin-top:3px;font-size:10.5px;line-height:1.5;color:var(--ink-3)}
+.tsbsim-note{margin:9px 0 16px;font-size:10.5px;line-height:1.7;color:var(--ink-3)}
+.tsbsim-note b{color:var(--ink-2);font-weight:600}
+
+/* ── 圖 ── */
+.tsbsim-read{
+  height:16px;margin-bottom:5px;font-size:11px;letter-spacing:.3px;color:var(--ink-3);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+}
+.tsbsim-read b{
+  font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:700;
+  color:var(--ink-1);letter-spacing:.4px
+}
+.tsbsim-read i{font-style:normal;color:var(--ink-3);margin:0 5px}
+.tsbsim-plots{position:relative;padding-left:40px}
+.tsbsim-strip{position:relative;width:100%}
+.tsbsim-strip svg{display:block;width:100%;height:100%}
+.tsbsim-s1{height:134px}
+.tsbsim-s2{height:44px;margin-top:3px}
+.tsbsim-s3{height:114px;margin-top:3px}
+.tsbsim-ov{position:absolute;inset:0;pointer-events:none}
+.tsbsim-gut{position:absolute;left:-40px;top:0;bottom:0;width:36px;pointer-events:none}
+.tsbsim-yl{
+  position:absolute;right:0;transform:translateY(-50%);
+  font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:600;
+  font-size:10px;color:var(--ink-3);letter-spacing:.3px;white-space:nowrap
+}
+.tsbsim-tag{
+  position:absolute;transform:translateY(-50%);
+  font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:800;
+  font-size:11.5px;letter-spacing:.4px;white-space:nowrap;
+  padding:0 4px;border-radius:3px;background:rgba(10,4,8,.74)
+}
+.tsbsim-tag u{text-decoration:none;font-size:9px;font-weight:600;opacity:.75;margin-right:3px}
+.tsbsim-base{
+  position:absolute;left:2px;transform:translateY(-50%);
+  font-size:9.5px;letter-spacing:.8px;color:rgba(252,76,2,.72);white-space:nowrap;
+  background:rgba(10,4,8,.7);padding:0 3px;border-radius:3px
+}
+.tsbsim-xr{position:relative;height:26px;margin-left:40px;margin-top:4px}
+.tsbsim-xl{
+  position:absolute;top:0;transform:translateX(-50%);
+  font-size:9.5px;line-height:1.35;letter-spacing:.5px;color:var(--ink-3);
+  white-space:nowrap;text-align:center
+}
+.tsbsim-xl b{display:block;font-family:var(--f-num);font-weight:700;font-size:10.5px;color:var(--ink-2)}
+.tsbsim-xl.hot{color:var(--sig)}
+.tsbsim-xl.hot b{color:var(--sig)}
+.tsbsim-hits{position:absolute;left:40px;right:0;top:0;bottom:0;display:flex}
+.tsbsim-hits span{flex:1 1 0;cursor:crosshair}
+.tsbsim-cur{
+  position:absolute;top:0;bottom:0;width:1px;background:rgba(244,240,234,.30);
+  pointer-events:none;opacity:0;transition:opacity .12s
+}
+
+/* ── 圖例 ── */
+.tsbsim-leg{display:flex;flex-wrap:wrap;gap:6px 15px;margin-top:12px;font-size:10.5px;color:var(--ink-3)}
+.tsbsim-leg span{display:inline-flex;align-items:center;gap:5px}
+.tsbsim-sw{width:15px;height:3px;border-radius:2px;display:inline-block}
+.tsbsim-swb{width:9px;height:11px;border-radius:1px;display:inline-block}
+
+/* ── 控制台 ── */
+.tsbsim-panel{margin-top:22px;border-top:1px solid var(--hair);padding-top:15px}
+.tsbsim-ph{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:4px}
+.tsbsim-ph h3{font-size:12px;font-weight:700;color:var(--ink-1);letter-spacing:.2px}
+.tsbsim-ph em{font-style:normal;font-size:10.5px;color:var(--ink-3)}
+.tsbsim-ph .sp{flex:1}
+.tsbsim-btn{
+  padding:5px 11px;border:1px solid var(--hair);border-radius:999px;
+  background:transparent;color:var(--ink-2);font-family:var(--f-ui);
+  font-size:10.5px;letter-spacing:.5px;cursor:pointer;transition:.15s;white-space:nowrap
+}
+.tsbsim-btn:hover{border-color:var(--sig);color:var(--sig)}
+.tsbsim-btn[disabled]{opacity:.34;cursor:default}
+.tsbsim-btn[disabled]:hover{border-color:var(--hair);color:var(--ink-2)}
+
+.tsbsim-row{
+  display:grid;grid-template-columns:158px 1fr 116px;gap:6px 14px;align-items:center;
+  padding:9px 0;border-bottom:1px solid var(--hair)
+}
+.tsbsim-row:last-child{border-bottom:0}
+.tsbsim-rl{min-width:0}
+.tsbsim-rl b{
+  font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:800;
+  font-size:13px;letter-spacing:.5px;color:var(--ink-1);margin-right:6px
+}
+.tsbsim-rl i{font-style:normal;font-size:10.5px;color:var(--ink-2)}
+.tsbsim-rl u{
+  display:block;text-decoration:none;margin-top:2px;
+  font-size:9.5px;letter-spacing:.4px;color:var(--ink-3);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+}
+.tsbsim-sl{position:relative;padding:0 1px}
+.tsbsim-tick{
+  position:absolute;top:50%;width:1px;height:13px;margin-top:-6px;
+  background:rgba(244,240,234,.30);pointer-events:none
+}
+.tsbsim-rg{
+  -webkit-appearance:none;appearance:none;display:block;
+  width:100%;height:22px;background:transparent;cursor:pointer;position:relative
+}
+.tsbsim-rg::-webkit-slider-runnable-track{height:3px;border-radius:2px;background:rgba(255,255,255,.12)}
+.tsbsim-rg::-webkit-slider-thumb{
+  -webkit-appearance:none;width:15px;height:15px;margin-top:-6px;border:0;border-radius:50%;
+  background:var(--sig);box-shadow:0 0 0 3px rgba(252,76,2,.15)
+}
+.tsbsim-rg::-moz-range-track{height:3px;border-radius:2px;background:rgba(255,255,255,.12)}
+.tsbsim-rg::-moz-range-thumb{width:15px;height:15px;border:0;border-radius:50%;background:var(--sig)}
+.tsbsim-rg:focus{outline:none}
+.tsbsim-rg:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 4px rgba(252,76,2,.34)}
+.tsbsim-rg:focus-visible::-moz-range-thumb{box-shadow:0 0 0 4px rgba(252,76,2,.34)}
+.tsbsim-rv{text-align:right;min-width:0}
+.tsbsim-rv b{
+  font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:800;
+  font-size:16px;letter-spacing:.4px;color:var(--ink-1)
+}
+.tsbsim-rv b.moved{color:var(--sig)}
+.tsbsim-rv u{
+  display:block;text-decoration:none;margin-top:1px;
+  font-size:9.5px;letter-spacing:.3px;color:var(--ink-3);white-space:nowrap
+}
+
+/* ── 週合計 ── */
+.tsbsim-wk{display:flex;flex-wrap:wrap;gap:9px;margin-top:16px}
+.tsbsim-w{
+  flex:1 1 172px;min-width:150px;padding:9px 11px 10px;
+  border:1px solid var(--hair);border-radius:8px;background:rgba(255,255,255,.014)
+}
+.tsbsim-wt{font-size:9.5px;letter-spacing:1.1px;color:var(--ink-3);white-space:nowrap}
+.tsbsim-wn{flex:1 1 100%;margin-top:-2px;font-size:10px;line-height:1.55;letter-spacing:.3px;color:var(--ink-3)}
+.tsbsim-wv{display:flex;align-items:baseline;gap:6px;margin-top:2px}
+.tsbsim-wv b{
+  font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:800;
+  font-size:19px;letter-spacing:.4px;color:var(--ink-1)
+}
+.tsbsim-wv b.hi{color:var(--sig)}
+.tsbsim-wv i{font-style:normal;font-size:10px;color:var(--ink-3);margin-left:auto;white-space:nowrap}
+.tsbsim-wb{position:relative;height:4px;margin-top:7px;border-radius:2px;background:rgba(255,255,255,.07);overflow:hidden}
+.tsbsim-wf{position:absolute;left:0;top:0;bottom:0;border-radius:2px;background:rgba(244,240,234,.36)}
+.tsbsim-wf.hi{background:var(--sig)}
+.tsbsim-wm{position:absolute;top:-2px;bottom:-2px;width:1px;background:rgba(244,240,234,.5)}
+
+@media(max-width:767px){
+  .tsbsim-kv{font-size:24px}
+  .tsbsim-s1{height:112px}
+  .tsbsim-s3{height:96px}
+  .tsbsim-row{grid-template-columns:1fr 92px;grid-template-areas:"lab val" "sld sld"}
+  .tsbsim-rl{grid-area:lab}
+  .tsbsim-rv{grid-area:val}
+  .tsbsim-sl{grid-area:sld}
+}
+</style>
+<section class="lab-card" id="card-tsbsim">
+  <h2 class="lab-h">TSB 沙盤 <span>· TSB SANDBOX · 9/10 後測那天，我會不會比前測那天新鮮太多，讓這次配對比較白做？</span></h2>
+  <div class="tsbsim-root"></div>
+</section>
+<script>
+(function(){
+  window.LAB_PARTS = window.LAB_PARTS || [];
+
+  var DAY = 86400000, MAXT = 200, SUP_DEF = 30, SUP_MAX = 60, OKBAND = 1.0;
+
+  function pad(n){ return (n < 10 ? '0' : '') + n; }
+  function pms(s){ var p = String(s).split('-'); return Date.UTC(+p[0], +p[1] - 1, +p[2]); }
+  function iso(ms){ var d = new Date(ms); return d.getUTCFullYear() + '-' + pad(d.getUTCMonth() + 1) + '-' + pad(d.getUTCDate()); }
+  function md(ms){ var d = new Date(ms); return pad(d.getUTCMonth() + 1) + '/' + pad(d.getUTCDate()); }
+  function num(v, d){ var s = (Math.abs(v)).toFixed(d == null ? 1 : d); return (v < 0 ? '−' : '') + s; }
+  function sgn(v, d){ var s = (Math.abs(v)).toFixed(d == null ? 1 : d); return (v < 0 ? '−' : '+') + s; }
+  function esc(s){ return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+  function el(tag, cls, html){ var n = document.createElement(tag); if (cls) n.className = cls; if (html != null) n.innerHTML = html; return n; }
+  function clamp(v, a, b){ return v < a ? a : (v > b ? b : v); }
+
+  window.LAB_PARTS.push({ id: 'tsbsim', render: function(root, LAB){
+    var P = (LAB && LAB.pmc) || null;
+    if (!P || !P.history || !P.history.length || !P.pre_test ||
+        P.pre_test.tsb == null || !P.post_test_date ||
+        P.ctl == null || P.atl == null){
+      root.innerHTML = '<div class="lab-nil">還沒有這個資料 —— TSB 沙盤要 <code>pmc</code> 裡的 CTL/ATL 歷史、前測 TSB 與後測日期，三者缺一就推不動。</div>';
+      return;
+    }
+
+    var BASE = P.pre_test.tsb;                 // 前測那天的 TSB（同日定義）
+    var T0   = pms(P.today);                   // 今天：CTL/ATL 的最後一個真值
+    var TEND = pms(P.post_test_date);          // 後測日
+    var NDAY = Math.round((TEND - T0) / DAY);
+    if (NDAY <= 0){
+      root.innerHTML = '<div class="lab-nil">後測日（' + esc(P.post_test_date) + '）已經過了，沒有可以推的未來。</div>';
+      return;
+    }
+
+    // ── 歷史：TSS 由 ATL 遞推式反解（intervals 只給 CTL/ATL） ──
+    var H = {}, hd = [];
+    (P.history || []).forEach(function(h){ if (h && h.d && h.ctl != null && h.atl != null){ H[h.d] = h; hd.push(h.d); } });
+    var START = Math.max(pms(P.pre_test.date) - 5 * DAY, T0 - 28 * DAY);
+    if (hd.length && pms(hd[0]) > START) START = pms(hd[0]);
+
+    var PAST = [];
+    for (var t = START; t <= T0; t += DAY){
+      var h = H[iso(t)]; if (!h) continue;
+      var pv = H[iso(t - DAY)];
+      var tss = pv ? Math.max(0, h.atl * 7 - pv.atl * 6) : null;
+      PAST.push({ ms: t, ctl: h.ctl, atl: h.atl, tsb: h.ctl - h.atl, tss: tss, future: false });
+    }
+    var histTss = {}; PAST.forEach(function(r){ if (r.tss != null) histTss[iso(r.ms)] = r.tss; });
+
+    // ── 未來這段的課表 ──
+    var SESS = (P.sessions || []).filter(function(s){ return s && s.date; });
+    var FUT = SESS.filter(function(s){ return pms(s.date) > T0 && pms(s.date) <= TEND; })
+                  .sort(function(a, b){ return a.date < b.date ? -1 : 1; });
+    var RIDES = [], SUPS = [];
+    FUT.forEach(function(s, i){ s._i = i; (s.support ? SUPS : RIDES).push(s); });
+
+    var plan = FUT.map(function(s){ return s.support ? null : (s.target_tss != null ? s.target_tss : 0); });
+    var vals = plan.slice(), sup = SUP_DEF;
+
+    // ── 遞推 ──
+    function simulate(v, sv){
+      var ctl = P.ctl, atl = P.atl, out = [];
+      for (var k = 1; k <= NDAY; k++){
+        var ms = T0 + k * DAY, key = iso(ms), tss = 0;
+        for (var i = 0; i < FUT.length; i++){
+          if (FUT[i].date === key) tss += FUT[i].support ? sv : v[i];
+        }
+        ctl += (tss - ctl) / 42;
+        atl += (tss - atl) / 7;
+        out.push({ ms: ms, ctl: ctl, atl: atl, tsb: ctl - atl, tss: tss, future: true });
+      }
+      return out;
+    }
+    function endTsb(v, sv){ var r = simulate(v, sv); return r[r.length - 1].tsb; }
+
+    // 對每一堂線性求解：要落在基準線上，那一堂該排多少 TSS
+    function solve(idx, v, sv){
+      var a = v.slice();
+      a[idx] = 0;    var f0 = endTsb(a, sv);
+      a[idx] = MAXT; var f1 = endTsb(a, sv);
+      if (Math.abs(f1 - f0) < 1e-9) return null;
+      return { x: MAXT * (BASE - f0) / (f1 - f0), per10: (f1 - f0) / MAXT * 10 };
+    }
+
+    // ── 骨架 ──
+    var kpi   = el('div', 'tsbsim-kpi');
+    var note  = el('div', 'tsbsim-note');
+    var read  = el('div', 'tsbsim-read');
+    var plots = el('div', 'tsbsim-plots');
+    var xrow  = el('div', 'tsbsim-xr');
+    var leg   = el('div', 'tsbsim-leg');
+    var panel = el('div', 'tsbsim-panel');
+    var wkbox = el('div', 'tsbsim-wk');
+    var say   = el('div', 'lab-say');
+
+    var s1 = el('div', 'tsbsim-strip tsbsim-s1'), s2 = el('div', 'tsbsim-strip tsbsim-s2'), s3 = el('div', 'tsbsim-strip tsbsim-s3');
+    plots.appendChild(s1); plots.appendChild(s2); plots.appendChild(s3);
+    var hits = el('div', 'tsbsim-hits'), cur = el('div', 'tsbsim-cur');
+    plots.appendChild(cur); plots.appendChild(hits);
+
+    root.appendChild(kpi); root.appendChild(note); root.appendChild(read);
+    root.appendChild(plots); root.appendChild(xrow); root.appendChild(leg);
+    root.appendChild(panel); root.appendChild(wkbox); root.appendChild(say);
+
+    note.innerHTML = 'TSB 一律用 intervals 的<b>同日定義</b>（CTL − ATL，含當天那堂課）—— 前測 ' +
+      md(pms(P.pre_test.date)) + ' 的 ' + num(BASE) + ' 也是同日值，兩邊同一把尺。' +
+      '未來段由遞推式推：<b>CTL += (TSS−CTL)/42、ATL += (TSS−ATL)/7</b>，起點是今天（' + md(T0) + '）的真值 CTL ' +
+      num(P.ctl) + ' / ATL ' + num(P.atl) + '。';
+
+    leg.innerHTML =
+      '<span><i class="tsbsim-sw" style="background:var(--ts-ctl)"></i>CTL 體能</span>' +
+      '<span><i class="tsbsim-sw" style="background:var(--ts-atl)"></i>ATL 疲勞</span>' +
+      '<span><i class="tsbsim-sw" style="background:var(--ts-tsb)"></i>TSB 狀態</span>' +
+      '<span><i class="tsbsim-sw" style="background:repeating-linear-gradient(90deg,var(--sig) 0 4px,transparent 4px 7px)"></i>前測基準 ' + num(BASE) + '</span>' +
+      '<span><i class="tsbsim-swb" style="background:rgba(252,76,2,.16)"></i>±1 貼齊帶</span>' +
+      '<span><i class="tsbsim-swb" style="background:rgba(244,240,234,.26)"></i>已發生的 TSS（由 ATL 反解，±2）</span>' +
+      '<span><i class="tsbsim-swb" style="background:var(--sig)"></i>你在調的 TSS</span>';
+
+    // ── 控制列 ──
+    var rowEls = [];
+    var ph = el('div', 'tsbsim-ph');
+    ph.innerHTML = '<h3>拖，把後測那天推回基準線</h3><em>' + RIDES.length + ' 堂有處方的課 · ' + SUPS.length + ' 堂輔助課</em><span class="sp"></span>';
+    var reset = el('button', 'tsbsim-btn', '重設回課表原值');
+    reset.type = 'button';
+    ph.appendChild(reset);
+    panel.appendChild(ph);
+
+    function mkRow(o){
+      var row = el('div', 'tsbsim-row');
+      var l = el('div', 'tsbsim-rl');
+      l.innerHTML = '<b>' + o.date + '</b><i>' + esc(o.name) + '</i><u>' + esc(o.sub) + '</u>';
+      var sl = el('div', 'tsbsim-sl');
+      var rg = document.createElement('input');
+      rg.className = 'tsbsim-rg'; rg.type = 'range';
+      rg.min = 0; rg.max = o.max; rg.step = 1; rg.value = o.val;
+      rg.setAttribute('aria-label', o.date + ' ' + o.name + ' TSS');
+      var tick = el('span', 'tsbsim-tick');
+      tick.style.left = (o.tick / o.max * 100) + '%';
+      sl.appendChild(tick); sl.appendChild(rg);
+      var v = el('div', 'tsbsim-rv', '<b class="lab-n">' + o.val + '</b><u></u>');
+      row.appendChild(l); row.appendChild(sl); row.appendChild(v);
+      panel.appendChild(row);
+      var rec = { rg: rg, b: v.querySelector('b'), u: v.querySelector('u'), o: o };
+      rg.addEventListener('input', function(){ o.set(+rg.value); draw(); });
+      rowEls.push(rec);
+      return rec;
+    }
+
+    RIDES.forEach(function(s){
+      var isPost = s.date === P.post_test_date;
+      mkRow({ date: md(pms(s.date)), name: s.name || s.code || '課表',
+              sub: (isPost ? '測驗本身 · 課表 ' + plan[s._i] + ' TSS · 改它等於改測驗'
+                            : (s.minutes ? s.minutes + ' 分 · ' : '') + '課表 ' + plan[s._i] + ' TSS'),
+              val: plan[s._i], tick: plan[s._i], max: MAXT, idx: s._i,
+              set: function(x){ vals[s._i] = x; } });
+    });
+    var supRow = null;
+    if (SUPS.length){
+      supRow = mkRow({
+        date: '輔助', name: '每堂當幾分算', max: SUP_MAX, val: SUP_DEF, tick: SUP_DEF, idx: -1,
+        sub: SUPS.map(function(s){ return md(pms(s.date)); }).join(' · '),
+        set: function(x){ sup = x; }
+      });
+    }
+
+    reset.addEventListener('click', function(){
+      vals = plan.slice(); sup = SUP_DEF;
+      rowEls.forEach(function(r){ r.rg.value = r.o.idx >= 0 ? plan[r.o.idx] : SUP_DEF; });
+      draw();
+    });
+
+    // ── x 軸：只標三個真的要看的日子 ──
+    var ROWS = [], NB = 0;
+    function xpct(i){ return (i + 0.5) / NB * 100; }
+
+    // ── 畫 ──
+    function stripSvg(h, body){
+      return '<svg viewBox="0 0 1000 100" preserveAspectRatio="none" aria-hidden="true">' + body + '</svg>';
+    }
+    function line(pts, color, w, dash){
+      if (pts.length < 2) return '';
+      return '<polyline points="' + pts.join(' ') + '" fill="none" stroke="' + color + '" stroke-width="' + w +
+             '" stroke-linejoin="round" stroke-linecap="round"' + (dash ? ' stroke-dasharray="' + dash + '"' : '') +
+             ' vector-effect="non-scaling-stroke"/>';
+    }
+    function hair(y){
+      return '<line x1="0" y1="' + y + '" x2="1000" y2="' + y + '" stroke="rgba(255,255,255,.065)" stroke-width="1" vector-effect="non-scaling-stroke"/>';
+    }
+    function vline(i, color, dash){
+      var x = (i + 0.5) / NB * 1000;
+      return '<line x1="' + x + '" y1="0" x2="' + x + '" y2="100" stroke="' + color + '" stroke-width="1"' +
+             (dash ? ' stroke-dasharray="' + dash + '"' : '') + ' vector-effect="non-scaling-stroke"/>';
+    }
+
+    function draw(){
+      var FUTR = simulate(vals, sup);
+      ROWS = PAST.concat(FUTR);
+      NB = ROWS.length;
+
+      var iToday = PAST.length - 1, iPre = -1, iEnd = NB - 1;
+      var preIso = P.pre_test.date;
+      ROWS.forEach(function(r, i){ if (iso(r.ms) === preIso) iPre = i; });
+      var last = ROWS[iEnd], gap = last.tsb - BASE, ok = Math.abs(gap) <= OKBAND;
+
+      // ── KPI ──
+      kpi.innerHTML =
+        '<div class="tsbsim-k"><div class="tsbsim-kt">前測基準 ' + md(pms(preIso)) + '</div>' +
+          '<div class="tsbsim-kv">' + num(BASE) + '</div>' +
+          '<div class="tsbsim-kn">' + esc((SESS.filter(function(s){ return s.date === preIso; })[0] || {}).name || '前測') + '</div></div>' +
+        '<div class="tsbsim-k hero"><div class="tsbsim-kt">後測預測 ' + md(TEND) + '</div>' +
+          '<div class="tsbsim-kv">' + num(last.tsb) + '</div>' +
+          '<div class="tsbsim-kn">CTL ' + num(last.ctl) + ' · ATL ' + num(last.atl) + ' · 前一天 ' + num(ROWS[iEnd - 1].tsb) + '</div></div>' +
+        '<div class="tsbsim-k"><div class="tsbsim-kt">跟前測差多少</div>' +
+          '<div class="tsbsim-kv ' + (ok ? 'ok' : 'off') + '">' + sgn(gap) + '<u>點</u></div>' +
+          '<div class="tsbsim-kn">' + (ok ? '在 ±1 內 —— 配對成立' : (gap > 0 ? '後測那天比前測新鮮' : '後測那天比前測更累')) + '</div></div>';
+
+      // ── 尺度 ──
+      var fMax = 10, tMax = 60, tsbLo = Math.min(BASE, 0), tsbHi = Math.max(BASE, 0);
+      ROWS.forEach(function(r){
+        fMax = Math.max(fMax, r.ctl, r.atl);
+        if (r.tss != null) tMax = Math.max(tMax, r.tss);
+        tsbLo = Math.min(tsbLo, r.tsb); tsbHi = Math.max(tsbHi, r.tsb);
+      });
+      fMax = Math.ceil(fMax / 10) * 10 + 4;
+      tMax = Math.ceil(tMax / 20) * 20;
+      var padT = Math.max(3, (tsbHi - tsbLo) * 0.10);
+      tsbHi += padT; tsbLo -= padT;
+
+      function yF(v){ return 100 - v / fMax * 100; }
+      function yT(v){ return 100 - v / tMax * 100; }
+      function yB(v){ return 100 - (v - tsbLo) / (tsbHi - tsbLo) * 100; }
+      function X(i){ return (i + 0.5) / NB * 1000; }
+
+      // ── 體能／疲勞 ──
+      var g1 = '', ctlP = [], atlP = [];
+      for (var v = 0; v <= fMax; v += 20) g1 += hair(yF(v));
+      ROWS.forEach(function(r, i){ ctlP.push(X(i) + ',' + yF(r.ctl)); atlP.push(X(i) + ',' + yF(r.atl)); });
+      g1 += vline(iToday, 'rgba(244,240,234,.24)', '3 3');
+      if (iPre >= 0) g1 += vline(iPre, 'rgba(252,76,2,.42)', '3 3');
+      g1 += vline(iEnd, 'rgba(252,76,2,.42)', '3 3');
+      // 未來段畫虛線，一眼看出哪裡開始是「推的」
+      var cut = PAST.length - 1;
+      g1 += line(atlP.slice(0, cut + 1), 'var(--ts-atl)', 1.6);
+      g1 += line(atlP.slice(cut), 'var(--ts-atl)', 1.6, '4 3');
+      g1 += line(ctlP.slice(0, cut + 1), 'var(--ts-ctl)', 1.6);
+      g1 += line(ctlP.slice(cut), 'var(--ts-ctl)', 1.6, '4 3');
+      s1.innerHTML = stripSvg(134, g1);
+
+      var ov1 = el('div', 'tsbsim-ov'), gut1 = el('div', 'tsbsim-gut');
+      for (var v2 = 0; v2 <= fMax - 4; v2 += 20){
+        var yl = el('div', 'tsbsim-yl', String(v2)); yl.style.top = yF(v2) + '%'; gut1.appendChild(yl);
+      }
+      ov1.appendChild(gut1);
+      var tagC = el('div', 'tsbsim-tag', '<u>CTL</u>' + num(last.ctl));
+      tagC.style.cssText += ';color:var(--ts-ctl);right:1px;top:' + yF(last.ctl) + '%';
+      var tagA = el('div', 'tsbsim-tag', '<u>ATL</u>' + num(last.atl));
+      tagA.style.cssText += ';color:var(--ts-atl);right:1px;top:' + yF(last.atl) + '%';
+      ov1.appendChild(tagC); ov1.appendChild(tagA);
+      s1.appendChild(ov1);
+
+      // ── 每日 TSS ──
+      var g2 = hair(100) + '', bw = 1000 / NB * 0.62, off = (1000 / NB - bw) / 2;
+      ROWS.forEach(function(r, i){
+        var val = r.tss; if (val == null || val <= 0) return;
+        var y = yT(val), x = i * (1000 / NB) + off;
+        var fill = r.future ? 'var(--sig)' : 'rgba(244,240,234,.26)';
+        g2 += '<rect x="' + x + '" y="' + y + '" width="' + bw + '" height="' + (100 - y) + '" fill="' + fill + '"/>';
+      });
+      s2.innerHTML = stripSvg(44, g2);
+      var ov2 = el('div', 'tsbsim-ov'), gut2 = el('div', 'tsbsim-gut');
+      // 上緣＝這段時間的單日最大 TSS，下緣＝0
+      var ylt = el('div', 'tsbsim-yl', String(tMax)); ylt.style.top = '16%'; gut2.appendChild(ylt);
+      var ylt2 = el('div', 'tsbsim-yl', 'TSS'); ylt2.style.top = '72%'; ylt2.style.opacity = '.65'; gut2.appendChild(ylt2);
+      ov2.appendChild(gut2); s2.appendChild(ov2);
+
+      // ── TSB ──
+      var g3 = '', tsbP = [];
+      ROWS.forEach(function(r, i){ tsbP.push(X(i) + ',' + yB(r.tsb)); });
+      var yb0 = yB(BASE + OKBAND), yb1 = yB(BASE - OKBAND);
+      g3 += '<rect x="0" y="' + yb0 + '" width="1000" height="' + (yb1 - yb0) + '" fill="rgba(252,76,2,.16)"/>';
+      if (tsbLo < 0 && tsbHi > 0) g3 += hair(yB(0));
+      g3 += vline(iToday, 'rgba(244,240,234,.24)', '3 3');
+      if (iPre >= 0) g3 += vline(iPre, 'rgba(252,76,2,.42)', '3 3');
+      g3 += vline(iEnd, 'rgba(252,76,2,.42)', '3 3');
+      g3 += '<line x1="0" y1="' + yB(BASE) + '" x2="1000" y2="' + yB(BASE) + '" stroke="var(--sig)" stroke-width="1.2" stroke-dasharray="5 4" vector-effect="non-scaling-stroke"/>';
+      g3 += line(tsbP.slice(0, cut + 1), 'var(--ts-tsb)', 1.6);
+      g3 += line(tsbP.slice(cut), 'var(--ts-tsb)', 1.6, '4 3');
+      s3.innerHTML = stripSvg(114, g3);
+
+      var ov3 = el('div', 'tsbsim-ov'), gut3 = el('div', 'tsbsim-gut');
+      var step = (tsbHi - tsbLo) > 34 ? 20 : 10;
+      for (var q = Math.ceil(tsbLo / step) * step; q <= tsbHi; q += step){
+        var y3 = yB(q); if (y3 < 5 || y3 > 96) continue;
+        var yl3 = el('div', 'tsbsim-yl', num(q, 0)); yl3.style.top = y3 + '%'; gut3.appendChild(yl3);
+      }
+      ov3.appendChild(gut3);
+      var bl = el('div', 'tsbsim-base', '前測 ' + num(BASE));
+      bl.style.top = yB(BASE) + '%'; ov3.appendChild(bl);
+      var tagB = el('div', 'tsbsim-tag', num(last.tsb));
+      tagB.style.cssText += ';color:' + (ok ? 'var(--ok)' : 'var(--sig)') + ';right:1px;top:' + clamp(yB(last.tsb), 6, 94) + '%';
+      ov3.appendChild(tagB);
+      s3.appendChild(ov3);
+
+      // ── x 軸標籤 ──
+      xrow.innerHTML = '';
+      var marks = [{ i: iPre, t: '前測', hot: true }, { i: iToday, t: '今天', hot: false }, { i: iEnd, t: '後測', hot: true }];
+      marks.forEach(function(m){
+        if (m.i < 0) return;
+        var px = xpct(m.i);
+        var x = el('div', 'tsbsim-xl' + (m.hot ? ' hot' : ''), '<b>' + md(ROWS[m.i].ms) + '</b>' + m.t);
+        // 兩端改成貼邊對齊，不然標籤自己的寬度會把版面撐出水平捲軸
+        if (px > 84){ x.style.right = '0'; x.style.transform = 'none'; }
+        else if (px < 6){ x.style.left = '0'; x.style.transform = 'none'; }
+        else { x.style.left = px + '%'; }
+        xrow.appendChild(x);
+      });
+
+      // ── 控制列數字 ──
+      rowEls.forEach(function(r){
+        var isSup = r.o.idx < 0;
+        var now = isSup ? sup : vals[r.o.idx], base = isSup ? SUP_DEF : plan[r.o.idx];
+        r.b.textContent = now;
+        r.b.className = 'lab-n' + (now !== base ? ' moved' : '');
+        var s = solve(isSup ? -1 : r.o.idx, vals, sup);
+        if (isSup){
+          var a = vals.slice(), f0 = endTsb(a, 0), f1 = endTsb(a, SUP_MAX);
+          r.u.textContent = '每 +10 → ' + sgn((f1 - f0) / SUP_MAX * 10) + ' 點';
+        } else {
+          r.u.textContent = s ? ('每 +10 → ' + sgn(s.per10) + ' 點') : '';
+        }
+      });
+
+      // ── 週 TSS 合計 ──
+      wkbox.innerHTML = '';
+      var maint = P.ctl * 7;
+      var w0 = T0 - ((new Date(T0).getUTCDay() + 6) % 7) * DAY;
+      for (var wk = w0; wk <= TEND; wk += 7 * DAY){
+        var tot = 0, done = 0, est = false;
+        for (var k2 = 0; k2 < 7; k2++){
+          var dms = wk + k2 * DAY, key = iso(dms);
+          if (dms <= T0){
+            if (histTss[key] != null){ tot += histTss[key]; done += histTss[key]; }
+            SESS.forEach(function(s){ if (s.date === key && s.support){ tot += sup; done += sup; est = true; } });
+          } else {
+            FUT.forEach(function(s){
+              if (s.date !== key) return;
+              tot += s.support ? sup : vals[s._i];
+              if (s.support) est = true;
+            });
+          }
+        }
+        var hot = tot > maint * 1.45;
+        var w = el('div', 'tsbsim-w');
+        w.innerHTML = '<div class="tsbsim-wt">' + md(wk) + ' – ' + md(wk + 6 * DAY) + (wk <= T0 && wk + 6 * DAY >= T0 ? ' · 本週' : '') + '</div>' +
+          '<div class="tsbsim-wv"><b class="lab-n' + (hot ? ' hi' : '') + '">' + Math.round(tot) + '</b>' +
+          '<i>已發生 ' + Math.round(done) + (est ? ' · 含輔助估值' : '') + '</i></div>' +
+          '<div class="tsbsim-wb"><span class="tsbsim-wf' + (hot ? ' hi' : '') + '" style="width:' + clamp(tot / (maint * 2) * 100, 0, 100) + '%"></span>' +
+          '<span class="tsbsim-wm" style="left:50%"></span></div>';
+        wkbox.appendChild(w);
+      }
+      var mnote = el('div', 'tsbsim-wn');
+      mnote.innerHTML = '白刻度＝維持量 ' + Math.round(maint) + ' TSS／週（CTL×7）。超過 1.45 倍轉橘 —— 沙盤上調得出來，不代表排得下去。';
+      wkbox.appendChild(mnote);
+
+      sayIt(last, gap, ok);
+      showRead(iEnd, true);
+    }
+
+    // ── 判讀：從當下這組設定算出來的一句話 ──
+    function sayIt(last, gap, ok){
+      var head = '目前這組設定下，<b>' + md(TEND) + ' 後測當天的 TSB 會落在 ' + num(last.tsb) + '</b>，' +
+                 '比前測那天（' + md(pms(P.pre_test.date)) + '，' + num(BASE) + '）' +
+                 (Math.abs(gap) < 0.05 ? '幾乎完全一樣' : (gap > 0 ? '<span class="hot">新鮮 ' + num(Math.abs(gap)) + ' 點</span>' : '<span class="hot">疲勞 ' + num(Math.abs(gap)) + ' 點</span>')) + '。';
+      if (ok){
+        say.innerHTML = head + ' 差距在 ±' + OKBAND.toFixed(0) + ' 點以內，<b>配對條件成立</b> —— 這次量到的差就是真的變強或變弱，不是誰比較新鮮。' +
+          '（輔助課目前每堂當 ' + sup + ' TSS 算；那是假設不是量測，拉動它整條預測都會跟著動。）';
+        return;
+      }
+      // 可調的槓桿：後測日之前、有處方的課，越靠近測驗那天槓桿越大
+      var cands = RIDES.filter(function(s){ return pms(s.date) < TEND; })
+                       .sort(function(a, b){ return a.date < b.date ? 1 : -1; });
+      var fix = null;
+      for (var i = 0; i < cands.length; i++){
+        var s = solve(cands[i]._i, vals, sup);
+        if (s && s.x >= 0 && s.x <= MAXT){ fix = { s: cands[i], x: Math.round(s.x) }; break; }
+      }
+      if (fix){
+        say.innerHTML = head + ' 把 <b>' + md(pms(fix.s.date)) + '「' + esc(fix.s.name || fix.s.code) + '」' +
+          '從 ' + vals[fix.s._i] + ' 排到 <span class="hot">TSS ' + fix.x + '</span></b>，後測就會落在前測的 ±' + OKBAND.toFixed(0) + ' 點內。' +
+          '（' + (fix.x > vals[fix.s._i] ? '往上加' : '往下砍') + ' ' + Math.abs(fix.x - vals[fix.s._i]) + ' TSS；越靠近測驗那天的課，每 1 TSS 的槓桿越大。）';
+        return;
+      }
+      // 一堂救不回來：把最靠近的那堂推到極限，再解第二堂
+      if (cands.length >= 2){
+        var a = vals.slice();
+        var need = gap > 0 ? MAXT : 0;
+        a[cands[0]._i] = need;
+        var s2 = solve(cands[1]._i, a, sup);
+        if (s2 && s2.x >= 0 && s2.x <= MAXT){
+          say.innerHTML = head + ' <b>一堂救不回來</b> —— 就算把 ' + md(pms(cands[0].date)) + ' 推到 ' + need +
+            '，還得把 ' + md(pms(cands[1].date)) + '「' + esc(cands[1].name || cands[1].code) + '」排到 <span class="hot">TSS ' + Math.round(s2.x) + '</span> 才貼得回基準線。' +
+            '這種量級排不排得下去是另一回事；排不下去就承認後測帶著 ' + num(Math.abs(gap)) + ' 點的新鮮度紅利，判讀時扣掉。';
+          return;
+        }
+      }
+      var b = vals.slice();
+      cands.forEach(function(s){ b[s._i] = gap > 0 ? MAXT : 0; });
+      var resid = endTsb(b, sup) - BASE;
+      say.innerHTML = head + ' <b>光靠這幾堂拉不回來</b> —— 把 ' + (cands.length || 0) + ' 堂全部推到' + (gap > 0 ? '上限 ' + MAXT : '零') +
+        '，' + md(TEND) + ' 也只到 ' + num(endTsb(b, sup)) + '（還差 ' + num(Math.abs(resid)) + ' 點）。' +
+        '要嘛在測驗前一天補一堂沒排的課，要嘛承認這次的配對帶著新鮮度紅利。';
+    }
+
+    // ── hover 讀數 ──
+    function showRead(i, isDefault){
+      var r = ROWS[i]; if (!r) return;
+      read.innerHTML = '<b>' + md(r.ms) + '</b><i>·</i>CTL <b>' + num(r.ctl) + '</b><i>·</i>ATL <b>' + num(r.atl) +
+        '</b><i>·</i>TSB <b>' + num(r.tsb) + '</b><i>·</i>TSS <b>' + (r.tss == null ? '—' : Math.round(r.tss)) + '</b>' +
+        '<i>·</i>' + (r.future ? '預測' : '已發生') + (isDefault ? '<i>·</i>滑過任何一天看當天的數字' : '');
+      cur.style.left = 'calc(40px + (100% - 40px) * ' + ((i + 0.5) / NB) + ')';
+      cur.style.opacity = isDefault ? '0' : '1';
+    }
+    hits.addEventListener('mousemove', function(e){
+      var b = hits.getBoundingClientRect();
+      if (!b.width) return;
+      showRead(clamp(Math.floor((e.clientX - b.left) / b.width * NB), 0, NB - 1), false);
+    });
+    hits.addEventListener('mouseleave', function(){ showRead(ROWS.length - 1, true); });
+    hits.addEventListener('touchmove', function(e){
+      var b = hits.getBoundingClientRect(), t = e.touches[0];
+      if (!b.width || !t) return;
+      showRead(clamp(Math.floor((t.clientX - b.left) / b.width * NB), 0, NB - 1), false);
+    }, { passive: true });
+
+    for (var q2 = 0; q2 < 64; q2++) hits.appendChild(document.createElement('span'));
+
+    draw();
+  }});
+})();
+</script>
+<script>
+(function () {
+  var main = document.getElementById('lab-main');
+  var toc = document.getElementById('lab-toc');
+
+  // 元件的 <section> 是直接寫在文件流裡的，先把它們搬進 main 並建目錄
+  var cards = [].slice.call(document.querySelectorAll('body > .lab-card, .lab-wrap > .lab-card'));
+  cards.forEach(function (c) { main.appendChild(c); });
+
+  function titleOf(card) {
+    var h = card.querySelector('.lab-h');
+    if (!h) return card.id;
+    var clone = h.cloneNode(true);
+    var sub = clone.querySelector('span');
+    if (sub) sub.remove();
+    return clone.textContent.trim();
+  }
+  cards.forEach(function (c) {
+    var a = document.createElement('a');
+    a.href = '#' + c.id;
+    a.textContent = titleOf(c);
+    toc.appendChild(a);
+  });
+
+  function fail(msg) {
+    main.insertAdjacentHTML('afterbegin',
+      '<div class="lab-nil">' + msg + '</div>');
+  }
+
+  fetch('data/lab.json', { cache: 'no-cache' })
+    .then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    })
+    .then(function (LAB) {
+      window.LAB = LAB;
+      var st = document.getElementById('lab-stamp');
+      if (st && LAB.generated_at) st.textContent = '· 資料 ' + String(LAB.generated_at).slice(0, 16).replace('T', ' ');
+
+      window.LAB_PARTS.forEach(function (p) {
+        var root = document.querySelector('#card-' + p.id + ' .' + p.id + '-root')
+                || document.querySelector('.' + p.id + '-root');
+        if (!root) return;
+        // 一個元件炸掉不可以把整頁帶走 —— 就地顯示錯誤，其餘照畫
+        try {
+          p.render(root, LAB);
+        } catch (e) {
+          root.innerHTML = '<div class="lab-nil">這張圖畫不出來：' +
+            String(e && e.message ? e.message : e) + '</div>';
+          if (window.console) console.error('[lab] part ' + p.id + ' failed', e);
+        }
+      });
+    })
+    .catch(function (e) {
+      fail('讀不到 <code>data/lab.json</code>（' + e.message + '）。' +
+           '先跑一次 <code>python3 scripts/build-lab.py</code> 產生它。');
+    });
+})();
+</script>
+</body>
+</html>

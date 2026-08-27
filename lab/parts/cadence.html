@@ -1,0 +1,530 @@
+<style>
+.cadence-root{--cad-bar:rgba(244,240,234,.26);--cad-bar-hi:rgba(244,240,234,.48)}
+
+/* ── 主圖 ───────────────────────────────────────── */
+.cadence-main{position:relative;margin-top:2px}
+.cadence-plot{
+  position:relative;height:236px;margin-left:44px;
+  border-bottom:1px solid rgba(255,255,255,.16)
+}
+.cadence-grid{position:absolute;inset:0;pointer-events:none}
+.cadence-gl{position:absolute;left:0;right:0;height:0;border-top:1px solid var(--hair)}
+.cadence-gl b{
+  position:absolute;right:100%;top:-8px;padding-right:8px;
+  font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:600;
+  font-size:10.5px;color:var(--ink-3);white-space:nowrap
+}
+.cadence-cells{position:absolute;inset:0;display:flex;align-items:flex-end}
+.cadence-cell{
+  position:relative;flex:1 1 0;height:100%;display:flex;align-items:flex-end;
+  justify-content:center;cursor:default;outline:none
+}
+.cadence-cell::before{content:"";position:absolute;inset:0;background:transparent;transition:background .12s}
+.cadence-cell:hover::before,.cadence-cell:focus-visible::before{background:rgba(255,255,255,.05)}
+.cadence-bar{
+  position:relative;width:calc(100% - 4px);min-height:1px;
+  background:var(--cad-bar);transition:background .12s
+}
+.cadence-cell:hover .cadence-bar,.cadence-cell:focus-visible .cadence-bar{background:var(--cad-bar-hi)}
+.cadence-cell.cadence-tail .cadence-bar{
+  background:repeating-linear-gradient(135deg,rgba(244,240,234,.20) 0 3px,rgba(244,240,234,.07) 3px 6px)
+}
+.cadence-ovl{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+.cadence-ovl path{vector-effect:non-scaling-stroke}
+.cadence-zone{
+  position:absolute;top:0;bottom:0;pointer-events:none;
+  background:linear-gradient(rgba(255,255,255,.030),rgba(255,255,255,0));
+  border-left:1px dashed rgba(244,240,234,.26)
+}
+.cadence-zone i{
+  position:absolute;top:5px;left:5px;font-style:normal;font-size:9.5px;
+  letter-spacing:1.4px;color:var(--ink-3);white-space:nowrap
+}
+.cadence-med{position:absolute;top:0;bottom:0;width:0;border-left:1px solid;pointer-events:none}
+.cadence-med u{
+  position:absolute;text-decoration:none;white-space:nowrap;
+  font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:800;
+  font-size:11px;letter-spacing:.4px;padding:1px 4px;border-radius:2px;
+  background:#0a0408
+}
+.cadence-xaxis{position:relative;height:17px;margin-left:44px}
+.cadence-xt{
+  position:absolute;top:4px;transform:translateX(-50%);
+  font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:600;
+  font-size:10.5px;color:var(--ink-3)
+}
+.cadence-xunit{
+  margin-left:44px;margin-top:1px;font-size:10px;letter-spacing:1.6px;color:var(--ink-3)
+}
+
+/* ── 讀數列（取代 tooltip，手機也能用） ───────────── */
+.cadence-read{
+  margin:13px 0 0 44px;min-height:34px;display:flex;flex-wrap:wrap;
+  align-items:baseline;gap:6px 16px;
+  padding:7px 11px;border:1px solid var(--hair);border-radius:3px;
+  background:var(--panel);font-size:11.5px;color:var(--ink-3)
+}
+.cadence-read k{font-style:normal;letter-spacing:1px;font-size:10px}
+.cadence-read v{
+  font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:800;
+  font-size:15px;color:var(--ink-1);margin-left:5px;letter-spacing:.3px
+}
+.cadence-read v.cadence-hot{color:var(--sig)}
+.cadence-read em{font-style:normal;color:var(--ink-2);font-size:11.5px}
+
+/* ── 圖例 ───────────────────────────────────────── */
+.cadence-leg{display:flex;flex-wrap:wrap;gap:6px 18px;margin:12px 0 0 44px;font-size:11px;color:var(--ink-3)}
+.cadence-leg span{display:inline-flex;align-items:center;gap:6px}
+.cadence-sw{width:15px;height:9px;flex:none;border-radius:1px}
+.cadence-sw.cadence-l{height:0;border-top:2px solid var(--sig)}
+.cadence-sw.cadence-d{height:0;border-top:1px dashed rgba(244,240,234,.5)}
+
+/* ── 小倍數 ─────────────────────────────────────── */
+.cadence-sub{
+  margin-top:30px;padding-top:16px;border-top:1px solid var(--hair);
+  display:flex;align-items:baseline;gap:10px;flex-wrap:wrap
+}
+.cadence-sub h3{font-size:12.5px;font-weight:700;color:var(--ink-1);letter-spacing:.2px}
+.cadence-sub p{font-size:11px;color:var(--ink-3)}
+.cadence-grid2{
+  display:grid;gap:12px;margin-top:13px;
+  grid-template-columns:repeat(auto-fit,minmax(196px,1fr))
+}
+.cadence-mini{
+  padding:10px 11px 9px;border:1px solid var(--hair);border-radius:3px;
+  background:var(--panel);min-width:0
+}
+.cadence-mini.cadence-key{border-color:rgba(252,76,2,.30)}
+.cadence-mh{display:flex;align-items:baseline;gap:7px;min-width:0}
+.cadence-mh b{
+  font-size:11.5px;font-weight:700;color:var(--ink-1);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0
+}
+.cadence-gr{
+  flex:none;font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:800;
+  font-size:11px;letter-spacing:.3px;color:var(--sig)
+}
+.cadence-gr.cadence-mute{color:var(--ink-3)}
+.cadence-mv{display:flex;align-items:baseline;gap:5px;margin:5px 0 5px}
+.cadence-mv strong{
+  font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:800;
+  font-size:27px;line-height:1;color:var(--ink-1);letter-spacing:.5px
+}
+.cadence-mv i{font-style:normal;font-size:10px;letter-spacing:1.2px;color:var(--ink-3)}
+.cadence-msvg{display:block;width:100%;height:48px;overflow:visible}
+.cadence-msvg line,.cadence-msvg .cadence-mmed{vector-effect:non-scaling-stroke}
+.cadence-mx{position:relative;height:13px;margin-top:1px}
+.cadence-mx b{
+  position:absolute;top:0;transform:translateX(-50%);font-weight:400;
+  font-family:var(--f-num);font-variant-numeric:tabular-nums;
+  font-size:9.5px;color:var(--ink-3)
+}
+.cadence-mf{margin-top:3px;font-size:10.5px;color:var(--ink-3);letter-spacing:.2px}
+.cadence-mf b{
+  font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:800;
+  color:var(--sig);letter-spacing:.3px
+}
+.cadence-mf b.cadence-mute{color:var(--ink-2)}
+
+@media(max-width:767px){
+  .cadence-plot{height:180px;margin-left:36px}
+  /* 窄螢幕上這行字會去撞中位數標籤；虛線＋X 軸的 90 已經說完同一件事 */
+  .cadence-zone i{display:none}
+  .cadence-xaxis,.cadence-read,.cadence-leg,.cadence-xunit{margin-left:36px}
+  .cadence-read{margin-right:0}
+  .cadence-grid2{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:9px}
+  .cadence-mv strong{font-size:23px}
+}
+</style>
+<section class="lab-card" id="card-cadence">
+  <h2 class="lab-h">踏頻分布 <span>· CADENCE · 他的高踏頻有氧能力，到底有沒有在坡上被練到？</span></h2>
+  <div class="cadence-root"></div>
+</section>
+<script>
+(function(){
+  window.LAB_PARTS = window.LAB_PARTS || [];
+  window.LAB_PARTS.push({ id: 'cadence', render: function(root, LAB){
+
+    var C = LAB && LAB.cadence;
+    function nil(msg){
+      var d = document.createElement('div');
+      d.className = 'lab-nil';
+      d.textContent = msg || '還沒有這個資料。';
+      root.appendChild(d);
+    }
+    if (!C || !C.bin_edges || !C.bin_edges.length ||
+        !C.overall || !C.overall.secs || !C.overall.secs.length){
+      nil('還沒有這個資料 —— data/lab.json 裡沒有 cadence 直方圖。');
+      return;
+    }
+
+    var E = C.bin_edges, N = E.length - 1;
+    var segsAll = (C.by_segment || []).filter(function(s){
+      return s && s.secs && s.secs.length === N && s.secs.some(function(v){ return v > 0; });
+    });
+
+    // ── 小工具 ───────────────────────────────────
+    var CAP = 125;                       // 最後一格是 120-999，畫圖／分位數時封頂
+    function edgeHi(i){ return Math.min(E[i+1], CAP); }
+    function sum(a){ var t=0; for (var i=0;i<a.length;i++) t += (a[i]||0); return t; }
+    function pcts(a){ var t=sum(a)||1; return a.map(function(v){ return 100*(v||0)/t; }); }
+    function pctAtLeast(a, thr){
+      var t = sum(a) || 1, s = 0;
+      for (var i=0;i<N;i++) if (E[i] >= thr) s += (a[i]||0);
+      return 100*s/t;
+    }
+    function secsAtLeast(a, thr){
+      var s = 0;
+      for (var i=0;i<N;i++) if (E[i] >= thr) s += (a[i]||0);
+      return s;
+    }
+    // 分位數：在所屬格內線性內插
+    function quant(a, p){
+      var t = sum(a); if (!t) return null;
+      var target = t*p, acc = 0;
+      for (var i=0;i<N;i++){
+        var v = a[i]||0; acc += v;
+        if (acc >= target && v > 0){
+          var lo = E[i], hi = edgeHi(i);
+          return lo + (hi-lo) * ((target-(acc-v))/v);
+        }
+      }
+      return E[N-1];
+    }
+    // 把某個踏頻值換成 0-1 的橫向位置（格子是等寬的類別軸）
+    function xOf(v){
+      for (var i=0;i<N;i++){
+        var lo = E[i], hi = edgeHi(i);
+        if (v >= lo && v < hi) return (i + (v-lo)/(hi-lo)) / N;
+      }
+      return v < E[0] ? 0 : 1;
+    }
+    function hm(sec){
+      var m = Math.round(sec/60);
+      if (m < 90) return m + ' 分';
+      var h = Math.floor(m/60), r = m%60;
+      return h + ' 小時' + (r ? ' ' + r + ' 分' : '');
+    }
+    function one(v){ return (Math.round(v*10)/10).toFixed(1); }
+    function el(tag, cls, txt){
+      var d = document.createElement(tag);
+      if (cls) d.className = cls;
+      if (txt != null) d.textContent = txt;
+      return d;
+    }
+    function binLabel(i){
+      if (i === 0) return '< ' + E[1];
+      if (i === N-1) return E[N-1] + '+';
+      return E[i] + '–' + E[i+1];
+    }
+
+    var OV = C.overall.secs.map(function(v){ return v||0; });
+    var ovTot = sum(OV);
+    if (!ovTot){ nil('還沒有這個資料 —— 戶外騎乘的踏頻累計是 0 秒。'); return; }
+    var ovP = pcts(OV);
+    var ovMed = quant(OV, .5);
+
+    // ── 有坡度的路段＝這張圖的主角 ────────────────
+    var graded = segsAll.filter(function(s){ return typeof s.grade === 'number'; })
+                        .sort(function(a,b){ return a.grade - b.grade; });
+    var flat   = segsAll.filter(function(s){ return typeof s.grade !== 'number'; })
+                        .sort(function(a,b){ return (b.median||0) - (a.median||0); });
+
+    var climb = null, clP = null, clTot = 0, clMed = null;
+    var clName = graded.length + ' 條坡';   // 有幾條就說幾條，別把 4 寫死
+    if (graded.length){
+      climb = new Array(N); for (var i=0;i<N;i++) climb[i] = 0;
+      graded.forEach(function(s){ for (var j=0;j<N;j++) climb[j] += (s.secs[j]||0); });
+      clTot = sum(climb); clP = pcts(climb); clMed = quant(climb, .5);
+    }
+
+    var maxP = Math.max.apply(null, ovP.concat(clP ? clP : [0]));
+    var yMax = Math.ceil(maxP/4)*4 || 4;
+
+    // ══ 主圖 ═════════════════════════════════════
+    var main = el('div','cadence-main');
+    var plot = el('div','cadence-plot');
+
+    // 橫格線（Y＝占各自總時間的百分比）
+    var grid = el('div','cadence-grid');
+    for (var g=1; g<=4; g++){
+      var val = yMax*g/4;
+      var gl = el('div','cadence-gl');
+      gl.style.bottom = (100*g/4) + '%';
+      gl.appendChild(el('b', null, one(val).replace(/\.0$/,'') + '%'));
+      grid.appendChild(gl);
+    }
+    plot.appendChild(grid);
+
+    // 90+ 區帶
+    if (E.indexOf(90) > -1){
+      var z = el('div','cadence-zone');
+      z.style.left = (100*xOf(90)) + '%';
+      z.style.right = '0';
+      z.appendChild(el('i', null, '90 RPM 以上'));
+      plot.appendChild(z);
+    }
+
+    // 柱子
+    var cells = el('div','cadence-cells');
+    var cellEls = [];
+    for (var b=0; b<N; b++){
+      var cell = el('div','cadence-cell' + ((b===0||b===N-1) ? ' cadence-tail' : ''));
+      cell.tabIndex = 0;
+      cell.setAttribute('role','img');
+      cell.setAttribute('aria-label', binLabel(b) + ' rpm，全部戶外 ' + one(ovP[b]) + '%'
+        + (clP ? '，' + clName + ' ' + one(clP[b]) + '%' : ''));
+      var bar = el('div','cadence-bar');
+      bar.style.height = Math.max(0.4, 100*ovP[b]/yMax) + '%';
+      cell.appendChild(bar);
+      cells.appendChild(cell);
+      cellEls.push(cell);
+    }
+    plot.appendChild(cells);
+
+    // 爬坡分布疊在上面（階梯外框，不放任何文字進 SVG）
+    if (clP){
+      var W = 1000, H = 1000, dd = '';
+      for (var k=0; k<N; k++){
+        var x0 = W*k/N, x1 = W*(k+1)/N, y = H - H*Math.min(1, clP[k]/yMax);
+        dd += (k===0 ? 'M'+x0.toFixed(1)+','+y.toFixed(1) : 'L'+x0.toFixed(1)+','+y.toFixed(1));
+        dd += 'L'+x1.toFixed(1)+','+y.toFixed(1);
+      }
+      var svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+      svg.setAttribute('class','cadence-ovl');
+      svg.setAttribute('viewBox','0 0 '+W+' '+H);
+      svg.setAttribute('preserveAspectRatio','none');
+      svg.setAttribute('aria-hidden','true');
+      var fillP = document.createElementNS('http://www.w3.org/2000/svg','path');
+      fillP.setAttribute('d', dd + 'L'+W+','+H+'L0,'+H+'Z');
+      fillP.setAttribute('fill','rgba(252,76,2,.065)');
+      var lineP = document.createElementNS('http://www.w3.org/2000/svg','path');
+      lineP.setAttribute('d', dd);
+      lineP.setAttribute('fill','none');
+      lineP.setAttribute('stroke','#FC4C02');
+      lineP.setAttribute('stroke-width','1.6');
+      lineP.setAttribute('stroke-linejoin','round');
+      svg.appendChild(fillP); svg.appendChild(lineP);
+      plot.appendChild(svg);
+    }
+
+    // 中位數刻度
+    function medMark(v, color, label, top){
+      var m = el('div','cadence-med');
+      m.style.left = (100*xOf(v)) + '%';
+      m.style.borderLeftColor = color;
+      m.style.borderLeftStyle = 'dashed';
+      var u = el('u', null, label);
+      u.style.color = color;
+      u.style.top = top + 'px';
+      if (xOf(v) > .62){ u.style.right = '4px'; } else { u.style.left = '4px'; }
+      m.appendChild(u);
+      plot.appendChild(m);
+    }
+    if (ovMed != null) medMark(ovMed, 'rgba(244,240,234,.55)', '全部 中位 ' + Math.round(ovMed), 4);
+    if (clMed != null) medMark(clMed, '#FC4C02', clName + ' 中位 ' + Math.round(clMed), 22);
+
+    main.appendChild(plot);
+
+    // X 軸
+    var xax = el('div','cadence-xaxis');
+    [40,50,60,70,80,90,100,110].forEach(function(v){
+      if (E.indexOf(v) < 0) return;
+      var t = el('div','cadence-xt', String(v));
+      t.style.left = (100*xOf(v)) + '%';
+      xax.appendChild(t);
+    });
+    main.appendChild(xax);
+    main.appendChild(el('div','cadence-xunit','RPM　·　兩端的斜紋格是 <'+E[1]+' 與 '+E[N-1]+'+ 的收攏格'));
+
+    // 讀數列
+    var read = el('div','cadence-read');
+    function setRead(i){
+      read.innerHTML = '';
+      if (i == null){
+        var s = el('em', null,
+          '滑過／點任一格看該踏頻區間的時間占比。' +
+          (clP ? '　橘線＝' + graded.length + ' 條有坡度的 ITT 合計 ' + hm(clTot) + '；灰柱＝全部戶外 ' + hm(ovTot) + '。' : ''));
+        read.appendChild(s);
+        return;
+      }
+      var k1 = el('k', null, binLabel(i) + ' RPM');
+      read.appendChild(k1);
+      var w1 = el('span'); w1.appendChild(el('k',null,'全部戶外'));
+      var v1 = el('v', null, one(ovP[i]) + '%'); w1.appendChild(v1);
+      w1.appendChild(el('k',null,'　' + hm(OV[i])));
+      w1.style.display = 'inline-flex'; w1.style.alignItems = 'baseline';
+      read.appendChild(w1);
+      if (clP){
+        var w2 = el('span'); w2.appendChild(el('k',null,clName));
+        var v2 = el('v','cadence-hot', one(clP[i]) + '%'); w2.appendChild(v2);
+        w2.appendChild(el('k',null,'　' + hm(climb[i])));
+        w2.style.display = 'inline-flex'; w2.style.alignItems = 'baseline';
+        read.appendChild(w2);
+      }
+    }
+    cellEls.forEach(function(c, i){
+      c.addEventListener('mouseenter', function(){ setRead(i); });
+      c.addEventListener('focus', function(){ setRead(i); });
+      c.addEventListener('click', function(){ setRead(i); });
+    });
+    cells.addEventListener('mouseleave', function(){ setRead(null); });
+    setRead(null);
+
+    // 圖例
+    var leg = el('div','cadence-leg');
+    function legItem(swCls, swStyle, txt){
+      var s = el('span');
+      var sw = el('i','cadence-sw' + (swCls ? ' ' + swCls : ''));
+      sw.style.cssText += swStyle || '';
+      s.appendChild(sw); s.appendChild(document.createTextNode(txt));
+      leg.appendChild(s);
+    }
+    legItem('', 'background:rgba(244,240,234,.26)', (C.overall.label || '全部戶外騎乘') + ' · ' + hm(ovTot));
+    if (clP) legItem('cadence-l', '', graded.length + ' 條有坡度的 ITT 合計 · ' + hm(clTot));
+    legItem('cadence-d', '', '中位數');
+    main.appendChild(read);
+    main.appendChild(leg);
+    root.appendChild(main);
+
+    // ══ 小倍數 ═══════════════════════════════════
+    function miniGrid(list, title, note, keyed){
+      if (!list.length) return;
+      var head = el('div','cadence-sub');
+      head.appendChild(el('h3', null, title));
+      head.appendChild(el('p', null, note));
+      root.appendChild(head);
+
+      var wrap = el('div','cadence-grid2');
+      list.forEach(function(s){
+        var p = pcts(s.secs), tot = sum(s.secs);
+        var mx = Math.max.apply(null, p) || 1;
+        var med = (typeof s.median === 'number') ? s.median : quant(s.secs, .5);
+        var hi = pctAtLeast(s.secs, 90);
+
+        var card = el('div','cadence-mini' + (keyed ? ' cadence-key' : ''));
+        var h = el('div','cadence-mh');
+        var nm = el('b', null, s.name || s.key); nm.title = s.name || s.key;
+        h.appendChild(nm);
+        h.appendChild(el('span','cadence-gr' + (typeof s.grade === 'number' ? '' : ' cadence-mute'),
+          typeof s.grade === 'number' ? one(s.grade) + '%' : '坡度未知'));
+        card.appendChild(h);
+
+        var mv = el('div','cadence-mv');
+        mv.appendChild(el('strong', null, med != null ? String(Math.round(med)) : '—'));
+        mv.appendChild(el('i', null, 'RPM 中位'));
+        card.appendChild(mv);
+
+        var W2 = 1000, H2 = 100;
+        var sv = document.createElementNS('http://www.w3.org/2000/svg','svg');
+        sv.setAttribute('class','cadence-msvg');
+        sv.setAttribute('viewBox','0 0 '+W2+' '+H2);
+        sv.setAttribute('preserveAspectRatio','none');
+        sv.setAttribute('aria-label', (s.name||s.key) + ' 踏頻中位數 ' + (med!=null?Math.round(med):'—')
+          + ' rpm，90 rpm 以上占 ' + one(hi) + '%');
+        // 60/80/100 的參考細線
+        [60,80,100].forEach(function(v){
+          if (E.indexOf(v) < 0) return;
+          var ln = document.createElementNS('http://www.w3.org/2000/svg','line');
+          var x = W2*xOf(v);
+          ln.setAttribute('x1',x); ln.setAttribute('x2',x);
+          ln.setAttribute('y1',0); ln.setAttribute('y2',H2);
+          ln.setAttribute('stroke','rgba(255,255,255,.065)');
+          ln.setAttribute('stroke-width','1');
+          sv.appendChild(ln);
+        });
+        for (var q=0;q<N;q++){
+          if (!p[q]) continue;
+          var r = document.createElementNS('http://www.w3.org/2000/svg','rect');
+          var bw = W2/N, hgt = Math.max(1.2, H2*p[q]/mx);
+          r.setAttribute('x', (W2*q/N + bw*0.14).toFixed(1));
+          r.setAttribute('width', (bw*0.72).toFixed(1));
+          r.setAttribute('y', (H2-hgt).toFixed(1));
+          r.setAttribute('height', hgt.toFixed(1));
+          r.setAttribute('fill', E[q] >= 90 ? '#FC4C02' : 'rgba(244,240,234,.26)');
+          sv.appendChild(r);
+        }
+        if (med != null){
+          var ml = document.createElementNS('http://www.w3.org/2000/svg','line');
+          var mxp = W2*xOf(med);
+          ml.setAttribute('class','cadence-mmed');
+          ml.setAttribute('x1',mxp); ml.setAttribute('x2',mxp);
+          ml.setAttribute('y1',-4); ml.setAttribute('y2',H2);
+          ml.setAttribute('stroke','rgba(244,240,234,.72)');
+          ml.setAttribute('stroke-width','1');
+          ml.setAttribute('stroke-dasharray','3 3');
+          sv.appendChild(ml);
+        }
+        card.appendChild(sv);
+
+        var mxr = el('div','cadence-mx');
+        [60,80,100].forEach(function(v){
+          if (E.indexOf(v) < 0) return;
+          var t = el('b', null, String(v));
+          t.style.left = (100*xOf(v)) + '%';
+          mxr.appendChild(t);
+        });
+        card.appendChild(mxr);
+
+        var f = el('div','cadence-mf');
+        f.appendChild(document.createTextNode((s.n_efforts||0) + ' 趟 · ' + hm(tot) + ' · 90+ '));
+        f.appendChild(el('b', 'cadence-mute', one(hi) + '%'));
+        card.appendChild(f);
+        wrap.appendChild(card);
+      });
+      root.appendChild(wrap);
+    }
+
+    miniGrid(graded, '有坡度的 ITT 路段 · 依坡度由緩到陡',
+      '橘色＝ 90 rpm 以上的時間；虛線＝中位數。每張各自正規化，看的是形狀不是高度。', true);
+    miniGrid(flat, '其餘路段 · 依中位踏頻由高到低',
+      '沒有登錄坡度，多半是平路或混合段 —— 拿來當對照組。', false);
+
+    // ══ 判讀（全部從上面算出來的數字生成） ════════
+    var say = el('div','lab-say');
+    var html = '';
+    var ovHi = pctAtLeast(OV, 90), ovHiSec = secsAtLeast(OV, 90);
+
+    html += '全部戶外 <b>' + hm(ovTot) + '</b>的踏頻中位數 <b>' + Math.round(ovMed) + ' rpm</b>，'
+          + '90 rpm 以上占 <b>' + one(ovHi) + '%</b>（' + hm(ovHiSec) + '）。';
+
+    if (clP){
+      var clHi = pctAtLeast(climb, 90), clHiSec = secsAtLeast(climb, 90);
+      var lo10 = quant(climb, .1), hi90 = quant(climb, .9);
+      html += '但那些高踏頻幾乎都不在坡上：' + graded.length + ' 條有坡度的 ITT 合計 <b>' + hm(clTot)
+            + '</b>，八成的時間擠在 <b>' + Math.round(lo10) + '–' + Math.round(hi90) + ' rpm</b>，'
+            + '90 以上只剩 <span class="hot">' + one(clHi) + '%</span>（' + hm(clHiSec) + '）——'
+            + '平均每爬 1 小時，只有 <b>' + Math.round(clHi*0.6) + ' 分鐘</b>踩在 90 以上。';
+
+      // 坡度 → 中位踏頻 的鏈條，以及它在哪裡斷掉
+      var gmed = graded.map(function(s){
+        return (typeof s.median === 'number') ? s.median : (quant(s.secs, .5) || 0);
+      });
+      var chain = graded.map(function(s, i){
+        return s.name.replace(/\s*全段$/,'') + ' ' + one(s.grade) + '% → ' + Math.round(gmed[i]) + ' rpm';
+      }).join('，');
+      html += '<br>坡度越陡踏頻越低：' + chain + '。';
+
+      var breaks = [];
+      for (var t=1;t<graded.length;t++){
+        if (gmed[t] > gmed[t-1]){
+          breaks.push(graded[t].name.replace(/\s*全段$/,'') + '（' + one(graded[t].grade) + '%，'
+            + Math.round(gmed[t]) + ' rpm）反而高過'
+            + graded[t-1].name.replace(/\s*全段$/,'') + '（' + one(graded[t-1].grade) + '%，'
+            + Math.round(gmed[t-1]) + ' rpm）');
+        }
+      }
+      if (breaks.length){
+        html += '唯一的例外是' + breaks.join('；') + '，'
+              + '這條鏈子是從 ' + one(graded[1].grade) + '% 起才單調往下的。';
+      }
+      var steep = graded[graded.length-1];
+      html += '最陡的' + steep.name.replace(/\s*全段$/,'') + '（' + one(steep.grade) + '%）'
+            + '的 90 以上只有 <span class="hot">' + one(pctAtLeast(steep.secs, 90)) + '%</span>，'
+            + '整段幾乎是空的 —— 而填平 60 分鐘功率斷崖，要的正是這一段。';
+    }
+    say.innerHTML = html;
+    root.appendChild(say);
+  }});
+})();
+</script>

@@ -1,0 +1,284 @@
+<style>
+/* ══ quality · 執行品質四維 ══ 選擇器一律 .quality- 前綴 */
+.quality-root{--q-h:14px}
+
+/* 圖例 */
+.quality-lg{display:flex;flex-wrap:wrap;gap:7px 18px;margin-bottom:16px;
+  font-size:10.5px;letter-spacing:.4px;color:var(--ink-3)}
+.quality-lg i{font-style:normal;display:inline-flex;align-items:center;gap:6px}
+.quality-lg .quality-sw{width:22px;height:8px;border-radius:2px;background:rgba(244,240,234,.28);flex:none}
+.quality-lg .quality-sw.is-hot{background:var(--sig)}
+.quality-lg .quality-sw.is-nil{background:repeating-linear-gradient(135deg,rgba(244,240,234,.14) 0 4px,transparent 4px 8px)}
+.quality-lg .quality-sw.is-prev{width:2px;height:12px;border-radius:0;
+  background:repeating-linear-gradient(180deg,var(--ink-3) 0 2px,transparent 2px 4px)}
+
+/* 一堂 = 一個區塊，直向排列 */
+.quality-s{padding:15px 0 16px;border-top:1px solid var(--hair)}
+.quality-s:first-of-type{border-top:0;padding-top:0}
+.quality-hd{display:flex;align-items:baseline;flex-wrap:wrap;gap:6px 11px;margin-bottom:10px}
+.quality-md{font-size:19px;color:var(--ink-1);flex:none}
+.quality-yr{font-size:10px;letter-spacing:1px;color:var(--ink-3);flex:none}
+.quality-lb{flex:1 1 180px;min-width:0;font-size:11.5px;color:var(--ink-3);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.quality-tot{display:flex;align-items:baseline;gap:8px;flex:none;margin-left:auto}
+.quality-num{font-size:20px;color:var(--ink-1)}
+.quality-g{font-family:var(--f-num);font-weight:800;font-size:12px;letter-spacing:.6px;
+  padding:1px 7px;border-radius:3px;border:1px solid currentColor;line-height:1.5}
+.quality-g[data-t="ok"]{color:var(--ok)}
+.quality-g[data-t="mid"]{color:var(--warn)}
+.quality-g[data-t="bad"]{color:var(--sig)}
+
+/* 加權組成條：段寬＝權重，填滿比例＝總分 */
+.quality-strip{display:flex;gap:3px;height:8px;margin-bottom:12px}
+.quality-seg{position:relative;background:rgba(255,255,255,.05);border-radius:2px;overflow:hidden;min-width:2px}
+.quality-seg span{position:absolute;left:0;top:0;bottom:0;background:rgba(244,240,234,.28)}
+.quality-seg.is-hot span{background:var(--sig)}
+
+/* 四維並排的水平條 */
+.quality-row{display:grid;grid-template-columns:104px 1fr 40px 54px;align-items:center;
+  gap:10px;padding:3px 0}
+.quality-nm{font-size:12px;color:var(--ink-1);line-height:1.25}
+.quality-nm em{font-style:normal;color:var(--sig);font-size:9.5px;font-weight:700;margin-left:4px;letter-spacing:.5px}
+.quality-nm i{display:block;font-style:normal;margin-top:2px;white-space:nowrap;min-height:11px;
+  font-size:9px;letter-spacing:.7px;color:var(--ink-3)}
+.quality-nm i b{font-weight:400}
+.quality-track{position:relative;height:var(--q-h);border-radius:2px;overflow:hidden;
+  background:rgba(255,255,255,.045);
+  background-image:linear-gradient(90deg,transparent calc(50% - .5px),rgba(255,255,255,.10) calc(50% - .5px),rgba(255,255,255,.10) calc(50% + .5px),transparent calc(50% + .5px))}
+.quality-fill{position:absolute;left:0;top:0;bottom:0;border-radius:2px;background:rgba(244,240,234,.28)}
+.quality-row.is-hot .quality-fill{background:var(--sig)}
+.quality-prev{position:absolute;top:0;bottom:0;width:2px;margin-left:-1px;
+  background:repeating-linear-gradient(180deg,var(--ink-3) 0 2px,transparent 2px 4px)}
+.quality-v{font-size:14px;color:var(--ink-1);text-align:right}
+.quality-d{font-size:10.5px;text-align:right;color:var(--ink-3);white-space:nowrap}
+.quality-d.is-up{color:var(--ok)}
+.quality-d.is-dn{color:var(--warn)}
+.quality-row.is-nil .quality-track{background-image:none;
+  background:repeating-linear-gradient(135deg,rgba(244,240,234,.055) 0 4px,transparent 4px 8px)}
+.quality-row.is-nil .quality-nm,.quality-row.is-nil .quality-v{color:var(--ink-3)}
+.quality-nilx{position:absolute;left:7px;top:0;line-height:var(--q-h);
+  font-size:9.5px;letter-spacing:.5px;color:var(--ink-3)}
+
+@media(max-width:767px){
+  .quality-lb{flex:1 1 100%;order:3;white-space:normal}
+  .quality-tot{margin-left:auto}
+  .quality-row{grid-template-columns:64px 1fr 36px 46px;gap:8px}
+  .quality-nm{font-size:11.5px}
+  .quality-nm i b{display:none}   /* 窄螢幕只留權重，英文名收掉 */
+  .quality-v{font-size:13px}
+  .quality-d{font-size:10px}
+}
+</style>
+<section class="lab-card" id="card-quality">
+  <h2 class="lab-h">執行品質四維 <span>· QUALITY · 課表到底有沒有照做——四個維度分開看，是哪一維在扣分</span></h2>
+  <div class="quality-root"></div>
+</section>
+<script>
+(function(){
+  window.LAB_PARTS = window.LAB_PARTS || [];
+
+  var DIMS = [
+    { k:'compliance', zh:'執行度', en:'COMPLIANCE', d:'work 段功率 vs 處方（平均 × 落在區間的時間佔比）' },
+    { k:'discipline', zh:'紀律',   en:'DISCIPLINE', d:'逐秒對帳課表規則（不准滑行、該做滿的時間）' },
+    { k:'durability', zh:'續航',   en:'DURABILITY', d:'work 段前半 vs 後半的衰減' },
+    { k:'cadence',    zh:'迴轉',   en:'CADENCE',    d:'踩踏秒數落在目標迴轉區間的佔比' }
+  ];
+  var DEFW = { compliance:0.40, discipline:0.25, durability:0.20, cadence:0.15 };
+  var ZH = {}; DIMS.forEach(function(d){ ZH[d.k] = d.zh; });
+
+  function isNum(v){ return typeof v === 'number' && isFinite(v); }
+  function f1(v){ return (Math.round(v*10)/10).toFixed(1); }
+  function esc(s){
+    return String(s == null ? '' : s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function clamp(v){ return Math.max(0, Math.min(100, v)); }
+  function gradeTone(g){
+    var c = String(g || '').charAt(0).toUpperCase();
+    if (c === 'A' || c === 'B') return 'ok';
+    if (c === 'C' || c === 'D') return 'mid';
+    return 'bad';
+  }
+  // 權重只算「當天真的有這個維度」的那幾維，再重新歸一 —— json 裡的 total 就是這樣算的
+  function effWeights(s){
+    var w = s.weights || {}, out = {}, tot = 0;
+    DIMS.forEach(function(d){
+      if (!isNum((s.dims||{})[d.k])) return;
+      var x = isNum(w[d.k]) ? w[d.k] : DEFW[d.k];
+      out[d.k] = x; tot += x;
+    });
+    if (tot > 0) { for (var k in out) out[k] = out[k] / tot; }
+    return out;
+  }
+  function weakest(s){
+    var best = null;
+    DIMS.forEach(function(d){
+      var v = (s.dims||{})[d.k];
+      if (!isNum(v)) return;
+      if (!best || v < best.v) best = { k:d.k, v:v };
+    });
+    return best;
+  }
+
+  window.LAB_PARTS.push({ id:'quality', render: function(root, LAB){
+    var raw = (LAB && LAB.scores) || [];
+    if (!raw.length){
+      root.innerHTML = '<div class="lab-nil">還沒有這個資料 —— <code>data/lab.json</code> 的 <code>scores</code> 是空的，' +
+        '要有逐段對帳過的課表（<code>tools/tcx/score.py</code>）才會出現。</div>';
+      return;
+    }
+
+    var rows = raw.slice().filter(function(s){ return s && s.dims; })
+      .sort(function(a,b){ return String(a.date) < String(b.date) ? -1 : 1; });
+    if (!rows.length){
+      root.innerHTML = '<div class="lab-nil">還沒有這個資料 —— scores 裡沒有帶維度的堂數。</div>';
+      return;
+    }
+
+    var html = '';
+
+    html += '<div class="quality-lg">' +
+      '<i><span class="quality-sw"></span>維度得分 0–100</i>' +
+      '<i><span class="quality-sw is-hot"></span>當天最弱的一維</i>' +
+      '<i><span class="quality-sw is-prev"></span>上一堂的位置</i>' +
+      '<i><span class="quality-sw is-nil"></span>當天沒有這個維度（不計分，權重分回其餘三維）</i>' +
+      '<i>頂端細條：段寬＝權重、填滿＝該維得分，整條填滿的比例就是總分</i>' +
+      '</div>';
+
+    rows.forEach(function(s, i){
+      var prev = i > 0 ? rows[i-1] : null;
+      var w = effWeights(s);
+      var wk = weakest(s);
+      var d = String(s.date || '');
+      var tone = gradeTone(s.grade);
+
+      html += '<article class="quality-s">';
+
+      html += '<header class="quality-hd">' +
+        '<span class="lab-n quality-md">' + esc(d.slice(5).replace('-','/')) + '</span>' +
+        '<span class="quality-yr">' + esc(d.slice(0,4)) + '</span>' +
+        '<span class="quality-lb" title="' + esc(s.label) + '">' + esc(s.label) + '</span>' +
+        '<span class="quality-tot">' +
+          '<span class="quality-g" data-t="' + tone + '">' + esc(s.grade) + '</span>' +
+          '<span class="lab-n quality-num">' + (isNum(s.total) ? f1(s.total) : '—') + '</span>' +
+        '</span></header>';
+
+      // 加權組成條
+      var stripe = '';
+      DIMS.forEach(function(dim){
+        var v = s.dims[dim.k];
+        if (!isNum(v) || !w[dim.k]) return;
+        stripe += '<div class="quality-seg' + (wk && wk.k === dim.k ? ' is-hot' : '') +
+          '" style="flex:' + (w[dim.k]*100).toFixed(2) + ' 0 0" title="' +
+          esc(dim.zh + ' ' + f1(v) + ' × 權重 ' + Math.round(w[dim.k]*100) + '% ＝ 對總分貢獻 ' + f1(v*w[dim.k]) + ' 分') +
+          '"><span style="width:' + clamp(v).toFixed(1) + '%"></span></div>';
+      });
+      if (stripe) html += '<div class="quality-strip">' + stripe + '</div>';
+
+      // 四維水平條
+      DIMS.forEach(function(dim){
+        var v = s.dims[dim.k];
+        var has = isNum(v);
+        var pv = prev && isNum((prev.dims||{})[dim.k]) ? prev.dims[dim.k] : null;
+        var cls = 'quality-row' + (has ? (wk && wk.k === dim.k ? ' is-hot' : '') : ' is-nil');
+        var tip = has
+          ? dim.zh + ' ' + f1(v) + '　' + dim.d + (w[dim.k] ? '　權重 ' + Math.round(w[dim.k]*100) + '%' : '')
+          : dim.zh + '：當天的課表沒有這個維度可對帳（' + dim.d + '）';
+
+        html += '<div class="' + cls + '" title="' + esc(tip) + '">';
+        html += '<div class="quality-nm">' + esc(dim.zh) +
+          (has && wk && wk.k === dim.k ? '<em>最弱</em>' : '') +
+          '<i><b>' + dim.en + (has && w[dim.k] ? ' ·' : '') + '</b>' +
+          (has && w[dim.k] ? ' ' + Math.round(w[dim.k]*100) + '%' : '') + '</i></div>';
+
+        html += '<div class="quality-track">';
+        if (has){
+          html += '<div class="quality-fill" style="width:' + clamp(v).toFixed(1) + '%"></div>';
+          if (pv !== null) html += '<div class="quality-prev" style="left:' + clamp(pv).toFixed(1) + '%"></div>';
+        } else {
+          html += '<span class="quality-nilx">本日無此維度</span>';
+        }
+        html += '</div>';
+
+        html += '<div class="lab-n quality-v">' + (has ? f1(v) : '—') + '</div>';
+
+        var dv = (has && pv !== null) ? v - pv : null;
+        var dcls = dv === null ? '' : (dv >= 0 ? ' is-up' : ' is-dn');
+        var dtxt = dv === null ? '—' : (dv >= 0 ? '▲ ' : '▼ ') + f1(Math.abs(dv));
+        html += '<div class="quality-d' + dcls + '">' + dtxt + '</div>';
+
+        html += '</div>';
+      });
+
+      html += '</article>';
+    });
+
+    // ── 判讀：全部從上面同一份資料現算 ───────────────────────────
+    var say = [];
+
+    // 1) 最新一堂 vs 上一堂，動最多的那一維
+    var last = rows[rows.length-1];
+    if (rows.length >= 2){
+      var pre = rows[rows.length-2], mv = null;
+      DIMS.forEach(function(dim){
+        var a = (pre.dims||{})[dim.k], b = (last.dims||{})[dim.k];
+        if (!isNum(a) || !isNum(b)) return;
+        var diff = b - a;
+        if (!mv || Math.abs(diff) > Math.abs(mv.diff)) mv = { k:dim.k, diff:diff, a:a, b:b };
+      });
+      var tot = (isNum(last.total) && isNum(pre.total)) ? last.total - pre.total : null;
+      say.push('最新一堂 <b>' + esc(String(last.date).slice(5).replace('-','/')) + '</b> 總分 <b>' +
+        f1(last.total) + '</b>（' + esc(last.grade) + '）' +
+        (tot === null ? '' : '，比上一堂 ' + esc(String(pre.date).slice(5).replace('-','/')) + ' 的 ' +
+          f1(pre.total) + (tot >= 0 ? ' 拉回 ' : ' 掉了 ') + f1(Math.abs(tot)) + ' 分') +
+        (mv ? '；動最多的是<b>' + ZH[mv.k] + '</b> ' + f1(mv.a) + ' → ' + f1(mv.b) +
+          '（' + (mv.diff >= 0 ? '+' : '−') + f1(Math.abs(mv.diff)) + '）' : '') + '。');
+    } else {
+      say.push('目前只有 <b>1</b> 堂對帳過的課表，還比不出趨勢。');
+    }
+
+    // 2) 同一個等第的幾堂，失分位置一不一樣
+    var lowest = rows.reduce(function(a,b){ return (isNum(b.total) && b.total < a.total) ? b : a; }, rows[0]);
+    var grp = rows.filter(function(s){ return String(s.grade) === String(lowest.grade); });
+    if (grp.length >= 2){
+      var A = grp[0], B = grp[grp.length-1];
+      var wa = weakest(A), wb = weakest(B), gap = null;
+      DIMS.forEach(function(dim){
+        var a = (A.dims||{})[dim.k], b = (B.dims||{})[dim.k];
+        if (!isNum(a) || !isNum(b)) return;
+        var diff = Math.abs(b - a);
+        if (!gap || diff > gap.diff) gap = { k:dim.k, diff:diff, a:a, b:b };
+      });
+      var dA = esc(String(A.date).slice(5).replace('-','/')), dB = esc(String(B.date).slice(5).replace('-','/'));
+      if (wa && wb && wa.k !== wb.k){
+        say.push('同樣拿 <b>' + esc(lowest.grade) + '</b> 的 ' + grp.length + ' 堂，<b>失分位置不一樣</b>：' +
+          dA + ' 最弱的是<span class="hot">' + ZH[wa.k] + '</span> ' + f1(wa.v) + '，' +
+          dB + ' 最弱的是<span class="hot">' + ZH[wb.k] + '</span> ' + f1(wb.v) +
+          (gap ? '；兩天落差最大的維度是<b>' + ZH[gap.k] + '</b>（' + f1(gap.a) + ' → ' + f1(gap.b) +
+            '，差 ' + f1(gap.diff) + ' 分）' : '') + '。同一個等第不代表同一種問題，要修的東西不同。');
+      } else if (wa){
+        say.push('同樣拿 <b>' + esc(lowest.grade) + '</b> 的 ' + grp.length + ' 堂最弱的都是<span class="hot">' +
+          ZH[wa.k] + '</span>' + (gap ? '；兩天落差最大的維度是<b>' + ZH[gap.k] + '</b>（' +
+          f1(gap.a) + ' → ' + f1(gap.b) + '，差 ' + f1(gap.diff) + ' 分）' : '') + '。');
+      }
+    }
+
+    // 3) 缺維度的堂數
+    var miss = {};
+    DIMS.forEach(function(dim){
+      var n = rows.filter(function(s){ return !isNum((s.dims||{})[dim.k]); }).length;
+      if (n) miss[dim.k] = n;
+    });
+    var mk = Object.keys(miss);
+    if (mk.length){
+      say.push(mk.map(function(k){
+        return '<b>' + miss[k] + '/' + rows.length + '</b> 堂沒有' + ZH[k] + '維度';
+      }).join('、') + '——那幾天的課表本來就沒開這個處方，<b>不是 0 分</b>，權重按比例分回其餘幾維。');
+    }
+
+    html += '<div class="lab-say">' + say.join('<br>') + '</div>';
+
+    root.innerHTML = html;
+  }});
+})();
+</script>

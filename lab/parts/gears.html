@@ -1,0 +1,417 @@
+<style>
+/* ══ gears · 齒比與坡度 ══ 全部選擇器都掛 .gears- 前綴 */
+.gears-root{--gears-lo:var(--sig);--gears-mid:var(--warn);--gears-hi:var(--cool);--gears-x:var(--vio)}
+
+/* 圖例 */
+.gears-legend{display:flex;flex-wrap:wrap;gap:6px 18px;margin-bottom:16px;font-size:11px;line-height:1.5;color:var(--ink-2)}
+.gears-lg{display:flex;align-items:center;gap:7px}
+.gears-lgbox{display:flex;align-items:center;justify-content:center;width:20px;height:20px;flex:0 0 20px}
+.gears-lgt b{color:var(--ink-1);font-weight:700}
+.gears-lgt i{font-style:normal;color:var(--ink-3)}
+.gears-lgsep{width:100%;height:0;margin:-2px 0}
+
+/* 標記本體 */
+.gears-mk{display:block;border-radius:50%;box-sizing:border-box}
+.gears-mk-floor{border:0}                                   /* 沒檔可下：實心 */
+.gears-mk-edge{background:transparent;border-style:solid}    /* 接近見底：甜甜圈 */
+.gears-mk-room{background:transparent;border-style:solid;opacity:.55} /* 還有餘裕：細環 */
+.gears-mk-ring{background:transparent;border-style:solid;border-radius:2px;transform:rotate(45deg)} /* 沒下小盤：菱形 */
+.gears-cross{outline:1.5px dotted var(--gears-x);outline-offset:3px;border-radius:50%}
+.gears-mk-ring.gears-cross{outline-offset:4px;border-radius:2px}
+
+/* 點（外面包一層方便點到 / 可鍵盤 focus） */
+.gears-pt{position:absolute;width:24px;height:24px;margin:0;padding:0;border:0;background:none;
+  transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;
+  cursor:pointer;z-index:2}
+.gears-pt:hover,.gears-pt:focus-visible{z-index:6;outline:none}
+.gears-pt:hover .gears-mk,.gears-pt:focus-visible .gears-mk{filter:brightness(1.35)}
+.gears-pt:focus-visible::after{content:'';position:absolute;inset:1px;border:1px solid var(--ink-1);border-radius:50%}
+
+/* 主圖 */
+.gears-scroll{overflow-x:auto;overflow-y:visible;-webkit-overflow-scrolling:touch}
+.gears-plot{position:relative;min-width:300px;padding:6px 34px 46px 40px}
+.gears-area{position:relative;height:296px}
+.gears-grid{position:absolute;inset:0;width:100%;height:100%;display:block}
+.gears-ylab{position:absolute;right:calc(100% + 7px);transform:translateY(-50%);
+  font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:700;font-size:11px;
+  color:var(--ink-3);white-space:nowrap}
+.gears-yname{position:absolute;left:-2px;top:-2px;font-size:10.5px;letter-spacing:.3px;color:var(--ink-3)}
+.gears-rule{position:absolute;left:0;transform:translateY(-50%);font-size:10px;color:var(--ink-3);
+  background:linear-gradient(90deg,rgba(10,4,8,.92),rgba(10,4,8,0) 92%);padding:1px 14px 1px 3px;
+  pointer-events:none;z-index:3;white-space:nowrap}
+.gears-col{position:absolute;top:calc(100% + 9px);transform:translateX(-50%);text-align:center;
+  width:88px;font-size:10.5px;line-height:1.35;color:var(--ink-3)}
+.gears-col b{display:block;font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:800;
+  font-size:15px;color:var(--ink-2);letter-spacing:.2px}
+.gears-col span{display:block;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gears-xname{position:absolute;right:0;bottom:8px;font-size:10.5px;color:var(--ink-3)}
+
+/* 坡度未知的那 51 趟 */
+.gears-sub{margin-top:26px;padding-top:16px;border-top:1px solid var(--hair)}
+.gears-subh{font-size:11.5px;line-height:1.7;color:var(--ink-2);margin-bottom:12px}
+.gears-subh b{color:var(--ink-1);font-weight:700}
+.gears-lane{display:grid;grid-template-columns:118px 1fr;align-items:center;gap:0 10px;margin-bottom:2px}
+.gears-lanem{font-size:11px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right}
+.gears-lanem i{font-style:normal;color:var(--ink-3);font-family:var(--f-num);font-variant-numeric:tabular-nums}
+.gears-lanet{position:relative;height:30px}
+.gears-lanet::before{content:'';position:absolute;left:0;right:0;top:50%;height:1px;background:var(--hair)}
+.gears-laneaxis{display:grid;grid-template-columns:118px 1fr;gap:0 10px;margin-top:4px}
+.gears-lanescale{position:relative;height:14px;font-family:var(--f-num);font-variant-numeric:tabular-nums;font-size:10px;color:var(--ink-3)}
+.gears-lanescale span{position:absolute;transform:translateX(-50%)}
+
+/* 浮出的細節 */
+.gears-tip{position:absolute;z-index:20;width:250px;padding:10px 11px 11px;pointer-events:none;
+  background:#120810;border:1px solid rgba(255,255,255,.13);border-radius:5px;
+  box-shadow:0 14px 34px rgba(0,0,0,.6);font-size:11px;line-height:1.55;color:var(--ink-2);
+  opacity:0;transition:opacity .12s}
+.gears-tip.on{opacity:1}
+.gears-tiph{font-size:12px;color:var(--ink-1);font-weight:700;margin-bottom:1px}
+.gears-tipd{font-family:var(--f-num);font-variant-numeric:tabular-nums;font-size:11px;color:var(--ink-3);letter-spacing:.4px}
+.gears-tipv{display:inline-block;margin:6px 0 7px;padding:1px 7px;border-radius:3px;font-size:10.5px;
+  letter-spacing:.5px;border:1px solid currentColor}
+.gears-kv{display:flex;justify-content:space-between;gap:10px}
+.gears-kv span{color:var(--ink-3)}
+.gears-kv b{font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:700;color:var(--ink-1);font-size:12px}
+.gears-mix{margin-top:8px;padding-top:7px;border-top:1px solid var(--hair)}
+.gears-mixh{font-size:10px;letter-spacing:.8px;color:var(--ink-3);margin-bottom:4px}
+.gears-mr{display:grid;grid-template-columns:44px 40px 1fr 60px;align-items:center;gap:6px;margin-bottom:2px;
+  font-family:var(--f-num);font-variant-numeric:tabular-nums;font-size:11px;color:var(--ink-2)}
+.gears-mr u{text-decoration:none;color:var(--ink-3);font-size:10px}
+.gears-bar{position:relative;height:6px;background:rgba(255,255,255,.05);border-radius:2px;overflow:hidden}
+.gears-bar i{position:absolute;left:0;top:0;bottom:0;background:var(--ink-3);border-radius:2px}
+.gears-bar.is-low i{background:var(--sig)}
+.gears-mr em{font-style:normal;color:var(--ink-3);font-size:10px;text-align:right}
+
+.gears-note{margin-top:9px;font-size:11.5px;line-height:1.75;color:var(--ink-3)}
+.gears-note b{color:var(--ink-2);font-weight:700}
+
+@media(max-width:767px){
+  .gears-plot{padding:6px 26px 46px 34px;min-width:290px}
+  .gears-area{height:238px}
+  .gears-lane,.gears-laneaxis{grid-template-columns:92px 1fr}
+  .gears-lanem{font-size:10.5px}
+  .gears-tip{width:214px}
+  .gears-col{width:74px}
+}
+</style>
+<section class="lab-card" id="card-gears">
+  <h2 class="lab-h">齒比與坡度 <span>· GEARING vs GRADE · 爬不動的時候，是沒檔可下，還是自己沒下小盤？</span></h2>
+  <div class="gears-root"></div>
+</section>
+<script>
+(function(){
+  window.LAB_PARTS = window.LAB_PARTS || [];
+
+  window.LAB_PARTS.push({ id: 'gears', render: function(root, LAB){
+
+    var G = (LAB && LAB.gears) || [];
+    if (!G.length){
+      root.innerHTML = '<div class="lab-nil">還沒有這個資料 —— <code>data/lab.json</code> 的 ' +
+        '<code>gears</code> 是空陣列。齒比只有在電變跟手錶配對時才錄得到。</div>';
+      return;
+    }
+
+    /* ── 小工具 ───────────────────────────────────────────────── */
+    var esc = function(s){ return String(s == null ? '' : s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
+    var n1 = function(v){ return (v == null || isNaN(v)) ? '—' : (Math.round(v*10)/10).toFixed(1); };
+    var n2 = function(v){ return (v == null || isNaN(v)) ? '—' : (Math.round(v*100)/100).toFixed(2); };
+    var n0 = function(v){ return (v == null || isNaN(v)) ? '—' : String(Math.round(v)); };
+    var uniq = function(a){ var s = [], i; for (i=0;i<a.length;i++) if (s.indexOf(a[i])<0) s.push(a[i]); return s; };
+    var minOf = function(a){ return a.length ? Math.min.apply(null, a) : null; };
+    var maxOf = function(a){ return a.length ? Math.max.apply(null, a) : null; };
+    var med = function(a){ if(!a.length) return null; var b=a.slice().sort(function(x,y){return x-y;});
+      var m=b.length>>1; return b.length%2 ? b[m] : (b[m-1]+b[m])/2; };
+
+    /* ── 四種判讀的視覺語言（verdict 直接來自資料，不自己重新分類） ─ */
+    var KIND = {
+      '沒檔可下':     { cls:'floor', why:'器材',   blurb:'常掛最輕檔，而那個檔踏頻踩不上去' },
+      '接近見底':     { cls:'edge',  why:'分界線', blurb:'常掛最輕檔，但踏頻還撐得住' },
+      '沒下小盤':     { cls:'ring',  why:'習慣',   blurb:'整段沒用到最輕檔' },
+      '沒用到最輕檔': { cls:'ring',  why:'習慣',   blurb:'整段沒用到最輕檔' },
+      '齒比還有餘裕': { cls:'room',  why:'沒問題', blurb:'最輕檔用不到一半的時間' }
+    };
+    var kindOf = function(v){ return KIND[v] || { cls:'room', why:'', blurb:'' }; };
+
+    /* 踏頻分三段上色；分界點從資料本身量出來（見下方 CAD_CUT） */
+    var CAD_CUT = 70, CAD_HI = 80;
+    var cadColor = function(c){
+      if (c == null) return 'var(--ink-3)';
+      if (c < CAD_CUT) return 'var(--gears-lo)';
+      if (c < CAD_HI)  return 'var(--gears-mid)';
+      return 'var(--gears-hi)';
+    };
+    var cadSize = function(c){
+      if (c == null) return 11;
+      var t = Math.max(0, Math.min(1, (c - 55) / 30));
+      return 10 + t * 8;                       /* 踏頻越高點越大 */
+    };
+    var CROSS_CUT = 20;                        /* 交叉鏈佔比多少才算「掛著交叉鏈騎」 */
+
+    var markup = function(r){
+      var k = kindOf(r.verdict), d = cadSize(r.low_cad), col = cadColor(r.low_cad),
+          cross = (r.cross_pct >= CROSS_CUT) ? ' gears-cross' : '', st;
+      if (k.cls === 'floor') st = 'width:'+d+'px;height:'+d+'px;background:'+col+';';
+      else if (k.cls === 'edge') st = 'width:'+d+'px;height:'+d+'px;border-width:3px;border-color:'+col+';';
+      else if (k.cls === 'room') st = 'width:'+d+'px;height:'+d+'px;border-width:1.5px;border-color:'+col+';';
+      else st = 'width:'+(d*0.84)+'px;height:'+(d*0.84)+'px;border-width:2px;border-color:'+col+';';
+      return '<i class="gears-mk gears-mk-'+k.cls+cross+'" style="'+st+'"></i>';
+    };
+
+    /* ── 分堆 ─────────────────────────────────────────────────── */
+    var graded = G.filter(function(r){ return r.grade != null; });
+    var plain  = G.filter(function(r){ return r.grade == null; });
+    var byVerdict = {};
+    G.forEach(function(r){ (byVerdict[r.verdict] = byVerdict[r.verdict] || []).push(r); });
+
+    /* 最輕檔是哪一組：用 drivetrain 的完整卡式帶，不是「這趟看到過的齒」 */
+    var dt = (LAB && LAB.drivetrain) || {}, lowCombo = '';
+    if (dt.chainrings && dt.chainrings.length && dt.cassette && dt.cassette.length){
+      lowCombo = Math.min.apply(null, dt.chainrings) + '×' + Math.max.apply(null, dt.cassette);
+    }
+    var bikeMin = G[0].bike_min_dev;
+
+    /* 踏頻的真實分界：沒檔可下的最高踏頻 vs 接近見底的最低踏頻 */
+    var floorCads = (byVerdict['沒檔可下'] || []).map(function(r){ return r.low_cad; })
+                      .filter(function(v){ return v != null; });
+    var edgeCads  = (byVerdict['接近見底'] || []).map(function(r){ return r.low_cad; })
+                      .filter(function(v){ return v != null; });
+
+    /* ── 版面 ─────────────────────────────────────────────────── */
+    var H = [];
+    H.push('<div class="gears-legend">');
+    [['floor','沒檔可下'],['edge','接近見底'],['ring','沒下小盤'],['room','齒比還有餘裕']].forEach(function(p){
+      var rows = byVerdict[p[1]] || (p[1] === '沒下小盤' ? (byVerdict['沒用到最輕檔'] || []) : []);
+      var demo = { verdict:p[1], low_cad:(p[0]==='ring'?null:76), cross_pct:0 };
+      H.push('<span class="gears-lg"><span class="gears-lgbox">'+markup(demo)+'</span>' +
+        '<span class="gears-lgt"><b>'+esc(p[1])+'</b> <i>'+esc(kindOf(p[1]).why)+'·'+rows.length+' 趟</i></span></span>');
+    });
+    H.push('<span class="gears-lgsep"></span>');
+    H.push('<span class="gears-lg"><span class="gears-lgbox">' +
+      '<i class="gears-mk gears-mk-floor" style="width:11px;height:11px;background:var(--gears-lo)"></i></span>' +
+      '<span class="gears-lgt">該檔踏頻 <b>&lt;70</b></span></span>');
+    H.push('<span class="gears-lg"><span class="gears-lgbox">' +
+      '<i class="gears-mk gears-mk-floor" style="width:14px;height:14px;background:var(--gears-mid)"></i></span>' +
+      '<span class="gears-lgt"><b>70–79</b></span></span>');
+    H.push('<span class="gears-lg"><span class="gears-lgbox">' +
+      '<i class="gears-mk gears-mk-floor" style="width:17px;height:17px;background:var(--gears-hi)"></i></span>' +
+      '<span class="gears-lgt"><b>≥80 rpm</b> <i>點越大踏頻越高</i></span></span>');
+    H.push('<span class="gears-lg"><span class="gears-lgbox">' +
+      '<i class="gears-mk gears-mk-edge gears-cross" style="width:12px;height:12px;border-width:2px;border-color:var(--ink-3)"></i></span>' +
+      '<span class="gears-lgt">虛線圈＝<b>交叉鏈</b> <i>佔 '+CROSS_CUT+'% 以上時間</i></span></span>');
+    H.push('</div>');
+
+    /* 主圖：x 坡度、y 掛最輕檔的時間佔比 —— 只有 grade 有值的才畫得進來 */
+    var XMIN = 3.5, XMAX = 10.5;
+    var xp = function(g){ return (g - XMIN) / (XMAX - XMIN) * 100; };
+    var yp = function(p){ return 100 - Math.max(0, Math.min(100, p)); };
+
+    var cols = {};
+    graded.forEach(function(r){ (cols[r.grade] = cols[r.grade] || []).push(r); });
+    var colKeys = Object.keys(cols).map(Number).sort(function(a,b){ return a-b; });
+
+    if (graded.length){
+      H.push('<div class="gears-scroll"><div class="gears-plot"><div class="gears-area" id="gears-area">');
+      H.push('<svg class="gears-grid" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">');
+      [0,25,50,75,100].forEach(function(v){
+        H.push('<line x1="0" y1="'+yp(v)+'" x2="100" y2="'+yp(v)+'" stroke="var(--hair)" ' +
+               'stroke-width="1" vector-effect="non-scaling-stroke"/>');
+      });
+      colKeys.forEach(function(g){
+        H.push('<line x1="'+xp(g)+'" y1="0" x2="'+xp(g)+'" y2="100" stroke="rgba(255,255,255,.045)" ' +
+               'stroke-width="1" vector-effect="non-scaling-stroke"/>');
+      });
+      H.push('<line x1="0" y1="'+yp(45)+'" x2="100" y2="'+yp(45)+'" stroke="rgba(252,76,2,.42)" ' +
+             'stroke-width="1" stroke-dasharray="4 4" vector-effect="non-scaling-stroke"/>');
+      H.push('</svg>');
+      H.push('<div class="gears-yname">掛在最輕檔的時間佔比</div>');
+      [0,25,50,75,100].forEach(function(v){
+        H.push('<div class="gears-ylab" style="top:'+yp(v)+'%">'+v+'%</div>');
+      });
+      H.push('<div class="gears-rule" style="top:'+yp(45)+'%">45% ← 判「常掛最輕檔」的門檻</div>');
+      H.push('<div class="gears-rule" style="top:'+yp(0)+'%">0% ＝ 整段沒下到最輕檔</div>');
+
+      /* 同一條路的多趟左右錯開，不然會疊成一點 */
+      var pts = [];
+      colKeys.forEach(function(g){
+        var rows = cols[g].slice().sort(function(a,b){ return a.date < b.date ? -1 : 1; });
+        var span = 2.9, i;
+        for (i = 0; i < rows.length; i++){
+          var off = rows.length === 1 ? 0 : (i / (rows.length - 1) - 0.5) * span;
+          pts.push({ r: rows[i], x: xp(g + off * (XMAX-XMIN) / 100 * 3.2), y: yp(rows[i].low_pct) });
+        }
+      });
+      pts.forEach(function(p){
+        var idx = G.indexOf(p.r);
+        H.push('<button type="button" class="gears-pt" data-i="'+idx+'" ' +
+          'style="left:'+p.x.toFixed(2)+'%;top:'+p.y.toFixed(2)+'%" ' +
+          'aria-label="'+esc(p.r.name+' '+p.r.date+'，最輕檔佔 '+n1(p.r.low_pct)+'%，'+p.r.verdict)+'">' +
+          markup(p.r) + '</button>');
+      });
+      H.push('</div>');   /* /area */
+      colKeys.forEach(function(g){
+        var nm = uniq(cols[g].map(function(r){ return r.name; })).join('／');
+        H.push('<div class="gears-col" style="left:'+xp(g)+'%"><b>'+n1(g)+'%</b><span>' +
+               esc(nm) + '</span><span>'+cols[g].length+' 趟</span></div>');
+      });
+      H.push('<div class="gears-xname">路段平均坡度 →</div>');
+      H.push('</div></div>');
+    } else {
+      H.push('<div class="lab-nil">沒有任何一趟帶得出平均坡度，主圖畫不出來。</div>');
+    }
+
+    /* 坡度未知的：同一把尺橫過來，一條路一列 */
+    if (plain.length){
+      var lanes = {}, order;
+      plain.forEach(function(r){ (lanes[r.name] = lanes[r.name] || []).push(r); });
+      order = Object.keys(lanes).sort(function(a,b){
+        var ma = med(lanes[a].map(function(r){return r.low_pct;})),
+            mb = med(lanes[b].map(function(r){return r.low_pct;}));
+        return (mb - ma) || (lanes[b].length - lanes[a].length);
+      });
+      H.push('<div class="gears-sub">');
+      H.push('<div class="gears-subh">另外 <b>'+plain.length+' 趟</b>的路段設定檔裡沒有平均坡度，' +
+             '擺不進上圖的 x 軸。同一把尺橫過來：左邊 0%＝整段沒下到最輕檔，右邊 100%＝整段都掛在最輕檔。</div>');
+      order.forEach(function(nm){
+        var rows = lanes[nm];
+        H.push('<div class="gears-lane"><div class="gears-lanem">'+esc(nm)+' <i>'+rows.length+'</i></div>' +
+               '<div class="gears-lanet">');
+        rows.slice().sort(function(a,b){ return a.date < b.date ? -1 : 1; }).forEach(function(r){
+          var idx = G.indexOf(r);
+          H.push('<button type="button" class="gears-pt" data-i="'+idx+'" ' +
+            'style="left:'+Math.max(0, Math.min(100, r.low_pct)).toFixed(2)+'%;top:50%" ' +
+            'aria-label="'+esc(nm+' '+r.date+'，最輕檔佔 '+n1(r.low_pct)+'%，'+r.verdict)+'">' +
+            markup(r) + '</button>');
+        });
+        H.push('</div></div>');
+      });
+      H.push('<div class="gears-laneaxis"><div></div><div class="gears-lanescale">' +
+             '<span style="left:0">0%</span><span style="left:50%">50%</span>' +
+             '<span style="left:100%">100%</span></div></div>');
+      H.push('</div>');
+    }
+
+    H.push('<div class="gears-tip" id="gears-tip" role="status"></div>');
+
+    /* ── 判讀（全部從上面這批資料現算） ─────────────────────────── */
+    var say = [], note = [];
+    var allDates = G.map(function(r){ return r.date; }).sort();
+    var fl = byVerdict['沒檔可下'] || [];
+    if (fl.length){
+      var flBy = {}, flList;
+      fl.forEach(function(r){ (flBy[r.name] = flBy[r.name] || []).push(r); });
+      flList = Object.keys(flBy).sort(function(a,b){ return flBy[b].length - flBy[a].length; })
+        .map(function(nm){
+          var gr = flBy[nm][0].grade;
+          return (gr != null ? n1(gr) + '% 的' : '') + nm + ' ' + flBy[nm].length + ' 趟';
+        }).join('、');
+      say.push('有齒比資料的 <b class="hot">' + G.length + ' 趟</b>（' +
+        allDates[0].slice(0,7) + ' → ' + allDates[allDates.length-1].slice(0,7) + '）裡，<span class="hot">' + fl.length + ' 趟是「沒檔可下」</span>：最輕檔' +
+        (lowCombo ? ' ' + lowCombo : '') + '（展開 ' + n2(bikeMin) + ' m）就吃掉 45% 以上的時間，' +
+        '而那個檔的踏頻<b>沒有一趟超過 ' + n1(maxOf(floorCads)) + ' rpm</b>。落點：' + flList + '。');
+    }
+    if (edgeCads.length && floorCads.length){
+      var eg = (byVerdict['接近見底'] || []).filter(function(r){ return r.grade != null; });
+      var egName = eg.length ? uniq(eg.map(function(r){ return n1(r.grade) + '% 的' + r.name; }))[0] : null;
+      say.push('「接近見底」' + (byVerdict['接近見底']||[]).length + ' 趟的踏頻是 ' +
+        n1(minOf(edgeCads)) + '–' + n1(maxOf(edgeCads)) + ' rpm，跟沒檔可下的 ' +
+        n1(minOf(floorCads)) + '–' + n1(maxOf(floorCads)) + ' 之間<b>沒有一趟重疊</b>，' +
+        '被 ' + CAD_CUT + ' rpm 乾淨切開 —— 這就是分界線' +
+        (egName ? '，' + egName + ' ' + eg.length + ' 趟全部站在還撐得住的那一邊' : '') + '。');
+    }
+    var ringAll = (byVerdict['沒下小盤'] || []).concat(byVerdict['沒用到最輕檔'] || []);
+    var xchain = ringAll.filter(function(r){ return r.cross_pct >= CROSS_CUT; });
+    var flatish = ringAll.filter(function(r){ return r.cross_pct < CROSS_CUT; });
+    if (xchain.length){
+      var xn = uniq(xchain.map(function(r){ return (r.grade != null ? n1(r.grade) + '% 的' : '') + r.name; })).join('、');
+      say.push(xn + ' 這 ' + xchain.length + ' 趟則是<b>整段沒下小盤</b>，交叉鏈佔了 ' +
+        n1(minOf(xchain.map(function(r){ return r.cross_pct; }))) + '–' +
+        n1(maxOf(xchain.map(function(r){ return r.cross_pct; }))) + '% 的時間 —— ' +
+        '這台車有的檔他沒用，是<b>換檔習慣</b>不是器材。');
+    }
+    if (flatish.length){
+      note.push('另有 ' + flatish.length + ' 趟同樣被判「沒下小盤」，但那是平路：' +
+        uniq(flatish.map(function(r){ return r.name; })).join('、') + '，全段最輕只用到 ' +
+        n2(minOf(flatish.map(function(r){ return r.seg_min_dev; }))) + '–' +
+        n2(maxOf(flatish.map(function(r){ return r.seg_min_dev; }))) + ' m 展開、交叉鏈 ≤' +
+        n1(maxOf(flatish.map(function(r){ return r.cross_pct; }))) + '%。' +
+        '判讀字串一樣，病不一樣 —— 平路本來就沒有下小盤的必要。');
+    }
+    note.push('齒比只有在電變跟手錶配對時才錄得到，最新一趟有資料的是 ' +
+      allDates[allDates.length-1] + '。');
+
+    H.push('<div class="lab-say">' + say.join(' ') + '</div>');
+    if (note.length) H.push('<div class="gears-note">' + note.join('<br>') + '</div>');
+
+    root.innerHTML = H.join('');
+
+    /* ── hover / focus 顯示該趟細節 ───────────────────────────── */
+    root.style.position = 'relative';
+    var tip = root.querySelector('#gears-tip');
+
+    var tipHTML = function(r){
+      var k = kindOf(r.verdict), col = cadColor(r.low_cad);
+      var t = [];
+      t.push('<div class="gears-tiph">' + esc(r.name) + '</div>');
+      t.push('<div class="gears-tipd">' + esc(r.date) + ' · ' + n1(r.dist_km) + ' km' +
+             (r.grade != null ? ' · 均坡 ' + n1(r.grade) + '%' : ' · 均坡未知') + '</div>');
+      t.push('<div class="gears-tipv" style="color:' + col + '">' + esc(r.verdict) +
+             (k.why ? '　' + esc(k.why) : '') + '</div>');
+      t.push('<div class="gears-kv"><span>掛在最輕檔</span><b>' + n1(r.low_pct) + '%</b></div>');
+      t.push('<div class="gears-kv"><span>該檔踏頻</span><b>' +
+             (r.low_cad == null ? '沒用到' : n1(r.low_cad) + ' rpm') + '</b></div>');
+      t.push('<div class="gears-kv"><span>全段踏頻中位</span><b>' + n0(r.cad_med) + ' rpm</b></div>');
+      t.push('<div class="gears-kv"><span>交叉鏈</span><b>' + n1(r.cross_pct) + '%</b></div>');
+      t.push('<div class="gears-kv"><span>全段最輕展開</span><b>' + n2(r.seg_min_dev) + ' m</b></div>');
+      var mix = (r.mix || []).slice(0, 6);
+      if (mix.length){
+        t.push('<div class="gears-mix"><div class="gears-mixh">待在各檔的時間</div>');
+        mix.forEach(function(m){
+          var isLow = m.dev_m <= bikeMin * 1.02;
+          t.push('<div class="gears-mr"><span>' + m.f + '×' + m.r + '</span>' +
+            '<u>' + n2(m.dev_m) + 'm</u>' +
+            '<span class="gears-bar' + (isLow ? ' is-low' : '') + '"><i style="width:' +
+            Math.max(1.5, Math.min(100, m.pct)) + '%"></i></span>' +
+            '<em>' + n1(m.pct) + '% · ' + (m.cad == null ? '—' : m.cad) + 'rpm</em></div>');
+        });
+        t.push('</div>');
+      }
+      return t.join('');
+    };
+
+    var show = function(btn){
+      var i = +btn.getAttribute('data-i'), r = G[i];
+      if (!r) return;
+      tip.innerHTML = tipHTML(r);
+      tip.classList.add('on');
+      var rb = root.getBoundingClientRect(), pb = btn.getBoundingClientRect();
+      var w = tip.offsetWidth, h = tip.offsetHeight;
+      var left = pb.left - rb.left + pb.width / 2 - w / 2;
+      left = Math.max(2, Math.min(rb.width - w - 2, left));
+      var top = pb.top - rb.top - h - 10;
+      if (top < 2) top = pb.top - rb.top + pb.height + 10;
+      tip.style.left = left + 'px';
+      tip.style.top = top + 'px';
+    };
+    var hide = function(){ tip.classList.remove('on'); };
+
+    root.addEventListener('mouseover', function(e){
+      var b = e.target.closest ? e.target.closest('.gears-pt') : null;
+      if (b) show(b);
+    });
+    root.addEventListener('mouseout', function(e){
+      var b = e.target.closest ? e.target.closest('.gears-pt') : null;
+      if (b) hide();
+    });
+    root.addEventListener('focusin', function(e){
+      var b = e.target.closest ? e.target.closest('.gears-pt') : null;
+      if (b) show(b);
+    });
+    root.addEventListener('focusout', hide);
+    root.addEventListener('click', function(e){
+      var b = e.target.closest ? e.target.closest('.gears-pt') : null;
+      if (b) show(b); else hide();
+    });
+  }});
+})();
+</script>

@@ -1,0 +1,37 @@
+</head>
+<body>
+<div class="lab-wrap">
+
+  <div class="lab-top">
+    <b>STEVE</b> <span>/ 分析室 · LAB</span>
+    <span class="sp"></span>
+    <a href="strava.html">← 回主控台</a>
+    <span id="lab-stamp"></span>
+  </div>
+
+  <header class="lab-hero">
+    <h1>分析室</h1>
+    <p>主控台回答「我現在怎樣」。這一頁回答<b>「為什麼」</b>——把平常散在 FIT 檔、對帳報告與
+      wellness 紀錄裡、只有跑腳本才看得到的東西，做成看得見的形狀。
+      七張圖各自回答一個獨立的問題，沒有先後順序，挑要看的看。
+      <br><em>資料由 <code>scripts/build-lab.py</code> 從 repo 內的真實檔案產生，
+      沒有任何示意值。瀏覽器讀不到 .fit，所以凡是逐秒的東西都先在那支腳本裡算好。</em></p>
+    <nav class="lab-toc" id="lab-toc"></nav>
+  </header>
+
+  <main id="lab-main"></main>
+
+  <footer class="lab-foot">
+    資料源：<code>data/lab.json</code>（<code>scripts/build-lab.py</code> 產生）·
+    逐段對帳來自 <code>tools/tcx/score.py</code> ·
+    齒比視窗定位沿用 <code>scripts/itt-gears.py</code><br>
+    DOMS 與 TSB 預測都是<b>估計值不是量測值</b>；預測用的是課表的目標 TSS，實際做多少會不一樣。
+  </footer>
+</div>
+
+<script>
+/* 外殼只做三件事：載資料、依序呼叫每個元件的 render、把目錄接起來。
+   元件之間互不知道對方存在 —— 加一張圖就是多串一個 lab/parts/<key>.html 進來，
+   不必改這裡。沒有 build step，所以「串進來」字面上就是檔案接檔案。 */
+window.LAB_PARTS = window.LAB_PARTS || [];
+</script>
