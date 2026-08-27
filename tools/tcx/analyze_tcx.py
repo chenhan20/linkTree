@@ -862,6 +862,7 @@ def analyze(path, ftp=None, weight=None, height=None, age=None, maxhr=None,
         "stops": stops_list,
         "stop_summary": stop_sum,
         "blocks": blocks,
+        "splits_10min": ten_min_splits(pts),
         "training_quality": training_quality(blocks, moving),
     }
     result["strava"] = strava_context(load_strava(strava), result["when"]["date"])
@@ -1023,6 +1024,51 @@ def flat_distance_m(pts, mass=88.0):
     for p in pts:
         tot += speed_from_watts(p.get("w") or 0, mass=mass)
     return tot
+
+
+def ten_min_splits(pts, win_sec=600):
+    """整趟切成固定長度的區塊（預設 10 分鐘），每塊回平均功率、NP、心率、迴轉、
+    以及**逐秒標準差**。
+
+    存在的理由：逐秒功率會跳得很兇（2026-08-27 那趟 SD 31.7W、極差 66-348W），
+    但那是曲柄逐踏量扭矩被逐秒取樣的相位雜訊，不是出力在變 —— 同一趟的踏頻
+    SD 只有 4.1 rpm、60 秒平滑後功率 SD 剩 8.6W。**穩不穩要看分鐘等級，不是逐秒。**
+    這張表就是分鐘等級的那個視角：一眼看得出前後半有沒有掉、哪一塊崩了。
+
+    最後不足半個視窗的尾巴併進前一塊，免得產生一個 2 分鐘的假區塊。
+    """
+    ws = [p.get("w") for p in pts]
+    n = len(ws)
+    if n < win_sec:
+        return []
+    edges = list(range(0, n, win_sec))
+    if n - edges[-1] < win_sec * 0.5 and len(edges) > 1:
+        edges.pop()
+    out = []
+    for i, a in enumerate(edges):
+        b = edges[i + 1] if i + 1 < len(edges) else n
+        seg = [w for w in ws[a:b] if w is not None]
+        if not seg:
+            continue
+        hr = [p["hr"] for p in pts[a:b] if p.get("hr")]
+        cad = [p["cad"] for p in pts[a:b] if p.get("cad")]
+        mean = sum(seg) / len(seg)
+        var = sum((w - mean) ** 2 for w in seg) / len(seg)
+        out.append({
+            "i": i + 1,
+            "from_sec": a, "to_sec": b, "sec": b - a,
+            "avg_w": round(mean, 1),
+            "np_w": round(normalized_power(seg)) if normalized_power(seg) else None,
+            "sd_w": round(var ** 0.5, 1),
+            "min_w": min(seg), "max_w": max(seg),
+            "avg_hr": round(sum(hr) / len(hr)) if hr else None,
+            "avg_cad": round(sum(cad) / len(cad)) if cad else None,
+        })
+    # 跟「前一塊」比，不是跟第一塊比 —— 第一塊是熱身，拿它當基準每一行都會是 +60，
+    # 那個欄位就沒有資訊。要看的是「這 10 分鐘比上 10 分鐘掉了沒有」。
+    for i, r in enumerate(out):
+        r["delta_w"] = 0.0 if i == 0 else round(r["avg_w"] - out[i - 1]["avg_w"], 1)
+    return out
 
 
 def classify_blocks(pts, ftp, weight=80.0, win=180):

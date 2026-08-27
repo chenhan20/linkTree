@@ -362,6 +362,9 @@ table.tbl{width:100%;border-collapse:collapse;font-size:12.5px;font-variant-nume
 .tbl th:first-child,.tbl td:first-child{text-align:left;padding-left:0}
 .tbl th:last-child,.tbl td:last-child{padding-right:0}
 .tbl td.hi{color:var(--ink-1);font-weight:650}
+/* 十分鐘表的「vs 前段」：掉 8W 以上轉暗、漲 8W 以上轉亮，讓掉瓦一眼看得到 */
+.tbl td.lo{color:var(--s2);font-weight:650}
+.app-n{font-size:11px;line-height:1.6;color:var(--ink-3);margin:6px 0 18px}
 .app-h{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;
  color:var(--ink-3);margin:26px 0 0}
 .app-w{overflow-x:auto}
@@ -1409,6 +1412,23 @@ if(REPS){
   R.laps.forEach(l=>{const k=l.elev_gain_m>=80;
     t+=`<tr><td${k?' class="hi"':''}>${l.n}</td><td>${l.hhmmss.replace(/^0:/,'')}</td><td>${l.km}</td><td>${l.kmh??'—'}</td><td${k?' class="hi"':''}>${l.avg_w??'—'}</td><td>${l.np_w??'—'}</td><td>${l.avg_hr??'—'}</td><td>${l.cad??'—'}</td><td>${l.elev_gain_m?'+'+l.elev_gain_m:'—'}</td></tr>`;});
   t+='</tbody></table></div>';
+  /* 十分鐘一塊的平均功率。逐秒功率跳得兇（相位雜訊），穩不穩要看分鐘等級。
+     長條圖用整趟工作區的最大值當滿格，眼睛掃一遍就知道有沒有掉。 */
+  if(R.splits_10min&&R.splits_10min.length){
+    const S10=R.splits_10min, mx=Math.max(...S10.map(x=>x.avg_w))||1;
+    t+='<div class="app-h">十分鐘平均功率</div><div class="app-w"><table class="tbl"><thead><tr>'
+      +'<th>起</th><th>均瓦</th><th>vs 前段</th><th></th><th>NP</th><th>逐秒 SD</th><th>心率</th><th>迴轉</th></tr></thead><tbody>';
+    S10.forEach((x,i)=>{
+      const w=Math.round(x.avg_w/mx*100);
+      const d=i===0?'—':(x.delta_w>0?'+':'')+Math.round(x.delta_w);
+      const dc=i===0?'':(x.delta_w<=-8?' class="lo"':(x.delta_w>=8?' class="hi"':''));
+      t+=`<tr><td>${hm(x.from_sec)}</td><td class="hi">${Math.round(x.avg_w)}</td><td${dc}>${d}</td>`
+        +`<td style="width:120px"><span style="display:inline-block;height:7px;width:${w}%;`
+        +`background:var(--s2);opacity:.55;border-radius:2px"></span></td>`
+        +`<td>${x.np_w??'—'}</td><td>${x.sd_w}</td><td>${x.avg_hr??'—'}</td><td>${x.avg_cad??'—'}</td></tr>`;});
+    t+='</tbody></table></div>';
+    t+='<div class="app-n">逐秒功率會跳（曲柄逐踏量扭矩、逐秒取樣的相位雜訊），'
+      +'看穩不穩要用這張表的分鐘等級。「逐秒 SD」大不代表踩得不穩 —— 功率在爬升或下降的那幾塊本來就會大。</div>';}
   if(R.blocks&&R.blocks.length){
     /* 室內（訓練台）沒有距離、速度、坡度，那三欄全是 0，擺著只是誤導 ——
        整張表的意義也不同：室內分的是強度不是地形，所以連標題一起換。 */
@@ -1491,7 +1511,8 @@ def slim(ride):
     """只留頁面用得到的欄位。Strava 快照裡的 polyline / route_stream 動輒上百 KB，
     全部塞進 HTML 會讓檔案膨脹三倍，這裡先剃掉。"""
     keep = ("meta", "athlete", "when", "totals", "power", "hr", "cadence", "energy",
-            "zones", "laps", "climbs", "stop_summary", "blocks", "training_quality")
+            "zones", "laps", "climbs", "stop_summary", "blocks", "training_quality",
+            "splits_10min")
     out = {k: ride[k] for k in keep if k in ride}
     out["stops"] = [s for s in ride.get("stops", []) if s["dur_sec"] >= 90]
     sv = ride.get("strava") or {}
