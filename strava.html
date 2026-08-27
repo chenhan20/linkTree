@@ -200,6 +200,59 @@ html,body{height:100%;font-family:var(--f-ui);background:#0a0408;color:#ddd}
   from{stroke-dashoffset:13}
   to{stroke-dashoffset:-100}
 }
+/* ══ PMC · 體能與疲勞（現況）══════════════════════════════════════════
+   側欄的 .rdy-spark 只給「現在幾點」，這一塊給的是方向與**未來**：
+   CTL/ATL 是指數移動平均，用課表的目標 TSS 就能往前推到後測日。
+   全站唯一一個往前看的圖，其餘都是回顧。
+
+   為什麼要有它：配對比較（8/13 前測 vs 9/10 後測）的前提是兩天的疲勞狀態要接近，
+   不然測到的是「誰比較新鮮」不是「誰變強」。那件事只有畫出來才看得見，
+   而且要提早看見才來得及調 9/08 的前置負荷。
+
+   線用 preserveAspectRatio="none" 拉伸，靠 vector-effect 讓線寬不跟著歪；
+   文字一律走 HTML 絕對定位，不進 SVG —— 進去就會被同一個拉伸壓扁。 */
+.pmc{position:relative;margin-top:2px}
+.pmc-plot{position:relative;width:100%;height:196px}
+.pmc-svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.pmc-svg path,.pmc-svg line{vector-effect:non-scaling-stroke}
+/* 未來區：一塊很淡的底,讓「今天」那條線兩邊一眼分得出過去與預測 */
+.pmc-svg .p-fut{fill:rgba(255,255,255,.022)}
+.pmc-svg .p-grid{stroke:var(--hair);stroke-width:1}
+.pmc-svg .p-zero{stroke:rgba(255,255,255,.18);stroke-width:1}
+.pmc-svg .p-ctl{fill:none;stroke:#FC4C02;stroke-width:1.8;stroke-linejoin:round}
+.pmc-svg .p-atl{fill:none;stroke:rgba(255,255,255,.34);stroke-width:1.3;stroke-linejoin:round}
+/* 預測段：同一條線同一個顏色，只是改成虛線 —— 換顏色會讓人以為是第三個指標 */
+.pmc-svg .is-proj{stroke-dasharray:4 4;opacity:.85}
+.pmc-svg .p-band{fill:rgba(252,76,2,.22);stroke:none}
+.pmc-svg .p-tsb-pos{fill:rgba(74,208,122,.20)}
+.pmc-svg .p-tsb-neg{fill:rgba(255,176,32,.14)}
+/* 面積講正負,線講形狀。只有面積時整條讀起來是一塊糊的橘 */
+.pmc-svg .p-tsb-line{fill:none;stroke:rgba(255,208,150,.75);stroke-width:1.2;stroke-linejoin:round}
+.pmc-svg .p-ref{stroke:rgba(255,255,255,.55);stroke-width:1.2;stroke-dasharray:5 4}
+.pmc-svg .p-now{stroke:rgba(255,255,255,.30);stroke-width:1}
+.pmc-svg .p-dot{fill:#FC4C02}
+.pmc-lab{position:absolute;font-size:9px;letter-spacing:.5px;color:var(--ink-3);
+  white-space:nowrap;pointer-events:none;font-variant-numeric:tabular-nums}
+.pmc-lab.is-hi{color:var(--ink-2)}
+.pmc-legend{display:flex;flex-wrap:wrap;gap:0 14px;margin:9px 0 0;
+  font-size:10px;letter-spacing:.4px;color:var(--ink-3)}
+.pmc-legend i{display:inline-block;width:14px;height:0;margin-right:5px;
+  vertical-align:middle;border-top:2px solid currentColor}
+.pmc-legend .k-ctl{color:#FC4C02}
+.pmc-legend .k-atl{color:rgba(244,240,234,.5)}
+.pmc-legend .k-proj i{border-top-style:dashed}
+.pmc-read{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:11px;
+  padding-top:10px;border-top:1px solid var(--hair);font-size:11px;color:var(--ink-2)}
+.pmc-read b{font-family:var(--f-num);font-weight:800;font-size:15px;
+  font-variant-numeric:tabular-nums;color:var(--ink-1)}
+.pmc-read span{display:block;font-size:9px;letter-spacing:1px;color:var(--ink-3);margin-top:1px}
+.pmc-read .is-warn b{color:#ffb020}
+.pmc-note{margin:10px 0 0;font-size:11px;line-height:1.7;color:var(--ink-3)}
+.pmc-note b{color:var(--ink-2);font-weight:700}
+@media(max-width:767px){
+  .pmc-plot{height:164px}
+  .pmc-read{gap:6px 14px}
+}
 .rdy-cta{
   display:flex;gap:8px;padding:0 9px;font-size:9px;letter-spacing:.6px;
   color:var(--ink-3);font-variant-numeric:tabular-nums
@@ -8457,6 +8510,7 @@ function render(data) {
       <div class="block">${seasonHtml}</div>
       ${renderRhythmCalendar(data)}
       ${blockHtml}
+      ${renderPmc()}
       ${weekHtml}
       ${attnHtml}
       ${signalsHtml}
@@ -10642,6 +10696,188 @@ function renderReadiness() {
     ${eftp ? row('eFTP', eftp + ' W', null) : ''}
     ${renderBlockProgress()}
   </div>`
+}
+
+/* ══ PMC · 體能與疲勞 ═══════════════════════════════════════════════
+   CTL（體能）與 ATL（疲勞）都是 TSS 的指數移動平均，時間常數 42 / 7 天。
+   既然公式就是遞推，把 training-block.json 的目標 TSS 餵進去就能往前推 ——
+   這是全站唯一能回答「照這樣走，後測那天我會是什麼狀態」的地方。
+
+   ⚠️ 輔助課表沒有目標 TSS（它們本來就不計區塊進度），所以預測一定是個區間不是一條線。
+   用 0 與 SUP_HI 兩種假設掃出上下界，畫成帶子，數字也照實印區間。
+   假裝它是單一數字＝在一個估計值上再疊一層假精確。 */
+/* 歷史視窗跟著區塊走，不是固定 90 天：這張圖要回答的是「這個區塊會走到哪」，
+   x 軸就該是這個區塊的長度。固定 90 天會把 14 天的預測擠成右邊 13%，
+   而預測正是唯一非看不可的部分。沒有區塊時才退回 90 天。 */
+const PMC_DAYS = 90            // 沒有進行中區塊時的回看天數
+const PMC_LEAD = 14            // 區塊開始前先留幾天當基線
+const PMC_SUP_HI = 40          // 輔助課表的 TSS 上界估計（飛輪 60 分／有氧課）
+
+/** 用課表把 CTL/ATL 往前推。supTss ＝ 輔助課表當幾分算。 */
+function pmcProject(ctl0, atl0, fromDate, toDate, tssBy, supDates, supTss) {
+  const out = []
+  let ctl = ctl0, atl = atl0
+  const d = new Date(fromDate + 'T00:00:00Z'), end = new Date(toDate + 'T00:00:00Z')
+  let guard = 0
+  while (d < end && guard++ < 400) {
+    d.setUTCDate(d.getUTCDate() + 1)
+    const k = d.toISOString().slice(0, 10)
+    const t = tssBy[k] != null ? tssBy[k] : (supDates.has(k) ? supTss : 0)
+    ctl += (t - ctl) / 42
+    atl += (t - atl) / 7
+    out.push({ d: k, ctl, atl })
+  }
+  return out
+}
+
+function renderPmc() {
+  const w = window._wellness
+  if (!w) return ''
+  const days = wellnessDays(w)                       // 已切掉未來日（那是 intervals 的推算值）
+  const B = window._trainingBlock
+  const S = (B && B.sessions) || []
+  // 起點：區塊開始前 PMC_LEAD 天（看得到進區塊前的基線）；沒有區塊就退回固定天數
+  const startAt = (() => {
+    if (!B || !B.start) return days.slice(-PMC_DAYS)[0]
+    const d = new Date(B.start + 'T00:00:00Z')
+    d.setUTCDate(d.getUTCDate() - PMC_LEAD)
+    return d.toISOString().slice(0, 10)
+  })()
+  const hist = days.filter(d => d >= startAt)
+    .map(d => ({ d, ctl: w[d]?.ctl ?? null, atl: w[d]?.atl ?? null }))
+    .filter(p => p.ctl != null && p.atl != null)
+  if (hist.length < 8) return ''
+  const last = hist[hist.length - 1]
+
+  // ── 預測：課表的目標 TSS 往前推到最後一堂有目標的課 ──
+  const tssBy = {}, supDates = new Set()
+  S.forEach(x => {
+    if (x.support) { supDates.add(x.date); return }
+    const t = (x.target || {}).tss
+    if (t != null) tssBy[x.date] = t
+  })
+  // 已經做過的那幾堂用實際值蓋掉目標值 —— 預測的起點是今天，但區間內若有已完成的
+  // 課（同步落後的情況）不該再用目標值算一次。
+  S.forEach(x => { if (x.actual && x.actual.tss != null) tssBy[x.date] = x.actual.tss })
+  const future = Object.keys(tssBy).filter(k => k > last.d).sort()
+  const endDate = future.length ? future[future.length - 1] : null
+
+  let projLo = [], projHi = [], testDate = null, testTsb = null
+  if (endDate) {
+    projLo = pmcProject(last.ctl, last.atl, last.d, endDate, tssBy, supDates, 0)
+    projHi = pmcProject(last.ctl, last.atl, last.d, endDate, tssBy, supDates, PMC_SUP_HI)
+    testDate = endDate
+  }
+  // 前測：區塊裡有 actual.test 的那一堂，拿它當天的 TSB 當基準線
+  const pre = S.find(x => x.actual && x.actual.test != null)
+  const preTsb = pre && w[pre.date]?.ctl != null && w[pre.date]?.atl != null
+    ? w[pre.date].ctl - w[pre.date].atl : null
+
+  // ── 幾何 ──
+  const W = 1000, H = 190, HT = 68, HM = H - HT - 10   // 主圖 / TSB 條
+  const all = [...hist, ...projLo, ...projHi]
+  const N = hist.length + projLo.length
+  const vals = all.flatMap(p => [p.ctl, p.atl])
+  const lo = Math.min(...vals), hi = Math.max(...vals), span = (hi - lo) || 1
+  const X = i => (i / Math.max(1, N - 1) * W)
+  const Y = v => HM - (v - lo) / span * HM
+  const tsbAll = all.map(p => p.ctl - p.atl).concat(preTsb == null ? [] : [preTsb])
+  const tLo = Math.min(0, ...tsbAll), tHi = Math.max(0, ...tsbAll), tSpan = (tHi - tLo) || 1
+  const TY = v => HM + 10 + (HT - (v - tLo) / tSpan * HT)
+
+  const line = (arr, key, off) => arr.map((p, i) =>
+    `${i ? 'L' : 'M'}${X(i + off).toFixed(1)} ${Y(p[key]).toFixed(1)}`).join(' ')
+  // 預測段要從歷史最後一點接上去，不然中間會斷一格
+  const joinLine = (arr, key) => arr.length
+    ? `M${X(hist.length - 1).toFixed(1)} ${Y(last[key]).toFixed(1)} ` +
+      arr.map((p, i) => `L${X(hist.length + i).toFixed(1)} ${Y(p[key]).toFixed(1)}`).join(' ')
+    : ''
+
+  // 預測不確定帶：兩種假設的 TSB 之間
+  const band = projLo.length ? (() => {
+    const up = projLo.map((p, i) => `${X(hist.length + i).toFixed(1)} ${TY(p.ctl - p.atl).toFixed(1)}`)
+    const dn = projHi.map((p, i) => `${X(hist.length + i).toFixed(1)} ${TY(p.ctl - p.atl).toFixed(1)}`).reverse()
+    return `M${X(hist.length - 1).toFixed(1)} ${TY(last.ctl - last.atl).toFixed(1)} L` +
+           up.join(' L') + ' L' + dn.join(' L') + ' Z'
+  })() : ''
+
+  // TSB 面積（歷史）：以 0 為基線，正負分開填
+  const tsbArea = sign => {
+    const pts = hist.map((p, i) => [X(i), p.ctl - p.atl])
+    let d = '', open = false
+    pts.forEach(([x, v], i) => {
+      const inSide = sign > 0 ? v > 0 : v < 0
+      if (inSide && !open) { d += `M${x.toFixed(1)} ${TY(0).toFixed(1)} `; open = true }
+      if (inSide) d += `L${x.toFixed(1)} ${TY(v).toFixed(1)} `
+      if (!inSide && open) { d += `L${x.toFixed(1)} ${TY(0).toFixed(1)} Z `; open = false }
+      if (open && i === pts.length - 1) d += `L${x.toFixed(1)} ${TY(0).toFixed(1)} Z `
+    })
+    return d
+  }
+
+  const md = d => d.slice(5).replace('-', '/')
+  const pct = i => (X(i) / W * 100).toFixed(2) + '%'
+  const nowX = hist.length - 1
+  const tsbNow = last.ctl - last.atl
+  const mood = tsbMood(tsbNow)
+  const tsbEndLo = projLo.length ? projLo[projLo.length - 1].ctl - projLo[projLo.length - 1].atl : null
+  const tsbEndHi = projHi.length ? projHi[projHi.length - 1].ctl - projHi[projHi.length - 1].atl : null
+  const f1 = v => (v > 0 ? '+' : '') + v.toFixed(1)
+  // 預測落點跟前測差多少 —— 配對比較的關鍵數字
+  const gap = (preTsb != null && tsbEndLo != null)
+    ? ((tsbEndLo + tsbEndHi) / 2) - preTsb : null
+
+  const preX = pre ? hist.findIndex(p => p.d === pre.date) : -1
+
+  return `
+    <div class="block">
+      <div class="section-title">體能與疲勞 <span class="muted">· FITNESS &amp; FATIGUE · ${
+        md(hist[0].d)} 起${endDate ? ` ＋ 預測到 ${md(endDate)}` : ''}</span></div>
+      <div class="pmc">
+        <div class="pmc-plot">
+          <svg class="pmc-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">
+            ${projLo.length ? `<rect class="p-fut" x="${X(nowX).toFixed(1)}" y="0" width="${(W - X(nowX)).toFixed(1)}" height="${H}"/>` : ''}
+            <line class="p-grid" x1="0" y1="${HM}" x2="${W}" y2="${HM}"/>
+            <path class="p-tsb-pos" d="${tsbArea(1)}"/>
+            <path class="p-tsb-neg" d="${tsbArea(-1)}"/>
+            <path class="p-tsb-line" d="${hist.map((p, i) =>
+              `${i ? 'L' : 'M'}${X(i).toFixed(1)} ${TY(p.ctl - p.atl).toFixed(1)}`).join(' ')}"/>
+            ${band ? `<path class="p-band" d="${band}"/>` : ''}
+            <line class="p-zero" x1="0" y1="${TY(0).toFixed(1)}" x2="${W}" y2="${TY(0).toFixed(1)}"/>
+            ${preTsb != null ? `<line class="p-ref" x1="0" y1="${TY(preTsb).toFixed(1)}" x2="${W}" y2="${TY(preTsb).toFixed(1)}"/>` : ''}
+            <path class="p-atl" d="${line(hist, 'atl', 0)}"/>
+            <path class="p-ctl" d="${line(hist, 'ctl', 0)}"/>
+            ${projLo.length ? `<path class="p-atl is-proj" d="${joinLine(projLo, 'atl')}"/>
+            <path class="p-ctl is-proj" d="${joinLine(projLo, 'ctl')}"/>` : ''}
+            <line class="p-now" x1="${X(nowX).toFixed(1)}" y1="0" x2="${X(nowX).toFixed(1)}" y2="${H}"/>
+            <circle class="p-dot" cx="${X(nowX).toFixed(1)}" cy="${Y(last.ctl).toFixed(1)}" r="2.6"/>
+          </svg>
+          <div class="pmc-lab is-hi" style="left:${pct(nowX)};top:-2px;transform:translateX(-50%)">今天</div>
+          <div class="pmc-lab" style="left:0;top:-2px">${md(hist[0].d)}</div>
+          ${endDate ? `<div class="pmc-lab is-hi" style="right:0;top:-2px">${md(endDate)} 後測</div>` : ''}
+          ${preTsb != null && preX >= 0 ? `<div class="pmc-lab" style="left:${pct(preX)};bottom:-2px;transform:translateX(-50%)">前測 ${md(pre.date)}</div>` : ''}
+          ${preTsb != null ? `<div class="pmc-lab is-hi" style="left:2px;top:${(TY(preTsb) / H * 100).toFixed(1)}%;transform:translateY(-115%)">前測基準 ${f1(preTsb)}</div>` : ''}
+        </div>
+        <div class="pmc-legend">
+          <span class="k-ctl"><i></i>CTL 體能</span>
+          <span class="k-atl"><i></i>ATL 疲勞</span>
+          <span class="k-proj"><i></i>照課表預測</span>
+          <span>面積 ＝ TSB（體能 − 疲勞）</span>
+        </div>
+        <div class="pmc-read">
+          <div><b>${last.ctl.toFixed(1)}</b><span>CTL 體能</span></div>
+          <div><b>${last.atl.toFixed(1)}</b><span>ATL 疲勞</span></div>
+          <div><b>${f1(tsbNow)}</b><span>TSB · ${mood.txt}</span></div>
+          ${tsbEndLo != null ? `<div class="${gap != null && Math.abs(gap) > 4 ? 'is-warn' : ''}"><b>${
+            f1(Math.min(tsbEndHi, tsbEndLo))}～${f1(Math.max(tsbEndHi, tsbEndLo))}</b><span>${md(endDate)} 預測 TSB</span></div>` : ''}
+          ${preTsb != null ? `<div><b>${f1(preTsb)}</b><span>前測當天 TSB</span></div>` : ''}
+        </div>
+        ${gap != null ? `<p class="pmc-note">配對比較的前提是<b>兩次測驗的疲勞狀態要接近</b>，否則量到的是誰比較新鮮，不是誰變強。
+          照目前的課表推，${md(endDate)}會比前測那天<b>${gap > 0 ? `新鮮 ${gap.toFixed(1)} 點` : `疲勞 ${(-gap).toFixed(1)} 點`}</b>${
+            Math.abs(gap) > 4 ? '—— 差距夠大，成績會被狀態影響，還來得及調前置負荷。' : '，落在可比的範圍。'}
+          區間來自輔助課表沒有目標 TSS（用 0～${PMC_SUP_HI} 掃上下界）。</p>` : ''}
+      </div>
+    </div>`
 }
 
 /* ══ WELLNESS 趨勢抽屜 ═══════════════════════════════════════════════
