@@ -92,8 +92,11 @@ def monthly_series():
         out[m] = {**v, 'src': 'frozen'}
 
     acts = _load('data', 'fit', '_activities.json') or {}
+    # 室內沒有距離（訓練台沒配成速度來源），用 scripts/estimate-indoor-distance.py
+    # 估的等效平路里程補上，否則室內的量在月／年公里數上會整個消失。
+    est = _load('data', 'fit', '_est_distance.json') or {}
     live = {}
-    for v in acts.values():
+    for aid, v in acts.items():
         if v.get('type') not in RIDE_TYPES:
             continue
         m = str(v.get('start_date_local', ''))[:7]
@@ -101,7 +104,12 @@ def monthly_series():
             continue          # 凍結區間不重算，才不會讓損益線的基準漂掉
         d = live.setdefault(m, {'hours': 0.0, 'km': 0.0, 'rides': 0, 'src': 'intervals'})
         d['hours'] += (v.get('moving_time') or 0) / 3600.0
-        d['km'] += (v.get('distance') or 0) / 1000.0
+        km = (v.get('distance') or 0) / 1000.0
+        if not km:
+            km = ((est.get(aid) or {}).get('km') or 0)
+            if km:
+                d['km_estimated'] = round(d.get('km_estimated', 0) + km, 1)
+        d['km'] += km
         d['rides'] += 1
     for m, d in live.items():
         d['hours'] = round(d['hours'], 2)

@@ -643,7 +643,11 @@ let HERO_IN_MASTHEAD=false;
   /* 量測列：一排讀數，固定順序，不搶頭號數字的視覺 */
   const K=[];
   const push=(k,v,u,n)=>{ if(v!=null&&v!=='') K.push({k,v,u,n}); };
-  push('距離',t.distance_km,'km',`爬升 ${t.elev_gain_m.toLocaleString()} m`);
+  /* 訓練台的距離是用逐秒功率反推平路速度積出來的，不是量到的 —— 一定要標出來，
+     不然「室內 50 km」看起來會像真的騎了 50 公里。 */
+  push('距離',t.distance_km,'km', t.distance_estimated
+    ? '估算值 · 逐秒功率換平路速度'
+    : `爬升 ${t.elev_gain_m.toLocaleString()} m`);
   push('移動時間',hms(t.moving_sec),'',st&&st.total_sec>120?`停等 ${hm(st.total_sec)}`:'幾乎沒停');
   if(p.np_w) push('NP',p.np_w,'W',`移動均瓦 ${p.avg_w_moving} W`);
   if(p.tss) push('TSS',p.tss,'',`IF ${p.if} · VI ${p.vi}`);

@@ -139,6 +139,9 @@ def sec_volume(today):
     L.append('- 照目前節奏推估月底 %.1f h（%s）' % (pace, '過線' if pace >= BREAKEVEN else '不足'))
     L.append('- 資料源：%s' % ('intervals.icu（手錶 FIT）' if cur['src'] == 'intervals'
                               else 'Strava 歷史快照'))
+    if cur.get('km_estimated'):
+        L.append('- 其中 **%.0f km 是估算**（室內沒有速度感測，用逐秒功率反推平路速度；'
+                 '拿他自己的戶外平路趟校準，平均比值 1.003）' % cur['km_estimated'])
     L.append('')
     L.append('近 6 個月：')
     m = {k: v['hours'] for k, v in series.items()}

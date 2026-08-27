@@ -710,6 +710,12 @@ def analyze(path, ftp=None, weight=None, height=None, age=None, maxhr=None,
         dist_m = sum(haversine((pts[i]["lat"], pts[i]["lon"]),
                                (pts[i + 1]["lat"], pts[i + 1]["lon"]))
                      for i in range(len(pts) - 1))
+    # 訓練台：既沒有速度感測也沒有座標，距離會是 0。用逐秒功率估等效平路里程，
+    # 免得室內的量在月里程、年里程上整個消失。估算值一律標記出來，不要跟量測混談。
+    dist_estimated = False
+    if dist_m <= 0 and any(p.get("w") for p in pts):
+        dist_m = flat_distance_m(pts, mass=(weight or 80.0) + 8.0)
+        dist_estimated = True
 
     # 移動時間：速度 > 0.5 m/s
     moving = sum(1 for s in spds if s and s > 0.5)
@@ -821,6 +827,7 @@ def analyze(path, ftp=None, weight=None, height=None, age=None, maxhr=None,
             "moving_sec": int(moving),
             "stopped_sec": stopped,
             "distance_km": round(dist_m / 1000, 2),
+            "distance_estimated": dist_estimated,
             "avg_speed_kmh": round(dist_m / moving * 3.6, 1) if moving else None,
             "max_speed_kmh": round(max([s for s in spds if s] or [0]) * 3.6, 1),
             "elev_gain_m": up, "elev_loss_m": dn,
@@ -985,6 +992,37 @@ def solo_watts(v_ms, grade=0.0, mass=88.0, cda=0.36, crr=0.005, rho=1.18):
     roll = crr * mass * 9.81 * v_ms
     climb = mass * 9.81 * grade * v_ms
     return max(0.0, (aero + roll + climb) / 0.97)
+
+
+def speed_from_watts(w, mass=88.0, cda=0.36, crr=0.005, rho=1.18):
+    """solo_watts 的反函數：給定功率，回平路上的理論速度（m/s）。二分逼近。"""
+    if not w or w <= 0:
+        return 0.0
+    lo, hi = 0.0, 25.0
+    for _ in range(40):
+        mid = (lo + hi) / 2
+        if solo_watts(mid, 0.0, mass, cda, crr, rho) < w:
+            lo = mid
+        else:
+            hi = mid
+    return (lo + hi) / 2
+
+
+def flat_distance_m(pts, mass=88.0):
+    """訓練台沒有速度感測時，用逐秒功率估算「等效平路里程」。
+
+    做法：每一秒把當下的功率反推成平路速度再積分。**這是估算不是量測**，
+    而且刻意全部當平路算 —— 室內本來就沒有地形，Rouvy 的虛擬爬升不屬於他。
+
+    參數用 analyze_tcx 既有的 solo_watts 預設（CdA 0.36 / Crr 0.005 / rho 1.18），
+    那組值是拿他自己的戶外平路趟校準過的：2026-07-15 / 08-05 / 08-13 三趟
+    （3.4-5.1 m/km、27-51 km），估算 ÷ 實際 = 1.05 / 0.96 / 1.00，平均 1.003。
+    也就是說單趟誤差約 ±5%，總量幾乎無偏。
+    """
+    tot = 0.0
+    for p in pts:
+        tot += speed_from_watts(p.get("w") or 0, mass=mass)
+    return tot
 
 
 def classify_blocks(pts, ftp, weight=80.0, win=180):
