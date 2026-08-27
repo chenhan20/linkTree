@@ -316,6 +316,28 @@ def _fit_extras(sess, tiz, points, devices, gear_evs=(), aux_batt=0):
 WHEEL_CIRC_M = 2.105
 
 
+_DRIVETRAIN = None
+
+
+def drivetrain():
+    """讀 data/drivetrain.json —— 完整的大盤與飛輪齒數。
+
+    為什麼不能只看「這一趟用過的檔」：2026-08-27 那趟只用到 14/15/17/19/21 五片，
+    拿它當全部的話，50×19 會被判成「大盤配最大的兩片」＝交叉鏈，算出 94.1%。
+    用真正的卡式帶（11-34 十二速）重算是 0%。誤報會把人送去修一個不存在的問題。
+    """
+    global _DRIVETRAIN
+    if _DRIVETRAIN is None:
+        path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(
+            os.path.abspath(__file__)))), "data", "drivetrain.json")
+        try:
+            with open(path, encoding="utf-8") as f:
+                _DRIVETRAIN = json.load(f)
+        except (OSError, ValueError):
+            _DRIVETRAIN = {}
+    return _DRIVETRAIN
+
+
 def _gear_report(gear_evs, points):
     """電子變速的齒比分布。
 
@@ -350,9 +372,16 @@ def _gear_report(gear_evs, points):
 
     acc = {}                       # (front, rear) -> [secs, cad_sec, w_sec, cad_n, w_n]
     covered = moving = 0.0
+    # 訓練台沒有速度感測，逐秒 spd 全是 None。原本「spd < 0.5 就跳過」等於把整趟
+    # 室內資料丟光 —— 症狀是明明有 62 次換檔事件，齒比分布卻整塊不出現。
+    # 沒有速度資料時改用「有踩」判定：有功率或有迴轉就算在動。
+    has_speed = any(p.get("spd") is not None for p in points)
     for i, p in enumerate(points):
-        spd = p.get("spd")
-        if spd is None or spd < 0.5:          # 停著不算
+        if has_speed:
+            spd = p.get("spd")
+            if spd is None or spd < 0.5:      # 停著不算
+                continue
+        elif not (p.get("w") or p.get("cad")):
             continue
         nxt = points[i + 1]["t"] if i + 1 < len(points) else None
         dt = min((nxt - p["t"]).total_seconds(), 10.0) if nxt else 1.0
@@ -374,14 +403,18 @@ def _gear_report(gear_evs, points):
     if not acc or covered <= 0:
         return None
 
-    fronts = sorted({f for f, _ in acc})
-    rears = sorted({r for _, r in acc})
+    dt_cfg = drivetrain()
+    fronts = sorted(dt_cfg.get("chainrings") or {f for f, _ in acc})
+    # 判交叉鏈一定要用**完整卡式帶**，不是這一趟用過的那幾片（見 drivetrain()）。
+    full_rears = sorted(dt_cfg.get("cassette") or [])
+    rears = full_rears or sorted({r for _, r in acc})
+    cross_known = bool(full_rears) and len(fronts) > 1
     big, small = max(fronts), min(fronts)
     # 交叉鏈：大盤配最大的兩片、或小盤配最小的兩片。傳動效率差、鏈條磨損快。
     cross = sum(
         v[0] for (f, r), v in acc.items()
-        if (f == big and r in sorted(rears)[-2:]) or (f == small and r in sorted(rears)[:2])
-    ) if len(fronts) > 1 else 0.0
+        if (f == big and r in rears[-2:]) or (f == small and r in rears[:2])
+    ) if cross_known else None
 
     combos = []
     for (f, r), v in sorted(acc.items(), key=lambda kv: -kv[1][0]):
@@ -402,7 +435,8 @@ def _gear_report(gear_evs, points):
         "shifts_rear": n_rear,
         "shifts_per_hour": round((n_front + n_rear) / hours) if hours else None,
         "coverage_pct": round(covered / moving * 100, 1) if moving else None,
-        "cross_chain_pct": round(cross / covered * 100, 1) if cross else 0.0,
+        # None ＝ 沒有 data/drivetrain.json，無從判定（不是 0）。畫面要分得出這兩件事。
+        "cross_chain_pct": (round(cross / covered * 100, 1) if cross is not None else None),
         "combos": combos,
         "ratio_range": [combos and min(c["ratio"] for c in combos),
                         combos and max(c["ratio"] for c in combos)],
