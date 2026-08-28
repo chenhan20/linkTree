@@ -1,250 +1,624 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-07-26T00:00:00.000Z",
+  "generatedAt": "2026-08-28T09:26:44+08:00",
   "title": "Design System: Strava Telemetry Dashboard",
+  "scope": {
+    "file": "strava.html",
+    "note": "DESIGN.md 只描述 strava.html。lab.html 與五個過期的 theme fork 不在範圍內；它們與本規格的字級／圓角相同不代表被納管。"
+  },
   "extensions": {
     "colorMeta": {
       "signal-orange": {
         "role": "primary",
-        "displayName": "訊號橘 Signal Orange",
+        "displayName": "訊號橘",
         "canonical": "#FC4C02",
-        "tonalRamp": ["#2a0d00", "#4d1800", "#7a2600", "#a83400", "#d64200", "#fc4c02", "#ff7a3c", "#ffb894"]
+        "purpose": "全站唯一主訊號：作用中、CTA、破紀錄。不是文字色。",
+        "tonalRamp": [
+          "#4c1701",
+          "#862801",
+          "#c03a02",
+          "#f94b02",
+          "#fd7338",
+          "#fe9b72",
+          "#fec4ac",
+          "#ffede6"
+        ]
       },
       "segment-amber": {
         "role": "secondary",
-        "displayName": "路段琥珀 Segment Amber",
+        "displayName": "路段琥珀",
         "canonical": "#E87C1A",
-        "tonalRamp": ["#2b1605", "#4d270a", "#7a3d0f", "#a55315", "#d0691a", "#e87c1a", "#f2a45c", "#f9cfa3"]
+        "purpose": "ITT 路段世界專屬，與訊號橘刻意拉開一階。",
+        "tonalRamp": [
+          "#462507",
+          "#7a410c",
+          "#af5d12",
+          "#e47917",
+          "#ed9749",
+          "#f2b57e",
+          "#f7d3b3",
+          "#fdf2e8"
+        ]
       },
       "ascent-cyan": {
-        "role": "tertiary",
-        "displayName": "爬升青 Ascent Cyan",
+        "role": "secondary",
+        "displayName": "爬升青",
         "canonical": "#4AB4FF",
-        "tonalRamp": ["#04202f", "#073852", "#0b5480", "#0f72ad", "#1a95d9", "#4ab4ff", "#8ed0ff", "#c9e8ff"]
+        "purpose": "爬升與高度讀數，冷色在暖底上自然後退。",
+        "tonalRamp": [
+          "#002d4c",
+          "#004f87",
+          "#0071c1",
+          "#0093fb",
+          "#37acff",
+          "#71c4ff",
+          "#abdcff",
+          "#e5f4ff"
+        ]
       },
       "duration-gold": {
         "role": "tertiary",
-        "displayName": "時數金 Duration Gold",
+        "displayName": "時長金",
         "canonical": "#FFD24D",
-        "tonalRamp": ["#2e2405", "#50400a", "#7d6410", "#a88616", "#d4a91d", "#ffd24d", "#ffe28c", "#fff1c6"]
-      },
-      "cleared-green": {
-        "role": "tertiary",
-        "displayName": "達標綠 Cleared Green",
-        "canonical": "#5FD060",
-        "tonalRamp": ["#0a2410", "#123f1b", "#1c6329", "#268637", "#33a847", "#5fd060", "#96e296", "#c9f2c9"]
-      },
-      "decline-red": {
-        "role": "tertiary",
-        "displayName": "衰退紅 Decline Red",
-        "canonical": "#FF6A6A",
-        "tonalRamp": ["#2e0909", "#520f0f", "#7f1818", "#ab2222", "#d63e3e", "#ff6a6a", "#ff9d9d", "#ffcfcf"]
-      },
-      "peak-flame": {
-        "role": "tertiary",
-        "displayName": "巔峰焰 Peak Flame",
-        "canonical": "#FF4500",
-        "tonalRamp": ["#2b0c00", "#4d1500", "#7a2200", "#a52e00", "#d13a00", "#ff4500", "#ff8347", "#ffbfa1"]
+        "purpose": "時數與耗時類數值。",
+        "tonalRamp": [
+          "#4c3900",
+          "#876500",
+          "#c19000",
+          "#fbbc00",
+          "#ffcc37",
+          "#ffdb71",
+          "#ffeaab",
+          "#fff9e5"
+        ]
       },
       "crown-gold": {
         "role": "tertiary",
-        "displayName": "皇冠金 Crown Gold",
+        "displayName": "冠軍金",
         "canonical": "#FFD700",
-        "tonalRamp": ["#2e2700", "#514500", "#7d6b00", "#a89000", "#d4b500", "#ffd700", "#ffe654", "#fff3ab"]
+        "purpose": "PR／KOM／排名徽記，只給站上頒獎台的語意。",
+        "tonalRamp": [
+          "#4c4000",
+          "#877200",
+          "#c1a300",
+          "#fbd400",
+          "#ffe037",
+          "#ffe971",
+          "#fff2ab",
+          "#fffbe5"
+        ]
+      },
+      "cleared-green": {
+        "role": "tertiary",
+        "displayName": "達標綠",
+        "canonical": "#5FD060",
+        "purpose": "目標達成。",
+        "tonalRamp": [
+          "#113b12",
+          "#1f681f",
+          "#2c952d",
+          "#39c23a",
+          "#64d265",
+          "#91df92",
+          "#beecbf",
+          "#ebf9eb"
+        ]
+      },
+      "fresh-green": {
+        "role": "tertiary",
+        "displayName": "新鮮綠",
+        "canonical": "#4AD07A",
+        "purpose": "TSB 新鮮狀態。",
+        "tonalRamp": [
+          "#103d20",
+          "#1c6b38",
+          "#289950",
+          "#34c869",
+          "#60d68a",
+          "#8ee2ac",
+          "#bceece",
+          "#ebfaf0"
+        ]
+      },
+      "caution-amber": {
+        "role": "tertiary",
+        "displayName": "警示琥珀",
+        "canonical": "#FFB020",
+        "purpose": "疲勞中／需要注意／未達標。",
+        "tonalRamp": [
+          "#4c3100",
+          "#875700",
+          "#c17d00",
+          "#fba200",
+          "#ffb837",
+          "#ffcd71",
+          "#ffe1ab",
+          "#fff6e5"
+        ]
+      },
+      "decline-red": {
+        "role": "tertiary",
+        "displayName": "衰退紅",
+        "canonical": "#FF6A6A",
+        "purpose": "退步／逾期／失敗。",
+        "tonalRamp": [
+          "#4c0000",
+          "#870000",
+          "#c10000",
+          "#fb0000",
+          "#ff3737",
+          "#ff7171",
+          "#ffabab",
+          "#ffe5e5"
+        ]
+      },
+      "peak-flame": {
+        "role": "tertiary",
+        "displayName": "峰焰",
+        "canonical": "#FF4500",
+        "purpose": "峰值標記，橘系最高溫端。",
+        "tonalRamp": [
+          "#4c1500",
+          "#872400",
+          "#c13400",
+          "#fb4400",
+          "#ff6d37",
+          "#ff9771",
+          "#ffc2ab",
+          "#ffece5"
+        ]
       },
       "deep-space": {
         "role": "neutral",
-        "displayName": "深空底 Deep Space",
+        "displayName": "深空",
         "canonical": "#0A0408",
-        "tonalRamp": ["#0a0408", "#160c12", "#241620", "#33222e", "#4a3644", "#6b5462", "#9a8894", "#cec3ca"]
+        "purpose": "頁面底色，帶紫紅的近黑，不是純黑。",
+        "tonalRamp": [
+          "#37162c",
+          "#60274d",
+          "#8a376e",
+          "#b44890",
+          "#c670a9",
+          "#d69ac2",
+          "#e7c3db",
+          "#f8edf4"
+        ]
       },
       "bulkhead": {
         "role": "neutral",
-        "displayName": "艙壁 Bulkhead",
+        "displayName": "艙壁",
         "canonical": "#060810",
-        "tonalRamp": ["#060810", "#0e1220", "#191f33", "#262e47", "#3a4463", "#586387", "#8c95b3", "#c6cbdd"]
+        "purpose": "星場漸層外緣與側欄底。",
+        "tonalRamp": [
+          "#151c38",
+          "#253162",
+          "#35468c",
+          "#455bb7",
+          "#6d80c8",
+          "#98a5d8",
+          "#c2cae8",
+          "#eceff8"
+        ]
       },
       "readout-white": {
         "role": "neutral",
-        "displayName": "讀數白 Readout White",
+        "displayName": "讀數白",
         "canonical": "#FFFFFF",
-        "tonalRamp": ["#1a1a1a", "#333333", "#555555", "#777777", "#999999", "#bbbbbb", "#dddddd", "#ffffff"]
+        "purpose": "只留給甲板讀數。",
+        "tonalRamp": [
+          "#262626",
+          "#434343",
+          "#616161",
+          "#7e7e7e",
+          "#9b9b9b",
+          "#b8b8b8",
+          "#d5d5d5",
+          "#f2f2f2"
+        ]
       },
       "ink-primary": {
         "role": "neutral",
-        "displayName": "主文灰 Ink Primary",
-        "canonical": "#DDDDDD",
-        "tonalRamp": ["#161616", "#2b2b2b", "#454545", "#5f5f5f", "#8a8a8a", "#b0b0b0", "#dddddd", "#f5f5f5"]
+        "displayName": "暖白墨",
+        "canonical": "#F4F0EA",
+        "purpose": "預設文字色，不是純白。",
+        "tonalRamp": [
+          "#32291a",
+          "#58482e",
+          "#7f6742",
+          "#a58656",
+          "#baa17c",
+          "#cebca2",
+          "#e2d8c8",
+          "#f6f3ee"
+        ]
       },
-      "ink-secondary": {
+      "field-crown": {
         "role": "neutral",
-        "displayName": "次文灰 Ink Secondary",
-        "canonical": "#AAAAAA",
-        "tonalRamp": ["#111111", "#242424", "#3c3c3c", "#575757", "#7a7a7a", "#aaaaaa", "#cccccc", "#eeeeee"]
+        "displayName": "冠頂",
+        "canonical": "#0D0510",
+        "purpose": "星場徑向漸層的頂端，帶紫的近黑。",
+        "tonalRamp": [
+          "#2f123a",
+          "#532067",
+          "#782e93",
+          "#9c3cc0",
+          "#b366cf",
+          "#c993dd",
+          "#dfbfeb",
+          "#f5ecf9"
+        ]
       },
-      "ink-muted": {
+      "field-floor": {
         "role": "neutral",
-        "displayName": "弱文灰 Ink Muted",
-        "canonical": "#888888",
-        "tonalRamp": ["#0f0f0f", "#1f1f1f", "#333333", "#4a4a4a", "#666666", "#888888", "#b5b5b5", "#e0e0e0"]
+        "displayName": "場底",
+        "canonical": "#050308",
+        "purpose": "星場漸層的最深處，畫面四角。",
+        "tonalRamp": [
+          "#231538",
+          "#3d2562",
+          "#58358c",
+          "#7245b7",
+          "#926dc8",
+          "#b298d8",
+          "#d1c2e8",
+          "#f1ecf8"
+        ]
+      },
+      "nebula-warm": {
+        "role": "neutral",
+        "displayName": "暖星雲",
+        "canonical": "rgba(140,44,8,.08)",
+        "purpose": "暖色星雲核，blur(56px) + mix-blend-mode:screen，與冷星雲交替呼吸。",
+        "tonalRamp": [
+          "#481704",
+          "#802807",
+          "#b7390a",
+          "#ee4b0e",
+          "#f47241",
+          "#f79b79",
+          "#fac4b0",
+          "#feede7"
+        ]
+      },
+      "nebula-cool": {
+        "role": "neutral",
+        "displayName": "冷星雲",
+        "canonical": "rgba(74,120,255,.11)",
+        "purpose": "冷色星雲核，與暖核反相呼吸。",
+        "tonalRamp": [
+          "#00134c",
+          "#002287",
+          "#0031c1",
+          "#0040fb",
+          "#376aff",
+          "#7195ff",
+          "#abc1ff",
+          "#e5ecff"
+        ]
+      },
+      "aurora-violet": {
+        "role": "neutral",
+        "displayName": "極光紫",
+        "canonical": "rgba(96,42,150,.06)",
+        "purpose": "慢旋的極光層。",
+        "tonalRamp": [
+          "#26113c",
+          "#431d69",
+          "#612a97",
+          "#7e37c4",
+          "#9b62d3",
+          "#b890e0",
+          "#d5beed",
+          "#f2ebf9"
+        ]
+      },
+      "vignette": {
+        "role": "neutral",
+        "displayName": "暗角",
+        "canonical": "rgba(2,1,4,.72)",
+        "purpose": "最外層暗角，向內收束保住讀數對比。",
+        "tonalRamp": [
+          "#1f0f3d",
+          "#361b6c",
+          "#4d279a",
+          "#6532c9",
+          "#875fd7",
+          "#aa8de3",
+          "#cdbcee",
+          "#f0ebfa"
+        ]
       }
     },
     "typographyMeta": {
-      "display": { "displayName": "Display", "purpose": "車手姓名，全頁唯一最大字。名片內變體為 800/24px/ls:1px。" },
-      "headline": { "displayName": "Headline", "purpose": "卡片標題、彈窗標題。" },
-      "title": { "displayName": "Title", "purpose": "統計數值。儀表板的主角字級——粗、密、緊。" },
-      "body": { "displayName": "Body", "purpose": "說明文字與表格內容。11px 是全頁最高頻字級（81 個節點）。" },
-      "label": { "displayName": "Label", "purpose": "系統簽名。所有區塊標題：大寫 + ls:3px + 訊號橘，讀起來像刻在面板上的標示。" },
-      "micro": { "displayName": "Micro", "purpose": "單位、次要標記、狀態副標。修補目標為不低於 11px。" }
+      "board-readout": {
+        "displayName": "甲板讀數",
+        "purpose": "一屏只有一個。白色，帶橘色 text-shadow 暈。"
+      },
+      "numeral": {
+        "displayName": "讀數",
+        "purpose": "KPI／生涯總量／ITT 成績。一律 tabular-nums。"
+      },
+      "headline": {
+        "displayName": "主數值",
+        "purpose": "區塊內的主數值與課表名稱。"
+      },
+      "title": {
+        "displayName": "章節標題",
+        "purpose": ".section-title，底下壓一條髮絲線。"
+      },
+      "nav": {
+        "displayName": "導覽",
+        "purpose": "側欄導覽項。"
+      },
+      "body": {
+        "displayName": "內文",
+        "purpose": "說明文字，長段落封頂 46–70ch。"
+      },
+      "label": {
+        "displayName": "拉丁副標",
+        "purpose": "章節英文名、量測窗口、欄位名。uppercase。"
+      },
+      "micro": {
+        "displayName": "微標",
+        "purpose": "徽章、單位、腳註。"
+      }
     },
     "shadows": [
-      { "name": "hairline-ring", "value": "0 0 0 1px rgba(0,0,0,.5)", "purpose": "把元素從亮背景切出來的暗描邊，不是投影。全頁 28 處。" },
-      { "name": "panel-lift", "value": "0 20px 50px -22px rgba(0,0,0,.8)", "purpose": "路段卡浮起。負 spread 讓陰影只落在正下方，不外擴。" },
-      { "name": "hero-lift", "value": "0 16px 46px rgba(0,0,0,.55)", "purpose": "名片浮起。" },
-      { "name": "state-glow", "value": "0 0 8px rgba(252,76,2,.18), inset 0 0 0 1px rgba(252,76,2,.18)", "purpose": "唯一允許的彩色光暈。只在 hover / PR / 選中時出現，永不表達靜態層級。" }
+      {
+        "name": "signal-glow",
+        "value": "0 0 6px rgba(252,76,2,.75)",
+        "purpose": "作用中的導覽圓點與狀態指示。"
+      },
+      {
+        "name": "segment-glow",
+        "value": "0 0 12px rgba(232,124,26,.25)",
+        "purpose": "作用中的路段分頁鈕。"
+      },
+      {
+        "name": "inset-warm",
+        "value": "inset 0 0 18px rgba(252,76,2,.06)",
+        "purpose": "需要「這一塊是熱的」的面板。"
+      },
+      {
+        "name": "readout-halo",
+        "value": "0 0 34px rgba(252,76,2,.22)",
+        "purpose": "甲板讀數的 text-shadow，點亮時 .45。"
+      },
+      {
+        "name": "modal-base",
+        "value": "0 6px 22px rgba(0,0,0,.5), inset 0 0 0 1px rgba(255,255,255,.04)",
+        "purpose": "全站唯一的真陰影，只給彈窗。"
+      }
     ],
     "motion": [
-      { "name": "ease-micro", "value": "0.15s ease", "purpose": "按鈕與晶片的狀態切換。最高頻的微互動時長。" },
-      { "name": "ease-instant", "value": "0.1s ease", "purpose": "hover 顏色變化等需要即時回饋的變化。" },
-      { "name": "ease-card", "value": "0.22s cubic-bezier(0.2, 1, 0.4, 1)", "purpose": "卡片進場與展開。減速曲線，儀器式而非彈跳式。" },
-      { "name": "ease-meter", "value": "1s cubic-bezier(0.25, 0.46, 0.45, 0.94)", "purpose": "進度條與圖表長條的填充動畫。長時距讓數值成長可被看見。全頁 48 處。" },
-      { "name": "ease-overlay", "value": "0.3s ease", "purpose": "彈窗遮罩淡入淡出。" }
+      {
+        "name": "ease-standard",
+        "value": "cubic-bezier(.2,.9,.25,1)",
+        "purpose": "預設 easing，最高頻。"
+      },
+      {
+        "name": "ease-drawer",
+        "value": "cubic-bezier(.2,.8,.3,1)",
+        "purpose": "抽屜推開主欄、view 進場。"
+      },
+      {
+        "name": "ease-overshoot",
+        "value": "cubic-bezier(.2,.9,.25,1.05)",
+        "purpose": "需要一點回彈的狀態切換。"
+      },
+      {
+        "name": "dur-instant",
+        "value": ".13s",
+        "purpose": "hover／底色變化，最高頻。"
+      },
+      {
+        "name": "dur-fast",
+        "value": ".15s",
+        "purpose": "一般狀態轉換。"
+      },
+      {
+        "name": "dur-view",
+        "value": ".2s",
+        "purpose": "較大面積的變化。"
+      },
+      {
+        "name": "reduced-motion",
+        "value": "@media (prefers-reduced-motion:reduce)",
+        "purpose": "十個針對性區塊，且保留動畫終態而非一刀切關閉——不得簡化。"
+      }
     ],
     "breakpoints": [
-      { "name": "xs", "value": "360px" },
-      { "name": "sm", "value": "420px" },
-      { "name": "md", "value": "480px" },
-      { "name": "lg", "value": "600px" },
-      { "name": "xl", "value": "640px" },
-      { "name": "2xl", "value": "760px" },
-      { "name": "3xl", "value": "1000px" }
-    ]
+      {
+        "name": "wide-2x",
+        "value": "2200px",
+        "purpose": "side-w 284 / main-max 1440"
+      },
+      {
+        "name": "wide",
+        "value": "1600px",
+        "purpose": "side-w 236 / main-max 1280"
+      },
+      {
+        "name": "drawer-push",
+        "value": "1280px",
+        "purpose": "抽屜推開主欄而非覆蓋"
+      },
+      {
+        "name": "narrow-side",
+        "value": "1023px",
+        "purpose": "側欄收窄到 148px"
+      },
+      {
+        "name": "mobile",
+        "value": "767px",
+        "purpose": "側欄換成底部 tabbar"
+      },
+      {
+        "name": "compact",
+        "value": "640px",
+        "purpose": "表格欄位與甲板尺度逐級收合"
+      }
+    ],
+    "starfield": {
+      "note": "背景零圖片負載，整個氛圍由 CSS 算出。五層：徑向漸層(field-crown→deep-space→field-floor) + 暖/冷星雲 + 極光 + 暗角。",
+      "layers": [
+        {
+          "name": "gradient",
+          "value": "radial-gradient(140% 100% at 50% 0%, #0d0510 0%, #0a0408 45%, #050308 100%)"
+        },
+        {
+          "name": "nebula",
+          "value": "width:110vmax;height:110vmax;border-radius:50%;filter:blur(56px);mix-blend-mode:screen"
+        },
+        {
+          "name": "vignette",
+          "value": "rgba(2,1,4,.72)"
+        }
+      ]
+    }
   },
   "components": [
     {
-      "name": "Primary Button",
-      "kind": "button",
-      "refersTo": "button-primary",
-      "description": "單一主要動作。深色字壓在亮橘漸層上（實測 5.6:1）。",
-      "html": "<button class=\"ds-btn-primary\">詳情 <span class=\"ds-btn-primary-arrow\">▾</span></button>",
-      "css": ".ds-btn-primary { display:inline-flex; align-items:center; gap:6px; background:linear-gradient(135deg,#FC4C02,#FC4C02 60%,rgba(255,255,255,.4)); color:#0A0604; border:1.5px solid #FC4C02; border-radius:6px; padding:6px 14px; font:800 13px/1.3 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; letter-spacing:1px; text-shadow:0 1px 0 rgba(255,255,255,.25); cursor:pointer; transition:box-shadow .15s ease, filter .15s ease; } .ds-btn-primary:hover { filter:brightness(1.08); box-shadow:0 0 8px rgba(252,76,2,.18), inset 0 0 0 1px rgba(252,76,2,.18); } .ds-btn-primary:focus-visible { outline:2px solid #FC4C02; outline-offset:2px; } .ds-btn-primary-arrow { font-size:10px; }"
+      "name": "Navigation Item",
+      "kind": "nav",
+      "refersTo": "nav-item",
+      "description": "側欄導覽項。作用中時左側圓點亮橘並發輝光——這是全站標記「你在哪」的手法。",
+      "html": "<nav class=\"ds-nav\"><button class=\"ds-nav-i\"><i></i>現況<em>7 小時前</em></button><button class=\"ds-nav-i\" aria-current=\"page\"><i></i>計畫<em>今天</em></button><button class=\"ds-nav-i\"><i></i>ITT<em>35 段</em></button></nav>",
+      "css": ".ds-nav{display:flex;flex-direction:column;gap:2px;width:190px;font-family:'Archivo',system-ui,'PingFang TC',sans-serif}.ds-nav-i{display:flex;align-items:center;gap:9px;width:100%;padding:7px 9px;border:0;border-radius:6px;background:transparent;font:600 12.5px/1.4 inherit;letter-spacing:.5px;color:rgba(244,240,234,.66);text-align:left;cursor:pointer;transition:background .13s,color .13s}.ds-nav-i i{width:4px;height:4px;border-radius:50%;background:transparent;flex:none;transition:background .13s,box-shadow .13s}.ds-nav-i:hover{background:rgba(255,255,255,.04);color:#f4f0ea}.ds-nav-i:focus-visible{outline:1px solid rgba(252,76,2,.6);outline-offset:1px}.ds-nav-i[aria-current=\"page\"]{background:rgba(252,76,2,.07);color:#FC4C02}.ds-nav-i[aria-current=\"page\"] i{background:#FC4C02;box-shadow:0 0 6px rgba(252,76,2,.75)}.ds-nav-i em{margin-left:auto;font-style:normal;font-size:8.5px;letter-spacing:1.6px;color:rgba(244,240,234,.38);font-variant-numeric:tabular-nums}"
     },
     {
-      "name": "Ghost Button",
+      "name": "Drawer CTA",
       "kind": "button",
-      "refersTo": "button-ghost",
-      "description": "次要動作與外部連結。透明底、1.5px 實橘描邊。",
-      "html": "<a class=\"ds-btn-ghost\" href=\"#\">Strava <svg width=\"11\" height=\"11\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.5\"><path d=\"M7 17L17 7M17 7H8M17 7v9\"/></svg></a>",
-      "css": ".ds-btn-ghost { display:inline-flex; align-items:center; gap:5px; background:transparent; color:#FC4C02; border:1.5px solid #FC4C02; border-radius:6px; padding:6px 14px; font:700 13px/1.3 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; letter-spacing:.5px; text-decoration:none; cursor:pointer; transition:background .15s ease; } .ds-btn-ghost:hover { background:rgba(252,76,2,.12); } .ds-btn-ghost:focus-visible { outline:2px solid #FC4C02; outline-offset:2px; }"
+      "refersTo": "cta-drawer",
+      "description": "全站最強的行動召喚。一個 view 不應出現兩個。",
+      "html": "<a class=\"ds-cta\" href=\"#\"><span>檢視這一堂</span><span>→</span></a>",
+      "css": ".ds-cta{display:flex;align-items:center;justify-content:space-between;gap:10px;width:280px;padding:11px 14px;border-radius:8px;border:1px solid rgba(252,76,2,.45);background:rgba(252,76,2,.09);color:#FC4C02;font:700 12px/1.4 'Archivo',system-ui,'PingFang TC',sans-serif;letter-spacing:1.4px;text-transform:uppercase;text-decoration:none;cursor:pointer;transition:background .13s}.ds-cta:hover{background:rgba(252,76,2,.2)}.ds-cta:focus-visible{outline:1px solid rgba(252,76,2,.6);outline-offset:2px}"
     },
     {
-      "name": "Pill CTA",
-      "kind": "button",
-      "refersTo": "button-pill",
-      "description": "卡片內的滿寬展開型 CTA。刻意用中性白而非橘，避免與區塊標題搶訊號。",
-      "html": "<button class=\"ds-btn-pill\">▶ REVIEW ATTEMPT <span class=\"ds-btn-pill-n\">(10)</span></button>",
-      "css": ".ds-btn-pill { display:block; width:100%; background:rgba(255,255,255,.08); color:#fff; border:1px solid rgba(255,255,255,.16); border-radius:100px; padding:10px 16px; font:800 12px/1.3 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; letter-spacing:1.5px; cursor:pointer; transition:background .15s ease, border-color .15s ease; } .ds-btn-pill:hover { background:rgba(255,255,255,.14); border-color:rgba(255,255,255,.28); } .ds-btn-pill:focus-visible { outline:2px solid #FC4C02; outline-offset:2px; } .ds-btn-pill-n { opacity:.55; letter-spacing:.5px; }"
-    },
-    {
-      "name": "Filter Chip",
+      "name": "Segment Tab Chip",
       "kind": "chip",
       "refersTo": "chip-tab",
-      "description": "運動類型與語錄來源分頁。選中為橘色態，未選中為中性描邊。",
-      "html": "<div style=\"display:flex;gap:8px\"><button class=\"ds-chip is-active\">🚴 單車</button><button class=\"ds-chip\">🏃 跑步</button></div>",
-      "css": ".ds-chip { background:transparent; color:rgba(255,255,255,.45); border:1px solid rgba(255,255,255,.16); border-radius:20px; padding:5px 14px; font:400 12px/1.4 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; letter-spacing:1px; cursor:pointer; transition:background .15s ease, color .15s ease, border-color .15s ease; } .ds-chip:hover { color:rgba(255,255,255,.75); border-color:rgba(255,255,255,.3); } .ds-chip.is-active { background:rgba(252,76,2,.14); color:#FC4C02; border-color:#FC4C02; } .ds-chip:focus-visible { outline:2px solid #FC4C02; outline-offset:2px; }"
+      "description": "ITT 路段分頁。唯一使用路段琥珀而非訊號橘的互動元件——它屬於 ITT 世界。",
+      "html": "<div class=\"ds-tabs\"><button class=\"ds-tab is-on\">全段</button><button class=\"ds-tab\">上半 2.2K</button><button class=\"ds-tab\">1/4</button></div>",
+      "css": ".ds-tabs{display:flex;gap:8px;flex-wrap:wrap;font-family:'Archivo',system-ui,'PingFang TC',sans-serif}.ds-tab{display:flex;align-items:center;gap:7px;padding:10px 18px;border-radius:22px;font:700 14px/1 inherit;letter-spacing:1px;border:1px solid rgba(232,124,26,.35);color:rgba(232,124,26,.8);background:rgba(232,124,26,.06);cursor:pointer;transition:all .2s}.ds-tab:hover,.ds-tab.is-on{background:rgba(232,124,26,.2);color:#e87c1a;border-color:#e87c1a;box-shadow:0 0 12px rgba(232,124,26,.25)}"
     },
     {
-      "name": "Stat Card",
-      "kind": "card",
-      "refersTo": "card-stat",
-      "description": "統計數值卡。極淡橘填色 + 發絲橘邊，數值用 Title 字級。",
-      "html": "<div class=\"ds-card-stat\"><div class=\"ds-card-stat-label\">DISTANCE</div><div class=\"ds-card-stat-val\">1,421<span class=\"ds-card-stat-unit\">KM</span></div></div>",
-      "css": ".ds-card-stat { background:rgba(252,76,2,.05); border:1px solid rgba(252,76,2,.2); border-radius:10px; padding:16px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; } .ds-card-stat-label { font-size:11px; font-weight:600; letter-spacing:3px; text-transform:uppercase; color:#FC4C02; margin-bottom:8px; } .ds-card-stat-val { font-size:26px; font-weight:800; color:#fff; display:flex; align-items:baseline; gap:5px; } .ds-card-stat-unit { font-size:11px; font-weight:600; color:rgba(252,76,2,.8); letter-spacing:.5px; }"
-    },
-    {
-      "name": "Activity Card",
-      "kind": "card",
-      "refersTo": "card-activity",
-      "description": "活動紀錄卡。半透明黑讓星空透出，最淺一級的發絲邊框。",
-      "html": "<div class=\"ds-card-activity\"><div class=\"ds-card-activity-head\">晨間騎乘 · 劍中風碧</div><div class=\"ds-card-activity-meta\">2026/07/24 · 63.2 km · 1,204 m</div></div>",
-      "css": ".ds-card-activity { background:rgba(10,4,0,.45); border:1px solid rgba(252,76,2,.12); border-radius:9px; padding:14px 16px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; transition:border-color .15s ease, background .15s ease; } .ds-card-activity:hover { border-color:rgba(252,76,2,.3); background:rgba(10,4,0,.6); } .ds-card-activity-head { font-size:15px; font-weight:800; color:#fff; margin-bottom:6px; } .ds-card-activity-meta { font-size:11px; font-weight:400; color:#aaa; letter-spacing:.3px; }"
-    },
-    {
-      "name": "Section Label",
+      "name": "Section Header",
       "kind": "custom",
-      "refersTo": "label-section",
-      "description": "系統簽名。大寫 + ls:3px + 訊號橘，讀起來像刻在面板上的標示。所有區塊標題都是這個規格。",
-      "html": "<div class=\"ds-label-section\">月度訓練量<span class=\"ds-label-section-en\">· MONTHLY VOLUME</span></div>",
-      "css": ".ds-label-section { font:600 11px/1.4 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; letter-spacing:3px; text-transform:uppercase; color:#FC4C02; padding:0 0 8px; border-bottom:1px solid rgba(252,76,2,.15); display:flex; align-items:center; gap:8px; } .ds-label-section-en { color:rgba(252,76,2,.5); font-weight:400; }"
+      "refersTo": null,
+      "description": "全站最高頻的結構：中文主標＋8.5px 橘色 uppercase 拉丁副標＋髮絲底線。新區塊一律沿用。",
+      "html": "<div class=\"ds-sect\">課表指南 <span>· 8 則 · 不綁日期，點開查</span></div>",
+      "css": ".ds-sect{display:flex;align-items:baseline;gap:0 8px;flex-wrap:wrap;font:700 13.5px/1.35 'Archivo',system-ui,'PingFang TC',sans-serif;color:#f4f0ea;letter-spacing:.5px;margin-bottom:.8rem;padding-bottom:.45rem;border-bottom:1px solid rgba(255,255,255,.065)}.ds-sect span{font:600 8.5px/1.4 inherit;color:rgba(252,76,2,.55);letter-spacing:2.4px;text-transform:uppercase;white-space:nowrap}"
     },
     {
-      "name": "Status Badge",
+      "name": "Data Row",
       "kind": "custom",
-      "refersTo": "badge-status",
-      "description": "簽名元件。ITT 路段狀態評分：emoji + 英文狀態 + 說明「為什麼」的副標。顏色由語意色鎖定。",
-      "html": "<div style=\"display:flex;flex-direction:column;gap:10px\"><div class=\"ds-badge ds-badge-peak\">🔥 PEAK<small>AT YOUR BEST</small></div><div class=\"ds-badge ds-badge-rising\">⚡ RISING<small>97% OF PEAK (ALL-TIME)</small></div><div class=\"ds-badge ds-badge-untouched\">💀 UNTOUCHED<small>NO POWER DATA</small></div></div>",
-      "css": ".ds-badge { font:800 10px/1.4 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; letter-spacing:1px; display:flex; flex-direction:column; gap:2px; } .ds-badge small { font-size:9px; font-weight:600; letter-spacing:.5px; opacity:.7; } .ds-badge-peak { color:#FF4500; } .ds-badge-rising { color:#FC4C02; } .ds-badge-untouched { color:#888; }"
+      "refersTo": "data-row",
+      "description": "資料列。分隔靠髮絲線，不包卡片——九張等重的卡等於沒有層級。",
+      "html": "<div class=\"ds-rows\"><a class=\"ds-row\" href=\"#\"><b>關渡→美堤</b><span>25:07</span><em>PR</em></a><a class=\"ds-row\" href=\"#\"><b>20 分功率</b><span>252 W</span><em>BEST</em></a></div>",
+      "css": ".ds-rows{width:340px;border-top:1px solid rgba(255,255,255,.065);font-family:'Archivo',system-ui,'PingFang TC',sans-serif}.ds-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:baseline;gap:4px 16px;padding:11px 8px;border-bottom:1px solid rgba(255,255,255,.065);border-radius:2px;text-decoration:none;color:rgba(244,240,234,.66);transition:background .13s}.ds-row:hover{background:rgba(255,255,255,.025)}.ds-row b{font-size:12px;font-weight:400;color:#f4f0ea}.ds-row span{font-family:'Saira Condensed','Arial Narrow',sans-serif;font-weight:800;font-size:15px;font-variant-numeric:tabular-nums;color:#f4f0ea}.ds-row em{font-style:normal;font-size:9px;font-weight:700;letter-spacing:1.6px;color:#FC4C02}"
     },
     {
-      "name": "Topbar Navigation",
-      "kind": "nav",
-      "refersTo": "topbar",
-      "description": "Sticky 導覽列。唯一偏冷的表面，用毛玻璃與橘色發絲線與內容分離。",
-      "html": "<div class=\"ds-topbar\"><a class=\"ds-topbar-back\" href=\"#\">← BACK</a><span class=\"ds-topbar-title\">Athletics · Strava</span></div>",
-      "css": ".ds-topbar { display:flex; align-items:center; gap:12px; padding:14px 20px; background:rgba(6,8,16,.95); backdrop-filter:blur(8px); border-bottom:1px solid rgba(252,76,2,.15); font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; } .ds-topbar-back { display:inline-flex; align-items:center; gap:6px; background:rgba(252,76,2,.1); border:1px solid rgba(252,76,2,.3); border-radius:20px; padding:6px 14px; color:#FC4C02; font-size:13px; font-weight:500; text-decoration:none; transition:background .2s ease; } .ds-topbar-back:hover { background:rgba(252,76,2,.2); } .ds-topbar-title { font-size:12px; color:rgba(252,76,2,.75); letter-spacing:2.5px; text-transform:uppercase; }"
-    },
-    {
-      "name": "Corner Marks",
+      "name": "Session Row",
       "kind": "custom",
-      "refersTo": "corner-marks",
-      "description": "簽名幾何。主卡與彈窗四角的 L 形細線，來自 HUD 取景框語彙。純裝飾但是全系統的識別記號。",
-      "html": "<div class=\"ds-corners\"><span>功率排行榜</span></div>",
-      "css": ".ds-corners { position:relative; background:linear-gradient(160deg,rgba(252,76,2,.1),rgba(252,76,2,.02)); border:1px solid rgba(252,76,2,.35); border-radius:14px; padding:22px; min-height:80px; display:flex; align-items:center; justify-content:center; color:#FC4C02; font:600 11px/1.4 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; letter-spacing:3px; text-transform:uppercase; } .ds-corners::before, .ds-corners::after { content:''; position:absolute; width:18px; height:18px; border:2px solid #FC4C02; pointer-events:none; } .ds-corners::before { top:8px; left:8px; border-right:none; border-bottom:none; } .ds-corners::after { bottom:8px; right:8px; border-left:none; border-top:none; }"
+      "refersTo": "session-row",
+      "description": "課表列三層級：過去低對比、未來低對比、下一堂最高優先（左緣 2px 橘條）。左緣色條是標記當前項的手法，不是加底色。",
+      "html": "<div class=\"ds-ses-list\"><button class=\"ds-ses is-past\"><i>08/20</i><b>B · 不准滑行</b><s>未達</s></button><button class=\"ds-ses is-next\"><i>08/25</i><b>A · 門檻續航</b><s>下一堂</s></button><button class=\"ds-ses\"><i>08/27</i><b>B · 不准滑行</b><s></s></button></div>",
+      "css": ".ds-ses-list{width:340px;border-top:1px solid rgba(255,255,255,.065);font-family:'Archivo',system-ui,'PingFang TC',sans-serif}.ds-ses{display:grid;grid-template-columns:3.4rem minmax(0,1fr) auto;gap:2px 14px;align-items:baseline;width:100%;padding:12px 8px 12px 10px;border:0;border-left:2px solid transparent;border-bottom:1px solid rgba(255,255,255,.065);border-radius:0 5px 5px 0;background:transparent;text-align:left;cursor:pointer;transition:background .13s;color:rgba(244,240,234,.66)}.ds-ses:hover{background:rgba(255,255,255,.025)}.ds-ses i{font-style:normal;font-size:10.5px;letter-spacing:.8px;color:rgba(244,240,234,.38);font-variant-numeric:tabular-nums}.ds-ses b{font-size:12.5px;font-weight:700;color:rgba(244,240,234,.66)}.ds-ses s{text-decoration:none;font-size:9px;letter-spacing:1.4px;color:rgba(244,240,234,.38)}.ds-ses.is-next{border-left-color:#FC4C02}.ds-ses.is-next b{color:#f4f0ea}.ds-ses.is-next s{color:#FC4C02}.ds-ses.is-past{opacity:.62}"
+    },
+    {
+      "name": "Board Readout",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "甲板的單一巨大讀數。一屏只有一個——四個等寬大數字會互相抵消，誰都不是重點。",
+      "html": "<div class=\"ds-board\"><span class=\"ds-board-k\">2026 SEASON · DISTANCE</span><b class=\"ds-board-n\">1,847</b><span class=\"ds-board-u\">KM</span></div>",
+      "css": ".ds-board{display:flex;flex-direction:column;align-items:flex-start;font-family:'Archivo',system-ui,'PingFang TC',sans-serif}.ds-board-k{font-size:8.5px;font-weight:700;letter-spacing:2.6px;text-transform:uppercase;color:rgba(252,76,2,.6)}.ds-board-n{display:block;font-family:'Saira Condensed','Arial Narrow',sans-serif;font-weight:800;font-size:clamp(62px,12vw,132px);line-height:.82;letter-spacing:-1.5px;color:#fff;margin-left:-.03em;font-variant-numeric:tabular-nums;text-shadow:0 0 34px rgba(252,76,2,.22);transition:text-shadow .6s ease}.ds-board:hover .ds-board-n{text-shadow:0 0 40px rgba(252,76,2,.45)}.ds-board-u{font-size:9px;font-weight:700;letter-spacing:2px;color:rgba(244,240,234,.38)}"
+    },
+    {
+      "name": "Readiness Panel",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "側欄常駐狀態面板。TSB 依四段門檻換色，CTL 線上有一顆持續跑的心電圖掃描光點——這是全站唯一持續運動的元素。",
+      "html": "<div class=\"ds-rdy\"><div class=\"ds-rdy-hd\">狀態<span>08/27</span></div><div class=\"ds-rdy-tsb\"><b>-8.3</b><span>TSB · 平衡</span></div><svg class=\"ds-rdy-spark\" viewBox=\"0 0 156 34\" preserveAspectRatio=\"none\"><path class=\"a\" d=\"M0 20L26 12L52 22L78 8L104 18L130 6L156 14\"/><path class=\"c\" d=\"M0 24L26 21L52 23L78 19L104 21L130 17L156 20\"/><path class=\"s\" d=\"M0 24L26 21L52 23L78 19L104 21L130 17L156 20\" pathLength=\"100\"/></svg><div class=\"ds-rdy-cta\"><span>CTL 30.8</span><span>ATL 39.1</span></div></div>",
+      "css": ".ds-rdy{width:176px;padding:9px 0;border:1px solid rgba(255,255,255,.065);border-radius:8px;background:rgba(255,255,255,.02);font-family:'Archivo',system-ui,'PingFang TC',sans-serif}.ds-rdy-hd{display:flex;justify-content:space-between;padding:0 9px;font-size:8.5px;font-weight:700;letter-spacing:2.4px;text-transform:uppercase;color:rgba(252,76,2,.6)}.ds-rdy-hd span{color:rgba(244,240,234,.38);letter-spacing:1px}.ds-rdy-tsb{padding:6px 9px 0}.ds-rdy-tsb b{display:block;font-family:'Saira Condensed','Arial Narrow',sans-serif;font-size:30px;font-weight:800;letter-spacing:-.5px;font-variant-numeric:tabular-nums;color:#f4f0ea}.ds-rdy-tsb span{display:block;margin-top:3px;font-size:9px;letter-spacing:1.6px;color:rgba(244,240,234,.38)}.ds-rdy-spark{display:block;width:calc(100% - 18px);margin:2px 9px 0;height:34px;overflow:visible}.ds-rdy-spark path{fill:none;stroke-width:1.4;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke}.ds-rdy-spark .c{stroke:#FC4C02}.ds-rdy-spark .a{stroke:rgba(255,255,255,.28);stroke-dasharray:3 3}.ds-rdy-spark .s{stroke:rgba(255,248,242,.95);stroke-width:1.8;stroke-dasharray:13 100;filter:drop-shadow(0 0 3px rgba(252,76,2,.9));animation:ds-scan 3.6s linear infinite}@keyframes ds-scan{from{stroke-dashoffset:13}to{stroke-dashoffset:-100}}.ds-rdy-cta{display:flex;gap:8px;padding:0 9px;margin-top:2px;font-size:9px;letter-spacing:.6px;color:rgba(244,240,234,.38);font-variant-numeric:tabular-nums}"
     }
   ],
   "narrative": {
-    "northStar": "深空觀測站 (The Observatory)",
-    "overview": "背景是觀測站，前景是競賽讀數。這兩件事是刻意並存的張力，不是矛盾：底層是一片近黑的深空（#0A0408）、緩慢漂移的星野 canvas、呼吸的星雲光暈、22 秒轉一圈的星座環——那是安靜、遙遠、可以一直看著的。但浮在它之上的每一張卡片都在報成績：功率、排名、PR 皇冠、狀態評分、離月目標還差幾次。環境負責讓人待著，前景負責讓人知道自己現在幾分。\n\n密度是這套系統的立場，不是缺陷。主要使用者是作者本人，他認得每一個縮寫，所以資訊可以擠得很近——實測全頁 2,099 個節點、常用字級落在 8–12px、間距用 3–8px。這種密度在一般產品會被判為過載，在這裡是正確的：它讓一屏塞得下一個月的訓練事實。但密度的代價必須用顏色紀律償還——這就是訊號橘只在需要被讀的地方出現的原因。\n\n材質上，這套系統幾乎不用實體陰影。層級靠兩件事表達：1px 的發絲邊框（全頁 200+ 個，透明度從 .12 到 .55 分級）和低透明度的背景疊層（卡片是 rgba(10,4,0,.45) 這種讓星空透出來的半透明黑）。真正的投影只保留給三張主卡。光暈完全是狀態語言，不是裝飾。",
+    "northStar": "深空計時站（The Deep-Space Timing Post）",
+    "overview": "這是一座架在近黑星場之上的分段計時站。背景是程序化生成的深空——雙星雲核交替呼吸、極光慢旋、暗角向內收束保住讀數對比；前景是賽道邊的計時板與工程師桌上的計時紙。兩個 register 疊在一起：極少字、極大字的板牌，與密集分段秒數的計時紙。中間沒有第三種尺度，這個斷裂就是版面的組織原則。\n\n密度是給主要使用者的，不是疏漏。畫面上絕大多數的分隔工作由 6.5% 白的髮絲線完成，不由邊框、陰影或圓角完成。橘色是訊號不是裝飾：中性墨階承擔所有預設文字，橘色只在「這件事需要你現在看」時出現。\n\n深度完全不靠投影。這個系統是平的、但會發光：作用中的狀態靠橘色輝光，面板靠內陰影微微透出橘，甲板讀數靠 text-shadow 的橘暈浮起來。星場本身是唯一的空間感來源。",
     "keyCharacteristics": [
-      "近黑深空底 + 半透明面板，星空永遠從卡片後面透出來",
-      "單一訊號色 + 六個語意色，各自綁死一個數據維度",
-      "發絲邊框分層，而非陰影分層",
-      "系統字體堆疊，零字體載入",
-      "大寫寬字距標籤作為結構訊號（ls:3px）",
-      "高密度：8–12px 為主字級，3–8px 為主間距"
+      "近黑星場底（#0A0408）＋ 程序化星雲／極光，無圖片負載",
+      "兩個字體 register：Saira Condensed 只給數字，Archivo 只給拉丁標籤，中文交還系統字",
+      "7–13.5px 的半階字級梯（8.5 / 9.5 / 10.5 / 11.5 / 12.5 / 13.5 全在重度使用）",
+      "髮絲線做分隔，不用卡片；圓角小（2–8px 佔絕大多數）",
+      "橘 #FC4C02 是訊號色，中性暖墨階是預設文字色",
+      "平面＋發光，零投影式抬升",
+      "動態極快（.13s / .15s 為主），十個 prefers-reduced-motion 區塊且保留動畫終態"
     ],
     "rules": [
-      { "name": "The One Signal Rule", "body": "訊號橘只出現在需要被優先讀到的地方。它不是「品牌色所以到處撒」，是「這裡有值得看的數字」。任一屏若橘色元素超過視覺面積的 15%，訊號就失效了。", "section": "colors" },
-      { "name": "The Semantic Lock Rule", "body": "六個語意色各自綁死一個數據維度：青=爬升、金=時數/HR、綠=達標、紅=下滑、焰=巔峰、皇冠金=PR。不得為了配色好看而借用。要表達新的維度就要新增一個語意色並登記，不能挪用既有的。", "section": "colors" },
-      { "name": "The Consolidation Rule", "body": "同一語意目前存在多個近似值，屬技術債：暖橘系 7 個重複值應收斂進 #FC4C02；金系 5 個重複值應收斂進 #FFD24D；綠系 #3fcc4a 收斂進 #5FD060。弱灰 #555 與 #666 對比度不足（2.72:1 / 3.54:1），應提升至 #8A8A8A 或更亮。", "section": "colors" },
-      { "name": "The Transparency Ladder Rule", "body": "訊號橘的透明度目前有 12 階，過密。收斂為 5 階：.08（極淡填色）、.15（面板填色）、.3（靜態邊框）、.55（強調邊框）、1（文字與圖示）。", "section": "colors" },
-      { "name": "The Engraved Label Rule", "body": "結構性標籤（區塊標題、導覽列標題、統計標籤）一律大寫 + 寬字距（2.5px–3px）+ 訊號橘。內容文字一律小寫混排 + 中性灰 + 正常字距。看到寬字距大寫就知道那是結構，不是資料。", "section": "typography" },
-      { "name": "The 11px Floor Rule", "body": "目前有 255 個文字節點小於 11px，其中 30 個在 7–7.5px。標籤字級下限應為 11px、數值下限 13px；密度靠字距與顏色回收，不靠縮字級。", "section": "typography" },
-      { "name": "The Transparent Surface Rule", "body": "面永遠半透明，星空永遠透得出來。不得使用不透明的實色卡片背景——那會把觀測站變成一般儀表板。", "section": "elevation" },
-      { "name": "The Glow-Is-State Rule", "body": "彩色光暈只表達狀態（hover、PR、選中、巔峰），永遠不表達靜態層級。靜態層級一律用邊框透明度。看到光就代表有事發生了。", "section": "elevation" },
-      { "name": "The Radius-Follows-Scale Rule", "body": "圓角與容器尺度成正比。晶片 6px、卡片 10px、主卡 16px、面板 20px。不得讓小元件用大圓角（那會變成藥丸）或大面板用小圓角（那會變成表格）。", "section": "shapes" }
+      {
+        "name": "The Signal-Not-Ink Rule",
+        "body": "橘色不得作為預設文字色。任何一段連續閱讀的文字都走 --ink-1/2/3；橘色只用於狀態、作用中、與需要立刻被看見的單一數值。",
+        "section": "colors"
+      },
+      {
+        "name": "The One Readout Rule",
+        "body": "一屏只有一個 board-readout 尺度的數字。四個等寬大數字會互相抵消，誰都不是重點。",
+        "section": "colors"
+      },
+      {
+        "name": "The Half-Step Rule",
+        "body": "小字級走 0.5px 半階，不是整數階。在 7–14px 這個帶裡，1px 的跳躍會讓相鄰兩層對比過強。",
+        "section": "typography"
+      },
+      {
+        "name": "The Tabular Rule",
+        "body": "任何會隨資料更新的數字都必須 font-variant-numeric:tabular-nums。",
+        "section": "typography"
+      },
+      {
+        "name": "The Two-Register Rule",
+        "body": "板牌與計時紙之間沒有中間尺度。要嘛 ≥30px 的 Saira 讀數，要嘛 ≤13.5px 的 Archivo／系統字。",
+        "section": "typography"
+      },
+      {
+        "name": "The No-Card Rule",
+        "body": "資料列不包卡片。分隔靠髮絲線，不靠邊框＋圓角＋投影。",
+        "section": "layout"
+      },
+      {
+        "name": "The Emissive Depth Rule",
+        "body": "需要一個元素往前站，就讓它發光，不要給它投影。投影屬於彈窗那一層。",
+        "section": "elevation"
+      },
+      {
+        "name": "The Hairline-First Rule",
+        "body": "需要分隔，先用 1px solid var(--hair)。不足時才升級到背景色差，最後才是邊框＋圓角。",
+        "section": "shapes"
+      }
     ],
     "dos": [
-      "Do 讓面保持半透明，星空要從卡片後面透出來（rgba(10,4,0,.45) 這類）。",
-      "Do 用邊框透明度表達靜態層級（.12 → .2 → .3 → .35 → .55），用光暈表達狀態。",
-      "Do 讓結構性標籤一律大寫 + ls:2.5–3px + 訊號橘；內容文字一律小寫 + 中性灰 + 正常字距。",
-      "Do 讓語意色綁死數據維度：青=爬升、金=時數/HR、綠=達標、紅=下滑、焰=巔峰、皇冠金=PR。",
-      "Do 讓圓角與容器尺度成正比（晶片 6px / 卡片 10px / 主卡 16px / 面板 20px）。",
-      "Do 讓狀態徽章永遠帶「為什麼」的副標——97% OF PEAK 而不只是 RISING。",
-      "Do 在缺資料時明說（NO POWER DATA、此路線尚無高度資料），不得補零或留白。",
-      "Do 保留現有的 prefers-reduced-motion 處理方式：針對性關閉並保留動畫終態，不要改成一刀切。"
+      "Do 用 --ink-1/2/3 當文字色，把橘色留給狀態與訊號。",
+      "Do 小字級沿用 0.5px 半階（8.5 / 9.5 / 10.5 / 11.5 / 12.5 / 13.5）。",
+      "Do 所有會更新的數字加 font-variant-numeric:tabular-nums。",
+      "Do 用 1px solid var(--hair) 做分隔，優先於卡片、邊框與背景色差。",
+      "Do 要讓元素往前站時用輝光，不用投影。",
+      "Do 新區塊沿用「中文主標 ＋ 8.5px 橘色 uppercase 拉丁副標 ＋ 髮絲底線」的章節結構。",
+      "Do 互動元件預設 6px 圓角；狀態圓點一律 4px border-radius:50%。",
+      "Do 缺值時明說，不要補零或留白。",
+      "Do 為每個新動畫寫 prefers-reduced-motion 區塊，且保留動畫終態。",
+      "Do 動態時長維持在 .13s–.2s；主要 easing 用 cubic-bezier(.2,.9,.25,1)。"
     ],
     "donts": [
-      "Don't 讓它看起來像一般 SaaS 儀表板——不要白底、不要 Material 卡片投影、不要藍色主色、不要引入 Inter 之類的 webfont。（使用者確認的反面參照）",
-      "Don't 讓它變成 Strava 官方 App 的複製品。這個站的價值正是官方沒有的（ITT 評分、3D 回放、對手 PK）。（使用者確認的反面參照）",
-      "Don't 用彩色光暈表達靜態層級。看到光就該代表有事發生。",
-      "Don't 為了配色好看而挪用語意色。新的維度要新增顏色並登記，不能借用。",
-      "Don't 新增第 8 個近似橘或第 6 個近似金。目前已有 7 個重複暖橘與 5 個重複金待收斂。",
-      "Don't 使用 #555 / #666 作為文字色（實測 2.72:1 / 3.54:1，不合格）。",
-      "Don't 用 2px 以上的邊框，也不要在單邊加粗色條當作強調（偵測器已標記兩處 border-left 強調線）。",
-      "Don't 使用彈跳或彈性緩動（目前有兩處 cubic-bezier(...1.4) 與 (...1.2...)）。這套系統的動作是儀器式的減速，不是玩具式的回彈。",
-      "Don't 引入多欄版面。800px 單欄置中是刻意的閱讀節奏。",
-      "Don't 引入任何需要 build step 的東西——字體託管、CSS 預處理器、打包工具都會破壞部署模型。"
+      "Don't 讓橘色兼任預設文字色。",
+      "Don't 在一屏放第二個 board-readout 尺度的數字。",
+      "Don't 把窄體拉丁與正常寬度中文排在同一個元素裡。",
+      "Don't 用投影做抬升。真陰影只屬於彈窗那一層。",
+      "Don't 把資料列包成卡片。",
+      "Don't 建立 14–29px 的新字級層。",
+      "Don't 引入任何需要 build step 的東西。",
+      "Don't 用整數階取代半階小字級。",
+      "Don't 為了裝飾使用語意色。"
     ]
   }
 }
