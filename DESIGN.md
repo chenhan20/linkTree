@@ -87,6 +87,7 @@ rounded:
   soft: "5px"
   control: "6px"
   card: "8px"
+  nub: "9px"
   well: "10px"
   panel: "12px"
   modal: "16px"
@@ -289,7 +290,7 @@ components:
 - `hair 2px`：進度條、微標籤、資料列。
 - `chip 3px` / `tab 4px` / `soft 5px`：徽章、小標籤、分頁。
 - `control 6px`：導覽項、可點的儲存格、側欄連結——**互動元件的預設值**。
-- `card 8px`：抽屜 CTA、有實體邊框的面板。
+- `card 8px` / `nub 9px`：抽屜 CTA、有實體邊框的面板、狀態面板。
 - `well 10px` / `panel 12px` / `modal 16px` / `hero 20px`：大面積容器與彈窗。
 - `pill 100px`：分頁鈕、狀態膠囊。
 - `dot 50%`：狀態圓點（20 次），一律 4px 見方。
