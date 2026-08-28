@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Steve Chuang · 循環訓練</title>
+<link rel="icon" type="image/png" href="docs/strava_icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Saira+Condensed:wght@600;700;800&display=swap">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+[hidden]{display:none!important}
+:root{
+  --f-num:'Saira Condensed','Oswald','Arial Narrow',sans-serif;
+  --f-ui:'Archivo',-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang TC','Noto Sans TC','Microsoft JhengHei',sans-serif;
+  --ink-1:#f4f0ea;--ink-2:rgba(244,240,234,.66);--ink-3:rgba(244,240,234,.38);
+  --sig:#FC4C02;--hair:rgba(255,255,255,.065);--hair-2:rgba(255,255,255,.11);
+  --surface:rgba(255,255,255,.02);
+  --ok:#4ad07a;--warn:#ffb020;--cool:#4AB4FF;
+}
+html,body{height:100%}
+body{
+  font-family:var(--f-ui);color:var(--ink-2);line-height:1.6;
+  background:radial-gradient(120% 90% at 50% 0%,#0d0510 0%,#0a0408 46%,#050308 100%) fixed,#0a0408;
+  -webkit-font-smoothing:antialiased;
+}
+.n{font-family:var(--f-num);font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1;font-weight:800}
+
+/* ── 版面 ─────────────────────────────────────────────── */
+.wrap{max-width:940px;margin:0 auto;padding:0 18px 120px}
+.top{
+  position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  padding:13px 0 12px;background:linear-gradient(#0a0408 74%,rgba(10,4,8,0));
+  font-size:11px;letter-spacing:2px;color:var(--ink-3)
+}
+.top b{color:var(--ink-1);font-weight:700}
+.top a{color:var(--ink-3);text-decoration:none}
+.top a:hover{color:var(--sig)}
+.top .sp{flex:1}
+.hero{padding:22px 0 24px;border-bottom:1px solid var(--hair);margin-bottom:24px}
+.hero h1{font-size:27px;font-weight:700;color:var(--ink-1);letter-spacing:-.4px}
+.hero p{margin-top:10px;max-width:66ch;font-size:12.5px;line-height:1.8;color:var(--ink-2)}
+.sect{
+  display:flex;align-items:baseline;gap:0 8px;flex-wrap:wrap;
+  font-size:13.5px;font-weight:700;color:var(--ink-1);letter-spacing:.5px;
+  margin:30px 0 .8rem;padding-bottom:.45rem;border-bottom:1px solid var(--hair)
+}
+.sect span{font-size:8.5px;font-weight:600;color:rgba(252,76,2,.55);letter-spacing:2.4px;text-transform:uppercase}
+.sect .sp{flex:1}
+
+/* ── 預設卡 ───────────────────────────────────────────── */
+.presets{display:grid;grid-template-columns:repeat(auto-fill,minmax(226px,1fr));gap:9px}
+.pcard{
+  display:block;width:100%;text-align:left;padding:13px 14px;border:1px solid var(--hair-2);
+  border-radius:8px;background:var(--surface);color:inherit;font-family:inherit;cursor:pointer;
+  transition:border-color .13s,background .13s
+}
+.pcard:hover{border-color:var(--sig);background:rgba(252,76,2,.05)}
+.pcard.on{border-color:var(--sig);background:rgba(252,76,2,.09)}
+.pcard b{display:block;font-size:14px;font-weight:700;color:var(--ink-1)}
+.pcard i{display:block;font-style:normal;font-size:10.5px;color:var(--ink-3);margin-top:3px;letter-spacing:.3px}
+.pcard em{display:block;font-style:normal;font-size:11px;color:var(--ink-2);margin-top:8px;line-height:1.65}
+
+/* ── 課表列 ───────────────────────────────────────────── */
+.plan{border-top:1px solid var(--hair)}
+.pr{
+  display:grid;grid-template-columns:1.6rem minmax(0,1fr) auto auto;
+  align-items:center;gap:2px 10px;padding:9px 4px;border-bottom:1px solid var(--hair)
+}
+.pr.is-stretch{opacity:.86}
+.pr-i{font-size:10px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.pr-n{min-width:0}
+.pr-n b{display:block;font-size:13px;font-weight:600;color:var(--ink-1);line-height:1.35}
+.pr-n s{
+  text-decoration:none;display:inline-block;margin-right:6px;padding:1px 5px;border-radius:3px;
+  font-size:8.5px;font-weight:700;letter-spacing:1px;background:rgba(255,255,255,.06);color:var(--ink-3)
+}
+.pr-n i{font-style:normal;font-size:10.5px;color:var(--ink-3)}
+.pr-amt{display:flex;align-items:center;gap:4px}
+.pr-amt input{
+  width:52px;padding:5px 6px;border:1px solid var(--hair-2);border-radius:5px;
+  background:rgba(0,0,0,.3);color:var(--ink-1);font-family:var(--f-num);font-weight:800;
+  font-size:14px;text-align:center;font-variant-numeric:tabular-nums
+}
+.pr-amt input:focus{outline:1px solid var(--sig);outline-offset:1px;border-color:var(--sig)}
+.pr-amt span{font-size:9.5px;color:var(--ink-3);white-space:nowrap}
+.pr-act{display:flex;gap:2px}
+.ib{
+  width:28px;height:28px;display:grid;place-items:center;border:0;border-radius:5px;
+  background:transparent;color:var(--ink-3);font-size:13px;cursor:pointer;transition:background .13s,color .13s
+}
+.ib:hover{background:rgba(255,255,255,.05);color:var(--ink-1)}
+.ib.rm:hover{background:rgba(252,76,2,.14);color:var(--sig)}
+.nil{padding:18px 4px;font-size:12px;color:var(--ink-3)}
+
+/* ── 設定 ─────────────────────────────────────────────── */
+.knobs{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:14px}
+.knob{padding:10px 12px;border:1px solid var(--hair);border-radius:8px;background:var(--surface)}
+.knob label{display:block;font-size:8.5px;font-weight:700;letter-spacing:2px;color:rgba(252,76,2,.6);text-transform:uppercase}
+.knob .row{display:flex;align-items:center;gap:8px;margin-top:6px}
+.knob input{
+  width:100%;padding:6px 8px;border:1px solid var(--hair-2);border-radius:5px;background:rgba(0,0,0,.3);
+  color:var(--ink-1);font-family:var(--f-num);font-weight:800;font-size:19px;text-align:center;
+  font-variant-numeric:tabular-nums
+}
+.knob input:focus{outline:1px solid var(--sig);outline-offset:1px;border-color:var(--sig)}
+.knob em{font-style:normal;font-size:9.5px;color:var(--ink-3);white-space:nowrap}
+
+/* ── 動作挑選 ─────────────────────────────────────────── */
+.filters{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}
+.chip{
+  padding:5px 11px;border:1px solid var(--hair-2);border-radius:100px;background:transparent;
+  color:var(--ink-2);font-family:inherit;font-size:11px;cursor:pointer;transition:.13s
+}
+.chip:hover{border-color:var(--sig);color:var(--sig)}
+.chip.on{background:rgba(252,76,2,.16);border-color:var(--sig);color:var(--sig);font-weight:700}
+.lib{display:grid;grid-template-columns:repeat(auto-fill,minmax(268px,1fr));gap:7px}
+.mv{
+  display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:start;gap:8px;
+  padding:9px 10px;border:1px solid var(--hair);border-radius:7px;background:var(--surface);
+  text-align:left;color:inherit;font-family:inherit;cursor:pointer;transition:border-color .13s,background .13s
+}
+.mv:hover{border-color:var(--sig);background:rgba(252,76,2,.05)}
+.mv-t{
+  padding:2px 5px;border-radius:3px;font-size:8.5px;font-weight:700;letter-spacing:.8px;
+  background:rgba(255,255,255,.07);color:var(--ink-2);white-space:nowrap
+}
+.mv-t.t-B{background:rgba(252,76,2,.16);color:var(--sig)}
+.mv b{display:block;font-size:12.5px;font-weight:600;color:var(--ink-1);line-height:1.35}
+.mv i{display:block;font-style:normal;font-size:10px;color:var(--ink-3);margin-top:2px}
+.mv .dot{width:6px;height:6px;border-radius:50%;margin-top:5px;flex:none}
+.mv .plus{font-size:16px;color:var(--ink-3);line-height:1}
+
+/* ── 開始列 ───────────────────────────────────────────── */
+.launch{
+  position:fixed;left:0;right:0;bottom:0;z-index:30;
+  padding:11px 18px calc(11px + env(safe-area-inset-bottom));
+  background:linear-gradient(rgba(10,4,8,0),#0a0408 32%);
+  display:flex;justify-content:center
+}
+.launch-in{display:flex;align-items:center;gap:12px;width:100%;max-width:904px}
+.est{font-size:10.5px;color:var(--ink-3);line-height:1.4;white-space:nowrap}
+.est b{display:block;font-family:var(--f-num);font-weight:800;font-size:21px;color:var(--ink-1);font-variant-numeric:tabular-nums}
+.go{
+  flex:1;padding:14px 18px;border:1px solid var(--sig);border-radius:8px;
+  background:var(--sig);color:#0a0408;font-family:inherit;font-size:14px;font-weight:700;
+  letter-spacing:2px;cursor:pointer;transition:filter .13s
+}
+.go:hover{filter:brightness(1.12)}
+.go:disabled{opacity:.4;cursor:not-allowed;filter:none}
+
+/* ══ 執行畫面 ═════════════════════════════════════════════
+   全螢幕、手機優先。運動中是隔著一公尺看手機，所以讀數要夠大、
+   按鈕要拇指按得到（≥52px），顏色只有三種狀態：做／休息／換邊。 */
+.run{
+  position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;
+  background:#0a0408;padding:calc(14px + env(safe-area-inset-top)) 18px calc(14px + env(safe-area-inset-bottom))
+}
+.run-hd{display:flex;align-items:center;gap:10px;font-size:10px;letter-spacing:1.6px;color:var(--ink-3)}
+.run-hd .sp{flex:1}
+.run-x{width:38px;height:38px;border:0;border-radius:7px;background:rgba(255,255,255,.05);color:var(--ink-2);font-size:17px;cursor:pointer}
+.run-x:hover{background:rgba(252,76,2,.16);color:var(--sig)}
+.run-bar{height:3px;border-radius:2px;background:rgba(255,255,255,.08);margin:11px 0 0;overflow:hidden}
+.run-bar i{display:block;height:100%;background:var(--sig);transition:width .3s linear}
+.run-body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:6px;min-height:0}
+.run-k{font-size:9.5px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:rgba(252,76,2,.75)}
+.run-name{font-size:clamp(23px,6.4vw,40px);font-weight:700;color:var(--ink-1);line-height:1.15;letter-spacing:-.3px}
+.run-num{
+  font-family:var(--f-num);font-weight:800;font-variant-numeric:tabular-nums;
+  font-size:clamp(80px,26vw,190px);line-height:.86;letter-spacing:-3px;color:#fff;
+  text-shadow:0 0 38px rgba(252,76,2,.26)
+}
+.run-unit{font-size:11px;letter-spacing:2.4px;color:var(--ink-3);margin-top:-2px}
+.run-cue{max-width:52ch;font-size:12.5px;line-height:1.75;color:var(--ink-2);margin-top:4px}
+.run-cue b{color:var(--ink-1)}
+.run-yt{
+  display:inline-block;margin-top:8px;padding:5px 12px;border:1px solid var(--hair-2);border-radius:100px;
+  font-size:11px;color:var(--ink-2);text-decoration:none
+}
+.run-yt:hover{border-color:var(--sig);color:var(--sig)}
+.run-next{font-size:11.5px;color:var(--ink-3)}
+.run-next b{color:var(--ink-2);font-weight:600}
+.run-ft{display:flex;gap:9px;margin-top:12px}
+.rb{
+  flex:1;min-height:54px;border:1px solid var(--hair-2);border-radius:9px;background:rgba(255,255,255,.03);
+  color:var(--ink-1);font-family:inherit;font-size:13px;font-weight:700;letter-spacing:1.2px;cursor:pointer;
+  transition:background .13s,border-color .13s
+}
+.rb:hover{background:rgba(255,255,255,.07)}
+.rb.hot{background:var(--sig);border-color:var(--sig);color:#0a0408;flex:2}
+.rb.hot:hover{filter:brightness(1.12);background:var(--sig)}
+/* 狀態配色：休息是綠、換邊是青、做是橘 */
+.run.is-rest .run-k,.run.is-rest .run-num{color:var(--ok)}
+.run.is-rest .run-num{text-shadow:0 0 38px rgba(74,208,122,.24)}
+.run.is-rest .run-bar i{background:var(--ok)}
+.run.is-switch .run-k,.run.is-switch .run-num{color:var(--cool)}
+.run.is-switch .run-num{text-shadow:0 0 38px rgba(74,180,255,.24)}
+.run.is-done .run-num{font-size:clamp(46px,13vw,86px)}
+/* 暫停:數字調暗並停掉光暈,讓「它沒有在動」一眼看得出來 */
+.run.is-paused .run-num{opacity:.42;text-shadow:none}
+
+@media(max-width:767px){
+  .wrap{padding:0 14px 120px}
+  .hero h1{font-size:22px}
+  .pr{grid-template-columns:1.4rem minmax(0,1fr) auto;grid-template-areas:"i n a" ". amt amt"}
+  .pr-i{grid-area:i}.pr-n{grid-area:n}.pr-act{grid-area:a}
+  .pr-amt{grid-area:amt;margin-top:5px}
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="top">
+    <b>STEVE</b> <span>/ 循環訓練 · CIRCUIT</span>
+    <span class="sp"></span>
+    <a href="strava.html">← 回主控台</a>
+  </div>
+
+  <header class="hero">
+    <h1>循環訓練</h1>
+    <p>挑一張預設按開始就能練，或自己搭。動作庫有 <b id="nmv">—</b> 個動作，
+      分成 <b>C1→C4</b>（徒手，由易到難）與 <b>B1／B2</b>（開始用家裡的重量）。
+      每個動作都寫了<b>你會做錯的地方</b>，第一次做先點開影片關鍵字看過再上墊子。</p>
+  </header>
+
+  <div class="sect">預設 <span>· PRESETS · 按一下就套用</span></div>
+  <div class="presets" id="presets"></div>
+
+  <div class="sect">課表 <span>· YOUR PLAN</span><span class="sp"></span></div>
+  <div class="plan" id="plan"></div>
+
+  <div class="knobs">
+    <div class="knob"><label>組數 SETS</label>
+      <div class="row"><input id="k-sets" type="number" min="1" max="10" step="1"><em>組</em></div></div>
+    <div class="knob"><label>動作間休 REST</label>
+      <div class="row"><input id="k-rm" type="number" min="0" max="180" step="5"><em>秒</em></div></div>
+    <div class="knob"><label>大休 SET REST</label>
+      <div class="row"><input id="k-rs" type="number" min="0" max="600" step="15"><em>秒</em></div></div>
+  </div>
+
+  <div class="sect">收操伸展 <span>· STRETCH · 只做一輪，不進組數</span></div>
+  <div class="plan" id="stretch"></div>
+
+  <div class="sect">動作庫 <span>· LIBRARY · 點一下加進課表</span></div>
+  <div class="filters" id="f-pat"></div>
+  <div class="filters" id="f-tier"></div>
+  <div class="lib" id="lib"></div>
+</div>
+
+<div class="launch"><div class="launch-in">
+  <div class="est"><b id="est">—</b>預估總長</div>
+  <button class="go" id="go" type="button">開始訓練</button>
+</div></div>
+
+<div class="run" id="run" hidden>
+  <div class="run-hd">
+    <span id="r-set">—</span><span class="sp"></span><span id="r-pos">—</span>
+    <button class="run-x" id="r-x" type="button" aria-label="結束">✕</button>
+  </div>
+  <div class="run-bar"><i id="r-bar" style="width:0%"></i></div>
+  <div class="run-body">
+    <div class="run-k" id="r-k">—</div>
+    <div class="run-name" id="r-name">—</div>
+    <div class="run-num" id="r-num">—</div>
+    <div class="run-unit" id="r-unit"></div>
+    <div class="run-cue" id="r-cue"></div>
+    <a class="run-yt" id="r-yt" target="_blank" rel="noopener" hidden>▶ 影片關鍵字</a>
+    <div class="run-next" id="r-next"></div>
+  </div>
+  <div class="run-ft">
+    <button class="rb" id="r-prev" type="button">← 上一個</button>
+    <button class="rb hot" id="r-main" type="button">完成</button>
+    <button class="rb" id="r-skip" type="button">跳過 →</button>
+  </div>
+</div>
+
+<script>
+/* ══ 循環訓練 ═══════════════════════════════════════════════════════
+   資料來自 data/movements.json（手寫維護）。沒有 build step，
+   整頁就是一個檔案 ＋ 一份 JSON。
+
+   兩個設計決定：
+   1. 計時器對「次數」動作不自動倒數 —— 次數是你做完才算完，
+      自動跳走只會逼你追時鐘。時間類才倒數。
+   2. 「每側」的時間動作會跑兩段並在中間喊換邊；「每側」的次數動作
+      只顯示一次（你知道要做兩邊），不然畫面會一直在切。 */
+const $ = s => document.querySelector(s);
+const LS = 'circuit-plan-v1';
+let DB = null, plan = null, filt = { pat: 'all', tier: 'all' };
+
+const UNIT = { reps:'次', time:'秒', reps_each:'次／側', time_each:'秒／側' };
+const isTime = u => u === 'time' || u === 'time_each';
+const isEach = u => u === 'reps_each' || u === 'time_each';
+const byId = id => DB.moves.find(m => m.id === id);
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+/* 動作說明允許 **粗體** —— 先跳脫再還原，JSON 裡的文字不會被當成 HTML */
+const md = s => esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+const yt = kw => 'https://www.youtube.com/results?search_query=' + encodeURIComponent(kw);
+const mmss = s => Math.floor(s/60) + ':' + String(Math.round(s%60)).padStart(2,'0');
+
+/* ── 預估總長：次數類用「每下 3 秒、至少 20 秒」估，只用於顯示 ── */
+function estimate() {
+  if (!plan) return 0;
+  const one = plan.moves.reduce((t, r) => {
+    const m = byId(r.id); if (!m) return t;
+    if (isTime(m.unit)) return t + r.amt * (isEach(m.unit) ? 2 : 1);
+    return t + Math.max(20, r.amt * 3 * (isEach(m.unit) ? 2 : 1));
+  }, 0);
+  const gaps = Math.max(0, plan.moves.length - 1) * plan.restMove;
+  const body = (one + gaps) * plan.sets + Math.max(0, plan.sets - 1) * plan.restSet;
+  const st = plan.stretches.reduce((t, r) => {
+    const m = byId(r.id); if (!m) return t;
+    return t + r.amt * (isEach(m.unit) ? 2 : 1) + 8;
+  }, 0);
+  return body + st;
+}
+
+/* ── 把課表攤平成一連串步驟 ── */
+function buildSteps() {
+  const S = [];
+  for (let s = 1; s <= plan.sets; s++) {
+    plan.moves.forEach((r, i) => {
+      const m = byId(r.id); if (!m) return;
+      const meta = { move: m, set: s, idx: i + 1, of: plan.moves.length };
+      if (isEach(m.unit) && isTime(m.unit)) {
+        S.push({ kind:'work', side:'左', secs:r.amt, ...meta });
+        S.push({ kind:'switch', secs:5, ...meta });
+        S.push({ kind:'work', side:'右', secs:r.amt, ...meta });
+      } else {
+        S.push({ kind:'work', secs:isTime(m.unit)?r.amt:null, amt:r.amt, ...meta });
+      }
+      if (i < plan.moves.length - 1 && plan.restMove > 0)
+        S.push({ kind:'rest', secs:plan.restMove, ...meta });
+    });
+    if (s < plan.sets && plan.restSet > 0)
+      S.push({ kind:'bigrest', secs:plan.restSet, set:s });
+  }
+  plan.stretches.forEach((r, i) => {
+    const m = byId(r.id); if (!m) return;
+    const meta = { move:m, stretch:true, idx:i+1, of:plan.stretches.length };
+    if (isEach(m.unit)) {
+      S.push({ kind:'work', side:'左', secs:isTime(m.unit)?r.amt:null, amt:r.amt, ...meta });
+      S.push({ kind:'work', side:'右', secs:isTime(m.unit)?r.amt:null, amt:r.amt, ...meta });
+    } else {
+      S.push({ kind:'work', secs:isTime(m.unit)?r.amt:null, amt:r.amt, ...meta });
+    }
+  });
+  S.push({ kind:'done' });
+  return S;
+}
+
+/* ── 提示音：Web Audio，不載任何檔案 ── */
+let AC = null;
+function beep(freq, ms, vol) {
+  try {
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    if (AC.state === 'suspended') AC.resume();
+    const o = AC.createOscillator(), g = AC.createGain();
+    o.type = 'sine'; o.frequency.value = freq;
+    g.gain.setValueAtTime(vol == null ? .18 : vol, AC.currentTime);
+    g.gain.exponentialRampToValueAtTime(.0001, AC.currentTime + ms/1000);
+    o.connect(g); g.connect(AC.destination);
+    o.start(); o.stop(AC.currentTime + ms/1000);
+  } catch (e) { /* 靜音裝置或不支援：不影響流程 */ }
+  try { if (navigator.vibrate) navigator.vibrate(ms > 200 ? [90,60,90] : 45); } catch (e) {}
+}
+
+/* ── 執行器 ── */
+const R = { steps:[], i:0, left:0, timer:null, wake:null, paused:false };
+
+async function keepAwake(on) {
+  try {
+    if (on && 'wakeLock' in navigator) R.wake = await navigator.wakeLock.request('screen');
+    else if (R.wake) { R.wake.release(); R.wake = null; }
+  } catch (e) { /* 不支援就算了，不擋流程 */ }
+}
+
+function startRun() {
+  R.steps = buildSteps(); R.i = 0;
+  $('#run').hidden = false;
+  document.body.style.overflow = 'hidden';
+  keepAwake(true);
+  beep(880, 140);
+  showStep();
+}
+function endRun() {
+  clearInterval(R.timer); R.timer = null;
+  $('#run').hidden = true;
+  document.body.style.overflow = '';
+  keepAwake(false);
+}
+function showStep() {
+  clearInterval(R.timer); R.timer = null;
+  const st = R.steps[R.i], run = $('#run');
+  run.className = 'run' + (st.kind==='rest'||st.kind==='bigrest' ? ' is-rest'
+    : st.kind==='switch' ? ' is-switch' : st.kind==='done' ? ' is-done' : '');
+
+  if (st.kind === 'done') {
+    $('#r-k').textContent = '完成'; $('#r-name').textContent = '收工';
+    $('#r-num').textContent = '✓'; $('#r-unit').textContent = '';
+    $('#r-cue').innerHTML = '記得<b>戴錶錄成肌力訓練</b> —— 沒錄的話它在 CTL、DOMS、校準三個地方都不存在。';
+    $('#r-yt').hidden = true; $('#r-next').textContent = '';
+    $('#r-set').textContent = ''; $('#r-pos').textContent = '';
+    $('#r-bar').style.width = '100%';
+    $('#r-main').textContent = '關閉'; $('#r-prev').hidden = true; $('#r-skip').hidden = true;
+    beep(1180, 420); return;
+  }
+  $('#r-prev').hidden = false; $('#r-skip').hidden = false;
+  $('#r-bar').style.width = (R.i / (R.steps.length - 1) * 100).toFixed(1) + '%';
+  $('#r-set').textContent = st.stretch ? '收操伸展'
+    : st.set ? '第 ' + st.set + ' / ' + plan.sets + ' 組' : '';
+  $('#r-pos').textContent = st.of ? st.idx + ' / ' + st.of : '';
+
+  const nx = R.steps.slice(R.i + 1).find(s => s.kind === 'work');
+  $('#r-next').innerHTML = nx ? '接著：<b>' + esc(nx.move.zh) + (nx.side ? ' · ' + nx.side : '') + '</b>' : '';
+
+  if (st.kind === 'rest' || st.kind === 'bigrest' || st.kind === 'switch') {
+    $('#r-k').textContent = st.kind === 'switch' ? '換邊' : st.kind === 'bigrest' ? '大休' : '休息';
+    $('#r-name').textContent = st.kind === 'switch' ? '換另一邊' : (nx ? nx.move.zh : '休息');
+    $('#r-unit').textContent = '秒';
+    $('#r-cue').innerHTML = st.kind === 'bigrest' ? '一組做完了。<b>喝水、把呼吸放回鼻子</b>再開始下一組。' : '';
+    $('#r-yt').hidden = true;
+    $('#r-main').textContent = '暫停';
+    countdown(st.secs);
+    return;
+  }
+
+  const m = st.move;
+  $('#r-k').textContent = st.stretch ? '伸展' : (DB.patterns[m.pattern] || {}).zh || '';
+  $('#r-name').textContent = m.zh + (st.side ? ' · ' + st.side : '');
+  $('#r-cue').innerHTML = md(m.cue);
+  $('#r-yt').hidden = false; $('#r-yt').href = yt(m.kw);
+  $('#r-yt').textContent = '▶ ' + m.kw;
+
+  if (isTime(m.unit)) {
+    $('#r-unit').textContent = '秒';
+    $('#r-main').textContent = '暫停';
+    countdown(st.secs);
+  } else {
+    $('#r-num').textContent = st.amt;
+    $('#r-unit').textContent = isEach(m.unit) ? '次／側' : '次';
+    $('#r-main').textContent = '完成';
+  }
+}
+function countdown(secs) {
+  R.left = secs; R.paused = false;
+  $('#r-num').textContent = R.left;
+  R.timer = setInterval(() => {
+    if (R.paused) return;
+    R.left--;
+    $('#r-num').textContent = Math.max(0, R.left);
+    if (R.left === 3 || R.left === 2 || R.left === 1) beep(660, 90, .12);
+    if (R.left <= 0) { clearInterval(R.timer); R.timer = null; beep(920, 220); next(); }
+  }, 1000);
+}
+function next() { if (R.i < R.steps.length - 1) { R.i++; showStep(); } }
+/* 計時中主鈕是暫停;次數類主鈕是「完成」（次數做完才算完,不該被時鐘趕） */
+function togglePause() {
+  R.paused = !R.paused;
+  $('#r-main').textContent = R.paused ? '繼續' : '暫停';
+  $('#run').classList.toggle('is-paused', R.paused);
+  beep(R.paused ? 440 : 720, 90, .12);
+}
+function prev() { if (R.i > 0) { R.i--; showStep(); } }
+
+/* ── 課表 UI ── */
+function rowHtml(r, i, kind) {
+  const m = byId(r.id); if (!m) return '';
+  return '<div class="pr' + (kind==='stretch' ? ' is-stretch' : '') + '">' +
+    '<span class="pr-i">' + (i+1) + '</span>' +
+    '<span class="pr-n"><b>' + esc(m.zh) + '</b>' +
+      '<s>' + m.tier + '</s><i>' + esc(m.en) + (m.doms >= 4 ? ' · ⚠️ 離心高' : '') + '</i></span>' +
+    '<span class="pr-amt"><input type="number" min="1" max="600" value="' + r.amt +
+      '" data-amt="' + kind + ':' + i + '"><span>' + UNIT[m.unit] + '</span></span>' +
+    '<span class="pr-act">' +
+      '<button class="ib" data-mv="' + kind + ':' + i + ':-1" aria-label="上移">↑</button>' +
+      '<button class="ib" data-mv="' + kind + ':' + i + ':1" aria-label="下移">↓</button>' +
+      '<button class="ib rm" data-rm="' + kind + ':' + i + '" aria-label="移除">✕</button>' +
+    '</span></div>';
+}
+function renderPlan() {
+  $('#plan').innerHTML = plan.moves.length
+    ? plan.moves.map((r,i) => rowHtml(r,i,'moves')).join('')
+    : '<div class="nil">還沒有動作。挑一張上面的預設，或從下面的動作庫點幾個加進來。</div>';
+  $('#stretch').innerHTML = plan.stretches.length
+    ? plan.stretches.map((r,i) => rowHtml(r,i,'stretches')).join('')
+    : '<div class="nil">沒有收操伸展。從動作庫的「伸展」分類點幾個加進來。</div>';
+  $('#k-sets').value = plan.sets; $('#k-rm').value = plan.restMove; $('#k-rs').value = plan.restSet;
+  $('#est').textContent = plan.moves.length ? mmss(estimate()) : '—';
+  $('#go').disabled = !plan.moves.length && !plan.stretches.length;
+  document.querySelectorAll('.pcard').forEach(c => c.classList.toggle('on', c.dataset.p === plan.from));
+  try { localStorage.setItem(LS, JSON.stringify(plan)); } catch (e) {}
+}
+function renderLib() {
+  const ms = DB.moves.filter(m =>
+    (filt.pat === 'all' || m.pattern === filt.pat) &&
+    (filt.tier === 'all' || m.tier[0] === filt.tier || m.tier === filt.tier));
+  $('#lib').innerHTML = ms.length ? ms.map(m =>
+    '<button class="mv" type="button" data-add="' + m.id + '">' +
+      '<span class="dot" style="background:' + ((DB.patterns[m.pattern]||{}).hue || '#888') + '"></span>' +
+      '<span><b>' + esc(m.zh) + '</b><i>' + m.tier + ' · ' + esc(m.en) +
+        (m.gear.length ? ' · 需器材' : '') + (m.doms >= 4 ? ' · ⚠️' : '') + '</i></span>' +
+      '<span class="plus">＋</span>' +
+    '</button>').join('') : '<div class="nil">這個篩選沒有動作。</div>';
+}
+function applyPreset(p) {
+  plan = {
+    from: p.id,
+    moves: p.moves.map(id => ({ id, amt: byId(id).default })),
+    stretches: p.stretches.map(id => ({ id, amt: byId(id).default })),
+    sets: p.sets, restMove: p.restMove, restSet: p.restSet,
+  };
+  renderPlan();
+  window.scrollTo({ top: $('#plan').offsetTop - 90, behavior: 'smooth' });
+}
+
+/* ── 啟動 ── */
+fetch('data/movements.json', { cache: 'no-cache' })
+  .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+  .then(db => {
+    DB = db;
+    $('#nmv').textContent = db.moves.length;
+    $('#presets').innerHTML = db.presets.map(p =>
+      '<button class="pcard" type="button" data-p="' + p.id + '">' +
+        '<b>' + esc(p.name) + '</b><i>' + esc(p.sub) + '</i><em>' + md(p.note) + '</em></button>').join('');
+    $('#f-pat').innerHTML = '<button class="chip on" data-pat="all">全部</button>' +
+      Object.entries(db.patterns).map(([k,v]) =>
+        '<button class="chip" data-pat="' + k + '">' + esc(v.zh) + '</button>').join('');
+    $('#f-tier').innerHTML = '<button class="chip on" data-tier="all">所有分級</button>' +
+      ['C1','C2','C3','C4','B'].map(t =>
+        '<button class="chip" data-tier="' + t + '">' + t + (t==='B'?'（重量）':'') + '</button>').join('');
+    let saved = null;
+    try { saved = JSON.parse(localStorage.getItem(LS) || 'null'); } catch (e) {}
+    if (saved && Array.isArray(saved.moves) && saved.moves.every(r => byId(r.id))) plan = saved;
+    else applyPreset(db.presets[0]);
+    renderPlan(); renderLib();
+  })
+  .catch(e => {
+    $('#plan').innerHTML = '<div class="nil">讀不到 <code>data/movements.json</code>（' +
+      esc(e.message) + '）。</div>';
+  });
+
+/* ── 事件（全部委派，重繪後不必重綁）── */
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-p],[data-add],[data-rm],[data-mv],[data-pat],[data-tier]');
+  if (!t) return;
+  if (t.dataset.p) return applyPreset(DB.presets.find(p => p.id === t.dataset.p));
+  if (t.dataset.add) {
+    const m = byId(t.dataset.add);
+    const key = m.pattern === 'stretch' ? 'stretches' : 'moves';
+    plan[key].push({ id: m.id, amt: m.default }); plan.from = null; return renderPlan();
+  }
+  if (t.dataset.rm) {
+    const [k, i] = t.dataset.rm.split(':');
+    plan[k].splice(+i, 1); plan.from = null; return renderPlan();
+  }
+  if (t.dataset.mv) {
+    const [k, i, d] = t.dataset.mv.split(':'); const a = plan[k], j = +i + +d;
+    if (j < 0 || j >= a.length) return;
+    [a[+i], a[j]] = [a[j], a[+i]]; plan.from = null; return renderPlan();
+  }
+  if (t.dataset.pat) { filt.pat = t.dataset.pat;
+    $('#f-pat').querySelectorAll('.chip').forEach(c => c.classList.toggle('on', c === t)); return renderLib(); }
+  if (t.dataset.tier) { filt.tier = t.dataset.tier;
+    $('#f-tier').querySelectorAll('.chip').forEach(c => c.classList.toggle('on', c === t)); return renderLib(); }
+});
+document.addEventListener('input', e => {
+  const t = e.target;
+  if (t.dataset.amt) {
+    const [k, i] = t.dataset.amt.split(':');
+    plan[k][+i].amt = Math.max(1, +t.value || 1); plan.from = null;
+    $('#est').textContent = mmss(estimate());
+    try { localStorage.setItem(LS, JSON.stringify(plan)); } catch (e2) {}
+    return;
+  }
+  if (t === $('#k-sets')) plan.sets = Math.max(1, +t.value || 1);
+  else if (t === $('#k-rm')) plan.restMove = Math.max(0, +t.value || 0);
+  else if (t === $('#k-rs')) plan.restSet = Math.max(0, +t.value || 0);
+  else return;
+  plan.from = null;
+  $('#est').textContent = mmss(estimate());
+  try { localStorage.setItem(LS, JSON.stringify(plan)); } catch (e2) {}
+});
+$('#go').addEventListener('click', startRun);
+$('#r-x').addEventListener('click', endRun);
+$('#r-prev').addEventListener('click', prev);
+$('#r-skip').addEventListener('click', next);
+$('#r-main').addEventListener('click', () => {
+  const st = R.steps[R.i];
+  if (!st) return;
+  if (st.kind === 'done') return endRun();
+  if (R.timer) return togglePause();   // 計時中 → 暫停
+  next();                              // 次數類 → 完成
+});
+document.addEventListener('keydown', e => {
+  if ($('#run').hidden) return;
+  if (e.key === 'Escape') endRun();
+  if (e.key === ' ') { e.preventDefault(); R.timer ? togglePause() : next(); }
+  if (e.key === 'ArrowRight') { e.preventDefault(); next(); }
+  if (e.key === 'ArrowLeft') { e.preventDefault(); prev(); }
+});
+</script>
+</body>
+</html>
