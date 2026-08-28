@@ -30,7 +30,7 @@ body{
 /* ── 版面 ─────────────────────────────────────────────── */
 .wrap{max-width:940px;margin:0 auto;padding:0 18px 120px}
 .top{
-  position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  font-size:12px;position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;flex-wrap:wrap;
   padding:13px 0 12px;background:linear-gradient(#0a0408 74%,rgba(10,4,8,0));
   font-size:11px;letter-spacing:2px;color:var(--ink-3)
 }
@@ -39,14 +39,14 @@ body{
 .top a:hover{color:var(--sig)}
 .top .sp{flex:1}
 .hero{padding:22px 0 24px;border-bottom:1px solid var(--hair);margin-bottom:24px}
-.hero h1{font-size:27px;font-weight:700;color:var(--ink-1);letter-spacing:-.4px}
-.hero p{margin-top:10px;max-width:66ch;font-size:12.5px;line-height:1.8;color:var(--ink-2)}
+.hero h1{font-size:clamp(26px,3.4vw,38px);font-weight:700;color:var(--ink-1);letter-spacing:-.4px}
+.hero p{margin-top:12px;max-width:62ch;font-size:15px;line-height:1.85;color:var(--ink-2)}
 .sect{
   display:flex;align-items:baseline;gap:0 8px;flex-wrap:wrap;
-  font-size:13.5px;font-weight:700;color:var(--ink-1);letter-spacing:.5px;
-  margin:30px 0 .8rem;padding-bottom:.45rem;border-bottom:1px solid var(--hair)
+  font-size:17px;font-weight:700;color:var(--ink-1);letter-spacing:.3px;
+  margin:34px 0 .8rem;padding-bottom:.45rem;border-bottom:1px solid var(--hair)
 }
-.sect span{font-size:8.5px;font-weight:600;color:rgba(252,76,2,.55);letter-spacing:2.4px;text-transform:uppercase}
+.sect span{font-size:10px;font-weight:600;color:rgba(252,76,2,.55);letter-spacing:2.4px;text-transform:uppercase}
 .sect .sp{flex:1}
 
 /* ── 預設卡 ───────────────────────────────────────────── */
@@ -58,9 +58,9 @@ body{
 }
 .pcard:hover{border-color:var(--sig);background:rgba(252,76,2,.05)}
 .pcard.on{border-color:var(--sig);background:rgba(252,76,2,.09)}
-.pcard b{display:block;font-size:14px;font-weight:700;color:var(--ink-1)}
-.pcard i{display:block;font-style:normal;font-size:10.5px;color:var(--ink-3);margin-top:3px;letter-spacing:.3px}
-.pcard em{display:block;font-style:normal;font-size:11px;color:var(--ink-2);margin-top:8px;line-height:1.65}
+.pcard b{display:block;font-size:17px;font-weight:700;color:var(--ink-1)}
+.pcard i{display:block;font-style:normal;font-size:12px;color:var(--ink-3);margin-top:3px;letter-spacing:.3px}
+.pcard em{display:block;font-style:normal;font-size:13px;color:var(--ink-2);margin-top:9px;line-height:1.7}
 
 /* ── 課表列 ───────────────────────────────────────────── */
 .plan{border-top:1px solid var(--hair)}
@@ -71,20 +71,20 @@ body{
 .pr.is-stretch{opacity:.86}
 .pr-i{font-size:10px;color:var(--ink-3);font-variant-numeric:tabular-nums}
 .pr-n{min-width:0}
-.pr-n b{display:block;font-size:13px;font-weight:600;color:var(--ink-1);line-height:1.35}
+.pr-n b{display:block;font-size:15.5px;font-weight:600;color:var(--ink-1);line-height:1.35}
 .pr-n s{
-  text-decoration:none;display:inline-block;margin-right:6px;padding:1px 5px;border-radius:3px;
-  font-size:8.5px;font-weight:700;letter-spacing:1px;background:rgba(255,255,255,.06);color:var(--ink-3)
+  text-decoration:none;display:inline-block;margin-right:6px;padding:1px 6px;border-radius:3px;
+  font-size:10px;font-weight:700;letter-spacing:1px;background:rgba(255,255,255,.06);color:var(--ink-3)
 }
-.pr-n i{font-style:normal;font-size:10.5px;color:var(--ink-3)}
+.pr-n i{font-style:normal;font-size:12px;color:var(--ink-3)}
 .pr-amt{display:flex;align-items:center;gap:4px}
 .pr-amt input{
-  width:52px;padding:5px 6px;border:1px solid var(--hair-2);border-radius:5px;
+  width:60px;padding:6px 6px;border:1px solid var(--hair-2);border-radius:5px;
   background:rgba(0,0,0,.3);color:var(--ink-1);font-family:var(--f-num);font-weight:800;
-  font-size:14px;text-align:center;font-variant-numeric:tabular-nums
+  font-size:17px;text-align:center;font-variant-numeric:tabular-nums
 }
 .pr-amt input:focus{outline:1px solid var(--sig);outline-offset:1px;border-color:var(--sig)}
-.pr-amt span{font-size:9.5px;color:var(--ink-3);white-space:nowrap}
+.pr-amt span{font-size:11px;color:var(--ink-3);white-space:nowrap}
 .pr-act{display:flex;gap:2px}
 .ib{
   width:28px;height:28px;display:grid;place-items:center;border:0;border-radius:5px;
@@ -92,26 +92,26 @@ body{
 }
 .ib:hover{background:rgba(255,255,255,.05);color:var(--ink-1)}
 .ib.rm:hover{background:rgba(252,76,2,.14);color:var(--sig)}
-.nil{padding:18px 4px;font-size:12px;color:var(--ink-3)}
+.nil{padding:20px 4px;font-size:13.5px;color:var(--ink-3)}
 
 /* ── 設定 ─────────────────────────────────────────────── */
 .knobs{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:14px}
 .knob{padding:10px 12px;border:1px solid var(--hair);border-radius:8px;background:var(--surface)}
-.knob label{display:block;font-size:8.5px;font-weight:700;letter-spacing:2px;color:rgba(252,76,2,.6);text-transform:uppercase}
+.knob label{display:block;font-size:10px;font-weight:700;letter-spacing:2px;color:rgba(252,76,2,.6);text-transform:uppercase}
 .knob .row{display:flex;align-items:center;gap:8px;margin-top:6px}
 .knob input{
   width:100%;padding:6px 8px;border:1px solid var(--hair-2);border-radius:5px;background:rgba(0,0,0,.3);
-  color:var(--ink-1);font-family:var(--f-num);font-weight:800;font-size:19px;text-align:center;
+  color:var(--ink-1);font-family:var(--f-num);font-weight:800;font-size:23px;text-align:center;
   font-variant-numeric:tabular-nums
 }
 .knob input:focus{outline:1px solid var(--sig);outline-offset:1px;border-color:var(--sig)}
-.knob em{font-style:normal;font-size:9.5px;color:var(--ink-3);white-space:nowrap}
+.knob em{font-style:normal;font-size:11.5px;color:var(--ink-3);white-space:nowrap}
 
 /* ── 動作挑選 ─────────────────────────────────────────── */
 .filters{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}
 .chip{
-  padding:5px 11px;border:1px solid var(--hair-2);border-radius:100px;background:transparent;
-  color:var(--ink-2);font-family:inherit;font-size:11px;cursor:pointer;transition:.13s
+  padding:7px 13px;border:1px solid var(--hair-2);border-radius:100px;background:transparent;
+  color:var(--ink-2);font-family:inherit;font-size:13px;cursor:pointer;transition:.13s
 }
 .chip:hover{border-color:var(--sig);color:var(--sig)}
 .chip.on{background:rgba(252,76,2,.16);border-color:var(--sig);color:var(--sig);font-weight:700}
@@ -123,12 +123,12 @@ body{
 }
 .mv:hover{border-color:var(--sig);background:rgba(252,76,2,.05)}
 .mv-t{
-  padding:2px 5px;border-radius:3px;font-size:8.5px;font-weight:700;letter-spacing:.8px;
+  padding:2px 6px;border-radius:3px;font-size:10px;font-weight:700;letter-spacing:.8px;
   background:rgba(255,255,255,.07);color:var(--ink-2);white-space:nowrap
 }
 .mv-t.t-B{background:rgba(252,76,2,.16);color:var(--sig)}
-.mv b{display:block;font-size:12.5px;font-weight:600;color:var(--ink-1);line-height:1.35}
-.mv i{display:block;font-style:normal;font-size:10px;color:var(--ink-3);margin-top:2px}
+.mv b{display:block;font-size:14.5px;font-weight:600;color:var(--ink-1);line-height:1.35}
+.mv i{display:block;font-style:normal;font-size:11.5px;color:var(--ink-3);margin-top:2px}
 .mv .dot{width:6px;height:6px;border-radius:50%;margin-top:5px;flex:none}
 .mv .plus{font-size:16px;color:var(--ink-3);line-height:1}
 
@@ -140,11 +140,11 @@ body{
   display:flex;justify-content:center
 }
 .launch-in{display:flex;align-items:center;gap:12px;width:100%;max-width:904px}
-.est{font-size:10.5px;color:var(--ink-3);line-height:1.4;white-space:nowrap}
-.est b{display:block;font-family:var(--f-num);font-weight:800;font-size:21px;color:var(--ink-1);font-variant-numeric:tabular-nums}
+.est{font-size:12px;color:var(--ink-3);line-height:1.4;white-space:nowrap}
+.est b{display:block;font-family:var(--f-num);font-weight:800;font-size:25px;color:var(--ink-1);font-variant-numeric:tabular-nums}
 .go{
-  flex:1;padding:14px 18px;border:1px solid var(--sig);border-radius:8px;
-  background:var(--sig);color:#0a0408;font-family:inherit;font-size:14px;font-weight:700;
+  flex:1;padding:16px 18px;border:1px solid var(--sig);border-radius:8px;
+  background:var(--sig);color:#0a0408;font-family:inherit;font-size:16px;font-weight:700;
   letter-spacing:2px;cursor:pointer;transition:filter .13s
 }
 .go:hover{filter:brightness(1.12)}
@@ -157,35 +157,36 @@ body{
   position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;
   background:#0a0408;padding:calc(14px + env(safe-area-inset-top)) 18px calc(14px + env(safe-area-inset-bottom))
 }
-.run-hd{display:flex;align-items:center;gap:10px;font-size:10px;letter-spacing:1.6px;color:var(--ink-3)}
+.run-hd{display:flex;align-items:center;gap:10px;font-size:clamp(10px,1.7vmin,16px);letter-spacing:1.6px;color:var(--ink-3)}
 .run-hd .sp{flex:1}
 .run-x{width:38px;height:38px;border:0;border-radius:7px;background:rgba(255,255,255,.05);color:var(--ink-2);font-size:17px;cursor:pointer}
 .run-x:hover{background:rgba(252,76,2,.16);color:var(--sig)}
-.run-bar{height:3px;border-radius:2px;background:rgba(255,255,255,.08);margin:11px 0 0;overflow:hidden}
+.run-x.off{color:rgba(244,240,234,.22)}
+.run-bar{height:5px;border-radius:2px;background:rgba(255,255,255,.08);margin:11px 0 0;overflow:hidden}
 .run-bar i{display:block;height:100%;background:var(--sig);transition:width .3s linear}
 .run-body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:6px;min-height:0}
-.run-k{font-size:9.5px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:rgba(252,76,2,.75)}
-.run-name{font-size:clamp(23px,6.4vw,40px);font-weight:700;color:var(--ink-1);line-height:1.15;letter-spacing:-.3px}
+.run-k{font-size:clamp(9.5px,1.6vmin,17px);font-weight:700;letter-spacing:3px;text-transform:uppercase;color:rgba(252,76,2,.75)}
+.run-name{font-size:clamp(26px,7.6vmin,86px);font-weight:700;color:var(--ink-1);line-height:1.12;letter-spacing:-.6px}
 .run-num{
   font-family:var(--f-num);font-weight:800;font-variant-numeric:tabular-nums;
-  font-size:clamp(80px,26vw,190px);line-height:.86;letter-spacing:-3px;color:#fff;
+  font-size:clamp(92px,31vmin,330px);line-height:.84;letter-spacing:-4px;color:#fff;
   text-shadow:0 0 38px rgba(252,76,2,.26)
 }
-.run-unit{font-size:11px;letter-spacing:2.4px;color:var(--ink-3);margin-top:-2px}
-.run-cue{max-width:52ch;font-size:12.5px;line-height:1.75;color:var(--ink-2);margin-top:4px}
+.run-unit{font-size:clamp(11px,1.9vmin,20px);letter-spacing:2.8px;color:var(--ink-3);margin-top:-2px}
+.run-cue{max-width:56ch;font-size:clamp(12.5px,2vmin,20px);line-height:1.7;color:var(--ink-2);margin-top:6px}
 .run-cue b{color:var(--ink-1)}
 .run-yt{
   display:inline-block;margin-top:8px;padding:5px 12px;border:1px solid var(--hair-2);border-radius:100px;
-  font-size:11px;color:var(--ink-2);text-decoration:none
+  font-size:clamp(11px,1.7vmin,16px);color:var(--ink-2);text-decoration:none
 }
 .run-yt:hover{border-color:var(--sig);color:var(--sig)}
-.run-next{font-size:11.5px;color:var(--ink-3)}
+.run-next{font-size:clamp(11.5px,1.9vmin,19px);color:var(--ink-3)}
 .run-next b{color:var(--ink-2);font-weight:600}
 .run-ft{display:flex;gap:9px;margin-top:12px}
 .rb{
-  flex:1;min-height:54px;border:1px solid var(--hair-2);border-radius:9px;background:rgba(255,255,255,.03);
-  color:var(--ink-1);font-family:inherit;font-size:13px;font-weight:700;letter-spacing:1.2px;cursor:pointer;
-  transition:background .13s,border-color .13s
+  flex:1;min-height:clamp(54px,9vmin,80px);border:1px solid var(--hair-2);border-radius:9px;background:rgba(255,255,255,.03);
+  color:var(--ink-1);font-family:inherit;font-size:clamp(13px,2vmin,19px);font-weight:700;letter-spacing:1.2px;
+  cursor:pointer;transition:background .13s,border-color .13s
 }
 .rb:hover{background:rgba(255,255,255,.07)}
 .rb.hot{background:var(--sig);border-color:var(--sig);color:#0a0408;flex:2}
@@ -199,10 +200,74 @@ body{
 .run.is-done .run-num{font-size:clamp(46px,13vw,86px)}
 /* 暫停:數字調暗並停掉光暈,讓「它沒有在動」一眼看得出來 */
 .run.is-paused .run-num{opacity:.42;text-shadow:none}
+/* 最後五秒:數字轉橘並輕微放大,餘光就能判斷「快到了」 */
+.run-num.is-last{color:var(--sig);text-shadow:0 0 46px rgba(252,76,2,.5)}
+
+/* ══ 教學面板 ═══════════════════════════════════════════
+   「先點一點教學,再用設定頁,再開始」—— 所以教學要能單獨看完,
+   而不是只在動作跑到時才閃一下。整份課表可以一次讀完。 */
+.how{
+  position:fixed;inset:0;z-index:70;display:flex;flex-direction:column;
+  background:rgba(5,3,8,.97);backdrop-filter:blur(6px)
+}
+.how-hd{
+  display:flex;align-items:center;gap:12px;flex:none;
+  padding:calc(14px + env(safe-area-inset-top)) 18px 12px;border-bottom:1px solid var(--hair)
+}
+.how-hd b{font-size:17px;color:var(--ink-1)}
+.how-hd span{font-size:12px;color:var(--ink-3)}
+.how-hd .sp{flex:1}
+.how-body{flex:1;overflow-y:auto;padding:16px 18px calc(24px + env(safe-area-inset-bottom));-webkit-overflow-scrolling:touch}
+.how-in{max-width:760px;margin:0 auto}
+.hc{padding:16px 0;border-bottom:1px solid var(--hair)}
+.hc:last-child{border-bottom:0}
+.hc-h{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.hc-h b{font-size:19px;font-weight:700;color:var(--ink-1)}
+.hc-h s{
+  text-decoration:none;padding:2px 7px;border-radius:3px;font-size:10px;font-weight:700;
+  letter-spacing:1px;background:rgba(255,255,255,.07);color:var(--ink-2)
+}
+.hc-h s.t-B{background:rgba(252,76,2,.16);color:var(--sig)}
+.hc-h i{font-style:normal;font-size:12px;color:var(--ink-3)}
+.hc-amt{margin-top:6px;font-size:13px;color:var(--ink-2)}
+.hc-amt b{font-family:var(--f-num);font-weight:800;font-size:19px;color:var(--ink-1);font-variant-numeric:tabular-nums}
+.hc-cue{margin-top:9px;font-size:14.5px;line-height:1.8;color:var(--ink-2)}
+.hc-cue b{color:var(--ink-1)}
+.hc-note{
+  margin-top:9px;padding:9px 12px;border-left:2px solid rgba(252,76,2,.4);
+  font-size:13px;line-height:1.75;color:var(--ink-2);background:rgba(252,76,2,.04)
+}
+.hc-warn{
+  margin-top:9px;padding:9px 12px;border-left:2px solid var(--warn);
+  font-size:13px;line-height:1.75;color:var(--warn);background:rgba(255,176,32,.05)
+}
+.hc-yt{
+  display:inline-block;margin-top:11px;padding:8px 15px;border:1px solid var(--hair-2);
+  border-radius:100px;font-size:13px;color:var(--ink-2);text-decoration:none
+}
+.hc-yt:hover{border-color:var(--sig);color:var(--sig)}
+.how-tip{
+  margin:0 0 18px;padding:12px 14px;border:1px solid var(--hair);border-radius:8px;
+  background:var(--surface);font-size:13.5px;line-height:1.8;color:var(--ink-2)
+}
+.how-tip b{color:var(--ink-1)}
+.lnk{
+  border:0;background:transparent;padding:0;font:inherit;color:inherit;cursor:pointer;text-align:left;
+  border-bottom:1px dotted rgba(255,255,255,.22)
+}
+.lnk:hover{color:var(--sig);border-bottom-color:var(--sig)}
+.ghost{
+  padding:16px 18px;border:1px solid var(--hair-2);border-radius:8px;background:transparent;
+  color:var(--ink-1);font-family:inherit;font-size:15px;font-weight:700;letter-spacing:1.4px;
+  cursor:pointer;transition:.13s;white-space:nowrap
+}
+.ghost:hover{border-color:var(--sig);color:var(--sig)}
 
 @media(max-width:767px){
   .wrap{padding:0 14px 120px}
-  .hero h1{font-size:22px}
+  .ghost{padding:15px 13px;font-size:13px;letter-spacing:.8px}
+  .hc-h b{font-size:17px}
+  .hero h1{font-size:24px}
   .pr{grid-template-columns:1.4rem minmax(0,1fr) auto;grid-template-areas:"i n a" ". amt amt"}
   .pr-i{grid-area:i}.pr-n{grid-area:n}.pr-act{grid-area:a}
   .pr-amt{grid-area:amt;margin-top:5px}
@@ -251,12 +316,22 @@ body{
 
 <div class="launch"><div class="launch-in">
   <div class="est"><b id="est">—</b>預估總長</div>
+  <button class="ghost" id="how-open" type="button">看教學</button>
   <button class="go" id="go" type="button">開始訓練</button>
 </div></div>
+
+<div class="how" id="how" hidden>
+  <div class="how-hd">
+    <b>教學</b><span id="how-t"></span><span class="sp"></span>
+    <button class="run-x" id="how-x" type="button" aria-label="關閉">✕</button>
+  </div>
+  <div class="how-body"><div class="how-in" id="how-body"></div></div>
+</div>
 
 <div class="run" id="run" hidden>
   <div class="run-hd">
     <span id="r-set">—</span><span class="sp"></span><span id="r-pos">—</span>
+    <button class="run-x" id="r-snd" type="button" aria-label="音效">♪</button>
     <button class="run-x" id="r-x" type="button" aria-label="結束">✕</button>
   </div>
   <div class="run-bar"><i id="r-bar" style="width:0%"></i></div>
@@ -351,9 +426,13 @@ function buildSteps() {
   return S;
 }
 
-/* ── 提示音：Web Audio，不載任何檔案 ── */
-let AC = null;
-function beep(freq, ms, vol) {
+/* ── 提示音：Web Audio，不載任何檔案 ──
+   拿筆電當計時器時眼睛不一定在螢幕上，所以聲音要能單獨講完進度：
+   每秒「搭…答…」兩個交替音高＝時鐘在走；最後五秒加重；時間到是雙音。 */
+let AC = null, SND = true;
+try { SND = localStorage.getItem('circuit-snd') !== '0'; } catch (e) {}
+function beep(freq, ms, vol, force) {
+  if (!SND && !force) return;
   try {
     AC = AC || new (window.AudioContext || window.webkitAudioContext)();
     if (AC.state === 'suspended') AC.resume();
@@ -364,7 +443,17 @@ function beep(freq, ms, vol) {
     o.connect(g); g.connect(AC.destination);
     o.start(); o.stop(AC.currentTime + ms/1000);
   } catch (e) { /* 靜音裝置或不支援：不影響流程 */ }
-  try { if (navigator.vibrate) navigator.vibrate(ms > 200 ? [90,60,90] : 45); } catch (e) {}
+  try { if (navigator.vibrate && ms >= 80) navigator.vibrate(ms > 200 ? [90,60,90] : 45); } catch (e) {}
+}
+/* 鐘擺：奇偶秒換音高做出「搭…答…」。長休息時放輕，不然兩分鐘會吵死。 */
+function tick(left) {
+  const soft = left > 30 ? .028 : .055;
+  beep(left % 2 === 0 ? 1040 : 760, 24, soft);
+}
+/* 時間到：兩個上行音，跟每秒的搭答答明顯不同 */
+function endTone() {
+  beep(760, 150, .26);
+  setTimeout(() => beep(1180, 340, .26), 165);
 }
 
 /* ── 執行器 ── */
@@ -380,6 +469,8 @@ async function keepAwake(on) {
 function startRun() {
   R.steps = buildSteps(); R.i = 0;
   $('#run').hidden = false;
+  $('#r-snd').classList.toggle('off', !SND);
+  $('#r-snd').textContent = SND ? '♪' : '♪̸';
   document.body.style.overflow = 'hidden';
   keepAwake(true);
   beep(880, 140);
@@ -447,12 +538,20 @@ function showStep() {
 function countdown(secs) {
   R.left = secs; R.paused = false;
   $('#r-num').textContent = R.left;
+  $('#r-num').classList.toggle('is-last', R.left <= 5);
   R.timer = setInterval(() => {
     if (R.paused) return;
     R.left--;
     $('#r-num').textContent = Math.max(0, R.left);
-    if (R.left === 3 || R.left === 2 || R.left === 1) beep(660, 90, .12);
-    if (R.left <= 0) { clearInterval(R.timer); R.timer = null; beep(920, 220); next(); }
+    const num = $('#r-num');
+    if (R.left > 5) tick(R.left);
+    else if (R.left > 0) beep(680, 95, .2);          // 最後五秒加重
+    num.classList.toggle('is-last', R.left <= 5 && R.left > 0);
+    if (R.left <= 0) {
+      clearInterval(R.timer); R.timer = null;
+      num.classList.remove('is-last');
+      endTone(); next();
+    }
   }, 1000);
 }
 function next() { if (R.i < R.steps.length - 1) { R.i++; showStep(); } }
@@ -465,12 +564,53 @@ function togglePause() {
 }
 function prev() { if (R.i > 0) { R.i--; showStep(); } }
 
+/* ── 教學面板 ──
+   同一個渲染器兩種用法:單一動作(從課表列點名稱)、整份課表(看教學鈕)。 */
+const GEAR_ZH = { dumbbell:'啞鈴', kettlebell:'壺鈴' };
+function howCard(m, amt) {
+  const p = DB.patterns[m.pattern] || {};
+  return '<div class="hc">' +
+    '<div class="hc-h"><b>' + esc(m.zh) + '</b>' +
+      '<s class="' + (m.tier[0] === 'B' ? 't-B' : '') + '">' + m.tier + '</s>' +
+      '<i>' + esc(p.zh || '') + ' · ' + esc(m.en) + '</i></div>' +
+    (amt != null ? '<div class="hc-amt">做 <b>' + amt + '</b> ' + UNIT[m.unit] + '</div>' : '') +
+    '<div class="hc-cue">' + md(m.cue) + '</div>' +
+    (m.note ? '<div class="hc-note">' + md(m.note) + '</div>' : '') +
+    (m.doms >= 4 ? '<div class="hc-warn">⚠️ 離心損傷高（' + m.doms + '／5）—— ' +
+      '週二門檻課與週末測驗前 48 小時不要做這個。</div>' : '') +
+    (m.gear.length ? '<div class="hc-warn">需要器材：' +
+      m.gear.map(g => GEAR_ZH[g] || g).join('／') + '</div>' : '') +
+    '<a class="hc-yt" href="' + yt(m.kw) + '" target="_blank" rel="noopener">▶ ' + esc(m.kw) + '</a>' +
+  '</div>';
+}
+function openHow(id) {
+  const body = $('#how-body');
+  if (id) {
+    const m = byId(id); if (!m) return;
+    $('#how-t').textContent = '單一動作';
+    body.innerHTML = howCard(m);
+  } else {
+    const all = plan.moves.concat(plan.stretches);
+    $('#how-t').textContent = '整份課表 · ' + all.length + ' 個動作';
+    body.innerHTML = (all.length
+      ? '<div class="how-tip"><b>第一次做先把影片看過再上墊子。</b>挑 60～90 秒、有<b>側面角度</b>、' +
+        '只有講解沒有配樂的；避開「30 天挑戰」那種。英文關鍵字找到的技術影片品質明顯比中文高。<br>' +
+        '下面每個動作都寫了<b>你會做錯的地方</b> —— 那一句通常比影片還有用。</div>'
+      : '<div class="how-tip">課表還是空的。先挑一張預設，或從動作庫點幾個動作進來。</div>') +
+      all.map(r => { const m = byId(r.id); return m ? howCard(m, r.amt) : ''; }).join('');
+  }
+  $('#how').hidden = false;
+  document.body.style.overflow = 'hidden';
+  $('#how').querySelector('.how-body').scrollTop = 0;
+}
+function closeHow() { $('#how').hidden = true; if ($('#run').hidden) document.body.style.overflow = ''; }
+
 /* ── 課表 UI ── */
 function rowHtml(r, i, kind) {
   const m = byId(r.id); if (!m) return '';
   return '<div class="pr' + (kind==='stretch' ? ' is-stretch' : '') + '">' +
     '<span class="pr-i">' + (i+1) + '</span>' +
-    '<span class="pr-n"><b>' + esc(m.zh) + '</b>' +
+    '<span class="pr-n"><b><button class="lnk" type="button" data-how="' + m.id + '">' + esc(m.zh) + '</button></b>' +
       '<s>' + m.tier + '</s><i>' + esc(m.en) + (m.doms >= 4 ? ' · ⚠️ 離心高' : '') + '</i></span>' +
     '<span class="pr-amt"><input type="number" min="1" max="600" value="' + r.amt +
       '" data-amt="' + kind + ':' + i + '"><span>' + UNIT[m.unit] + '</span></span>' +
@@ -544,8 +684,9 @@ fetch('data/movements.json', { cache: 'no-cache' })
 
 /* ── 事件（全部委派，重繪後不必重綁）── */
 document.addEventListener('click', e => {
-  const t = e.target.closest('[data-p],[data-add],[data-rm],[data-mv],[data-pat],[data-tier]');
+  const t = e.target.closest('[data-how],[data-p],[data-add],[data-rm],[data-mv],[data-pat],[data-tier]');
   if (!t) return;
+  if (t.dataset.how) return openHow(t.dataset.how);
   if (t.dataset.p) return applyPreset(DB.presets.find(p => p.id === t.dataset.p));
   if (t.dataset.add) {
     const m = byId(t.dataset.add);
@@ -584,7 +725,16 @@ document.addEventListener('input', e => {
   try { localStorage.setItem(LS, JSON.stringify(plan)); } catch (e2) {}
 });
 $('#go').addEventListener('click', startRun);
+$('#how-open').addEventListener('click', () => openHow(null));
+$('#how-x').addEventListener('click', closeHow);
 $('#r-x').addEventListener('click', endRun);
+$('#r-snd').addEventListener('click', () => {
+  SND = !SND;
+  $('#r-snd').classList.toggle('off', !SND);
+  $('#r-snd').textContent = SND ? '♪' : '♪̸';
+  try { localStorage.setItem('circuit-snd', SND ? '1' : '0'); } catch (e) {}
+  if (SND) beep(1040, 60, .18, true);
+});
 $('#r-prev').addEventListener('click', prev);
 $('#r-skip').addEventListener('click', next);
 $('#r-main').addEventListener('click', () => {
@@ -595,6 +745,7 @@ $('#r-main').addEventListener('click', () => {
   next();                              // 次數類 → 完成
 });
 document.addEventListener('keydown', e => {
+  if (!$('#how').hidden) { if (e.key === 'Escape') closeHow(); return; }
   if ($('#run').hidden) return;
   if (e.key === 'Escape') endRun();
   if (e.key === ' ') { e.preventDefault(); R.timer ? togglePause() : next(); }
