@@ -1,9 +1,7 @@
 {
   "_comment": "動作圖書館 + 循環課表預設。circuit.html 讀這一份。手寫維護,不由 cron 產生。",
   "_units": {
-    "reps": "次",
     "time": "秒",
-    "reps_each": "次／側",
     "time_each": "秒／側"
   },
   "_doms": "0–5 的離心損傷估計(手寫,不是量測)。4 以上的動作排在週二門檻課或週末測驗前要想一下。",
@@ -268,13 +266,14 @@
       "en": "90/90 Hip Switch",
       "pattern": "warmup",
       "tier": "C1",
-      "unit": "reps_each",
-      "default": 6,
+      "unit": "time_each",
+      "default": 20,
       "kw": "90 90 hip switch",
       "cue": "兩腳都貼地、上半身挺直。**錯**：靠手撐地把身體甩過去",
       "gear": [],
       "doms": 0,
-      "note": ""
+      "note": "",
+      "hint": "約 7 下／側"
     },
     {
       "id": "warm-ankle",
@@ -282,13 +281,14 @@
       "en": "Deep Squat Ankle Rocks",
       "pattern": "warmup",
       "tier": "C1",
-      "unit": "reps_each",
-      "default": 8,
+      "unit": "time_each",
+      "default": 25,
       "kw": "deep squat ankle rocks",
       "cue": "**腳跟全程不離地**，膝蓋往腳尖前方推。落地緩衝與踩踏踝角的共同基礎",
       "gear": [],
       "doms": 0,
-      "note": ""
+      "note": "",
+      "hint": "約 8 下／側"
     },
     {
       "id": "warm-bridge",
@@ -296,13 +296,14 @@
       "en": "Glute Bridge",
       "pattern": "warmup",
       "tier": "C1",
-      "unit": "reps",
-      "default": 12,
+      "unit": "time",
+      "default": 35,
       "kw": "glute bridge form",
       "cue": "用夾臀推起。**錯**：用腰拱起來（腰會痠就是做錯了）",
       "gear": [],
       "doms": 1,
-      "note": ""
+      "note": "",
+      "hint": "約 12 下"
     },
     {
       "id": "warm-birddog",
@@ -310,13 +311,14 @@
       "en": "Bird Dog",
       "pattern": "warmup",
       "tier": "C1",
-      "unit": "reps_each",
-      "default": 6,
+      "unit": "time_each",
+      "default": 20,
       "kw": "bird dog exercise form",
       "cue": "骨盆不動。背上放個水瓶不掉才算合格",
       "gear": [],
       "doms": 0,
-      "note": ""
+      "note": "",
+      "hint": "約 7 下／側"
     },
     {
       "id": "warm-scap",
@@ -324,13 +326,14 @@
       "en": "Scapular Push-up",
       "pattern": "warmup",
       "tier": "C1",
-      "unit": "reps",
-      "default": 10,
+      "unit": "time",
+      "default": 30,
       "kw": "scapular push up",
       "cue": "**手肘全程打直**，只有肩胛在推開與收攏",
       "gear": [],
       "doms": 0,
-      "note": ""
+      "note": "",
+      "hint": "約 10 下"
     },
     {
       "id": "warm-tspine",
@@ -338,13 +341,14 @@
       "en": "Quadruped T-spine Rotation",
       "pattern": "warmup",
       "tier": "C1",
-      "unit": "reps_each",
-      "default": 8,
+      "unit": "time_each",
+      "default": 25,
       "kw": "quadruped thoracic rotation",
       "cue": "手放後腦，手肘往天花板轉。**錯**：用腰代償轉",
       "gear": [],
       "doms": 0,
-      "note": ""
+      "note": "",
+      "hint": "約 8 下／側"
     },
     {
       "id": "warm-armcircle",
@@ -352,13 +356,14 @@
       "en": "Prone Arm Circles",
       "pattern": "warmup",
       "tier": "C1",
-      "unit": "reps",
-      "default": 6,
+      "unit": "time",
+      "default": 20,
       "kw": "prone arm circles shoulder",
       "cue": "手臂離地畫大圈，額頭貼墊",
       "gear": [],
       "doms": 0,
-      "note": ""
+      "note": "",
+      "hint": "約 7 下"
     },
     {
       "id": "push-incline",
@@ -366,13 +371,14 @@
       "en": "Incline Push-up",
       "pattern": "push",
       "tier": "C1",
-      "unit": "reps",
-      "default": 12,
+      "unit": "time",
+      "default": 35,
       "kw": "incline push up form",
       "cue": "手撐桌沿或牆。身體一直線，越高越輕鬆。做不動標準版就從這裡開始",
       "gear": [],
       "doms": 2,
-      "note": ""
+      "note": "",
+      "hint": "約 12 下"
     },
     {
       "id": "push-up",
@@ -380,13 +386,14 @@
       "en": "Push-up",
       "pattern": "push",
       "tier": "C1",
-      "unit": "reps",
-      "default": 12,
+      "unit": "time",
+      "default": 35,
       "kw": "push up proper form",
       "cue": "手肘約 45 度不要外開成 T 字。**錯**：屁股先起來＝核心鬆掉",
       "gear": [],
       "doms": 2,
-      "note": ""
+      "note": "",
+      "hint": "約 12 下"
     },
     {
       "id": "push-wide",
@@ -394,13 +401,14 @@
       "en": "Wide Push-up",
       "pattern": "push",
       "tier": "C1",
-      "unit": "reps",
-      "default": 12,
+      "unit": "time",
+      "default": 35,
       "kw": "wide push up form",
       "cue": "手比肩寬。胸大肌比標準版多、三頭少",
       "gear": [],
       "doms": 2,
-      "note": ""
+      "note": "",
+      "hint": "約 12 下"
     },
     {
       "id": "push-diamond",
@@ -408,13 +416,14 @@
       "en": "Diamond Push-up",
       "pattern": "push",
       "tier": "C2",
-      "unit": "reps",
-      "default": 10,
+      "unit": "time",
+      "default": 30,
       "kw": "diamond push up form",
       "cue": "手肘貼身。這一項練的是**三頭**不是胸",
       "gear": [],
       "doms": 2,
-      "note": ""
+      "note": "",
+      "hint": "約 10 下"
     },
     {
       "id": "push-pike",
@@ -422,13 +431,14 @@
       "en": "Pike Push-up",
       "pattern": "push",
       "tier": "C2",
-      "unit": "reps",
-      "default": 8,
+      "unit": "time",
+      "default": 25,
       "kw": "pike push up form",
       "cue": "臀部抬高成倒 V、頭往**雙手前方**下降。**錯**：垂直下降＝變回伏地挺身",
       "gear": [],
       "doms": 2,
-      "note": ""
+      "note": "",
+      "hint": "約 8 下"
     },
     {
       "id": "push-tempo",
@@ -436,13 +446,14 @@
       "en": "Tempo Push-up",
       "pattern": "push",
       "tier": "C3",
-      "unit": "reps",
-      "default": 8,
+      "unit": "time",
+      "default": 40,
       "kw": "tempo push up 3 second eccentric",
       "cue": "下降數 3 秒、底部停 1 秒。**離心損傷高**，測驗週前避開",
       "gear": [],
       "doms": 4,
-      "note": ""
+      "note": "",
+      "hint": "約 8 下"
     },
     {
       "id": "push-decline-pike",
@@ -450,13 +461,14 @@
       "en": "Decline Pike Push-up",
       "pattern": "push",
       "tier": "C3",
-      "unit": "reps",
-      "default": 8,
+      "unit": "time",
+      "default": 25,
       "kw": "elevated pike push up",
       "cue": "腳放椅子上。接近倒立推的入門",
       "gear": [],
       "doms": 3,
-      "note": ""
+      "note": "",
+      "hint": "約 8 下"
     },
     {
       "id": "push-wall-hspu",
@@ -464,13 +476,14 @@
       "en": "Wall Handstand Push-up",
       "pattern": "push",
       "tier": "C4",
-      "unit": "reps",
-      "default": 5,
+      "unit": "time",
+      "default": 25,
       "kw": "wall handstand push up progression",
       "cue": "面牆或背牆都可以。**第一次先只做站姿撐住**",
       "gear": [],
       "doms": 3,
-      "note": ""
+      "note": "",
+      "hint": "約 5 下"
     },
     {
       "id": "push-db-press",
@@ -478,15 +491,16 @@
       "en": "Dumbbell Shoulder Press",
       "pattern": "push",
       "tier": "B1",
-      "unit": "reps",
-      "default": 10,
+      "unit": "time",
+      "default": 30,
       "kw": "dumbbell shoulder press form",
       "cue": "肋骨不要開，核心收。站姿比坐姿更練核心",
       "gear": [
         "dumbbell"
       ],
       "doms": 2,
-      "note": ""
+      "note": "",
+      "hint": "約 10 下"
     },
     {
       "id": "push-floor-press",
@@ -494,15 +508,16 @@
       "en": "Dumbbell Floor Press",
       "pattern": "push",
       "tier": "B1",
-      "unit": "reps",
-      "default": 10,
+      "unit": "time",
+      "default": 30,
       "kw": "dumbbell floor press",
       "cue": "躺地上，手肘輕碰地就推。家裡沒臥推椅的替代",
       "gear": [
         "dumbbell"
       ],
       "doms": 2,
-      "note": ""
+      "note": "",
+      "hint": "約 10 下"
     },
     {
       "id": "pull-snowangel",
@@ -510,13 +525,14 @@
       "en": "Prone Snow Angel",
       "pattern": "pull",
       "tier": "C1",
-      "unit": "reps",
-      "default": 10,
+      "unit": "time",
+      "default": 30,
       "kw": "prone snow angel exercise",
       "cue": "手臂從大腿旁慢慢畫到頭頂、全程離地。**錯**：為了畫更遠而拱腰",
       "gear": [],
       "doms": 1,
-      "note": ""
+      "note": "",
+      "hint": "約 10 下"
     },
     {
       "id": "pull-w",
@@ -524,13 +540,14 @@
       "en": "Prone W Raise",
       "pattern": "pull",
       "tier": "C1",
-      "unit": "reps",
-      "default": 12,
+      "unit": "time",
+      "default": 35,
       "kw": "prone w raise exercise",
       "cue": "手肘彎成 W、肩胛夾緊、頂端停 2 秒。後三角＋下斜方",
       "gear": [],
       "doms": 1,
-      "note": ""
+      "note": "",
+      "hint": "約 12 下"
     },
     {
       "id": "pull-superman",
@@ -544,7 +561,8 @@
       "cue": "趴著同時抬手抬腳。**這就是你說的「趴著那個」**（嬰兒式是拉筋，不是這個）",
       "gear": [],
       "doms": 1,
-      "note": "公司 C1 的第四個動作。中文有人叫「小飛燕」"
+      "note": "公司 C1 的第四個動作。中文有人叫「小飛燕」",
+      "hint": ""
     },
     {
       "id": "pull-towel-row",
@@ -552,13 +570,14 @@
       "en": "Towel Row",
       "pattern": "pull",
       "tier": "C1",
-      "unit": "reps",
-      "default": 12,
+      "unit": "time",
+      "default": 35,
       "kw": "towel row door anchor",
       "cue": "毛巾繞門把或柱子,身體後傾往後拉。家裡沒器材的划船替代",
       "gear": [],
       "doms": 1,
-      "note": ""
+      "note": "",
+      "hint": "約 12 下"
     },
     {
       "id": "pull-y",
@@ -566,13 +585,14 @@
       "en": "Prone Y Raise",
       "pattern": "pull",
       "tier": "C1",
-      "unit": "reps",
-      "default": 12,
+      "unit": "time",
+      "default": 35,
       "kw": "prone y raise exercise",
       "cue": "手臂成 Y、拇指朝上抬起。下斜方肌 —— 趴姿騎車最需要的那塊",
       "gear": [],
       "doms": 1,
-      "note": ""
+      "note": "",
+      "hint": "約 12 下"
     },
     {
       "id": "pull-table-row",
@@ -580,13 +600,14 @@
       "en": "Inverted Row (under table)",
       "pattern": "pull",
       "tier": "C2",
-      "unit": "reps",
-      "default": 10,
+      "unit": "time",
+      "default": 30,
       "kw": "inverted row under table",
       "cue": "抓穩固的桌沿，身體一直線拉到胸口。**桌子要先確認不會翻**",
       "gear": [],
       "doms": 2,
-      "note": ""
+      "note": "",
+      "hint": "約 10 下"
     },
     {
       "id": "pull-table-row-1",
@@ -594,13 +615,14 @@
       "en": "Single-arm Inverted Row",
       "pattern": "pull",
       "tier": "C3",
-      "unit": "reps_each",
-      "default": 8,
+      "unit": "time_each",
+      "default": 25,
       "kw": "single arm inverted row",
       "cue": "另一手放胸前。骨盆不准轉",
       "gear": [],
       "doms": 3,
-      "note": ""
+      "note": "",
+      "hint": "約 8 下／側"
     },
     {
       "id": "pull-db-row",
@@ -608,15 +630,16 @@
       "en": "Dumbbell Single-arm Row",
       "pattern": "pull",
       "tier": "B1",
-      "unit": "reps_each",
-      "default": 12,
+      "unit": "time_each",
+      "default": 35,
       "kw": "dumbbell single arm row form",
       "cue": "手肘往後不往外。**錯**：用轉身把重量甩起來",
       "gear": [
         "dumbbell"
       ],
       "doms": 2,
-      "note": ""
+      "note": "",
+      "hint": "約 12 下／側"
     },
     {
       "id": "sq-bw",
@@ -624,13 +647,14 @@
       "en": "Bodyweight Squat",
       "pattern": "squat",
       "tier": "C1",
-      "unit": "reps",
-      "default": 15,
+      "unit": "time",
+      "default": 45,
       "kw": "bodyweight squat form",
       "cue": "蹲到大腿平行或更低，膝蓋對齊腳尖。**錯**：腳跟離地",
       "gear": [],
       "doms": 2,
-      "note": "公司 C1 的第二個動作"
+      "note": "公司 C1 的第二個動作",
+      "hint": "約 15 下"
     },
     {
       "id": "sq-split-iso",
@@ -644,7 +668,8 @@
       "cue": "後腳跟提起、重心壓**前腳**、上身微前傾。**錯**：重心留在後腳＝變成拉筋",
       "gear": [],
       "doms": 1,
-      "note": "測驗週前的下肢首選：拿得到力量刺激但離心損傷極低"
+      "note": "測驗週前的下肢首選：拿得到力量刺激但離心損傷極低",
+      "hint": ""
     },
     {
       "id": "sq-split",
@@ -652,13 +677,14 @@
       "en": "Split Squat",
       "pattern": "squat",
       "tier": "C2",
-      "unit": "reps_each",
-      "default": 10,
+      "unit": "time_each",
+      "default": 50,
       "kw": "tempo split squat 3 second eccentric",
       "cue": "下降 3 秒、底部 1 秒。**膝蓋輕點地不是砸地**（家裡要安靜）",
       "gear": [],
       "doms": 4,
-      "note": ""
+      "note": "",
+      "hint": "約 10 下／側"
     },
     {
       "id": "sq-lateral",
@@ -666,13 +692,14 @@
       "en": "Lateral Lunge",
       "pattern": "squat",
       "tier": "C2",
-      "unit": "reps_each",
-      "default": 10,
+      "unit": "time_each",
+      "default": 30,
       "kw": "lateral lunge form",
       "cue": "屈膝腳膝蓋對齊腳尖、另一腿打直、屁股往後坐。**內側出現尖銳拉扯感就停**",
       "gear": [],
       "doms": 3,
-      "note": ""
+      "note": "",
+      "hint": "約 10 下／側"
     },
     {
       "id": "sq-lateral-iso",
@@ -686,7 +713,8 @@
       "cue": "側蹲到底停住。內收肌的等長版，測驗週前用這個",
       "gear": [],
       "doms": 1,
-      "note": ""
+      "note": "",
+      "hint": ""
     },
     {
       "id": "sq-reverse-lunge",
@@ -694,13 +722,14 @@
       "en": "Reverse Lunge",
       "pattern": "squat",
       "tier": "C2",
-      "unit": "reps_each",
-      "default": 10,
+      "unit": "time_each",
+      "default": 30,
       "kw": "reverse lunge form",
       "cue": "往**後**跨。比前跨對膝蓋友善很多,家裡也比較安靜",
       "gear": [],
       "doms": 3,
-      "note": ""
+      "note": "",
+      "hint": "約 10 下／側"
     },
     {
       "id": "sq-walking-lunge",
@@ -708,13 +737,14 @@
       "en": "Walking Lunge",
       "pattern": "squat",
       "tier": "C2",
-      "unit": "reps_each",
-      "default": 10,
+      "unit": "time_each",
+      "default": 30,
       "kw": "walking lunge form",
       "cue": "需要走道空間。**離心損傷偏高**,測驗週前避開",
       "gear": [],
       "doms": 4,
-      "note": ""
+      "note": "",
+      "hint": "約 10 下／側"
     },
     {
       "id": "sq-stepup",
@@ -722,13 +752,14 @@
       "en": "Step-up",
       "pattern": "squat",
       "tier": "C2",
-      "unit": "reps_each",
-      "default": 10,
+      "unit": "time_each",
+      "default": 30,
       "kw": "step up exercise form",
       "cue": "**下來要慢**,那一段才是在練。後腳不准蹬地借力",
       "gear": [],
       "doms": 3,
-      "note": ""
+      "note": "",
+      "hint": "約 10 下／側"
     },
     {
       "id": "sq-tspine-split",
@@ -736,13 +767,14 @@
       "en": "Split Squat + T-spine Rotation",
       "pattern": "squat",
       "tier": "C3",
-      "unit": "reps_each",
-      "default": 8,
+      "unit": "time_each",
+      "default": 25,
       "kw": "split squat with thoracic rotation",
       "cue": "分腿蹲底部停住，上半身往**前腳側**轉。**錯**：轉的是腰不是胸椎（骨盆要鎖住）",
       "gear": [],
       "doms": 3,
-      "note": "你提的動作。胸椎旋轉在原本的動作庫裡是缺的"
+      "note": "你提的動作。胸椎旋轉在原本的動作庫裡是缺的",
+      "hint": "約 8 下／側"
     },
     {
       "id": "sq-bulgarian",
@@ -750,13 +782,14 @@
       "en": "Bulgarian Split Squat",
       "pattern": "squat",
       "tier": "C3",
-      "unit": "reps_each",
-      "default": 10,
+      "unit": "time_each",
+      "default": 30,
       "kw": "bulgarian split squat form",
       "cue": "後腳放椅子。**離心損傷很高**，第一次只做一半的量",
       "gear": [],
       "doms": 5,
-      "note": ""
+      "note": "",
+      "hint": "約 10 下／側"
     },
     {
       "id": "sq-skater",
@@ -764,13 +797,14 @@
       "en": "Skater Squat",
       "pattern": "squat",
       "tier": "C4",
-      "unit": "reps_each",
-      "default": 8,
+      "unit": "time_each",
+      "default": 30,
       "kw": "skater squat progression",
       "cue": "單腳蹲、後腳膝蓋往地面點。手可以往前平衡",
       "gear": [],
       "doms": 5,
-      "note": ""
+      "note": "",
+      "hint": "約 8 下／側"
     },
     {
       "id": "sq-pistol",
@@ -778,13 +812,14 @@
       "en": "Pistol Squat",
       "pattern": "squat",
       "tier": "C4",
-      "unit": "reps_each",
-      "default": 5,
+      "unit": "time_each",
+      "default": 25,
       "kw": "pistol squat progression",
       "cue": "扶著門框做輔助版就好。這是平衡＋踝活動度的綜合測驗",
       "gear": [],
       "doms": 4,
-      "note": ""
+      "note": "",
+      "hint": "約 5 下／側"
     },
     {
       "id": "sq-goblet",
@@ -792,8 +827,8 @@
       "en": "Goblet Squat",
       "pattern": "squat",
       "tier": "B1",
-      "unit": "reps",
-      "default": 12,
+      "unit": "time",
+      "default": 35,
       "kw": "goblet squat form",
       "cue": "重量抱胸前，手肘走膝蓋內側。**負重反而讓深蹲更好蹲**",
       "gear": [
@@ -801,7 +836,8 @@
         "kettlebell"
       ],
       "doms": 3,
-      "note": ""
+      "note": "",
+      "hint": "約 12 下"
     },
     {
       "id": "sq-goblet-lateral",
@@ -809,8 +845,8 @@
       "en": "Goblet Lateral Squat",
       "pattern": "squat",
       "tier": "B1",
-      "unit": "reps_each",
-      "default": 10,
+      "unit": "time_each",
+      "default": 30,
       "kw": "goblet lateral squat",
       "cue": "側弓步的負重版，重量抱胸前當配重。**錯**：重量太重會讓你彎腰",
       "gear": [
@@ -818,7 +854,8 @@
         "kettlebell"
       ],
       "doms": 3,
-      "note": "你提的動作。動作模式與 sq-lateral 相同，這是它的負重層"
+      "note": "你提的動作。動作模式與 sq-lateral 相同，這是它的負重層",
+      "hint": "約 10 下／側"
     },
     {
       "id": "hinge-bridge-1",
@@ -826,13 +863,14 @@
       "en": "Single-leg Glute Bridge",
       "pattern": "hinge",
       "tier": "C2",
-      "unit": "reps_each",
-      "default": 12,
+      "unit": "time_each",
+      "default": 35,
       "kw": "single leg glute bridge",
       "cue": "骨盆兩側等高。**錯**：非支撐側骨盆掉下去",
       "gear": [],
       "doms": 2,
-      "note": ""
+      "note": "",
+      "hint": "約 12 下／側"
     },
     {
       "id": "hinge-longlever",
@@ -846,7 +884,8 @@
       "cue": "腳跟往前放遠、腳尖翹起、**只用腳跟撐**。抽筋就把腳跟收近一點",
       "gear": [],
       "doms": 2,
-      "note": ""
+      "note": "",
+      "hint": ""
     },
     {
       "id": "hinge-sl-rdl",
@@ -854,13 +893,14 @@
       "en": "Single-leg RDL",
       "pattern": "hinge",
       "tier": "C2",
-      "unit": "reps_each",
-      "default": 10,
+      "unit": "time_each",
+      "default": 30,
       "kw": "single leg rdl bodyweight form",
       "cue": "支撐腳微彎,身體與後腿成一直線往前倒。**骨盆不准打開**（腳尖朝下）",
       "gear": [],
       "doms": 3,
-      "note": "單車最該練卻最常漏掉的動作:單腳、髖鉸鏈、腿後側三合一"
+      "note": "單車最該練卻最常漏掉的動作:單腳、髖鉸鏈、腿後側三合一",
+      "hint": "約 10 下／側"
     },
     {
       "id": "hinge-airplane",
@@ -868,13 +908,14 @@
       "en": "Hip Airplane",
       "pattern": "hinge",
       "tier": "C3",
-      "unit": "reps_each",
-      "default": 6,
+      "unit": "time_each",
+      "default": 20,
       "kw": "hip airplane exercise",
       "cue": "單腳站、上身前傾成 T，骨盆往內外轉。**扶牆做完全可以**，這動作難在平衡不在肌力",
       "gear": [],
       "doms": 2,
-      "note": "你提的動作（徒手版）。單腳穩定＋臀中肌，你的動作庫裡正缺"
+      "note": "你提的動作（徒手版）。單腳穩定＋臀中肌，你的動作庫裡正缺",
+      "hint": "約 7 下／側"
     },
     {
       "id": "hinge-walkout",
@@ -882,13 +923,14 @@
       "en": "Hamstring Walkout",
       "pattern": "hinge",
       "tier": "C3",
-      "unit": "reps",
-      "default": 8,
+      "unit": "time",
+      "default": 40,
       "kw": "hamstring walkout exercise",
       "cue": "從臀橋位置腳跟慢慢往外走再走回來。**全表最容易讓你隔天下不了樓梯**，第一次只做 4 下",
       "gear": [],
       "doms": 5,
-      "note": ""
+      "note": "",
+      "hint": "約 8 下"
     },
     {
       "id": "hinge-nordic",
@@ -896,13 +938,14 @@
       "en": "Nordic Hamstring Curl",
       "pattern": "hinge",
       "tier": "C4",
-      "unit": "reps",
-      "default": 5,
+      "unit": "time",
+      "default": 30,
       "kw": "nordic hamstring curl progression",
       "cue": "撐到不能撐再用手接。**離心損傷最高的動作，測驗週前絕對不要碰**",
       "gear": [],
       "doms": 5,
-      "note": ""
+      "note": "",
+      "hint": "約 5 下"
     },
     {
       "id": "hinge-kb-dl",
@@ -910,8 +953,8 @@
       "en": "Kettlebell Deadlift",
       "pattern": "hinge",
       "tier": "B1",
-      "unit": "reps",
-      "default": 12,
+      "unit": "time",
+      "default": 35,
       "kw": "kettlebell deadlift form",
       "cue": "屁股往後推不是往下蹲。背打直",
       "gear": [
@@ -919,7 +962,8 @@
         "dumbbell"
       ],
       "doms": 3,
-      "note": ""
+      "note": "",
+      "hint": "約 12 下"
     },
     {
       "id": "hinge-sl-rdl-w",
@@ -927,8 +971,8 @@
       "en": "Weighted Single-leg RDL",
       "pattern": "hinge",
       "tier": "B1",
-      "unit": "reps_each",
-      "default": 10,
+      "unit": "time_each",
+      "default": 30,
       "kw": "single leg romanian deadlift dumbbell",
       "cue": "重量拿**對側手**(左腳站拿右手)。背打直",
       "gear": [
@@ -936,7 +980,8 @@
         "kettlebell"
       ],
       "doms": 4,
-      "note": ""
+      "note": "",
+      "hint": "約 10 下／側"
     },
     {
       "id": "hinge-kb-swing",
@@ -944,15 +989,16 @@
       "en": "Kettlebell Swing",
       "pattern": "hinge",
       "tier": "B2",
-      "unit": "reps",
-      "default": 15,
+      "unit": "time",
+      "default": 45,
       "kw": "kettlebell swing form hardstyle",
       "cue": "**用髖爆發不是用手抬**。到胸口高度就夠。家裡空間要夠",
       "gear": [
         "kettlebell"
       ],
       "doms": 3,
-      "note": ""
+      "note": "",
+      "hint": "約 15 下"
     },
     {
       "id": "lat-clam",
@@ -960,13 +1006,14 @@
       "en": "Clamshell",
       "pattern": "lateral",
       "tier": "C1",
-      "unit": "reps_each",
-      "default": 15,
+      "unit": "time_each",
+      "default": 45,
       "kw": "clamshell exercise glute medius",
       "cue": "側躺屈膝,**骨盆不准往後倒**（背貼牆做最準）。臀中肌的入門式",
       "gear": [],
       "doms": 1,
-      "note": ""
+      "note": "",
+      "hint": "約 15 下／側"
     },
     {
       "id": "lat-sidelying",
@@ -974,13 +1021,14 @@
       "en": "Side-lying Hip Abduction",
       "pattern": "lateral",
       "tier": "C1",
-      "unit": "reps_each",
-      "default": 15,
+      "unit": "time_each",
+      "default": 45,
       "kw": "side lying leg raise hip abduction",
       "cue": "腳尖**微微朝下**（朝上會變成用髖屈肌）。抬到 45 度就夠",
       "gear": [],
       "doms": 1,
-      "note": ""
+      "note": "",
+      "hint": "約 15 下／側"
     },
     {
       "id": "lat-stand-abd",
@@ -988,13 +1036,14 @@
       "en": "Standing Hip Abduction",
       "pattern": "lateral",
       "tier": "C1",
-      "unit": "reps_each",
-      "default": 15,
+      "unit": "time_each",
+      "default": 45,
       "kw": "standing hip abduction form",
       "cue": "站姿版,同時練支撐腳的穩定。**錯**：身體往反方向倒",
       "gear": [],
       "doms": 1,
-      "note": ""
+      "note": "",
+      "hint": "約 15 下／側"
     },
     {
       "id": "lat-squat-walk",
@@ -1008,7 +1057,8 @@
       "cue": "半蹲姿勢左右橫move,**膝蓋不准內夾**。沒有彈力帶也有效",
       "gear": [],
       "doms": 2,
-      "note": ""
+      "note": "",
+      "hint": ""
     },
     {
       "id": "lat-hipdip",
@@ -1016,13 +1066,14 @@
       "en": "Side Plank Hip Dip",
       "pattern": "lateral",
       "tier": "C2",
-      "unit": "reps_each",
-      "default": 12,
+      "unit": "time_each",
+      "default": 35,
       "kw": "side plank hip dip",
       "cue": "髖往下沉再推回一直線。比靜態側棒式更練臀中肌",
       "gear": [],
       "doms": 2,
-      "note": ""
+      "note": "",
+      "hint": "約 12 下／側"
     },
     {
       "id": "lat-crab",
@@ -1036,7 +1087,8 @@
       "cue": "反向撐地、臀部離地前後左右走。**肩前側會很酸**,那是正常的",
       "gear": [],
       "doms": 2,
-      "note": ""
+      "note": "",
+      "hint": ""
     },
     {
       "id": "lat-bearside",
@@ -1050,7 +1102,8 @@
       "cue": "熊爬姿勢往側邊移動。**同手同腳容易打結**,慢慢來",
       "gear": [],
       "doms": 2,
-      "note": ""
+      "note": "",
+      "hint": ""
     },
     {
       "id": "lat-stepup",
@@ -1058,13 +1111,14 @@
       "en": "Lateral Step-up",
       "pattern": "lateral",
       "tier": "C2",
-      "unit": "reps_each",
-      "default": 10,
+      "unit": "time_each",
+      "default": 30,
       "kw": "lateral step up form",
       "cue": "側身踩上椅子,**用上面那隻腳的力量站起來**,下面的腳不准蹬地",
       "gear": [],
       "doms": 3,
-      "note": ""
+      "note": "",
+      "hint": "約 10 下／側"
     },
     {
       "id": "lat-cph-knee",
@@ -1078,7 +1132,8 @@
       "cue": "上腳膝蓋放椅子,用**內收肌**把髖撐起來。內收肌訓練的黃金動作",
       "gear": [],
       "doms": 4,
-      "note": "內收肌是單車最常拉傷的地方之一,而且幾乎沒人練。第一次做時間減半"
+      "note": "內收肌是單車最常拉傷的地方之一,而且幾乎沒人練。第一次做時間減半",
+      "hint": ""
     },
     {
       "id": "lat-sideplank-raise",
@@ -1086,13 +1141,14 @@
       "en": "Side Plank Leg Raise",
       "pattern": "lateral",
       "tier": "C3",
-      "unit": "reps_each",
-      "default": 10,
+      "unit": "time_each",
+      "default": 30,
       "kw": "side plank leg raise",
       "cue": "側棒式撐住再抬上腿。兩側臀中肌同時在做不同的工作",
       "gear": [],
       "doms": 3,
-      "note": ""
+      "note": "",
+      "hint": "約 10 下／側"
     },
     {
       "id": "lat-skater",
@@ -1106,7 +1162,8 @@
       "cue": "側向跳躍落地單腳穩住,**停 1 秒再跳下一下**。落地穩不住就降成側踏",
       "gear": [],
       "doms": 4,
-      "note": "會吵。這是最接近籃球變向的徒手動作"
+      "note": "會吵。這是最接近籃球變向的徒手動作",
+      "hint": ""
     },
     {
       "id": "lat-mtn-side",
@@ -1120,7 +1177,8 @@
       "cue": "膝蓋往**同側手肘外側**收。斜腹＋髖屈肌",
       "gear": [],
       "doms": 2,
-      "note": ""
+      "note": "",
+      "hint": ""
     },
     {
       "id": "lat-cph-full",
@@ -1134,7 +1192,8 @@
       "cue": "整條腿放椅子上。**內收肌拉傷史的人不要直接做這個**,先做屈膝版四週",
       "gear": [],
       "doms": 5,
-      "note": ""
+      "note": "",
+      "hint": ""
     },
     {
       "id": "lat-goblet-step",
@@ -1142,8 +1201,8 @@
       "en": "Goblet Lateral Step",
       "pattern": "lateral",
       "tier": "B1",
-      "unit": "reps_each",
-      "default": 10,
+      "unit": "time_each",
+      "default": 30,
       "kw": "goblet lateral step up",
       "cue": "側跨步的負重版,重量抱胸前。**錯**：重量太重會讓你用下面那隻腳蹬",
       "gear": [
@@ -1151,7 +1210,8 @@
         "kettlebell"
       ],
       "doms": 3,
-      "note": ""
+      "note": "",
+      "hint": "約 10 下／側"
     },
     {
       "id": "co-crosscrawl",
@@ -1165,7 +1225,8 @@
       "cue": "站姿,右手肘碰左膝再換邊。**慢比快難**,慢速版才練得到協調",
       "gear": [],
       "doms": 0,
-      "note": ""
+      "note": "",
+      "hint": ""
     },
     {
       "id": "co-toetap",
@@ -1179,7 +1240,8 @@
       "cue": "對著台階或書本快速交替點腳。籃球腳步的最基礎版",
       "gear": [],
       "doms": 1,
-      "note": ""
+      "note": "",
+      "hint": ""
     },
     {
       "id": "co-sl-stand",
@@ -1193,7 +1255,8 @@
       "cue": "**撐不到 30 秒就代表這是你的弱點**。手可以張開平衡,但不要扶東西",
       "gear": [],
       "doms": 0,
-      "note": ""
+      "note": "",
+      "hint": ""
     },
     {
       "id": "co-bearhold",
@@ -1207,7 +1270,8 @@
       "cue": "四足膝蓋離地一吋停住。**背上放水瓶不掉**才算合格。爬行的前置",
       "gear": [],
       "doms": 1,
-      "note": ""
+      "note": "",
+      "hint": ""
     },
     {
       "id": "co-bear-tap",
@@ -1215,13 +1279,14 @@
       "en": "Bear Crawl Shoulder Tap",
       "pattern": "coord",
       "tier": "C2",
-      "unit": "reps_each",
-      "default": 10,
+      "unit": "time_each",
+      "default": 30,
       "kw": "bear crawl shoulder tap",
       "cue": "熊式撐地再單手摸對側肩。骨盆不准晃",
       "gear": [],
       "doms": 2,
-      "note": ""
+      "note": "",
+      "hint": "約 10 下／側"
     },
     {
       "id": "co-spiderman",
@@ -1235,7 +1300,8 @@
       "cue": "伏地挺身姿勢,膝蓋往同側手肘外側爬。髖活動度＋核心",
       "gear": [],
       "doms": 2,
-      "note": ""
+      "note": "",
+      "hint": ""
     },
     {
       "id": "co-crabreach",
@@ -1243,13 +1309,14 @@
       "en": "Crab Reach",
       "pattern": "coord",
       "tier": "C2",
-      "unit": "reps_each",
-      "default": 8,
+      "unit": "time_each",
+      "default": 25,
       "kw": "crab reach exercise",
       "cue": "反向撐地推髖,單手往後上方伸展開胸。**久坐與趴姿騎車的解藥**",
       "gear": [],
       "doms": 1,
-      "note": ""
+      "note": "",
+      "hint": "約 8 下／側"
     },
     {
       "id": "co-shuffle",
@@ -1263,7 +1330,8 @@
       "cue": "半蹲姿勢左右橫移,**腳不交叉**。籃球防守步伐",
       "gear": [],
       "doms": 2,
-      "note": ""
+      "note": "",
+      "hint": ""
     },
     {
       "id": "co-carioca",
@@ -1277,7 +1345,8 @@
       "cue": "橫move時前後腳交叉。**打結是正常的**,這動作就是在練那個",
       "gear": [],
       "doms": 2,
-      "note": ""
+      "note": "",
+      "hint": ""
     },
     {
       "id": "co-scorpion",
@@ -1285,13 +1354,14 @@
       "en": "Scorpion",
       "pattern": "coord",
       "tier": "C2",
-      "unit": "reps_each",
-      "default": 8,
+      "unit": "time_each",
+      "default": 25,
       "kw": "scorpion stretch exercise",
       "cue": "趴著單腳往對側跨過去。胸椎＋髖旋轉,早上做最有感",
       "gear": [],
       "doms": 1,
-      "note": ""
+      "note": "",
+      "hint": "約 8 下／側"
     },
     {
       "id": "co-bear-rev",
@@ -1305,7 +1375,8 @@
       "cue": "熊爬往後走。**比往前難得多**,方向感會整個亂掉",
       "gear": [],
       "doms": 2,
-      "note": ""
+      "note": "",
+      "hint": ""
     },
     {
       "id": "co-sl-eyes",
@@ -1319,7 +1390,8 @@
       "cue": "閉眼把視覺拿掉,只剩本體感覺。**撐得住 20 秒代表腳踝穩定很好**",
       "gear": [],
       "doms": 0,
-      "note": ""
+      "note": "",
+      "hint": ""
     },
     {
       "id": "co-bear-rot",
@@ -1327,13 +1399,14 @@
       "en": "Bear Crawl + Rotation",
       "pattern": "coord",
       "tier": "C3",
-      "unit": "reps_each",
-      "default": 8,
+      "unit": "time_each",
+      "default": 25,
       "kw": "bear crawl rotation exercise",
       "cue": "熊式撐地,單手往天花板轉開成側撐。爬行＋旋轉的組合",
       "gear": [],
       "doms": 2,
-      "note": ""
+      "note": "",
+      "hint": "約 8 下／側"
     },
     {
       "id": "co-tgu",
@@ -1341,13 +1414,14 @@
       "en": "Turkish Get-up (bodyweight)",
       "pattern": "coord",
       "tier": "C3",
-      "unit": "reps_each",
-      "default": 5,
+      "unit": "time_each",
+      "default": 50,
       "kw": "turkish get up bodyweight step by step",
       "cue": "躺著到站著再躺回去,手全程舉高。**一下要 40 秒以上**,快就是做錯",
       "gear": [],
       "doms": 2,
-      "note": "協調動作之王。徒手版先把七個步驟做順,再考慮加重量"
+      "note": "協調動作之王。徒手版先把七個步驟做順,再考慮加重量",
+      "hint": "約 1 下／側"
     },
     {
       "id": "co-tgu-kb",
@@ -1355,8 +1429,8 @@
       "en": "Turkish Get-up (weighted)",
       "pattern": "coord",
       "tier": "B1",
-      "unit": "reps_each",
-      "default": 3,
+      "unit": "time_each",
+      "default": 50,
       "kw": "turkish get up kettlebell form",
       "cue": "**眼睛全程盯著重量**。從最輕的開始,寧可拿水瓶",
       "gear": [
@@ -1364,7 +1438,8 @@
         "dumbbell"
       ],
       "doms": 2,
-      "note": ""
+      "note": "",
+      "hint": "約 1 下／側"
     },
     {
       "id": "core-plank",
@@ -1378,7 +1453,8 @@
       "cue": "手肘在肩膀正下方、夾臀。**錯**：屁股翹高偷懶或腰塌下去",
       "gear": [],
       "doms": 1,
-      "note": "公司 C1 的第三個動作"
+      "note": "公司 C1 的第三個動作",
+      "hint": ""
     },
     {
       "id": "core-quad-tap",
@@ -1386,13 +1462,14 @@
       "en": "Quadruped Shoulder Tap",
       "pattern": "core",
       "tier": "C1",
-      "unit": "reps_each",
-      "default": 10,
+      "unit": "time_each",
+      "default": 30,
       "kw": "quadruped shoulder tap",
       "cue": "四足跪姿（膝蓋離地一吋），單手摸對側肩。**骨盆不能左右晃**",
       "gear": [],
       "doms": 1,
-      "note": "你提的動作。這是 core-plank-tap 的降階版，先做這個再進棒式版"
+      "note": "你提的動作。這是 core-plank-tap 的降階版，先做這個再進棒式版",
+      "hint": "約 10 下／側"
     },
     {
       "id": "core-deadbug",
@@ -1400,13 +1477,14 @@
       "en": "Dead Bug",
       "pattern": "core",
       "tier": "C2",
-      "unit": "reps_each",
-      "default": 8,
+      "unit": "time_each",
+      "default": 25,
       "kw": "dead bug exercise form",
       "cue": "腰**全程貼地**。貼不住就縮小手腳伸展範圍",
       "gear": [],
       "doms": 1,
-      "note": ""
+      "note": "",
+      "hint": "約 8 下／側"
     },
     {
       "id": "core-sideplank",
@@ -1420,7 +1498,8 @@
       "cue": "髖部推高成一直線。這同時在練臀中肌",
       "gear": [],
       "doms": 1,
-      "note": ""
+      "note": "",
+      "hint": ""
     },
     {
       "id": "core-plank-tap",
@@ -1428,13 +1507,14 @@
       "en": "Plank Shoulder Taps",
       "pattern": "core",
       "tier": "C2",
-      "unit": "reps_each",
-      "default": 8,
+      "unit": "time_each",
+      "default": 25,
       "kw": "plank shoulder taps",
       "cue": "**骨盆不能左右晃**。雙腳可以張開一點，晃就是核心輸了",
       "gear": [],
       "doms": 1,
-      "note": ""
+      "note": "",
+      "hint": "約 8 下／側"
     },
     {
       "id": "core-halo-lunge",
@@ -1442,13 +1522,14 @@
       "en": "Lunge + Halo",
       "pattern": "core",
       "tier": "C2",
-      "unit": "reps_each",
-      "default": 8,
+      "unit": "time_each",
+      "default": 25,
       "kw": "half kneeling halo exercise",
       "cue": "單膝跪或弓步撐住，手臂繞頭一圈。**錯**：肋骨開掉、腰往前頂",
       "gear": [],
       "doms": 1,
-      "note": "你提的動作（徒手版）。抗旋轉＋肩活動度，負重版見 core-halo-kb"
+      "note": "你提的動作（徒手版）。抗旋轉＋肩活動度，負重版見 core-halo-kb",
+      "hint": "約 8 下／側"
     },
     {
       "id": "core-pallof",
@@ -1462,7 +1543,8 @@
       "cue": "半跪、雙手合十往前推到底停住,**想像有人要把你的手往側邊撥**",
       "gear": [],
       "doms": 1,
-      "note": ""
+      "note": "",
+      "hint": ""
     },
     {
       "id": "core-hollow",
@@ -1476,7 +1558,8 @@
       "cue": "腰貼地。離地就改屈膝或提早結束",
       "gear": [],
       "doms": 1,
-      "note": ""
+      "note": "",
+      "hint": ""
     },
     {
       "id": "core-rkc",
@@ -1490,7 +1573,8 @@
       "cue": "全身用力的棒式，**20 秒就該撐不住**。撐得過 40 秒代表沒用力",
       "gear": [],
       "doms": 1,
-      "note": ""
+      "note": "",
+      "hint": ""
     },
     {
       "id": "core-hollow-rock",
@@ -1498,13 +1582,14 @@
       "en": "Hollow Rock",
       "pattern": "core",
       "tier": "C3",
-      "unit": "reps",
-      "default": 15,
+      "unit": "time",
+      "default": 45,
       "kw": "hollow rock progression",
       "cue": "Hollow hold 加上前後搖。**腰離地就停**,先把 hold 做滿 30 秒再進這個",
       "gear": [],
       "doms": 1,
-      "note": ""
+      "note": "",
+      "hint": "約 15 下"
     },
     {
       "id": "core-halo-kb",
@@ -1512,8 +1597,8 @@
       "en": "Lunge + Kettlebell Halo",
       "pattern": "core",
       "tier": "B1",
-      "unit": "reps_each",
-      "default": 8,
+      "unit": "time_each",
+      "default": 25,
       "kw": "kettlebell halo half kneeling",
       "cue": "重量繞頭時**骨盆不准動**。從最輕的開始",
       "gear": [
@@ -1521,7 +1606,8 @@
         "dumbbell"
       ],
       "doms": 2,
-      "note": ""
+      "note": "",
+      "hint": "約 8 下／側"
     },
     {
       "id": "loco-crawl",
@@ -1535,7 +1621,8 @@
       "cue": "膝蓋離地一吋、背上像放著一杯水。**錯**：屁股翹高變成跑",
       "gear": [],
       "doms": 2,
-      "note": "公司 C1 的第一個動作"
+      "note": "公司 C1 的第一個動作",
+      "hint": ""
     },
     {
       "id": "loco-jack",
@@ -1549,7 +1636,8 @@
       "cue": "**家裡要安靜的話換成 step jack**（不跳，左右踏步開合）",
       "gear": [],
       "doms": 2,
-      "note": "公司 C1 的第六個動作。跳躍會吵，樓下有人就換無跳版"
+      "note": "公司 C1 的第六個動作。跳躍會吵，樓下有人就換無跳版",
+      "hint": ""
     },
     {
       "id": "loco-stepjack",
@@ -1563,7 +1651,8 @@
       "cue": "不離地、左右踏開。膝蓋友善、不吵",
       "gear": [],
       "doms": 1,
-      "note": ""
+      "note": "",
+      "hint": ""
     },
     {
       "id": "loco-highknee",
@@ -1577,7 +1666,8 @@
       "cue": "膝蓋抬到髖高。**安靜版**：不跳,原地快走抬膝",
       "gear": [],
       "doms": 2,
-      "note": ""
+      "note": "",
+      "hint": ""
     },
     {
       "id": "loco-mtn",
@@ -1591,7 +1681,8 @@
       "cue": "骨盆穩住不上下彈。速度慢一點反而更難",
       "gear": [],
       "doms": 2,
-      "note": ""
+      "note": "",
+      "hint": ""
     },
     {
       "id": "loco-duck",
@@ -1605,7 +1696,8 @@
       "cue": "深蹲姿勢往前走。**膝蓋不舒服就跳過這個**,它對膝蓋不友善",
       "gear": [],
       "doms": 3,
-      "note": ""
+      "note": "",
+      "hint": ""
     },
     {
       "id": "loco-burpee",
@@ -1613,13 +1705,14 @@
       "en": "Burpee",
       "pattern": "loco",
       "tier": "C3",
-      "unit": "reps",
-      "default": 10,
+      "unit": "time",
+      "default": 40,
       "kw": "burpee form beginner",
       "cue": "**會吵**。不想跳就做走式波比（腳一次一隻往後走）",
       "gear": [],
       "doms": 3,
-      "note": ""
+      "note": "",
+      "hint": "約 10 下"
     },
     {
       "id": "st-quad",
@@ -1633,7 +1726,8 @@
       "cue": "單腳站，手抓同側腳背往後勾，**膝蓋併攏、骨盆後傾**。扶牆沒關係",
       "gear": [],
       "doms": 0,
-      "note": "你說的「站著單腳腳往後勾手拉著」"
+      "note": "你說的「站著單腳腳往後勾手拉著」",
+      "hint": ""
     },
     {
       "id": "st-ham",
@@ -1647,7 +1741,8 @@
       "cue": "**從髖部往前折不是駝背**。膝蓋可以微彎",
       "gear": [],
       "doms": 0,
-      "note": "你說的「坐著拉腿後」"
+      "note": "你說的「坐著拉腿後」",
+      "hint": ""
     },
     {
       "id": "st-greatest",
@@ -1661,7 +1756,8 @@
       "cue": "弓步＋手肘壓地＋開胸旋轉。一個動作打包髖屈肌、內收肌、胸椎",
       "gear": [],
       "doms": 0,
-      "note": ""
+      "note": "",
+      "hint": ""
     },
     {
       "id": "st-hipflexor",
@@ -1675,7 +1771,8 @@
       "cue": "**骨盆後傾**才拉得到。**錯**：腰往前塌，那是拉腰不是拉髖",
       "gear": [],
       "doms": 0,
-      "note": ""
+      "note": "",
+      "hint": ""
     },
     {
       "id": "st-9090",
@@ -1689,7 +1786,8 @@
       "cue": "前腳外旋後腳內旋，上身往前腳方向壓",
       "gear": [],
       "doms": 0,
-      "note": ""
+      "note": "",
+      "hint": ""
     },
     {
       "id": "st-pigeon",
@@ -1703,7 +1801,8 @@
       "cue": "臀肌深層。膝蓋不舒服就改躺姿穿針",
       "gear": [],
       "doms": 0,
-      "note": ""
+      "note": "",
+      "hint": ""
     },
     {
       "id": "st-thread",
@@ -1717,7 +1816,8 @@
       "cue": "躺著版的鴿式，膝蓋友善",
       "gear": [],
       "doms": 0,
-      "note": ""
+      "note": "",
+      "hint": ""
     },
     {
       "id": "st-calf",
@@ -1731,7 +1831,8 @@
       "cue": "後腳跟踩地、膝蓋打直。彎膝版拉的是比目魚肌",
       "gear": [],
       "doms": 0,
-      "note": ""
+      "note": "",
+      "hint": ""
     },
     {
       "id": "st-chest",
@@ -1745,7 +1846,8 @@
       "cue": "手肘與肩同高，身體往前。週三練完胸特別需要",
       "gear": [],
       "doms": 0,
-      "note": ""
+      "note": "",
+      "hint": ""
     },
     {
       "id": "st-openbook",
@@ -1759,7 +1861,8 @@
       "cue": "側躺屈膝,上手往後打開畫半圓。**膝蓋要壓住不能跟著翻**",
       "gear": [],
       "doms": 0,
-      "note": ""
+      "note": "",
+      "hint": ""
     },
     {
       "id": "st-catcow",
@@ -1767,13 +1870,15 @@
       "en": "Cat-Cow",
       "pattern": "stretch",
       "tier": "C1",
-      "unit": "reps",
-      "default": 10,
+      "unit": "time",
+      "default": 30,
       "kw": "cat cow exercise form",
       "cue": "一節一節捲起再一節一節放下。脊椎的暖機",
       "gear": [],
       "doms": 0,
-      "note": ""
+      "note": "",
+      "hint": "約 10 下"
     }
-  ]
+  ],
+  "_why_time": "全部動作一律用秒數,不用次數。使用者把筆電當電視擺著看 —— 次數要自己按「完成」才會前進,等於每個動作結束都要走過去碰電腦。改成純計時後整堂完全不用碰。hint 是照秒數回推的次數參考,只顯示不控制。"
 }

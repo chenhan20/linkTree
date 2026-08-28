@@ -287,7 +287,8 @@ body{
     <h1>循環訓練</h1>
     <p>挑一張預設按開始就能練，或自己搭。動作庫有 <b id="nmv">—</b> 個動作，
       分成 <b>C1→C4</b>（徒手，由易到難）與 <b>B1／B2</b>（開始用家裡的重量）。
-      每個動作都寫了<b>你會做錯的地方</b>，第一次做先點開影片關鍵字看過再上墊子。</p>
+      每個動作都寫了<b>你會做錯的地方</b>，第一次做先點開影片關鍵字看過再上墊子。<br>
+      <b>全部動作都用秒數</b> —— 開始之後整堂不用再碰電腦，擺著當計時器就好。</p>
   </header>
 
   <div class="sect">預設 <span>· PRESETS · 按一下就套用</span></div>
@@ -365,7 +366,7 @@ const $ = s => document.querySelector(s);
 const LS = 'circuit-plan-v1';
 let DB = null, plan = null, filt = { pat: 'all', tier: 'all' };
 
-const UNIT = { reps:'次', time:'秒', reps_each:'次／側', time_each:'秒／側' };
+const UNIT = { time:'秒', time_each:'秒／側' };
 const isTime = u => u === 'time' || u === 'time_each';
 const isEach = u => u === 'reps_each' || u === 'time_each';
 const byId = id => DB.moves.find(m => m.id === id);
@@ -378,16 +379,16 @@ const mmss = s => Math.floor(s/60) + ':' + String(Math.round(s%60)).padStart(2,'
 /* ── 預估總長：次數類用「每下 3 秒、至少 20 秒」估，只用於顯示 ── */
 function estimate() {
   if (!plan) return 0;
+  /* 全部都是計時的,所以這個數字是準的,不是估的 */
   const one = plan.moves.reduce((t, r) => {
     const m = byId(r.id); if (!m) return t;
-    if (isTime(m.unit)) return t + r.amt * (isEach(m.unit) ? 2 : 1);
-    return t + Math.max(20, r.amt * 3 * (isEach(m.unit) ? 2 : 1));
+    return t + r.amt * (isEach(m.unit) ? 2 : 1) + (isEach(m.unit) ? 5 : 0);  // 每側動作中間有 5 秒換邊
   }, 0);
   const gaps = Math.max(0, plan.moves.length - 1) * plan.restMove;
   const body = (one + gaps) * plan.sets + Math.max(0, plan.sets - 1) * plan.restSet;
   const st = plan.stretches.reduce((t, r) => {
     const m = byId(r.id); if (!m) return t;
-    return t + r.amt * (isEach(m.unit) ? 2 : 1) + 8;
+    return t + r.amt * (isEach(m.unit) ? 2 : 1);
   }, 0);
   return body + st;
 }
@@ -526,12 +527,14 @@ function showStep() {
   $('#r-yt').textContent = '▶ ' + m.kw;
 
   if (isTime(m.unit)) {
-    $('#r-unit').textContent = '秒';
+    $('#r-unit').textContent = '秒' + (m.hint ? ' · ' + m.hint : '');
     $('#r-main').textContent = '暫停';
     countdown(st.secs);
   } else {
+    /* 全部動作都是計時的（見 movements.json 的 _why_time）。
+       這條分支留著只是防呆:資料如果哪天又冒出次數類,不要整個畫面空掉。 */
     $('#r-num').textContent = st.amt;
-    $('#r-unit').textContent = isEach(m.unit) ? '次／側' : '次';
+    $('#r-unit').textContent = '次';
     $('#r-main').textContent = '完成';
   }
 }
@@ -573,7 +576,8 @@ function howCard(m, amt) {
     '<div class="hc-h"><b>' + esc(m.zh) + '</b>' +
       '<s class="' + (m.tier[0] === 'B' ? 't-B' : '') + '">' + m.tier + '</s>' +
       '<i>' + esc(p.zh || '') + ' · ' + esc(m.en) + '</i></div>' +
-    (amt != null ? '<div class="hc-amt">做 <b>' + amt + '</b> ' + UNIT[m.unit] + '</div>' : '') +
+    (amt != null ? '<div class="hc-amt">做 <b>' + amt + '</b> ' + UNIT[m.unit] +
+      (m.hint ? '　<span style="color:var(--ink-3)">（' + esc(m.hint) + '）</span>' : '') + '</div>' : '') +
     '<div class="hc-cue">' + md(m.cue) + '</div>' +
     (m.note ? '<div class="hc-note">' + md(m.note) + '</div>' : '') +
     (m.doms >= 4 ? '<div class="hc-warn">⚠️ 離心損傷高（' + m.doms + '／5）—— ' +
@@ -611,7 +615,8 @@ function rowHtml(r, i, kind) {
   return '<div class="pr' + (kind==='stretch' ? ' is-stretch' : '') + '">' +
     '<span class="pr-i">' + (i+1) + '</span>' +
     '<span class="pr-n"><b><button class="lnk" type="button" data-how="' + m.id + '">' + esc(m.zh) + '</button></b>' +
-      '<s>' + m.tier + '</s><i>' + esc(m.en) + (m.doms >= 4 ? ' · ⚠️ 離心高' : '') + '</i></span>' +
+      '<s>' + m.tier + '</s><i>' + (m.hint ? esc(m.hint) + ' · ' : '') + esc(m.en) +
+        (m.doms >= 4 ? ' · ⚠️ 離心高' : '') + '</i></span>' +
     '<span class="pr-amt"><input type="number" min="1" max="600" value="' + r.amt +
       '" data-amt="' + kind + ':' + i + '"><span>' + UNIT[m.unit] + '</span></span>' +
     '<span class="pr-act">' +
