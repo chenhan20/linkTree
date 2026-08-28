@@ -48,6 +48,14 @@ body{
 }
 .sect span{font-size:10px;font-weight:600;color:rgba(252,76,2,.55);letter-spacing:2.4px;text-transform:uppercase}
 .sect .sp{flex:1}
+/* 騎完車、打完球只想拉一拉:收操可以不跑課表單獨開跑 */
+.sect-go{
+  align-self:center;padding:6px 13px;border:1px solid var(--hair-2);border-radius:100px;
+  background:transparent;color:var(--ink-2);font-family:inherit;font-size:12px;font-weight:600;
+  letter-spacing:.5px;cursor:pointer;transition:.13s;white-space:nowrap
+}
+.sect-go:hover{border-color:var(--sig);color:var(--sig)}
+.sect-go:disabled{opacity:.35;cursor:not-allowed}
 
 /* ── 預設卡 ───────────────────────────────────────────── */
 .presets{display:grid;grid-template-columns:repeat(auto-fill,minmax(226px,1fr));gap:9px}
@@ -131,6 +139,30 @@ body{
 .mv i{display:block;font-style:normal;font-size:11.5px;color:var(--ink-3);margin-top:2px}
 .mv .dot{width:6px;height:6px;border-radius:50%;margin-top:5px;flex:none}
 .mv .plus{font-size:16px;color:var(--ink-3);line-height:1}
+.mv.added{border-color:var(--ok);background:rgba(74,208,122,.09)}
+.mv.added .plus{color:var(--ok)}
+
+/* ── 加入回饋 ──
+   菜單在畫面上方、動作庫在下方,點「＋」時看不到列表在長 ——
+   所以回饋要就地發生:卡片打勾、新列閃綠、toast 講加到哪裡。 */
+.pr.is-new{animation:rownew 1.1s ease-out}
+@keyframes rownew{0%{background:rgba(74,208,122,.18)}100%{background:transparent}}
+.plan.stagger .pr{animation:rowin .3s both}
+.plan.stagger .pr:nth-child(2){animation-delay:.04s}
+.plan.stagger .pr:nth-child(3){animation-delay:.08s}
+.plan.stagger .pr:nth-child(4){animation-delay:.12s}
+.plan.stagger .pr:nth-child(5){animation-delay:.16s}
+.plan.stagger .pr:nth-child(6){animation-delay:.2s}
+.plan.stagger .pr:nth-child(n+7){animation-delay:.24s}
+@keyframes rowin{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+#toast{
+  position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));z-index:35;
+  transform:translate(-50%,14px);padding:9px 17px;border:1px solid rgba(74,208,122,.55);
+  border-radius:100px;background:#0f130d;color:var(--ink-1);font-size:13px;white-space:nowrap;
+  opacity:0;pointer-events:none;transition:opacity .16s,transform .16s
+}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+#toast b{color:var(--ok)}
 
 /* ── 開始列 ───────────────────────────────────────────── */
 .launch{
@@ -163,7 +195,7 @@ body{
 .run-x:hover{background:rgba(252,76,2,.16);color:var(--sig)}
 .run-x.off{color:rgba(244,240,234,.22)}
 .run-bar{height:5px;border-radius:2px;background:rgba(255,255,255,.08);margin:11px 0 0;overflow:hidden}
-.run-bar i{display:block;height:100%;background:var(--sig);transition:width .3s linear}
+.run-bar i{display:block;height:100%;width:100%;background:var(--sig);transform:scaleX(0);transform-origin:0 50%;transition:transform .3s linear}
 .run-body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:6px;min-height:0}
 .run-k{font-size:clamp(9.5px,1.6vmin,17px);font-weight:700;letter-spacing:3px;text-transform:uppercase;color:rgba(252,76,2,.75)}
 .run-name{font-size:clamp(26px,7.6vmin,86px);font-weight:700;color:var(--ink-1);line-height:1.12;letter-spacing:-.6px}
@@ -202,6 +234,37 @@ body{
 .run.is-paused .run-num{opacity:.42;text-shadow:none}
 /* 最後五秒:數字轉橘並輕微放大,餘光就能判斷「快到了」 */
 .run-num.is-last{color:var(--sig);text-shadow:0 0 46px rgba(252,76,2,.5)}
+/* 搏動:每秒數字跳一下,最後五秒跳更大並讓畫面邊緣閃橘 ——
+   隔一公尺看螢幕時,「動起來的程度」本身就是進度資訊 */
+.run-num.beat{animation:npop .3s ease-out}
+.run-num.beat-hard{animation:npop2 .45s cubic-bezier(.2,.85,.3,1)}
+@keyframes npop{0%{transform:scale(1.045)}100%{transform:scale(1)}}
+@keyframes npop2{0%{transform:scale(1.14)}100%{transform:scale(1)}}
+.run::after{
+  content:'';position:absolute;inset:0;pointer-events:none;opacity:0;
+  background:radial-gradient(120% 100% at 50% 50%,transparent 56%,rgba(252,76,2,.24) 100%)
+}
+.run.edge::after{animation:eflash .5s ease-out}
+@keyframes eflash{0%{opacity:1}100%{opacity:0}}
+.run-body.in{animation:stepin .24s ease-out}
+@keyframes stepin{0%{opacity:0;transform:translateY(10px)}100%{opacity:1;transform:none}}
+/* 預備(黃):開始後先給五秒站到位,同時提醒開聲音 */
+.run.is-ready .run-k,.run.is-ready .run-num{color:var(--warn)}
+.run.is-ready .run-num{text-shadow:0 0 38px rgba(255,176,32,.24)}
+.run.is-ready .run-bar i{background:var(--warn)}
+.run.is-ready #r-snd.off{color:var(--warn);animation:sndping 1.1s ease-in-out infinite}
+@keyframes sndping{0%,100%{box-shadow:0 0 0 0 rgba(255,176,32,0)}50%{box-shadow:0 0 0 7px rgba(255,176,32,.28)}}
+/* ✕ 第一下先變成「結束?」——練到一半誤觸不該讓整堂直接消失 */
+.run-x.arm{width:auto;padding:0 13px;background:rgba(252,76,2,.22);color:var(--sig);font-size:13px;font-weight:700;letter-spacing:1px}
+/* 收工彩帶 */
+.cfx{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.cfx i{position:absolute;top:-6vh;display:block;border-radius:2px;animation:cfall linear both}
+@keyframes cfall{to{transform:translate(var(--dx,0),115vh) rotate(680deg)}}
+.est b.pop{animation:npop .3s ease-out}
+@media (prefers-reduced-motion:reduce){
+  .run::after,.run-num.beat,.run-num.beat-hard,.run-body.in,.cfx i,
+  .plan.stagger .pr,.pr.is-new,.est b.pop{animation:none!important}
+}
 
 /* ══ 教學面板 ═══════════════════════════════════════════
    「先點一點教學,再用設定頁,再開始」—— 所以教學要能單獨看完,
@@ -233,6 +296,19 @@ body{
 .hc-amt b{font-family:var(--f-num);font-weight:800;font-size:19px;color:var(--ink-1);font-variant-numeric:tabular-nums}
 .hc-cue{margin-top:9px;font-size:14.5px;line-height:1.8;color:var(--ink-2)}
 .hc-cue b{color:var(--ink-1)}
+/* 分段步驟:教學卡的「怎麼做」。執行畫面仍用一行版 cue —— 運動中讀不了段落 */
+.hc-steps{margin-top:10px;list-style:none;counter-reset:hcs}
+.hc-steps li{
+  counter-increment:hcs;position:relative;padding-left:30px;margin-top:7px;
+  font-size:14.5px;line-height:1.75;color:var(--ink-2)
+}
+.hc-steps li::before{
+  content:counter(hcs);position:absolute;left:0;top:3px;width:20px;height:20px;
+  display:grid;place-items:center;border:1px solid var(--hair-2);border-radius:50%;
+  font-family:var(--f-num);font-weight:800;font-size:11px;line-height:1;color:var(--sig)
+}
+.hc-wrong{margin-top:10px;font-size:14px;line-height:1.75;color:var(--ink-2)}
+.hc-wrong::before{content:'✗ 錯：';color:var(--sig);font-weight:700}
 .hc-note{
   margin-top:9px;padding:9px 12px;border-left:2px solid rgba(252,76,2,.4);
   font-size:13px;line-height:1.75;color:var(--ink-2);background:rgba(252,76,2,.04)
@@ -285,16 +361,17 @@ body{
 
   <header class="hero">
     <h1>循環訓練</h1>
-    <p>挑一張預設按開始就能練，或自己搭。動作庫有 <b id="nmv">—</b> 個動作，
+    <p>挑一張菜單按開始就能練，或自己搭。動作庫有 <b id="nmv">—</b> 個動作，
       分成 <b>C1→C4</b>（徒手，由易到難）與 <b>B1／B2</b>（開始用家裡的重量）。
-      每個動作都寫了<b>你會做錯的地方</b>，第一次做先點開影片關鍵字看過再上墊子。<br>
-      <b>全部動作都用秒數</b> —— 開始之後整堂不用再碰電腦，擺著當計時器就好。</p>
+      每個動作都拆好<b>分段步驟</b>、標了<b>你會做錯的地方</b>，第一次做先按「看教學」讀過再上墊子。<br>
+      <b>全部動作都用秒數</b> —— 開始之後整堂不用再碰電腦。<b>建議開聲音</b>：
+      每秒有節拍、最後五秒加重、時間到有結束音（執行畫面右上角 ♪ 開關）。</p>
   </header>
 
-  <div class="sect">預設 <span>· PRESETS · 按一下就套用</span></div>
+  <div class="sect">現成菜單 <span>· MENUS · 按一下就套用</span></div>
   <div class="presets" id="presets"></div>
 
-  <div class="sect">課表 <span>· YOUR PLAN</span><span class="sp"></span></div>
+  <div class="sect">今日菜單 <span>· TODAY</span><span class="sp"></span></div>
   <div class="plan" id="plan"></div>
 
   <div class="knobs">
@@ -306,7 +383,8 @@ body{
       <div class="row"><input id="k-rs" type="number" min="0" max="600" step="15"><em>秒</em></div></div>
   </div>
 
-  <div class="sect">收操伸展 <span>· STRETCH · 只做一輪，不進組數</span></div>
+  <div class="sect">收操伸展 <span>· STRETCH · 只做一輪，不進組數</span><span class="sp"></span>
+    <button class="sect-go" id="go-stretch" type="button">▶ 單獨做收操</button></div>
   <div class="plan" id="stretch"></div>
 
   <div class="sect">動作庫 <span>· LIBRARY · 點一下加進課表</span></div>
@@ -314,6 +392,8 @@ body{
   <div class="filters" id="f-tier"></div>
   <div class="lib" id="lib"></div>
 </div>
+
+<div id="toast" role="status"></div>
 
 <div class="launch"><div class="launch-in">
   <div class="est"><b id="est">—</b>預估總長</div>
@@ -335,7 +415,7 @@ body{
     <button class="run-x" id="r-snd" type="button" aria-label="音效">♪</button>
     <button class="run-x" id="r-x" type="button" aria-label="結束">✕</button>
   </div>
-  <div class="run-bar"><i id="r-bar" style="width:0%"></i></div>
+  <div class="run-bar"><i id="r-bar"></i></div>
   <div class="run-body">
     <div class="run-k" id="r-k">—</div>
     <div class="run-name" id="r-name">—</div>
@@ -375,6 +455,14 @@ const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>
 const md = s => esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
 const yt = kw => 'https://www.youtube.com/results?search_query=' + encodeURIComponent(kw);
 const mmss = s => Math.floor(s/60) + ':' + String(Math.round(s%60)).padStart(2,'0');
+/* 重新觸發同一個 CSS 動畫要先把 class 拿掉再強制 reflow */
+const repop = (el, cls) => { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); };
+let toastT = null;
+function toast(html) {
+  const t = $('#toast');
+  t.innerHTML = html; t.classList.add('show');
+  clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 1700);
+}
 
 /* ── 預估總長：次數類用「每下 3 秒、至少 20 秒」估，只用於顯示 ── */
 function estimate() {
@@ -385,18 +473,23 @@ function estimate() {
     return t + r.amt * (isEach(m.unit) ? 2 : 1) + (isEach(m.unit) ? 5 : 0);  // 每側動作中間有 5 秒換邊
   }, 0);
   const gaps = Math.max(0, plan.moves.length - 1) * plan.restMove;
-  const body = (one + gaps) * plan.sets + Math.max(0, plan.sets - 1) * plan.restSet;
+  /* 收操型菜單（動作是空的）不算組數與大休 */
+  const body = plan.moves.length
+    ? (one + gaps) * plan.sets + Math.max(0, plan.sets - 1) * plan.restSet : 0;
   const st = plan.stretches.reduce((t, r) => {
     const m = byId(r.id); if (!m) return t;
     return t + r.amt * (isEach(m.unit) ? 2 : 1);
   }, 0);
-  return body + st;
+  return 5 + body + st;   // 開頭固定 5 秒預備
 }
 
-/* ── 把課表攤平成一連串步驟 ── */
-function buildSteps() {
-  const S = [];
-  for (let s = 1; s <= plan.sets; s++) {
+/* ── 把課表攤平成一連串步驟 ──
+   mode 'stretch' 只跑收操:騎完車、打完球拿來單獨用 */
+function buildSteps(mode) {
+  /* 開頭固定五秒「預備」:按下開始的人還站在電腦前,要走到墊子上就位,
+     順便在這一屏提醒開聲音 —— 提醒放在設定頁沒人看,放在這裡剛剛好 */
+  const S = [{ kind:'ready', secs:5 }];
+  if (mode !== 'stretch' && plan.moves.length) for (let s = 1; s <= plan.sets; s++) {
     plan.moves.forEach((r, i) => {
       const m = byId(r.id); if (!m) return;
       const meta = { move: m, set: s, idx: i + 1, of: plan.moves.length };
@@ -456,6 +549,12 @@ function endTone() {
   beep(760, 150, .26);
   setTimeout(() => beep(1180, 340, .26), 165);
 }
+/* 預備結束＝GO:比一般結束音更短促上揚。收工＝號角式四連音,一年只聽得到這裡 */
+function goTone() { beep(880, 110, .24); setTimeout(() => beep(1320, 300, .26), 120); }
+function fanfare() {
+  [[660,120],[880,120],[990,120],[1320,560]].forEach(([f,d],i) =>
+    setTimeout(() => beep(f, d, .24), i * 135));
+}
 
 /* ── 執行器 ── */
 const R = { steps:[], i:0, left:0, timer:null, wake:null, paused:false };
@@ -467,8 +566,9 @@ async function keepAwake(on) {
   } catch (e) { /* 不支援就算了，不擋流程 */ }
 }
 
-function startRun() {
-  R.steps = buildSteps(); R.i = 0;
+function startRun(mode) {
+  R.mode = mode === 'stretch' ? 'stretch' : 'full';
+  R.steps = buildSteps(R.mode); R.i = 0; R.t0 = Date.now();
   $('#run').hidden = false;
   $('#r-snd').classList.toggle('off', !SND);
   $('#r-snd').textContent = SND ? '♪' : '♪̸';
@@ -479,6 +579,7 @@ function startRun() {
 }
 function endRun() {
   clearInterval(R.timer); R.timer = null;
+  disarmQuit();
   $('#run').hidden = true;
   document.body.style.overflow = '';
   keepAwake(false);
@@ -487,20 +588,29 @@ function showStep() {
   clearInterval(R.timer); R.timer = null;
   const st = R.steps[R.i], run = $('#run');
   run.className = 'run' + (st.kind==='rest'||st.kind==='bigrest' ? ' is-rest'
-    : st.kind==='switch' ? ' is-switch' : st.kind==='done' ? ' is-done' : '');
+    : st.kind==='switch' ? ' is-switch' : st.kind==='done' ? ' is-done'
+    : st.kind==='ready' ? ' is-ready' : '');
+  repop(document.querySelector('.run-body'), 'in');
 
   if (st.kind === 'done') {
+    const secs = Math.max(1, Math.round((Date.now() - R.t0) / 1000));
     $('#r-k').textContent = '完成'; $('#r-name').textContent = '收工';
-    $('#r-num').textContent = '✓'; $('#r-unit').textContent = '';
-    $('#r-cue').innerHTML = '記得<b>戴錶錄成肌力訓練</b> —— 沒錄的話它在 CTL、DOMS、校準三個地方都不存在。';
-    $('#r-yt').hidden = true; $('#r-next').textContent = '';
+    $('#r-num').textContent = mmss(secs); $('#r-unit').textContent = '總時間';
+    $('#r-cue').innerHTML = R.mode === 'stretch'
+      ? '拉完收工。單獨收操<b>不用另外戴錶記錄</b>，主課的紀錄已經涵蓋。'
+      : '記得<b>戴錶錄成肌力訓練</b> —— 沒錄的話它在 CTL、DOMS、校準三個地方都不存在。';
+    $('#r-yt').hidden = true;
+    $('#r-next').textContent = R.mode === 'stretch'
+      ? plan.stretches.length + ' 個收操伸展'
+      : plan.moves.length + ' 動作 × ' + plan.sets + ' 組' +
+        (plan.stretches.length ? ' ＋ ' + plan.stretches.length + ' 伸展' : '');
     $('#r-set').textContent = ''; $('#r-pos').textContent = '';
-    $('#r-bar').style.width = '100%';
+    $('#r-bar').style.transform = 'scaleX(1)';
     $('#r-main').textContent = '關閉'; $('#r-prev').hidden = true; $('#r-skip').hidden = true;
-    beep(1180, 420); return;
+    confetti(); fanfare(); return;
   }
   $('#r-prev').hidden = false; $('#r-skip').hidden = false;
-  $('#r-bar').style.width = (R.i / (R.steps.length - 1) * 100).toFixed(1) + '%';
+  $('#r-bar').style.transform = 'scaleX(' + (R.i / (R.steps.length - 1)).toFixed(4) + ')';
   $('#r-set').textContent = st.stretch ? '收操伸展'
     : st.set ? '第 ' + st.set + ' / ' + plan.sets + ' 組' : '';
   $('#r-pos').textContent = st.of ? st.idx + ' / ' + st.of : '';
@@ -508,11 +618,26 @@ function showStep() {
   const nx = R.steps.slice(R.i + 1).find(s => s.kind === 'work');
   $('#r-next').innerHTML = nx ? '接著：<b>' + esc(nx.move.zh) + (nx.side ? ' · ' + nx.side : '') + '</b>' : '';
 
+  if (st.kind === 'ready') {
+    $('#r-k').textContent = '預備';
+    $('#r-name').textContent = nx ? nx.move.zh : '開始';
+    $('#r-unit').textContent = '秒';
+    $('#r-cue').innerHTML = SND
+      ? '🔊 每秒有節拍、<b>最後五秒加重</b>、時間到有結束音。站到位，倒數完就開始！'
+      : '🔇 <b>聲音是關的</b> —— 點右上角 ♪ 打開，才聽得到倒數節拍與結束音。';
+    $('#r-yt').hidden = true; $('#r-next').textContent = '';
+    $('#r-main').textContent = '暫停';
+    countdown(st.secs);
+    return;
+  }
+
   if (st.kind === 'rest' || st.kind === 'bigrest' || st.kind === 'switch') {
     $('#r-k').textContent = st.kind === 'switch' ? '換邊' : st.kind === 'bigrest' ? '大休' : '休息';
     $('#r-name').textContent = st.kind === 'switch' ? '換另一邊' : (nx ? nx.move.zh : '休息');
     $('#r-unit').textContent = '秒';
-    $('#r-cue').innerHTML = st.kind === 'bigrest' ? '一組做完了。<b>喝水、把呼吸放回鼻子</b>再開始下一組。' : '';
+    $('#r-cue').innerHTML = st.kind === 'bigrest'
+      ? '第 ' + st.set + ' 組完成，還剩 ' + (plan.sets - st.set) + ' 組。<b>喝水、把呼吸放回鼻子</b>再開始下一組。'
+      : '';
     $('#r-yt').hidden = true;
     $('#r-main').textContent = '暫停';
     countdown(st.secs);
@@ -540,20 +665,27 @@ function showStep() {
 }
 function countdown(secs) {
   R.left = secs; R.paused = false;
-  $('#r-num').textContent = R.left;
-  $('#r-num').classList.toggle('is-last', R.left <= 5);
+  const num = $('#r-num'), run = $('#run');
+  num.classList.remove('beat', 'beat-hard');
+  num.textContent = R.left;
+  num.classList.toggle('is-last', R.left <= 5);
   R.timer = setInterval(() => {
     if (R.paused) return;
     R.left--;
-    $('#r-num').textContent = Math.max(0, R.left);
-    const num = $('#r-num');
-    if (R.left > 5) tick(R.left);
-    else if (R.left > 0) beep(680, 95, .2);          // 最後五秒加重
+    num.textContent = Math.max(0, R.left);
+    if (R.left > 5) { tick(R.left); repop(num, 'beat'); }
+    else if (R.left > 0) {
+      /* 最後五秒:音高一秒一秒爬升、數字重跳、畫面邊緣閃橘 ——
+         耳朵跟餘光都收得到「快到了」 */
+      beep(620 + (5 - R.left) * 70, 95, .22);
+      num.classList.remove('beat'); repop(num, 'beat-hard'); repop(run, 'edge');
+    }
     num.classList.toggle('is-last', R.left <= 5 && R.left > 0);
     if (R.left <= 0) {
       clearInterval(R.timer); R.timer = null;
       num.classList.remove('is-last');
-      endTone(); next();
+      (R.steps[R.i].kind === 'ready' ? goTone : endTone)();
+      next();
     }
   }, 1000);
 }
@@ -567,6 +699,40 @@ function togglePause() {
 }
 function prev() { if (R.i > 0) { R.i--; showStep(); } }
 
+/* 收工彩帶：28 片純 CSS 動畫的小紙片，4 秒後自己收掉 */
+function confetti() {
+  const run = $('#run'), old = run.querySelector('.cfx');
+  if (old) old.remove();
+  const box = document.createElement('div'); box.className = 'cfx';
+  const hues = ['#FC4C02', '#4ad07a', '#4AB4FF', '#FFD24D', '#f4f0ea'];
+  for (let i = 0; i < 28; i++) {
+    const p = document.createElement('i');
+    p.style.left = (Math.random() * 100) + '%';
+    p.style.width = (5 + Math.random() * 6) + 'px';
+    p.style.height = (9 + Math.random() * 8) + 'px';
+    p.style.background = hues[i % hues.length];
+    p.style.setProperty('--dx', ((Math.random() - .5) * 120) + 'px');
+    p.style.animationDuration = (1.7 + Math.random() * 1.5) + 's';
+    p.style.animationDelay = (Math.random() * .7) + 's';
+    box.appendChild(p);
+  }
+  run.appendChild(box);
+  setTimeout(() => box.remove(), 4400);
+}
+
+/* ✕ 要按兩下才真的結束（2.5 秒內）。收工畫面按一下就關。 */
+let quitT = null;
+function disarmQuit() {
+  clearTimeout(quitT); quitT = null;
+  const x = $('#r-x'); x.classList.remove('arm'); x.textContent = '✕';
+}
+function tryQuit() {
+  const st = R.steps[R.i];
+  if (!st || st.kind === 'done' || quitT) return endRun();
+  const x = $('#r-x'); x.classList.add('arm'); x.textContent = '結束?';
+  quitT = setTimeout(disarmQuit, 2500);
+}
+
 /* ── 教學面板 ──
    同一個渲染器兩種用法:單一動作(從課表列點名稱)、整份課表(看教學鈕)。 */
 const GEAR_ZH = { dumbbell:'啞鈴', kettlebell:'壺鈴' };
@@ -578,7 +744,10 @@ function howCard(m, amt) {
       '<i>' + esc(p.zh || '') + ' · ' + esc(m.en) + '</i></div>' +
     (amt != null ? '<div class="hc-amt">做 <b>' + amt + '</b> ' + UNIT[m.unit] +
       (m.hint ? '　<span style="color:var(--ink-3)">（' + esc(m.hint) + '）</span>' : '') + '</div>' : '') +
-    '<div class="hc-cue">' + md(m.cue) + '</div>' +
+    (m.steps && m.steps.length
+      ? '<ol class="hc-steps">' + m.steps.map(s => '<li>' + md(s) + '</li>').join('') + '</ol>'
+      : '<div class="hc-cue">' + md(m.cue) + '</div>') +
+    (m.wrong ? '<div class="hc-wrong">' + md(m.wrong) + '</div>' : '') +
     (m.note ? '<div class="hc-note">' + md(m.note) + '</div>' : '') +
     (m.doms >= 4 ? '<div class="hc-warn">⚠️ 離心損傷高（' + m.doms + '／5）—— ' +
       '週二門檻課與週末測驗前 48 小時不要做這個。</div>' : '') +
@@ -595,12 +764,12 @@ function openHow(id) {
     body.innerHTML = howCard(m);
   } else {
     const all = plan.moves.concat(plan.stretches);
-    $('#how-t').textContent = '整份課表 · ' + all.length + ' 個動作';
+    $('#how-t').textContent = '整份菜單 · ' + all.length + ' 個動作';
     body.innerHTML = (all.length
-      ? '<div class="how-tip"><b>第一次做先把影片看過再上墊子。</b>挑 60～90 秒、有<b>側面角度</b>、' +
-        '只有講解沒有配樂的；避開「30 天挑戰」那種。英文關鍵字找到的技術影片品質明顯比中文高。<br>' +
-        '下面每個動作都寫了<b>你會做錯的地方</b> —— 那一句通常比影片還有用。</div>'
-      : '<div class="how-tip">課表還是空的。先挑一張預設，或從動作庫點幾個動作進來。</div>') +
+      ? '<div class="how-tip"><b>每個動作都拆成 2～3 步</b>，照編號做就對了；最後的 <b>✗ 錯</b> 是最常見的做錯法，' +
+        '那一句通常比影片還有用。第一次做的動作再點影片關鍵字補畫面：挑 60～90 秒、有<b>側面角度</b>、' +
+        '只有講解沒有配樂的；避開「30 天挑戰」那種。英文關鍵字找到的技術影片品質明顯比中文高。</div>'
+      : '<div class="how-tip">菜單還是空的。先挑一張現成菜單，或從動作庫點幾個動作進來。</div>') +
       all.map(r => { const m = byId(r.id); return m ? howCard(m, r.amt) : ''; }).join('');
   }
   $('#how').hidden = false;
@@ -628,13 +797,20 @@ function rowHtml(r, i, kind) {
 function renderPlan() {
   $('#plan').innerHTML = plan.moves.length
     ? plan.moves.map((r,i) => rowHtml(r,i,'moves')).join('')
-    : '<div class="nil">還沒有動作。挑一張上面的預設，或從下面的動作庫點幾個加進來。</div>';
+    : '<div class="nil">還沒有動作。挑一張上面的菜單，或從下面的動作庫點幾個加進來。</div>';
   $('#stretch').innerHTML = plan.stretches.length
     ? plan.stretches.map((r,i) => rowHtml(r,i,'stretches')).join('')
     : '<div class="nil">沒有收操伸展。從動作庫的「伸展」分類點幾個加進來。</div>';
   $('#k-sets').value = plan.sets; $('#k-rm').value = plan.restMove; $('#k-rs').value = plan.restSet;
-  $('#est').textContent = plan.moves.length ? mmss(estimate()) : '—';
+  $('#est').textContent = (plan.moves.length || plan.stretches.length) ? mmss(estimate()) : '—';
+  repop($('#est'), 'pop');
   $('#go').disabled = !plan.moves.length && !plan.stretches.length;
+  const stSecs = plan.stretches.reduce((t, r) => {
+    const m = byId(r.id); return m ? t + r.amt * (isEach(m.unit) ? 2 : 1) : t;
+  }, 0);
+  $('#go-stretch').disabled = !plan.stretches.length;
+  $('#go-stretch').textContent = plan.stretches.length
+    ? '▶ 單獨做收操 ' + mmss(5 + stSecs) : '▶ 單獨做收操';
   document.querySelectorAll('.pcard').forEach(c => c.classList.toggle('on', c.dataset.p === plan.from));
   try { localStorage.setItem(LS, JSON.stringify(plan)); } catch (e) {}
 }
@@ -658,7 +834,14 @@ function applyPreset(p) {
     sets: p.sets, restMove: p.restMove, restSet: p.restSet,
   };
   renderPlan();
-  window.scrollTo({ top: $('#plan').offsetTop - 90, behavior: 'smooth' });
+  /* 套用時列表逐列進場,配 toast —— 「換了一張菜單」看得出來 */
+  ['#plan', '#stretch'].forEach(s => {
+    const el = $(s); repop(el, 'stagger');
+    setTimeout(() => el.classList.remove('stagger'), 900);
+  });
+  toast('<b>✓</b> 已套用 ' + esc(p.name));
+  /* 收操型菜單（沒有動作）直接捲到收操段,不然會停在一片「還沒有動作」 */
+  window.scrollTo({ top: $(plan.moves.length ? '#plan' : '#stretch').offsetTop - 90, behavior: 'smooth' });
 }
 
 /* ── 啟動 ── */
@@ -696,7 +879,16 @@ document.addEventListener('click', e => {
   if (t.dataset.add) {
     const m = byId(t.dataset.add);
     const key = m.pattern === 'stretch' ? 'stretches' : 'moves';
-    plan[key].push({ id: m.id, amt: m.default }); plan.from = null; return renderPlan();
+    plan[key].push({ id: m.id, amt: m.default }); plan.from = null;
+    renderPlan();
+    /* 加入回饋:卡片短暫打勾＋新列閃綠＋toast。菜單在畫面上方,沒有這些會以為沒按到 */
+    t.classList.add('added');
+    const plus = t.querySelector('.plus'); plus.textContent = '✓';
+    setTimeout(() => { t.classList.remove('added'); plus.textContent = '＋'; }, 900);
+    const row = $(key === 'moves' ? '#plan' : '#stretch').lastElementChild;
+    if (row && row.classList.contains('pr')) repop(row, 'is-new');
+    toast('<b>✓</b> ' + esc(m.zh) + ' 已加入' + (key === 'moves' ? '今日菜單' : '收操'));
+    return;
   }
   if (t.dataset.rm) {
     const [k, i] = t.dataset.rm.split(':');
@@ -729,16 +921,19 @@ document.addEventListener('input', e => {
   $('#est').textContent = mmss(estimate());
   try { localStorage.setItem(LS, JSON.stringify(plan)); } catch (e2) {}
 });
-$('#go').addEventListener('click', startRun);
+$('#go').addEventListener('click', () => startRun());
+$('#go-stretch').addEventListener('click', () => startRun('stretch'));
 $('#how-open').addEventListener('click', () => openHow(null));
 $('#how-x').addEventListener('click', closeHow);
-$('#r-x').addEventListener('click', endRun);
+$('#r-x').addEventListener('click', tryQuit);
 $('#r-snd').addEventListener('click', () => {
   SND = !SND;
   $('#r-snd').classList.toggle('off', !SND);
   $('#r-snd').textContent = SND ? '♪' : '♪̸';
   try { localStorage.setItem('circuit-snd', SND ? '1' : '0'); } catch (e) {}
   if (SND) beep(1040, 60, .18, true);
+  /* 預備頁的提醒文字跟著開關切換（重進會重數五秒,當作重新就位） */
+  if (!$('#run').hidden && R.steps[R.i] && R.steps[R.i].kind === 'ready') showStep();
 });
 $('#r-prev').addEventListener('click', prev);
 $('#r-skip').addEventListener('click', next);
@@ -752,7 +947,7 @@ $('#r-main').addEventListener('click', () => {
 document.addEventListener('keydown', e => {
   if (!$('#how').hidden) { if (e.key === 'Escape') closeHow(); return; }
   if ($('#run').hidden) return;
-  if (e.key === 'Escape') endRun();
+  if (e.key === 'Escape') tryQuit();
   if (e.key === ' ') { e.preventDefault(); R.timer ? togglePause() : next(); }
   if (e.key === 'ArrowRight') { e.preventDefault(); next(); }
   if (e.key === 'ArrowLeft') { e.preventDefault(); prev(); }
