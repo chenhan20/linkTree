@@ -1705,17 +1705,12 @@ button.ov-cell:focus-visible{outline:1px solid rgba(252,76,2,.6);outline-offset:
 .tsv-stats .st.hot .nu{color:var(--ac,#e87c1a)}
 .tsv-live{display:none;gap:clamp(14px,2.2vw,32px)}
 .tsv.playing .tsv-live{display:flex}
-.tsv.playing .tsv-stats,.tsv.playing .tsv-sub,.tsv.playing .tsv-subs{display:none}
+.tsv.playing .tsv-stats,.tsv.playing .tsv-sub{display:none}
 .tsv-live .dot{width:7px;height:7px;border-radius:50%;background:var(--sig);align-self:center;
   box-shadow:0 0 9px rgba(252,76,2,.8);animation:tsvBlink 1s steps(2) infinite}
 @keyframes tsvBlink{50%{opacity:.25}}
 .tsv-sub{font-size:10.5px;color:var(--ink-3);letter-spacing:.8px;line-height:1.6}
 .tsv-sub b{color:var(--ink-2);font-variant-numeric:tabular-nums}
-.tsv-subs{display:flex;gap:12px;flex-wrap:wrap;align-items:baseline;max-width:100%}
-.tsv-subs-lbl{font-size:9.5px;font-weight:700;letter-spacing:1.8px;color:var(--ink-3);text-transform:uppercase}
-.tsv-subrow{font-size:10.5px;color:var(--ink-3);letter-spacing:.4px;white-space:nowrap}
-.tsv-subrow b{color:var(--ink-2);font-weight:600;font-variant-numeric:tabular-nums;margin-left:5px}
-.tsv-subrow em{font-style:normal;opacity:.55;margin-left:3px}
 .tsv-ctrl{position:absolute;right:22px;bottom:14px;display:flex;gap:7px;pointer-events:auto}
 .tsv-ctrl button{
   font-family:var(--f-ui);font-size:11px;font-weight:600;letter-spacing:1.4px;color:var(--ink-2);
@@ -1738,10 +1733,6 @@ button.ov-cell:focus-visible{outline:1px solid rgba(252,76,2,.6);outline-offset:
 .tsv-tag.km{font-size:9px;font-weight:600;color:var(--ink-3);background:none;border:none;padding:1px 3px}
 .tsv-tag.hidden{visibility:hidden}
 /* ── 挑戰簿（§41）：全部挑戰常駐攤開，欄數自適應、無捲動無點開 ── */
-.tsv-ledger{position:relative;z-index:3;border-top:1px solid rgba(244,240,234,.07);padding:11px 22px 14px}
-.tsv-ledger-h{display:flex;align-items:baseline;gap:10px;font-size:11px;font-weight:700;letter-spacing:1px;color:var(--ink-2)}
-.tsv-ledger-h span{font-size:9px;font-weight:600;letter-spacing:2px;color:var(--ink-3);text-transform:uppercase}
-.tsv-ledger-h em{font-style:normal;margin-left:auto;font-size:9.5px;font-weight:500;letter-spacing:.8px;color:var(--ink-3)}
 .tsv-ledger-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(158px,1fr));gap:3px 16px;margin-top:8px}
 .tl-cell{display:flex;align-items:baseline;gap:7px;font-size:11px;white-space:nowrap;min-width:0}
 .tl-cell i{font-style:normal;font-size:10px;color:var(--ink-3);font-variant-numeric:tabular-nums;overflow:hidden;text-overflow:ellipsis}
@@ -1750,6 +1741,25 @@ button.ov-cell:focus-visible{outline:1px solid rgba(252,76,2,.6);outline-offset:
 .tl-cell.pr i{color:var(--ac,#e87c1a)}
 .tl-cell.pr b{color:var(--ac,#e87c1a)}
 .tsv-nil{padding:30px 22px;color:var(--ink-3);font-size:12px}
+/* ── §42 挑戰簿分頁：一組一塊，全段＋每個分段的逐次紀錄常駐攤開 ── */
+.il-group{
+  border:1px solid var(--hair-2);border-radius:14px;margin-bottom:14px;
+  padding:16px 22px 8px;scroll-margin-top:64px;background:#0b0509;
+}
+.il-ghead{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;padding-bottom:11px;border-bottom:1px solid rgba(244,240,234,.08)}
+.il-ghead > b{font-size:19px;font-weight:800;color:var(--ink-1);letter-spacing:.8px}
+.il-gmeta{margin-left:auto;font-size:10.5px;color:var(--ink-3);letter-spacing:.6px}
+.il-gmeta b{color:#4ab4ff;font-variant-numeric:tabular-nums;font-weight:700}
+.il-seg{padding:10px 0 9px;border-bottom:1px solid rgba(244,240,234,.05)}
+.il-seg:last-child{border-bottom:none}
+.il-shead{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.il-sname{font-size:12.5px;font-weight:700;color:var(--ink-1);letter-spacing:.5px;min-width:64px}
+.il-sdim{font-size:10.5px;color:var(--ink-3);letter-spacing:.3px}
+.il-spr{font-size:11px;color:var(--ink-2)}
+.il-spr b{font-family:var(--f-mono);font-weight:700;color:var(--ac,#e87c1a);font-variant-numeric:tabular-nums}
+.il-sn{margin-left:auto;font-size:10.5px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.il-seg .tsv-ledger-grid{margin-top:6px}
+.il-none{font-size:10.5px;color:var(--ink-3);margin-top:4px}
 @media(max-width:720px){
   .tsv{border-radius:11px}
   .tsv-stage{height:70vh}
@@ -1758,8 +1768,8 @@ button.ov-cell:focus-visible{outline:1px solid rgba(252,76,2,.6);outline-offset:
   .tsv-stats,.tsv-live{gap:16px}
   .tsv-stats .nu,.tsv-live .nu{font-size:26px}
   .tsv-ctrl{left:16px;right:16px;justify-content:flex-end}
-  .tsv-ledger{padding:10px 16px 12px}
   .tsv-ledger-grid{grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:3px 12px}
+  .il-group{padding:13px 16px 6px;border-radius:11px}
 }
 @media (prefers-reduced-motion:reduce){
   .tsv-live .dot{animation:none}
@@ -4508,23 +4518,10 @@ function renderSegments(segs) {
     })
   }
 
-  /** 檯上的分段清單：純資訊、不可點（§40 把點開互動全數退役）。
-      代表自己不重複列，只列同組的其他分段（依中位時間由長到短）。 */
-  function tsvSubsHTML(seg) {
-    const g = (SEG_META[seg.id] || {}).group
-    if (!g) return ''
-    const others = (memberIds[g] || []).filter(id => id !== seg.id).map(id => bySeg[id]).filter(Boolean)
-    if (!others.length) return ''
-    const withPr = others.map(s => {
-      const list = (s.efforts || []).slice().sort((a, b) => a.elapsed_sec - b.elapsed_sec)
-      return { s, pr: list[0] || null, n: (s.efforts || []).length }
-    }).sort((a, b) => (b.pr?.elapsed_sec || 0) - (a.pr?.elapsed_sec || 0))
-    return `<div class="tsv-subs">
-      <span class="tsv-subs-lbl">分段 ${others.length}</span>
-      ${withPr.map(({ s, pr, n }) => `<span class="tsv-subrow" title="${(SEG_META[s.id] || {}).nameZh || s.name}">${
-        (SEG_META[s.id] || {}).label || s.name}<b>${pr ? pr.elapsed_str : '—'}</b><em>×${n}</em></span>`).join('')}
-    </div>`
-  }
+  // §42：分段與逐次紀錄整包搬到「挑戰簿」分頁（renderIttLog）——這頁只負責畫坡度路線。
+  // 群組順序 stash 給挑戰簿用，兩頁的編號與主色才會一致。
+  const repOrder = []
+  window.__ittRepOrder = repOrder
 
   const cards = segs.map((seg, idx) => {
     const meta   = SEG_META[seg.id] || {}
@@ -4668,25 +4665,7 @@ function renderSegments(segs) {
     tsvStats.push(['PR', prTimeStr, '', 1])
     if (prWatts) tsvStats.push(['功率', prWatts, 'w'])
 
-    // ── 挑戰簿（§41）：每一次挑戰常駐攤開，取代退役的成績彈窗。
-    //    時間為主、功率為輔，PR 戴皇冠；新 → 舊。細節（心率／來源／同日場次）收在 title。
-    const ledgerRows = (seg.efforts || []).slice()
-      .sort((a, b) => (`${b.date || ''} ${b.start_time || ''}`).localeCompare(`${a.date || ''} ${a.start_time || ''}`))
-    const dayN = {}
-    ledgerRows.forEach(e => { const d = e.date || ''; dayN[d] = (dayN[d] || 0) + 1 })
-    const ledgerHtml = !ledgerRows.length ? '' : `<div class="tsv-ledger">
-      <div class="tsv-ledger-h">挑戰簿<span>ATTEMPT LOG · ${ledgerRows.length}</span><em>👑 PR · 新 → 舊</em></div>
-      <div class="tsv-ledger-grid">${ledgerRows.map(e => {
-        const isPr = pr && sameEffort(e, pr)
-        const d = e.date ? e.date.slice(2).replace(/-/g, '/') : '—'
-        const rep = (dayN[e.date || ''] > 1 && e.start_time) ? ' ' + e.start_time.slice(0, 5) : ''
-        const tip = `${e.date || ''}${e.start_time ? ' ' + e.start_time : ''} · ${e.elapsed_str}` +
-          `${e.avg_watts ? ` · ${e.avg_watts}w` : ''}${e.avg_heartrate ? ` · ❤${e.avg_heartrate}` : ''}` +
-          ` · ${e.source === 'fit' ? '自建計時' : 'Strava'}`
-        return `<span class="tl-cell${isPr ? ' pr' : ''}" title="${tip}"><i>${isPr ? '👑 ' : ''}${d}${rep}</i>` +
-          `<b>${e.elapsed_str}</b><small>${e.avg_watts ? e.avg_watts + 'w' : ''}</small></span>`
-      }).join('')}</div>
-    </div>`
+    repOrder.push({ group: meta.group || String(seg.id), repId: seg.id, idx: numBadge, accent })
 
     return `<section class="tsv" id="tsv-${seg.id}" data-tsv="${seg.id}" data-type="${segFlat ? 'flat' : 'climb'}"
       data-ac="${accent}" data-pr-sec="${pr && pr.elapsed_sec ? Math.round(pr.elapsed_sec) : ''}" style="--ac:${accent}">
@@ -4709,17 +4688,16 @@ function renderSegments(segs) {
             <div class="st"><div class="lb">坡度</div><div class="nu" data-live="grd">—<small>%</small></div></div>
           </div>
           <div class="tsv-sub">${attempts} 次嘗試 · PR ${pr && pr.date ? pr.date : '—'} · ${komGapHtml} · <span style="color:${lastGapColor}">${lastGapLabel} ${lastGapTxt}</span></div>
-          ${tsvSubsHTML(seg)}
         </div>
         ${hasTerr ? `<div class="tsv-ctrl">
           <button type="button" data-act="replay">重播 PR</button>
           <button type="button" data-act="spin"${reduceMotion ? '' : ' class="on"'}>自轉</button>
           <button type="button" data-act="north">回正北</button>
+          <button type="button" data-act="log" onclick="goIttLog('${meta.group || seg.id}')">挑戰簿 ↗</button>
         </div>
         <div class="tsv-prog"></div>` : ''}
       </div>
       </div>
-      ${ledgerHtml}
     </section>`
   }).join('')
 
@@ -4776,6 +4754,96 @@ function selectSegment(id, opts) {
       const top = el.getBoundingClientRect().top
       if (Math.abs(top - 64) > 40) ensure()   // 64 = .tsv 的 scroll-margin-top
       else hit()
+    }, 200)
+  }
+  setTimeout(ensure, 150)
+}
+
+/* ══ §42 挑戰簿分頁 ══════════════════════════════════════════════════
+   ITT 測量檯只負責畫坡度路線；紀錄（全段＋每個分段的時間、次數、每一次挑戰）
+   整包住在這一頁。沿用測量檯的群組順序與主色（window.__ittRepOrder），
+   兩頁編號一致；一樣沒有任何「點開」——全部常駐攤開。 */
+function ittAttemptGridHTML(efforts, pr) {
+  const rows = (efforts || []).slice()
+    .sort((a, b) => (`${b.date || ''} ${b.start_time || ''}`).localeCompare(`${a.date || ''} ${a.start_time || ''}`))
+  if (!rows.length) return '<div class="il-none">尚無成績</div>'
+  const dayN = {}
+  rows.forEach(e => { const d = e.date || ''; dayN[d] = (dayN[d] || 0) + 1 })
+  return `<div class="tsv-ledger-grid">${rows.map(e => {
+    const isPr = pr && sameEffort(e, pr)
+    const d = e.date ? e.date.slice(2).replace(/-/g, '/') : '—'
+    const rep = (dayN[e.date || ''] > 1 && e.start_time) ? ' ' + e.start_time.slice(0, 5) : ''
+    const tip = `${e.date || ''}${e.start_time ? ' ' + e.start_time : ''} · ${e.elapsed_str}` +
+      `${e.avg_watts ? ` · ${e.avg_watts}w` : ''}${e.avg_heartrate ? ` · ❤${e.avg_heartrate}` : ''}` +
+      ` · ${e.source === 'fit' ? '自建計時' : 'Strava'}`
+    return `<span class="tl-cell${isPr ? ' pr' : ''}" title="${tip}"><i>${isPr ? '👑 ' : ''}${d}${rep}</i>` +
+      `<b>${e.elapsed_str}</b><small>${e.avg_watts ? e.avg_watts + 'w' : ''}</small></span>`
+  }).join('')}</div>`
+}
+function renderIttLog(segs) {
+  if (!segs || !segs.length) return '<div class="nil">尚無路段成績。</div>'
+  const SEG_META = window._ittSegMeta || {}
+  const bySeg = Object.fromEntries(segs.map(s => [String(s.id), s]))
+  const order = window.__ittRepOrder || []
+  if (!order.length) return '<div class="nil">尚無路段成績。</div>'
+  return order.map(g => {
+    // 組內排序照 itt-config 的原始順序（全段 → 1/4 → 2/4 …）
+    const members = segs
+      .filter(s => ((SEG_META[s.id] || {}).group || String(s.id)) === g.group)
+      .sort((a, b) => ((SEG_META[a.id] || {})._idx ?? 999) - ((SEG_META[b.id] || {})._idx ?? 999))
+    const rep = bySeg[String(g.repId)] || members[0]
+    if (!rep) return ''
+    const repMeta = SEG_META[rep.id] || {}
+    const total = members.reduce((s, x) => s + (x.efforts || []).length, 0)
+    const repPr = (rep.efforts || []).find(e => e.is_pr) ||
+      (rep.efforts || []).slice().sort((a, b) => a.elapsed_sec - b.elapsed_sec)[0]
+    let kom = ''
+    if (rep.kom_elapsed_sec && repPr) {
+      const gap = Math.round(repPr.elapsed_sec - rep.kom_elapsed_sec)
+      kom = ` · <b>${gap >= 0 ? '+' : '−'}${String(Math.floor(Math.abs(gap) / 60)).padStart(2, '0')}:${String(Math.abs(gap) % 60).padStart(2, '0')}</b> TO KOM`
+    }
+    return `<div class="il-group" id="illog-${g.group}" style="--ac:${g.accent}">
+      <div class="il-ghead">
+        <span class="tsv-idx">${g.idx}</span>
+        <b>${(repMeta.nameZh || rep.name || '').replace(' 全段', '')}</b>
+        <span class="tsv-en">${(repMeta.group || '').toUpperCase().replace(/-/g, ' ')}${repMeta.type ? ' · ' + repMeta.type : ''}</span>
+        <span class="il-gmeta">${members.length} 段 · ${total} 次挑戰${kom}</span>
+      </div>
+      ${members.map(seg => {
+        const m = SEG_META[seg.id] || {}
+        const efforts = seg.efforts || []
+        const pr = efforts.find(e => e.is_pr) || efforts.slice().sort((a, b) => a.elapsed_sec - b.elapsed_sec)[0]
+        const dims = [seg.distance_km != null ? (+seg.distance_km).toFixed(2) + ' km' : '',
+                      m.avgGrade != null ? '均坡 ' + m.avgGrade + '%' : ''].filter(Boolean).join(' · ')
+        return `<div class="il-seg">
+          <div class="il-shead">
+            <b class="il-sname">${m.label || m.nameZh || seg.name}</b>
+            ${dims ? `<span class="il-sdim">${dims}</span>` : ''}
+            ${pr ? `<span class="il-spr">PR <b>${pr.elapsed_str}</b>${pr.avg_watts ? ` @${pr.avg_watts}w` : ''}</span>` : ''}
+            <span class="il-sn">${efforts.length} 次</span>
+          </div>
+          ${ittAttemptGridHTML(efforts, pr)}
+        </div>`
+      }).join('')}
+    </div>`
+  }).join('')
+}
+/* 測量檯 → 挑戰簿的直達鍵：切頁後捲到該組（跟深連結一樣用自癒重試避開轉場） */
+function goIttLog(groupKey) {
+  setView('ittlog', { push: true })
+  const h = '#ittlog/group/' + encodeURIComponent(groupKey)
+  if (location.hash !== h) history.replaceState({ view: 'ittlog', group: groupKey }, '', h)
+  ittLogScrollTo(groupKey)
+}
+function ittLogScrollTo(groupKey) {
+  const el = document.getElementById('illog-' + groupKey)
+  if (!el) return
+  let tries = 0
+  const ensure = () => {
+    el.scrollIntoView({ behavior: 'auto', block: 'start' })
+    if (++tries >= 8) return
+    setTimeout(() => {
+      if (Math.abs(el.getBoundingClientRect().top - 64) > 40) ensure()
     }, 200)
   }
   setTimeout(ensure, 150)
@@ -6652,6 +6720,13 @@ function render(data) {
 
     <section class="view" data-view="itt">
       ${(sHtml => viewH('ITT 區間', 'Individual time trial', window.__ittCount || '歷來最佳') + (sHtml || '<div class="nil">尚無路段成績。</div>'))(renderSegments(data.segments))}
+    </section>
+
+    <section class="view" data-view="ittlog">
+      ${viewH('挑戰簿', 'Attempt log', `${(data.segments || []).reduce((s, x) => s + (x.efforts || []).length, 0)} 次挑戰`)}
+      <p class="view-sub">ITT 頁畫坡度路線，這一頁是<b>帳本</b>：全段與每個分段的最佳時間、次數，
+        以及每一次挑戰的完整紀錄（新 → 舊，👑 = PR；心率與計時來源收在滑鼠提示）。</p>
+      ${renderIttLog(data.segments)}
     </section>
 
     <section class="view" data-view="playbook">
@@ -9246,6 +9321,8 @@ const VIEWS = [
   { id: 'plan',     zh: '計畫',     en: 'Plan'     },
   { id: 'log',      zh: '活動紀錄', en: 'Log',     tab: '紀錄' },
   { id: 'itt',      zh: 'ITT',      en: 'ITT'      },
+  // ITT 畫坡度路線（測量檯），挑戰簿放紀錄（全段＋分段的逐次成績）。畫面與帳本分開。
+  { id: 'ittlog',   zh: '挑戰簿',   en: 'Logbook'  },
   // ITT 講「我騎多快」，攻略講「要更快該改什麼」。兩件事，混在一頁會互相稀釋。
   { id: 'playbook', zh: '攻略',     en: 'Playbook' },
   { id: 'atlas',    zh: '地圖',     en: 'Atlas'    },
@@ -9303,9 +9380,11 @@ function updateNavBadges(data) {
     .reduce((n, k) => n + (data[k] || []).filter(a => (a.date || '') >= monday).length, 0)
   set('log', wk ? `本週 ${wk}` : '本週 0')
 
-  // ITT：目前追蹤幾條分段
+  // ITT：目前追蹤幾條分段；挑戰簿：總挑戰次數
   const nSeg = (data.segments || []).length
   if (nSeg) set('itt', `${nSeg} 段`)
+  const nEff = (data.segments || []).reduce((s, x) => s + (x.efforts || []).length, 0)
+  if (nEff) set('ittlog', `${nEff} 次`)
 
   // 趨勢：體能（CTL）—— 趨勢章看的就是這條線的長期走向
   const w = window._wellness
@@ -10281,6 +10360,7 @@ function routeFromHash() {
   if (!kind || !id) return
   const key = decodeURIComponent(id)
   if (v === 'itt'  && kind === 'segment')  selectSegment(key, { silent: true, reveal: true })
+  if (v === 'ittlog' && kind === 'group')  ittLogScrollTo(key)
   if (v === 'log'  && kind === 'activity') focusActivity(key)
   if (v === 'plan' && kind === 'session')  openSessionDrawer(key)
   if (v === 'harvest' && kind === 'month')  openHarvestMonth(key)
