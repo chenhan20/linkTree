@@ -94,9 +94,10 @@
   "presets": [
     {
       "id": "company-c1",
-      "name": "公司 C1 菜單",
-      "sub": "教練系統的入門循環 · 6 動作 × 4 組",
-      "note": "公司教練的原版：六個動作連做完算一組，動作間休 30 秒，一組做完大休 2 分，共 4 組。最後三個伸展。",
+      "name": "入門循環 C1",
+      "sub": "最基本的一張：爬、蹲、撐、拉、推、跳各一個。",
+      "note": "六個動作連做完算一組，動作間休 30 秒，一組做完大休 2 分，共 4 組。最後三個伸展。",
+      "noteMe": "公司教練給的原版菜單，一個字都沒改。",
       "moves": [
         "loco-crawl",
         "sq-bw",
@@ -112,13 +113,16 @@
       ],
       "sets": 4,
       "restMove": 30,
-      "restSet": 120
+      "restSet": 120,
+      "category": "full",
+      "tags": [],
+      "featured": true
     },
     {
       "id": "company-c1-quiet",
-      "name": "公司 C1 菜單（安靜版）",
-      "sub": "同上但不跳不跺 · 樓下有人用這個",
-      "note": "把開合跳換成無跳版。其餘與公司 C1 菜單相同。",
+      "name": "入門循環 C1（安靜版）",
+      "sub": "樓下有人的時候用這張，不跳不跺地。",
+      "note": "把開合跳換成無跳版，其餘與入門循環 C1 相同。樓下有人、或晚上做的時候用這張。",
       "moves": [
         "loco-crawl",
         "sq-bw",
@@ -134,13 +138,18 @@
       ],
       "sets": 4,
       "restMove": 30,
-      "restSet": 120
+      "restSet": 120,
+      "category": "full",
+      "tags": [
+        "quiet"
+      ],
+      "featured": false
     },
     {
       "id": "c2-full",
       "name": "C2 全身",
-      "sub": "推拉蹲髖核心各一 · 5 動作 × 3 組",
-      "note": "六大動作模式各取一個的平衡循環。比 C1 難一階。",
+      "sub": "推、拉、蹲、髖、核心各一個，比 C1 難一階。",
+      "note": "五個動作模式各取一個的平衡循環：推、拉、蹲、髖鉸鏈、核心。比 C1 難一階。",
       "moves": [
         "push-pike",
         "pull-table-row",
@@ -155,13 +164,17 @@
       ],
       "sets": 3,
       "restMove": 30,
-      "restSet": 90
+      "restSet": 90,
+      "category": "full",
+      "tags": [],
+      "featured": false
     },
     {
       "id": "test-week",
       "name": "測驗週（等長）",
-      "sub": "下肢全等長 · 離心損傷最低",
-      "note": "⚠️ 9/15 中社、9/22 風櫃嘴之前用這個。下肢只用等長動作：拿得到力量刺激但幾乎不產生延遲性痠痛，不會汙染測驗。",
+      "sub": "測驗或高強度課表前三天用，下肢只做等長。",
+      "note": "**重要測驗或高強度課表前 48～72 小時**用這張。下肢只用等長動作：拿得到力量刺激但幾乎不產生延遲性痠痛，不會汙染測驗。",
+      "noteMe": "對應爬坡測驗與週二門檻課的前置窗口。",
       "moves": [
         "sq-split-iso",
         "sq-lateral-iso",
@@ -176,12 +189,17 @@
       ],
       "sets": 2,
       "restMove": 25,
-      "restSet": 75
+      "restSet": 75,
+      "category": "full",
+      "tags": [
+        "low-doms"
+      ],
+      "featured": false
     },
     {
       "id": "mobility",
       "name": "活動度／恢復",
-      "sub": "不累人 · 騎完或隔天做",
+      "sub": "沒有肌力刺激，騎完或隔天想動一動時做。",
       "note": "沒有肌力刺激，純活動度。DOMS 成本接近 0，任何日子都能做。",
       "moves": [
         "warm-9090",
@@ -198,13 +216,20 @@
       ],
       "sets": 2,
       "restMove": 20,
-      "restSet": 60
+      "restSet": 60,
+      "category": "prepost",
+      "tags": [
+        "low-doms",
+        "quiet"
+      ],
+      "featured": false
     },
     {
       "id": "lateral-coord",
       "name": "側邊與協調",
-      "sub": "單車練不到的那個面 · 6 動作 × 3 組",
-      "note": "單車幾乎全在矢狀面(前後),這一堂全部是**額狀面與旋轉**:臀中肌、內收肌、對側協調。DOMS 成本中等,不會汙染週二。",
+      "sub": "補單車練不到的額狀面與旋轉：臀中肌、內收肌、對側協調。",
+      "note": "單車幾乎全在矢狀面（前後），這一堂全部是**額狀面與旋轉**：臀中肌、內收肌、對側協調。DOMS 成本中等。",
+      "noteMe": "DOMS 曲線不會汙染週二早上的門檻課。",
       "moves": [
         "lat-clam",
         "lat-hipdip",
@@ -220,12 +245,15 @@
       ],
       "sets": 3,
       "restMove": 30,
-      "restSet": 90
+      "restSet": 90,
+      "category": "targeted",
+      "tags": [],
+      "featured": false
     },
     {
       "id": "basketball-prime",
       "name": "籃球前啟動",
-      "sub": "週二晚上打球前 · 不累人",
+      "sub": "打球前把腳踝、臀中肌與變向腳步叫醒，不製造疲勞。",
       "note": "打球前做,約 12 分鐘。把腳踝、臀中肌、變向腳步先叫醒,**不製造疲勞**(全部 DOMS ≤2)。不是訓練,是啟動。",
       "moves": [
         "co-toetap",
@@ -240,13 +268,19 @@
       ],
       "sets": 2,
       "restMove": 20,
-      "restSet": 45
+      "restSet": 45,
+      "category": "prepost",
+      "tags": [
+        "low-doms"
+      ],
+      "featured": false
     },
     {
       "id": "c3-athletic",
       "name": "C3 運動能力",
-      "sub": "協調＋側向＋單腳 · 進階",
-      "note": "⚠️ 含跳躍與 Copenhagen,**離心損傷偏高**。測驗週與週二門檻課前 48 小時不要做。",
+      "sub": "協調、側向與單腳的進階循環，離心損傷偏高。",
+      "note": "⚠️ 含跳躍與 Copenhagen，**離心損傷偏高**。重要測驗或高強度課表前 48 小時不要做。",
+      "noteMe": "測驗週與週二門檻課前 48 小時不要排。",
       "moves": [
         "co-tgu",
         "lat-skater",
@@ -262,12 +296,17 @@
       ],
       "sets": 3,
       "restMove": 35,
-      "restSet": 100
+      "restSet": 100,
+      "category": "full",
+      "tags": [
+        "high-doms"
+      ],
+      "featured": false
     },
     {
       "id": "cooldown-ride",
       "name": "騎車收操",
-      "sub": "騎完 30 分鐘內做 · 只有伸展",
+      "sub": "騎完 30 分鐘內拉開趴姿騎車縮最緊的六個地方。",
       "note": "沒有動作只有收操，約 5 分鐘：髖屈肌、股四頭、腿後、臀深層、小腿、開胸——趴姿騎車縮最緊的六個地方。",
       "moves": [],
       "stretches": [
@@ -280,12 +319,18 @@
       ],
       "sets": 1,
       "restMove": 0,
-      "restSet": 0
+      "restSet": 0,
+      "category": "prepost",
+      "tags": [
+        "low-doms",
+        "quiet"
+      ],
+      "featured": true
     },
     {
       "id": "cooldown-ball",
       "name": "籃球收操",
-      "sub": "週二打完球 · 只有伸展",
+      "sub": "打完球拉開變向與跳躍用最兇的地方。",
       "note": "沒有動作只有收操，約 5 分鐘：變向與跳躍用最兇的地方——小腿、股四頭、腿後、臀深層、90/90、最偉大伸展收尾。",
       "moves": [],
       "stretches": [
@@ -298,7 +343,415 @@
       ],
       "sets": 1,
       "restMove": 0,
-      "restSet": 0
+      "restSet": 0,
+      "category": "prepost",
+      "tags": [
+        "low-doms",
+        "quiet"
+      ],
+      "featured": false
+    },
+    {
+      "id": "quick-full",
+      "name": "10 分鐘全身",
+      "sub": "很忙也做得完的一張，推、蹲、拉、核心、心肺各一個。",
+      "note": "目前最短的正式訓練。五個動作繞兩圈，動作間只休 15 秒 —— 強度靠**密度**不靠難度。不跳不跺地，晚上也能做。真的沒時間就把組數改成 1。",
+      "moves": [
+        "push-incline",
+        "sq-bw",
+        "pull-snowangel",
+        "core-deadbug",
+        "loco-stepjack"
+      ],
+      "stretches": [
+        "st-greatest",
+        "st-chest"
+      ],
+      "sets": 2,
+      "restMove": 15,
+      "restSet": 30,
+      "category": "full",
+      "tags": [
+        "quiet"
+      ],
+      "featured": true
+    },
+    {
+      "id": "upper-core",
+      "name": "上肢＋核心",
+      "sub": "隔天要練腿或測驗，腿要留著的時候練這張。",
+      "note": "**完全不碰下肢**：垂直推、三頭、後三角、下斜方與抗旋轉核心 —— 臥推划船涵蓋不到的地方。安靜、免器材。",
+      "noteMe": "對應週三健身房（背＋胸）與單車涵蓋不到的部位；測驗週減量版就是這一段。",
+      "moves": [
+        "push-pike",
+        "push-diamond",
+        "pull-snowangel",
+        "pull-w",
+        "core-deadbug",
+        "core-sideplank"
+      ],
+      "stretches": [
+        "st-openbook",
+        "st-chest",
+        "st-wrist"
+      ],
+      "sets": 3,
+      "restMove": 20,
+      "restSet": 60,
+      "category": "targeted",
+      "tags": [
+        "no-legs",
+        "quiet"
+      ],
+      "featured": true
+    },
+    {
+      "id": "home-dumbbell-b1",
+      "name": "家用啞鈴 B1",
+      "sub": "家裡有啞鈴時的全身一堂，推拉蹲髖核心各一個。",
+      "note": "唯一一張用重量的預設。**一對啞鈴就夠**，酒杯深蹲與硬舉可以換壺鈴。重量挑「最後兩下還維持得住姿勢」的那個，不是最重的那個。",
+      "moves": [
+        "push-db-press",
+        "pull-db-row",
+        "sq-goblet",
+        "hinge-kb-dl",
+        "core-halo-kb"
+      ],
+      "stretches": [
+        "st-greatest",
+        "st-chest",
+        "st-hipflexor"
+      ],
+      "sets": 3,
+      "restMove": 30,
+      "restSet": 90,
+      "category": "weights",
+      "tags": [],
+      "featured": true
+    },
+    {
+      "id": "ride-primer",
+      "name": "騎車前啟動",
+      "sub": "上車前十分鐘叫醒髖、踝、臀與單腳穩定，不製造疲勞。",
+      "note": "跟籃球前啟動同一個用途，換成單車要用的東西：髖旋轉、踝背屈、臀橋、脛前、單腳站。**不放靜態伸展** —— 上車前拉長靜態伸展會先把出力壓下去。全部 DOMS ≤1。",
+      "moves": [
+        "warm-9090",
+        "warm-ankle",
+        "warm-bridge",
+        "warm-birddog",
+        "calf-tib",
+        "co-sl-stand"
+      ],
+      "stretches": [],
+      "sets": 2,
+      "restMove": 10,
+      "restSet": 20,
+      "category": "prepost",
+      "tags": [
+        "low-doms",
+        "quiet"
+      ],
+      "featured": true
+    },
+    {
+      "id": "posterior-hip",
+      "name": "後鏈＋髖穩定",
+      "sub": "專練單車刺激不到的腿後側、臀中肌與髖穩定。",
+      "note": "久坐與久騎最不練的那一面：腿後側、臀中肌、髖穩定與側向核心 —— 也正好是球類拉傷前三名。免器材、安靜，負荷中等。",
+      "noteMe": "不要排在週二門檻課前一天。",
+      "moves": [
+        "hinge-wall",
+        "hinge-bridge-1",
+        "hinge-longlever",
+        "hinge-sl-rdl",
+        "lat-clam",
+        "core-sideplank"
+      ],
+      "stretches": [
+        "st-9090",
+        "st-pigeon",
+        "st-ham"
+      ],
+      "sets": 2,
+      "restMove": 25,
+      "restSet": 60,
+      "category": "targeted",
+      "tags": [
+        "quiet"
+      ],
+      "featured": false
+    },
+    {
+      "id": "ankle-knee",
+      "name": "足踝＋膝蓋保養",
+      "sub": "小腿、脛前與單腳穩定的保養課，籃球與單車都適用。",
+      "note": "不是啟動也不是主課，是**保養**：提踵、屈膝提踵、脛前、單腳站與靠牆等長。阿基里斯與膝前痛最常缺的就是這幾個。DOMS 低，任何一天都能加。",
+      "moves": [
+        "warm-ankle",
+        "calf-raise",
+        "calf-soleus",
+        "calf-tib",
+        "co-sl-stand",
+        "sq-wall-sit"
+      ],
+      "stretches": [
+        "st-calf",
+        "st-quad",
+        "st-ham"
+      ],
+      "sets": 2,
+      "restMove": 20,
+      "restSet": 45,
+      "category": "targeted",
+      "tags": [
+        "low-doms",
+        "quiet"
+      ],
+      "featured": false
+    },
+    {
+      "id": "weekend-home-46",
+      "name": "居家完整課（分段）",
+      "sub": "四段各有自己的輪數：熱身、下肢、肩臂、核心。",
+      "note": "**分段課表**：熱身 1 輪／下肢 2 輪／肩臂 3 輪／核心 2 輪，不是一個大循環。瑜伽墊、不跳不跺地。**下肢一律等長**：拿得到刺激但幾乎不留延遲性痠痛。太累就改用「上肢核心（減量）」把下肢整段拿掉。",
+      "noteMe": "訓練計畫裡的週末居家徒手 46 分。當天 DOMS am ≥45 或 HRV 連兩天偏低 → 下肢整段砍掉。週二早上不會收帳。**一定要戴錶錄成肌力訓練**。",
+      "blocks": [
+        {
+          "name": "熱身",
+          "warm": true,
+          "sets": 1,
+          "restMove": 10,
+          "restSet": 0,
+          "moves": [
+            {
+              "id": "warm-9090",
+              "amt": 30
+            },
+            {
+              "id": "warm-ankle",
+              "amt": 30
+            },
+            {
+              "id": "warm-bridge",
+              "amt": 45
+            },
+            {
+              "id": "warm-birddog",
+              "amt": 30
+            },
+            {
+              "id": "warm-scap",
+              "amt": 40
+            },
+            {
+              "id": "warm-armcircle",
+              "amt": 25
+            }
+          ]
+        },
+        {
+          "name": "下肢",
+          "sets": 2,
+          "restMove": 30,
+          "restSet": 75,
+          "moves": [
+            {
+              "id": "sq-split-iso",
+              "amt": 30
+            },
+            {
+              "id": "sq-lateral-iso",
+              "amt": 22
+            },
+            {
+              "id": "hinge-bridge-1",
+              "amt": 35
+            },
+            {
+              "id": "hinge-longlever",
+              "amt": 25
+            },
+            {
+              "id": "calf-sl",
+              "amt": 30
+            }
+          ]
+        },
+        {
+          "name": "肩臂",
+          "sets": 3,
+          "restMove": 30,
+          "restSet": 60,
+          "moves": [
+            {
+              "id": "push-pike",
+              "amt": 25
+            },
+            {
+              "id": "push-diamond",
+              "amt": 30
+            },
+            {
+              "id": "pull-snowangel",
+              "amt": 30
+            },
+            {
+              "id": "pull-w",
+              "amt": 35
+            }
+          ]
+        },
+        {
+          "name": "核心",
+          "sets": 2,
+          "restMove": 20,
+          "restSet": 45,
+          "moves": [
+            {
+              "id": "core-deadbug",
+              "amt": 25
+            },
+            {
+              "id": "core-sideplank",
+              "amt": 30
+            },
+            {
+              "id": "core-plank-tap",
+              "amt": 25
+            },
+            {
+              "id": "core-hollow",
+              "amt": 25
+            }
+          ]
+        }
+      ],
+      "stretches": [
+        {
+          "id": "st-hipflexor",
+          "amt": 30
+        },
+        {
+          "id": "st-9090",
+          "amt": 30
+        }
+      ],
+      "restBlock": 30,
+      "shift": 8,
+      "category": "full",
+      "tags": [
+        "quiet",
+        "low-doms"
+      ],
+      "featured": false
+    },
+    {
+      "id": "test-week-25",
+      "name": "上肢核心（減量）",
+      "sub": "同一堂課拿掉下肢那一段，測驗前三天用。",
+      "note": "就是**居家完整課刪掉「下肢」整段**：熱身、肩臂、核心、收操照舊。重要測驗前不放任何腿部變因進去。",
+      "noteMe": "訓練計畫寫「25 分」是拿 46 減 16 的粗估；照動作秒數實算是 31 分左右，以畫面上的時間為準。",
+      "blocks": [
+        {
+          "name": "熱身",
+          "warm": true,
+          "sets": 1,
+          "restMove": 10,
+          "restSet": 0,
+          "moves": [
+            {
+              "id": "warm-9090",
+              "amt": 30
+            },
+            {
+              "id": "warm-ankle",
+              "amt": 30
+            },
+            {
+              "id": "warm-bridge",
+              "amt": 45
+            },
+            {
+              "id": "warm-birddog",
+              "amt": 30
+            },
+            {
+              "id": "warm-scap",
+              "amt": 40
+            },
+            {
+              "id": "warm-armcircle",
+              "amt": 25
+            }
+          ]
+        },
+        {
+          "name": "肩臂",
+          "sets": 3,
+          "restMove": 30,
+          "restSet": 60,
+          "moves": [
+            {
+              "id": "push-pike",
+              "amt": 25
+            },
+            {
+              "id": "push-diamond",
+              "amt": 30
+            },
+            {
+              "id": "pull-snowangel",
+              "amt": 30
+            },
+            {
+              "id": "pull-w",
+              "amt": 35
+            }
+          ]
+        },
+        {
+          "name": "核心",
+          "sets": 2,
+          "restMove": 20,
+          "restSet": 45,
+          "moves": [
+            {
+              "id": "core-deadbug",
+              "amt": 25
+            },
+            {
+              "id": "core-sideplank",
+              "amt": 30
+            },
+            {
+              "id": "core-plank-tap",
+              "amt": 25
+            },
+            {
+              "id": "core-hollow",
+              "amt": 25
+            }
+          ]
+        }
+      ],
+      "stretches": [
+        {
+          "id": "st-hipflexor",
+          "amt": 30
+        },
+        {
+          "id": "st-9090",
+          "amt": 30
+        }
+      ],
+      "restBlock": 30,
+      "shift": 8,
+      "category": "targeted",
+      "tags": [
+        "no-legs",
+        "quiet"
+      ],
+      "featured": false
     }
   ],
   "moves": [
@@ -1167,7 +1620,8 @@
       "gear": [],
       "doms": 5,
       "note": "",
-      "hint": "約 8 下／側"
+      "hint": "約 8 下／側",
+      "noisy": true
     },
     {
       "id": "sq-pistol",
@@ -1685,7 +2139,8 @@
       "gear": [],
       "doms": 4,
       "note": "會吵。這是最接近籃球變向的徒手動作",
-      "hint": ""
+      "hint": "",
+      "noisy": true
     },
     {
       "id": "lat-mtn-side",
@@ -1706,7 +2161,8 @@
       "gear": [],
       "doms": 2,
       "note": "",
-      "hint": ""
+      "hint": "",
+      "noisy": true
     },
     {
       "id": "lat-cph-full",
@@ -2345,7 +2801,8 @@
       "gear": [],
       "doms": 2,
       "note": "跳躍會吵，樓下有人就換無跳版",
-      "hint": ""
+      "hint": "",
+      "noisy": true
     },
     {
       "id": "loco-stepjack",
@@ -2387,7 +2844,8 @@
       "gear": [],
       "doms": 2,
       "note": "",
-      "hint": ""
+      "hint": "",
+      "noisy": true
     },
     {
       "id": "loco-shadowbox",
@@ -2429,7 +2887,8 @@
       "gear": [],
       "doms": 2,
       "note": "",
-      "hint": ""
+      "hint": "",
+      "noisy": true
     },
     {
       "id": "loco-duck",
@@ -2471,7 +2930,8 @@
       "gear": [],
       "doms": 3,
       "note": "",
-      "hint": "約 10 下"
+      "hint": "約 10 下",
+      "noisy": true
     },
     {
       "id": "calf-raise",
@@ -2755,7 +3215,7 @@
       "unit": "time",
       "default": 30,
       "kw": "doorway chest stretch",
-      "cue": "手肘與肩同高，身體往前。週三練完胸特別需要",
+      "cue": "手肘與肩同高，身體往前。練完胸或久坐一整天之後特別需要",
       "steps": [
         "站門框中間，手肘與肩同高貼框",
         "身體往前跨半步",
@@ -2852,5 +3312,9 @@
       "hint": ""
     }
   ],
-  "_why_time": "全部動作一律用秒數,不用次數。使用者把筆電當電視擺著看 —— 次數要自己按「完成」才會前進,等於每個動作結束都要走過去碰電腦。改成純計時後整堂完全不用碰。hint 是照秒數回推的次數參考,只顯示不控制。"
+  "_why_time": "全部動作一律用秒數,不用次數。使用者把筆電當電視擺著看 —— 次數要自己按「完成」才會前進,等於每個動作結束都要走過去碰電腦。改成純計時後整堂完全不用碰。hint 是照秒數回推的次數參考,只顯示不控制。",
+  "_presetMeta": "category＝主要分組(full 全身／prepost 運動前後／targeted 局部強化／weights 重量),單值。tags＝限制標籤(quiet 安靜／no-legs 不練腿／low-doms 低 DOMS／high-doms 離心高),卡片最多顯示 2 個。featured＝現成菜單的預設首屏,維持 6 張。時間、器材、最高難度一律由 moves 推導,不手寫。",
+  "_noisy": "noisy=true 的動作會跳或跺地,挑選器的「安靜」限制會把它們濾掉。",
+  "_blocks": "preset 可以用 blocks[] 取代 moves/sets/restMove/restSet:每一段有自己的輪數與休息。沒有 blocks 的舊 preset 會被當成單一段,10 張舊菜單不必改寫。blocks[].warm=true 的段可以單獨跑（只做熱身）。restBlock＝段與段之間的轉場,shift＝伸展之間的換動作秒數。",
+  "_me": "noteMe＝只跟我自己的訓練週期有關的排課備註（週幾、測驗、戴錶、DOMS 門檻）。circuit.html 預設不顯示,只有在網址帶 ?me=1（會記在 localStorage）時才會出現 —— 其他人看到的是一般的循環訓練工具。菜單結構與參數不受影響,所以「我做了哪一張」照樣能拿去問 AI。"
 }
