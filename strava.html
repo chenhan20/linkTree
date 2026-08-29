@@ -293,36 +293,54 @@ html,body{height:100%;font-family:var(--f-ui);background:#0a0408;color:#ddd}
 .pcv-note{margin:9px 0 0;font-size:11px;line-height:1.7;color:var(--ink-3)}
 @media(max-width:600px){ .pcv-plot{height:196px} .pcv{padding-left:30px} }
 
-/* ══ 時段鐘 · TRAINING CLOCK ══════════════════════════════════════════
-   一天 24 小時繞成一圈，兩條環比較兩段時期。這是全站唯一一張不用
-   preserveAspectRatio="none" 的圖 —— 那個拉伸在直角座標上只是把線壓扁，
-   在極座標上會把圓變成橢圓、把「幾點」這件事整個算錯。所以它是等比縮放的
-   方形，文字也就可以留在 SVG 裡（其它圖的文字被趕出去正是因為那個拉伸）。 */
-.clk{display:flex;gap:22px;align-items:center;flex-wrap:wrap;margin-top:6px}
-.clk-svg{flex:1 1 300px;max-width:420px;min-width:260px;height:auto;display:block;margin-inline:auto}
-.clk-svg .k-ring{fill:none;stroke:var(--hair);stroke-width:1}
-.clk-svg .k-spoke{stroke:var(--hair);stroke-width:1}
-.clk-svg .k-hr{fill:var(--ink-3);font-size:11px;letter-spacing:.5px;font-family:var(--f-num);font-weight:800}
-.clk-svg .k-cap{fill:var(--ink-3);font-size:9.5px;letter-spacing:1.6px}
-.clk-svg .k-mid{fill:var(--ink-1);font-size:27px;font-family:var(--f-num);font-weight:800}
-.clk-svg .k-mid2{fill:var(--ink-3);font-size:9.5px;letter-spacing:1.4px}
-.clk-svg .w-ride{fill:#FC4C02}
-.clk-svg .w-cross{fill:#3FA9F5}
-.clk-svg .a-dim{opacity:.56}
-.clk-svg .k-hit{fill:transparent;cursor:pointer}
-.clk-svg .k-hit:hover ~ .k-ring{stroke:var(--hair-2)}
-.clk-side{flex:1 1 210px;min-width:200px}
-.clk-read{min-height:52px;font-size:11.5px;line-height:1.7;color:var(--ink-2)}
+/* ══ 時段條 · TRAINING CLOCK ═════════════════════════════════════════
+   本來畫成極座標的鐘。看起來很酷，但要回答「幾點練得最多」得繞著圓讀刻度，
+   而且兩條同心環的長度沒辦法並排比 —— 實測給人看，看不懂。
+
+   改成兩排對齊的 24 小時長條之後，同一個小時上下一比就有答案，
+   而且這張圖最重要的發現（白天整段消失）在長條上是一個「洞」，
+   在圓上只是某一段比較短。同樣的資料，換一個座標系就從裝飾變成資訊。 */
+.dstrip{margin-top:8px}
+.dstrip-r{display:grid;grid-template-columns:88px minmax(0,1fr);gap:0 10px;align-items:end;margin-bottom:10px}
+.dstrip-k{padding-bottom:2px;font-size:11px;line-height:1.4;color:var(--ink-2);text-align:right;white-space:nowrap}
+.dstrip-k em{display:block;font-style:normal;font-size:9px;letter-spacing:.6px;color:var(--ink-3)}
+.dstrip-b{position:relative;display:flex;gap:2px;height:74px;align-items:flex-end}
+/* 09–17 這段在後段整個歸零，給它一塊底才看得出「這裡本來有東西」 */
+.dstrip-b::before{
+  content:'';position:absolute;top:-3px;bottom:-3px;left:calc(9/24*100%);width:calc(9/24*100%);
+  background:rgba(255,255,255,.035);border-left:1px solid var(--hair);border-right:1px solid var(--hair);
+  pointer-events:none
+}
+.dstrip-c{flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:100%;
+  min-width:0;cursor:pointer;position:relative}
+.dstrip-c b{display:block;min-height:0}
+.dstrip-c b.r{background:#FC4C02;border-radius:2px 2px 0 0}
+.dstrip-c b.c{background:#3FA9F5}
+.dstrip-c b.c:first-child{border-radius:2px 2px 0 0}
+.dstrip-c::after{content:'';position:absolute;inset:-3px 0;border-radius:3px}
+.dstrip-c:hover::after,.dstrip-c:focus-visible::after{background:rgba(255,255,255,.07)}
+.dstrip-c:focus-visible{outline:none}
+.dstrip-z{height:2px;background:rgba(255,255,255,.10);border-radius:1px}
+.dstrip-ax{display:grid;grid-template-columns:88px minmax(0,1fr);gap:0 10px;margin-top:1px}
+.dstrip-ax div{position:relative;height:14px}
+/* 選擇器一定要限定在 div 裡：不限定的話左欄那個佔位 span 也會被絕對定位，
+   grid 的第一欄整個塌掉，24 小時的刻度會全部擠進 88px 裡（實際踩過） */
+.dstrip-ax div span{position:absolute;transform:translateX(-50%);font-size:9px;color:var(--ink-3);
+  font-variant-numeric:tabular-nums}
+.clk-read{min-height:46px;margin-top:12px;padding-top:10px;border-top:1px solid var(--hair);
+  font-size:11.5px;line-height:1.7;color:var(--ink-2)}
 .clk-read b{font-family:var(--f-num);font-weight:800;font-size:17px;color:var(--ink-1);
   font-variant-numeric:tabular-nums}
 .clk-read em{font-style:normal;color:var(--ink-3)}
-.clk-leg{display:flex;flex-direction:column;gap:5px;margin-top:12px;padding-top:10px;
-  border-top:1px solid var(--hair);font-size:10.5px;color:var(--ink-3)}
-.clk-leg span{display:flex;align-items:center;gap:7px}
+.clk-leg{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:10px;font-size:10.5px;color:var(--ink-3)}
+.clk-leg span{display:flex;align-items:center;gap:6px}
 .clk-leg i{width:13px;height:7px;border-radius:2px;flex-shrink:0}
-.clk-leg u{text-decoration:none;color:var(--ink-2)}
-.clk-note{margin:12px 0 0;font-size:11px;line-height:1.7;color:var(--ink-3)}
-@media(max-width:600px){ .clk{gap:14px} .clk-svg{max-width:none} }
+.clk-note{margin:11px 0 0;font-size:11px;line-height:1.7;color:var(--ink-3)}
+@media(max-width:600px){
+  .dstrip-r,.dstrip-ax{grid-template-columns:64px minmax(0,1fr);gap:0 7px}
+  .dstrip-b{height:62px;gap:1px}
+  .dstrip-k{font-size:10px}
+}
 
 /* ══ 雷達 · 環形 · 賽跑線 ══════════════════════════════════════════════
    這四張圖跟時段鐘同一個理由用等比縮放的方形 SVG：極座標一旦被
@@ -377,14 +395,29 @@ html,body{height:100%;font-family:var(--f-ui);background:#0a0408;color:#ddd}
   background:rgba(10,4,8,.8);font-variant-numeric:tabular-nums}
 .race-ax{position:relative;height:14px;margin-top:4px}
 .race-ax span{position:absolute;transform:translateX(-50%);font-size:9px;color:var(--ink-3)}
-/* 逐月差：累積線說「領先」，這一條說「最近三個月其實在落後」。兩件事都要看得到 */
-.race-bars{display:flex;gap:3px;align-items:flex-end;height:46px;margin-top:14px}
-.race-b{flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:100%;position:relative}
-.race-b i{display:block;border-radius:2px 2px 0 0}
-.race-b.dn i{border-radius:0 0 2px 2px}
+/* 逐月差：累積線說「領先」，這一條說「最近三個月其實在落後」。兩件事都要看得到。
+   有正有負的量一定要有零線 —— 全部往上長、只靠顏色分正負，讀起來會變成
+   「四個月都有東西」而不是「兩個月多、三個月少」。 */
+.race-bars{display:flex;gap:3px;height:60px;margin-top:14px;position:relative}
+.race-bars::before{content:'';position:absolute;left:0;right:0;top:50%;height:1px;
+  background:rgba(255,255,255,.14);pointer-events:none}
+.race-b{flex:1;display:flex;flex-direction:column;height:100%}
+.race-b u{flex:1;display:flex;align-items:flex-end;text-decoration:none}
+.race-b s{flex:1;display:flex;align-items:flex-start;text-decoration:none}
+.race-b i{display:block;width:100%}
+.race-b u i{border-radius:2px 2px 0 0}
+.race-b s i{border-radius:0 0 2px 2px}
 .race-bx{display:flex;gap:3px;margin-top:3px}
 .race-bx span{flex:1;text-align:center;font-size:8.5px;color:var(--ink-3)}
-.race-note{margin:11px 0 0;font-size:11px;line-height:1.7;color:var(--ink-3)}
+.race-head{margin:13px 0 0;padding-top:10px;border-top:1px solid var(--hair);
+  font-size:12px;color:var(--ink-2)}
+.race-head b{font-family:var(--f-num);font-weight:800;font-size:19px;color:#5FD060;
+  font-variant-numeric:tabular-nums;margin-left:4px}
+.race-head b.dn{color:#FFB020}
+/* 落後時把兩線之間那塊填色改成警示琥珀 —— 橘色在這一頁是「訊號／正面」，
+   用它畫「你落後了」會讀成好消息 */
+.race-svg .z-gapf.is-behind{fill:rgba(255,176,32,.10)}
+.race-note{margin:9px 0 0;font-size:11px;line-height:1.7;color:var(--ink-3)}
 @media(max-width:600px){ .race-plot{height:152px} .race{padding-left:32px} }
 
 
@@ -454,6 +487,10 @@ html,body{height:100%;font-family:var(--f-ui);background:#0a0408;color:#ddd}
 .wl-chart .wl-gap{fill:rgba(255,255,255,.05)}
 .wl-chart .wl-raw{stroke:rgba(255,176,32,.34);stroke-width:1.2}
 .wl-chart .wl-avg{stroke:#ffb020;stroke-width:1.9}
+/* 掃描光：跟 .rdy-scan 同一個做法 —— 複製 .wl-avg 那條 d，疊一小段亮的沿著它跑一次。
+   只跑一趟不 loop：loop 會讓 anime 的引擎永遠不睡，把「閒置零成本」這件事賠掉。 */
+.wl-chart .wl-scan{stroke:#fff6e2;stroke-width:2.6;stroke-linecap:round;fill:none;
+  filter:drop-shadow(0 0 5px rgba(255,176,32,.9));pointer-events:none}
 .wl-chart circle{vector-effect:non-scaling-stroke}
 .wl-chart .wl-good{fill:#4ad07a}
 /* 刻度：三條水平參考線 + 月界的直立刻度。這頁在講「相對自己的高低」，
@@ -8648,7 +8685,6 @@ function render(data) {
   const blk2 = (title, en, body) => body
     ? `<div class="block"><div class="section-title">${title} <span class="muted">· ${en}</span></div>${body}</div>` : ''
   const raceHtml    = blk2('兩年互追', 'YEAR ON YEAR', renderYearRace(data.monthly_history))
-  const profileHtml = blk2('功率體質', 'POWER PROFILE · COGGAN', renderPowerProfile(data.power_prs))
   const hexHtml     = blk2('六圍', 'ATHLETE HEX · 近 90 天', renderHexCard(data))
   const ringsHtml   = blk2('本月目標', 'MONTHLY GOALS', renderGoalRings(data.monthly_goals))
   const partsHtml   = (() => {
@@ -8757,7 +8793,6 @@ function render(data) {
       ${raceHtml}
       ${clockHtml}
       ${curveHtml}
-      ${profileHtml}
       ${hexHtml}
       <div class="block">${totalsHtml}</div>
     </section>
@@ -9616,77 +9651,6 @@ function renderRadar(axes, opts) {
     ${rings}${spokes}${ringLab}<path class="r-area" d="${area}"/>${nodes}${labs}</svg>`
 }
 
-/* 體重是設定值不是每日資料。權威在 data/lab.json 的 baseline.weight_kg，
-   但為了一個數字多抓一支 114 KB 的檔不划算 —— 跟訓練日曆裡那幾個 LTHR
-   常數同一個處理方式。體重變了改這裡。 */
-const RIDER_KG = 80
-
-/* Coggan 功率分級表（男子，W/kg）：[Untrained, World Class] 兩端。
-   20 分那軸先 ×0.95 換成 FTP 當量再比，60 分本來就是 FTP 的定義時長。 */
-const COGGAN = {
-  5:    [8.24, 24.04],
-  60:   [4.54, 11.50],
-  300:  [2.94,  7.60],
-  1200: [2.31,  6.40],
-  3600: [2.31,  6.40],
-}
-/* Coggan 表在兩端之間有 8 個等級名（7 段），所以百分比可以直接換回等級名。
-   只給百分比的話「22%」讀不出任何東西；給了等級名才知道 22% ≈ Fair 往 Moderate 的路上。 */
-const COGGAN_LV = ['Untrained', 'Fair', 'Moderate', 'Good', 'Very Good', 'Excellent', 'Exceptional', 'World Class']
-const cogganLevel = pct => {
-  const i = Math.max(0, Math.min(6, Math.floor(pct * 7)))
-  const f = pct * 7 - i
-  return COGGAN_LV[i] + (f > 0.55 ? '+' : '')
-}
-const cogganPct = (sec, watts) => {
-  const c = COGGAN[sec]
-  if (!c || !(watts > 0)) return null
-  const wkg = (sec === 1200 ? watts * 0.95 : watts) / RIDER_KG
-  return Math.max(0, Math.min(1, (wkg - c[0]) / (c[1] - c[0])))
-}
-
-/* ── 功率體質雷達 ─────────────────────────────────────────────────── */
-function renderPowerProfile(prs) {
-  const AX = [[5, '5 秒'], [60, '1 分'], [300, '5 分'], [1200, '20 分'], [3600, '60 分']]
-  const rows = AX.map(([sec, k]) => {
-    const p = (prs || []).find(x => x.duration_sec === sec)
-    const v = p ? cogganPct(sec, p.watts) : null
-    // 20 分那一列顯示的是 FTP 當量（×0.95），跟右邊那個百分比是同一個數字算出來的 ——
-    // 顯示原始 W/kg 的話讀者拿去查 Coggan 表會得到跟這裡不一樣的等級
-    const wkg = p ? (sec === 1200 ? p.watts * 0.95 : p.watts) / RIDER_KG : null
-    return { sec, k, w: p ? p.watts : null, date: p ? p.date : '', v: v == null ? 0 : v, wkg }
-  })
-  if (rows.filter(r => r.w).length < 4) return ''
-  const axes = rows.map(r => ({ k: r.k, sub: r.w ? r.w + 'W' : '—', v: r.v }))
-  const best = rows.reduce((a, b) => (b.v > a.v ? b : a))
-  const worst = rows.filter(r => r.w).reduce((a, b) => (b.v < a.v ? b : a))
-
-  return `
-    <div class="rdr">
-      ${renderRadar(axes, {
-        rings: [1 / 7, 3 / 7, 5 / 7, 1],
-        ringLabels: ['Fair', 'Good', 'Excellent', 'World Class'],
-        aria: '功率體質雷達，五個時長對照 Coggan 分級',
-      })}
-      <div class="rdr-side">
-        五個時長各自換算成 <b>Coggan 男子分級表</b>上的位置 ——
-        圓心是 Untrained、外圈是 World Class，中間三圈是 Fair／Good／Excellent。
-        多邊形貼著內圈是正常的：那張表的滿分是職業選手。
-        目前最強的一軸是 <b>${best.k}</b>（${cogganLevel(best.v)}）。
-        <div class="rdr-tab">
-          ${rows.map(r => `<u>${r.k}</u><i>${r.wkg ? r.wkg.toFixed(2) + ' W/kg' + (r.sec === 1200 ? '*' : '') : '尚無紀錄'}</i><b>${
-            r.w ? cogganLevel(r.v) : '—'}</b>`).join('')}
-        </div>
-      </div>
-    </div>
-    <p class="rdr-note">體重以 ${RIDER_KG} kg 計。<b>60 分那一軸低不代表引擎差</b> ——
-      它是「歷來最好的連續 60 分鐘平均」，實際騎乘裡有紅燈、下坡與滑行，
-      沒有做過整整一小時的全力測試，這個數字量到的是機會不是能力。
-      要看引擎請看 20 分那軸（表上打星號的那列是 FTP 當量：實測 ${
-        (rows.find(r => r.sec === 1200) || {}).w || '—'} W × 0.95）。
-      最弱的可比軸是 <b>${worst.k}</b>（${cogganLevel(worst.v)}，${Math.round(worst.v * 100)}%）。</p>`
-}
-
 /* ── 重訓部位平衡 ──────────────────────────────────────────────────
    計劃書原本要的是「五軸現成」的雷達，但資料不是那樣：recent_weights
    裡沒有部位欄位，部位是從活動名稱的關鍵字猜的（detectTrainPartsFromActivities
@@ -9775,7 +9739,7 @@ function renderGoalRings(goals) {
     return `<div class="gring-i">
       <svg viewBox="0 0 88 88" role="img" aria-label="${GOAL_META[k][0]} ${g.count} 比 ${g.target}">
         <circle class="g-bg" cx="44" cy="44" r="${R}"/>
-        ${f > 0 ? `<circle class="g-fg" cx="44" cy="44" r="${R}" stroke="${col}"
+        ${f > 0 ? `<circle class="g-fg" cx="44" cy="44" r="${R}" stroke="${col}" data-arc="${f.toFixed(4)}"
           stroke-dasharray="${(CIRC * f).toFixed(2)} ${(CIRC * (1 - f) + 0.01).toFixed(2)}"/>` : ''}
         <text class="g-n" x="44" y="46" text-anchor="middle">${g.count ?? 0}</text>
         <text class="g-d" x="44" y="60" text-anchor="middle">/ ${g.target}</text>
@@ -9787,10 +9751,14 @@ function renderGoalRings(goals) {
 }
 
 /* ── 累積里程賽跑線 ────────────────────────────────────────────────
-   兩年的累積公里互追。**但累積線會說謊**：Strava 的資料從 2025-04-27 才開始，
-   去年的線是從四月從零起跑的，一到三月不是「沒騎」是「沒有資料」。
-   只畫累積線的結論會是「今年大幅領先」，而同月對照的結論是「最近三個月都在落後」。
-   兩件事都是真的，所以兩個都畫：上面累積、下面逐月差。 */
+   兩年的累積公里互追，**只從「兩年都有資料的第一個月」起跑**。
+
+   為什麼要這樣：Strava 的資料從 2025-04-27 才開始，去年的一到三月不是
+   「沒騎」是「沒有量到」。從一月起算的話，今年那三個月的 684 km 會白白
+   變成領先，圖上會顯示「今年大幅領先」——而同期對照的真相是落後 142 km。
+   結論剛好相反，而且人看的是圖不是圖說，所以警語救不回來，只能改基準。
+
+   今年在起跑點之前的里程另外標成一行，不進賽跑，但也不藏起來。 */
 function renderYearRace(history) {
   const h = (history || []).filter(x => x && x.month && x.ride)
   if (h.length < 8) return ''
@@ -9801,27 +9769,40 @@ function renderYearRace(history) {
     const r = h.find(x => x.month === `${y}-${String(m).padStart(2, '0')}`)
     return r ? (r.ride.distance_km || 0) : null
   }
+  // 起跑點＝兩年都有資料的第一個月
+  const M0 = Array.from({ length: 12 }, (_, i) => i + 1)
+    .find(m => km(prevY, m) != null && km(nowY, m) != null)
+  if (!M0) return ''
   const cum = y => {
-    let c = 0
+    let c = null
     return Array.from({ length: 12 }, (_, i) => {
-      const v = km(y, i + 1)
+      const m = i + 1
+      if (m < M0) return null
+      const v = km(y, m)
       if (v == null) return null
-      c += v
+      c = (c == null ? 0 : c) + v
       return c
     })
   }
   const A = cum(prevY), B = cum(nowY)
   const lastNow = B.reduce((a, v, i) => (v != null ? i : a), -1)
-  if (lastNow < 1) return ''
-  const first = A.findIndex(v => v != null)
+  if (lastNow < M0) return ''
+  // 起跑點之前今年騎的：不進賽跑（去年那幾個月沒有資料可比），但要說出來
+  const preNow = Array.from({ length: M0 - 1 }, (_, i) => km(nowY, i + 1) || 0)
+    .reduce((a, b) => a + b, 0)
 
-  const W = 1000, H = 260, PADX = 18
+  // PADX 為 0：點畫在格子中央，第一個點自然就離邊 半格，不需要另外留白 ——
+  // 留了反而會跟下面等寬的長條差半個 PADX
+  const W = 1000, H = 260, PADX = 0
   const top = Math.ceil(Math.max(...[...A, ...B].filter(v => v != null)) / 500) * 500 || 500
-  const X = m => PADX + (m / 11) * (W - PADX * 2)
+  /* 每個月是一個「格」，線的點畫在格子中央 —— 下面的逐月差是長條，長條本來就
+     佔滿一格。線用格線位置、長條用格中央的話，同一個月在兩張圖上會差半格。 */
+  const SLOTS = 12 - (M0 - 1)
+  const SLOTW = (W - PADX * 2) / SLOTS
+  const X = m => PADX + (m - (M0 - 1) + 0.5) * SLOTW
   const Y = v => H - (v / top) * H
   const path = arr => arr.map((v, i) => (v == null ? null : `${X(i).toFixed(1)} ${Y(v).toFixed(1)}`))
     .filter(Boolean).map((s, i) => (i ? 'L' : 'M') + s).join('')
-  // 領先/落後的填色只畫兩條線都有值的那一段
   const both = Array.from({ length: 12 }, (_, i) => (A[i] != null && B[i] != null ? i : -1)).filter(i => i >= 0)
   const gapFill = both.length > 1
     ? both.map((i, k) => `${k ? 'L' : 'M'}${X(i).toFixed(1)} ${Y(B[i]).toFixed(1)}`).join('') +
@@ -9830,48 +9811,63 @@ function renderYearRace(history) {
 
   const ticks = []
   for (let v = 500; v <= top; v += 500) ticks.push(v)
-  const MON = ['1','2','3','4','5','6','7','8','9','10','11','12']
+  const MON = Array.from({ length: 12 }, (_, i) => String(i + 1))
   const diff = (B[lastNow] ?? 0) - (A[lastNow] ?? 0)
+  const behindNow = diff < 0
 
-  // 逐月差：今年這個月比去年同月多／少多少
   const deltas = Array.from({ length: 12 }, (_, i) => {
     const a = km(prevY, i + 1), b = km(nowY, i + 1)
     return (a == null || b == null) ? null : b - a
   })
   const dMax = Math.max(1, ...deltas.filter(v => v != null).map(Math.abs))
-  const bars = deltas.map((d, i) => {
-    if (d == null) return `<div class="race-b"></div>`
+  // 只畫 M0 之後那幾格：上面的線也是從 M0 起跑，兩張圖疊著看，x 軸不同刻度會讀錯
+  const bars = deltas.slice(M0 - 1).map((d, k) => {
+    const i = M0 - 1 + k
+    if (d == null) return `<div class="race-b"><u></u><s></s></div>`
     const up = d >= 0, pct = Math.abs(d) / dMax * 100
-    return `<div class="race-b${up ? '' : ' dn'}" title="${MON[i]} 月 ${up ? '+' : ''}${Math.round(d)} km">
-      <i style="height:${pct.toFixed(1)}%;background:${up ? '#FC4C02' : 'rgba(244,240,234,.34)'}"></i></div>`
+    return `<div class="race-b" title="${MON[i]} 月 ${up ? '+' : ''}${Math.round(d)} km">
+      <u>${up ? `<i style="height:${pct.toFixed(1)}%;background:#FC4C02"></i>` : ''}</u>
+      <s>${up ? '' : `<i style="height:${pct.toFixed(1)}%;background:rgba(244,240,234,.40)"></i>`}</s></div>`
   }).join('')
-  const behind = deltas.filter(v => v != null && v < 0).length
   const tail = deltas.slice(0, lastNow + 1).filter(v => v != null)
   let streak = 0
   for (let i = tail.length - 1; i >= 0 && tail[i] < 0; i--) streak++
+  const winMon = `${M0}–${lastNow + 1} 月`
 
   return `
     <div class="race">
       <div class="race-plot">
         <svg class="race-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">
           ${ticks.map(v => `<line class="z-grid" x1="0" x2="${W}" y1="${Y(v)}" y2="${Y(v)}"/>`).join('')}
-          ${gapFill ? `<path class="z-gapf" d="${gapFill}"/>` : ''}
+          ${gapFill ? `<path class="z-gapf${behindNow ? ' is-behind' : ''}" d="${gapFill}"/>` : ''}
           <path class="z-prev" d="${path(A)}"/>
           <path class="z-now" d="${path(B)}"/>
         </svg>
         ${ticks.map(v => `<span class="race-yl" style="top:${(Y(v) / H * 100).toFixed(2)}%">${v.toLocaleString()}</span>`).join('')}
-        <span class="race-tag" style="left:${(X(lastNow) / W * 100).toFixed(2)}%;top:${(Y(B[lastNow]) / H * 100).toFixed(2)}%;color:#FC4C02;transform:translate(-100%,-50%)">${nowY} ${Math.round(B[lastNow]).toLocaleString()} km&nbsp;</span>
-        ${A[lastNow] != null ? `<span class="race-tag" style="left:${(X(lastNow) / W * 100).toFixed(2)}%;top:${(Y(A[lastNow]) / H * 100).toFixed(2)}%;color:var(--ink-3);transform:translate(-100%,-50%)">${prevY} ${Math.round(A[lastNow]).toLocaleString()} km&nbsp;</span>` : ''}
+        ${(() => {
+          // 兩個端點標籤靠太近就上下推開。今年落後時兩條線在終點會很接近，
+          // 不推的話兩行字直接疊住，誰是誰看不出來
+          const yb = Y(B[lastNow]) / H * 100
+          const ya = A[lastNow] != null ? Y(A[lastNow]) / H * 100 : null
+          const near = ya != null && Math.abs(ya - yb) < 9
+          const push = near ? (yb > ya ? 5 : -5) : 0
+          const tag = (top, col, txt) => `<span class="race-tag" style="left:${(X(lastNow) / W * 100).toFixed(2)}%;top:${top.toFixed(2)}%;color:${col};transform:translate(-100%,-50%)">${txt}&nbsp;</span>`
+          return tag(yb + push, '#FC4C02', `${nowY} ${Math.round(B[lastNow]).toLocaleString()} km`) +
+            (ya != null ? tag(ya - push, 'var(--ink-3)', `${prevY} ${Math.round(A[lastNow]).toLocaleString()} km`) : '')
+        })()}
       </div>
-      <div class="race-ax">${MON.map((m, i) => `<span style="left:${(X(i) / W * 100).toFixed(2)}%">${m}</span>`).join('')}</div>
+      <div class="race-ax">${MON.slice(M0 - 1).map((m, k) =>
+        `<span style="left:${(X(M0 - 1 + k) / W * 100).toFixed(2)}%">${m}</span>`).join('')}</div>
       <div class="race-bars">${bars}</div>
-      <div class="race-bx">${MON.map(m => `<span>${m}</span>`).join('')}</div>
-      <p class="race-note">上：累積里程。下：<b>今年這個月比去年同月多／少多少</b>（橘＝多、灰＝少）。
-        到 ${lastNow + 1} 月為止 ${nowY} 比 ${prevY} ${diff >= 0 ? '多' : '少'}
-        <b>${Math.abs(Math.round(diff)).toLocaleString()} km</b>。
-        ${first > 0 ? `注意 ${prevY} 的線是從 <b>${first + 1} 月</b>才起跑的 ——
-        那之前不是沒騎，是 Strava 沒有資料，所以累積線的領先幅度被高估。` : ''}
-        ${streak >= 2 ? `逐月差那排更誠實：<b>最近 ${streak} 個月都比去年同月少</b>。` : ''}</p>
+      <div class="race-bx">${MON.slice(M0 - 1).map(m => `<span>${m}</span>`).join('')}</div>
+      <div class="race-head">同期 ${winMon}：${nowY} 比 ${prevY}
+        <b class="${behindNow ? 'dn' : ''}">${diff >= 0 ? '多' : '少'} ${Math.abs(Math.round(diff)).toLocaleString()} km</b></div>
+      <p class="race-note">兩條線都<b>從 ${M0} 月起跑</b>，因為那是兩年都有資料的第一個月 ——
+        ${prevY} 的 1–${M0 - 1} 月不是沒騎，是 Strava 沒有量到。
+        ${preNow > 0 ? `${nowY} 在起跑點之前還騎了 <b>${Math.round(preNow).toLocaleString()} km</b>，
+        但那幾個月沒有對照組，不算進這場互追（算進去會憑空多出 ${Math.round(preNow)} km 的領先）。` : ''}
+        下面那排是<b>今年這個月比去年同月多／少多少</b>（橘＝多、灰＝少）。
+        ${streak >= 2 ? `<b>最近 ${streak} 個月都比去年同月少</b>，跟上面那條線是同一件事。` : ''}</p>
     </div>`
 }
 
@@ -9886,9 +9882,19 @@ function renderHexCard(data) {
   const r90 = rides.filter(r => within(r, 90))
   const prs = data.power_prs || []
 
-  const burst = cogganPct(5, (prs.find(p => p.duration_sec === 5) || {}).watts)
-  const endur = cogganPct(1200, (prs.find(p => p.duration_sec === 1200) || {}).watts)
-  if (burst == null || endur == null) return ''
+  /* 兩支功率軸一律自比，不拿去對任何外部分級表：
+     爆發＝5 秒功率是門檻的幾倍（一般公路車手落在 3–5 倍，這裡用 5 倍當滿格）；
+     續航＝20 分功率還剩 5 分功率的幾成（衰減率，越接近 1 越撐得住，
+     0.5–1.0 是有意義的範圍，所以刻度從 0.5 起跳）。
+     兩個都只用他自己的數字算，沒有「你比誰強」這件事。 */
+  const W = d => (prs.find(p => p.duration_sec === d) || {}).watts || null
+  const w5 = W(5), w300 = W(300), w1200 = W(1200)
+  if (!w5 || !w300 || !w1200) return ''
+  const ftp = w1200 * 0.95
+  const burstX = w5 / ftp
+  const fade = w1200 / w300
+  const burst = Math.max(0, Math.min(1, burstX / 5))
+  const endur = Math.max(0, Math.min(1, (fade - 0.5) / 0.5))
 
   // 爬坡：近 90 天的 m/km，對自己 17 個月的月度區間正規化
   const mk = (data.monthly_history || []).map(m => m.ride).filter(x => x && x.distance_km >= 50)
@@ -9939,8 +9945,8 @@ function renderHexCard(data) {
   }
 
   const axes = [
-    { k: '爆發', sub: Math.round(burst * 100) + '%', v: burst },
-    { k: '續航', sub: Math.round(endur * 100) + '%', v: endur },
+    { k: '爆發', sub: burstX.toFixed(1) + '× FTP', v: burst },
+    { k: '續航', sub: Math.round(fade * 100) + '% 留存', v: endur },
     { k: '爬坡', sub: mpk ? Math.round(mpk) + ' m/km' : '—', v: climb == null ? 0 : climb },
     { k: '紀律', sub: days.size + ' 天', v: disc },
     { k: '多元', sub: Math.round(varty * 100) + '%', v: varty },
@@ -9959,23 +9965,24 @@ function renderHexCard(data) {
         </div>
       </div>
     </div>
-    <p class="rdr-note">六軸不是同一種東西，所以<b>各自正規化</b>：爆發與續航對 Coggan 分級表，
+    <p class="rdr-note">六軸不是同一種東西，所以<b>各自正規化</b>，而且<b>全部只跟自己比</b> ——
+      爆發是 5 秒功率相對自己門檻的倍數（5 倍滿格），續航是 20 分功率相對 5 分功率的留存率，
       爬坡對自己 17 個月的月度區間，紀律是每 10 天練 6.2 次滿格，多元是四項運動的均勻度，
       ${sixth.k}是${sixth.note}。<b>軸與軸之間不可比</b> ——
       拿其中一軸的數字去跟另一軸比大小沒有意義，
       只有「這一軸相對自己是高是低」讀得出東西。這張是玩的，判讀請看上面幾張。</p>`
 }
 
-/* ── 時段鐘 ─────────────────────────────────────────────────────────
-   「我都幾點在練」不是一條時間序列能回答的問題 —— 那是一個繞著 24 小時
-   分布的形狀，所以它是極座標不是長條圖。
+/* ── 時段條 ─────────────────────────────────────────────────────────
+   「我都幾點在練」的答案是一個繞著 24 小時的分布。兩段時期各一排，
+   同一個小時上下對齊，所以「這個時段變多還變少」用看的就好。
 
-   兩條環是兩段時期，各自對自己的總數正規化（樣本數差六倍，畫原始筆數
-   的話後段整條會細到看不見）。刻度是共用的百分比，所以兩環可以直接比。
+   兩排各自對自己的總數正規化（樣本數差六倍，畫原始筆數的話下面那排會細到
+   看不見）。刻度是共用的百分比，所以兩排可以直接比。
 
-   分色沿用日曆已經立好的規則：騎乘走橘、其餘運動走藍。不為四種運動各發
-   一個顏色 —— 這一頁的顏色都綁著語意，多發四個等於把語意鎖拆了。 */
-const CLOCK_SPLIT = '2026-05-29'      // 作息改變的那天；換一個日期整張圖會自己重算
+   分色沿用日曆已經立好的規則：騎乘走橘、其餘運動走藍。不為四種運動各發一個
+   顏色 —— 這一頁的顏色都綁著語意，多發四個等於把語意鎖拆了。 */
+const CLOCK_SPLIT = '2026-05-29'      // 分界日；換一個日期整張圖會自己重算
 function renderTrainingClock(data) {
   const SRC = [
     ['recent_rides', 'ride'], ['recent_runs', 'cross'],
@@ -9986,100 +9993,74 @@ function renderTrainingClock(data) {
     if (!a.date || !a.time) return
     const h = +String(a.time).slice(0, 2), mi = +String(a.time).slice(3, 5) || 0
     if (!(h >= 0 && h <= 23)) return
-    // h 用來分桶（整點一格），f 是含分鐘的小數 —— 平均開始時刻用整點算會系統性早半小時
     acts.push({ d: a.date, h, f: h + mi / 60, band })
   }))
   if (acts.length < 30) return ''
 
   const periods = [
-    { key: 'a', label: CLOCK_SPLIT.replace(/-/g, '/').slice(0, 10) + ' 之前', rows: acts.filter(a => a.d < CLOCK_SPLIT) },
-    { key: 'b', label: CLOCK_SPLIT.replace(/-/g, '/').slice(0, 10) + ' 之後', rows: acts.filter(a => a.d >= CLOCK_SPLIT) },
+    { key: 'a', rows: acts.filter(a => a.d < CLOCK_SPLIT) },
+    { key: 'b', rows: acts.filter(a => a.d >= CLOCK_SPLIT) },
   ]
   if (periods.some(p => p.rows.length < 10)) return ''
-
   periods.forEach(p => {
     p.n = p.rows.length
     p.by = Array.from({ length: 24 }, () => ({ ride: 0, cross: 0, all: 0 }))
     p.rows.forEach(r => { p.by[r.h][r.band]++; p.by[r.h].all++ })
-    p.span = [Math.min(...p.rows.map(r => r.d)), Math.max(...p.rows.map(r => r.d))]
     p.mean = p.rows.reduce((s, r) => s + r.f, 0) / p.n
+    p.hours = p.by.filter(b => b.all).length
+    p.day = p.by.slice(9, 18).reduce((s, b) => s + b.all, 0)
   })
-  // 共用刻度：兩環同一個百分比尺，不然「哪個時段比較集中」就沒得比
+  const [PA, PB] = periods
+  // 兩排共用刻度：不共用的話「哪一段比較集中」就沒得比
   const peak = Math.max(...periods.flatMap(p => p.by.map(b => b.all / p.n)))
   const FULL = Math.ceil(peak * 100 / 4) * 4 / 100
+  const dLab = CLOCK_SPLIT.replace(/-/g, '/')
+  const dShort = dLab.slice(5)          // 左欄只有 88px，年份塞不下也不需要
 
-  const C = 200, S = 400
-  const BANDS = { a: [72, 118], b: [128, 174] }
-  const pol = (r, hr) => {           // 0 點在正上方、順時針，跟時鐘一樣
-    const th = (hr / 24) * Math.PI * 2 - Math.PI / 2
-    return [C + r * Math.cos(th), C + r * Math.sin(th)]
-  }
-  const wedge = (r0, r1, h0, h1) => {
-    const [ax, ay] = pol(r1, h0), [bx, by] = pol(r1, h1)
-    const [cx, cy] = pol(r0, h1), [dx, dy] = pol(r0, h0)
-    return `M${ax.toFixed(2)} ${ay.toFixed(2)}A${r1} ${r1} 0 0 1 ${bx.toFixed(2)} ${by.toFixed(2)}` +
-           `L${cx.toFixed(2)} ${cy.toFixed(2)}A${r0} ${r0} 0 0 0 ${dx.toFixed(2)} ${dy.toFixed(2)}Z`
-  }
+  const row = (p, label, sub) => `
+    <div class="dstrip-r">
+      <span class="dstrip-k">${label}<em>${sub}</em></span>
+      <div class="dstrip-b">
+        ${p.by.map((b, h) => {
+          const len = b.all ? Math.min(1, (b.all / p.n) / FULL) * 100 : 0
+          const ridePct = b.all ? len * (b.ride / b.all) : 0
+          return `<span class="dstrip-c" tabindex="0" data-clk="${p.key}" data-h="${h}"
+            data-n="${b.all}" data-ride="${b.ride}" data-pct="${(b.all / p.n * 100).toFixed(1)}"
+            aria-label="${String(h).padStart(2, '0')} 點 ${b.all} 次">${
+            b.all ? `${len - ridePct > .4 ? `<b class="c" style="height:${(len - ridePct).toFixed(2)}%"></b>` : ''}${
+                     ridePct > .4 ? `<b class="r" style="height:${ridePct.toFixed(2)}%"></b>` : ''}`
+                  : '<b class="dstrip-z"></b>'}</span>`
+        }).join('')}
+      </div>
+    </div>`
 
-  const GAP = 0.10                    // 小時之間留一線縫，不然整環糊成一圈
-  let wedges = '', hits = ''
-  periods.forEach(p => {
-    const [r0, r1] = BANDS[p.key], H = r1 - r0
-    p.by.forEach((b, h) => {
-      const h0 = h + GAP, h1 = h + 1 - GAP
-      if (b.all) {
-        const len = Math.min(1, (b.all / p.n) / FULL) * H
-        const rideLen = len * (b.ride / b.all)
-        if (rideLen > .4) wedges += `<path class="w-ride${p.key === 'a' ? ' a-dim' : ''}" d="${wedge(r0, r0 + rideLen, h0, h1)}"/>`
-        if (len - rideLen > .4) wedges += `<path class="w-cross${p.key === 'a' ? ' a-dim' : ''}" d="${wedge(r0 + rideLen, r0 + len, h0, h1)}"/>`
-      }
-      hits += `<path class="k-hit" d="${wedge(r0, r1, h0, h1)}" data-clk="${p.key}" data-h="${h}"
-        data-n="${b.all}" data-ride="${b.ride}" data-pct="${(b.all / p.n * 100).toFixed(1)}"></path>`
-    })
-  })
-
-  const rings = Object.values(BANDS).flat().map(r => `<circle class="k-ring" cx="${C}" cy="${C}" r="${r}"/>`).join('')
-  const spokes = [0, 6, 12, 18].map(h => {
-    const [x0, y0] = pol(BANDS.a[0], h), [x1, y1] = pol(BANDS.b[1] + 5, h)
-    return `<line class="k-spoke" x1="${x0.toFixed(1)}" y1="${y0.toFixed(1)}" x2="${x1.toFixed(1)}" y2="${y1.toFixed(1)}"/>`
-  }).join('')
-  const hrLabs = [0, 3, 6, 9, 12, 15, 18, 21].map(h => {
-    const [x, y] = pol(BANDS.b[1] + 17, h + .5)
-    return `<text class="k-hr" x="${x.toFixed(1)}" y="${(y + 4).toFixed(1)}" text-anchor="middle">${String(h).padStart(2, '0')}</text>`
-  }).join('')
-
-  const shift = periods[1].mean - periods[0].mean
   const hhmm = v => `${String(Math.floor(v)).padStart(2, '0')}:${String(Math.round((v % 1) * 60)).padStart(2, '0')}`
-  const dead = periods[1].by.map((b, h) => (b.all ? -1 : h)).filter(h => h >= 9 && h <= 17 && h >= 0)
-  const deadTxt = dead.length >= 6 ? `09–17 點有 ${dead.length} 個整點掛零` : ''
+  const shift = PB.mean - PA.mean
+  const axLabs = [0, 3, 6, 9, 12, 15, 18, 21].map(h =>
+    `<span style="left:${((h + .5) / 24 * 100).toFixed(2)}%">${String(h).padStart(2, '0')}</span>`).join('')
 
   return `
-    <div class="clk">
-      <svg class="clk-svg" viewBox="0 0 ${S} ${S}" role="img"
-        aria-label="訓練時段分布，${periods[0].label} 與 ${periods[1].label} 兩環比較">
-        ${rings}${spokes}${wedges}${hits}${hrLabs}
-        <text class="k-mid" x="${C}" y="${C - 4}" text-anchor="middle">${hhmm(periods[1].mean)}</text>
-        <text class="k-mid2" x="${C}" y="${C + 12}" text-anchor="middle">平均開始</text>
-        <text class="k-cap" x="${C}" y="${C + 30}" text-anchor="middle">比之前${shift >= 0 ? '晚' : '早'} ${Math.floor(Math.abs(shift))} 小時 ${Math.round((Math.abs(shift) % 1) * 60)} 分</text>
-      </svg>
-      <div class="clk-side">
-        <div class="clk-read" id="clk-read"
-          data-idle="${periods[0].n} + ${periods[1].n} 筆活動的開始時刻。<em>指到任何一格看那個時段。</em>">
-          ${periods[0].n} + ${periods[1].n} 筆活動的開始時刻。<em>指到任何一格看那個時段。</em>
-        </div>
-        <div class="clk-leg">
-          <span><i style="background:#FC4C02"></i><u>騎乘</u></span>
-          <span><i style="background:#3FA9F5"></i><u>跑步 · 游泳 · 重訓</u></span>
-          <span><i style="background:rgba(244,240,234,.24)"></i>內環＝${periods[0].label}（${periods[0].n} 筆）</span>
-          <span><i style="background:rgba(244,240,234,.5)"></i>外環＝${periods[1].label}（${periods[1].n} 筆）</span>
-          <span>滿格 ＝ 該時期活動數的 ${Math.round(FULL * 100)}%</span>
-        </div>
-      </div>
+    <div class="dstrip">
+      ${row(PA, `${dShort} 之前`, `${PA.n} 筆 · ${PA.hours} 時段`)}
+      ${row(PB, `${dShort} 之後`, `${PB.n} 筆 · ${PB.hours} 時段`)}
+      <div class="dstrip-ax"><span></span><div>${axLabs}</div></div>
     </div>
-    <p class="clk-note">兩環<b>各自對自己的總數正規化</b>——樣本數差了 ${(periods[0].n / periods[1].n).toFixed(1)} 倍，
-      畫原始筆數的話外環會細到看不見。刻度是共用的百分比，所以「哪一段比較集中」可以直接比。
-      ${deadTxt ? `外環最明顯的不是尖峰移動，是<b>白天整段不見了</b>——${deadTxt}。` : ''}
-      顏色沿用節奏日曆的規則：騎乘走橘、其餘運動走藍。</p>`
+    <div class="clk-read" id="clk-read"
+      data-idle="平均開始時刻從 <b>${hhmm(PA.mean)}</b> 移到 <b>${hhmm(PB.mean)}</b>。<em>指到任何一格看那個時段。</em>">
+      平均開始時刻從 <b>${hhmm(PA.mean)}</b> 移到 <b>${hhmm(PB.mean)}</b>。<em>指到任何一格看那個時段。</em>
+    </div>
+    <div class="clk-leg">
+      <span><i style="background:#FC4C02"></i>騎乘</span>
+      <span><i style="background:#3FA9F5"></i>跑步 · 游泳 · 重訓</span>
+      <span><i style="background:rgba(255,255,255,.09)"></i>09–17 點</span>
+      <span>滿格 ＝ 該排總數的 ${Math.round(FULL * 100)}%</span>
+    </div>
+    <p class="clk-note">分界是 <b>${dLab}</b>。兩排<b>各自對自己的總數正規化</b>（樣本數差 ${(PA.n / PB.n).toFixed(1)} 倍），
+      刻度共用，所以上下可以直接比。最大的變化不是尖峰移動，是<b>中間那塊白天不見了</b> ——
+      09–17 點從 ${PA.day} 次（${Math.round(PA.day / PA.n * 100)}%）掉到
+      ${PB.day} 次（${Math.round(PB.day / PB.n * 100)}%），有活動的時段也從
+      ${PA.hours} 個收斂成 ${PB.hours} 個。${
+      shift < 0 ? `連帶平均開始時刻早了 ${Math.floor(Math.abs(shift))} 小時 ${Math.round((Math.abs(shift) % 1) * 60)} 分。` : ''}</p>`
 }
 
 function renderPowerCurve(prs, ftp) {
@@ -11681,7 +11662,7 @@ const WELLNESS_METRICS = {
                disp: v => Math.round(v / 60) * 60,
                note: '入睡到起床的實際睡眠時間。沒有值代表那晚沒戴錶，不是沒睡 —— 所以線是斷的，不補零。' },
 }
-const WELLNESS_RANGES = [30, 90, 365]
+const WELLNESS_RANGES = [7, 30, 90, 365]
 let _wellnessRange = 90
 
 /* 活動來源的指標（_activities.json）：一趟一筆，不是一天一筆。
@@ -11825,11 +11806,12 @@ function wellnessPlot(series, avg, m, band, nDays, gaps) {
   // X 軸：月界一律給刻度，標籤密度看區間 —— 30 天標到日、90 天每月、365 天單月＋一月帶年份
   const pctAt = i => i / (series.length - 1) * 100
   const short = nDays <= 31
+  const daily = nDays <= 10        // 一週那張每天都標，不然七格只會標到第一格
   let axis = '', lastLab = -99
   series.forEach((p, i) => {
     const d = p[0]
     const newMonth = i === 0 || d.slice(0, 7) !== series[i - 1][0].slice(0, 7)
-    const weekly = short && (series.length - 1 - i) % 7 === 0
+    const weekly = short && (daily || (series.length - 1 - i) % 7 === 0)
     if (!newMonth && !weekly) return
     const px = pctAt(i)
     axis += `<i class="${newMonth ? 'maj' : ''}" style="left:${px.toFixed(2)}%"></i>`
@@ -11884,20 +11866,28 @@ function wellnessPanel(key) {
   const m = WELLNESS_METRICS[key]
   if (!m) return ''
   const n = _wellnessRange
-  const series = wellnessSeries(key, n)
-  const vals = series.map(p => p[1]).filter(v => v != null)
-  if (!vals.length) return '<div class="nil">還沒有這個指標的資料。</div>'
   // 一趟一筆的指標（EF、脫鉤、左右平衡）在日軸上是稀疏的，窗要拉寬、門檻要放低
   const W1 = m.win || 7, W2 = m.winLong || 28
-  const avg7 = rollingMean(series, W1, m.src === 'act' ? 3 : undefined)
+  /* 「要算多長」跟「要畫多長」是兩件事。7 天視窗如果只餵 7 天進去：
+     7 日均線只會有一個點、60 天的基準帶整條是空的、而「近 7 天比近 28 天」
+     兩邊會變成同一批資料所以差永遠是 0 —— 三個讀數同時失效。
+     所以一律用長歷史算，算完再切最後 n 天來畫。7 天那張是真的放大，不是重算。 */
+  const CTX = Math.max(n, 90)
+  const full = wellnessSeries(key, CTX)
+  const cut = Math.max(0, full.length - n)
+  const series = full.slice(cut)
+  const vals = series.map(p => p[1]).filter(v => v != null)
+  if (!vals.length) return '<div class="nil">還沒有這個指標的資料。</div>'
+  const avg7 = rollingMean(full, W1, m.src === 'act' ? 3 : undefined).slice(cut)
   // 基準帶只給 HRV 與靜息心率：那兩個的判讀方式就是「相對自己平常」。
   // 睡眠時數、分數、eFTP 有絕對意義（睡 8 小時就是比 4 小時好），畫帶子只會多一層雜訊。
-  const band = (key === 'hrv' || key === 'restingHR') ? rollingBand(series, 60) : null
+  const band = (key === 'hrv' || key === 'restingHR') ? rollingBand(full, 60).slice(cut) : null
   const bNow = band ? [...band].reverse().find(Boolean) : null
   const latest = [...series].reverse().find(p => p[1] != null)
   const mean = a => a.reduce((x, z) => x + z, 0) / a.length
+  // 近 7 / 近 28 一律從長歷史尾端取，跟畫面切多長無關
   const tailMean = k => {
-    const t = series.slice(-k).map(p => p[1]).filter(v => v != null)
+    const t = full.slice(-k).map(p => p[1]).filter(v => v != null)
     return t.length ? mean(t) : null
   }
   const lo = Math.min(...vals), hi = Math.max(...vals)
@@ -12328,7 +12318,7 @@ function initRouter() {
     if (!el) { box.innerHTML = box.dataset.idle || ''; return }
     const d = el.dataset
     const hh = String(d.h).padStart(2, '0')
-    const ring = d.clk === 'a' ? '內環' : '外環'
+    const ring = d.clk === 'a' ? '上排' : '下排'
     if (!+d.n) { box.innerHTML = `${hh}:00–${String((+d.h + 1) % 24).padStart(2, '0')}:00 · ${ring}<br><em>這個時段一次都沒有練</em>`; return }
     const cross = +d.n - +d.ride
     box.innerHTML = `${hh}:00–${String((+d.h + 1) % 24).padStart(2, '0')}:00 · ${ring}<br>` +
@@ -12340,9 +12330,9 @@ function initRouter() {
     const dot = e.target.closest('.pcv-dot')
     if (dot) { pcvShow(dot); return }
     if (!e.target.closest('.pcv-plot')) pcvShow(null)
-    const cell = e.target.closest('.k-hit')
+    const cell = e.target.closest('.dstrip-c')
     if (cell) { clkShow(cell); return }
-    if (!e.target.closest('.clk-svg')) clkShow(null)
+    if (!e.target.closest('.dstrip')) clkShow(null)
   }
   document.getElementById('content').addEventListener('pointerover', onPcv)
   document.getElementById('content').addEventListener('focusin', onPcv)
@@ -12576,7 +12566,8 @@ function motionLayer({ animate, createDrawable }) {
     { root: '.wl-plot',
       draw: [['.wl-raw', 0, 900], ['.wl-avg', 200, 900]],
       fade: [['.wl-band', 300]],
-      pop:  [['.wl-good', 940], ['.wl-bad', 1000]] },
+      pop:  [['.wl-good', 940], ['.wl-bad', 1000]],
+      scan: '.wl-avg', bump: '.wl-now b' },
     { root: '.pb-prof',
       draw: [['.l', 0, 820]],
       fade: [['.f', 320]] },
@@ -12636,11 +12627,111 @@ function motionLayer({ animate, createDrawable }) {
       })
     })
 
-    if (!job.draw.length && !job.fade.length && !job.pop.length) return
+    /* 掃描光：描線跑完之後，複製一份 .wl-avg 疊上去，讓一小段亮的沿著線跑一趟。
+       複製品是動效層自己生的，跑完就自己移除 —— DOM 回到沒有動效層的樣子。 */
+    if (spec.scan) {
+      const src = root.querySelector(spec.scan)
+      let len = 0
+      try { len = src && src.getTotalLength ? src.getTotalLength() : 0 } catch (err) { len = 0 }
+      if (len > 8) job.scan = { src, len }
+    }
+    // 大讀數：換指標時整塊重畫，讓那個數字自己跳出來說「我換了」
+    if (spec.bump) {
+      const el = root.parentElement && root.parentElement.querySelector(spec.bump)
+      if (el) { el.style.opacity = '0'; job.bump = el }
+    }
+    if (!['draw', 'fade', 'pop'].some(k => job[k].length) && !job.scan && !job.bump) return
     jobs.set(root, job)
     io.observe(root)
   }
 
+
+
+  /* ── 新圖表的進場 ───────────────────────────────────────────────
+     grow  = HTML 元素長高／長大（時段條的長條、功率曲線的圓點）
+     arc   = 環形進度（交給 createDrawable 代管，draw 的終點就是它的比例）
+     fill  = SVG 的 fill-opacity（雷達的面積：描線只管 stroke，填色會整塊直接出現） */
+  const SPECS2 = [
+    { root: '.pcv-plot',
+      draw: [['.c-line', 120, 950]],
+      fade: [['.c-band', 420], ['.c-ftp', 200]],
+      grow: [['.pcv-dot', 620, 34, 'scale']] },
+    { root: '.race-plot',
+      draw: [['.z-prev', 0, 800], ['.z-now', 200, 900]],
+      fade: [['.z-gapf', 620]] },
+    { root: '.race-bars',
+      grow: [['.race-b i', 0, 26, 'height']] },   // u/s 兩層是零線的上下半，i 才是柱子
+    { root: '.dstrip-b',
+      // 由左到右一小時一格長起來，兩排錯開 —— 上排先跑完才輪到下排，
+      // 「本來有、後來沒有」的對照就是這樣看出來的
+      grow: [['.dstrip-c b', 0, 18, 'height']] },
+    { root: '.rdr-svg',
+      draw: [['.r-area', 100, 900]],
+      fill: [['.r-area', 700]],
+      pop:  [['.r-node', 780]] },
+    { root: '.gring-i',
+      arc: [['.g-fg', 120, 900]] },
+  ]
+
+  function arm2(root) {
+    if (armed.has(root)) return
+    armed.add(root)
+    const spec = SPECS2.find(x => root.matches(x.root))
+    if (!spec) return
+    const job = { draw: [], fade: [], pop: [], grow: [], arc: [], fill: [] }
+    ;(spec.draw || []).forEach(([sel, delay, dur]) => {
+      root.querySelectorAll(sel).forEach((el, i) => {
+        let len = 0
+        try { len = el.getTotalLength ? el.getTotalLength() : 0 } catch (err) { return }
+        if (len < 1) return
+        job.draw.push({ t: createDrawable(el)[0], delay: delay + i * 110, dur })
+      })
+    })
+    ;(spec.fade || []).forEach(([sel, delay]) => {
+      root.querySelectorAll(sel).forEach(el => {
+        const to = el.hasAttribute('opacity') ? +el.getAttribute('opacity') : 1
+        el.style.opacity = '0'
+        job.fade.push({ el, to, delay })
+      })
+    })
+    ;(spec.fill || []).forEach(([sel, delay]) => {
+      root.querySelectorAll(sel).forEach(el => {
+        el.style.fillOpacity = '0'
+        job.fill.push({ el, delay })
+      })
+    })
+    ;(spec.pop || []).forEach(([sel, delay]) => {
+      root.querySelectorAll(sel).forEach((el, i) => {
+        const r = +el.getAttribute('r') || 0
+        if (!r) return
+        el.setAttribute('r', 0)
+        job.pop.push({ el, r, delay: delay + i * 55 })
+      })
+    })
+    ;(spec.grow || []).forEach(([sel, delay, step, mode]) => {
+      root.querySelectorAll(sel).forEach((el, i) => {
+        if (mode === 'height') {
+          const h = el.style.height || getComputedStyle(el).height
+          if (!h || h === '0px') return
+          el.style.height = '0'
+          job.grow.push({ el, to: { height: h }, delay: delay + i * step })
+        } else {
+          el.style.transform = 'scale(0)'
+          job.grow.push({ el, to: { scale: 1 }, delay: delay + i * step, clear: 1 })
+        }
+      })
+    })
+    ;(spec.arc || []).forEach(([sel, delay, dur]) => {
+      root.querySelectorAll(sel).forEach(el => {
+        const f = +el.dataset.arc
+        if (!(f > 0)) return
+        job.arc.push({ t: createDrawable(el)[0], f, delay, dur })
+      })
+    })
+    if (!Object.values(job).some(a => a.length)) return
+    jobs.set(root, job)
+    io.observe(root)
+  }
 
   /* ── A2 · 捲動進場 ───────────────────────────────────────────────
      清單類的東西進畫面時一筆一筆長出來，而不是整塊一起「砰」。
@@ -12692,15 +12783,48 @@ function motionLayer({ animate, createDrawable }) {
     job.draw.forEach(d => animate(d.t, { draw: '0 1', duration: d.dur, delay: d.delay, ease: 'inOutQuad' }))
     job.fade.forEach(f => animate(f.el, { opacity: f.to, duration: 520, delay: f.delay, ease: 'outQuad' }))
     job.pop .forEach(p => animate(p.el, { r: p.r, duration: 420, delay: p.delay, ease: 'outBack' }))
+    ;(job.fill || []).forEach(f => animate(f.el, { fillOpacity: 1, duration: 560, delay: f.delay, ease: 'outQuad' }))
+    ;(job.arc  || []).forEach(a => animate(a.t, { draw: `0 ${a.f}`, duration: a.dur, delay: a.delay, ease: 'outExpo' }))
+    if (job.bump) animate(job.bump, {
+      opacity: [0, 1], scale: [.76, 1], duration: 620, delay: 120, ease: 'outBack',
+      onComplete: () => { job.bump.style.opacity = ''; job.bump.style.transform = '' },
+    })
+    if (job.scan) {
+      const { src, len } = job.scan
+      const ghost = src.cloneNode()
+      ghost.setAttribute('class', 'wl-scan')
+      /* 來源那條已經被 createDrawable 接管了，身上有 pathLength=1000 與一組 dash 屬性。
+         複製過來的話這裡的 dash 會被當成「千分之幾」而不是使用者單位，亮段長度全錯。 */
+      ghost.removeAttribute('pathLength')
+      ghost.removeAttribute('stroke-dasharray')
+      ghost.removeAttribute('stroke-dashoffset')
+      ghost.style.strokeDasharray = `${(len * .13).toFixed(1)} ${len.toFixed(1)}`
+      ghost.style.strokeDashoffset = (len * .13).toFixed(1)
+      src.parentNode.appendChild(ghost)
+      animate(ghost, {
+        strokeDashoffset: -len, opacity: [0, 1, 1, 0],
+        duration: 1500, delay: 1050, ease: 'inOutSine',
+        onComplete: () => ghost.remove(),
+      })
+    }
+    ;(job.grow || []).forEach(g => animate(g.el, {
+      ...g.to, duration: 520, delay: g.delay, ease: 'outExpo',
+      // scale 類跑完把 inline transform 清掉，終態要跟沒有動效層時一模一樣
+      onComplete: g.clear ? () => { g.el.style.transform = '' } : undefined,
+    }))
   }
 
+  const ROOTS2 = SPECS2.map(x => x.root).join(',')
   const sweep = (el) => {
     if (el.matches(ROOTS)) arm(el)
     el.querySelectorAll(ROOTS).forEach(arm)
+    if (el.matches(ROOTS2)) arm2(el)
+    el.querySelectorAll(ROOTS2).forEach(arm2)
     if (el.matches(ITEMS)) armReveal(el)
     el.querySelectorAll(ITEMS).forEach(armReveal)
   }
   document.querySelectorAll(ROOTS).forEach(arm)
+  document.querySelectorAll(ROOTS2).forEach(arm2)
   document.querySelectorAll(ITEMS).forEach(armReveal)
   new MutationObserver(muts => {
     for (const m of muts) {
@@ -12712,8 +12836,8 @@ function motionLayer({ animate, createDrawable }) {
       // 被觀察的節點不放，不解掉的話每切一次頁籤就多留一份垃圾。
       for (const n of m.removedNodes) {
         if (n.nodeType !== 1) continue
-        if (n.matches(ROOTS)) io.unobserve(n)
-        n.querySelectorAll(ROOTS).forEach(el => io.unobserve(el))
+        if (n.matches(ROOTS) || n.matches(ROOTS2)) io.unobserve(n)
+        n.querySelectorAll(ROOTS + ',' + ROOTS2).forEach(el => io.unobserve(el))
         if (n.matches(ITEMS)) rio.unobserve(n)
         n.querySelectorAll(ITEMS).forEach(el => rio.unobserve(el))
       }
