@@ -8,8 +8,8 @@
 | 檔案 | 大小 | 角色 | 什麼時候載 |
 |---|---:|---|---|
 | [`circuit.html`](../circuit.html) | 2,111 行 | 全部的畫面、計時器、音效、動效 | — |
-| [`data/movements.json`](../data/movements.json) | 97 KB | 120 個動作 ＋ 18 張菜單 ＋ 11 個動作模式 | 開頁就抓（關鍵路徑） |
-| [`data/movement-videos.json`](../data/movement-videos.json) | 170 KB | 360 支教學影片（120 × 3） | **延後**：第一次開教學或挑選器才抓 |
+| [`data/movements.json`](../data/movements.json) | 105 KB | 125 個動作 ＋ 18 張菜單 ＋ 11 個動作模式 ＋ 更新紀錄 | 開頁就抓（關鍵路徑） |
+| [`data/movement-videos.json`](../data/movement-videos.json) | 170 KB | 360 支教學影片（涵蓋 120／125 個動作） | **延後**：第一次開教學或挑選器才抓 |
 | [`vendor-anime-4.esm.min.js`](../vendor-anime-4.esm.min.js) | — | 動效層，純加法 | 非同步；載不到就當沒這回事 |
 | [`scripts/check-circuit-data.js`](../scripts/check-circuit-data.js) | 146 行 | 資料檢查 ＋ 估時基準 | 手動 |
 | [`scripts/research_movement_videos.py`](../scripts/research_movement_videos.py) | 512 行 | 影片離線採集 | 手動，一年跑不到幾次 |
@@ -53,12 +53,12 @@ flowchart TD
 
 ## 2. 兩種資料：動作與菜單
 
-### 2.1 動作（120 個）
+### 2.1 動作（125 個）
 
 | 欄位 | 說明 |
 |---|---|
 | `pattern` | 11 個動作模式之一（`warmup` `push` `pull` `squat` `hinge` `lateral` `coord` `core` `loco` `calf` `stretch`）。挑選器把它們收成 **6 個大類**。 |
-| `tier` | `C1`–`C4` 徒手由易到難；`B1`／`B2` 用家裡的重量。分布：C1 51、C2 35、C3 18、C4 5、B1 10、B2 1 |
+| `tier` | `C1`–`C4` 徒手由易到難；`B1`／`B2` 用家裡的重量。分布：C1 56、C2 35、C3 18、C4 5、B1 10、B2 1 |
 | `unit` | 一律是 `time` 或 `time_each`。**全部用秒數**，不用次數 —— 次數要自己按「完成」才會前進，等於每個動作結束都要走去碰螢幕 |
 | `default` | 預設秒數。`hint` 是照秒數回推的次數參考，只顯示、不控制 |
 | `gear` | `[]`／`dumbbell`／`kettlebell`。11 個動作需要器材 |
@@ -396,7 +396,31 @@ preset → plan 轉換前後的筆數對不對得起來，以及六張新菜單�
 
 ---
 
-## 12. 相關文件
+## 12. 更新紀錄
+
+頂列右邊的「更新紀錄」按鈕，答的是「我什麼時候加了什麼動作／菜單」。
+
+資料在 `movements.json` 的 `changelog[]`，手寫維護、新的排最前面：
+
+```json
+{ "date": "2026-08-30", "title": "補上五個最常漏掉的伸展",
+  "moves": ["st-frog", "st-plantar"], "presets": [], "note": "…" }
+```
+
+- `moves`／`presets` 存的是 **id**，名稱在畫面上即時解析 —— 之後改名不用回頭補紀錄
+- 已經刪掉的 id 會安靜跳過，不會留一個點不開的名字
+- 動作名稱點得開教學面板（返回鍵會寫「返回更新紀錄」）
+- 沒有新增東西的改版就只寫 `note`
+
+檢查腳本會擋：日期格式、由新到舊的順序、id 存不存在、以及「這一筆等於沒說話」
+（既沒有新增項目也沒有 note）。
+
+> 為什麼放在 `movements.json` 而不是另一個檔？因為**加動作時就是在改這個檔** ——
+> 放在一起才不會忘記補。它只佔 3 KB。
+
+---
+
+## 13. 相關文件
 
 - [circuit-menu-expansion-plan.md](circuit-menu-expansion-plan.md) —— 這一輪改版的完整計畫與實作差異（§13）
 - [gemini-movement-video-research-prompt.md](gemini-movement-video-research-prompt.md) —— 影片採集規格

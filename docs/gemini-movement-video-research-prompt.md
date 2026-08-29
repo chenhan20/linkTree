@@ -162,6 +162,88 @@ data/movement-videos.json
 不要另外提出 UI 改版，也不要實作影片播放器。這次只負責影片研究資料。
 ```
 
+---
+
+## 增補：只補新加的幾個動作
+
+動作庫之後會繼續長。**不要為了幾個新動作重跑整份 360 支** —— 既有資料已經逐一驗證過，
+重跑只會多出一堆沒必要的變動，也可能把好的挑選換成差的。
+
+判斷哪些動作缺影片，直接跑：
+
+```bash
+node scripts/check-circuit-data.js
+```
+
+它會印出 `! N 個動作還沒有教學影片：<id> <id> …`。
+
+給 Gemini 的增補指令用下面這個模板。重點是：
+
+1. **只研究列出來的 id**，不要碰既有的動作。
+2. 交付的是**片段**，不是完整檔案 —— 只有 `movements` 與 `issues` 兩個 key。
+   合併與頂層欄位（`movementCount`、`videoCount`、`generatedAt`）由我們這邊處理。
+3. 每個動作的 `zh`／`en`／`kw`／`steps`／`wrong` 直接寫在指令裡，
+   不必再附整份 `data/movements.json`。
+4. **一定要點名容易混淆的變化式**。新動作最常見的失敗不是找不到影片，
+   而是找到「名字很像但做的是另一個東西」的影片。
+
+```text
+你是這個專案的 YouTube 動作教學研究員。這次是增補，不是重做。
+
+只研究下面列出的動作。不要碰、不要重新產生、不要提及其他既有動作。
+
+交付內容是「片段 JSON」，只有兩個 key：
+
+{
+  "movements": { "<動作 id>": [ 三支影片 ] },
+  "issues": []
+}
+
+不要輸出 version / generatedAt / movementCount / videoCount，那些由我們合併時處理。
+不要用 Markdown code fence 包住 JSON。
+
+每支影片的欄位（全部都要實際查證，不可估算、不可捏造）：
+
+{
+  "videoId": "11 字元 YouTube video ID",
+  "title": "影片原始標題",
+  "channel": "頻道名稱",
+  "watchUrl": "https://www.youtube.com/watch?v=VIDEO_ID",
+  "durationSec": 192,
+  "viewCountAtSelection": 12800000,
+  "language": "en",
+  "checkedAt": "YYYY-MM-DD",
+  "embeddable": true,
+  "approved": true,
+  "selectionNote": "一句話說明為何確定是正確版本"
+}
+
+規則跟之前完全一樣：
+
+- 相關性資格先於觀看數。合格候選再依觀看數由高到低取前三。
+- 每個動作恰好 3 支，同一動作內不得重複 videoId。
+- 必須是公開、目前可播放、**允許嵌入其他網站**的影片。無法確認就寫進 issues，不要猜。
+- 建議片長 45 秒～12 分鐘。超出只在候選不足時採用，並在 selectionNote 說明。
+- 排除：YouTube Shorts、30 天挑戰、跟練合集、完整 workout、反應／搞笑、
+  只談好處沒有完整示範、只有音樂的 montage、把錯誤姿勢當標準的示範。
+- 語言不限，正確填 language。
+- 找不到 3 支就寧可只留 1～2 支並寫進 issues，格式：
+  { "movementId": "...", "found": 2, "reason": "...", "queriesTried": ["..."] }
+
+<<在這裡貼上這一批動作的清單與「不要挑錯」提醒>>
+
+完成後只回報：每個動作找到幾支、issues 有哪些、你實際做過哪些查證。
+不要提出 UI 建議，不要動任何程式碼。
+```
+
+### 合併回來之後要做的
+
+1. 把片段的 `movements` 併進 `data/movement-videos.json`，更新 `movementCount`、
+   `videoCount`、`generatedAt`。
+2. **逐一打官方 oEmbed 驗證新的 videoId**（`https://www.youtube.com/oembed?format=json&url=…`）——
+   回 200 才算數。videoId 是最容易被憑空生出來的欄位。
+3. `node scripts/check-circuit-data.js` 應該不再出現「還沒有教學影片」的警告。
+
 ## 要提供給 Gemini 的檔案
 
 必要：

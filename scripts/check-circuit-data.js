@@ -115,6 +115,34 @@ db.presets.forEach(p => {
 const nFeat = db.presets.filter(p => p.featured).length;
 if (nFeat !== 6) E(`精選菜單有 ${nFeat} 張，首屏規格是 6 張`);
 
+/* ── 更新紀錄 ── */
+const cl = db.changelog || [];
+let lastDate = null;
+cl.forEach((x, i) => {
+  const w = `changelog[${i}]`;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(x.date || '')) E(`${w}: date ${x.date} 不是 YYYY-MM-DD`);
+  if (!x.title) E(`${w}: 缺 title`);
+  if (lastDate && x.date > lastDate) E(`${w}: ${x.date} 比上一筆 ${lastDate} 新，新的要排前面`);
+  lastDate = x.date;
+  (x.moves || []).forEach(id => { if (!byId(id)) W(`${w}: 動作 ${id} 已經不存在（畫面上會安靜跳過）`); });
+  (x.presets || []).forEach(id => { if (!pseen.has(id)) W(`${w}: 菜單 ${id} 已經不存在`); });
+  if (!(x.moves || []).length && !(x.presets || []).length && !x.note)
+    E(`${w}: 既沒有新增項目也沒有 note，這筆等於沒說話`);
+});
+/* 有沒有動作漏掉影片。不是錯 —— 新加的動作本來就要等下一輪採集 */
+try {
+  const vf = path.join(ROOT, 'data/movement-videos.json');
+  if (fs.existsSync(vf)) {
+    const vids = JSON.parse(fs.readFileSync(vf, 'utf8')).movements || {};
+    const miss = db.moves.filter(m => !vids[m.id]).map(m => m.id);
+    const wrong = db.moves.filter(m => vids[m.id] && vids[m.id].length !== 3).map(m => m.id);
+    const extra = Object.keys(vids).filter(id => !byId(id));
+    if (miss.length) W(`${miss.length} 個動作還沒有教學影片：${miss.join(' ')}`);
+    if (wrong.length) W(`影片不是 3 支的動作：${wrong.join(' ')}`);
+    if (extra.length) E(`影片檔有來源不存在的動作 id：${extra.join(' ')}`);
+  }
+} catch (e) { W('影片檔讀不起來：' + e.message); }
+
 /* ── 六張新菜單的估時基準（計畫 §1E-2）──
    計畫寫的 10:45／21:00／22:45／11:35／19:55／15:40 是「收操沒有換位時間」
    那版公式算的。加了每側 5 秒換邊與伸展間 shift 秒之後，含收操的菜單會變長；

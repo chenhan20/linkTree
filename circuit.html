@@ -100,6 +100,41 @@ body{
 /* 只有個人模式（?me=1）看得到的排課備註 */
 .pnote .me{display:block;margin-top:8px;padding-top:8px;border-top:1px dashed var(--hair-2);color:var(--ink-3)}
 
+/* 更新紀錄的入口。放在頂列右邊，不跟任何操作搶位置 */
+.top-btn{
+  display:inline-flex;align-items:center;min-height:var(--tap);padding:0 12px;
+  border:1px solid var(--hair-2);border-radius:100px;background:transparent;
+  color:var(--ink-2);font-family:inherit;font-size:12.5px;letter-spacing:.5px;cursor:pointer
+}
+.top-btn:hover{border-color:var(--sig);color:var(--sig)}
+
+/* ── 更新紀錄 ─────────────────────────────────────────── */
+.log-body{padding:16px 18px calc(24px + env(safe-area-inset-bottom))}
+.log-in{max-width:760px;margin:0 auto}
+.log-now{
+  margin-bottom:6px;padding:12px 14px;border:1px solid var(--hair);border-radius:8px;
+  background:var(--surface);font-size:13.5px;line-height:1.8;color:var(--ink-2)
+}
+.log-now b{font-family:var(--f-num);font-weight:800;font-size:21px;color:var(--ink-1);
+  font-variant-numeric:tabular-nums;margin:0 2px}
+.lg{padding:18px 0;border-bottom:1px solid var(--hair)}
+.lg:last-child{border-bottom:0}
+.lg-d{
+  font-family:var(--f-num);font-weight:800;font-size:13px;letter-spacing:1.6px;
+  color:var(--sig);font-variant-numeric:tabular-nums
+}
+.lg-t{display:block;font-size:17px;font-weight:700;color:var(--ink-1);margin-top:4px;line-height:1.45}
+.lg-c{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px}
+.lg-c s{
+  text-decoration:none;padding:3px 9px;border-radius:100px;font-size:11px;font-weight:700;
+  letter-spacing:.6px;background:rgba(74,208,122,.13);color:var(--ok)
+}
+.lg-c s.p{background:rgba(252,76,2,.14);color:var(--sig)}
+.lg-l{margin-top:9px;font-size:13.5px;line-height:2;color:var(--ink-3)}
+.lg-l .lnk{font-size:13.5px;color:var(--ink-2)}
+.lg-l i{font-style:normal}
+.lg p{margin-top:9px;font-size:13.5px;line-height:1.85;color:var(--ink-2)}
+
 /* ── 課表列 ───────────────────────────────────────────── */
 .plan{border-top:1px solid var(--hair)}
 .pr{
@@ -623,6 +658,7 @@ body{
   <div class="top">
     <b>CIRCUIT</b> <span>/ 循環訓練</span>
     <span class="sp"></span>
+    <button class="top-btn" id="log-open" type="button">更新紀錄</button>
   </div>
 
   <header class="hero">
@@ -698,6 +734,16 @@ body{
     <span class="sp"></span>
   </div>
   <div class="ov-body how-body"><div class="how-in" id="how-body"></div></div>
+</div>
+
+<!-- 更新紀錄：什麼時候加了哪些動作與菜單。名稱是即時解析的，改名不用回來補 -->
+<div class="ov" id="log" hidden>
+  <div class="ohd">
+    <button class="oback" id="log-x" type="button"><span>←</span><span>返回今日菜單</span></button>
+    <b>更新紀錄</b>
+    <span class="sp"></span>
+  </div>
+  <div class="ov-body log-body"><div class="log-in" id="log-body"></div></div>
 </div>
 
 <!-- 動作挑選器：桌面左右兩欄、手機列表→詳情推進。整個流程只有一層 modal -->
@@ -1031,7 +1077,7 @@ function popTo(depth) {
 addEventListener('popstate', e => popTo((e.state && e.state.circuit) || 0));
 const topLayer = () => NAV[NAV.length - 1];
 const lockScroll = on => { document.body.style.overflow = on ? 'hidden' : ''; };
-const anyOverlay = () => !$('#run').hidden || !$('#how').hidden || !$('#pick').hidden;
+const anyOverlay = () => !$('#run').hidden || !$('#how').hidden || !$('#pick').hidden || !$('#log').hidden;
 
 /* ══ 執行器 ════════════════════════════════════════════════════ */
 const R = { steps:[], i:0, left:-1, timer:null, wake:null, wakeOk:null, paused:false, gate:false, mode:'full' };
@@ -1328,9 +1374,11 @@ const nView = n => n >= 1e8 ? Math.round(n/1e6) + ' 萬次觀看'
 const vSecs = s => Math.floor(s/60) + ':' + String(s%60).padStart(2, '0');
 function videoHtml(m) {
   const vs = vidsOf(m.id);
-  if (!vs) return (vidState === 3
-      ? '<p>影片清單讀不到。先用搜尋關鍵字：</p>'
-      : '<p>載入中…先用搜尋關鍵字：</p>') +
+  /* 三種「沒有影片」要分清楚：還沒載完、載不到、以及這個動作根本還沒採集。
+     新加的動作會落在第三種 —— 寫「載入中」會讓人一直等一個不會來的東西。 */
+  if (!vs) return '<p>' + (vidState === 3 ? '影片清單讀不到。'
+      : vidState === 2 ? '這個動作還沒採集影片。'
+      : '載入中…') + '先用搜尋關鍵字：</p>' +
     '<a class="hc-yt" href="' + yt(m.kw) + '" target="_blank" rel="noopener">▶ ' + esc(m.kw) + '</a>';
   return '<div class="vids">' + vs.map((v, i) =>
     '<button class="vid" type="button" data-vid="' + m.id + ':' + i + '">' +
@@ -1405,9 +1453,52 @@ function howCard(m, amt, opt) {
       (n ? '再加一次（已加入 ' + n + '）' : '加入' + (m.pattern === 'stretch' ? '收操' : '今日菜單')) + '</button>' : '') +
   '</div>';
 }
+/* ── 更新紀錄 ────────────────────────────────────────────────
+   資料在 movements.json 的 changelog[]，手寫維護。
+   moves／presets 存的是 id,名稱在這裡即時解析 —— 之後動作或菜單改名,
+   歷史紀錄會跟著對,不用回頭補。已經刪掉的 id 就安靜跳過。 */
+function renderLog() {
+  const cl = DB.changelog || [];
+  const nMove = DB.moves.length, nSet = DB.presets.length;
+  const names = (ids, kind) => (ids || []).map(id => {
+    if (kind === 'p') { const p = DB.presets.find(x => x.id === id); return p ? esc(p.name) : null; }
+    const m = byId(id);
+    return m ? '<button class="lnk" type="button" data-how="' + m.id + '">' + esc(m.zh) + '</button>' : null;
+  }).filter(Boolean);
+  $('#log-body').innerHTML =
+    '<div class="log-now">目前有 <b>' + nMove + '</b> 個動作、<b>' + nSet + '</b> 張現成菜單。' +
+      '下面是每一次加了什麼 —— 動作名稱點得開教學。</div>' +
+    (cl.length ? cl.map(x => {
+      const mv = names(x.moves, 'm'), ps = names(x.presets, 'p');
+      return '<div class="lg">' +
+        '<div class="lg-d">' + esc(x.date) + '</div>' +
+        '<b class="lg-t">' + esc(x.title) + '</b>' +
+        (mv.length || ps.length ? '<div class="lg-c">' +
+          (mv.length ? '<s>＋' + mv.length + ' 個動作</s>' : '') +
+          (ps.length ? '<s class="p">＋' + ps.length + ' 張菜單</s>' : '') + '</div>' : '') +
+        (ps.length ? '<div class="lg-l"><i>菜單：</i>' + ps.join(' · ') + '</div>' : '') +
+        (mv.length ? '<div class="lg-l"><i>動作：</i>' + mv.join(' · ') + '</div>' : '') +
+        (x.note ? '<p>' + md(x.note) + '</p>' : '') +
+      '</div>';
+    }).join('') : '<div class="nil">還沒有紀錄。</div>');
+}
+function openLog() {
+  renderLog();
+  $('#log').hidden = false;
+  lockScroll(true);
+  $('#log').querySelector('.ov-body').scrollTop = 0;
+  layerOpen({ name:'log', close:closeLog });
+  $('#log-x').focus();
+}
+function closeLog() {
+  $('#log').hidden = true;
+  if (!anyOverlay()) lockScroll(false);
+}
+
 function openHow(id, backLabel) {
   const body = $('#how-body');
-  $('#how-back').textContent = backLabel || '返回今日菜單';
+  $('#how-back').textContent = backLabel ||
+    (!$('#log').hidden ? '返回更新紀錄' : !$('#pick').hidden ? '返回動作庫' : '返回今日菜單');
   if (id) {
     const m = byId(id); if (!m) return;
     const row = allRows(plan).find(r => r.id === id);
@@ -1885,6 +1976,8 @@ $('#go').addEventListener('click', () => startRun('full'));
 $('#go-stretch').addEventListener('click', () => startRun('stretch'));
 $('#how-open').addEventListener('click', () => openHow(null));
 $('#how-x').addEventListener('click', layerBack);
+$('#log-open').addEventListener('click', openLog);
+$('#log-x').addEventListener('click', layerBack);
 $('#lib-open').addEventListener('click', () => openPick());
 $('#lib-browse').addEventListener('click', () => openPick({ mode:'browse' }));
 $('#lib-stretch').addEventListener('click', () => openPick({ cat:'stretch' }));
@@ -1923,7 +2016,7 @@ document.addEventListener('keydown', e => {
     if (e.key === 'Escape') { $('#r-conf').hidden = true; if (R.paused && R.timer) reReady(); }
     return;
   }
-  if (!$('#how').hidden || !$('#pick').hidden) { if (e.key === 'Escape') layerBack(); return; }
+  if (!$('#how').hidden || !$('#pick').hidden || !$('#log').hidden) { if (e.key === 'Escape') layerBack(); return; }
   if ($('#run').hidden) return;
   if (e.key === 'Escape') return askQuit();
   if (e.key === ' ') { e.preventDefault(); R.timer ? togglePause() : next(); }
