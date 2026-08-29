@@ -256,8 +256,63 @@ body{
 @keyframes sndping{0%,100%{box-shadow:0 0 0 0 rgba(255,176,32,0)}50%{box-shadow:0 0 0 7px rgba(255,176,32,.28)}}
 /* ✕ 第一下先變成「結束?」——練到一半誤觸不該讓整堂直接消失 */
 .run-x.arm{width:auto;padding:0 13px;background:rgba(252,76,2,.22);color:var(--sig);font-size:13px;font-weight:700;letter-spacing:1px}
+/* ── 動效層的三個舞台 ────────────────────────────────────────
+   都是空殼：沒有 anime.js（或使用者關了動畫）就永遠透明，不畫任何東西。
+   run-wash 用 z-index:-1 —— .run 是 position:fixed + z-index:60，自己就是一個
+   堆疊脈絡，所以 -1 只會沉到 .run 的底色上面、所有內容下面，不會跑到頁面後面去。
+   刻意是「一整片純色」不是漸層：這麼大一塊的軟漸層在 8-bit 色深下會出現同心
+   色環（實測看得到），而整片純色沒有階可以斷。 */
+.run-wash{position:absolute;inset:0;z-index:-1;pointer-events:none;background-color:transparent}
+.run-wipe{
+  position:absolute;left:0;right:0;top:0;height:30vh;z-index:3;pointer-events:none;opacity:0;
+  background:linear-gradient(180deg,transparent,rgba(255,255,255,.16) 46%,transparent)
+}
+.run-go{
+  position:absolute;inset:0;z-index:3;pointer-events:none;opacity:0;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--f-num);font-weight:800;font-size:clamp(96px,32vmin,320px);
+  letter-spacing:-6px;color:var(--sig);text-shadow:0 0 60px rgba(252,76,2,.55)
+}
+/* 換邊：整堂最容易恍神的五秒。左滑出、箭頭跳出來、右滑進來，
+   一眼就知道「換另一隻腳」，不必去讀那行小字。 */
+.run-side{
+  position:absolute;inset:0;z-index:3;pointer-events:none;opacity:0;
+  display:flex;align-items:center;justify-content:center;gap:min(6vw,54px);
+  font-family:var(--f-num);font-weight:800;color:var(--cool);
+  font-size:clamp(64px,20vmin,190px);text-shadow:0 0 54px rgba(74,180,255,.45)
+}
+.run-side i{font-style:normal;font-size:.46em;opacity:.85}
+/* 加進課表的飛行殘影。position:fixed ＋ 量起訖矩形（FLIP），
+   所以捲動位置、版面寬窄都不用管 */
+.fly{
+  position:fixed;z-index:80;pointer-events:none;border-radius:8px;
+  border:1px solid var(--sig);background:rgba(252,76,2,.16);color:var(--ink-1);
+  font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;
+  padding:0 10px;white-space:nowrap;box-shadow:0 0 22px rgba(252,76,2,.35)
+}
+/* 收工：號角四連音的視覺對位 */
+.run-burst{position:absolute;inset:0;z-index:4;pointer-events:none}
+.run-burst i{
+  position:absolute;left:50%;top:46%;display:block;width:7px;height:7px;
+  margin:-3.5px 0 0 -3.5px;border-radius:2px;opacity:0
+}
+/* 收操呼吸引導：吸 4 秒放大、吐 6 秒縮小。這顆之後要整個搬去 still-point */
+.run-breath{
+  position:absolute;left:50%;top:46%;width:min(52vmin,300px);aspect-ratio:1;
+  transform:translate(-50%,-50%);z-index:-1;pointer-events:none;opacity:0;
+  border-radius:50%;border:1px solid rgba(74,180,255,.42);
+  background:radial-gradient(circle,rgba(74,180,255,.10),transparent 68%)
+}
+/* 標籤放上半部的空白區。這一屏是垂直置中的，圈裡從標題到「接著：」整條中軸
+   全是字，圈上緣、下緣都會疊到 —— 兩個位置都實測過。圈自己會脹縮，
+   字只是補一個口令，離遠一點沒關係，讀得到比較重要。 */
+.run-breathk{
+  position:absolute;left:50%;top:21%;transform:translateX(-50%);
+  z-index:2;pointer-events:none;opacity:0;
+  font-size:clamp(15px,2.6vmin,26px);letter-spacing:10px;text-indent:10px;color:var(--cool)
+}
 /* 收工彩帶 */
-.cfx{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.cfx{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:5}
 .cfx i{position:absolute;top:-6vh;display:block;border-radius:2px;animation:cfall linear both}
 @keyframes cfall{to{transform:translate(var(--dx,0),115vh) rotate(680deg)}}
 .est b.pop{animation:npop .3s ease-out}
@@ -455,6 +510,10 @@ const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>
 const md = s => esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
 const yt = kw => 'https://www.youtube.com/results?search_query=' + encodeURIComponent(kw);
 const mmss = s => Math.floor(s/60) + ':' + String(Math.round(s%60)).padStart(2,'0');
+/* 動效層的掛勾。這裡只負責「說剛才發生了什麼」，不知道也不在乎有沒有人在聽 ——
+   頁尾那個 module 沒載入、或使用者開了 reduce motion，這幾行就是幾個沒人接的事件。
+   計時、音效、狀態一律不經過這裡，所以動效層壞掉不會影響到練習本身。 */
+const fx = (name, detail) => dispatchEvent(new CustomEvent('circuit:' + name, { detail }));
 /* 重新觸發同一個 CSS 動畫要先把 class 拿掉再強制 reflow */
 const repop = (el, cls) => { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); };
 let toastT = null;
@@ -591,6 +650,7 @@ function showStep() {
     : st.kind==='switch' ? ' is-switch' : st.kind==='done' ? ' is-done'
     : st.kind==='ready' ? ' is-ready' : '');
   repop(document.querySelector('.run-body'), 'in');
+  fx('step', { kind: st.kind, side: st.side || null, stretch: !!st.stretch });
 
   if (st.kind === 'done') {
     const secs = Math.max(1, Math.round((Date.now() - R.t0) / 1000));
@@ -606,11 +666,13 @@ function showStep() {
         (plan.stretches.length ? ' ＋ ' + plan.stretches.length + ' 伸展' : '');
     $('#r-set').textContent = ''; $('#r-pos').textContent = '';
     $('#r-bar').style.transform = 'scaleX(1)';
+    fx('progress', { p: 1 });
     $('#r-main').textContent = '關閉'; $('#r-prev').hidden = true; $('#r-skip').hidden = true;
     confetti(); fanfare(); return;
   }
   $('#r-prev').hidden = false; $('#r-skip').hidden = false;
   $('#r-bar').style.transform = 'scaleX(' + (R.i / (R.steps.length - 1)).toFixed(4) + ')';
+  fx('progress', { p: R.i / (R.steps.length - 1) });
   $('#r-set').textContent = st.stretch ? '收操伸展'
     : st.set ? '第 ' + st.set + ' / ' + plan.sets + ' 組' : '';
   $('#r-pos').textContent = st.of ? st.idx + ' / ' + st.of : '';
@@ -685,6 +747,7 @@ function countdown(secs) {
       clearInterval(R.timer); R.timer = null;
       num.classList.remove('is-last');
       (R.steps[R.i].kind === 'ready' ? goTone : endTone)();
+      fx(R.steps[R.i].kind === 'ready' ? 'go' : 'end');
       next();
     }
   }, 1000);
@@ -887,7 +950,10 @@ document.addEventListener('click', e => {
     setTimeout(() => { t.classList.remove('added'); plus.textContent = '＋'; }, 900);
     const row = $(key === 'moves' ? '#plan' : '#stretch').lastElementChild;
     if (row && row.classList.contains('pr')) repop(row, 'is-new');
-    toast('<b>✓</b> ' + esc(m.zh) + ' 已加入' + (key === 'moves' ? '今日菜單' : '收操'));
+    fx('add', { from: t, to: row, zh: m.zh, list: key });
+    /* 有動效層時卡片會飛過去，飛行本身就說明了「加到哪」，再彈一個 toast 是重複；
+       沒有動效層就得靠 toast —— 菜單在畫面上方，什麼回饋都沒有會以為沒按到 */
+    if (!window.__fxFly) toast('<b>✓</b> ' + esc(m.zh) + ' 已加入' + (key === 'moves' ? '今日菜單' : '收操'));
     return;
   }
   if (t.dataset.rm) {
@@ -953,5 +1019,178 @@ document.addEventListener('keydown', e => {
   if (e.key === 'ArrowLeft') { e.preventDefault(); prev(); }
 });
 </script>
+<!-- ══ 動效層 · anime.js v4 ════════════════════════════════════════════════
+     跟音效層一對一：耳朵已經聽得到「搭答答 → 加重 → 結束音 → GO」，
+     這一層只是把同樣的事情畫給眼睛看。它接的是上面 fx() 派出來的事件，
+     不碰 R、不碰 setInterval、不碰任何一顆按鈕。
+
+     拔掉 vendor-anime-4.esm.min.js，或使用者開了 reduce motion → 整段不執行，
+     三個舞台元素連生都不會生出來，進度條退回原本那條 CSS transition。
+
+     這裡刻意不重做每秒的 pop 與最後五秒的加重 —— 那兩個已經是 CSS keyframe
+     （.beat / .beat-hard / .is-last / .edge），一秒觸發一次 class 就好，
+     搬到 JS 只會在每一次心跳多建一個動畫物件，換不到任何東西。 -->
+<script type="module">
+if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  import('./vendor-anime-4.esm.min.js?v=4.5.0').then(runFx).catch(() => {})
+}
+
+function runFx({ animate, createSpring, createTimeline }) {
+  const run = document.getElementById('run')
+  if (!run) return
+  const mk = cls => { const d = document.createElement('div'); d.className = cls; run.appendChild(d); return d }
+  const wash = mk('run-wash'), wipe = mk('run-wipe'), go = mk('run-go'), side = mk('run-side')
+  const burst = mk('run-burst'), breath = mk('run-breath'), breathK = mk('run-breathk')
+  go.textContent = 'GO'
+  side.innerHTML = '<b>左</b><i>→</i><b>右</b>'
+  const [sL, sArr, sR] = side.children
+  breathK.textContent = '吸'
+  const HUES = ['#FC4C02', '#4ad07a', '#4AB4FF', '#FFD24D', '#f4f0ea']
+  burst.innerHTML = Array.from({ length: 16 },
+    (_, i) => `<i style="background:${HUES[i % HUES.length]}"></i>`).join('')
+  const sparks = [...burst.children]
+  window.__fxFly = true          // 課表列表那邊看到這支旗標就把 toast 讓給飛行殘影
+
+  /* 底色溫度：做＝訊號橘、休息＝綠、換邊＝青、預備＝金。
+     顏色本身在畫面上已經有（數字跟標籤會變色），這裡是把它擴散到整個背景，
+     讓「現在能不能休息」在讀到字之前就先進到餘光裡。
+
+     透明度壓在 .17–.22：再往上推，.run-k 那行小字（橘字疊在橘底上）的對比會
+     從 3.7 掉到 3.1 —— 它本來就是全畫面對比最低的元素，不該由這一層再扣它。
+     換邊給到 .22 是刻意的，那五秒最容易恍神，值得吵一點。 */
+  const WASH = {
+    work:    ['rgba(252,76,2,.18)',   240],
+    ready:   ['rgba(255,176,32,.17)', 320],
+    rest:    ['rgba(74,208,122,.17)', 620],   // 進休息放慢：鬆下來是慢慢鬆的
+    bigrest: ['rgba(74,208,122,.19)', 720],
+    switch:  ['rgba(74,180,255,.22)', 300],
+    done:    ['rgba(255,210,77,.20)', 900],
+    stretch: ['rgba(74,180,255,.15)', 700],   // 收操：跟呼吸圈同一個冷色系
+  }
+
+  addEventListener('circuit:step', e => {
+    const key = (e.detail.stretch && e.detail.kind === 'work') ? 'stretch' : e.detail.kind
+    const [color, duration] = WASH[key] || WASH.work
+    animate(wash, { backgroundColor: color, duration, ease: 'outQuad' })
+
+    /* 換邊那五秒：左滑掉、箭頭跳出來、右滑進來，放約 0.9 秒之後淡掉 ——
+       倒數數字在它底下，蓋著不放會把「還剩幾秒」擋住。 */
+    if (e.detail.kind === 'switch') {
+      createTimeline({ defaults: { ease: 'outExpo' } })
+        .add(side, { opacity: [0, 1], duration: 160 }, 0)
+        .add(sL,   { translateX: [0, '-58%'], opacity: [1, .22], duration: 620 }, 0)
+        .add(sArr, { scale: [.5, 1], opacity: [0, 1], duration: 480 }, 120)
+        .add(sR,   { translateX: ['58%', 0], opacity: [.22, 1], duration: 620 }, 120)
+        .add(side, { opacity: 0, duration: 420, ease: 'inQuad' }, 1180)
+    }
+
+    /* 有分邊的動作：名稱從那一側滑進來。做右邊時字從右邊來 ——
+       比讀「· 右」那兩個字快，而且低頭喘的時候餘光也接得到。 */
+    const sd = e.detail.side
+    if (sd && e.detail.kind === 'work') {
+      const name = document.getElementById('r-name')
+      if (name) animate(name, {
+        translateX: [sd === '右' ? 42 : -42, 0], opacity: [0, 1],
+        duration: 420, ease: 'outExpo',
+        onComplete: () => { name.style.transform = ''; name.style.opacity = '' },
+      })
+    }
+  })
+
+  /* 進度條：原本是 .3s linear，一步一步像是被拖過去的。
+     換成 spring 之後它是「彈到」下一格 —— 一堂課 60 幾步，這是看得最多次的動畫。
+     接管的第一件事是關掉 CSS transition，不然兩套會互相打架。 */
+  const bar = document.getElementById('r-bar')
+  if (bar) {
+    bar.style.transition = 'none'
+    const spring = createSpring({ stiffness: 110, damping: 17 })
+    addEventListener('circuit:progress', e =>
+      animate(bar, { scaleX: e.detail.p, ease: spring }))
+  }
+
+  /* 時間到：一道橫向色帶由上往下掃過去，順手把動作名稱打亮一下。
+     這是「這一步結束了」的視覺句點，跟 endTone 同時發生。 */
+  addEventListener('circuit:end', () => {
+    animate(wipe, {
+      opacity: [0, .95, 0],
+      translateY: ['-110%', '340%'],
+      duration: 520, ease: 'inOutQuad',
+    })
+    const name = document.getElementById('r-name')
+    if (name) animate(name, { opacity: [.35, 1], scale: [1.06, 1], duration: 420, ease: 'outQuad' })
+  })
+
+  /* B4 · 收工煙火。對位的是 fanfare() 那四個音（135ms 一個、最後一個拖 560ms）：
+     十六個小方塊分四波放射出去，每一波跟一個音同時到。
+     彩帶（confetti）是慢慢飄下來的背景，這個是瞬間的重音，兩個不衝突。 */
+  addEventListener('circuit:step', e => {
+    if (e.detail.kind !== 'done') return
+    sparks.forEach((el, i) => {
+      const th = (i / sparks.length) * Math.PI * 2 + (i % 2 ? .2 : 0)
+      const far = 130 + (i % 4) * 46
+      animate(el, {
+        translateX: [0, Math.cos(th) * far], translateY: [0, Math.sin(th) * far],
+        scale: [.4, i % 3 ? 1 : 1.7], rotate: [0, (i % 2 ? 1 : -1) * 200],
+        opacity: [0, 1, 0],
+        duration: 900, delay: Math.floor(i / 4) * 135, ease: 'outExpo',
+      })
+    })
+  })
+
+  /* B5 · 收操呼吸引導：吸 4 秒放大、吐 6 秒縮小，只在收操的動作步驟出現。
+     4:6 不是隨便挑的 —— 吐氣長於吸氣才會把副交感拉起來，收操要的正是那個。
+     這顆元件跟 still-point 的核心需求同構，之後整個搬過去。 */
+  let breathTl = null
+  const stopBreath = () => {
+    if (!breathTl) return
+    breathTl.pause(); breathTl = null
+    animate([breath, breathK], { opacity: 0, duration: 260, ease: 'outQuad' })
+  }
+  addEventListener('circuit:step', e => {
+    const on = e.detail.stretch && e.detail.kind === 'work'
+    if (!on) return stopBreath()
+    if (breathTl) return                       // 一個收操動作接一個，不要每步重建
+    breath.style.transform = 'translate(-50%,-50%) scale(.72)'
+    animate([breath, breathK], { opacity: 1, duration: 320, ease: 'outQuad' })
+    breathTl = createTimeline({ loop: true })
+      .add(breath,  { scale: [.72, 1.16], duration: 4000, ease: 'inOutSine' }, 0)
+      .call(() => { breathK.textContent = '吐' }, 4000)
+      .add(breath,  { scale: [1.16, .72], duration: 6000, ease: 'inOutSine' }, 4000)
+      .call(() => { breathK.textContent = '吸' }, 10000)
+  })
+
+  /* B3 · 加進課表：複製一張殘影，量起訖矩形（FLIP）飛到剛長出來的那一列。
+     捲動位置、桌機/手機版面都不用管，因為量的是 viewport 座標、殘影走 position:fixed。 */
+  addEventListener('circuit:add', e => {
+    const { from, to, zh } = e.detail || {}
+    if (!from || !to) return
+    const a = from.getBoundingClientRect(), b = to.getBoundingClientRect()
+    const ghost = document.createElement('div')
+    ghost.className = 'fly'
+    ghost.textContent = zh
+    ghost.style.cssText += `left:${a.left}px;top:${a.top}px;width:${a.width}px;height:${a.height}px`
+    document.body.appendChild(ghost)
+    animate(ghost, {
+      translateX: b.left - a.left + (b.width - a.width) / 2,
+      translateY: b.top - a.top + (b.height - a.height) / 2,
+      width: Math.min(a.width, b.width) * .6, height: b.height,
+      opacity: [1, 1, 0], scale: [1, .82],
+      duration: 620, ease: 'inOutQuad',
+      onComplete: () => ghost.remove(),
+    })
+  })
+
+  /* 預備結束＝開始做。GO 放大淡出，比結束音更短更亮 —— 站定位的那五秒
+     結束在一個看得見的信號上，不是靜靜換一行字。 */
+  addEventListener('circuit:go', () => {
+    animate(go, {
+      opacity: [0, 1, 0],
+      scale: [.55, 1.32],
+      duration: 720, ease: 'outExpo',
+    })
+  })
+}
+</script>
+
 </body>
 </html>
