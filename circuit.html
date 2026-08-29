@@ -269,6 +269,12 @@ body{
   font-family:inherit;font-size:clamp(13px,1.7vmin,16px);cursor:pointer
 }
 .run-yt:hover{border-color:var(--sig);color:var(--sig)}
+/* 螢幕常亮拿不到時的警告。這件事一定要說出來 —— 不然是「做到第三組螢幕暗掉」才發現 */
+.run-wake{
+  max-width:46ch;margin-top:8px;padding:8px 13px;border-radius:7px;
+  border:1px solid rgba(255,176,32,.4);background:rgba(255,176,32,.07);
+  color:var(--warn);font-size:clamp(13px,1.7vmin,16px);line-height:1.6
+}
 .run-next{font-size:clamp(14px,1.9vmin,19px);color:var(--ink-3)}
 .run-next b{color:var(--ink-1);font-weight:600}
 .run-ft{display:flex;gap:9px;margin-top:10px}
@@ -742,6 +748,7 @@ body{
     <div class="run-num" id="r-num">—</div>
     <div class="run-unit" id="r-unit"></div>
     <div class="run-cue" id="r-cue"></div>
+    <div class="run-wake" id="r-wake" hidden></div>
     <button class="run-yt" id="r-yt" type="button" hidden>▶ 動作教學</button>
     <div class="run-next" id="r-next"></div>
   </div>
@@ -1027,13 +1034,44 @@ const lockScroll = on => { document.body.style.overflow = on ? 'hidden' : ''; };
 const anyOverlay = () => !$('#run').hidden || !$('#how').hidden || !$('#pick').hidden;
 
 /* ══ 執行器 ════════════════════════════════════════════════════ */
-const R = { steps:[], i:0, left:-1, timer:null, wake:null, paused:false, gate:false, mode:'full' };
+const R = { steps:[], i:0, left:-1, timer:null, wake:null, wakeOk:null, paused:false, gate:false, mode:'full' };
 
+/* ── 螢幕常亮 ────────────────────────────────────────────────
+   Screen Wake Lock：一般網頁就能用，不需要做成 PWA。要求是安全context
+   （https 或 localhost）＋ 分頁在前景。iOS Safari 16.4 起支援。
+
+   拿不到的情況是真的會發生：省電模式、iOS 16.4 以前、用 http 開。
+   而且系統自己收回時**不一定**會發 visibilitychange —— 所以要同時接
+   release 事件自己補申請。三件事缺一不可：
+     1. 失敗要講出來（不然是螢幕暗掉才發現）
+     2. 被收回要自己補回來
+     3. 回前景要重新申請（visibilitychange 那邊做） */
 async function keepAwake(on) {
+  if (!on) {
+    R.wakeOk = null;
+    try { if (R.wake) await R.wake.release(); } catch (e) {}
+    R.wake = null; return paintWake();
+  }
+  if (R.wake || document.hidden) return;
+  if (!('wakeLock' in navigator)) { R.wakeOk = false; return paintWake(); }
   try {
-    if (on && 'wakeLock' in navigator) { if (!R.wake) R.wake = await navigator.wakeLock.request('screen'); }
-    else if (R.wake) { R.wake.release(); R.wake = null; }
-  } catch (e) { /* 不支援就算了，不擋流程 */ }
+    const w = await navigator.wakeLock.request('screen');
+    R.wake = w; R.wakeOk = true;
+    w.addEventListener('release', () => {
+      R.wake = null;
+      /* 還在練、而且畫面看得到 —— 那就再要一次 */
+      if (!$('#run').hidden && !document.hidden) keepAwake(true);
+    });
+  } catch (e) { R.wake = null; R.wakeOk = false; }
+  paintWake();
+}
+function paintWake() {
+  const el = $('#r-wake'); if (!el) return;
+  const bad = R.wakeOk === false && !$('#run').hidden;
+  el.hidden = !bad;
+  if (bad) el.innerHTML = !('wakeLock' in navigator)
+    ? '⚠️ 這個瀏覽器不會讓螢幕保持常亮 —— <b>先把自動鎖定關掉</b>，不然中途會暗掉。'
+    : '⚠️ 螢幕常亮被擋住了（多半是<b>省電模式</b>）—— 關掉省電模式，或先把自動鎖定關掉。';
 }
 
 const MODE_ZH = { full:'訓練', warmup:'熱身', stretch:'收操' };
@@ -1089,6 +1127,7 @@ function showStep() {
     : st.set ? '第 ' + st.set + ' / ' + st.sets + ' 組' : '';
   $('#r-pos').textContent = st.of ? st.idx + ' / ' + st.of : '';
 
+  paintWake();
   const nx = R.steps.slice(R.i + 1).find(s => s.kind === 'work');
   $('#r-next').innerHTML = nx ? '接著：<b>' + esc(nx.move.zh) + (nx.side ? ' · ' + nx.side : '') + '</b>' : '';
   $('#r-yt').hidden = true;
@@ -1153,7 +1192,7 @@ function showDone() {
     ? '熱身完成，<b>直接接著上主課</b>。這一段不用另外記錄。'
     : (ME ? '記得<b>戴錶錄成肌力訓練</b> —— 沒錄的話它在 CTL、DOMS、校準三個地方都不存在。'
           : '收工。明後天有點痠是正常的，痠到影響動作就把下一堂的組數往下調一組。');
-  $('#r-yt').hidden = true;
+  $('#r-yt').hidden = true; $('#r-wake').hidden = true;
   $('#r-next').textContent = R.mode === 'stretch'
     ? plan.stretches.length + ' 個收操伸展'
     : nMoves + ' 個動作' + (R.mode === 'full' && plan.stretches.length ? ' ＋ ' + plan.stretches.length + ' 伸展' : '');
