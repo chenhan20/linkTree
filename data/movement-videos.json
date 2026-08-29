@@ -1,10 +1,10 @@
 {
   "version": 1,
-  "generatedAt": "2026-08-29T20:43:49+00:00",
+  "generatedAt": "2026-08-29T20:47:24+00:00",
   "source": "gemini-youtube-research",
   "selectionPolicy": "relevance-gate-then-view-count",
   "movementCount": 125,
-  "videoCount": 374,
+  "videoCount": 375,
   "movements": {
     "warm-9090": [
       {
@@ -5092,6 +5092,19 @@
     ],
     "st-soleus": [
       {
+        "videoId": "1i8QwoscojU",
+        "title": "Soleus Calf muscle stretch",
+        "channel": "EverestTherapeutics",
+        "watchUrl": "https://www.youtube.com/watch?v=1i8QwoscojU",
+        "durationSec": 59,
+        "viewCountAtSelection": 179399,
+        "language": "en",
+        "checkedAt": "2026-08-30",
+        "embeddable": true,
+        "approved": true,
+        "selectionNote": "雙手推牆、後腳腳跟貼地且後膝明確微彎下沉，專注鎖定比目魚肌之標準教學"
+      },
+      {
         "videoId": "Zmc36LtB7f8",
         "title": "Soleus Stretch Standing",
         "channel": "Baptist Health",
@@ -5119,17 +5132,6 @@
       }
     ]
   },
-  "issues": [
-    {
-      "movementId": "st-soleus",
-      "found": 2,
-      "reason": "第三支候選 2_2GMXTc1BE 被退掉：它已經是 st-calf（小腿伸展，直膝版）的第一支，標題也明寫 gastrocnemius and soleus —— 那正是 st-calf 的內容。st-soleus 存在的理由就是把「屈膝、只針對比目魚肌」獨立出來，用同一支通用影片會讓兩個動作在畫面上長得一模一樣。需要一支只示範屈膝版、且尚未被其他動作使用的替代影片。",
-      "queriesTried": [
-        "bent knee calf stretch soleus",
-        "soleus stretch wall bent knee",
-        "soleus vs gastrocnemius stretch"
-      ]
-    }
-  ],
+  "issues": [],
   "_howToUse": "circuit.html 延後載入這一份:只有開教學或動作挑選器時才 fetch。讀不到就退回搜尋關鍵字連結,菜單與計時完全不依賴它。縮圖 URL 由 videoId 推導。viewCountAtSelection 是 checkedAt 當天的快照,不是即時值。重新採集見 docs/gemini-movement-video-research-prompt.md。"
 }

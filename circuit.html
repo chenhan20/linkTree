@@ -310,6 +310,14 @@ body{
   border:1px solid rgba(255,176,32,.4);background:rgba(255,176,32,.07);
   color:var(--warn);font-size:clamp(13px,1.7vmin,16px);line-height:1.6
 }
+/* 收工才出現：把今天做了什麼變成一段可以直接貼進 Strava 的文字 */
+#r-copy.ok{border-color:var(--ok);color:var(--ok)}
+/* execCommand 備援用的暫存區。要留在畫面上（不能 display:none）才選得到，
+   所以縮成 1px 藏在角落 */
+#r-copy-t{
+  position:absolute;left:-9999px;top:0;width:1px;height:1px;opacity:0;
+  border:0;padding:0;resize:none;pointer-events:none
+}
 .run-next{font-size:clamp(14px,1.9vmin,19px);color:var(--ink-3)}
 .run-next b{color:var(--ink-1);font-weight:600}
 .run-ft{display:flex;gap:9px;margin-top:10px}
@@ -796,6 +804,8 @@ body{
     <div class="run-cue" id="r-cue"></div>
     <div class="run-wake" id="r-wake" hidden></div>
     <button class="run-yt" id="r-yt" type="button" hidden>▶ 動作教學</button>
+    <button class="run-yt" id="r-copy" type="button" hidden>⧉ 複製今天的大綱</button>
+    <textarea id="r-copy-t" readonly aria-hidden="true" tabindex="-1"></textarea>
     <div class="run-next" id="r-next"></div>
   </div>
   <div class="run-ft">
@@ -1138,6 +1148,7 @@ function startRun(mode) {
 function endRun() { if (topLayer() && topLayer().name === 'run') { NAV.pop(); closeRun(); try { history.back(); } catch (e) {} } else closeRun(); }
 function closeRun() {
   clearInterval(R.timer); R.timer = null; R.gate = false; R.paused = false;
+  $('#r-copy-t').style.cssText = ''; $('#r-copy-t').value = '';
   $('#run').hidden = true; $('#r-conf').hidden = true;
   if (!anyOverlay()) lockScroll(false);
   keepAwake(false);
@@ -1176,7 +1187,7 @@ function showStep() {
   paintWake();
   const nx = R.steps.slice(R.i + 1).find(s => s.kind === 'work');
   $('#r-next').innerHTML = nx ? '接著：<b>' + esc(nx.move.zh) + (nx.side ? ' · ' + nx.side : '') + '</b>' : '';
-  $('#r-yt').hidden = true;
+  $('#r-yt').hidden = true; $('#r-copy').hidden = true;
 
   if (st.kind === 'ready') {
     $('#r-k').textContent = '預備';
@@ -1225,6 +1236,48 @@ function showStep() {
     $('#r-main').textContent = '完成';
   }
 }
+/* ── 今天的大綱 ──────────────────────────────────────────────
+   收工畫面按一下就進剪貼簿,直接貼進 Strava 的說明欄。
+   內容是「實際跑的那個模式」—— 只做熱身就不會列收操,只做收操就不會列主課。
+   刻意不帶任何連結或出處：這一頁對外是一般的訓練工具。 */
+function summaryText() {
+  const secs = Math.max(1, Math.round((Date.now() - R.t0) / 1000));
+  const p = plan.from && DB.presets.find(x => x.id === plan.from);
+  /* 菜單名本身可能就以括號結尾（「居家完整課（分段）」），模式再包一層括號會很醜 */
+  const tag = R.mode === 'warmup' ? ' · 只做熱身' : R.mode === 'stretch' ? ' · 只做收操' : '';
+  const L = [(p ? p.name : '自訂菜單') + tag + ' · ' + mmss(secs), ''];
+  const one = r => { const m = byId(r.id); return m ? m.zh + ' ' + r.amt + ' ' + UNIT[m.unit] : ''; };
+  const bs = activeBlocks(plan, R.mode);
+  const multi = plan.blocks.length > 1;
+  bs.forEach(b => {
+    if (multi) L.push('【' + (b.name || '主課') + '】× ' + b.sets + ' 輪' +
+      '（休 ' + b.restMove + (b.sets > 1 ? '／' + b.restSet : '') + ' 秒）');
+    b.moves.forEach(r => L.push('· ' + one(r)));
+    if (!multi) L.push('× ' + b.sets + ' 組（動作間休 ' + b.restMove + ' 秒' +
+      (b.sets > 1 ? '、大休 ' + b.restSet + ' 秒' : '') + '）');
+    L.push('');
+  });
+  if (R.mode !== 'warmup' && plan.stretches.length)
+    L.push('收操：' + plan.stretches.map(one).filter(Boolean).join('、'));
+  return L.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+}
+async function copySummary() {
+  const txt = summaryText(), btn = $('#r-copy');
+  let ok = false;
+  try { await navigator.clipboard.writeText(txt); ok = true; } catch (e) {}
+  if (!ok) {
+    /* 沒有 clipboard API（舊瀏覽器、非安全 context）就退回選取 ＋ execCommand */
+    const ta = $('#r-copy-t');
+    ta.value = txt; ta.select(); ta.setSelectionRange(0, txt.length);
+    try { ok = document.execCommand('copy'); } catch (e) {}
+  }
+  btn.textContent = ok ? '✓ 已複製，可以貼進 Strava 了' : '複製失敗 —— 長按下面的文字自己選';
+  btn.classList.toggle('ok', ok);
+  if (!ok) { const ta = $('#r-copy-t'); ta.style.cssText = 'position:static;width:100%;height:9em;opacity:1;pointer-events:auto;background:rgba(0,0,0,.4);color:var(--ink-1);font:13px/1.7 inherit;padding:10px;border-radius:7px'; }
+  else setTimeout(() => { btn.textContent = '⧉ 複製今天的大綱'; btn.classList.remove('ok'); }, 2600);
+  beep(ok ? 1040 : 440, 70, .16);
+}
+
 function showDone() {
   const secs = Math.max(1, Math.round((Date.now() - R.t0) / 1000));
   const nMoves = activeBlocks(plan, R.mode).reduce((t,b) => t + b.moves.length, 0);
@@ -1239,6 +1292,8 @@ function showDone() {
     : (ME ? '記得<b>戴錶錄成肌力訓練</b> —— 沒錄的話它在 CTL、DOMS、校準三個地方都不存在。'
           : '收工。明後天有點痠是正常的，痠到影響動作就把下一堂的組數往下調一組。');
   $('#r-yt').hidden = true; $('#r-wake').hidden = true;
+  $('#r-copy').hidden = false;
+  $('#r-copy').textContent = '⧉ 複製今天的大綱'; $('#r-copy').classList.remove('ok');
   $('#r-next').textContent = R.mode === 'stretch'
     ? plan.stretches.length + ' 個收操伸展'
     : nMoves + ' 個動作' + (R.mode === 'full' && plan.stretches.length ? ' ＋ ' + plan.stretches.length + ' 伸展' : '');
@@ -1904,7 +1959,7 @@ fetch('data/movements.json', { cache: 'no-cache' })
     openFromHash();
     /* 給 headless 驗證用的把手：只讀,不改變任何行為 */
     window.__circuit = { estimate, blockSecs, stretchSecs, buildSteps, activeBlocks,
-      presetMeta, planFromPreset, R, frame, openPick,
+      presetMeta, planFromPreset, R, frame, openPick, summaryText,
       get plan() { return plan; }, get DB() { return DB; } };
   })
   .catch(e => {
@@ -1994,6 +2049,7 @@ $('#r-x').addEventListener('click', askQuit);
 $('#r-conf-no').addEventListener('click', () => { $('#r-conf').hidden = true; if (R.paused && R.timer) reReady(); });
 $('#r-conf-yes').addEventListener('click', endRun);
 $('#r-yt').addEventListener('click', openHowFromRun);
+$('#r-copy').addEventListener('click', copySummary);
 $('#r-snd').addEventListener('click', () => {
   SND = !SND;
   paintSound();
