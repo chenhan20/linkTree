@@ -9,7 +9,7 @@
 |---|---:|---|---|
 | [`circuit.html`](../circuit.html) | 2,111 行 | 全部的畫面、計時器、音效、動效 | — |
 | [`data/movements.json`](../data/movements.json) | 105 KB | 125 個動作 ＋ 18 張菜單 ＋ 11 個動作模式 ＋ 更新紀錄 | 開頁就抓（關鍵路徑） |
-| [`data/movement-videos.json`](../data/movement-videos.json) | 170 KB | 360 支教學影片（涵蓋 120／125 個動作） | **延後**：第一次開教學或挑選器才抓 |
+| [`data/movement-videos.json`](../data/movement-videos.json) | 177 KB | 374 支教學影片（涵蓋 125 個動作） | **延後**：第一次開教學或挑選器才抓 |
 | [`vendor-anime-4.esm.min.js`](../vendor-anime-4.esm.min.js) | — | 動效層，純加法 | 非同步；載不到就當沒這回事 |
 | [`scripts/check-circuit-data.js`](../scripts/check-circuit-data.js) | 146 行 | 資料檢查 ＋ 估時基準 | 手動 |
 | [`scripts/research_movement_videos.py`](../scripts/research_movement_videos.py) | 512 行 | 影片離線採集 | 手動，一年跑不到幾次 |
@@ -311,7 +311,7 @@ flowchart LR
 
 ## 9. 教學影片
 
-360 支（120 個動作 × 3），離線採集、人工複核後寫進 `data/movement-videos.json`。
+374 支（125 個動作，其中 124 個各 3 支），離線採集、人工複核後寫進 `data/movement-videos.json`。
 
 **不在瀏覽器即時搜尋 YouTube**：API key 會外洩、每次開動作都要等、結果每天都在變，
 而且官方 `search.list` 預設額度是每天 100 次，120 個動作一天做不完。
@@ -339,8 +339,15 @@ flowchart TD
 
 ### 影片資料是驗過的，不是照單全收
 
-`videoId` 是最容易被憑空生出來的東西，所以 360 支的 356 個不重複 ID
-**逐一打過 YouTube 官方 oEmbed**：全部回 200，0 個失效、0 個禁止嵌入。
+`videoId` 是最容易被憑空生出來的東西，所以每一批進來都**逐一打過 YouTube 官方 oEmbed**：
+第一批 360 支的 356 個不重複 ID、第二批 15 支，全部回 200，0 個失效、0 個禁止嵌入。
+第二批連標題與頻道名都跟宣稱的逐字對過。
+
+驗證會抓到採集端看不出來的問題。第二批就退掉一支：`st-soleus` 的第一名候選
+**已經是 `st-calf` 的第一名**，標題還明寫 gastrocnemius and soleus —— 那正是
+`st-calf`（直膝版）的內容。`st-soleus` 存在的理由就是把屈膝版獨立出來，
+用同一支通用影片會讓兩個動作在畫面上長得一模一樣。退掉之後那一格寫進 `issues`，
+檢查腳本會一直點名到補齊為止。
 
 一件要知道的事：採集是「先過相關性再依觀看數排序」，所以**有 19 個冷門動作三支都在
 5 萬觀看以下**（熊爬轉身最高只有 52 次）。標籤寫「熱門教學」，但每張卡都印出觀看數
