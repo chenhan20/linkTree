@@ -1674,10 +1674,12 @@ button.ov-cell:focus-visible{outline:1px solid rgba(252,76,2,.6);outline-offset:
    demo/itt-route-3d.html 的正式移植；字體憲法照舊（Saira 只給 ≥26px 數字）。 */
 .tsv-stack{display:flex;flex-direction:column;gap:14px}
 .tsv{
-  position:relative;height:min(74vh,660px);overflow:hidden;border-radius:14px;
+  position:relative;overflow:hidden;border-radius:14px;
   border:1px solid var(--hair-2);scroll-margin-top:64px;
   background:radial-gradient(ellipse 90% 62% at 50% 44%,rgba(35,18,8,.5),transparent 72%),#0b0509;
 }
+/* 3D 舞台固定高、挑戰簿在下方自然長高 —— 檯的總高度隨紀錄數伸縮 */
+.tsv-stage{position:relative;height:min(74vh,660px)}
 .tsv.tsv-hit{box-shadow:0 0 0 1px var(--ac,#e87c1a),0 0 34px rgba(232,124,26,.25)}
 .tsv-cv{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab;touch-action:pan-y}
 .tsv-cv:active{cursor:grabbing}
@@ -1735,14 +1737,29 @@ button.ov-cell:focus-visible{outline:1px solid rgba(252,76,2,.6);outline-offset:
 .tsv-tag.steep{color:#ff8f66;border-color:rgba(255,143,102,.4)}
 .tsv-tag.km{font-size:9px;font-weight:600;color:var(--ink-3);background:none;border:none;padding:1px 3px}
 .tsv-tag.hidden{visibility:hidden}
+/* ── 挑戰簿（§41）：全部挑戰常駐攤開，欄數自適應、無捲動無點開 ── */
+.tsv-ledger{position:relative;z-index:3;border-top:1px solid rgba(244,240,234,.07);padding:11px 22px 14px}
+.tsv-ledger-h{display:flex;align-items:baseline;gap:10px;font-size:11px;font-weight:700;letter-spacing:1px;color:var(--ink-2)}
+.tsv-ledger-h span{font-size:9px;font-weight:600;letter-spacing:2px;color:var(--ink-3);text-transform:uppercase}
+.tsv-ledger-h em{font-style:normal;margin-left:auto;font-size:9.5px;font-weight:500;letter-spacing:.8px;color:var(--ink-3)}
+.tsv-ledger-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(158px,1fr));gap:3px 16px;margin-top:8px}
+.tl-cell{display:flex;align-items:baseline;gap:7px;font-size:11px;white-space:nowrap;min-width:0}
+.tl-cell i{font-style:normal;font-size:10px;color:var(--ink-3);font-variant-numeric:tabular-nums;overflow:hidden;text-overflow:ellipsis}
+.tl-cell b{font-family:var(--f-mono);font-size:12px;font-weight:700;color:var(--ink-2);font-variant-numeric:tabular-nums;margin-left:auto}
+.tl-cell small{font-size:9.5px;color:var(--ink-3);font-variant-numeric:tabular-nums;min-width:34px;text-align:right}
+.tl-cell.pr i{color:var(--ac,#e87c1a)}
+.tl-cell.pr b{color:var(--ac,#e87c1a)}
 .tsv-nil{padding:30px 22px;color:var(--ink-3);font-size:12px}
 @media(max-width:720px){
-  .tsv{height:72vh;border-radius:11px}
+  .tsv{border-radius:11px}
+  .tsv-stage{height:70vh}
   .tsv-idb{left:16px;top:16px;max-width:80%}
   .tsv-foot{left:16px;right:16px;bottom:60px;gap:6px}
   .tsv-stats,.tsv-live{gap:16px}
   .tsv-stats .nu,.tsv-live .nu{font-size:26px}
   .tsv-ctrl{left:16px;right:16px;justify-content:flex-end}
+  .tsv-ledger{padding:10px 16px 12px}
+  .tsv-ledger-grid{grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:3px 12px}
 }
 @media (prefers-reduced-motion:reduce){
   .tsv-live .dot{animation:none}
@@ -4651,8 +4668,29 @@ function renderSegments(segs) {
     tsvStats.push(['PR', prTimeStr, '', 1])
     if (prWatts) tsvStats.push(['功率', prWatts, 'w'])
 
+    // ── 挑戰簿（§41）：每一次挑戰常駐攤開，取代退役的成績彈窗。
+    //    時間為主、功率為輔，PR 戴皇冠；新 → 舊。細節（心率／來源／同日場次）收在 title。
+    const ledgerRows = (seg.efforts || []).slice()
+      .sort((a, b) => (`${b.date || ''} ${b.start_time || ''}`).localeCompare(`${a.date || ''} ${a.start_time || ''}`))
+    const dayN = {}
+    ledgerRows.forEach(e => { const d = e.date || ''; dayN[d] = (dayN[d] || 0) + 1 })
+    const ledgerHtml = !ledgerRows.length ? '' : `<div class="tsv-ledger">
+      <div class="tsv-ledger-h">挑戰簿<span>ATTEMPT LOG · ${ledgerRows.length}</span><em>👑 PR · 新 → 舊</em></div>
+      <div class="tsv-ledger-grid">${ledgerRows.map(e => {
+        const isPr = pr && sameEffort(e, pr)
+        const d = e.date ? e.date.slice(2).replace(/-/g, '/') : '—'
+        const rep = (dayN[e.date || ''] > 1 && e.start_time) ? ' ' + e.start_time.slice(0, 5) : ''
+        const tip = `${e.date || ''}${e.start_time ? ' ' + e.start_time : ''} · ${e.elapsed_str}` +
+          `${e.avg_watts ? ` · ${e.avg_watts}w` : ''}${e.avg_heartrate ? ` · ❤${e.avg_heartrate}` : ''}` +
+          ` · ${e.source === 'fit' ? '自建計時' : 'Strava'}`
+        return `<span class="tl-cell${isPr ? ' pr' : ''}" title="${tip}"><i>${isPr ? '👑 ' : ''}${d}${rep}</i>` +
+          `<b>${e.elapsed_str}</b><small>${e.avg_watts ? e.avg_watts + 'w' : ''}</small></span>`
+      }).join('')}</div>
+    </div>`
+
     return `<section class="tsv" id="tsv-${seg.id}" data-tsv="${seg.id}" data-type="${segFlat ? 'flat' : 'climb'}"
       data-ac="${accent}" data-pr-sec="${pr && pr.elapsed_sec ? Math.round(pr.elapsed_sec) : ''}" style="--ac:${accent}">
+      <div class="tsv-stage">
       ${hasTerr ? `<canvas class="tsv-cv" aria-label="${meta.nameZh || seg.name} 的 3D 地形與路線，可拖曳旋轉"></canvas>` : ''}
       <div class="tsv-hud">
         <div class="tsv-idb">
@@ -4680,6 +4718,8 @@ function renderSegments(segs) {
         </div>
         <div class="tsv-prog"></div>` : ''}
       </div>
+      </div>
+      ${ledgerHtml}
     </section>`
   }).join('')
 
@@ -5546,7 +5586,7 @@ function setupIttPlates() {
       const el = document.createElement('div')
       el.className = 'tsv-tag ' + cls
       el.textContent = txt
-      sec.appendChild(el)
+      ;(sec.querySelector('.tsv-stage') || sec).appendChild(el)   // 籤要掛在 3D 舞台上，挑戰簿長高不影響投影
       const dy = cls === 'km' ? '-50%' : cls === 'peak' ? '-270%' : '-130%'
       it.tags.push({ el, v: v3, dy })
     }
