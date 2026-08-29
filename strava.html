@@ -1669,6 +1669,86 @@ button.ov-cell:focus-visible{outline:1px solid rgba(252,76,2,.6);outline-offset:
 /* ══ ITT MASTER → DETAIL ══════════════════════════════════════════════
    §25/§26：ITT 仍然是全站最有個性的地方，但 UX 從「卡片遊樂場」變成清單 → 詳情。
    玻璃、狀態色、戰情室、3D 全部原封不動，只是一次只掛一條。 */
+/* ══ §40 ITT 測量檯（terrain survey）═══════════════════════════════
+   一組路線一座常駐的地形檯：真地形＋路線燈絲＋計時板數字，取代點開式卡片。
+   demo/itt-route-3d.html 的正式移植；字體憲法照舊（Saira 只給 ≥26px 數字）。 */
+.tsv-stack{display:flex;flex-direction:column;gap:14px}
+.tsv{
+  position:relative;height:min(74vh,660px);overflow:hidden;border-radius:14px;
+  border:1px solid var(--hair-2);scroll-margin-top:64px;
+  background:radial-gradient(ellipse 90% 62% at 50% 44%,rgba(35,18,8,.5),transparent 72%),#0b0509;
+}
+.tsv.tsv-hit{box-shadow:0 0 0 1px var(--ac,#e87c1a),0 0 34px rgba(232,124,26,.25)}
+.tsv-cv{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab;touch-action:pan-y}
+.tsv-cv:active{cursor:grabbing}
+.tsv-hud{position:absolute;inset:0;pointer-events:none;z-index:3}
+.tsv-idb{position:absolute;top:20px;left:22px;max-width:min(62%,520px)}
+.tsv-idx{
+  font-family:var(--f-ui);font-size:10.5px;font-weight:700;letter-spacing:2px;color:#0a0408;
+  background:var(--ac,#e87c1a);border-radius:4px;padding:2px 7px;display:inline-block;
+}
+.tsv-en{font-size:10px;font-weight:600;letter-spacing:2.2px;color:var(--ink-3);text-transform:uppercase;margin-left:8px}
+.tsv-st{font-size:10px;font-weight:700;letter-spacing:1.6px;margin-left:10px;text-transform:uppercase}
+.tsv-name{font-size:clamp(24px,2.6vw,31px);font-weight:800;letter-spacing:1.2px;color:var(--ink-1);margin-top:8px}
+.tsv-note{font-size:11.5px;color:var(--ink-3);margin-top:4px;letter-spacing:.5px}
+/* 底部 HUD 走 flex 直欄（stats → 資訊行 → 分段列）：行數不定也永遠不互疊 */
+.tsv-foot{position:absolute;left:22px;right:310px;bottom:14px;display:flex;flex-direction:column;gap:7px;align-items:flex-start}
+.tsv-stats{display:flex;gap:clamp(14px,2.2vw,32px);flex-wrap:wrap}
+.tsv-stats .lb,.tsv-live .lb{font-size:10px;font-weight:600;letter-spacing:1.8px;color:var(--ink-3);text-transform:uppercase}
+.tsv-stats .nu,.tsv-live .nu{
+  font-family:var(--f-num);font-variant-numeric:tabular-nums;
+  font-size:28px;font-weight:800;line-height:1.12;color:var(--ink-1);margin-top:2px;
+}
+.tsv-stats .nu small,.tsv-live .nu small{font-family:var(--f-ui);font-size:10.5px;font-weight:600;color:var(--ink-3);letter-spacing:1px;margin-left:3px}
+.tsv-stats .st.hot .nu{color:var(--ac,#e87c1a)}
+.tsv-live{display:none;gap:clamp(14px,2.2vw,32px)}
+.tsv.playing .tsv-live{display:flex}
+.tsv.playing .tsv-stats,.tsv.playing .tsv-sub,.tsv.playing .tsv-subs{display:none}
+.tsv-live .dot{width:7px;height:7px;border-radius:50%;background:var(--sig);align-self:center;
+  box-shadow:0 0 9px rgba(252,76,2,.8);animation:tsvBlink 1s steps(2) infinite}
+@keyframes tsvBlink{50%{opacity:.25}}
+.tsv-sub{font-size:10.5px;color:var(--ink-3);letter-spacing:.8px;line-height:1.6}
+.tsv-sub b{color:var(--ink-2);font-variant-numeric:tabular-nums}
+.tsv-subs{display:flex;gap:12px;flex-wrap:wrap;align-items:baseline;max-width:100%}
+.tsv-subs-lbl{font-size:9.5px;font-weight:700;letter-spacing:1.8px;color:var(--ink-3);text-transform:uppercase}
+.tsv-subrow{font-size:10.5px;color:var(--ink-3);letter-spacing:.4px;white-space:nowrap}
+.tsv-subrow b{color:var(--ink-2);font-weight:600;font-variant-numeric:tabular-nums;margin-left:5px}
+.tsv-subrow em{font-style:normal;opacity:.55;margin-left:3px}
+.tsv-ctrl{position:absolute;right:22px;bottom:14px;display:flex;gap:7px;pointer-events:auto}
+.tsv-ctrl button{
+  font-family:var(--f-ui);font-size:11px;font-weight:600;letter-spacing:1.4px;color:var(--ink-2);
+  background:rgba(244,240,234,.04);border:1px solid rgba(244,240,234,.16);border-radius:7px;
+  padding:7px 12px;cursor:pointer;transition:color .15s,border-color .15s;
+}
+.tsv-ctrl button:hover{color:var(--ink-1);border-color:rgba(244,240,234,.4)}
+.tsv-ctrl button.on{color:var(--ac,#e87c1a);border-color:var(--ac,#e87c1a)}
+.tsv-ctrl button:focus-visible{outline:2px solid var(--sig);outline-offset:2px}
+.tsv-prog{position:absolute;left:0;bottom:0;height:2px;width:0%;background:var(--ac,#e87c1a);
+  box-shadow:0 0 8px var(--ac,#e87c1a);z-index:4}
+.tsv-tag{
+  position:absolute;transform:translate(-50%,-130%);font-size:11px;font-weight:600;letter-spacing:1px;
+  color:var(--ink-1);background:rgba(10,4,8,.72);border:1px solid rgba(244,240,234,.22);
+  border-radius:5px;padding:2px 7px;white-space:nowrap;opacity:0;transition:opacity .6s;pointer-events:none;
+}
+.tsv.revealed .tsv-tag{opacity:1}
+.tsv-tag.peak{color:#ffd27a;border-color:rgba(255,210,122,.45)}
+.tsv-tag.steep{color:#ff8f66;border-color:rgba(255,143,102,.4)}
+.tsv-tag.km{font-size:9px;font-weight:600;color:var(--ink-3);background:none;border:none;padding:1px 3px}
+.tsv-tag.hidden{visibility:hidden}
+.tsv-nil{padding:30px 22px;color:var(--ink-3);font-size:12px}
+@media(max-width:720px){
+  .tsv{height:72vh;border-radius:11px}
+  .tsv-idb{left:16px;top:16px;max-width:80%}
+  .tsv-foot{left:16px;right:16px;bottom:60px;gap:6px}
+  .tsv-stats,.tsv-live{gap:16px}
+  .tsv-stats .nu,.tsv-live .nu{font-size:26px}
+  .tsv-ctrl{left:16px;right:16px;justify-content:flex-end}
+}
+@media (prefers-reduced-motion:reduce){
+  .tsv-live .dot{animation:none}
+  .tsv-tag{transition:none}
+}
+
 .itt-bar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:18px}
 .itt-modes{display:flex;gap:2px;padding:2px;border:1px solid var(--hair-2);border-radius:7px}
 .itt-mode{
@@ -5232,8 +5312,9 @@ function renderSegments(segs) {
     })
   }
 
-  /** 卡內的分段清單。代表自己不重複列，只列同組的其他分段（依中位時間由長到短）。 */
-  function fcSubsHTML(seg, accent) {
+  /** 檯上的分段清單：純資訊、不可點（§40 把點開互動全數退役）。
+      代表自己不重複列，只列同組的其他分段（依中位時間由長到短）。 */
+  function tsvSubsHTML(seg) {
     const g = (SEG_META[seg.id] || {}).group
     if (!g) return ''
     const others = (memberIds[g] || []).filter(id => id !== seg.id).map(id => bySeg[id]).filter(Boolean)
@@ -5242,20 +5323,13 @@ function renderSegments(segs) {
       const list = (s.efforts || []).slice().sort((a, b) => a.elapsed_sec - b.elapsed_sec)
       return { s, pr: list[0] || null, n: (s.efforts || []).length }
     }).sort((a, b) => (b.pr?.elapsed_sec || 0) - (a.pr?.elapsed_sec || 0))
-    return `<div class="fc-subs">
-      <div class="fc-subs-lbl">分段 · ${others.length}　<span>最佳時間</span></div>
-      ${withPr.map(({ s, pr, n }) => `
-        <button class="fc-sub" type="button" onclick="event.stopPropagation();openSegModal(${s.id})"
-                title="${(SEG_META[s.id] || {}).nameZh || s.name}">
-          <span class="fc-sub-name">${(SEG_META[s.id] || {}).label || s.name}</span>
-          <span class="fc-sub-time">${pr ? pr.elapsed_str : '—'}</span>
-          <span class="fc-sub-n">${n}</span>
-        </button>`).join('')}
+    return `<div class="tsv-subs">
+      <span class="tsv-subs-lbl">分段 ${others.length}</span>
+      ${withPr.map(({ s, pr, n }) => `<span class="tsv-subrow" title="${(SEG_META[s.id] || {}).nameZh || s.name}">${
+        (SEG_META[s.id] || {}).label || s.name}<b>${pr ? pr.elapsed_str : '—'}</b><em>×${n}</em></span>`).join('')}
     </div>`
   }
 
-  // 主清單的列（§26）。全部取自下面同一輪迴圈算好的值，沒有第二次計算。
-  const listRows = []
   const cards = segs.map((seg, idx) => {
     const meta   = SEG_META[seg.id] || {}
     const sorted = (seg.efforts || []).slice().sort((a,b) => a.elapsed_sec - b.elapsed_sec)
@@ -5339,7 +5413,8 @@ function renderSegments(segs) {
     // ── GAP TO KOM ──
     let komGapHtml = ''
     if (seg.kom_elapsed_sec && pr) {
-      const gapSec = pr.elapsed_sec - seg.kom_elapsed_sec
+      // 自建 FIT 的 elapsed_sec 是小數，不先取整 %60 會浮出 +10.2000000000045
+      const gapSec = Math.round(pr.elapsed_sec - seg.kom_elapsed_sec)
       const sign   = gapSec >= 0 ? '+' : '−'
       const abs    = Math.abs(gapSec)
       const mm     = String(Math.floor(abs/60)).padStart(2,'0')
@@ -5368,130 +5443,74 @@ function renderSegments(segs) {
     } else if (sameEffort(latest, pr)) {
       lastGapTxt = 'PR ✓'; lastGapColor = accent; lastGapLabel = 'LAST EFFORT'
     } else {
-      const gapSec = latest.elapsed_sec - pr.elapsed_sec
+      const gapSec = Math.round(latest.elapsed_sec - pr.elapsed_sec)
       const mm = String(Math.floor(Math.abs(gapSec) / 60)).padStart(2,'0')
       const ss = String(Math.abs(gapSec) % 60).padStart(2,'0')
       lastGapTxt = (gapSec >= 0 ? '+' : '−') + `${mm}:${ss}`; lastGapColor = '#f0c040'; lastGapLabel = 'LAST vs PR'
     }
 
     const prTimeStr  = seg.pr_time_str || '—'
-    const sizeClass  = attempts >= 20 ? 'fc-sz-lg' : attempts >= 8 ? 'fc-sz-md' : 'fc-sz-sm'
-    const segStream  = (window._segStreams || {})[seg.id]
-    // 均坡 ≤2% 的平路段畫立體圖沒意義，改成俯視路線圖（北在上）
-    const segFlat    = meta.avgGrade != null && meta.avgGrade <= 2
-    // 只有山路值得畫路線圖。河濱平路的立體圖是一條沒有起伏的線，佔掉整張卡的高度
-    // 卻什麼也沒說明 —— 而且展開後 3D 畫布會蓋住卡片，讓卡片變得很難點掉。
-    // 預設由 itt-config.json 的 type 決定（ENDURANCE＝河濱平路），可用 route3d 逐條覆寫。
-    const wants3D    = meta.route3d != null ? !!meta.route3d : (meta.type || '') !== 'ENDURANCE'
-    const profile    = Array.isArray(meta.profile) ? meta.profile : null
-    const sparkPath  = profile ? smoothPath(profile) : null
-    const sparkFill  = profile ? smoothAreaPath(profile) : null
-    const sparkId    = `fc-spark-${seg.id}`
-    const fillId     = `fc-fill-${seg.id}`
-    const gradeLabel = (meta.avgGrade != null && meta.maxGrade != null)
-      ? `均坡 ${meta.avgGrade}% · 最陡 ${meta.maxGrade}%` : ''
+    // ── §40 測量檯：一組路線一座地形檯，資訊常駐、不用點開 ──
+    const stream   = ((window._segStreams || {})[seg.id] || {}).pts || null
+    const hasTerr  = !!(((window._segTerrain || {})[seg.id] || {}).h) && !!stream && stream.length > 2
+    let netGain = null
+    if (stream && stream.length > 2) {
+      let lo = Infinity, hi = -Infinity
+      for (const p of stream) { const a = p[2]; if (a == null) continue; if (a < lo) lo = a; if (a > hi) hi = a }
+      if (isFinite(lo)) netGain = Math.round(hi - lo)   // 頂—底淨值，跟官方爬升同一種說法
+    }
+    const distKm   = seg.distance_km != null ? +seg.distance_km : null
+    const segFlat  = (meta.type || '') === 'ENDURANCE' || (meta.avgGrade != null && meta.avgGrade <= 2)
+    const avgKmh   = (segFlat && distKm && pr && pr.elapsed_sec) ? (distKm / (pr.elapsed_sec / 3600)).toFixed(1) : null
+    const groupEn  = (meta.group || '').toUpperCase().replace(/-/g, ' ')
+    const noteTxt  = (meta.note || '').split('，')[0]
+    const tsvStats = []
+    if (distKm != null) tsvStats.push(['距離', distKm.toFixed(2), 'km'])
+    if (!segFlat && netGain != null) tsvStats.push(['爬升', netGain, 'm'])
+    if (!segFlat && meta.avgGrade != null) tsvStats.push(['均坡', meta.avgGrade, '%'])
+    if (segFlat && avgKmh) tsvStats.push(['均速', avgKmh, 'km/h'])
+    tsvStats.push(['PR', prTimeStr, '', 1])
+    if (prWatts) tsvStats.push(['功率', prWatts, 'w'])
 
-    listRows.push(`<button class="itt-row" type="button" data-seg="${seg.id}" style="--fc-accent:${accent}">
-      <span class="ir-nm">${meta.nameZh || seg.name}</span>
-      <span class="ir-t">${prTimeStr}</span>
-      <span class="ir-sc">${scorePct !== null ? scorePct : '—'}<i>${scorePct !== null ? '%' : ''}</i></span>
-      <span class="ir-st" style="color:${statusCol}">${statusLine}</span>
-      <span class="ir-n">${attempts}</span>
-    </button>`)
-
-    return `<div class="fc ${sizeClass}" style="--fc-accent:${accent};--fc-status:${statusCol}" data-fc data-segid="${seg.id}">
-      <div class="fc-face"></div>
-      <div class="fc-rim"></div>
-      <div class="fc-sheen"></div>
-      <div class="fc-holo"></div>
-      <button class="fc-close" type="button" aria-label="收合這張卡" title="收合（Esc）">✕</button>
-      <div class="fc-inner">
-        <div class="fc-top">
-          <span class="fc-type">${meta.type || 'ITT'}</span>
-          <span class="fc-attempts">🔁 ${attempts} 次挑戰</span>
+    return `<section class="tsv" id="tsv-${seg.id}" data-tsv="${seg.id}" data-type="${segFlat ? 'flat' : 'climb'}"
+      data-ac="${accent}" data-pr-sec="${pr && pr.elapsed_sec ? Math.round(pr.elapsed_sec) : ''}" style="--ac:${accent}">
+      ${hasTerr ? `<canvas class="tsv-cv" aria-label="${meta.nameZh || seg.name} 的 3D 地形與路線，可拖曳旋轉"></canvas>` : ''}
+      <div class="tsv-hud">
+        <div class="tsv-idb">
+          <span class="tsv-idx">${numBadge}</span><span class="tsv-en">${groupEn}${groupEn ? ' · ' : ''}${meta.type || 'ITT'}</span>
+          <span class="tsv-st" style="color:${statusCol}">${statusEmoji} ${statusLine}${scorePct !== null ? ` · ${scorePct}%` : ''}</span>
+          <div class="tsv-name">${meta.nameZh || seg.name}</div>
+          ${noteTxt ? `<div class="tsv-note">${noteTxt}</div>` : ''}
         </div>
-        <div class="fc-name">${meta.nameZh || seg.name}</div>
-        <div class="fc-kom">${komGapHtml}</div>
-        <div class="fc-status">${statusEmoji} ${statusLine} · ${scoreDisplay}</div>
-        ${segStream && wants3D ? `
-        <div class="fc-spark-block">
-          <canvas class="fc-3d" data-seg3d="${seg.id}"${segFlat ? ' data-flat="1"' : ''} data-pr-sec="${pr && pr.elapsed_sec ? pr.elapsed_sec : ''}"></canvas>
-          <div class="fc-lights" id="lights-${seg.id}">
-            <div class="fc-light-bar"><i class="fc-light"></i><i class="fc-light"></i><i class="fc-light"></i><i class="fc-light"></i><i class="fc-light"></i></div>
-            <span class="fc-light-cap"></span>
+        <div class="tsv-foot">
+          <div class="tsv-stats">${tsvStats.map(s => `
+            <div class="st${s[3] ? ' hot' : ''}"><div class="lb">${s[0]}</div><div class="nu">${s[1]}${s[2] ? `<small>${s[2]}</small>` : ''}</div></div>`).join('')}
           </div>
-          ${segStream ? `<div class="fc-race-bar">
-            ${pkBarHTML(seg.id, pr)}
-            ${selfBarHTML(seg.id)}
-            <button class="fc-replay-btn fc-terr-btn${ittTerrainOn() ? ' on' : ''}" onclick="toggleSegTerrain(event)"
-                    title="切換測繪地形">⛰</button>
-            <button class="fc-replay-btn" onclick="segReplay(event,${seg.id})" title="重看一次">↻</button>
-          </div>` : ''}
-          ${renderPkPanel(seg.id, pr)}
-          ${renderSelfPanel(seg.id)}
-          ${sparkPath ? `<svg class="fc-spark fc-mini" viewBox="0 0 100 42" preserveAspectRatio="none" aria-hidden="true">
-            <defs><linearGradient id="${fillId}" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="${accent}" stop-opacity=".5"/>
-              <stop offset="100%" stop-color="${accent}" stop-opacity="0"/></linearGradient></defs>
-            <line x1="0" y1="40" x2="100" y2="40" stroke="rgba(255,255,255,.14)" stroke-width="1"/>
-            <path d="${sparkFill}" fill="url(#${fillId})" stroke="none"/>
-            <path d="${sparkPath}" fill="none" stroke="${accent}" stroke-width="3" stroke-linecap="round"/>
-          </svg>` : ''}
-          <div class="fc-spark-row">
-            <span class="fc-spark-lbl">${segFlat ? 'Route Map · 北在上' : 'Route 3D · 拖曳旋轉'}</span>
-            <button class="fc-3d-toggle" type="button" data-seg3dtoggle
-              aria-expanded="false">▸ ${segFlat ? '路線圖' : '立體圖'}</button>
-            <a class="fc-spark-grade" href="https://www.strava.com/segments/${seg.id}" target="_blank" rel="noopener" title="在 Strava 查看官方路段資料" style="text-decoration:none">${gradeLabel}<span class="fc-spark-linkicon">↗</span></a>
+          <div class="tsv-live"><span class="dot"></span>
+            <div class="st"><div class="lb">里程</div><div class="nu" data-live="km">0.00<small>km</small></div></div>
+            <div class="st"><div class="lb">海拔</div><div class="nu" data-live="alt">—<small>m</small></div></div>
+            <div class="st"><div class="lb">坡度</div><div class="nu" data-live="grd">—<small>%</small></div></div>
           </div>
+          <div class="tsv-sub">${attempts} 次嘗試 · PR ${pr && pr.date ? pr.date : '—'} · ${komGapHtml} · <span style="color:${lastGapColor}">${lastGapLabel} ${lastGapTxt}</span></div>
+          ${tsvSubsHTML(seg)}
         </div>
-        ` : sparkPath ? `
-        <a class="fc-spark-block" href="https://www.strava.com/segments/${seg.id}" target="_blank" rel="noopener" title="在 Strava 查看官方路段資料">
-          <svg class="fc-spark" viewBox="0 0 100 42" preserveAspectRatio="none">
-            <defs>
-              <linearGradient id="${fillId}" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="${accent}" stop-opacity=".5"/>
-                <stop offset="100%" stop-color="${accent}" stop-opacity="0"/>
-              </linearGradient>
-            </defs>
-            <line class="fc-spark-base" x1="0" y1="40" x2="100" y2="40" stroke="rgba(255,255,255,.14)" stroke-width="1"/>
-            <path class="fc-spark-fill" d="${sparkFill}" fill="url(#${fillId})" stroke="none"/>
-            <path id="${sparkId}" d="${sparkPath}" fill="none" stroke="${accent}" stroke-width="3" stroke-linecap="round" pathLength="1" style="filter:drop-shadow(0 0 6px ${accent})"/>
-            ${reduceMotion ? '' : `<circle r="2.6" fill="#fff" style="filter:drop-shadow(0 0 4px #fff)">
-              <animateMotion dur="3.4s" begin="${(.3 + idx * .15).toFixed(2)}s" repeatCount="indefinite"><mpath href="#${sparkId}"/></animateMotion>
-            </circle>`}
-          </svg>
-          <div class="fc-spark-row">
-            <span class="fc-spark-lbl">Gradient · 實測示意</span>
-            <span class="fc-spark-grade">${gradeLabel}<span class="fc-spark-linkicon">↗</span></span>
-          </div>
-        </a>
-        ` : ''}
-        <div class="fc-time${timeClass ? ' fc-time-new' : ''}" data-countto="${prTimeStr}">${prTimeStr}</div>
-        <div class="fc-timelbl">BEST TIME</div>
-        ${fcWarHTML(seg, pr, accent)}
-        <div class="fc-stats">
-          <div class="fc-stat"><b style="color:${accent}">${prWatts || '—'}<small>${prWatts ? 'W' : ''}</small></b><span>Avg Power</span></div>
-          <div class="fc-stat"><b>${wkg}<small>${wkg !== '—' ? 'W/KG' : ''}</small></b><span>W / KG</span></div>
-          <div class="fc-stat"><b style="color:${wattGapColor}">${wattGapTxt}</b><span>${wattGapLabel}</span></div>
-          <div class="fc-stat"><b style="color:${lastGapColor}">${lastGapTxt}</b><span>${lastGapLabel}</span></div>
+        ${hasTerr ? `<div class="tsv-ctrl">
+          <button type="button" data-act="replay">重播 PR</button>
+          <button type="button" data-act="spin"${reduceMotion ? '' : ' class="on"'}>自轉</button>
+          <button type="button" data-act="north">回正北</button>
         </div>
-        ${fcSubsHTML(seg, accent)}
-        <div class="fc-foot">
-          <button class="seg-detail-btn" onclick="openSegModal(${seg.id})">▶ REVIEW ATTEMPT <span style="opacity:.6;font-size:.85em">(${attempts})</span></button>
-        </div>
+        <div class="tsv-prog"></div>` : ''}
       </div>
-    </div>`
+    </section>`
   }).join('')
 
   window.__ittCount = `${segs.length} 條路線 / ${Object.keys(bySeg).length} 段`
   window.__ittFirstSeg = segs.length ? String(segs[0].id) : null
-  // §26/§28：預設是 Master → Detail 的清單；抽卡檯面／輪播降為 COLLECTION 次要模式。
+  // §40：測量檯 —— 一組路線一座常駐的地形檯（demo/itt-route-3d.html 的正式移植）。
+  // List / Collection 兩種檢視模式、抽卡檯面與輪播全數退役：手機上「點開才看得到」
+  // 的互動不好用，資訊直接常駐在檯上。
   return `
     <div class="itt-bar">
-      <div class="itt-modes" role="tablist" aria-label="ITT 檢視模式">
-        <button class="itt-mode" type="button" data-ittmode="list" role="tab">List</button>
-        <button class="itt-mode" type="button" data-ittmode="collection" role="tab">Collection</button>
-      </div>
       <div class="itt-tabs">
         <button class="itt-tab-btn" onclick="toggleIttLevel(this,'status')">📋 狀態一覽</button>
         <button class="itt-tab-btn" onclick="toggleIttLevel(this,'calc')">⚙️ 計算方式</button>
@@ -5499,25 +5518,7 @@ function renderSegments(segs) {
         <button class="itt-tab-btn" onclick="toggleIttLevel(this,'example')">📊 範例</button>
       </div>
     </div>
-    <div class="itt-shell" id="itt-shell">
-      <div class="itt-list" id="itt-list">
-        <div class="itt-lhead"><span>Segment</span><span>Best</span><span>Score</span><span>Status</span><span>N</span></div>
-        ${listRows.join('')}
-      </div>
-      <div class="itt-stage">
-        <button class="itt-back" id="itt-back" type="button">‹ 全部路段</button>
-        <div class="fc-carousel">
-          <button class="fc-nav prev" aria-label="上一個路段">‹</button>
-          <div class="fc-grid" id="fc-grid" aria-label="ITT 路段卡片">${cards}</div>
-          <button class="fc-nav next" aria-label="下一個路段">›</button>
-          <div class="fc-dots" id="fc-dots" role="tablist" aria-label="路段頁點"></div>
-          <div class="fc-hint" aria-hidden="true">
-            <span class="fc-hint-mouse">拖曳瀏覽 · 長按卡片排序</span>
-            <span class="fc-hint-touch">左右滑動 · 長按卡片排序</span>
-          </div>
-        </div>
-      </div>
-    </div>`
+    <div class="tsv-stack" id="tsv-stack">${cards}</div>`
 }
 function fmtDate(d) {
   // "2026-04-22" → "04 / 22"
@@ -5553,486 +5554,42 @@ function animateFcCount(el) {
   }
   requestAnimationFrame(step)
 }
-function bindSegmentCards() {
-  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches
-  const cards = document.querySelectorAll('.fc')
-  if (!cards.length) return
-
-  cards.forEach(card => {
-    if (!reduce) {
-      // 只留跟著游標跑的光暈（--fc-mx/my 驅動 .fc-holo），不再傾斜卡片 ——
-      // 卡片裡本來就有一顆會自轉的 3D，再加上整張跟著滑鼠轉會暈
-      card.addEventListener('pointermove', e => {
-        const r = card.getBoundingClientRect()
-        card.style.setProperty('--fc-mx', ((e.clientX - r.left) / r.width * 100) + '%')
-        card.style.setProperty('--fc-my', ((e.clientY - r.top) / r.height * 100) + '%')
-      })
-    }
-  })
-
-  const revealObs = new IntersectionObserver(entries => {
-    entries.forEach(en => {
-      if (en.isIntersecting) {
-        en.target.classList.add('fc-revealed')
-        if (!reduce) {
-          const t = en.target.querySelector('[data-countto]')
-          if (t) animateFcCount(t)
-        }
-        revealObs.unobserve(en.target)
-      }
-    })
-  }, { threshold: .2 })
-  cards.forEach(c => revealObs.observe(c))
-
-  // 三套互動都綁上去，各自在事件裡檢查目前模式 —— 這樣拉寬拉窄可以來回切，
-  // 不必拆掉 DOM 再重建（拆掉重建會讓 3D 場景與已擺好的位置一起消失）
-  initIttCarousel(reduce)
-  initIttBoard(reduce)
-  initIttShell()
-  applyIttMode()
-  if (!window.__ittModeWatch) {
-    window.__ittModeWatch = true
-    let was = ittBoardMode()
-    addEventListener('resize', () => {
-      if (ittMode() === 'list') return   // 清單模式的版面純 CSS，不必重排
-      const now = ittBoardMode()
-      if (now === was) return
-      was = now
-      applyIttMode()
-    })
-  }
-}
-/* ── ITT 檢視模式 ──────────────────────────────────────────────────
-   LIST（預設）＝ Master → Detail：左邊一張全部路段的表，右邊只掛「選中的那一條」。
-   COLLECTION ＝ 舊的抽卡檯面（桌機）／輪播（手機），降為次要模式，拖曳排序仍在。
-   兩套共用同一份 DOM，只靠 class 決定誰現身 —— 切模式不重建卡片，3D 場景與位置才不會消失。 */
-const ITT_MODE_KEY = 'itt-view-mode-v1'
-const ittMode = () => { try { return localStorage.getItem(ITT_MODE_KEY) === 'collection' ? 'collection' : 'list' } catch (e) { return 'list' } }
-function setIttMode(m) {
-  try { localStorage.setItem(ITT_MODE_KEY, m) } catch (e) {}
-  applyIttMode()
-}
-function applyIttMode() {
-  const grid = document.getElementById('fc-grid')
-  if (!grid) return
-  const wrap = grid.closest('.fc-carousel')
-  const shell = document.getElementById('itt-shell')
-  const list = ittMode() === 'list'
-  shell?.classList.toggle('is-list', list)
-  document.querySelectorAll('.itt-mode').forEach(b =>
-    b.setAttribute('aria-selected', String(b.dataset.ittmode === (list ? 'list' : 'collection'))))
-
-  if (list) {
-    // 清單模式：檯面／輪播的狀態全部收掉，卡片交給 .fc-list 的 CSS 控制誰現身
-    grid.classList.remove('fc-board', 'has-open')
-    wrap.classList.remove('is-board')
-    grid.classList.add('fc-list')
-    grid.style.height = ''
-    grid.querySelectorAll('.fc').forEach(c => { c.style.display = ''; c.classList.remove('fc-open', 'fc-drag'); c.style.zIndex = '' })
-    selectSegment(appState.selectedSegment || window.__ittFirstSeg, { silent: true })
-    return
-  }
-
-  grid.classList.remove('fc-list')
-  const board = ittBoardMode()
-  grid.classList.toggle('fc-board', board)
-  wrap.classList.toggle('is-board', board)
-  if (board) {
-    grid.scrollLeft = 0
-    if (grid.__boardLayout) grid.__boardLayout()
-  } else {
-    // 回到輪播：所有卡都要看得見，展開態收掉；檯面撐開的行高也要還原
-    grid.style.height = ''
-    grid.classList.remove('has-open')
-    grid.querySelectorAll('.fc').forEach(c => { c.style.display = ''; c.classList.remove('fc-open', 'fc-drag'); c.style.zIndex = '' })
-    if (grid.__carouselSync) grid.__carouselSync()
-  }
-  if (typeof THREE !== 'undefined') setupSeg3D()
-}
-
-/* 選一條路段 → 右邊只掛這一條。setupSeg3D() 開頭就會把舊場景整組 dispose，
-   所以「切換路段＝換一顆 3D 場景」是自然發生的，不需要另外管生命週期。 */
+/* ── §40 測量檯的深連結（點開互動退役後唯一剩下的「選取」）：
+   #itt/segment/<id> → 捲到那座檯並短暫打光。舊的 List / Collection 檢視模式、
+   抽卡檯面、輪播、長按排序與卡片上的成績彈窗入口都在這一版退役 ——
+   資訊常駐在檯上，不再需要「點開」。 ── */
 function selectSegment(id, opts) {
   if (id == null) return
-  const sid = String(id)
-  appState.selectedSegment = sid
-  document.querySelectorAll('.itt-row').forEach(r => r.classList.toggle('is-on', r.dataset.seg === sid))
-  let hit = false
-  document.querySelectorAll('#fc-grid .fc').forEach(c => {
-    const on = String(c.dataset.segid) === sid
-    c.classList.toggle('is-sel', on)
-    if (on) hit = true
-  })
-  if (!hit) return
-  // 手機是「清單 → 詳情 → 返回」，所以只有使用者真的選了（或深連結指定了）才切到詳情畫面；
-  // applyIttMode 的預設選取是 silent，不該一進 ITT 就跳過清單。
-  if (!(opts && opts.silent) || (opts && opts.reveal)) document.getElementById('itt-shell')?.classList.add('is-detail')
+  const el = document.getElementById('tsv-' + String(id))
+  if (!el) return
   if (!(opts && opts.silent)) {
-    const h = '#itt/segment/' + sid
-    if (location.hash !== h) history.replaceState({ view: 'itt', seg: sid }, '', h)
+    const h = '#itt/segment/' + String(id)
+    if (location.hash !== h) history.replaceState({ view: 'itt', seg: String(id) }, '', h)
   }
-  const stage = document.querySelector('.itt-stage')
-  if (stage && !(opts && opts.silent)) stage.scrollIntoView({ block: 'nearest' })
-  if (typeof THREE !== 'undefined') setupSeg3D()
-  else loadThreeJS().then(setupSeg3D).catch(() => {})
-}
-function initIttShell() {
-  const shell = document.getElementById('itt-shell')
-  if (!shell || shell.dataset.bound) return
-  shell.dataset.bound = '1'
-  document.getElementById('itt-list')?.addEventListener('click', e => {
-    const r = e.target.closest('.itt-row')
-    if (r) selectSegment(r.dataset.seg)
-  })
-  // 手機：清單 → 詳情 → 返回，是 navigation，不是往下捲
-  document.getElementById('itt-back')?.addEventListener('click', () => shell.classList.remove('is-detail'))
-  document.querySelectorAll('.itt-mode').forEach(b =>
-    b.addEventListener('click', () => setIttMode(b.dataset.ittmode)))
-}
-
-/* ── ITT 檯面 ──────────────────────────────────────────────────
-   路段整齊排在置中的網格上，點卡片原地展開 3D 路線。
-   只有「展開中」的卡才會建 three.js 場景 —— 收起的卡不燒 GPU。
-
-   2026-08-13：拖曳與「重新排列」都拿掉了。原本卡片可以任意拖放、座標存在
-   localStorage，但那表示版面取決於你上次拖到哪 —— 卡片數一變（六條路段加到
-   九條）舊座標就對不上，於是「排版有時候怪怪」。現在位置一律由 tidy() 算，
-   欄列數自動平衡，永遠是確定的結果。localStorage 只剩「哪張是展開的」。 */
-// v4：不再存座標（只存 open），順便讓舊版的 v3 座標自然失效
-const ITT_BOARD_KEY = 'itt-board-v4'
-const ITT_CARD_W = 272, ITT_CARD_OPEN_W = 560
-const ITT_BOARD_GAP = 16, ITT_BOARD_PAD = 16
-const ittBoardMode = () => matchMedia('(min-width:641px)').matches
-function ittBoardState() {
-  try { const s = JSON.parse(localStorage.getItem(ITT_BOARD_KEY)); return s || null } catch (e) { return null }
-}
-function initIttBoard(reduce) {
-  const grid = document.getElementById('fc-grid')
-  if (!grid || grid.dataset.boardBound) return
-  grid.dataset.boardBound = '1'
-  const wrap = grid.closest('.fc-carousel')
-  // 先套上模式 class 再算版面：沒套之前卡片還是輪播的全尺寸（~620px 高），
-  // 用那個高度去夾邊界會把每張卡都壓到同一個 y
-  if (ittBoardMode()) { grid.classList.add('fc-board'); wrap.classList.add('is-board') }
-  const cards = [...grid.querySelectorAll('.fc')]
-  const idOf = c => String(c.dataset.segid)
-
-  const saved = ittBoardState()
-  // pos 每次都重算（place() 仍會寫進去給 setOpen 用），只有 open 需要記住
-  const state = { pos: {}, open: (saved && saved.open) || null }
-  const save = () => {
-    try { localStorage.setItem(ITT_BOARD_KEY, JSON.stringify({ open: state.open })) } catch (e) {}
+  const hit = () => {
+    el.classList.add('tsv-hit')
+    setTimeout(() => el.classList.remove('tsv-hit'), 2200)
   }
-
-  const boardW = () => grid.clientWidth
-  // 檯面高度會做 .38s 的 transition，動畫途中量 clientHeight 會拿到中間值 →
-  // 夾邊界要用「目標高度」，不然展開／歸位那一下卡片會被壓上來
-  let targetH = 560
-  const boardH = () => targetH
-  const cardH = c => c.offsetHeight || 150
-  const clamp = (c, x, y) => {
-    const w = c.classList.contains('fc-open') ? ITT_CARD_OPEN_W : ITT_CARD_W
-    return [Math.max(6, Math.min(boardW() - w - 6, x)), Math.max(6, Math.min(boardH() - cardH(c) - 6, y))]
+  if (!(opts && opts.reveal)) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    hit()
+    return
   }
-  const place = (c, x, y, rot) => {
-    const [cx, cy] = clamp(c, x, y)
-    state.pos[idOf(c)] = { x: cx, y: cy, rot: rot != null ? rot : (state.pos[idOf(c)]?.rot || 0) }
-    c.style.setProperty('--x', cx + 'px')
-    c.style.setProperty('--y', cy + 'px')
-    c.style.setProperty('--rot', state.pos[idOf(c)].rot + 'deg')
+  // 深連結：view 進場的軌道推移動畫會讓捲動落在搬移中的座標（實測停在半路）。
+  // 改成「跳 → 驗證有沒有對齊 → 沒對齊就再跳」，跟轉場的時間軸徹底解耦。
+  let tries = 0
+  const ensure = () => {
+    el.scrollIntoView({ behavior: 'auto', block: 'start' })
+    if (++tries >= 8) { hit(); return }
+    setTimeout(() => {
+      const top = el.getBoundingClientRect().top
+      if (Math.abs(top - 64) > 40) ensure()   // 64 = .tsv 的 scroll-margin-top
+      else hit()
+    }, 200)
   }
-  // 置中的網格：欄數看檯面塞得下幾張，每一列各自量高（不是全站共用一個最高值）——
-  // 卡片內容長短差很多（有沒有分段列表、對戰列），全站共用同一個列高會讓矮卡片那排
-  // 留下一大片空白，看起來很像沒排好。列高只看收起態的卡：展開中的那張有六百多，
-  // 拿它算會把那一列撐成兩倍高。
-  const tidy = () => {
-    const W = boardW(), G = ITT_BOARD_GAP, P = ITT_BOARD_PAD
-    const fit = Math.max(1, Math.min(cards.length, Math.floor((W - P * 2 + G) / (ITT_CARD_W + G))))
-    // 把列數攤平：9 張在塞得下 4 欄的螢幕上會排成 4+4+1，最後一排孤零零一張很醜。
-    // 先用「塞得下的欄數」算出需要幾列，再回頭把欄數收成剛好夠那幾列 → 3x3。
-    const rows = Math.ceil(cards.length / fit)
-    const cols = Math.ceil(cards.length / rows)
-    const x0 = Math.max(P, (W - (cols * ITT_CARD_W + (cols - 1) * G)) / 2)
-    const rowY = []
-    let y = P
-    for (let r = 0; r < rows; r++) {
-      let h = 0
-      for (let c = 0; c < cols; c++) {
-        const card = cards[r * cols + c]
-        if (card && !card.classList.contains('fc-open')) h = Math.max(h, cardH(card))
-      }
-      rowY.push(y)
-      y += (h || 150) + G
-    }
-    return {
-      height: y - G + P,
-      at: i => ({ x: x0 + (i % cols) * (ITT_CARD_W + G), y: rowY[Math.floor(i / cols)], rot: 0 }),
-    }
-  }
-  function layout() {
-    const t = tidy()
-    targetH = t.height
-    if (!grid.classList.contains('has-open')) grid.style.height = targetH + 'px'
-    // 一律用算出來的位置。以前這裡會優先吃 state.pos（你上次拖到哪就放哪），
-    // 那正是「排版有時候怪怪」的來源：卡片數一變（6→9），舊座標就對不上了。
-    cards.forEach((c, i) => {
-      c.style.display = ''
-      const p = t.at(i)
-      place(c, p.x, p.y, p.rot)
-    })
-  }
-
-  function setOpen(card, on) {
-    if (on) {
-      cards.forEach(c => { if (c !== card) { c.classList.remove('fc-open'); c.style.zIndex = '' } })
-      card.classList.add('fc-open')
-      grid.classList.add('has-open')
-      card.style.zIndex = 20
-      state.open = idOf(card)
-      const p = state.pos[idOf(card)]
-      place(card, p.x, p.y, 0)
-      // 寬高在 .38s 的 transition 裡才長到最終值，當下量到的還是收起態的高度 →
-      // 夾不住下緣。等 transition 結束再夾一次，卡片才真的留在檯面內。
-      const reclamp = () => {
-        // 展開卡比排好的檯面高 → 把檯面撐開，卡片才留得住（不然永遠夾不進邊界）
-        targetH = Math.max(tidy().height, card.offsetHeight + 24)
-        grid.style.height = targetH + 'px'
-        const q = state.pos[idOf(card)]; place(card, q.x, q.y, 0); save()
-      }
-      card.addEventListener('transitionend', reclamp, { once: true })
-      setTimeout(reclamp, 420)
-    } else {
-      card.classList.remove('fc-open')
-      grid.classList.remove('has-open')
-      card.style.zIndex = ''
-      state.open = null
-      targetH = tidy().height
-      grid.style.height = targetH + 'px'
-    }
-    save()
-    // 只有展開中的卡需要 3D
-    if (typeof THREE !== 'undefined') setupSeg3D()
-    else if (on) loadThreeJS().then(setupSeg3D).catch(() => {})
-  }
-
-  // 版面是算出來的，沒有「歸位」可言，所以不再放重新排列鈕
-  const bar = document.createElement('div')
-  bar.className = 'fc-board-bar'
-  bar.innerHTML = `<span class="fc-hint" style="margin:0;justify-content:flex-start">點卡片展開 3D 路線</span>`
-  wrap.appendChild(bar)
-
-  // 點擊展開。拖曳已移除（見上方 ITT_BOARD_KEY 的說明）——位置一律由 tidy() 決定。
-  const interactive = el => !!(el.closest && el.closest('.fc-3d, button, a, input, .fc-race-bar, .fc-pk-panel, .fc-self-panel'))
-  grid.addEventListener('click', e => {
-    if (!ittBoardMode()) return
-    // 收合鈕要贏過 interactive() —— 它就疊在 3D 畫布上面
-    const x = e.target.closest && e.target.closest('.fc-close')
-    if (x) { const c = x.closest('.fc'); if (c) setOpen(c, false); return }
-    const card = e.target.closest && e.target.closest('.fc')
-    if (!card) {
-      // 點到檯面空白處：收掉展開中的那張（跟一般彈窗點背景關閉的直覺一致）
-      const open = cards.find(c => c.classList.contains('fc-open'))
-      if (open) setOpen(open, false)
-      return
-    }
-    if (interactive(e.target)) return
-    setOpen(card, !card.classList.contains('fc-open'))
-  })
-
-  // Esc 收合。展開卡等同一個彈窗，鍵盤使用者要有出路。
-  addEventListener('keydown', e => {
-    if (e.key !== 'Escape' || !ittBoardMode()) return
-    const open = cards.find(c => c.classList.contains('fc-open'))
-    if (open) { setOpen(open, false); e.stopPropagation() }
-  })
-
-  grid.__boardLayout = layout
-  layout()
-  if (state.open) {
-    const c = cards.find(x => idOf(x) === state.open)
-    if (c) setOpen(c, true)
-  }
-  addEventListener('resize', () => { if (ittBoardMode()) layout() })
+  setTimeout(ensure, 150)
 }
 
-/* ── ITT 輪播：拖曳捲動 + 頁點 + 長按排序 + liquid glass 折射 ── */
-function initIttCarousel(reduce) {
-  const grid = document.getElementById('fc-grid')
-  if (!grid || grid.dataset.bound) return
-  grid.dataset.bound = '1'
-  const wrap = grid.closest('.fc-carousel')
-  const dotsEl = document.getElementById('fc-dots')
-  const prevBtn = wrap.querySelector('.fc-nav.prev')
-  const nextBtn = wrap.querySelector('.fc-nav.next')
-  const cardEls = () => [...grid.querySelectorAll('.fc')]
-
-  // ── 頁點 ──
-  const step = () => {
-    const c = grid.querySelector('.fc')
-    return c ? c.offsetWidth + parseFloat(getComputedStyle(grid).columnGap || 16) : 1
-  }
-  const curIdx = () => Math.max(0, Math.min(cardEls().length - 1, Math.round(grid.scrollLeft / step())))
-  // 目標位置 = 讓該卡置中（與 scroll-snap-align:center 的吸附點一致）
-  const goto = i => {
-    const cards = cardEls()
-    const c = cards[Math.max(0, Math.min(cards.length - 1, i))]
-    if (!c) return
-    grid.scrollTo({ left: c.offsetLeft - (grid.clientWidth - c.offsetWidth) / 2, behavior: reduce ? 'auto' : 'smooth' })
-  }
-  function buildDots() {
-    dotsEl.innerHTML = cardEls().map((c, i) =>
-      `<button class="fc-dot" role="tab" aria-label="第 ${i + 1} 段" style="--dot-accent:${c.style.getPropertyValue('--fc-accent') || '#FC4C02'}"><i></i></button>`
-    ).join('')
-    dotsEl.querySelectorAll('.fc-dot').forEach((d, i) => d.addEventListener('click', () => goto(i)))
-    syncDots()
-  }
-  function syncDots() {
-    const i = curIdx(), dots = dotsEl.querySelectorAll('.fc-dot'), n = cardEls().length
-    dots.forEach((d, k) => d.classList.toggle('active', k === i))
-    prevBtn.disabled = i <= 0
-    nextBtn.disabled = i >= n - 1
-  }
-  let scrollRaf = null
-  grid.addEventListener('scroll', () => {
-    if (ittBoardMode() || scrollRaf) return
-    scrollRaf = requestAnimationFrame(() => { scrollRaf = null; syncDots() })
-  })
-  prevBtn.addEventListener('click', () => goto(curIdx() - 1))
-  nextBtn.addEventListener('click', () => goto(curIdx() + 1))
-  buildDots()
-  grid.__carouselSync = () => { buildDots() }
-
-  // ── 拖曳捲動（滑鼠）+ 長按排序（滑鼠與觸控）──
-  const LONGPRESS_MS = 450, MOVE_CANCEL = 8
-  let mode = 'idle'            // idle | pressing | scrolling | lifted
-  let pressT = null, startX = 0, startY = 0, startScroll = 0
-  let lifted = null, liftBase = 0, liftPid = null, liftScroll = 0
-  const blockTouch = e => e.preventDefault()
-
-  function enterLift(card, pid) {
-    mode = 'lifted'
-    lifted = card
-    liftBase = 0
-    liftPid = pid
-    liftScroll = grid.scrollLeft
-    try { getSelection().removeAllRanges() } catch (e) {}
-    card.classList.add('fc-lifted')
-    grid.classList.add('fc-reordering')
-    // capture 要設在 grid 而不是卡片上：排序時卡片會被 insertBefore 重新掛載，
-    // 被 capture 的元素一經 reparent，後續 pointerup 就不會送達（Chromium 實測）
-    try { grid.setPointerCapture(pid) } catch (e) {}
-    document.addEventListener('touchmove', blockTouch, { passive: false })
-    if (navigator.vibrate) navigator.vibrate(12)
-  }
-  function flip(el, dx) {
-    if (reduce || !dx) return
-    el.classList.remove('fc-flip')
-    el.style.transform = `translateX(${dx}px)`
-    requestAnimationFrame(() => {
-      el.classList.add('fc-flip')
-      el.style.transform = ''
-      el.addEventListener('transitionend', () => el.classList.remove('fc-flip'), { once: true })
-    })
-  }
-  function liftMove(e) {
-    // 排序期間把 scrollLeft 釘住：位移出去的卡會撐大 scrollable overflow，
-    // 引發瀏覽器自己捲動，槽位計算就會被捲動量污染
-    if (grid.scrollLeft !== liftScroll) grid.scrollLeft = liftScroll
-    const dx = e.clientX - startX
-    lifted.style.transform = `translateX(${dx - liftBase}px) scale(1.035)`
-    // 槽位用版面座標（offsetLeft，不含 transform）計算 —— 鄰卡 FLIP 動畫中的
-    // rect 是移動中的，拿它判斷會來回誤觸；版面槽位是確定的。
-    const cards = cardEls()
-    const cur = cards.indexOf(lifted)
-    const pitch = step()
-    const origin = Math.min(...cards.map(c => c.offsetLeft))
-    const gr = grid.getBoundingClientRect()
-    const lr = lifted.getBoundingClientRect()
-    const centerContent = lr.left + lr.width / 2 - gr.left + grid.scrollLeft
-    let ti = Math.round((centerContent - origin - lifted.offsetWidth / 2) / pitch)
-    ti = Math.max(0, Math.min(cards.length - 1, ti))
-    if (ti === cur) return
-    // 記下所有卡對調前的位置 → DOM 移動 → 被擠開的卡做 FLIP，lifted 補償 liftBase
-    const before = new Map(cards.map(c => [c, c.getBoundingClientRect().left]))
-    const sib = cards[ti]
-    if (ti < cur) grid.insertBefore(lifted, sib)
-    else grid.insertBefore(lifted, sib.nextSibling)
-    liftBase += lifted.getBoundingClientRect().left - before.get(lifted)
-    lifted.style.transform = `translateX(${dx - liftBase}px) scale(1.035)`
-    for (const c of cards) {
-      if (c === lifted) continue
-      const d = before.get(c) - c.getBoundingClientRect().left
-      if (d) flip(c, d)
-    }
-  }
-  function dropLift() {
-    document.removeEventListener('touchmove', blockTouch)
-    grid.classList.remove('fc-reordering')
-    const card = lifted
-    lifted = null
-    card.classList.remove('fc-lifted')
-    if (!reduce) {
-      card.classList.add('fc-flip')
-      card.addEventListener('transitionend', () => card.classList.remove('fc-flip'), { once: true })
-    }
-    card.style.transform = ''
-    try { localStorage.setItem(ITT_ORDER_KEY, JSON.stringify(cardEls().map(c => +c.dataset.segid))) } catch (e) {}
-    buildDots()
-    goto(cardEls().indexOf(card))   // 放下後把卡吸附到它的新槽位
-    mode = 'idle'
-  }
-  const isInteractive = el => !!(el.closest && el.closest('.fc-3d, button, a, input, .fc-race-bar'))
-
-  grid.addEventListener('pointerdown', e => {
-    if (ittBoardMode() || mode !== 'idle' || e.button > 0 || isInteractive(e.target)) return
-    const card = e.target.closest && e.target.closest('.fc')
-    startX = e.clientX; startY = e.clientY; startScroll = grid.scrollLeft
-    mode = 'pressing'
-    clearTimeout(pressT)
-    if (card) pressT = setTimeout(() => { if (mode === 'pressing') enterLift(card, e.pointerId) }, LONGPRESS_MS)
-  })
-  grid.addEventListener('pointermove', e => {
-    if (ittBoardMode()) return
-    if (mode === 'pressing') {
-      const moved = Math.hypot(e.clientX - startX, e.clientY - startY)
-      if (moved > MOVE_CANCEL) {
-        clearTimeout(pressT)
-        if (e.pointerType === 'mouse') {
-          mode = 'scrolling'
-          grid.classList.add('fc-dragging')
-          try { grid.setPointerCapture(e.pointerId) } catch (err) {}
-        } else {
-          mode = 'idle'   // 觸控交給原生捲動
-        }
-      }
-    } else if (mode === 'scrolling') {
-      grid.scrollLeft = startScroll - (e.clientX - startX)
-    } else if (mode === 'lifted') {
-      liftMove(e)
-    }
-  })
-  const release = e => {
-    clearTimeout(pressT)
-    if (mode === 'lifted') { dropLift(); return }
-    if (mode === 'scrolling') {
-      grid.classList.remove('fc-dragging')
-      goto(curIdx())            // 放手吸附最近的卡
-    }
-    mode = 'idle'
-  }
-  grid.addEventListener('pointerup', release)
-  grid.addEventListener('pointercancel', release)
-  grid.addEventListener('keydown', e => {
-    if (e.key === 'ArrowRight') { e.preventDefault(); goto(curIdx() + 1) }
-    if (e.key === 'ArrowLeft')  { e.preventDefault(); goto(curIdx() - 1) }
-  })
-  grid.tabIndex = 0
-
-}
-
-/* 成績來源：'fit' = 自建偵測器從 Garmin 原始 FIT 算出來的，其餘（含沒有 source 欄位的
-   舊紀錄）一律是 Strava 官方配對。舊資料的空白已由 scripts/tag-itt-sources.py 補成
-   'strava'，這裡的 fallback 只是防呆。 */
 const srcKind = e => (e && e.source === 'fit') ? 'fit' : 'strava'
 const srcTag = e => srcKind(e) === 'fit'
   ? '<span class="s2-src s2-src-fit" title="自建 ITT 計時：由 Garmin 原始 FIT 逐秒座標判定閘門通過">自建計時</span>'
@@ -6582,19 +6139,457 @@ function teardown3D() {
       滾到 ITT 區塊附近才 lazy-load three.js，資料缺漏時卡片自動退回 SVG 坡度圖 ── */
 let SEG3D = null
 function initSeg3DWhenVisible() {
-  // 抽卡桌模式：卡片收起時 canvas 是 display:none，IntersectionObserver 永遠不會觸發，
-  // 所以改由「展開卡片」那一刻去載 three（見 initIttBoard 的 setOpen）
-  if (document.querySelector('.fc-board')) return
-  const first = document.querySelector('canvas.fc-3d')
+  // §40：測量檯常駐在 ITT view，第一座檯快進視野才載 three 與建場景
+  const first = document.querySelector('canvas.tsv-cv')
   if (!first) return
-  if (!('IntersectionObserver' in window)) { loadThreeJS().then(setupSeg3D).catch(() => {}); return }
+  if (!('IntersectionObserver' in window)) { loadThreeJS().then(setupIttPlates).catch(() => {}); return }
   const io = new IntersectionObserver(entries => {
     if (entries.some(e => e.isIntersecting)) {
       io.disconnect()
-      loadThreeJS().then(setupSeg3D).catch(() => {})
+      loadThreeJS().then(setupIttPlates).catch(() => {})
     }
-  }, { rootMargin: '150px' })
+  }, { rootMargin: '200px' })
   io.observe(first)
+}
+
+/* ══ §40 ITT 測量檯 3D 引擎（demo/itt-route-3d.html 的正式移植）═══════════
+   真地形（Tilezen 96×96 高度網格）＋路線燈絲＋shader 等高線＋河面。
+   資源紀律沿用舊 setupSeg3D：一顆共用 WebGL renderer 逐檯 blit 進各自的
+   2D canvas、IntersectionObserver 控管可見性、重建前整組 dispose。
+   旋轉是「轉模型不轉相機」（pivot.rotation.y）；canvas 是 touch-action:pan-y，
+   單指水平拖曳轉檯、垂直滑動留給頁面捲動，手機不會被綁架。 */
+let TSV = null
+
+/* 地形網格＋路線 stream 投影進同一個本地公尺座標系（原點＝地形 bbox 中心，
+   z 取南為正 → 相機在正南時北在畫面上方）。 */
+function tsvBuildModel(terrain, stream) {
+  const lat0 = (terrain.minLat + terrain.maxLat) / 2
+  const lng0 = (terrain.minLng + terrain.maxLng) / 2
+  const mLat = 110540, mLng = 111320 * Math.cos(lat0 * Math.PI / 180)
+  const halfX = (terrain.maxLng - terrain.minLng) * mLng / 2
+  const halfZ = (terrain.maxLat - terrain.minLat) * mLat / 2
+  const horiz = Math.max(halfX, halfZ) * 2
+  // 河床在 DEM 是負值（水深）：夾成水面 0，raw≤0.05 標成水
+  const n = terrain.n
+  const hClamp = new Float32Array(n * n)
+  const water = new Float32Array(n * n)
+  let base = Infinity, top = -Infinity
+  for (let i = 0; i < n * n; i++) {
+    const raw = terrain.h[i]
+    const v = Math.max(raw, 0)
+    hClamp[i] = v
+    water[i] = raw <= 0.05 ? 1 : 0
+    if (v < base) base = v
+    if (v > top) top = v
+  }
+  // 平原上的孤立水斑是 DEM 噪點：至少要有兩個水鄰居才算真的河面
+  const w2 = new Float32Array(water)
+  for (let gy = 0; gy < n; gy++) for (let gx = 0; gx < n; gx++) {
+    const i = gy * n + gx
+    if (!water[i]) continue
+    let nb = 0
+    if (gx > 0 && water[i - 1]) nb++
+    if (gx < n - 1 && water[i + 1]) nb++
+    if (gy > 0 && water[i - n]) nb++
+    if (gy < n - 1 && water[i + n]) nb++
+    if (nb < 2) w2[i] = 0
+  }
+  water.set(w2)
+  const range = Math.max(top - base, 30)
+  const exag = Math.min(8, Math.max(1.3, 0.35 * horiz / range))
+  const demYAt = (x, z) => {
+    const gx = Math.min(n - 1, Math.max(0, (x + halfX) / (2 * halfX) * (n - 1)))
+    const gy = Math.min(n - 1, Math.max(0, (z + halfZ) / (2 * halfZ) * (n - 1)))
+    const x0 = Math.floor(gx), y0 = Math.floor(gy)
+    const x1 = Math.min(n - 1, x0 + 1), y1 = Math.min(n - 1, y0 + 1)
+    const fx = gx - x0, fy = gy - y0
+    return hClamp[y0 * n + x0] * (1 - fx) * (1 - fy) + hClamp[y0 * n + x1] * fx * (1 - fy)
+         + hClamp[y1 * n + x0] * (1 - fx) * fy + hClamp[y1 * n + x1] * fx * fy
+  }
+  let cum = 0
+  const pts = stream.map((p, i) => {
+    if (i > 0) cum += haversineM(stream[i - 1][0], stream[i - 1][1], p[0], p[1])
+    const x = (p[1] - lng0) * mLng
+    const z = (lat0 - p[0]) * mLat
+    return { x, z, alt: Math.max(p[2] ?? 0, 0), dem: demYAt(x, z), dist: cum }
+  })
+  // 25m 半窗坡度（跟 buildSegSlopes 同款）：燈絲上色與重播儀表用
+  const sm = pts.map((p, i) => {
+    let s = 0, c = 0
+    for (let k = Math.max(0, i - 2); k <= Math.min(pts.length - 1, i + 2); k++) { s += pts[k].alt; c++ }
+    return s / c
+  })
+  const slopes = pts.map((p, i) => {
+    let a = i, b = i
+    while (a > 0 && pts[i].dist - pts[a].dist < 25) a--
+    while (b < pts.length - 1 && pts[b].dist - pts[i].dist < 25) b++
+    const run = pts[b].dist - pts[a].dist
+    return run > 0 ? (sm[b] - sm[a]) / run : 0
+  })
+  // 「最陡」用相鄰點（~25m 一段、3 點平滑），比 50m 窗更接近體感的瞬間坡
+  const sm3 = pts.map((p, i) => {
+    const l = pts[Math.max(0, i - 1)].alt, r = pts[Math.min(pts.length - 1, i + 1)].alt
+    return (l + p.alt + r) / 3
+  })
+  let steepI = 0, steepV = 0
+  for (let i = 1; i < pts.length; i++) {
+    const run = pts[i].dist - pts[i - 1].dist
+    if (run < 8) continue
+    const g = (sm3[i] - sm3[i - 1]) / run
+    if (g > steepV) { steepV = g; steepI = i }
+  }
+  return { halfX, halfZ, horiz, n, hClamp, water, base, top, range, exag,
+           pts, slopes, steepI, steepV, totalDist: cum }
+}
+
+/* 地形 mesh：高度漸層＋朝向光影＋等高線＋河面＋邊緣淡出，全在 shader 裡。
+   等高線用實際公尺數取模＋smoothstep（刻意避開 fwidth 的 WebGL1/2 地雷）。 */
+function tsvTerrainMesh(m, contourStep) {
+  const n = m.n
+  const geo = new THREE.BufferGeometry()
+  const pos = new Float32Array(n * n * 3)
+  const wat = new Float32Array(n * n)
+  for (let gy = 0; gy < n; gy++) for (let gx = 0; gx < n; gx++) {
+    const i = gy * n + gx
+    pos[i * 3]     = -m.halfX + (gx / (n - 1)) * m.halfX * 2
+    pos[i * 3 + 1] = (m.hClamp[i] - m.base) * m.exag
+    pos[i * 3 + 2] = -m.halfZ + (gy / (n - 1)) * m.halfZ * 2
+    wat[i] = m.water[i]
+  }
+  const idx = []
+  for (let gy = 0; gy < n - 1; gy++) for (let gx = 0; gx < n - 1; gx++) {
+    const a = gy * n + gx, b = a + 1, c = a + n, d = c + 1
+    idx.push(a, c, b, b, c, d)
+  }
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3))
+  geo.setAttribute('aWater', new THREE.BufferAttribute(wat, 1))
+  geo.setIndex(idx)
+  geo.computeVertexNormals()
+  const mat = new THREE.ShaderMaterial({
+    transparent: true,
+    side: THREE.DoubleSide,
+    uniforms: {
+      uYMax:  { value: (m.top - m.base) * m.exag },
+      uExag:  { value: m.exag },
+      uStep:  { value: contourStep },
+      uHalf:  { value: new THREE.Vector2(m.halfX, m.halfZ) },
+      uWater: { value: new THREE.Color(0x11293c) },
+    },
+    vertexShader: `
+      attribute float aWater;
+      varying float vY; varying float vW; varying vec3 vN; varying vec2 vXZ;
+      void main(){
+        vY = position.y; vW = aWater; vN = normal; vXZ = position.xz;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }`,
+    fragmentShader: `
+      precision highp float;
+      uniform float uYMax; uniform float uExag; uniform float uStep;
+      uniform vec2 uHalf; uniform vec3 uWater;
+      varying float vY; varying float vW; varying vec3 vN; varying vec2 vXZ;
+      void main(){
+        float t = clamp(vY / max(uYMax, 1.0), 0.0, 1.0);
+        vec3 col = mix(vec3(0.125,0.078,0.046), vec3(0.46,0.285,0.148), pow(t, 0.8));
+        vec3 L = normalize(vec3(0.42, 0.72, 0.52));
+        col *= 0.52 + 0.62 * max(dot(normalize(vN), L), 0.0);
+        float e = vY / uExag;
+        float d = abs(fract(e / uStep + 0.5) - 0.5) * uStep;
+        float line = 1.0 - smoothstep(0.0, uStep * 0.05, d);
+        col = mix(col, vec3(0.957,0.941,0.918), line * (0.10 + 0.14 * t));
+        col = mix(col, uWater, clamp(vW, 0.0, 1.0));
+        float ax = 1.0 - smoothstep(uHalf.x * 0.82, uHalf.x * 0.995, abs(vXZ.x));
+        float az = 1.0 - smoothstep(uHalf.y * 0.82, uHalf.y * 0.995, abs(vXZ.y));
+        gl_FragColor = vec4(col, ax * az);
+      }`,
+  })
+  return new THREE.Mesh(geo, mat)
+}
+
+/* 燈絲上色：爬坡依坡度（餘燼 → 主色 → 熾金）、平路依進度（暗 → 主色 → 近白）。 */
+function tsvRouteColorFn(m, flat, accentHex) {
+  const acC = new THREE.Color(accentHex)
+  if (!flat) {
+    const lo = new THREE.Color(0x54280e), hi = new THREE.Color(0xffd27a)
+    return u => {
+      const i = Math.round(u * (m.slopes.length - 1))
+      const t = Math.min(1, Math.max(0, m.slopes[i] / 0.14))
+      return t < 0.55 ? lo.clone().lerp(acC, t / 0.55) : acC.clone().lerp(hi, (t - 0.55) / 0.45)
+    }
+  }
+  const lo = new THREE.Color(0x1d3f5e), hi = new THREE.Color(0xcfeaff)
+  return u => (u < 0.6 ? lo.clone().lerp(acC, u / 0.6) : acC.clone().lerp(hi, (u - 0.6) / 0.4))
+}
+function tsvBuildRoute(m, flat, accentHex) {
+  const lift = Math.max(m.horiz * 0.0035, 5)
+  const v = m.pts.map(p => new THREE.Vector3(
+    p.x,
+    Math.max((p.alt - m.base) * m.exag, (p.dem - m.base) * m.exag) + lift,
+    p.z))
+  const curve = new THREE.CatmullRomCurve3(v)
+  const tub = Math.min(900, Math.max(120, m.pts.length * 3))
+  const rad = Math.max(m.horiz * 0.0028, 4)
+  const colorAt = tsvRouteColorFn(m, flat, accentHex)
+  const mk = (radius, opacity, blend) => {
+    const g = new THREE.TubeGeometry(curve, tub, radius, 8, false)
+    const rows = tub + 1, per = 9, col = new Float32Array(rows * per * 3)
+    for (let i = 0; i < rows; i++) {
+      const c = colorAt(i / tub)
+      for (let j = 0; j < per; j++) { const o = (i * per + j) * 3; col[o] = c.r; col[o + 1] = c.g; col[o + 2] = c.b }
+    }
+    g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3))
+    return new THREE.Mesh(g, new THREE.MeshBasicMaterial({ vertexColors: true, transparent: opacity < 1,
+      opacity, depthWrite: opacity === 1, blending: blend || THREE.NormalBlending }))
+  }
+  return { core: mk(rad, 1), glow: mk(rad * 2.6, 0.14, THREE.AdditiveBlending), v, rad }
+}
+
+function tsvFitCamera(it) {
+  const m = it.m, cam = it.camera
+  const tanY = Math.tan(cam.fov * Math.PI / 360)
+  const tilt = 0.58, s = Math.sin(tilt), c = Math.cos(tilt)
+  // 模型會繞 y 旋轉 → 取外接圓半徑，任何角度都不出框（角落本來就被邊緣淡出吃掉，縮 0.92）
+  const R = Math.hypot(m.halfX, m.halfZ) * 0.92
+  const yTop = m.range * m.exag
+  const needH = (R * c + yTop * s) * 1.04 / tanY
+  const needW = R * 1.04 / (tanY * Math.max(0.5, cam.aspect))
+  const d = Math.max(needH, needW) + R * s * 0.5
+  const ty = yTop * 0.12
+  cam.position.set(0, ty + d * s, d * c)
+  cam.lookAt(0, ty, 0)
+  cam.updateProjectionMatrix()
+}
+
+function setupIttPlates() {
+  if (TSV) {
+    cancelAnimationFrame(TSV.raf)
+    for (const it of TSV.items) {
+      it.scene.traverse(o => {
+        if (o.geometry) o.geometry.dispose()
+        if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach(mm => mm.dispose())
+      })
+      it.tags.forEach(t => t.el.remove())
+    }
+    if (TSV.renderer) TSV.renderer.dispose()
+    TSV = null
+    window.__tsv = null
+  }
+  const canvases = [...document.querySelectorAll('canvas.tsv-cv')].filter(cv => cv.offsetParent)
+  if (!canvases.length) return
+  let renderer
+  try { renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true }) } catch (e) { return }
+  renderer.setClearColor(0x000000, 0)
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches
+  const items = []
+  const vio = new IntersectionObserver(es => es.forEach(en => {
+    const it = items.find(i => i.cv === en.target)
+    if (it) it.visible = en.isIntersecting
+  }), { rootMargin: '80px' })
+
+  canvases.forEach((cv, ci) => {
+    const sec = cv.closest('.tsv')
+    const id = sec.dataset.tsv
+    const raw = ((window._segStreams || {})[id] || {}).pts
+    const terr = (window._segTerrain || {})[id]
+    if (!raw || raw.length < 3 || !terr || !terr.h) return
+    const m = tsvBuildModel(terr, raw)
+    const flat = sec.dataset.type === 'flat'
+    const accent = sec.dataset.ac || '#e87c1a'
+    const scene = new THREE.Scene()
+    const pivot = new THREE.Group()
+    scene.add(pivot)
+    pivot.add(tsvTerrainMesh(m, flat ? 25 : 50))
+    const route = tsvBuildRoute(m, flat, accent)
+    pivot.add(route.glow, route.core)
+    // 起點（金）／終點（暗紅）定位球 —— 全站既有語言
+    const capR = route.rad * 2.2
+    const startCap = new THREE.Mesh(new THREE.SphereGeometry(capR, 14, 14), new THREE.MeshBasicMaterial({ color: 0xffd27a }))
+    const endCap = new THREE.Mesh(new THREE.SphereGeometry(capR, 14, 14), new THREE.MeshBasicMaterial({ color: 0x8c1d0a }))
+    startCap.position.copy(route.v[0]); endCap.position.copy(route.v[route.v.length - 1])
+    pivot.add(startCap, endCap)
+    // 疏星掛在 scene（不進 pivot）：星空不該跟著檯面轉
+    const starN = 260, sp = new Float32Array(starN * 3), SR = m.horiz * 1.9
+    for (let i = 0; i < starN; i++) {
+      const th = Math.random() * Math.PI * 2, ph = Math.acos(Math.random())
+      sp[i * 3] = SR * Math.sin(ph) * Math.cos(th)
+      sp[i * 3 + 1] = SR * Math.cos(ph) * 0.6 + m.range * m.exag * 0.4
+      sp[i * 3 + 2] = SR * Math.sin(ph) * Math.sin(th)
+    }
+    const starGeo = new THREE.BufferGeometry()
+    starGeo.setAttribute('position', new THREE.BufferAttribute(sp, 3))
+    scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({
+      color: 0xffe3c2, size: Math.max(2, m.horiz * 0.0016), transparent: true, opacity: 0.45 })))
+    // 重播用：粉筆白定位球（儀器色）＋垂直落線
+    const marker = new THREE.Mesh(new THREE.SphereGeometry(route.rad * 3.0, 16, 16), new THREE.MeshBasicMaterial({ color: 0xedeae3 }))
+    marker.add(new THREE.Mesh(new THREE.SphereGeometry(route.rad * 6.0, 16, 16),
+      new THREE.MeshBasicMaterial({ color: 0xedeae3, transparent: true, opacity: 0.22 })))
+    const dropGeo = new THREE.BufferGeometry()
+    dropGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(6), 3))
+    const drop = new THREE.Line(dropGeo, new THREE.LineBasicMaterial({ color: 0xedeae3, transparent: true, opacity: 0.75 }))
+    marker.visible = drop.visible = false
+    pivot.add(marker, drop)
+
+    const camera = new THREE.PerspectiveCamera(46, 2, 1, m.horiz * 12)
+    const prSec = parseInt(sec.dataset.prSec, 10)
+    const it = {
+      cv, ctx: cv.getContext('2d'), sec, scene, pivot, camera, m, route, flat,
+      marker, drop, dropGeo, tags: [],
+      rot: 0, rotTarget: null, auto: !reduce, spinDir: ci % 2 ? -1 : 1,
+      dragging: false, lastX: 0, visible: false,
+      reveal: reduce ? 1 : 0, revealed: reduce,
+      totalIdx: route.core.geometry.index.count,
+      playMs: null, playDur: Math.min(32, Math.max(16, (isFinite(prSec) && prSec > 0 ? prSec : 1500) / 75)) * 1000,
+      liveEls: {
+        km: sec.querySelector('[data-live="km"]'),
+        alt: sec.querySelector('[data-live="alt"]'),
+        grd: sec.querySelector('[data-live="grd"]'),
+      },
+      prog: sec.querySelector('.tsv-prog'),
+      btnReplay: sec.querySelector('[data-act="replay"]'),
+      btnSpin: sec.querySelector('[data-act="spin"]'),
+    }
+    if (reduce) { it.sec.classList.add('revealed') } else {
+      route.core.geometry.setDrawRange(0, 0)
+      route.glow.geometry.setDrawRange(0, 0)
+    }
+    // 地標籤（DOM 才有銳利的字）：起終點、峰頂、最陡、每 1–2 公里
+    const mkTag = (cls, txt, v3) => {
+      const el = document.createElement('div')
+      el.className = 'tsv-tag ' + cls
+      el.textContent = txt
+      sec.appendChild(el)
+      const dy = cls === 'km' ? '-50%' : cls === 'peak' ? '-270%' : '-130%'
+      it.tags.push({ el, v: v3, dy })
+    }
+    mkTag('', '起點', route.v[0].clone())
+    mkTag('', '終點', route.v[route.v.length - 1].clone())
+    if (!flat) {
+      let pi = 0
+      m.pts.forEach((p, i) => { if (p.alt > m.pts[pi].alt) pi = i })
+      mkTag('peak', `▲ ${Math.round(m.pts[pi].alt)} m`, route.v[pi].clone())
+      if (m.steepI !== pi && m.steepV > 0.03) mkTag('steep', `最陡 ${Math.round(m.steepV * 100)}%`, route.v[m.steepI].clone())
+    }
+    const kmStep = m.totalDist > 9000 ? 2000 : 1000
+    for (let d = kmStep; d < m.totalDist - 200; d += kmStep) {
+      const i = m.pts.findIndex(p => p.dist >= d)
+      if (i > 0) mkTag('km', (d / 1000) + 'K', route.v[i].clone())
+    }
+    camera.aspect = (cv.clientWidth || 800) / (cv.clientHeight || 500)
+    tsvFitCamera(it)
+    // 拖曳轉檯：一動手就停自轉（touch-action:pan-y 讓垂直滑動照常捲頁）
+    cv.addEventListener('pointerdown', e => {
+      it.dragging = true; it.lastX = e.clientX; it.rotTarget = null
+      if (it.auto) { it.auto = false; it.btnSpin?.classList.remove('on') }
+      cv.setPointerCapture(e.pointerId)
+    })
+    cv.addEventListener('pointermove', e => {
+      if (!it.dragging) return
+      it.rot += (e.clientX - it.lastX) * 0.009
+      it.lastX = e.clientX
+    })
+    const stopDrag = () => { it.dragging = false }
+    cv.addEventListener('pointerup', stopDrag)
+    cv.addEventListener('pointercancel', stopDrag)
+    it.btnReplay?.addEventListener('click', () => tsvToggleReplay(it))
+    it.btnSpin?.addEventListener('click', () => {
+      it.auto = !it.auto
+      it.btnSpin.classList.toggle('on', it.auto)
+    })
+    sec.querySelector('[data-act="north"]')?.addEventListener('click', () => {
+      it.rotTarget = 0
+      if (it.auto) { it.auto = false; it.btnSpin?.classList.remove('on') }
+    })
+    vio.observe(cv)
+    items.push(it)
+  })
+  if (!items.length) { renderer.dispose(); return }
+  TSV = { renderer, items, raf: null, lastT: null }
+  window.__tsv = TSV   // debug/測試用握把
+
+  const yAxis = new THREE.Vector3(0, 1, 0), tagV = new THREE.Vector3()
+  function tsvPtAtDist(m, d) {
+    let lo = 0, hi = m.pts.length - 1
+    while (lo < hi) { const mid = (lo + hi) >> 1; (m.pts[mid].dist < d) ? lo = mid + 1 : hi = mid }
+    return Math.max(1, lo)
+  }
+  function tick(t) {
+    TSV.raf = requestAnimationFrame(tick)
+    const dt = TSV.lastT == null ? 16 : Math.min(100, t - TSV.lastT)
+    TSV.lastT = t
+    const dpr = Math.min(2, window.devicePixelRatio || 1)
+    for (const it of TSV.items) {
+      if (!it.visible) continue
+      const w = it.cv.clientWidth, h = it.cv.clientHeight
+      if (!w || !h) continue
+      const pw = Math.round(w * dpr), ph = Math.round(h * dpr)
+      if (it.cv.width !== pw || it.cv.height !== ph) { it.cv.width = pw; it.cv.height = ph }
+      const size = renderer.getSize(new THREE.Vector2())
+      if (size.x !== pw || size.y !== ph) renderer.setSize(pw, ph, false)
+      if (Math.abs(it.camera.aspect - w / h) > 0.01) { it.camera.aspect = w / h; tsvFitCamera(it) }
+      if (!reduce && it.auto && !it.dragging) it.rot += dt * 0.00009 * it.spinDir
+      if (it.rotTarget != null && !it.dragging) {
+        const diff = it.rotTarget - it.rot
+        if (Math.abs(diff) < 0.002) { it.rot = it.rotTarget; it.rotTarget = null }
+        else it.rot += diff * Math.min(1, dt / 260)
+      }
+      // 燈絲揭幕：進入視野後 2.3 秒從起點畫到終點
+      if (!it.revealed) {
+        it.reveal = Math.min(1, it.reveal + dt / 2300)
+        const p = it.reveal * it.reveal * (3 - 2 * it.reveal)
+        const c = Math.floor(it.totalIdx * p / 3) * 3
+        it.route.core.geometry.setDrawRange(0, c)
+        it.route.glow.geometry.setDrawRange(0, c)
+        if (it.reveal >= 1) { it.revealed = true; it.sec.classList.add('revealed') }
+      }
+      // 重播：累計 dt（不用絕對時間 —— 窗格被隱藏、rAF 凍結後回來要原地續播不是跳完）
+      if (it.playMs != null) {
+        it.playMs += dt
+        const p = Math.min(1, it.playMs / it.playDur)
+        const d = p * it.m.totalDist
+        const i = tsvPtAtDist(it.m, d)
+        it.marker.position.copy(it.route.v[i])
+        const dp = it.dropGeo.attributes.position.array
+        dp[0] = it.route.v[i].x; dp[1] = it.route.v[i].y; dp[2] = it.route.v[i].z
+        dp[3] = it.route.v[i].x; dp[4] = (it.m.pts[i].dem - it.m.base) * it.m.exag; dp[5] = it.route.v[i].z
+        it.dropGeo.attributes.position.needsUpdate = true
+        if (it.liveEls.km) it.liveEls.km.innerHTML = (d / 1000).toFixed(2) + '<small>km</small>'
+        if (it.liveEls.alt) it.liveEls.alt.innerHTML = Math.round(it.m.pts[i].alt) + '<small>m</small>'
+        if (it.liveEls.grd) it.liveEls.grd.innerHTML = (it.m.slopes[i] * 100).toFixed(1) + '<small>%</small>'
+        if (it.prog) it.prog.style.width = (p * 100).toFixed(2) + '%'
+        if (p >= 1) tsvStopReplay(it)
+      }
+      it.pivot.rotation.y = it.rot
+      renderer.render(it.scene, it.camera)
+      it.ctx.clearRect(0, 0, pw, ph)
+      it.ctx.drawImage(renderer.domElement, 0, 0, pw, ph)
+      // 地標籤跟著模型的旋轉重新投影（相機固定，模型在轉）
+      for (const tg of it.tags) {
+        tagV.copy(tg.v).applyAxisAngle(yAxis, it.rot).project(it.camera)
+        const off = tagV.z > 1 || tagV.x < -1.05 || tagV.x > 1.05 || tagV.y < -1.05 || tagV.y > 1.05
+        tg.el.classList.toggle('hidden', off)
+        if (!off) tg.el.style.transform =
+          `translate(-50%,${tg.dy}) translate(${((tagV.x + 1) / 2 * w).toFixed(1)}px,${((1 - tagV.y) / 2 * h).toFixed(1)}px)`
+      }
+    }
+  }
+  TSV.raf = requestAnimationFrame(tick)
+}
+function tsvStopReplay(it) {
+  it.playMs = null
+  it.sec.classList.remove('playing')
+  it.marker.visible = it.drop.visible = false
+  if (it.prog) it.prog.style.width = '0%'
+  if (it.btnReplay) { it.btnReplay.textContent = '重播 PR'; it.btnReplay.classList.remove('on') }
+}
+function tsvToggleReplay(it) {
+  if (it.playMs != null) { tsvStopReplay(it); return }
+  it.playMs = 0
+  it.sec.classList.add('playing')
+  it.marker.visible = it.drop.visible = true
+  if (it.btnReplay) { it.btnReplay.textContent = '停止'; it.btnReplay.classList.add('on') }
+  it.revealed = true
+  it.sec.classList.add('revealed')
+  it.route.core.geometry.setDrawRange(0, it.totalIdx)
+  it.route.glow.geometry.setDrawRange(0, it.totalIdx)
 }
 // 坡度上色：0% 餘燼紅 → 12%+ 熾金（越陡越亮），沿用速度色帶的暖色 ramp
 // 地標清單由使用者自己維護（data/landmarks.json），這裡只負責判斷「路線有沒有經過附近」。
@@ -12412,9 +12407,8 @@ function setView(name, opts) {
 let _ittMounted = false
 function mountItt() {
   if (_ittMounted) return
-  if (!document.querySelector('#content .view[data-view="itt"] .fc')) return
+  if (!document.querySelector('#content .view[data-view="itt"] .tsv')) return
   _ittMounted = true
-  bindSegmentCards()
   initSeg3DWhenVisible()
 }
 

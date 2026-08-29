@@ -1,0 +1,701 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ITT 地形測量檯</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Saira+Condensed:wght@600;700;800&display=swap">
+<style>
+/* 沿用 strava.html 的字體憲法：Saira Condensed 只給 ≥26px 的數字，
+   拉丁標籤走 Archivo，中文一律交還系統字。 */
+*{box-sizing:border-box;margin:0}
+:root{
+  --f-num:'Saira Condensed','Oswald','Arial Narrow',sans-serif;
+  --f-ui:'Archivo',-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang TC','Noto Sans TC','Microsoft JhengHei',sans-serif;
+  --ink-1:#f4f0ea;--ink-2:rgba(244,240,234,.66);--ink-3:rgba(244,240,234,.38);
+  --sig:#FC4C02;
+  --bg:#0a0408;
+}
+html,body{background:var(--bg);color:var(--ink-1);font-family:var(--f-ui)}
+::selection{background:rgba(252,76,2,.35)}
+
+/* ── 頁首 ── */
+header{padding:34px clamp(18px,4vw,56px) 26px;border-bottom:1px solid rgba(244,240,234,.07)}
+.crumb{font-size:11px;font-weight:600;letter-spacing:2.5px;color:var(--ink-3);text-transform:uppercase}
+.crumb b{color:var(--sig);font-weight:700}
+h1{font-size:clamp(24px,3.4vw,34px);font-weight:800;letter-spacing:1px;margin:10px 0 2px}
+h1 .en{font-family:var(--f-ui);font-size:11px;font-weight:600;letter-spacing:3px;color:var(--ink-3);margin-left:12px;vertical-align:4px}
+.brief{max-width:760px;font-size:13px;line-height:1.8;color:var(--ink-2);margin-top:10px}
+.brief b{color:var(--ink-1);font-weight:600}
+
+/* ── 測量檯 ── */
+.plate{position:relative;height:min(92vh,800px);border-bottom:1px solid rgba(244,240,234,.07);overflow:hidden;background:
+  radial-gradient(ellipse 90% 62% at 50% 44%, rgba(35,18,8,.55), transparent 72%), var(--bg)}
+.plate canvas.stage{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab;touch-action:pan-y}
+.plate canvas.stage:active{cursor:grabbing}
+.hud{position:absolute;inset:0;pointer-events:none;z-index:3}
+
+.idb{position:absolute;top:24px;left:clamp(18px,4vw,56px);max-width:min(60%,520px)}
+.idx{font-family:var(--f-ui);font-size:11px;font-weight:700;letter-spacing:2px;color:#0a0408;
+  background:var(--ac,#e87c1a);border-radius:4px;padding:2px 7px;display:inline-block}
+.idx-en{font-size:10.5px;font-weight:600;letter-spacing:2.2px;color:var(--ink-3);text-transform:uppercase;margin-left:9px}
+.seg-name{font-size:clamp(26px,3.2vw,38px);font-weight:800;letter-spacing:1.5px;margin-top:10px}
+.seg-name small{font-size:.5em;font-weight:600;color:var(--ink-2);letter-spacing:2px;margin-left:6px}
+.seg-note{font-size:12px;color:var(--ink-3);margin-top:6px;letter-spacing:.5px}
+
+.stats{position:absolute;left:clamp(18px,4vw,56px);bottom:26px;display:flex;gap:clamp(16px,2.6vw,38px);flex-wrap:wrap}
+.st .lb{font-size:10.5px;font-weight:600;letter-spacing:1.8px;color:var(--ink-3);text-transform:uppercase}
+.st .nu{font-family:var(--f-num);font-variant-numeric:tabular-nums;font-size:30px;font-weight:800;line-height:1.15;margin-top:3px}
+.st .nu small{font-family:var(--f-ui);font-size:11px;font-weight:600;color:var(--ink-3);letter-spacing:1px;margin-left:3px}
+.st.hot .nu{color:var(--ac,#e87c1a)}
+.st-sub{position:absolute;left:clamp(18px,4vw,56px);bottom:6px;font-size:10.5px;color:var(--ink-3);letter-spacing:1px}
+
+/* 重播中的即時儀表：取代 stats，粉筆白（儀器色），訊號橘小點 */
+.live{position:absolute;left:clamp(18px,4vw,56px);bottom:26px;display:none;gap:clamp(16px,2.6vw,38px)}
+.plate.playing .live{display:flex}
+.plate.playing .stats,.plate.playing .st-sub{display:none}
+.live .dot{width:8px;height:8px;border-radius:50%;background:var(--sig);align-self:center;
+  box-shadow:0 0 10px rgba(252,76,2,.8);animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:.25}}
+
+.ctrl{position:absolute;right:clamp(18px,4vw,56px);bottom:26px;display:flex;gap:8px;pointer-events:auto}
+.ctrl button{font-family:var(--f-ui);font-size:11.5px;font-weight:600;letter-spacing:1.5px;color:var(--ink-2);
+  background:rgba(244,240,234,.04);border:1px solid rgba(244,240,234,.16);border-radius:7px;
+  padding:8px 14px;cursor:pointer;transition:color .15s,border-color .15s,background .15s}
+.ctrl button:hover{color:var(--ink-1);border-color:rgba(244,240,234,.4)}
+.ctrl button.on{color:var(--ac,#e87c1a);border-color:var(--ac,#e87c1a);background:rgba(244,240,234,.03)}
+.ctrl button:focus-visible{outline:2px solid var(--sig);outline-offset:2px}
+.hint{position:absolute;right:clamp(18px,4vw,56px);top:26px;font-size:10.5px;letter-spacing:1.2px;color:var(--ink-3)}
+
+/* 投影到 3D 位置的地標籤（DOM 才有銳利的字） */
+.tag{position:absolute;transform:translate(-50%,-130%);font-size:11px;font-weight:600;letter-spacing:1px;
+  color:var(--ink-1);background:rgba(10,4,8,.72);border:1px solid rgba(244,240,234,.22);
+  border-radius:5px;padding:2px 7px;white-space:nowrap;opacity:0;transition:opacity .6s}
+.plate.revealed .tag{opacity:1}
+.tag.peak{color:#ffd27a;border-color:rgba(255,210,122,.45)}
+.tag.steep{color:#ff8f66;border-color:rgba(255,143,102,.4)}
+.tag.km{transform:translate(-50%,-50%);font-size:9.5px;font-weight:600;color:var(--ink-3);
+  background:none;border:none;padding:1px 3px;letter-spacing:.5px}
+.tag.hidden{visibility:hidden}
+
+/* 重播進度：貼齊測量檯底邊的一條細光 */
+.prog{position:absolute;left:0;bottom:0;height:2px;width:0%;background:var(--ac,#e87c1a);
+  box-shadow:0 0 8px var(--ac,#e87c1a);z-index:4}
+
+.perr{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  color:#ff8f8f;font-size:13px;letter-spacing:1px;text-align:center;padding:20px}
+
+/* ── 頁尾：做功課筆記 ── */
+footer{padding:40px clamp(18px,4vw,56px) 70px;max-width:980px}
+footer h2{font-size:15px;font-weight:700;letter-spacing:2px;margin-bottom:6px}
+footer .fen{font-size:10.5px;font-weight:600;letter-spacing:2.5px;color:var(--ink-3);text-transform:uppercase}
+.hw{margin-top:20px;border-top:1px solid rgba(244,240,234,.1)}
+.hw-row{display:grid;grid-template-columns:190px 1fr;gap:14px;padding:13px 0;border-bottom:1px solid rgba(244,240,234,.07);
+  font-size:12.5px;line-height:1.7;color:var(--ink-2)}
+.hw-row dt{font-weight:700;color:var(--ink-1);letter-spacing:.5px}
+.hw-row dt .pick{display:inline-block;font-size:10px;font-weight:700;letter-spacing:1.5px;color:#0a0408;
+  background:#7ce6a0;border-radius:4px;padding:1px 6px;margin-left:7px;vertical-align:2px}
+.src{margin-top:26px;font-size:11px;line-height:1.9;color:var(--ink-3);letter-spacing:.4px}
+.src a{color:var(--ink-2)}
+
+@media (max-width:720px){
+  .plate{height:78vh}
+  .st .nu{font-size:26px}
+  .idb{max-width:78%}
+  .hint{display:none}
+  .hw-row{grid-template-columns:1fr;gap:4px}
+  /* 手機：按鈕讓到最下緣，數字整排往上抬，兩者不再互疊 */
+  .stats,.live{bottom:96px;gap:18px}
+  .st-sub{bottom:76px}
+  .ctrl{left:18px;right:18px;justify-content:flex-end}
+}
+@media (prefers-reduced-motion:reduce){
+  .live .dot{animation:none}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="crumb">strava.html · ITT 區間 · <b>套件化原型</b></div>
+  <h1>地形測量檯<span class="en">TERRAIN SURVEY — PROTOTYPE</span></h1>
+  <p class="brief">
+    把 ITT 卡上那條手繪的 SVG 坡度線，換成<b>真地形</b>：套件用 <b>three.js r128</b>（站內已 vendor、
+    含 OrbitControls、MIT 授權），地形是一年前就抓好、放在 <b>data/segment-terrain.json</b> 卻從沒被畫過的
+    Tilezen 高程網格。挑了個性相反的兩段——爬坡的風櫃嘴、平路的社子島砍鴨頭。全部 35 個路段的資料都齊，這套可以直接套用。
+    <br>拖曳旋轉 · 點一下後滾輪縮放 · 「重播 PR」看等速跑完最佳成績。
+  </p>
+</header>
+
+<main id="plates"></main>
+
+<footer>
+  <div class="fen">HOMEWORK</div>
+  <h2>做功課：套件怎麼挑</h2>
+  <dl class="hw">
+    <div class="hw-row"><dt>three.js r128<span class="pick">採用</span></dt>
+      <dd>repo 早已 vendor（<code>vendor-three-r128.js</code>，pitwall 的 3D 回放同一顆），OrbitControls 打包在內，
+      零新依賴、離線可跑。96×96 的高度網格自己建 mesh 只要幾十行，等高線在 shader 裡畫，SVG 做不到的它全包。</dd></div>
+    <div class="hw-row"><dt>deck.gl TerrainLayer</dt>
+      <dd>官方地形層很成熟，但要拉進 @deck.gl 全家桶（~500 KB），而且地形預設吃「圖磚服務」；
+      我們的高度資料是已 commit 的靜態 JSON，餵給它反而繞路。</dd></div>
+    <div class="hw-row"><dt>MapLibre GL（raster-dem）</dt>
+      <dd>真 3D 地圖體驗最完整，但執行期要 style JSON＋磚服務，違反本站「頁面只讀 repo 內 JSON、不依賴第三方服務」的管線原則。</dd></div>
+    <div class="hw-row"><dt>ECharts GL / Plotly 3D</dt>
+      <dd>surface3D 十分鐘能出圖，但長相是「圖表」——座標軸盒、量測游標，跟太空計時板的世界觀打架；體積 1–3 MB 也不划算。</dd></div>
+    <div class="hw-row"><dt>之後要上正式頁？</dt>
+      <dd>照 pitwall 的做法：ITT 卡點開才 lazy-load vendor 與建場景，閒置零成本。手機上單指保留給頁面捲動，旋轉限定在檯內拖曳。</dd></div>
+  </dl>
+  <p class="src">
+    路線 GPS＝data/segment-streams.json（本人 Strava streams）；高程＝Tilezen Terrarium via AWS Open Data，
+    由 scripts/fetch-segment-terrain.js 抓取後 commit（山不會動，抓一次用一輩子）。
+    Terrain tiles © <a href="https://github.com/tilezen/joerd/blob/master/docs/attribution.md">Mapzen / Tilezen Joerd</a>。
+    海平面以下的河床深度值已夾為水面，畫成靜水。
+  </p>
+</footer>
+
+<script src="../vendor-three-r128.js"></script>
+<script>
+'use strict'
+/* ───────────────────────── 設定 ───────────────────────── */
+const PLATES = [
+  { id: '641218',  idx: '01', ac: 0xe87c1a, acCss: '#e87c1a', contour: 50,
+    colorMode: 'grade',    spin: 0.5,  en: 'FENGGUIZUI · CLIMB' },
+  { id: '7032136', idx: '02', ac: 0x4ab4ff, acCss: '#4ab4ff', contour: 25,
+    colorMode: 'progress', spin: -0.5, en: 'SHEZIDAO · ENDURANCE' },
+]
+const INK = 0xf4f0ea
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches
+
+/* ───────────────────────── 幾何工具 ───────────────────────── */
+function haversineM(la1, lo1, la2, lo2) {
+  const R = 6371000, rad = x => x * Math.PI / 180
+  const dLa = rad(la2 - la1), dLo = rad(lo2 - lo1)
+  const a = Math.sin(dLa / 2) ** 2 + Math.cos(rad(la1)) * Math.cos(rad(la2)) * Math.sin(dLo / 2) ** 2
+  return 2 * R * Math.asin(Math.sqrt(a))
+}
+function fmtKm(m) { return (m / 1000).toFixed(2) }
+
+/* 把「地形網格＋路線 stream」投影進同一個本地公尺座標系（z 取南為正，北在畫面上方） */
+function buildModel(terrain, stream, conf) {
+  const lat0 = (terrain.minLat + terrain.maxLat) / 2
+  const lng0 = (terrain.minLng + terrain.maxLng) / 2
+  const mLat = 110540, mLng = 111320 * Math.cos(lat0 * Math.PI / 180)
+  const halfX = (terrain.maxLng - terrain.minLng) * mLng / 2
+  const halfZ = (terrain.maxLat - terrain.minLat) * mLat / 2
+  const horiz = Math.max(halfX, halfZ) * 2
+
+  // 高度：河床的負值夾成水面 0；基準取夾過後的最低點
+  const n = terrain.n
+  const hClamp = new Float32Array(n * n)
+  const water = new Float32Array(n * n)
+  let base = Infinity, top = -Infinity
+  for (let i = 0; i < n * n; i++) {
+    const raw = terrain.h[i]
+    const v = Math.max(raw, 0)
+    hClamp[i] = v
+    water[i] = raw <= 0.05 ? 1 : 0
+    if (v < base) base = v
+    if (v > top) top = v
+  }
+  // 平原上的孤立水斑是 DEM 噪點：至少要有兩個鄰居也是水才算真的河面
+  const w2 = new Float32Array(water)
+  for (let gy = 0; gy < n; gy++) for (let gx = 0; gx < n; gx++) {
+    const i = gy * n + gx
+    if (!water[i]) continue
+    let nb = 0
+    if (gx > 0 && water[i - 1]) nb++
+    if (gx < n - 1 && water[i + 1]) nb++
+    if (gy > 0 && water[i - n]) nb++
+    if (gy < n - 1 && water[i + n]) nb++
+    if (nb < 2) w2[i] = 0
+  }
+  water.set(w2)
+  const range = Math.max(top - base, 30)
+  const exag = Math.min(8, Math.max(1.3, 0.35 * horiz / range))
+
+  // 路線：以同一原點投影；高度夾在地形之上，免得 GPS 跟 DEM 打架時路沉進山裡
+  const demYAt = (x, z) => {
+    const gx = Math.min(n - 1, Math.max(0, (x + halfX) / (2 * halfX) * (n - 1)))
+    const gy = Math.min(n - 1, Math.max(0, (z + halfZ) / (2 * halfZ) * (n - 1)))  // z南正=lat遞減=列序
+    const x0 = Math.floor(gx), y0 = Math.floor(gy)
+    const x1 = Math.min(n - 1, x0 + 1), y1 = Math.min(n - 1, y0 + 1)
+    const fx = gx - x0, fy = gy - y0
+    return hClamp[y0 * n + x0] * (1 - fx) * (1 - fy) + hClamp[y0 * n + x1] * fx * (1 - fy)
+         + hClamp[y1 * n + x0] * (1 - fx) * fy + hClamp[y1 * n + x1] * fx * fy
+  }
+  let cum = 0
+  const pts = stream.map((p, i) => {
+    if (i > 0) cum += haversineM(stream[i - 1][0], stream[i - 1][1], p[0], p[1])
+    const x = (p[1] - lng0) * mLng
+    const z = (lat0 - p[0]) * mLat
+    const alt = Math.max(p[2] ?? 0, 0)
+    return { x, z, alt, dem: demYAt(x, z), dist: cum }
+  })
+  // 平滑高度（5 點移動平均）→ 正向增量 = 總爬升
+  const sm = pts.map((p, i) => {
+    let s = 0, c = 0
+    for (let k = Math.max(0, i - 2); k <= Math.min(pts.length - 1, i + 2); k++) { s += pts[k].alt; c++ }
+    return s / c
+  })
+  let gain = 0
+  for (let i = 1; i < sm.length; i++) { const d = sm[i] - sm[i - 1]; if (d > 0) gain += d }
+  // 25m 半窗坡度（跟 strava.html 的 buildSegSlopes 同款，太短會被 GPS 雜訊放大）
+  const slopes = pts.map((p, i) => {
+    let a = i, b = i
+    while (a > 0 && pts[i].dist - pts[a].dist < 25) a--
+    while (b < pts.length - 1 && pts[b].dist - pts[i].dist < 25) b++
+    const run = pts[b].dist - pts[a].dist
+    return run > 0 ? (sm[b] - sm[a]) / run : 0
+  })
+  // 淨爬升（頂－底）＝站上爬坡卡用的數字；正向累計會把小回落也算進去，兩邊對不上
+  const alts = pts.map(p => p.alt)
+  const netGain = Math.max(...alts) - Math.min(...alts)
+  // 「最陡」用相鄰點（~25m 一段、3 點平滑），比 50m 窗更接近體感的瞬間坡
+  const sm3 = alts.map((a, i) => {
+    const l = alts[Math.max(0, i - 1)], r = alts[Math.min(alts.length - 1, i + 1)]
+    return (l + a + r) / 3
+  })
+  let steepI = 0, steepV = 0
+  for (let i = 1; i < pts.length; i++) {
+    const run = pts[i].dist - pts[i - 1].dist
+    if (run < 8) continue
+    const g = (sm3[i] - sm3[i - 1]) / run
+    if (g > steepV) { steepV = g; steepI = i }
+  }
+  return { lat0, lng0, mLat, mLng, halfX, halfZ, horiz, n, hClamp, water,
+           base, top, range, exag, pts, slopes, totalDist: cum, gain, netGain,
+           steepI, steepV, demYAt }
+}
+
+/* ───────────────────────── 地形 mesh（等高線畫在 shader 裡） ───────────────────────── */
+function buildTerrainMesh(m, conf) {
+  const n = m.n
+  const geo = new THREE.BufferGeometry()
+  const pos = new Float32Array(n * n * 3)
+  const wat = new Float32Array(n * n)
+  for (let gy = 0; gy < n; gy++) {
+    for (let gx = 0; gx < n; gx++) {
+      const i = gy * n + gx
+      pos[i * 3]     = -m.halfX + (gx / (n - 1)) * m.halfX * 2
+      pos[i * 3 + 1] = (m.hClamp[i] - m.base) * m.exag
+      pos[i * 3 + 2] = -m.halfZ + (gy / (n - 1)) * m.halfZ * 2
+      wat[i] = m.water[i]
+    }
+  }
+  const idx = []
+  for (let gy = 0; gy < n - 1; gy++) for (let gx = 0; gx < n - 1; gx++) {
+    const a = gy * n + gx, b = a + 1, c = a + n, d = c + 1
+    idx.push(a, c, b, b, c, d)
+  }
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3))
+  geo.setAttribute('aWater', new THREE.BufferAttribute(wat, 1))
+  geo.setIndex(idx)
+  geo.computeVertexNormals()
+
+  const mat = new THREE.ShaderMaterial({
+    transparent: true,
+    side: THREE.DoubleSide,
+    uniforms: {
+      uYMax:  { value: (m.top - m.base) * m.exag },
+      uExag:  { value: m.exag },
+      uStep:  { value: conf.contour },
+      uHalf:  { value: new THREE.Vector2(m.halfX, m.halfZ) },
+      uWater: { value: new THREE.Color(0x11293c) },
+    },
+    vertexShader: `
+      attribute float aWater;
+      varying float vY; varying float vW; varying vec3 vN; varying vec2 vXZ;
+      void main(){
+        vY = position.y; vW = aWater; vN = normal; vXZ = position.xz;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }`,
+    fragmentShader: `
+      precision highp float;
+      uniform float uYMax; uniform float uExag; uniform float uStep;
+      uniform vec2 uHalf; uniform vec3 uWater;
+      varying float vY; varying float vW; varying vec3 vN; varying vec2 vXZ;
+      void main(){
+        float t = clamp(vY / max(uYMax, 1.0), 0.0, 1.0);
+        vec3 col = mix(vec3(0.125,0.078,0.046), vec3(0.46,0.285,0.148), pow(t, 0.8));
+        vec3 L = normalize(vec3(0.42, 0.72, 0.52));
+        col *= 0.52 + 0.62 * max(dot(normalize(vN), L), 0.0);
+        // 等高線：實際公尺數取模，畫成細粉筆線（越高越亮，谷底仍要讀得到）
+        float e = vY / uExag;
+        float d = abs(fract(e / uStep + 0.5) - 0.5) * uStep;
+        float line = 1.0 - smoothstep(0.0, uStep * 0.05, d);
+        col = mix(col, vec3(0.957,0.941,0.918), line * (0.10 + 0.14 * t));
+        // 河面：靜水一片，壓平所有起伏
+        col = mix(col, uWater, clamp(vW, 0.0, 1.0));
+        // 邊緣淡出 → 地形浮在虛空中，不是一塊方毯
+        float ax = 1.0 - smoothstep(uHalf.x * 0.82, uHalf.x * 0.995, abs(vXZ.x));
+        float az = 1.0 - smoothstep(uHalf.y * 0.82, uHalf.y * 0.995, abs(vXZ.y));
+        gl_FragColor = vec4(col, ax * az);
+      }`,
+  })
+  mat.extensions = { derivatives: false }
+  return new THREE.Mesh(geo, mat)
+}
+
+/* ───────────────────────── 路線燈絲 ───────────────────────── */
+function routeColorFn(m, conf, ac) {
+  const acC = new THREE.Color(ac)
+  if (conf.colorMode === 'grade') {
+    // 爬坡：坡度 0→14% 從餘燼壓暗一路燒到熾金
+    const lo = new THREE.Color(0x54280e), hi = new THREE.Color(0xffd27a)
+    return u => {
+      const i = Math.round(u * (m.slopes.length - 1))
+      const t = Math.min(1, Math.max(0, m.slopes[i] / 0.14))
+      return t < 0.55 ? lo.clone().lerp(acC, t / 0.55) : acC.clone().lerp(hi, (t - 0.55) / 0.45)
+    }
+  }
+  // 平路：起點壓暗 → 終點全亮（進度即方向）
+  const lo = new THREE.Color(0x1d3f5e), hi = new THREE.Color(0xcfeaff)
+  return u => (u < 0.6 ? lo.clone().lerp(acC, u / 0.6) : acC.clone().lerp(hi, (u - 0.6) / 0.4))
+}
+function buildRoute(m, conf) {
+  const lift = Math.max(m.horiz * 0.0035, 5)
+  const v = m.pts.map(p => new THREE.Vector3(
+    p.x,
+    Math.max((p.alt - m.base) * m.exag, (p.dem - m.base) * m.exag) + lift,
+    p.z))
+  const curve = new THREE.CatmullRomCurve3(v)
+  const tub = Math.min(900, Math.max(120, m.pts.length * 3))
+  const rad = Math.max(m.horiz * 0.0028, 4)
+  const colorAt = routeColorFn(m, conf, conf.ac)
+  const mk = (radius, opacity, blend) => {
+    const g = new THREE.TubeGeometry(curve, tub, radius, 8, false)
+    const rows = tub + 1, per = 9, col = new Float32Array(rows * per * 3)
+    for (let i = 0; i < rows; i++) {
+      const c = colorAt(i / tub)
+      for (let j = 0; j < per; j++) { const o = (i * per + j) * 3; col[o] = c.r; col[o + 1] = c.g; col[o + 2] = c.b }
+    }
+    g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3))
+    const mat = new THREE.MeshBasicMaterial({ vertexColors: true, transparent: opacity < 1,
+      opacity, depthWrite: opacity === 1, blending: blend || THREE.NormalBlending })
+    return new THREE.Mesh(g, mat)
+  }
+  const core = mk(rad, 1)
+  const glow = mk(rad * 2.6, 0.14, THREE.AdditiveBlending)
+  return { core, glow, curve, v, lift, rad }
+}
+
+/* ───────────────────────── 每座測量檯 ───────────────────────── */
+function fmtTime(sec) {
+  const h = Math.floor(sec / 3600), mn = Math.floor(sec % 3600 / 60), s = sec % 60
+  return (h ? h + ':' + String(mn).padStart(2, '0') : mn) + ':' + String(s).padStart(2, '0')
+}
+function plateHTML(conf, segInfo, meta, m) {
+  const pr = segInfo.pr
+  // 距離以 Strava 路段官方值為準（stream 是 ~25m 重取樣，彎道會少算 1~2%）
+  const distKm = segInfo.distKm || m.totalDist / 1000
+  const stats = []
+  stats.push(['距離', distKm.toFixed(2), 'km'])
+  if (conf.colorMode === 'grade') {
+    stats.push(['爬升', String(Math.round(m.netGain)), 'm'])
+    stats.push(['均坡', (meta.avgGrade ?? (m.netGain / m.totalDist * 100)).toFixed(1), '%'])
+  } else {
+    stats.push(['均速', (distKm / (pr.elapsed_sec / 3600)).toFixed(1), 'km/h'])
+  }
+  stats.push(['PR', pr.elapsed_str, '', 'hot'])
+  if (pr.avg_watts) stats.push(['功率', String(pr.avg_watts), 'w'])
+  return `
+    <canvas class="stage"></canvas>
+    <div class="hud">
+      <div class="idb">
+        <span class="idx">${conf.idx}</span><span class="idx-en">${conf.en}</span>
+        <div class="seg-name">${meta.nameZh.replace(' 全段', '')}<small>全段</small></div>
+        <div class="seg-note">${(meta.note || '').split('，')[0]}</div>
+      </div>
+      <div class="hint">拖曳旋轉 · 點一下啟用滾輪縮放</div>
+      <div class="stats">${stats.map(s => `
+        <div class="st ${s[3] || ''}"><div class="lb">${s[0]}</div>
+        <div class="nu">${s[1]}${s[2] ? `<small>${s[2]}</small>` : ''}</div></div>`).join('')}
+      </div>
+      <div class="st-sub">${segInfo.count} 次嘗試 · PR ${pr.date} · ${segInfo.name}</div>
+      <div class="live">
+        <span class="dot"></span>
+        <div class="st"><div class="lb">里程</div><div class="nu" data-live="km">0.00<small>km</small></div></div>
+        <div class="st"><div class="lb">海拔</div><div class="nu" data-live="alt">—<small>m</small></div></div>
+        <div class="st"><div class="lb">坡度</div><div class="nu" data-live="grd">—<small>%</small></div></div>
+      </div>
+      <div class="ctrl">
+        <button data-act="replay">重播 PR</button>
+        <button data-act="spin" class="${reduceMotion ? '' : 'on'}">自轉</button>
+        <button data-act="north">回正北</button>
+      </div>
+      <div class="prog"></div>
+    </div>`
+}
+
+function initPlate(conf, terrain, stream, segInfo, meta) {
+  const sec = document.createElement('section')
+  sec.className = 'plate'
+  sec.style.setProperty('--ac', conf.acCss)
+  document.getElementById('plates').appendChild(sec)
+
+  const m = buildModel(terrain, stream, conf)
+  sec.innerHTML = plateHTML(conf, segInfo, meta, m)
+  const canvas = sec.querySelector('canvas.stage')
+
+  let renderer
+  try {
+    renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true })
+  } catch (e) {
+    sec.insertAdjacentHTML('beforeend', `<div class="perr">這台裝置無法建立 WebGL：${e.message}</div>`)
+    return null
+  }
+  renderer.setClearColor(0x000000, 0)
+  renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1))
+
+  const scene = new THREE.Scene()
+  scene.add(buildTerrainMesh(m, conf))
+  const route = buildRoute(m, conf)
+  scene.add(route.glow, route.core)
+
+  // 起點（金）／終點（暗紅）定位球 — 全站既有語言
+  const capR = route.rad * 2.2
+  const startCap = new THREE.Mesh(new THREE.SphereGeometry(capR, 14, 14), new THREE.MeshBasicMaterial({ color: 0xffd27a }))
+  const endCap = new THREE.Mesh(new THREE.SphereGeometry(capR, 14, 14), new THREE.MeshBasicMaterial({ color: 0x8c1d0a }))
+  startCap.position.copy(route.v[0]); endCap.position.copy(route.v[route.v.length - 1])
+  scene.add(startCap, endCap)
+
+  // 疏星：撒在地形上方的半球殼
+  const starN = 420, sp = new Float32Array(starN * 3), SR = m.horiz * 1.9
+  for (let i = 0; i < starN; i++) {
+    const th = Math.random() * Math.PI * 2, ph = Math.acos(Math.random())
+    sp[i * 3] = SR * Math.sin(ph) * Math.cos(th)
+    sp[i * 3 + 1] = SR * Math.cos(ph) * 0.6 + m.range * m.exag * 0.4
+    sp[i * 3 + 2] = SR * Math.sin(ph) * Math.sin(th)
+  }
+  const starGeo = new THREE.BufferGeometry()
+  starGeo.setAttribute('position', new THREE.BufferAttribute(sp, 3))
+  scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({
+    color: 0xffe3c2, size: Math.max(2, m.horiz * 0.0018), transparent: true, opacity: 0.5 })))
+
+  // 重播用：粉筆白定位球（儀器色）＋垂直落線
+  const marker = new THREE.Mesh(new THREE.SphereGeometry(route.rad * 3.0, 16, 16), new THREE.MeshBasicMaterial({ color: 0xedeae3 }))
+  marker.add(new THREE.Mesh(new THREE.SphereGeometry(route.rad * 6.0, 16, 16),
+    new THREE.MeshBasicMaterial({ color: 0xedeae3, transparent: true, opacity: 0.22 })))
+  const dropGeo = new THREE.BufferGeometry()
+  dropGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(6), 3))
+  const drop = new THREE.Line(dropGeo, new THREE.LineBasicMaterial({ color: 0xedeae3, transparent: true, opacity: 0.75 }))
+  marker.visible = drop.visible = false
+  scene.add(marker, drop)
+
+  // 相機與控制
+  const camera = new THREE.PerspectiveCamera(46, 2, 1, m.horiz * 12)
+  const controls = new THREE.OrbitControls(camera, canvas)
+  controls.enableDamping = true; controls.dampingFactor = 0.08
+  controls.enablePan = false
+  controls.enableZoom = false            // 先讓頁面滾得動；點一下檯面才接管滾輪
+  controls.minPolarAngle = 0.15; controls.maxPolarAngle = 1.42
+  controls.autoRotate = !reduceMotion
+  controls.autoRotateSpeed = conf.spin
+  const yTop = m.range * m.exag
+  const target = new THREE.Vector3(0, yTop * 0.12, 0)
+  controls.target.copy(target)
+  function fitCamera() {
+    const aspect = Math.max(0.5, camera.aspect)
+    const tanY = Math.tan(camera.fov * Math.PI / 360)
+    const tilt = 0.58, s = Math.sin(tilt), c = Math.cos(tilt)
+    const needH = (m.halfZ * c + yTop * s) * 1.06 / tanY
+    const needW = m.halfX * 1.06 / (tanY * aspect)
+    const d = Math.max(needH, needW) + m.halfZ * s * 0.55
+    camera.position.set(target.x, target.y + d * s, target.z + d * c)
+    controls.minDistance = d * 0.3
+    controls.maxDistance = d * 2.4
+    controls.update()
+  }
+  canvas.addEventListener('pointerdown', () => { controls.enableZoom = true })
+  canvas.addEventListener('mouseleave', () => { controls.enableZoom = false })
+
+  // 投影地標籤：起終點、峰頂、最陡、每公里
+  const hud = sec.querySelector('.hud')
+  const tags = []
+  const mkTag = (cls, txt, v3) => {
+    const el = document.createElement('div')
+    el.className = 'tag ' + cls
+    el.textContent = txt
+    hud.appendChild(el)
+    // 峰頂常常就是終點：往上多疊一層，兩張籤才不會互蓋
+    const dy = cls === 'km' ? '-50%' : cls === 'peak' ? '-270%' : '-130%'
+    tags.push({ el, v: v3, dy })
+  }
+  mkTag('', '起點', route.v[0].clone())
+  mkTag('', '終點', route.v[route.v.length - 1].clone())
+  if (conf.colorMode === 'grade') {
+    let pi = 0
+    m.pts.forEach((p, i) => { if (p.alt > m.pts[pi].alt) pi = i })
+    mkTag('peak', `▲ ${Math.round(m.pts[pi].alt)} m`, route.v[pi].clone())
+    if (m.steepI !== pi && m.steepV > 0.03) mkTag('steep', `最陡 ${Math.round(m.steepV * 100)}%`, route.v[m.steepI].clone())
+  }
+  const kmStep = m.totalDist > 9000 ? 2000 : 1000
+  for (let d = kmStep; d < m.totalDist - 200; d += kmStep) {
+    const i = m.pts.findIndex(p => p.dist >= d)
+    if (i > 0) mkTag('km', (d / 1000) + 'K', route.v[i].clone())
+  }
+  const v2 = new THREE.Vector3()
+  function layoutTags(w, h) {
+    for (const t of tags) {
+      v2.copy(t.v).project(camera)
+      const off = v2.z > 1 || v2.x < -1.05 || v2.x > 1.05 || v2.y < -1.05 || v2.y > 1.05
+      t.el.classList.toggle('hidden', off)
+      if (!off) t.el.style.transform =
+        `translate(-50%,${t.dy}) ` +
+        `translate(${((v2.x + 1) / 2 * w).toFixed(1)}px,${((1 - v2.y) / 2 * h).toFixed(1)}px)`
+    }
+  }
+
+  // 燈絲揭幕：從起點畫到終點（reduced-motion 直接全亮）
+  const totalIdx = route.core.geometry.index.count
+  let reveal = reduceMotion ? 1 : 0
+  if (reduceMotion) sec.classList.add('revealed')
+  const setReveal = p => {
+    const c = Math.floor(totalIdx * p / 3) * 3
+    route.core.geometry.setDrawRange(0, c)
+    route.glow.geometry.setDrawRange(0, c)
+  }
+  if (!reduceMotion) setReveal(0)
+
+  // 重播 PR：等速示意（stream 沒有逐秒配速，速度視為恆定）
+  const pr = segInfo.pr
+  const liveEls = {
+    km: sec.querySelector('[data-live="km"]'),
+    alt: sec.querySelector('[data-live="alt"]'),
+    grd: sec.querySelector('[data-live="grd"]'),
+  }
+  const prog = sec.querySelector('.prog')
+  const btnReplay = sec.querySelector('[data-act="replay"]')
+  const btnSpin = sec.querySelector('[data-act="spin"]')
+  // 用累計 dt 而不是絕對時間：窗格被隱藏（rAF 凍結）再回來時，重播從原地繼續而不是跳進度
+  let playMs = null
+  const playDur = Math.min(32, Math.max(16, pr.elapsed_sec / 75)) * 1000
+  function ptAtDist(d) {
+    let lo = 0, hi = m.pts.length - 1
+    while (lo < hi) { const mid = (lo + hi) >> 1; (m.pts[mid].dist < d) ? lo = mid + 1 : hi = mid }
+    const i1 = Math.max(1, lo), i0 = i1 - 1
+    const a = m.pts[i0], b = m.pts[i1]
+    const f = (d - a.dist) / Math.max(1, b.dist - a.dist)
+    return { i: f < 0.5 ? i0 : i1, f, a, b }
+  }
+  function stopReplay() {
+    playMs = null
+    sec.classList.remove('playing')
+    marker.visible = drop.visible = false
+    prog.style.width = '0%'
+    btnReplay.textContent = '重播 PR'
+    btnReplay.classList.remove('on')
+  }
+  btnReplay.addEventListener('click', () => {
+    if (playMs != null) { stopReplay(); return }
+    playMs = 0
+    sec.classList.add('playing')
+    marker.visible = drop.visible = true
+    btnReplay.textContent = '停止'
+    btnReplay.classList.add('on')
+    reveal = 1; setReveal(1); sec.classList.add('revealed')
+  })
+  btnSpin.addEventListener('click', () => {
+    controls.autoRotate = !controls.autoRotate
+    btnSpin.classList.toggle('on', controls.autoRotate)
+  })
+  sec.querySelector('[data-act="north"]').addEventListener('click', () => {
+    controls.autoRotate = false
+    btnSpin.classList.remove('on')
+    fitCamera()
+  })
+  controls.addEventListener('start', () => {   // 使用者一動手就停自轉
+    if (controls.autoRotate) { controls.autoRotate = false; btnSpin.classList.remove('on') }
+  })
+
+  // 進入視野才開始揭幕與渲染
+  let visible = false, revealed = reduceMotion
+  new IntersectionObserver(es => es.forEach(e => {
+    visible = e.isIntersecting
+    if (visible && !revealed) revealed = 'go'
+  }), { threshold: 0.25 }).observe(sec)
+
+  function frame(now, dt) {
+    if (!visible) return
+    const w = canvas.clientWidth, h = canvas.clientHeight
+    if (!w || !h) return
+    const pw = Math.round(w * Math.min(2, devicePixelRatio || 1))
+    const ph = Math.round(h * Math.min(2, devicePixelRatio || 1))
+    if (canvas.width !== pw || canvas.height !== ph) {
+      renderer.setSize(w, h, false)
+      camera.aspect = w / h
+      camera.updateProjectionMatrix()
+      fitCamera()
+    }
+    if (revealed === 'go') {
+      reveal = Math.min(1, reveal + dt / 2300)
+      setReveal(reveal * reveal * (3 - 2 * reveal))
+      if (reveal >= 1) { revealed = true; sec.classList.add('revealed') }
+    }
+    if (playMs != null) {
+      playMs += dt
+      const p = Math.min(1, playMs / playDur)
+      const d = p * m.totalDist
+      const s = ptAtDist(d)
+      // 直接用最近點就夠平滑（點距 ~25m、每幀走 ~10m）
+      marker.position.copy(route.v[s.i])
+      const dp = dropGeo.attributes.position.array
+      dp[0] = route.v[s.i].x; dp[1] = route.v[s.i].y; dp[2] = route.v[s.i].z
+      dp[3] = route.v[s.i].x; dp[4] = (m.pts[s.i].dem - m.base) * m.exag; dp[5] = route.v[s.i].z
+      dropGeo.attributes.position.needsUpdate = true
+      liveEls.km.innerHTML = fmtKm(d) + '<small>km</small>'
+      liveEls.alt.innerHTML = Math.round(m.pts[s.i].alt) + '<small>m</small>'
+      liveEls.grd.innerHTML = (m.slopes[s.i] * 100).toFixed(1) + '<small>%</small>'
+      prog.style.width = (p * 100).toFixed(2) + '%'
+      if (p >= 1) stopReplay()
+    }
+    controls.update()
+    renderer.render(scene, camera)
+    layoutTags(w, h)
+  }
+  return { frame }
+}
+
+/* ───────────────────────── 載入與主迴圈 ───────────────────────── */
+Promise.all([
+  fetch('../data/segment-streams.json').then(r => { if (!r.ok) throw new Error('segment-streams ' + r.status); return r.json() }),
+  fetch('../data/segment-terrain.json').then(r => { if (!r.ok) throw new Error('segment-terrain ' + r.status); return r.json() }),
+  fetch('../data/itt-segments.json').then(r => { if (!r.ok) throw new Error('itt-segments ' + r.status); return r.json() }),
+  fetch('../data/itt-config.json').then(r => { if (!r.ok) throw new Error('itt-config ' + r.status); return r.json() }),
+]).then(([streams, terrains, segs, cfg]) => {
+  const plates = []
+  for (const conf of PLATES) {
+    const terrain = terrains[conf.id]
+    const stream = (streams[conf.id] || {}).pts
+    const seg = segs.find(s => String(s.id) === conf.id) || {}
+    const meta = (cfg.segments || []).find(s => String(s.id) === conf.id) || {}
+    if (!terrain || !stream) {
+      document.getElementById('plates').insertAdjacentHTML('beforeend',
+        `<section class="plate"><div class="perr">路段 ${conf.id} 缺 stream 或地形資料</div></section>`)
+      continue
+    }
+    const efforts = (seg.efforts || []).slice().sort((a, b) => a.elapsed_sec - b.elapsed_sec)
+    const segInfo = { pr: efforts[0] || { elapsed_sec: 0, elapsed_str: '—', date: '—' },
+                      count: (seg.efforts || []).length, name: seg.name || meta.nameApi || '',
+                      distKm: seg.distance_km || null }
+    const p = initPlate(conf, terrain, stream, segInfo, meta)
+    if (p) plates.push(p)
+  }
+  let last = null
+  function tick(t) {
+    requestAnimationFrame(tick)
+    const dt = last == null ? 16 : Math.min(100, t - last)
+    last = t
+    for (const p of plates) p.frame(t, dt)
+  }
+  requestAnimationFrame(tick)
+}).catch(err => {
+  document.getElementById('plates').insertAdjacentHTML('beforeend',
+    `<section class="plate"><div class="perr">資料載入失敗：${err.message}<br>請從 repo 根目錄起本機伺服器再開這頁。</div></section>`)
+})
+</script>
+</body>
+</html>

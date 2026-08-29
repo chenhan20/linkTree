@@ -354,6 +354,19 @@ Canvas 星空 + 流星 + 粒子動畫、火箭導航動畫、社群連結、跳�
 >
 > 檔名裡的 `strava` 是歷史包袱，不是資料來源 —— 這四個世界現在吃的都是 Garmin FIT。
 
+#### ITT 測量檯（`strava.html` 的 ITT 區間）
+
+一組路線一座常駐的 3D 地形檯：Tilezen 高程網格（`data/segment-terrain.json`）＋
+路線燈絲＋shader 等高線與河面。爬坡照坡度上色、平路照行進方向；
+「重播 PR」把最佳成績等速跑一遍，即時顯示里程／海拔／坡度。
+沒有任何「點開」互動 —— 手機單指垂直照常捲頁，水平拖曳才轉檯。
+
+![風櫃嘴 全段 —— 重播 PR 進行中，白球是目前位置](docs/itt-survey-replay.png)
+
+![社子島砍鴨頭 —— 平路段：淡水河與基隆河把半島夾出來，藍色燈絲由暗到亮表示行進方向](docs/itt-survey-shezidao.png)
+
+<img src="docs/itt-survey-mobile.png" width="390" alt="手機版：中社路 全段 —— 數字、資訊行、分段列與按鈕直欄排列">
+
 ---
 
 ## 資料檔結構
