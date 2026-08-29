@@ -293,6 +293,54 @@ html,body{height:100%;font-family:var(--f-ui);background:#0a0408;color:#ddd}
 .pcv-note{margin:9px 0 0;font-size:11px;line-height:1.7;color:var(--ink-3)}
 @media(max-width:600px){ .pcv-plot{height:196px} .pcv{padding-left:30px} }
 
+/* ══ 引擎變化 · POWER CURVE SHIFT ═════════════════════════════════════
+   全史那張功率曲線的每個點可能來自完全不同的月份，看不出方向。這一張把同一條
+   曲線切成兩個等長的時間窗疊起來，才回答得了「有沒有變強」。
+
+   跟兩年互追同一個做法：上面畫絕對值、下面畫有正負的差，並且共用 x 軸。
+   只畫上面兩條線的話，中段那 5% 的差距在對數軸上小到看不出來。 */
+.pcw-plot{position:relative;width:100%;height:200px;margin-top:4px}
+.pcw-svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.pcw-svg path,.pcw-svg line{vector-effect:non-scaling-stroke}
+.pcw-svg .k-grid{stroke:var(--hair);stroke-width:1}
+.pcw-svg .k-now{fill:none;stroke:#FC4C02;stroke-width:2.2;stroke-linejoin:round;stroke-linecap:round}
+.pcw-svg .k-prev{fill:none;stroke:rgba(244,240,234,.45);stroke-width:1.6;stroke-dasharray:5 4;
+  stroke-linejoin:round;stroke-linecap:round}
+.pcw-dot{position:absolute;width:7px;height:7px;margin:-3.5px 0 0 -3.5px;border-radius:50%;
+  background:#FC4C02;box-shadow:0 0 0 2px rgba(10,4,8,.9);pointer-events:none}
+.pcw-yl{position:absolute;right:calc(100% + 6px);transform:translateY(-50%);font-size:9px;
+  color:var(--ink-3);white-space:nowrap;font-variant-numeric:tabular-nums;pointer-events:none}
+.pcw{padding-left:34px}
+/* 逐時長的差：有正有負，所以要有零線 */
+.pcw-bars{display:flex;gap:3px;height:64px;margin-top:16px;position:relative}
+.pcw-bars::before{content:'';position:absolute;left:0;right:0;top:50%;height:1px;
+  background:rgba(255,255,255,.14);pointer-events:none}
+.pcw-b{flex:1;display:flex;flex-direction:column;height:100%;cursor:pointer;position:relative}
+.pcw-b u,.pcw-b s{flex:1;display:flex;text-decoration:none}
+.pcw-b u{align-items:flex-end}
+.pcw-b s{align-items:flex-start}
+.pcw-b i{display:block;width:100%}
+.pcw-b u i{border-radius:2px 2px 0 0;background:#FC4C02}
+.pcw-b s i{border-radius:0 0 2px 2px;background:rgba(244,240,234,.40)}
+.pcw-b::after{content:'';position:absolute;inset:-4px 0;border-radius:3px}
+.pcw-b:hover::after{background:rgba(255,255,255,.06)}
+.pcw-ax{display:flex;gap:3px;margin-top:4px}
+.pcw-ax span{flex:1;text-align:center;font-size:9px;color:var(--ink-3)}
+.pcw-head{margin:14px 0 0;padding-top:11px;border-top:1px solid var(--hair);
+  font-size:12px;line-height:1.75;color:var(--ink-2)}
+.pcw-head b{color:var(--ink-1)}
+.pcw-head .up{color:#5FD060;font-family:var(--f-num);font-weight:800;font-size:16px}
+.pcw-head .dn{color:#FFB020;font-family:var(--f-num);font-weight:800;font-size:16px}
+.pcw-read{min-height:34px;margin-top:9px;font-size:11.5px;color:var(--ink-2)}
+.pcw-read b{font-family:var(--f-num);font-weight:800;font-size:16px;color:var(--ink-1)}
+.pcw-read em{font-style:normal;color:var(--ink-3)}
+.pcw-leg{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:9px;font-size:10.5px;color:var(--ink-3)}
+.pcw-leg span{display:flex;align-items:center;gap:6px}
+.pcw-leg i{width:15px;height:0;border-top:2px solid currentColor;flex-shrink:0}
+.pcw-note{margin:10px 0 0;font-size:11px;line-height:1.7;color:var(--ink-3)}
+@media(max-width:600px){ .pcw-plot{height:168px} .pcw{padding-left:30px} .pcw-ax span{font-size:8px} }
+
+
 /* ══ 時段條 · TRAINING CLOCK ═════════════════════════════════════════
    本來畫成極座標的鐘。看起來很酷，但要回答「幾點練得最多」得繞著圓讀刻度，
    而且兩條同心環的長度沒辦法並排比 —— 實測給人看，看不懂。
@@ -8685,6 +8733,7 @@ function render(data) {
   const blk2 = (title, en, body) => body
     ? `<div class="block"><div class="section-title">${title} <span class="muted">· ${en}</span></div>${body}</div>` : ''
   const raceHtml    = blk2('兩年互追', 'YEAR ON YEAR', renderYearRace(data.monthly_history))
+  const shiftHtml   = blk2('引擎變化', 'POWER CURVE SHIFT · 半年對半年', renderPowerShift(window._powerShift))
   const hexHtml     = blk2('六圍', 'ATHLETE HEX · 近 90 天', renderHexCard(data))
   const ringsHtml   = blk2('本月目標', 'MONTHLY GOALS', renderGoalRings(data.monthly_goals))
   const partsHtml   = (() => {
@@ -8793,6 +8842,7 @@ function render(data) {
       ${raceHtml}
       ${clockHtml}
       ${curveHtml}
+      ${shiftHtml}
       ${hexHtml}
       <div class="block">${totalsHtml}</div>
     </section>
@@ -9601,6 +9651,103 @@ function buildPwrMap(prs) {
   const m = new Map()
   ;(prs || []).forEach(p => m.set(p.duration_sec, p))
   return m
+}
+
+/* ── 引擎變化：兩個時間窗的功率曲線疊起來 ─────────────────────────
+   資料由 scripts/build-power-curve.py 從 data/fit/*.fit 逐秒功率重算
+   （data/power-curve-windows.json）。缺檔整塊不出現。
+
+   為什麼不能只畫上面那兩條線：對數 x 軸 ＋ 0–1000 W 的 y 軸，中段那 5–10%
+   的差距在畫面上只有幾個像素。所以下面一定要有一排「差」，而且要有零線 ——
+   這張圖的重點正好是「哪一段變強、哪一段變弱」，不是絕對值。 */
+const PCW_LAB = { 5:'5秒', 10:'10秒', 30:'30秒', 60:'1分', 120:'2分',
+                  300:'5分', 600:'10分', 1200:'20分', 1800:'30分', 3600:'60分' }
+function renderPowerShift(pcw) {
+  const ws = pcw && pcw.windows
+  if (!ws || ws.length < 2) return ''
+  const [prev, now] = ws
+  const rows = (pcw.durations || []).map(sec => {
+    const a = (prev.best || []).find(b => b.secs === sec)
+    const b = (now.best || []).find(x => x.secs === sec)
+    return { sec, a: a && a.watts, b: b && b.watts, date: b && b.date, name: b && b.name }
+  }).filter(r => r.a > 0 && r.b > 0)
+  if (rows.length < 4) return ''
+  rows.forEach(r => { r.d = r.b - r.a; r.p = r.d / r.a * 100 })
+
+  const W = 1000, H = 260
+  const L = Math.log(rows[0].sec), R = Math.log(rows[rows.length - 1].sec)
+  const SLOTW = W / rows.length
+  // 上面的線跟下面的長條共用 x：長條是等寬的格子，所以線也走格子中央，
+  // 不走真正的對數位置 —— 兩張圖疊著看，x 對不上比刻度不準更糟
+  const X = i => (i + 0.5) * SLOTW
+  const top = Math.ceil(Math.max(...rows.flatMap(r => [r.a, r.b])) / 200) * 200
+  const Y = v => H - (v / top) * H
+  const ticks = []
+  for (let v = 200; v <= top; v += 200) ticks.push(v)
+  const line = k => rows.map((r, i) => `${i ? 'L' : 'M'}${X(i).toFixed(1)} ${Y(r[k]).toFixed(1)}`).join('')
+
+  const dMax = Math.max(...rows.map(r => Math.abs(r.p)), 1)
+  const bars = rows.map(r => {
+    const up = r.d >= 0, pct = Math.abs(r.p) / dMax * 100
+    return `<div class="pcw-b" data-pcw="${r.sec}" data-a="${r.a}" data-b="${r.b}"
+      data-d="${r.d}" data-p="${r.p.toFixed(1)}" data-date="${r.date || ''}"
+      title="${PCW_LAB[r.sec] || r.sec + 's'} ${r.d >= 0 ? '+' : ''}${r.d} W">
+      <u>${up ? `<i style="height:${pct.toFixed(1)}%"></i>` : ''}</u>
+      <s>${up ? '' : `<i style="height:${pct.toFixed(1)}%"></i>`}</s></div>`
+  }).join('')
+
+  /* 判讀交給資料自己講。±1% 以內算持平 —— 逐秒功率的最佳值本來就有一兩瓦的
+     取樣抖動，把 +0.5% 當成「變強」會讓「短強長弱」這個真正的分界被一個雜訊打斷。 */
+  const FLAT = 1.0
+  const dir = r => (r.p > FLAT ? 1 : r.p < -FLAT ? -1 : 0)
+  const ups = rows.filter(r => dir(r) > 0), dns = rows.filter(r => dir(r) < 0)
+  const flats = rows.filter(r => dir(r) === 0)
+  const firstDn = rows.find(r => dir(r) < 0)
+  // 乾淨的分界＝比它短的沒有一個在跌、比它長的沒有一個在漲
+  const clean = firstDn && ups.length && dns.length &&
+    rows.every(r => (r.sec < firstDn.sec ? dir(r) >= 0 : dir(r) <= 0))
+  const bestUp = ups.length ? ups.reduce((a, b) => (b.p > a.p ? b : a)) : null
+  const worstDn = dns.length ? dns.reduce((a, b) => (b.p < a.p ? b : a)) : null
+  const md = s => s ? s.slice(2, 7).replace('-', '/') : ''
+  const lastUp = ups.length ? ups[ups.length - 1] : null
+  const head = clean
+    ? `<b>${PCW_LAB[lastUp.sec]}</b>以下的短時間功率全部<span class="up">變強</span>（最多
+       +${bestUp.p.toFixed(1)}%），<b>${PCW_LAB[firstDn.sec]}</b>以上全部<span class="dn">變弱</span>（最多
+       ${worstDn.p.toFixed(1)}%）${flats.length ? `，${flats.map(r => PCW_LAB[r.sec]).join('、')}持平` : ''}。
+       衝刺在進步、有氧在退 —— 這是<b>量掉下來</b>的形狀，不是能力沒了。`
+    : `${ups.length} 個時長<span class="up">變強</span>、${dns.length} 個<span class="dn">變弱</span>${
+        flats.length ? `、${flats.length} 個持平` : ''}${
+        bestUp ? `，最好 ${PCW_LAB[bestUp.sec]} +${bestUp.p.toFixed(1)}%` : ''}${
+        worstDn ? `，最差 ${PCW_LAB[worstDn.sec]} ${worstDn.p.toFixed(1)}%` : ''}。`
+
+  return `
+    <div class="pcw">
+      <div class="pcw-plot">
+        <svg class="pcw-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">
+          ${ticks.map(v => `<line class="k-grid" x1="0" x2="${W}" y1="${Y(v)}" y2="${Y(v)}"/>`).join('')}
+          <path class="k-prev" d="${line('a')}"/>
+          <path class="k-now" d="${line('b')}"/>
+        </svg>
+        ${ticks.map(v => `<span class="pcw-yl" style="top:${(Y(v) / H * 100).toFixed(2)}%">${v}</span>`).join('')}
+        ${rows.map((r, i) => `<i class="pcw-dot" style="left:${(X(i) / W * 100).toFixed(2)}%;top:${(Y(r.b) / H * 100).toFixed(2)}%"></i>`).join('')}
+      </div>
+      <div class="pcw-bars">${bars}</div>
+      <div class="pcw-ax">${rows.map(r => `<span>${PCW_LAB[r.sec] || r.sec}</span>`).join('')}</div>
+      <div class="pcw-head">${head}</div>
+      <div class="pcw-read" id="pcw-read"
+        data-idle="下面那排是<b>每個時長變化了幾 %</b>。<em>指到任何一根看實際瓦數。</em>">
+        下面那排是<b>每個時長變化了幾 %</b>。<em>指到任何一根看實際瓦數。</em>
+      </div>
+      <div class="pcw-leg">
+        <span style="color:#FC4C02"><i></i>最近 ${md(now.from)}–${md(now.to)} · ${now.rides} 趟 / ${now.hours} 小時</span>
+        <span style="color:rgba(244,240,234,.45)"><i style="border-top-style:dashed"></i>前一段 ${md(prev.from)}–${md(prev.to)} · ${prev.rides} 趟 / ${prev.hours} 小時</span>
+      </div>
+      <p class="pcw-note">兩段各 ${pcw.window_days} 天，從本機 <code style="font-family:var(--f-mono);font-size:10.5px">data/fit/*.fit</code>
+        的逐秒功率重算（<code style="font-family:var(--f-mono);font-size:10.5px">scripts/build-power-curve.py</code>）。
+        「最佳 N 秒」的定義是<b>沒有錄製中斷的連續 N 秒</b> —— 自動暫停或停錶會切段，
+        跨過那個洞去算連續 20 分鐘是假的。所以這裡的數字可能比 Strava／intervals 略低，
+        那不是誤差，是口徑不同。滑行的 0 瓦算進平均（那是真的 0），整趟沒帶功率計的直接不計。</p>
+    </div>`
 }
 
 /* ── 功率曲線 ───────────────────────────────────────────────────────
@@ -12217,8 +12364,14 @@ function centerTab(view) {
   sc.scrollTo({ left: Math.max(0, left), behavior: 'smooth' })
 }
 
+/* 動效層的掛勾。只負責「說剛才切到哪一章」，不知道也不在乎有沒有人在聽 ——
+   頁尾那個 module 沒載入、或使用者開了 reduce motion，這行就是一個沒人接的事件。
+   路由、捲動、count-up 一律不經過它，所以動效層壞掉不會影響導覽本身。 */
+const fx = (name, detail) => dispatchEvent(new CustomEvent('strava:' + name, { detail }))
+
 function setView(name, opts) {
   const v = VIEWS.find(x => x.id === name) ? name : 'overview'
+  const was = appState.view
   if (v !== appState.view) closeDrawer()
   appState.view = v
   document.querySelectorAll('#content .view').forEach(sec =>
@@ -12237,6 +12390,14 @@ function setView(name, opts) {
   const sec = document.querySelector(`#content .view[data-view="${v}"]`)
   if (sec) countUpIn(sec)
   scrollTo({ top: 0, behavior: 'auto' })
+  /* 方向取自導覽列的順序，不取自瀏覽歷史 —— 上一頁／下一頁可以從任何地方跳到
+     任何地方，用歷史當方向會讓同一個「往右」時而往左。VIEWS 的索引才是使用者
+     眼睛看到的那條軌道。首次進站 was === v，dir 0，不播（不然整頁會跟 A2 的
+     捲動進場打架）。 */
+  if (sec && was !== v) {
+    const i0 = VIEWS.findIndex(x => x.id === was), i1 = VIEWS.findIndex(x => x.id === v)
+    fx('view', { from: was, to: v, dir: i1 > i0 ? 1 : -1, el: sec })
+  }
   if (opts && opts.push && location.hash.slice(1) !== v) history.pushState({ view: v }, '', '#' + v)
   // ITT 的 3D 是重資源：進到這個 view 才掛，其它 view 完全不碰
   if (v === 'itt') mountItt()
@@ -12325,11 +12486,24 @@ function initRouter() {
       `<b>${d.n}</b> 次 <em>· 佔該時期 ${d.pct}%</em><br>` +
       `<em>騎乘 ${d.ride} · 其餘 ${cross}</em>`
   }
+  /* 引擎變化的讀數。長條只畫得出「差多少 %」，實際瓦數與那一趟的日期要指了才給。 */
+  const pcwShow = el => {
+    const box = document.getElementById('pcw-read')
+    if (!box) return
+    if (!el) { box.innerHTML = box.dataset.idle || ''; return }
+    const d = el.dataset, up = +d.d >= 0
+    box.innerHTML = `${PCW_LAB[+d.pcw] || d.pcw} <b>${d.a}</b> → <b>${d.b}</b> W ` +
+      `<span style="color:${up ? '#5FD060' : '#FFB020'};font-weight:700">${up ? '+' : ''}${d.d} W（${up ? '+' : ''}${d.p}%）</span>` +
+      (d.date ? `<br><em>最近這段的最佳出自 ${d.date}</em>` : '')
+  }
   const onPcv = e => {
     if (!e.target.closest) return
     const dot = e.target.closest('.pcv-dot')
     if (dot) { pcvShow(dot); return }
     if (!e.target.closest('.pcv-plot')) pcvShow(null)
+    const pw = e.target.closest('.pcw-b')
+    if (pw) { pcwShow(pw); return }
+    if (!e.target.closest('.pcw-bars')) pcwShow(null)
     const cell = e.target.closest('.dstrip-c')
     if (cell) { clkShow(cell); return }
     if (!e.target.closest('.dstrip')) clkShow(null)
@@ -12472,10 +12646,12 @@ Promise.all([
   fetchData('data/fit/_activities.json').then(r => r.ok ? r.json() : null).catch(() => null),
   // athlete 級的功率-心率曲線，一段 91 天、往回四段（scripts/sync-intervals.py 的 sync_power_hr）。
   fetchData('data/fit/_power_hr.json').then(r => r.ok ? r.json() : null).catch(() => null),
+  // 分時期功率曲線（scripts/build-power-curve.py 從本機 FIT 重算）。缺檔就不出現那一塊。
+  fetchData('data/power-curve-windows.json').then(r => r.ok ? r.json() : null).catch(() => null),
   // 破 PR 攻略（scripts/build-playbook.py 產生）。缺檔只讓這一頁降級成空狀態，不影響其他 view。
   fetchData('data/playbook.json').then(r => r.ok ? r.json() : null).catch(() => null),
 ])
-  .then(([data, ittConfig, segStreams, segTerrain, landmarks, rivals, taipeiOutline, quotesData, trainingBlock, ittSegments, wellness, doms, activities, powerHr, playbook]) => {
+  .then(([data, ittConfig, segStreams, segTerrain, landmarks, rivals, taipeiOutline, quotesData, trainingBlock, ittSegments, wellness, doms, activities, powerHr, powerShift, playbook]) => {
     mergeIttSegments(data, ittSegments)
     window._wellness = wellness || null
     window._doms = doms || null
@@ -12499,6 +12675,7 @@ Promise.all([
     }))
     window._trainingBlock = trainingBlock || null
     window._playbook = playbook || null
+    window._powerShift = powerShift || null
     window._taipeiMiniMap = buildTaipeiMiniMap(taipeiOutline)
     window._quotePool = mapQuotes(quotesData)
     window.__powerPrs = data.power_prs || []
@@ -12555,7 +12732,47 @@ if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
   import('./vendor-anime-4.esm.min.js?v=4.5.0').then(motionLayer).catch(() => {})
 }
 
-function motionLayer({ animate, createDrawable }) {
+function motionLayer({ animate, createDrawable, stagger }) {
+  /* ══ 軌道推移 · RAIL SHIFT ═══════════════════════════════════════
+     九個章節在導覽列上是一條有順序的軌道（現況 → 計畫 → 紀錄 → ITT → 攻略 →
+     地圖 → 趨勢 → 收成 → 身體）。那個順序是真的，所以轉場照 Material 的
+     shared axis 走「同一根軸上的位移」，不是 fade through —— 後者刻意不表態
+     方向，適合彼此無關的平行分頁；這裡的分頁有明確左右，抹掉方向等於丟資訊。
+
+     跟規格書不一樣的三個地方，都是因為這一頁不是手機的整頁換頁：
+
+     1. **只演進場，不演退場。** setView 是同步把舊的 display:none 掉的，
+        要演退場就得把切換改成非同步 —— 那是把路由邏輯搬進動效層，違反
+        「動效層壞掉不能影響導覽」。方向的訊息改由導覽列那顆亮點承擔。
+     2. **位移只有 26px，不是整屏。** 規格是為手機整頁換頁寫的；這裡是儀表板
+        內部換章，一次點三四下很正常。整屏滑動會把「換一章」演成「換一個 app」。
+     3. **標題領先、區塊跟上。** 進場拆成 view-h 先到、下面的 block 依序跟上，
+        沿用 A2 已經在用的 stagger 語彙 —— 換章跟捲動進場因此像同一套系統，
+        而不是兩種各說各話的動畫。
+
+     時間照規格書：進場 300ms、ease-out（新東西要快到、慢停），
+     stagger 28ms 是「看得出先後但不用等」的下限。 */
+  addEventListener('strava:view', e => {
+    const { dir, el } = e.detail || {}
+    if (!el) return
+    const head = el.querySelector('.view-h')
+    const rest = [...el.children].filter(n => n !== head)
+    const done = n => { n.style.opacity = ''; n.style.transform = '' }
+    if (head) animate(head, {
+      opacity: [0, 1], translateX: [dir * 40, 0],
+      duration: 320, ease: 'out(3)', onComplete: () => done(head),
+    })
+    if (rest.length) animate(rest, {
+      opacity: [0, 1], translateX: [dir * 26, 0],
+      duration: 300, delay: stagger(28, { start: 40 }), ease: 'out(3)',
+      onComplete: () => rest.forEach(done),
+    })
+    // 導覽列那顆亮點跟著跳一下：點擊要有物理回應，而且它是方向的第二個訊號
+    const dot = document.querySelector(`.nav-i[aria-current="page"] i, .tab-i[aria-current="page"] i`)
+    if (dot) animate(dot, { scale: [1, 2.1, 1], duration: 420, ease: 'outQuad',
+      onComplete: () => { dot.style.transform = '' } })
+  })
+
   /* 一張圖的進場順序就是它的閱讀順序：先有原始線，才有平滑線，最後才標極值。
      倒過來播（先跳出「最高的那天」再畫線）等於先給結論再給證據。
 
