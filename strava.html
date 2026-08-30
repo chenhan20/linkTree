@@ -639,6 +639,31 @@ html,body{height:100%;font-family:var(--f-ui);background:#0a0408;color:#ddd}
 }
 .side-lnk:hover{background:rgba(255,255,255,.04);color:var(--ink-1)}
 
+/* ── 跨頁連結（手機）──────────────────────────────────────────────
+   側欄在 767px 以下整個 display:none，連帶把它底部那組跨頁連結一起收掉 ——
+   循環訓練與分析室在手機上等於不存在，沒有任何地方點得過去。這一列是它們
+   在手機上的家：跟著 .viewport 走，所以每個 view 捲到底都在，不佔 chrome、
+   也不必再擠底部那顆已經九欄的膠囊。桌機仍由側欄負責，這裡不出現。 */
+.page-links{display:none}
+@media(max-width:767px){
+  .page-links{
+    display:flex;flex-wrap:wrap;gap:8px;margin-top:26px;padding-top:16px;
+    border-top:1px solid var(--hair);
+    /* 捲到底時最後一列的右半邊會正好落在「回到頂端」浮鈕底下（實測 to-top-btn
+       接走了「← Link Tree」的右緣點擊）。多墊一段，讓靜止狀態下整列都在浮鈕上方。 */
+    padding-bottom:54px;
+  }
+  .page-links a{
+    flex:1 1 auto;min-width:132px;min-height:44px;
+    display:flex;align-items:center;justify-content:center;
+    padding:11px 14px;border:1px solid var(--hair-2);border-radius:10px;
+    background:rgba(255,255,255,.02);text-decoration:none;
+    font-size:12.5px;font-weight:600;letter-spacing:1px;color:var(--ink-2);
+    -webkit-tap-highlight-color:transparent;
+  }
+  .page-links a:active{border-color:var(--sig);color:var(--ink-1);background:rgba(252,76,2,.06)}
+}
+
 /* ── 主區：極薄的 app chrome，不是 landing navbar ── */
 .main{min-width:0;display:flex;flex-direction:column}
 .apphead{
@@ -3564,6 +3589,14 @@ button.ov-cell:focus-visible{outline:1px solid rgba(252,76,2,.6);outline-offset:
     </header>
     <div class="viewport">
       <div id="content"><div class="sync">Syncing data…</div></div>
+      <!-- 手機專用：桌機側欄底部那組跨頁連結的手機版家（見 .page-links 的註解）。
+           順序照使用頻率排，不是照桌機側欄的順序。 -->
+      <nav class="page-links" aria-label="其他頁面">
+        <a href="circuit.html">循環訓練 →</a>
+        <a href="lab.html">分析室 →</a>
+        <a href="https://www.strava.com/athletes/161539959" target="_blank" rel="noopener">Strava ↗</a>
+        <a href="linkTreeIndex.html">← Link Tree</a>
+      </nav>
     </div>
   </div>
 </div>
