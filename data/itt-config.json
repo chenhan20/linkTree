@@ -7,14 +7,15 @@
     "4. 折線：node scripts/harvest-strava.js --phase segments --segments <id>",
     "   然後 node scripts/merge-harvested-streams.js（Strava 訂閱到期後只能靠 archive）",
     "5. 成績：python3 scripts/backfill-itt-efforts.py（純本機從 FIT 算，不打 API）",
-    "6. strava.html 無需改動，會自動依 group 收攏成一張群組卡"
+    "6. strava.html 無需改動，會自動依 group 收攏成一張群組卡",
+    "7. 坡度剖面：python3 scripts/build-segment-grades.py（從 data/fit 算，不打 API）"
   ],
   "_types": {
     "CLIMB": "爬坡路段（依功率與時間評估）",
     "SPRINT": "短衝路段（以瞬間輸出為主）",
     "ENDURANCE": "耐力路段（長時間持續輸出）"
   },
-  "_profile": "profile：從 PR 那趟活動的 altitude/distance stream 實測切出來的坡度示意點（x:0-100 距離% , y:0 最高-40 最低），非逐日更新，路段地形固定就不用重抓；avgGrade/maxGrade 是同一份 stream 算出的 grade_smooth 平均/最大值",
+  "_profile": "profile：從 PR 那趟活動的 altitude/distance stream 實測切出來的坡度示意點（x:0-100 距離% , y:0 最高-40 最低），非逐日更新，路段地形固定就不用重抓；avgGrade/maxGrade 是同一份 stream 算出的 grade_smooth 平均/最大值　※「最陡」不要用這裡的 maxGrade：Strava 路段的 altitude stream 局部坡度在山壁窄路上會高估 2–3 倍（碧山 stream 31.9% vs FIT 15.4%），前端讀的是 data/segment-grades.json。",
   "segments": [
     {
       "id": 1761462,

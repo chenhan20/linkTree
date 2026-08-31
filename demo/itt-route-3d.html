@@ -242,29 +242,31 @@ function buildModel(terrain, stream, conf) {
   })
   let gain = 0
   for (let i = 1; i < sm.length; i++) { const d = sm[i] - sm[i - 1]; if (d > 0) gain += d }
-  // 25m 半窗坡度（跟 strava.html 的 buildSegSlopes 同款，太短會被 GPS 雜訊放大）
-  const slopes = pts.map((p, i) => {
+  // 坡度一律「同一段量 rise 與 run」：半窗 GRADE_HALF 公尺，端點不預先平滑
+  //（跟 strava.html 的 buildSegSlopes 同款）
+  const GRADE_HALF = 50   // 半窗 50 m（總窗 100 m）：折線 ~25 m 一點、海拔又是 Strava 估值，再短就是在量雜訊
+  const gradeAt = i => {
     let a = i, b = i
-    while (a > 0 && pts[i].dist - pts[a].dist < 25) a--
-    while (b < pts.length - 1 && pts[b].dist - pts[i].dist < 25) b++
+    while (a > 0 && pts[i].dist - pts[a].dist < GRADE_HALF) a--
+    while (b < pts.length - 1 && pts[b].dist - pts[i].dist < GRADE_HALF) b++
     const run = pts[b].dist - pts[a].dist
-    return run > 0 ? (sm[b] - sm[a]) / run : 0
-  })
+    return run > 0 ? (pts[b].alt - pts[a].alt) / run : 0
+  }
+  const slopes = pts.map((p, i) => gradeAt(i))
   // 淨爬升（頂－底）＝站上爬坡卡用的數字；正向累計會把小回落也算進去，兩邊對不上
   const alts = pts.map(p => p.alt)
   const netGain = Math.max(...alts) - Math.min(...alts)
-  // 「最陡」用相鄰點（~25m 一段、3 點平滑），比 50m 窗更接近體感的瞬間坡
-  const sm3 = alts.map((a, i) => {
-    const l = alts[Math.max(0, i - 1)], r = alts[Math.min(alts.length - 1, i + 1)]
-    return (l + a + r) / 3
+  // 「最陡」＝同一份 slopes 的最大值。舊版拿 3 點平滑後的相鄰點相減，
+  // 分子跨 3 個點距、分母只有 1 個，點距不均（實測 2–86 m）就被放大 2–4 倍到 40–53%
+  // 挑最大值時跳過頭尾：那裡的窗只有半邊（起點只能往前看 50 m），
+  // 等於拿較短的窗去跟中段的滿窗比大小，最陡永遠被釘在第 0 點
+  let steepI = -1
+  pts.forEach((p, i) => {
+    if (p.dist < GRADE_HALF || cum - p.dist < GRADE_HALF) return
+    if (steepI < 0 || slopes[i] > slopes[steepI]) steepI = i
   })
-  let steepI = 0, steepV = 0
-  for (let i = 1; i < pts.length; i++) {
-    const run = pts[i].dist - pts[i - 1].dist
-    if (run < 8) continue
-    const g = (sm3[i] - sm3[i - 1]) / run
-    if (g > steepV) { steepV = g; steepI = i }
-  }
+  if (steepI < 0) steepI = 0
+  const steepV = slopes[steepI]
   return { lat0, lng0, mLat, mLng, halfX, halfZ, horiz, n, hClamp, water,
            base, top, range, exag, pts, slopes, totalDist: cum, gain, netGain,
            steepI, steepV, demYAt }
@@ -430,13 +432,35 @@ function plateHTML(conf, segInfo, meta, m) {
     </div>`
 }
 
-function initPlate(conf, terrain, stream, segInfo, meta) {
+/* 有 FIT 實測剖面就一律以它為準，把 stream 算出來的 slopes 整條換掉（同 strava.html 的 tsvApplyFitGrades）。
+   Strava 路段的 altitude stream 均坡是對的、局部坡度在山壁窄路上會高估 2–3 倍：
+   碧山 stream 31.9% vs FIT 15.4%、劍南路至善側 24.5% vs 9.5%，風櫃嘴則兩者吻合（12.9 vs 13.2）。 */
+function applyFitGrades(m, g) {
+  if (!g || !Array.isArray(g.grade) || g.grade.length < 2 || !(m.totalDist > 0)) return
+  const gr = g.grade, n = gr.length, step = g.step || 25
+  const k = ((n - 1) * step) / m.totalDist   // 折線長度與 FIT 差幾個百分點，照比例對齊
+  m.slopes = m.pts.map(p => {
+    const x = Math.min(n - 1, Math.max(0, p.dist * k / step))
+    const i = Math.floor(x)
+    return (gr[i] + (gr[Math.min(n - 1, i + 1)] - gr[i]) * (x - i)) / 100
+  })
+  if (typeof g.max !== 'number') return
+  const at = (g.maxAt || 0) * m.totalDist
+  let best = 0
+  m.pts.forEach((p, i) => { if (Math.abs(p.dist - at) < Math.abs(m.pts[best].dist - at)) best = i })
+  m.steepI = best
+  m.steepV = g.max / 100
+  m.slopes[best] = m.steepV      // 折線的點不會剛好落在格點上，內插會削掉尖峰
+}
+
+function initPlate(conf, terrain, stream, segInfo, meta, grades) {
   const sec = document.createElement('section')
   sec.className = 'plate'
   sec.style.setProperty('--ac', conf.acCss)
   document.getElementById('plates').appendChild(sec)
 
   const m = buildModel(terrain, stream, conf)
+  applyFitGrades(m, grades)
   sec.innerHTML = plateHTML(conf, segInfo, meta, m)
   const canvas = sec.querySelector('canvas.stage')
 
@@ -530,7 +554,7 @@ function initPlate(conf, terrain, stream, segInfo, meta) {
     let pi = 0
     m.pts.forEach((p, i) => { if (p.alt > m.pts[pi].alt) pi = i })
     mkTag('peak', `▲ ${Math.round(m.pts[pi].alt)} m`, route.v[pi].clone())
-    if (m.steepI !== pi && m.steepV > 0.03) mkTag('steep', `最陡 ${Math.round(m.steepV * 100)}%`, route.v[m.steepI].clone())
+    if (m.steepI !== pi && m.steepV > 0.03) mkTag('steep', `最陡 100m ${Math.round(m.steepV * 100)}%`, route.v[m.steepI].clone())
   }
   const kmStep = m.totalDist > 9000 ? 2000 : 1000
   for (let d = kmStep; d < m.totalDist - 200; d += kmStep) {
@@ -665,7 +689,9 @@ Promise.all([
   fetch('../data/segment-terrain.json').then(r => { if (!r.ok) throw new Error('segment-terrain ' + r.status); return r.json() }),
   fetch('../data/itt-segments.json').then(r => { if (!r.ok) throw new Error('itt-segments ' + r.status); return r.json() }),
   fetch('../data/itt-config.json').then(r => { if (!r.ok) throw new Error('itt-config ' + r.status); return r.json() }),
-]).then(([streams, terrains, segs, cfg]) => {
+  // 實測坡度剖面（scripts/build-segment-grades.py）；缺檔就退回用 stream 的高程現算
+  fetch('../data/segment-grades.json').then(r => r.ok ? r.json() : null).catch(() => null),
+]).then(([streams, terrains, segs, cfg, grades]) => {
   const plates = []
   for (const conf of PLATES) {
     const terrain = terrains[conf.id]
@@ -681,7 +707,7 @@ Promise.all([
     const segInfo = { pr: efforts[0] || { elapsed_sec: 0, elapsed_str: '—', date: '—' },
                       count: (seg.efforts || []).length, name: seg.name || meta.nameApi || '',
                       distKm: seg.distance_km || null }
-    const p = initPlate(conf, terrain, stream, segInfo, meta)
+    const p = initPlate(conf, terrain, stream, segInfo, meta, (grades || {})[conf.id])
     if (p) plates.push(p)
   }
   let last = null

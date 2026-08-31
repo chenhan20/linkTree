@@ -359,6 +359,12 @@ Canvas 星空 + 流星 + 粒子動畫、火箭導航動畫、社群連結、跳�
 一組路線一座常駐的 3D 地形檯：Tilezen 高程網格（`data/segment-terrain.json`）＋
 路線燈絲＋shader 等高線與河面。爬坡照坡度上色、平路照行進方向；
 「重播 PR」把最佳成績等速跑一遍，即時顯示里程／海拔／坡度。
+
+坡度（上色、儀表、「最陡 100m」浮標三處共用）一律讀 `data/segment-grades.json` ——
+那是 `scripts/build-segment-grades.py` 從他自己的 FIT 氣壓高度算的 100 m 窗剖面。
+**不要改回用 `segment-streams.json` 的高程現算**：Strava 路段的 altitude stream
+均坡是對的、局部坡度在山壁窄路上會高估 2–3 倍（碧山實測 stream 31.9% vs FIT 15.4%，
+風櫃嘴則兩者吻合），細節寫在那支腳本的檔頭。
 沒有任何「點開」互動 —— 手機單指垂直照常捲頁，水平拖曳才轉檯。
 
 ![風櫃嘴 全段 —— 重播 PR 進行中，白球是目前位置](docs/itt-survey-replay.png)
@@ -382,6 +388,7 @@ Canvas 星空 + 流星 + 粒子動畫、火箭導航動畫、社群連結、跳�
 | **`data/itt-segments.json`** | **ITT 成績權威檔**（自建計時 + Strava 歷史，靠 `source` 分辨） | 自動（FIT Sync） |
 | `data/segment-streams.json` | ITT 路段官方折線（每條 140 點，給 3D 路線圖與自建偵測器） | 自動（新增路段後跑一次） |
 | `data/segment-terrain.json` | ITT 路段地形高程（Tilezen DEM） | 自動（新增路段後跑一次） |
+| `data/segment-grades.json` | ITT 路段每 25 m 的實測坡度剖面（`scripts/build-segment-grades.py` 從 `data/fit` 算） | 自動（新增路段／補歷史後跑一次） |
 | `data/strava.json` | 儀表板的活動列表／年度統計／功率 PR。ITT 那段只是副本，以 `itt-segments.json` 為準 | 自動（Strava Sync，**已棄用**） |
 | `data/power-prs.json` | 功率 PR 快取 | 自動（Strava Sync，**已棄用**） |
 | **`data/itt-config.json`** | **ITT 路段設定（中文名、類型、顏色、要不要 3D）** | **手動** |
