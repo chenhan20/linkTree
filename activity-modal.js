@@ -25,8 +25,7 @@
     // rideMap 因此看不到最近幾天的活動 —— 症狀是新的騎乘完全長不出「報告」與
     // 課表徽章（實測 2026-08-27：8/20、8/25、8/27 三堂都沒有，8/13 以前的才有）。
     // strava.html 自己就是用 no-cache 抓同一個 URL，這裡跟它一致，實際不會多下載一次。
-    dataPromise = fetch(STRAVA_JSON, { cache: 'no-cache' })
-      .then(r => r.json())
+    dataPromise = fetchJSON(STRAVA_JSON, 2)
       .then(d => {
         rideMap = new Map()
         ;(d.recent_rides || []).forEach(r => { if (r.id) rideMap.set(String(r.id), r) })
@@ -619,15 +618,35 @@
     })
   }
 
-  /* ── 載入訓練報告清單；檔案不存在就靜靜跳過，不影響原本功能 ── */
+  /* 抓 JSON，失敗就重試一次。
+     為什麼要重試：這兩份檔都是**跟頁面分開**抓的，抓失敗的症狀是靜默的
+     —— 卡片、詳情、Strava、3D 全都在，就是少一顆「報告」鈕，沒有任何錯誤訊息，
+     而且整個 session 都不會再試（reportMap 已經被設成空 Map），非重整不可。
+     跟 CDN 邊緣快取給了舊 index 的症狀一模一樣，很難分辨是哪一種。
+     非 2xx 也當失敗重試：Pages 部署到一半拿到 404/5xx 是實際會發生的。 */
+  function fetchJSON(url, tries) {
+    return fetch(url, { cache: 'no-cache' })
+      .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json() })
+      .catch(err => {
+        if (tries > 1) {
+          return new Promise(res => setTimeout(res, 1500))
+            .then(() => fetchJSON(url, tries - 1))
+        }
+        throw err
+      })
+  }
+
+  /* ── 載入訓練報告清單；真的抓不到就靜靜跳過，不影響原本功能 ── */
   function loadReports() {
-    return fetch(RIDES_INDEX, { cache: 'no-cache' })
-      .then(r => (r.ok ? r.json() : null))
+    return fetchJSON(RIDES_INDEX, 2)
       .then(j => {
         reportMap = new Map()
         ;(j && j.rides ? j.rides : []).forEach(r => reportMap.set(r.date, r))
       })
-      .catch(() => { reportMap = new Map() })
+      .catch(err => {
+        console.warn('[activity-modal] 抓不到 ' + RIDES_INDEX + '，這次不會有報告鈕', err)
+        reportMap = new Map()
+      })
   }
 
   function init() {
