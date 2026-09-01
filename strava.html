@@ -6695,6 +6695,34 @@ function render(data) {
       </div>
     </div>` : ''
 
+  // ── 代辦（data/tasks.json，scripts/build-tasks.py 推導）──
+  // 這張卡跟 AI 讀的是同一份檔：同步管線發現「報告產了但評語沒寫」「課表分數偏低」
+  // 「Strava 跟手錶各存一筆」「這幾天完全沒紀錄」就會列上來。
+  // 沒有打勾的互動 —— 代辦是推導出來的，事情做完（評語檔出現了）它自己會消失；
+  // 靜態頁也寫不了檔，做成假的打勾只會讓兩邊狀態對不起來。
+  // 這份檔是自己的產生器寫的，但還是逃逸：--add 進來的字是人打的
+  const tEsc = v => String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;')
+  const TASK_K = { note: '評語', score: '課表', data: '資料', missing: '漏記', manual: '手動' }
+  const TASK_ST = { 1: ['next', '待辦'], 2: ['no', '要看'], 3: ['dim', '確認'] }
+  const taskList = ((window._tasks || {}).tasks) || []
+  const tasksHtml = window._tasks ? `
+    <div class="block">
+      <div class="section-title">代辦 <span class="muted">· TO-DO${taskList.length ? ` · ${taskList.length}` : ''}</span></div>
+      ${taskList.length ? `<div class="rows">${taskList.map(t => {
+        const [c, st] = TASK_ST[t.priority] || TASK_ST[2]
+        const cells = `<span class="row-k">${TASK_K[t.kind] || t.kind}</span>
+          <span class="row-p">${tEsc(t.title || '')}</span>
+          <span class="row-st ${c}">${st}</span>
+          <span class="row-go">${t.link ? '→' : ''}</span>
+          ${t.detail ? `<span class="row-s" style="grid-column:2/3">${tEsc(t.detail)}</span>` : ''}`
+        const style = 'style="--row-cols:auto minmax(0,1fr) auto auto"'
+        return t.link
+          ? `<a class="row" href="${tEsc(t.link)}" ${style}>${cells}</a>`
+          : `<div class="row" ${style}>${cells}</div>`
+      }).join('')}</div>`
+      : '<div class="nil">沒有待辦。</div>'}
+    </div>` : ''
+
   const quoteHtml = `<div class="block ov-quote">${renderDeckQuote()}</div>`
 
   // ── 功率曲線（Trends 內）──
@@ -6745,6 +6773,7 @@ function render(data) {
       ${viewH('現況', 'Overview', `${tY} SEASON`)}
       <div id="rdy-mobile"></div>
       <div class="block">${seasonHtml}</div>
+      ${tasksHtml}
       ${renderRhythmCalendar(data)}
       ${blockHtml}
       ${renderPmc()}
@@ -10622,9 +10651,11 @@ Promise.all([
   // 分時期功率曲線（scripts/build-power-curve.py 從本機 FIT 重算）。缺檔就不出現那一塊。
   fetchData('data/power-curve-windows.json').then(r => r.ok ? r.json() : null).catch(() => null),
   // 破 PR 攻略（scripts/build-playbook.py 產生）。缺檔只讓這一頁降級成空狀態，不影響其他 view。
+  // 代辦清單（scripts/build-tasks.py 推導出來的）；缺檔就不顯示那張卡
+  fetchData('data/tasks.json').then(r => r.ok ? r.json() : null).catch(() => null),
   fetchData('data/playbook.json').then(r => r.ok ? r.json() : null).catch(() => null),
 ])
-  .then(([data, ittConfig, segStreams, segTerrain, segGrades, landmarks, rivals, taipeiOutline, quotesData, trainingBlock, ittSegments, wellness, doms, activities, powerHr, powerShift, playbook]) => {
+  .then(([data, ittConfig, segStreams, segTerrain, segGrades, landmarks, rivals, taipeiOutline, quotesData, trainingBlock, ittSegments, wellness, doms, activities, powerHr, powerShift, tasks, playbook]) => {
     mergeIttSegments(data, ittSegments)
     window._wellness = wellness || null
     window._doms = doms || null
@@ -10638,6 +10669,7 @@ Promise.all([
     window._segStreams = segStreams || {}
     window._segTerrain = segTerrain || {}
     window._segGrades = segGrades || {}
+    window._tasks = tasks || null
     window._landmarks = Array.isArray(landmarks) ? landmarks : []
     window._rivals = (rivals && Array.isArray(rivals.riders)) ? rivals.riders : []
     // 本人各路段的 PR effort（遙測條要拿功率/心率/速度），key 用 segment id

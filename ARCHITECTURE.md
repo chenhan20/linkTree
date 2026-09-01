@@ -241,6 +241,7 @@ linkTree/
 │   ├── segment-streams.json      # [靜態] 路段 140 點官方參考折線 (提供 3D 與閘門判定)
 │   ├── segment-terrain.json      # [靜態] Tilezen DEM 地形高程網格
 │   ├── segment-grades.json       # [自動] 各路段每 25 m 的實測坡度剖面 (從 FIT 算，非 Strava 高程)
+│   ├── tasks.json                # [自動] 代辦清單 (現況頁那張卡，AI 開場也讀同一份)
 │   ├── strava.json               # [自動快取] 儀表板總覽、PR 與活動快照
 │   └── rivals.json               # [手動] 同事與車友對戰名單
 ├── rides/

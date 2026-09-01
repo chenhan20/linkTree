@@ -389,6 +389,7 @@ Canvas 星空 + 流星 + 粒子動畫、火箭導航動畫、社群連結、跳�
 | `data/segment-streams.json` | ITT 路段官方折線（每條 140 點，給 3D 路線圖與自建偵測器） | 自動（新增路段後跑一次） |
 | `data/segment-terrain.json` | ITT 路段地形高程（Tilezen DEM） | 自動（新增路段後跑一次） |
 | `data/segment-grades.json` | ITT 路段每 25 m 的實測坡度剖面（`scripts/build-segment-grades.py` 從 `data/fit` 算） | 自動（新增路段／補歷史後跑一次） |
+| `data/tasks.json` | 現況頁的代辦清單（`scripts/build-tasks.py` 從報告／評分／資料落差推導） | 自動（每次同步後跑一次） |
 | `data/strava.json` | 儀表板的活動列表／年度統計／功率 PR。ITT 那段只是副本，以 `itt-segments.json` 為準 | 自動（Strava Sync，**已棄用**） |
 | `data/power-prs.json` | 功率 PR 快取 | 自動（Strava Sync，**已棄用**） |
 | **`data/itt-config.json`** | **ITT 路段設定（中文名、類型、顏色、要不要 3D）** | **手動** |
