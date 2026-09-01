@@ -99,14 +99,22 @@ jobs:
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           mkdir -p data/fit rides
-          git add data/fit rides
+          # training-block.json 一定要一起 stage —— build-ride-reports.py 會把逐段對帳的
+          # actual 回填進去（見那支的 _write_block）。漏掉它，工作區就一路帶著未 stage 的
+          # 變更，下面每一次 git pull --rebase 都會以 "You have unstaged changes" 失敗，
+          # 平常看不出來（push 沒被拒就過了），一旦撞到別人先 push 就整班 exit 128。
+          # 2026-09-01 實際爆過一次。strava-sync 不碰這個檔，所以擺進第一個 commit
+          # 不會破壞「rebase 不可能衝突」那個前提。
+          git add data/fit rides data/training-block.json
           if git diff --staged --quiet; then
             echo "沒有 FIT／報告變更。"
           else
             git commit -m "chore: fit sync $(date -u '+%Y-%m-%d')"
           fi
           # 排程實際延遲 13~56 分，跟 strava-sync 的錯開設計會失效而撞車。
-          git pull --rebase || echo "::warning::rebase 失敗，改用當前 itt-segments.json 回補"
+          # --autostash 是安全網：萬一又有哪支腳本寫了沒被 stage 的檔，
+          # 也不要讓整條 rebase 直接躺平（真正的修法還是把該 commit 的檔 commit 掉）
+          git pull --rebase --autostash || echo "::warning::rebase 失敗，改用當前 itt-segments.json 回補"
           # 自建偵測器算 ITT 計時：不需要 Strava 訂閱，跟官方 91 筆逐筆吻合（平均差 0.75s）。
           # 純本機運算、不打任何 API；FIT 端的成績是整批重算，改演算法就會自動修正歷史。
           python scripts/backfill-itt-efforts.py --quiet || \
@@ -126,7 +134,12 @@ jobs:
           # 沒有這步的話它會停在最後一次手動重跑那天 —— 貼給 GPT 的就是過期的身體狀態。
           python scripts/build-coach-context.py || \
             echo "::warning::教練脈絡重建失敗，這班先跳過"
-          git add data/itt-segments.json data/strava.json athlete/coach-context.md data/fit/_est_distance.json
+          # 代辦清單（現況頁那張卡，AI 開場也讀同一份）。純本機推導、不打 API。
+          # 一定要排在最後：它要看這一班剛產出的報告、評分與 itt-segments.json 才算得準。
+          python scripts/build-tasks.py || \
+            echo "::warning::代辦清單重建失敗，這班先跳過"
+          git add data/itt-segments.json data/strava.json athlete/coach-context.md \
+                  data/fit/_est_distance.json data/tasks.json data/training-block.json
           git diff --staged --quiet || \
             git commit -m "chore: 回補自建 ITT 成績 $(date -u '+%Y-%m-%d')"
-          git push || (git pull --rebase && git push)
+          git push || (git pull --rebase --autostash && git push)

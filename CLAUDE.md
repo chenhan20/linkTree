@@ -27,9 +27,13 @@ python3 scripts/build-ride-reports.py --min-tss 100   # 產單日報告與評分
 python3 scripts/backfill-itt-efforts.py --quiet       # 從 FIT 重建 ITT 成績
 python3 scripts/tag-itt-sources.py
 python3 scripts/estimate-indoor-distance.py            # 室內沒有距離，估等效平路里程（漏跑月里程會少一整趟）
+python3 scripts/build-coach-context.py                # 貼給外部 AI 的脈絡檔，漏跑就停在上次那天
 node scripts/fetch-strava.js                          # 總覽的年度統計還住在 strava.json
 python3 scripts/build-tasks.py                        # 最後：把上面產生的新代辦收進清單
 ```
+
+**這串跟 `.github/workflows/fit-sync.yml` 是同一套**，本機手動跑等於搶了 CI 的工作 ——
+跑完就把結果推上去，不然下一班 CI 會做一次一樣的事然後 push 被拒。
 
 有新的**戶外** FIT 而且含 ITT 路段時，再多跑一支 `python3 scripts/build-segment-grades.py`
 （室內不用，沒有路段）。push 前先 `git pull --rebase`——CI 每天自己 commit，本機基底常常落後。
