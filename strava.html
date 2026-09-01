@@ -98,7 +98,14 @@ html,body{height:100%;font-family:var(--f-ui);background:#0a0408;color:#ddd}
   display:flex;flex-direction:column;
   padding:22px 12px 16px;border-right:1px solid var(--hair);
   background:rgba(7,4,3,.86);
+  /* 最後一道退路：矮到連 .rdy 的下限都塞不下時（導覽 292 ＋ 品牌 43 ＋ 底部 121
+     ＋ padding 38 就吃掉 494px），換成整條側欄自己捲，不要讓 flex 把誰壓扁。 */
+  overflow-y:auto;scrollbar-width:thin;
+  scrollbar-color:rgba(255,255,255,.16) transparent;
 }
+.side::-webkit-scrollbar{width:4px}
+.side::-webkit-scrollbar-thumb{background:rgba(255,255,255,.16);border-radius:2px}
+.side::-webkit-scrollbar-track{background:transparent}
 /* ── 側欄小火箭 ──
    inset() 讓它沿著邊框內縮跑，圓角 12px 把轉角磨順；offset-rotate:auto
    會讓機身自動朝向前進方向，所以 SVG 只要畫成「機鼻朝右」就好。
@@ -165,7 +172,24 @@ html,body{height:100%;font-family:var(--f-ui);background:#0a0408;color:#ddd}
    側欄先前有 501 px（62%）是空的。這裡放的是「看任何一章時都成立的脈絡」：
    現在的疲勞狀態、體能走向、今天該練什麼。刻意做得比主區暗一階 —— 它是背景資訊，
    不該跟正在看的那一章搶注意力。 */
-.rdy{margin-top:20px;display:flex;flex-direction:column;gap:9px;min-height:0}
+/* min-height:0 讓這一塊在側欄空間不夠時可以被壓縮 —— 但少了 overflow，
+   被壓扁的是盒子、裡面的字不會跟著縮，於是整個溢出去疊到 .side-foot 上。
+   實測 1512×720（一般筆電高度）：.rdy 從 351px 被壓到 197px，
+   睡眠／eFTP／下一課 直接壓在 分析室／循環訓練／Link Tree 上面。
+   讓它自己捲，nav 與底部連結就都留得住，而且任何高度都不會壞。 */
+.rdy{margin-top:20px;display:flex;flex-direction:column;gap:9px;min-height:118px;
+  overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;
+  scrollbar-color:rgba(255,255,255,.16) transparent}
+/* 可捲的時候下緣淡出，讓「下面還有」看得出來 —— 4px 的細軸在 188px 的欄位裡
+   太容易被忽略，而被藏起來的正好是「下一課」這種最該被看到的東西。
+   類別由 rdyScrollHint() 掛，不可捲時不掛，滿版時就不會無故把字弄糊。 */
+.rdy.has-more{mask-image:linear-gradient(to bottom,#000 calc(100% - 26px),transparent);
+  -webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 26px),transparent)}
+.rdy::-webkit-scrollbar{width:4px}
+.rdy::-webkit-scrollbar-thumb{background:rgba(255,255,255,.16);border-radius:2px}
+.rdy::-webkit-scrollbar-track{background:transparent}
+/* 子項不准被 flex 壓縮 —— 會被壓扁的只能是 .rdy 這個盒子本身（然後它自己捲） */
+.rdy>*{flex:0 0 auto}
 .rdy-hd{
   display:flex;justify-content:space-between;align-items:baseline;padding:0 9px;
   font-size:8.5px;letter-spacing:2.4px;text-transform:uppercase;color:var(--ink-3)
@@ -9528,6 +9552,23 @@ function rdySpark(series, w, h) {
   return d
 }
 
+/* 側欄狀態板可不可捲 —— 可捲才掛 .has-more（下緣淡出）。
+   捲到底就拿掉，不然會一直暗示還有東西。 */
+function rdyScrollHint() {
+  const el = document.querySelector('.rdy')
+  if (!el) return
+  const more = el.scrollHeight - el.clientHeight - el.scrollTop > 4
+  el.classList.toggle('has-more', more)
+  if (!el.dataset.hintBound) {
+    el.dataset.hintBound = '1'
+    el.addEventListener('scroll', rdyScrollHint, { passive: true })
+    // 用 ResizeObserver 而不是 window 的 resize：狀態板的高度也會因為資料晚到、
+    // 字體載入、側欄內容改變而變，那些都不會發 resize 事件。
+    if (window.ResizeObserver) new ResizeObserver(rdyScrollHint).observe(el)
+    else addEventListener('resize', rdyScrollHint)
+  }
+}
+
 function renderReadiness() {
   const w = window._wellness
   if (!w) return ''
@@ -10319,6 +10360,7 @@ function mountReadiness() {
   if (side && foot && !side.querySelector('.rdy')) foot.insertAdjacentHTML('beforebegin', html)
   const host = document.getElementById('rdy-mobile')
   if (host && !host.querySelector('.rdy')) host.innerHTML = html
+  rdyScrollHint()
 }
 
 function buildNav() {
