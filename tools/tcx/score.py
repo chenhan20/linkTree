@@ -54,6 +54,7 @@ DEFAULT_PARAMS = {
     "fade_k": 8.0,               # no_fade_last：最後 N 分鐘每掉 1% 扣 8 分
     "durability_k": 6.0,         # 續航：後半比前半每掉 1% 扣 6 分
     "slow_start_k": 4.0,         # 續航：負分割但前半欠處方時，每欠 1% 扣 4 分
+    "sag_pct": 3.0,              # 續航：中段比兩端低超過這個 % 就判為 U 型（中段垮）
     "cadence_near_rpm": 5,       # 迴轉區間外 5 rpm 內給半分
     "cadence_near_credit": 0.5,
     "twenty_min_decay_exponent": 0.06,   # 全力段不足 20 分時的外推指數
@@ -597,6 +598,9 @@ def _band_bounds(tw, tol):
             hi * (1 + tol) if hi is not None else INF)
 
 
+SERIES_MAX = 150      # 報告那張帶狀圖最多幾個點；960px 寬畫 150 點已經比像素密
+
+
 def _steadiness(S, sm, a, b, tw, P):
     """段內「移動秒數落在處方區間內」的佔比，以及由它換算出的執行度折扣因子。
 
@@ -612,12 +616,19 @@ def _steadiness(S, sm, a, b, tw, P):
     inb = sum(1 for i in idx if lo <= sm[i] <= hi)
     pct = inb / len(idx) * 100.0
     factor = max(P["steady_floor"], min(1.0, pct / P["steady_target_pct"]))
+    # series：報告要畫「處方帶 vs 實際功率」時用的軌跡。
+    # 刻意輸出 sm（就是算 in_band_pct 的那條平滑後功率），不要讓圖跟數字各算各的 ——
+    # 圖上看起來一直在帶子裡、旁邊卻寫 46%，那種畫面比沒有圖還糟。
+    # 只取移動中的秒數，理由同上（停紅燈不算沒執行）。降到最多 SERIES_MAX 點。
+    step = max(1, len(idx) // SERIES_MAX)
     return {"in_band_pct": round(pct, 1),
             "moving_sec": len(idx),
             "coast_pct": round(sum(1 for i in idx if S["w"][i] < 20) / len(idx) * 100, 1),
             "band_w": [None if lo == -INF else round(lo), None if hi == INF else round(hi)],
             "smooth_sec": P["band_smooth_sec"],
             "target_pct": P["steady_target_pct"],
+            "series": [round(sm[i]) for i in idx[::step]],
+            "series_sec": step,
             "factor": round(factor, 3)}
 
 
@@ -796,8 +807,14 @@ def _rule_hr_vs_curve(rule, segreps, S, P):
     if not win or not win.get("bpm"):
         return None
     bpm, mins = win["bpm"], win.get("minutes") or []
+    cad_ref = win.get("cadence") or []
     bucket = win.get("bucket") or 5
     lo_min = rule.get("min_sample_min", 5)
+    # 低踏頻本來就會壓低同瓦數心率（同樣的瓦數、每踩的力氣更大、心跳更低）。
+    # 大盤扭力那種段落處方就是 55-65 rpm，拿它去跟「常態」比，必然被判成泵不上去 ——
+    # 2026-09-01 實測：四段大盤扭力全部 -15/-16 被標低，而四段門檻／續航反而 +1~+7。
+    # 結論剛好相反，卻寫進了教練評語。所以踏頻比常態低這麼多的段，只記錄不算數。
+    cad_gap = rule.get("cadence_confound_rpm", 8)
     rows = []
     for r in _scope_segs(segreps, rule.get("scope", "work")):
         act = r.get("actual") or {}
@@ -807,23 +824,37 @@ def _rule_hr_vs_curve(rule, segreps, S, P):
         i = int(w // bucket)
         if i >= len(bpm) or not bpm[i] or (i < len(mins) and mins[i] < lo_min):
             continue
+        cad, cref = act.get("avg_cad"), (cad_ref[i] if i < len(cad_ref) else None)
+        conf = bool(cad and cref and cad <= cref - cad_gap)
         rows.append({"segment": r["name"], "avg_w": round(w), "avg_hr": hr,
-                     "expected_hr": bpm[i], "delta": hr - bpm[i]})
+                     "expected_hr": bpm[i], "delta": hr - bpm[i],
+                     "avg_cad": round(cad) if cad else None,
+                     "expected_cad": cref or None, "cad_confound": conf})
     if not rows:
         return None
-    worst = min(rows, key=lambda x: x["delta"])
+    valid = [x for x in rows if not x["cad_confound"]] or rows
+    worst = min(valid, key=lambda x: x["delta"])
     lim = rule.get("low_bpm", 5)
-    low = [x for x in rows if x["delta"] <= -lim]
+    low = [x for x in valid if x["delta"] <= -lim]
+    skipped = [x for x in rows if x["cad_confound"]]
+    tail = ("　（另有 %d 段踏頻比常態低 %d rpm 以上不列入：低踏頻本來就會壓低同瓦數心率）"
+            % (len(skipped), cad_gap)) if skipped else ""
     if low:
         verdict = ("%d/%d 個工作段的心率低於常態 %d 下以上（最多「%s」低 %d：%dW 應為 %d、實際 %d）"
                    " —— 當天泵不上去，不是處方設太高"
-                   % (len(low), len(rows), lim, worst["segment"], -worst["delta"],
-                      worst["avg_w"], worst["expected_hr"], worst["avg_hr"]))
+                   % (len(low), len(valid), lim, worst["segment"], -worst["delta"],
+                      worst["avg_w"], worst["expected_hr"], worst["avg_hr"])) + tail
     else:
         verdict = ("工作段心率都在常態範圍內（最低「%s」%+d 下）—— 沒有泵不上去的跡象"
-                   % (worst["segment"], worst["delta"]))
+                   % (worst["segment"], worst["delta"])) + tail
+    # curve：把常態曲線本身帶出去，報告才畫得出對照。只給樣本夠的桶
+    # （minutes < lo_min 的桶本來就不參與判定，畫出來只會是雜訊）。
+    curve = [[i * bucket + bucket // 2, bpm[i]] for i in range(len(bpm))
+             if bpm[i] and (i >= len(mins) or mins[i] >= lo_min)]
     return {"score": None, "verdict": verdict,
-            "detail": {"rows": rows, "low_bpm": lim,
+            "detail": {"rows": rows, "low_bpm": lim, "curve": curve,
+                       "curve_bucket": bucket, "min_sample_min": lo_min,
+                       "cadence_confound_rpm": cad_gap,
                        "window": [win.get("start"), win.get("end")]}}
 
 
@@ -939,38 +970,63 @@ def discipline_dim(rules, segreps, S, P):
 
 
 # ---------------------------------------------------------------- 維度三：續航
-def durability_dim(segreps, P):
+def durability_dim(segreps, S, P):
+    """前／中／後三段而不是前半／後半。
+
+    為什麼要三段：**U 型會被前後半互相抵銷掉。** 2026-09-01 門檻組 3/3 逐分鐘是
+    209 192 186 186 199 178 185 173 188 163 170 184 190 214 233 —— 第一分鐘就踩到
+    處方下緣、中段垮到 163、最後兩分鐘 214/233 補回來。前半 191 / 後半 189 讀起來
+    完全平坦，於是被判成「負分割，前半沒踩到處方 → 起步太慢」，結論剛好相反：
+    它不是起步慢，是中段撐不住。處方也相反（前者是配速問題，後者是耐力問題）。
+    """
     ent = []
     for r in segreps:
         if r["role"] not in WORK_ROLES or not r["matched"] or r["matched_sec"] < 300:
             continue
         h1 = r["actual"]["first_half_w"]
         h2 = r["actual"]["second_half_w"]
+        a = r["matched_start_sec"]
+        b = a + r["matched_sec"]
+        t = (b - a) // 3
+        w1, w2, w3 = _mean_w(S, a, a + t), _mean_w(S, a + t, b - t), _mean_w(S, b - t, b)
         decay = (h1 - h2) / h1 * 100 if h1 else 0.0
         sc = max(0.0, min(100.0, 100.0 - max(0.0, decay) * P["durability_k"]))
         shape = ("負分割（後半更強）" if decay < -1 else
                  ("平穩" if abs(decay) <= 1 else "後半掉瓦"))
         why = None
+        tw = r["target_w"] or {}
+        ref = tw.get("lo") or tw.get("about") or tw.get("hi")
+        # 中段比兩端都低 = U 型。這個判斷優先於「起步太慢」——
+        # 兩者的前半都可能低於處方，但掉的位置不同，處方完全不一樣。
+        edge = min(w1, w3)
+        sag = (edge - w2) / edge * 100.0 if edge else 0.0
+        if sag > P["sag_pct"]:
+            sc = max(0.0, min(sc, 100.0 - sag * P["durability_k"]))
+            shape = "U 型（中段垮）"
+            why = ("前 1/3 %.0fW → 中段 %.0fW → 後 1/3 %.0fW，中段比兩端低 %.1f%% —— "
+                   "掉的是中段不是起步；前半 %.0f / 後半 %.0f 幾乎相同，是 U 的兩邊互相抵銷"
+                   % (w1, w2, w3, sag, h1, h2))
         # 負分割不一律等於續航好。前半根本沒踩到處方的「負分割」，是起步太慢、
         # 靠後段把平均補回來 —— 8/13 主測 1 前半 173W（處方 185W）就是這個形狀，
         # 摘要自己寫「平均達標是後段補回來的」，續航卻拿滿分 20/20。
-        tw = r["target_w"] or {}
-        ref = tw.get("lo") or tw.get("about") or tw.get("hi")
-        if decay < 0 and ref and h1 < ref:
+        elif decay < 0 and ref and h1 < ref and w1 <= min(w2, w3):
             short = (ref - h1) / ref * 100.0
             sc = max(0.0, 100.0 - short * P["slow_start_k"])
             shape = "負分割，但前半沒踩到處方"
             why = ("前半 %.0fW 低於處方 %dW（-%.1f%%），後半 %.0fW 補回來 —— "
                    "這是起步太慢，不是撐得住" % (h1, ref, short, h2))
         ent.append({"name": r["name"], "sec": r["matched_sec"], "first_half_w": h1,
-                    "second_half_w": h2, "decay_pct": round(decay, 1), "score": round(sc, 1),
+                    "second_half_w": h2, "thirds": [round(w1, 1), round(w2, 1), round(w3, 1)],
+                    "sag_pct": round(sag, 1), "ref_w": ref,
+                    "decay_pct": round(decay, 1), "score": round(sc, 1),
                     "shape": shape, **({"why": why} if why else {})})
     if not ent:
         return None
     tot = sum(e["sec"] for e in ent)
     return {"score": round(sum(e["score"] * e["sec"] for e in ent) / tot, 1), "segments": ent,
-            "method": "各 work/allout 段前半 vs 後半平均功率的衰減率，以實際秒數加權；"
-                      "後半更強且前半有踩到處方才給 100，前半欠瓦的負分割按欠的比例扣"}
+            "method": "各 work/allout 段切成前／中／後三段比較，以實際秒數加權。"
+                      "中段比兩端低超過門檻＝U 型（中段垮）；前 1/3 最低且低於處方＝起步太慢；"
+                      "其餘看前半 vs 後半的衰減率。**不要只看前半/後半 —— U 型會被抵銷掉。**"}
 
 
 # ---------------------------------------------------------------- 維度四：迴轉
@@ -1195,7 +1251,7 @@ def score_ride(path, date=None, plan=None, plan_path=None):
 
     comp = compliance_dim(segreps, S, P)
     disc, rulereps = discipline_dim(day.get("rules"), segreps, S, P)
-    dur = durability_dim(segreps, P)
+    dur = durability_dim(segreps, S, P)
     cad = cadence_dim(segreps, S, P)
 
     dims = {"compliance": comp, "discipline": disc, "durability": dur, "cadence": cad}

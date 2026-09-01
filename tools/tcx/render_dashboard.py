@@ -466,6 +466,28 @@ footer{color:var(--ink-3);font-size:11.5px;margin-top:56px;padding-top:18px;bord
       <div id="exec-rules"></div>
       <div class="checks" id="exec-checks" hidden></div>
     </div>
+    <div class="sub" id="band-wrap" hidden>
+      <div class="sub-h"><span class="lab">Prescription</span><h3>處方帶 vs 實際功率</h3>
+        <span class="meta" id="band-meta"></span></div>
+      <p class="cap" id="band-sub" style="margin:0 0 16px"></p>
+      <svg id="c-band" viewBox="0 0 960 240"></svg>
+    </div>
+
+    <div class="sub" id="half-wrap" hidden>
+      <div class="sub-h"><span class="lab">Durability</span><h3>前半 vs 後半</h3>
+        <span class="meta" id="half-meta"></span></div>
+      <p class="cap" id="half-sub" style="margin:0 0 16px"></p>
+      <svg id="c-half" viewBox="0 0 960 200"></svg>
+    </div>
+
+    <div class="sub" id="sgear-wrap" hidden>
+      <div class="sub-h"><span class="lab">Gearing</span><h3>逐段檔位</h3>
+        <span class="meta" id="sgear-meta"></span></div>
+      <p class="cap" id="sgear-sub" style="margin:0 0 16px"></p>
+      <svg id="c-sgear" viewBox="0 0 960 200"></svg>
+      <p class="cap" id="sgear-cap"></p>
+    </div>
+
     <div class="sub" id="exec-score-wrap">
       <div class="sub-h"><span class="lab">Score</span><h3>分數怎麼來的</h3>
         <span class="meta" id="score-meta"></span></div>
@@ -513,6 +535,14 @@ footer{color:var(--ink-3);font-size:11.5px;margin-top:56px;padding-top:18px;bord
   <div class="body">
     <div class="facts" id="phys-facts"></div>
     <div class="g2" style="margin-top:34px"><div id="z-hr"></div><div id="z-pw"></div></div>
+
+    <div class="sub" id="hrc-wrap" hidden>
+      <div class="sub-h"><span class="lab">HR vs normal</span><h3>同瓦數心率 vs 常態曲線</h3>
+        <span class="meta" id="hrc-meta"></span></div>
+      <p class="cap" id="hrc-sub" style="margin:0 0 16px"></p>
+      <svg id="c-hrc" viewBox="0 0 960 300"></svg>
+      <p class="cap" id="hrc-cap"></p>
+    </div>
   </div>
 </section>
 
@@ -923,6 +953,282 @@ let HERO_IN_MASTHEAD=false;
       return `<div${sub?' class="sub2"':''}>${tw(x.trim())}</div>`;
     }).join('');
   }
+})();
+
+/* ---------- ① 處方帶 vs 實際功率 ----------
+   逐段帳的「執行度 0.61 折」是怎麼來的，光看表格看不出來。
+   這張圖把處方帶塗出來、把**算 in_band_pct 的那條平滑功率**疊上去，
+   落在帶外的部分換成 dim 色 —— 帶內顏色的比例就是那個百分比本身。
+   刻意用 score.py 給的 steadiness.series（同一條 30 秒平滑），
+   不要拿剖面圖那條 45 秒平滑的另外畫一次：圖跟數字打架比沒有圖更糟。 */
+(function(){
+  if(!PLANDAY) return;
+  const CE={}; (((SC.dimensions||{}).compliance||{}).segments||[]).forEach(e=>{CE[e.name]=e;});
+  const rows=(SC.segments||[]).filter(s=>(s.role==='work'||s.role==='allout')&&s.matched)
+    .map(s=>({s:s,st:(CE[s.name]||{}).steadiness}))
+    .filter(x=>x.st&&x.st.series&&x.st.series.length>4&&x.st.band_w&&
+               x.st.band_w[0]!=null&&x.st.band_w[1]!=null);
+  if(!rows.length) return;
+  document.getElementById('band-wrap').hidden=false;
+  const sv=document.getElementById('c-band');
+  const W=960,L=132,Rr=104,rowH=58,gap=14,T=16;
+  const H=T+rows.length*(rowH+gap)+18;
+  sv.setAttribute('viewBox','0 0 '+W+' '+H);
+  const iw=W-L-Rr;
+  /* 共用一套 Y 軸，各段才比得起來（每段各自縮放的話，190W 那段跟 201W 那段會長得一樣高）*/
+  let lo=Infinity,hi=-Infinity;
+  rows.forEach(r=>{r.st.series.forEach(v=>{lo=Math.min(lo,v);hi=Math.max(hi,v);});
+    lo=Math.min(lo,r.st.band_w[0]);hi=Math.max(hi,r.st.band_w[1]);});
+  const pad=(hi-lo)*0.10||10; lo-=pad; hi+=pad;
+  const Y=(v,top)=>top+rowH-rowH*(v-lo)/(hi-lo);
+  rows.forEach((r,ri)=>{
+    const st=r.st,top=T+ri*(rowH+gap),ser=st.series,n=ser.length;
+    const X=i=>L+iw*i/(n-1);
+    sv.appendChild(el('rect',{x:L,y:Y(st.band_w[1],top),width:iw,
+      height:Math.max(1,Y(st.band_w[0],top)-Y(st.band_w[1],top)),fill:C('s2'),opacity:.13}));
+    [st.band_w[0],st.band_w[1]].forEach(b=>sv.appendChild(el('line',
+      {x1:L,y1:Y(b,top),x2:L+iw,y2:Y(b,top),stroke:C('s2'),opacity:.42})));
+    /* 把軌跡切成「在帶內／帶外」的連續段分別上色。一整條同色的話，
+       46% 這個數字在圖上就完全看不出來，等於白畫。 */
+    const inb=i=>ser[i]>=st.band_w[0]&&ser[i]<=st.band_w[1];
+    let a=0;
+    for(let i=1;i<=n;i++){
+      if(i===n||inb(i)!==inb(i-1)){
+        let d='';
+        for(let k=a;k<Math.min(i+1,n);k++) d+=(k===a?'M':'L')+X(k).toFixed(1)+' '+Y(ser[k],top).toFixed(1);
+        if(d) sv.appendChild(el('path',{d:d,fill:'none',stroke:inb(a)?C('s2'):C('dim'),
+          'stroke-width':inb(a)?1.7:1.3}));
+        a=i;
+      }
+    }
+    sv.appendChild(txt(L-10,top+18,r.s.name,{anchor:'end',fs:11.5,fill:C('ink-2'),fw:600}));
+    sv.appendChild(txt(L-10,top+33,'處方 '+st.band_w[0]+'–'+st.band_w[1]+' W',{anchor:'end',fs:9.5}));
+    sv.appendChild(txt(L-10,top+47,ms(st.moving_sec)+' 移動',{anchor:'end',fs:9.5}));
+    const okc=st.in_band_pct>=st.target_pct?C('s2'):C('ink-2');
+    sv.appendChild(txt(W-Rr+12,top+22,st.in_band_pct+'%',{fs:17,fill:okc,fw:700}));
+    sv.appendChild(txt(W-Rr+12,top+37,'在帶內（門檻 '+st.target_pct+'%）',{fs:9.5}));
+    if(st.factor<1) sv.appendChild(txt(W-Rr+12,top+51,'執行度 ×'+st.factor,{fs:9.5,fill:C('ink-2')}));
+  });
+  const worst=rows.reduce((a2,b)=>b.st.in_band_pct<a2.st.in_band_pct?b:a2);
+  document.getElementById('band-meta').textContent=
+    '平滑 '+rows[0].st.smooth_sec+' 秒 · 每點 '+rows[0].st.series_sec+' 秒';
+  document.getElementById('band-sub').innerHTML=
+    '橘底是處方區間，線是實際功率（跟左邊那張表算執行度用的是<b>同一條</b>平滑功率）。'+
+    '線變灰＝那一刻踩在帶外。<b>顏色的比例就是右邊那個百分比</b>，不是另外算的。'+
+    '最散的是「'+esc(worst.s.name)+'」，只有 <b>'+worst.st.in_band_pct+'%</b> 的移動秒數在帶裡'+
+    (worst.st.coast_pct>2?'（其中 '+worst.st.coast_pct+'% 低於 20W ＝ 在滑行）':'（滑行 '+worst.st.coast_pct+'%，所以不是放掉，是功率在飄）')+'。';
+})();
+
+/* ---------- ② 段內形狀（前／中／後）----------
+   **不要用前半 vs 後半。** U 型會被兩邊互相抵銷：2026-09-01 門檻組 3/3 逐分鐘是
+   209 192 186 186 199 178 185 173 188 163 170 184 190 214 233 —— 第一分鐘就踩到處方
+   下緣、中段垮到 163、最後兩分鐘 214/233 補回來，前半 191／後半 189 卻讀起來完全平坦。
+   切三段才分得出「起步慢」（前段最低）跟「中段垮」（中段最低）—— 兩者的處方完全相反。 */
+(function(){
+  if(!PLANDAY) return;
+  const rows=(((SC.dimensions||{}).durability||{}).segments||[]).filter(d=>d.thirds&&d.thirds.length===3);
+  if(!rows.length) return;
+  document.getElementById('half-wrap').hidden=false;
+  const sv=document.getElementById('c-half');
+  const W=960,L=132,Rr=214,rowH=62,gap=10,T=18;
+  const H=T+rows.length*(rowH+gap)+16;
+  sv.setAttribute('viewBox','0 0 960 '+H);
+  const iw=W-L-Rr;
+  let lo=Infinity,hi=-Infinity;
+  rows.forEach(r=>{r.thirds.concat(r.ref_w!=null?[r.ref_w]:[]).forEach(v=>{
+    lo=Math.min(lo,v);hi=Math.max(hi,v);});});
+  const pad=(hi-lo)*0.14||8; lo-=pad; hi+=pad;
+  const LAB=['前 1/3','中段','後 1/3'];
+  rows.forEach((r,ri)=>{
+    const top=T+ri*(rowH+gap);
+    const Y=v=>top+rowH-rowH*(v-lo)/(hi-lo);
+    const bw=Math.min(96,iw/3-26);
+    const X=i=>L+iw*(i+0.5)/3;
+    /* 處方線橫過整列並標字 —— DESIGN.rides.md：重要的話直接畫在圖上 */
+    if(r.ref_w!=null){
+      sv.appendChild(el('line',{x1:L,y1:Y(r.ref_w),x2:L+iw,y2:Y(r.ref_w),stroke:C('s2'),
+        'stroke-width':1.2,'stroke-dasharray':'3 3'}));
+      /* 標在繪圖區內側右緣，不要跟右欄那三行擠在同一個 x —— 處方線的高度會撞到形狀標籤 */
+      sv.appendChild(txt(L+iw-4,Y(r.ref_w)-5,'處方 '+r.ref_w+' W',{anchor:'end',fs:9.5,fill:C('s2')}));
+    }
+    const dip=r.shape.indexOf('U 型')===0;
+    const minI=r.thirds.indexOf(Math.min(...r.thirds));
+    r.thirds.forEach((v,i)=>{
+      const y=Y(v),h=Math.max(2,top+rowH-y);
+      /* 谷底那一段用強調色，其餘中性 —— 一眼看得出低點在前、在中、還是在後 */
+      sv.appendChild(el('rect',{x:X(i)-bw/2,y:y,width:bw,height:h,
+        fill:i===minI?C('s2'):C('dim'),opacity:i===minI?.85:.75}));
+      sv.appendChild(txt(X(i),y-5,Math.round(v),{anchor:'middle',fs:11,
+        fill:i===minI?C('ink-1'):C('ink-2'),fw:i===minI?700:400}));
+      if(ri===rows.length-1) sv.appendChild(txt(X(i),top+rowH+13,LAB[i],{anchor:'middle',fs:9.5}));
+    });
+    sv.appendChild(el('line',{x1:L,y1:top+rowH,x2:L+iw,y2:top+rowH,stroke:C('axis')}));
+    sv.appendChild(txt(L-10,top+18,r.name,{anchor:'end',fs:11.5,fill:C('ink-2'),fw:600}));
+    sv.appendChild(txt(L-10,top+33,ms(r.sec),{anchor:'end',fs:9.5}));
+    sv.appendChild(txt(L-10,top+47,'續航 '+r.score,{anchor:'end',fs:9.5}));
+    sv.appendChild(txt(L+iw+6,top+16,r.shape,{fs:11,fill:dip?C('ink-1'):C('ink-2'),fw:dip?700:600}));
+    if(dip) sv.appendChild(txt(L+iw+6,top+31,'中段低 '+r.sag_pct+'%',{fs:9.5}));
+    sv.appendChild(txt(L+iw+6,top+(dip?45:31),
+      '前半 '+w0(r.first_half_w)+' / 後半 '+w0(r.second_half_w)+' W',{fs:9.5}));
+  });
+  const u=rows.filter(r=>r.shape.indexOf('U 型')===0), slow=rows.filter(r=>r.shape.indexOf('負分割，但')===0);
+  document.getElementById('half-meta').textContent='續航 '+
+    (((SC.dimensions||{}).durability||{}).score??'—')+' 分';
+  const bits=[];
+  if(u.length) bits.push('<b>'+u.length+' 段是 U 型</b>：開得對、中段垮、最後補回來 —— '+
+    '這幾段的前半／後半幾乎相同，正是 U 的兩邊互相抵銷，只看前後半會判成「平穩」。');
+  if(slow.length) bits.push('<b>'+slow.length+' 段是起步太慢</b>：前 1/3 最低且低於處方，靠後段把平均補回來。');
+  document.getElementById('half-sub').innerHTML=
+    '每一列切成前／中／後三段，<b>橘色是最低的那一段</b> —— 低點在哪，病就在哪。'+
+    '（刻意不用前半 vs 後半：那個切法看不見 U 型。）'+(bits.length?'　'+bits.join('　'):'');
+})();
+
+/* ---------- ③ 逐段檔位 ----------
+   裝置那節的齒比圖是**整趟聚合**，看不出「第一組用 19T、第三組換成 17T」。
+   室內尤其關鍵：slope 模式的阻力只看輪速，而輪速＝踏頻×展開，
+   所以換重檔換不到瓦數，只換到每一踩的力氣 —— 這件事只有按段落切開才看得見。 */
+(function(){
+  if(!PLANDAY) return;
+  const G=CH.gear;
+  if(!G||!G.runs_t||!G.runs_t.length) return;
+  const segs=(SC.segments||[]).filter(s=>(s.role==='work'||s.role==='allout')&&s.matched&&s.matched_sec>60);
+  if(!segs.length) return;
+  /* 每段各檔位的秒數 */
+  const rows=segs.map(s=>{
+    const a=s.matched_start_sec,b=a+s.matched_sec, by={};
+    G.runs_t.forEach(r=>{const o=Math.min(b,r[1])-Math.max(a,r[0]);
+      if(o>0){const k=r[2]+'×'+r[3]; by[k]=(by[k]||0)+o;}});
+    const tot=Object.values(by).reduce((x,y)=>x+y,0);
+    return {s:s,by:by,tot:tot};
+  }).filter(r=>r.tot>30);
+  if(!rows.length) return;
+  const keys=[...new Set(rows.flatMap(r=>Object.keys(r.by)))]
+    .sort((a,b)=>{const [f1,r1]=a.split('×').map(Number),[f2,r2]=b.split('×').map(Number);
+      return (f1/r1)-(f2/r2);});           // 輕 → 重
+  const rMin=Math.min(...keys.map(k=>{const [f,r]=k.split('×').map(Number);return f/r;}));
+  const rMax=Math.max(...keys.map(k=>{const [f,r]=k.split('×').map(Number);return f/r;}));
+  const col=k=>{const [f,r]=k.split('×').map(Number);
+    return C('q'+Math.min(5,Math.max(1,Math.round(1+((f/r)-rMin)/((rMax-rMin)||1)*4))));};
+  document.getElementById('sgear-wrap').hidden=false;
+  const sv=document.getElementById('c-sgear');
+  const W=960,L=132,Rr=118,rowH=30,T=18;
+  const H=T+rows.length*rowH+40;
+  sv.setAttribute('viewBox','0 0 960 '+H);
+  const iw=W-L-Rr;
+  rows.forEach((r,i)=>{
+    const y=T+i*rowH; let x=L;
+    keys.forEach(k=>{ const sec=r.by[k]; if(!sec) return;
+      const w=iw*sec/r.tot;
+      const rect=el('rect',{x:x,y:y,width:Math.max(1,w),height:18,fill:col(k)});
+      rect.appendChild(el('title',{})).textContent=k+'　'+ms(sec)+'（'+Math.round(sec/r.tot*100)+'%）';
+      sv.appendChild(rect);
+      if(w>46) sv.appendChild(txt(x+w/2,y+13,k,{anchor:'middle',fs:10,fill:'#fff',fw:600}));
+      x+=w;});
+    sv.appendChild(txt(L-10,y+13,r.s.name,{anchor:'end',fs:11.5,fill:C('ink-2'),fw:600}));
+    const a=r.s.actual||{};
+    sv.appendChild(txt(W-Rr+12,y+13,
+      (a.avg_cad?w0(a.avg_cad)+' rpm':'—')+'　'+(a.avg_w?w0(a.avg_w)+' W':''),{fs:10,fill:C('ink-2')}));
+  });
+  const y0=T+rows.length*rowH+16;
+  let lx=L;
+  keys.forEach(k=>{ sv.appendChild(el('rect',{x:lx,y:y0-9,width:11,height:11,fill:col(k)}));
+    sv.appendChild(txt(lx+16,y0,k,{fs:9.5})); lx+=16+k.length*7+16;});
+  sv.appendChild(txt(L,y0+16,'左＝輕　右＝重（依展開排序）',{fs:9.5}));
+  document.getElementById('sgear-meta').textContent='只算功率 ≥ '+Math.round(G.min_w)+' W 的秒數';
+  /* 有沒有「同樣的功率、踏頻掉一截」的段落 —— 那就是拿扭力換轉速 */
+  const wk=rows.filter(r=>(r.s.actual||{}).avg_cad&&(r.s.actual||{}).avg_w);
+  let hint='';
+  if(wk.length>1){
+    const f=wk[0].s.actual,l=wk[wk.length-1].s.actual;
+    const dc=(l.avg_cad-f.avg_cad)/f.avg_cad*100, dw2=(l.avg_w-f.avg_w)/f.avg_w*100;
+    if(dc<-6&&dw2>-8) hint='　最後一段的踏頻比第一段低 <b>'+Math.abs(dc).toFixed(0)+
+      '%</b>、功率只差 '+dw2.toFixed(0)+'% —— 換重檔換不到瓦數，只換到每一踩的力氣。';
+  }
+  document.getElementById('sgear-sub').innerHTML=
+    '每一列是一個主課表段，長度按<b>待在那一檔的秒數</b>切開（不是換檔次數）。'+
+    '裝置那節的齒比圖是整趟聚合，看不出段跟段之間換了檔。'+hint;
+  document.getElementById('sgear-cap').innerHTML=
+    '訓練台的 slope／level 模式阻力只看輪速，而<b>輪速 ＝ 踏頻 × 展開</b>。'+
+    '所以在室內換到重一階的檔、踏頻掉同樣的比例，輪速不變 → 阻力不變 → 功率也不變：'+
+    '那一檔沒有換到瓦數，只是把同樣的功率從轉速搬到每一踩的力氣上。要多瓦數只能把輪速抬上去。';
+})();
+
+/* ---------- ④ 同瓦數心率 vs 常態曲線 ----------
+   「為什麼踩不出來」跟「不想踩」是完全不同的病，處方也相反。
+   評分卡已經有這條規則但只有一行字，跨趟追不了 —— 這張圖把當天的工作段
+   放到他自己近三個月的常態曲線上，低多少一眼看到。 */
+(function(){
+  const rule=(SC.rules||[]).find(r=>r.kind==='hr_vs_curve');
+  const d=rule&&rule.detail;
+  if(!d||!d.curve||d.curve.length<6||!d.rows||!d.rows.length) return;
+  document.getElementById('hrc-wrap').hidden=false;
+  const sv=document.getElementById('c-hrc');
+  const W=960,H=300,L=52,Rr=150,T=24,B=44,iw=W-L-Rr,ih=H-T-B;
+  const pw=d.rows.map(r=>r.avg_w), ph=d.rows.map(r=>r.avg_hr);
+  const xlo=Math.min(...d.curve.map(c=>c[0]),...pw)*0.94;
+  const xhi=Math.max(...d.curve.map(c=>c[0]),...pw)*1.04;
+  const ylo=Math.min(...d.curve.map(c=>c[1]),...ph)*0.94;
+  const yhi=Math.max(...d.curve.map(c=>c[1]),...ph)*1.04;
+  const X=v=>L+iw*(v-xlo)/(xhi-xlo), Y=v=>T+ih-ih*(v-ylo)/(yhi-ylo);
+  const sx=niceScale(xlo,xhi,4), sy=niceScale(ylo,yhi,4);
+  for(let v=Math.ceil(ylo/sy.step)*sy.step;v<=yhi;v+=sy.step){
+    sv.appendChild(el('line',{x1:L,y1:Y(v),x2:L+iw,y2:Y(v),stroke:C('grid')}));
+    sv.appendChild(txt(L-8,Y(v)+3.5,Math.round(v),{anchor:'end',fs:9.5}));}
+  for(let v=Math.ceil(xlo/sx.step)*sx.step;v<=xhi;v+=sx.step){
+    sv.appendChild(txt(X(v),T+ih+16,Math.round(v),{anchor:'middle',fs:9.5}));}
+  sv.appendChild(el('line',{x1:L,y1:T+ih,x2:L+iw,y2:T+ih,stroke:C('axis')}));
+  sv.appendChild(txt(0,12,'心率 bpm',{fs:9.5}));
+  sv.appendChild(txt(L+iw,T+ih+32,'功率 W',{anchor:'end',fs:9.5}));
+  sv.appendChild(el('path',{d:d.curve.map((c,i)=>(i?'L':'M')+X(c[0]).toFixed(1)+' '+Y(c[1]).toFixed(1)).join(' '),
+    fill:'none',stroke:C('s1'),'stroke-width':1.8}));
+  const cl=d.curve[d.curve.length-1];
+  sv.appendChild(txt(X(cl[0])+6,Y(cl[1]),'常態',{fs:10,fill:C('s1'),fw:600}));
+  const marks=[];
+  d.rows.forEach(r=>{
+    const x=X(r.avg_w),y=Y(r.avg_hr),ye=Y(r.expected_hr);
+    /* 踏頻比常態低一截的段落畫空心圈：低踏頻本來就會壓低同瓦數心率，
+       那不是「泵不上去」。實線圈才是真的低。 */
+    const conf=!!r.cad_confound, low=!conf&&r.delta<=-(d.low_bpm||5);
+    sv.appendChild(el('line',{x1:x,y1:y,x2:x,y2:ye,stroke:low?C('s2'):C('dim'),
+      'stroke-width':1.2,'stroke-dasharray':'2 2'}));
+    const c=conf
+      ? el('circle',{cx:x,cy:y,r:4.6,fill:'none',stroke:C('ink-3'),'stroke-width':1.4})
+      : el('circle',{cx:x,cy:y,r:4.6,fill:low?C('s2'):C('ink-3')});
+    c.appendChild(el('title',{})).textContent=
+      r.segment+'　'+r.avg_w+'W　實際 '+r.avg_hr+' / 常態 '+r.expected_hr+'（'+(r.delta>0?'+':'')+r.delta+'）'+
+      (r.avg_cad?'　踏頻 '+r.avg_cad+(r.expected_cad?' / 常態 '+r.expected_cad:''):'')+
+      (conf?'　← 低踏頻，不列入判定':'');
+    sv.appendChild(c);
+    if(low||conf) marks.push({x:x,y:y,conf:conf,
+      t:r.segment+'　'+(r.delta>0?'+':'')+r.delta+(conf&&r.avg_cad?'（'+r.avg_cad+' rpm）':'')});
+  });
+  /* 八個工作段全部標字會疊成一團（實測 9 對重疊）。只標「偏低」的那幾個 ——
+     那才是這張圖要講的事，其餘留 tooltip。標到的再依 y 推開，x 夠遠就不算撞。 */
+  marks.sort((a,b)=>a.y-b.y);
+  for(let i=1;i<marks.length;i++)
+    if(Math.abs(marks[i].x-marks[i-1].x)<170&&marks[i].y-marks[i-1].y<14)
+      marks[i].y=marks[i-1].y+14;
+  marks.forEach(m=>sv.appendChild(txt(m.x+8,m.y+4,m.t,
+    {fs:10,fill:m.conf?C('ink-3'):C('ink-1'),fw:m.conf?400:600})));
+  const conf=d.rows.filter(r=>r.cad_confound);
+  const low=d.rows.filter(r=>!r.cad_confound&&r.delta<=-(d.low_bpm||5));
+  const valid=d.rows.length-conf.length;
+  document.getElementById('hrc-meta').textContent=
+    '常態取樣 '+(d.window?esc(d.window[0])+' – '+esc(d.window[1]):'近三個月');
+  document.getElementById('hrc-sub').innerHTML=
+    '藍線是他自己近三個月的功率-心率常態（每 '+(d.curve_bucket||5)+'W 一桶，樣本不足 '+
+    (d.min_sample_min||5)+' 分鐘的桶不畫）。每個點是當天一個主課表段，虛線是它離常態多遠。'+
+    (low.length
+      ? '　<b>'+low.length+' / '+valid+' 段低於常態 '+(d.low_bpm||5)+
+        ' 下以上</b> —— 當天泵不上去，跟「處方設太高」是完全不同的病。'
+      : '　工作段心率都在常態範圍內，沒有泵不上去的跡象。')+
+    (conf.length?'　空心圈的 '+conf.length+' 段踏頻比常態低 '+(d.cadence_confound_rpm||8)+
+      ' rpm 以上，<b>不列入判定</b>。':'');
+  document.getElementById('hrc-cap').innerHTML=
+    '這條規則<b>只報不扣分</b>：它回答的是「為什麼踩不出來」，不是「有沒有照著踩」。'+
+    '單一天的偏低可能只是當天狀態，要連續兩三堂都低才有判讀價值 —— 所以這張圖的用途是跨趟比對。'+
+    '　大盤扭力那種處方 55–65 rpm 的段落一定會落在常態線下面（<b>同樣的瓦數、踩得慢、心跳就是比較低</b>），'+
+    '那是踏頻造成的，不是狀態 —— 所以它們畫成空心圈並且不列入判定。';
 })();
 
 /* ---------- 剖面 ---------- */

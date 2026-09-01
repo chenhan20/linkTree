@@ -1254,7 +1254,7 @@ def chart_series(path, target_points=480, gear_min_w=150.0):
     lap_km = [[round(xs[l["i0"]], 2), round(xs[min(l["i1"], n - 1)], 2)] for l in laps]
 
     # ── 齒比軌跡：連續「有出力且同一檔」的區段，每段一筆 [起km, 迄km, 前盤, 飛輪] ──
-    runs, cur = [], None
+    runs, runs_t, cur = [], [], None
     moving = loaded = 0
     for i, p in enumerate(pts):
         if p.get("_gap"):
@@ -1263,20 +1263,25 @@ def chart_series(path, target_points=480, gear_min_w=150.0):
         key = (p.get("gf"), p.get("gr")) if (p.get("gr") and pw[i] >= gear_min_w) else None
         if key:
             loaded += 1
-        if cur is not None and cur[2] == key:
-            cur[1] = xs[i]
+        if cur is not None and cur[4] == key:
+            cur[1], cur[3] = xs[i], i
         else:
-            if cur is not None and cur[2] is not None and cur[1] > cur[0]:
-                runs.append([round(cur[0], 3), round(cur[1], 3), cur[2][0], cur[2][1]])
-            cur = [xs[i], xs[i], key]
-    if cur is not None and cur[2] is not None and cur[1] > cur[0]:
-        runs.append([round(cur[0], 3), round(cur[1], 3), cur[2][0], cur[2][1]])
+            if cur is not None and cur[4] is not None and cur[1] > cur[0]:
+                runs.append([round(cur[0], 3), round(cur[1], 3), cur[4][0], cur[4][1]])
+                runs_t.append([cur[2], cur[3], cur[4][0], cur[4][1]])
+            cur = [xs[i], xs[i], i, i, key]
+    if cur is not None and cur[4] is not None and cur[1] > cur[0]:
+        runs.append([round(cur[0], 3), round(cur[1], 3), cur[4][0], cur[4][1]])
+        runs_t.append([cur[2], cur[3], cur[4][0], cur[4][1]])
 
     out = {"profile": prof, "lap_km": lap_km, "x_axis": "min" if indoor_x else "km",
            "sport": meta.get("sport"), "total_km": round(dist[-1], 2)}
     if runs:
         out["gear"] = {
             "runs": runs,
+            # 同一批區段的「秒」版本（索引即秒，pts 是 1Hz）。報告要按課表段落切檔位時用它 ——
+            # 段落邊界是秒，而 runs 的 x 軸在戶外是公里，換不回去。
+            "runs_t": runs_t,
             "cogs": sorted({r[3] for r in runs}),
             "rings": sorted({r[2] for r in runs}),
             "min_w": gear_min_w,
