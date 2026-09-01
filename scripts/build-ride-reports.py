@@ -305,6 +305,32 @@ def qualifies(summary: dict, date: str, args, itt: set[str]) -> tuple[bool, str]
     return True, f"TSS {tss:.0f}"
 
 
+def incumbent_times() -> dict[str, str]:
+    """已存在的報告代表的是**哪一趟**（用出發時刻 HH:MM 當識別）。
+
+    `--overwrite` 會繞過 _reports.json 的記錄，於是同日多檔的勝出者照檔名排序重選 ——
+    一次全量重生就把 6 天換成了當天的另一筆活動，其中兩天從騎乘變成跑步
+    （2025-09-25、2026-03-28，實測）。那不只是換張圖：那天的教練評語會變成在講另一趟。
+    ride-meta 裡沒有 activity id，但有出發時刻，同一天兩筆活動不會同一分鐘出發。
+    """
+    out: dict[str, str] = {}
+    for p in RIDES.glob("2*.html"):
+        try:
+            head = p.read_bytes()[:4096].decode("utf-8", "ignore")
+        except OSError:
+            continue
+        m = re.search(r"<!-- ride-meta (\{.*?\}) -->", head, re.S)
+        if not m:
+            continue
+        try:
+            t = json.loads(m.group(1)).get("time")
+        except json.JSONDecodeError:
+            continue
+        if t:
+            out[p.stem] = t
+    return out
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="FIT → rides/<date>.html")
     ap.add_argument("--min-tss", type=float, default=100.0)
@@ -328,6 +354,8 @@ def main() -> int:
     plans = plan_dates()
     if plans:
         log(f"課表處方 {len(plans)} 天")
+    # --force 才允許換掉某天代表的那一趟；一般重生一律沿用既有那一趟
+    incumbents = {} if args.force else incumbent_times()
 
     done_file = FIT_DIR / "_reports.json"
     done = {}
@@ -369,6 +397,13 @@ def main() -> int:
                 date = report_date(summary, fit)
                 if not date:
                     log(f"[跳過] {fit.name}：判斷不出日期")
+                    skipped += 1
+                    continue
+                inc = incumbents.get(date)
+                cur_time = ((summary.get("when") or {}).get("start_local") or " ").split(" ")[-1]
+                if inc and cur_time and inc != cur_time:
+                    log(f"[沿用] {date}：既有報告是 {inc} 出發的那趟，"
+                        f"{fit.name} 是 {cur_time}，不取代")
                     skipped += 1
                     continue
                 cur_power = bool((summary.get("power") or {}).get("has_power"))
