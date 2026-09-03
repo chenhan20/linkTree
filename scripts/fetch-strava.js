@@ -45,6 +45,8 @@ const OUT_FILE        = path.join(__dirname, '..', 'data', 'strava.json')
 const ITT_FILE        = path.join(__dirname, '..', 'data', 'itt-segments.json')
 const ITT_CONFIG_FILE = path.join(__dirname, '..', 'data', 'itt-config.json')
 const POWER_FILE      = path.join(__dirname, '..', 'data', 'power-prs.json')
+const ACTS_FILE       = path.join(__dirname, '..', 'data', 'fit', '_activities.json')
+const EST_DIST_FILE   = path.join(__dirname, '..', 'data', 'fit', '_est_distance.json')
 
 // ── 簡單的 HTTPS helper（不裝額外套件）──
 function request(options, body = null) {
@@ -1224,13 +1226,52 @@ function buildJSON(stats, activities) {
     console.log(`   ↩︎ YTD 扣掉 ${dropY.count} 趟、${(dropY.sec / 3600).toFixed(1)} h 的室內重複`)
   }
 
+  // ── 只活在 intervals、Strava 上沒有的室內趟 ────────────────────────────
+  // 室內一趟可能只留在手錶那條路（Rouvy 那份被手動刪掉、或 Strava 根本沒收到）。
+  // YTD 走 Strava 自己的 stats API，這種趟對它來說不存在，於是整趟從年度統計
+  // 消失 —— 而它明明是真的訓練，FIT 也在 data/fit 裡。
+  //
+  // 里程用 scripts/estimate-indoor-distance.py 估的等效平路距離，**不是** Rouvy
+  // 的虛擬里程：Rouvy 的距離是虛擬路線的口徑，跟他的戶外不是同一把尺（8/25
+  // Rouvy 說 56.69 km、估算是 51.15）。詳見那支腳本的檔頭。
+  //
+  // 判定「Strava 沒有」＝當天沒有任何一筆騎乘的移動時間落在 ±5 分內。用時間而
+  // 不只是日期，才不會被同一天的戶外趟蓋掉。Strava 停掉之後這段會自動接管，
+  // 不需要再改。
+  const orphan = { count: 0, m: 0, sec: 0, days: [] }
+  try {
+    const acts = JSON.parse(fs.readFileSync(ACTS_FILE, 'utf8'))
+    const est  = JSON.parse(fs.readFileSync(EST_DIST_FILE, 'utf8'))
+    for (const [aid, v] of Object.entries(acts)) {
+      if (!RIDE_TYPE_NAMES.includes(v.type)) continue
+      const day = String(v.start_date_local || '').slice(0, 10)
+      if (day.slice(0, 4) !== thisYear) continue
+      if (v.distance) continue                       // 有距離＝戶外，Strava 一定也有
+      const sec = v.moving_time || 0
+      const seen = mergedRecentRides.some(r => r.date === day
+        && Math.abs((r.moving_time_sec || 0) - sec) <= 300)
+      if (seen) continue
+      const km = (est[aid] || {}).km || 0
+      if (!km) continue                              // 沒估算就不硬湊，寧可少算
+      orphan.count += 1
+      orphan.m     += km * 1000
+      orphan.sec   += sec
+      orphan.days.push(`${day} ${km.toFixed(1)}km`)
+    }
+  } catch (e) {
+    console.log(`   ⚠️ 讀不到 _activities.json／_est_distance.json，YTD 不補室內孤兒：${e.message}`)
+  }
+  if (orphan.count) {
+    console.log(`   ➕ YTD 補回 ${orphan.count} 趟只在手錶的室內（估算里程）：${orphan.days.join('、')}`)
+  }
+
   return {
     updated_at: new Date().toISOString(),
     summary: {
-      ytd_distance_km:      Math.round(s.ytd_ride_totals.distance / 100) / 10,
+      ytd_distance_km:      Math.round((s.ytd_ride_totals.distance + orphan.m) / 100) / 10,
       ytd_elevation_m:      Math.round(s.ytd_ride_totals.elevation_gain),
-      ytd_rides:            s.ytd_ride_totals.count - dropY.count,
-      ytd_moving_time_hr:   Math.round((s.ytd_ride_totals.moving_time - dropY.sec) / 360) / 10,
+      ytd_rides:            s.ytd_ride_totals.count - dropY.count + orphan.count,
+      ytd_moving_time_hr:   Math.round((s.ytd_ride_totals.moving_time - dropY.sec + orphan.sec) / 360) / 10,
       ytd_run_distance_km:  Math.round(s.ytd_run_totals.distance / 100) / 10,
       ytd_runs:             s.ytd_run_totals.count,
       ytd_swim_distance_km: Math.round((s.ytd_swim_totals?.distance || 0) / 100) / 10,
