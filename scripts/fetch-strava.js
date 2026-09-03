@@ -903,6 +903,9 @@ const RAW_ACC = {
   rideType: a => RIDE_TYPE_NAMES.includes(a.type) || RIDE_TYPE_NAMES.includes(a.sport_type),
   dist: a => (a.distance || 0) / 1000,
   setDist: (a, km) => { a.distance = km * 1000; a.distance_from_rouvy = true },
+  setEst: (a, km) => {
+    a.distance = km * 1000; a.distance_estimated = true; delete a.distance_from_rouvy
+  },
 }
 const RIDE_ACC = {
   tag: 'ride',
@@ -911,8 +914,73 @@ const RIDE_ACC = {
   secs: a => a.moving_time_sec,
   trainer: a => a.trainer,
   virtual: a => a.sport_type === 'VirtualRide' || a.type === 'VirtualRide',
+  rideType: a => RIDE_TYPE_NAMES.includes(a.sport_type) || RIDE_TYPE_NAMES.includes(a.type),
   dist: a => a.distance_km || 0,
   setDist: (a, km) => { a.distance_km = Math.round(km * 100) / 100; a.distance_from_rouvy = true },
+  setEst: (a, km) => {
+    a.distance_km = Math.round(km * 100) / 100
+    a.distance_estimated = true
+    delete a.distance_from_rouvy
+  },
+}
+
+// ── 室內里程一律走自己的估算，不用 Rouvy／Strava 的虛擬距離 ──────────────────
+// 訓練台沒有速度感測，Strava 那邊室內趟的距離是 Rouvy 虛擬路線的口徑，跟他的
+// 戶外不是同一把尺，而且方向還不固定：8/25 Rouvy 多報 5.5 km、8/27 多報 10.2 km，
+// 8/20 反而少報 7.5 km。scripts/estimate-indoor-distance.py 的等效平路估算是拿
+// 他自己的戶外平路趟校準的（2026-07-15／08-05／08-13，平均比值 1.003、單趟 ±5%），
+// 室內外換成同一把尺，年月公里數才加得起來。Strava 那條路遲早會斷，這是留下來的那條。
+//
+// 配對用日期＋移動時間（±5 分）—— intervals 與 Strava 的 id 不同，只能這樣對。
+// 沒有功率資料就估不出來（2026-04、05 那 7 趟室內），原樣不動；它們在 Strava 上
+// 本來就是 0 km，不動也不會錯。
+let _estIndex = null
+function indoorEstKm(day, sec) {
+  if (_estIndex === null) {
+    _estIndex = []
+    try {
+      const acts = JSON.parse(fs.readFileSync(ACTS_FILE, 'utf8'))
+      const est  = JSON.parse(fs.readFileSync(EST_DIST_FILE, 'utf8'))
+      for (const [aid, v] of Object.entries(acts)) {
+        const km = (est[aid] || {}).km
+        if (!km) continue
+        _estIndex.push({
+          day: String(v.start_date_local || '').slice(0, 10),
+          sec: v.moving_time || 0,
+          km,
+        })
+      }
+    } catch (e) {
+      console.log(`   ⚠️ 讀不到室內估算里程，維持 Strava 的數字：${e.message}`)
+    }
+  }
+  const hit = _estIndex.find(e => e.day === day && Math.abs(e.sec - (sec || 0)) <= 300)
+  return hit ? hit.km : null
+}
+
+// 就地改寫 list 裡室內趟的距離，回傳 {年: 公尺差} 給 YTD 對帳用。
+function applyIndoorEstimates(list, acc) {
+  const byYear = {}
+  const applied = []
+  for (const a of list) {
+    if (acc.rideType && !acc.rideType(a)) continue
+    if (!(acc.trainer(a) || acc.virtual(a))) continue
+    const day = String(acc.date(a) || '').slice(0, 10)
+    const km = indoorEstKm(day, acc.secs(a))
+    if (km === null) continue
+    const before = acc.dist(a)
+    // 數字已經對了也要跑一次 setEst：合併舊 JSON 會把過期的 distance_from_rouvy
+    // 記號帶回來，不清掉的話畫面上會同時掛「來自 Rouvy」與「估算」兩個矛盾的標記。
+    acc.setEst(a, km)
+    if (Math.abs(before - km) < 0.005) continue
+    const y = day.slice(0, 4)
+    byYear[y] = (byYear[y] || 0) + (km - before) * 1000
+    applied.push(`${day} ${before.toFixed(1)}→${km.toFixed(1)}`)
+  }
+  if (applied.length) {
+    console.log(`   📏 [${acc.tag}] 室內里程改用估算 ${applied.length} 筆（km）：${applied.join('、')}`)
+  }
+  return byYear
 }
 
 // ── Step 4：組合資料、處理 monthly_history ──
@@ -1032,6 +1100,8 @@ function buildJSON(stats, activities) {
       // 室內去重時把 Rouvy 那份的里程接過來的話，這裡留個記號，
       // 免得半年後看到「室內 56 km」不知道那個數字打哪來。
       ...(a.distance_from_rouvy ? { distance_from_rouvy: true } : {}),
+      // 室內：距離是 estimate-indoor-distance.py 估的等效平路里程，不是量測值。
+      ...(a.distance_estimated ? { distance_estimated: true } : {}),
       sport_type:     a.type,
       if_score:       ifScore,
       tss:            tss,
@@ -1114,6 +1184,14 @@ function buildJSON(stats, activities) {
   const mergedRecentRides = dropDuplicateIndoor(fetchAll
     ? recentRides
     : mergeActivityLists(recentRides, existing.recent_rides), RIDE_ACC)
+  // 合併之後再跑一次：舊 JSON 裡存的那幾筆帶的還是 Rouvy 的里程，上面那次
+  // 只改得到這回合抓下來的（預設只抓最近 100 筆活動）。
+  // 這一趟不算進 YTD —— 差額已經由 raw 那趟記過，重複記會扣兩次。但它有東西
+  // 就代表有活動掉出抓取視窗了，YTD 那邊會少算，所以印出來提醒。
+  const lateFix = applyIndoorEstimates(mergedRecentRides, RIDE_ACC)
+  if (Object.keys(lateFix).length) {
+    console.log('   ⚠️ 上面這幾筆已經掉出 Strava 抓取視窗，YTD 的距離會少算對應的差額')
+  }
   const mergedRecentRuns = fetchAll
     ? recentRuns
     : mergeActivityLists(recentRuns, existing.recent_runs)
@@ -1265,10 +1343,17 @@ function buildJSON(stats, activities) {
     console.log(`   ➕ YTD 補回 ${orphan.count} 趟只在手錶的室內（估算里程）：${orphan.days.join('、')}`)
   }
 
+  // YTD 的距離來自 Strava 的 stats API，裡面的室內趟還是 Rouvy 的虛擬距離。
+  // 上面把 recent_rides 換成估算了，這裡要補上同一筆差額，兩個數字才對得起來。
+  const estDeltaM = (applyIndoorEstimates.ytdDelta || {})[thisYear] || 0
+  if (estDeltaM) {
+    console.log(`   📏 YTD 室內里程改用估算：${(estDeltaM / 1000).toFixed(1)} km`)
+  }
+
   return {
     updated_at: new Date().toISOString(),
     summary: {
-      ytd_distance_km:      Math.round((s.ytd_ride_totals.distance + orphan.m) / 100) / 10,
+      ytd_distance_km:      Math.round((s.ytd_ride_totals.distance + orphan.m + estDeltaM) / 100) / 10,
       ytd_elevation_m:      Math.round(s.ytd_ride_totals.elevation_gain),
       ytd_rides:            s.ytd_ride_totals.count - dropY.count + orphan.count,
       ytd_moving_time_hr:   Math.round((s.ytd_ride_totals.moving_time - dropY.sec + orphan.sec) / 360) / 10,
@@ -1303,6 +1388,10 @@ async function main() {
   const token      = await getAccessToken()
   const stats      = await fetchStats(token)
   const activities = dropDuplicateIndoor(await fetchRecentActivities(token), RAW_ACC)
+  // 去重之後才換里程：dropDuplicateIndoor 會把 Rouvy 的距離接到留下的那筆上，
+  // 這裡再用估算蓋掉它。monthly_history 是從 activities 現算的，所以要改在這裡。
+  // YTD 的差額也拿這一份 —— 它跟 Strava stats API 是同一批活動，對得起來。
+  applyIndoorEstimates.ytdDelta = applyIndoorEstimates(activities, RAW_ACC)
 
   // 讀舊 JSON 供 lap 快取使用（buildJSON 內部也會讀，此處獨立讀取供 enrichRideLaps）
   let existingData = { recent_rides: [] }
