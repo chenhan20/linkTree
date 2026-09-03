@@ -1,0 +1,674 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   theme-fable51.css — STRAVA TELEMETRY · OVERDRIVE
+   strava_fable51.html 專屬的視覺層。載在頁面 inline CSS 之後（<head> 尾端），
+   選擇器一律帶 html[data-fx] 前綴，權重才壓得過 body 尾端才載的 theme-strava.css。
+
+   三個效果模式由 <html data-fx="overdrive|active|quiet"> 驅動（strava_fable51.html
+   的 <head> 開場腳本決定，控制項由 strava-fable51-fx.js 掛進 app chrome）：
+     overdrive  全部：環境層、轉場、圖表進場、事件爆發、視差
+     active     保留轉場與圖表進場，關掉持續的背景效果（星雲呼吸、火箭、掃描線）
+     quiet      只留即時操作回饋；所有裝飾性動畫落到終態
+   prefers-reduced-motion: reduce 由頁面直接壓成 quiet，這裡再用 @media 保險一次。
+
+   跟 DESIGN.md 刻意不同的兩條（lab 版放寬）：
+     1. 不再「全站只有一個持續動畫」—— 但分成背景（星雲／氣象層）、中景（掃描）、
+        前景（事件爆發）三層，高顯著的動畫不同時搶焦點。
+     2. 主要轉場可以到 480ms（DESIGN.md 是 130–200ms），操作回饋仍是即時的。
+   不動的：#FC4C02 是訊號不是文字色、語意色鎖、tabular numerals、Saira 只給 ≥26px 數字、
+   缺值不補、髮絲線分層。
+   ══════════════════════════════════════════════════════════════════════════ */
+:root{
+  --fx-sig:#FC4C02;
+  --fx-cy:#4AB4FF;        /* 爬升青（既有語意：冷色＝次要度量／FRESH 場景的主色溫） */
+  --fx-vi:#8A6BFF;        /* 極光紫（既有星場 aurora-violet 的亮階；BUILD 場景） */
+  --fx-gold:#FFD24D;      /* 時長金 */
+  --fx-crown:#FFD700;     /* 冠軍金（PR 專用） */
+  --fx-red:#FF4500;       /* 峰焰（REDLINE） */
+  --fx-green:#4AD07A;     /* 新鮮綠 */
+  --fx-ease:cubic-bezier(.2,.9,.25,1);
+  --fx-ease-out:cubic-bezier(.16,1,.3,1);
+  --fx-view-t:480ms;
+}
+
+/* ── 0. 舞台骨架 ─────────────────────────────────────────────────────────── */
+html[data-fx] .main{position:relative}
+/* Training Atmosphere：fixed 全幅畫布，星野之上、內容之下。hidden 由動效層拿掉。 */
+html[data-fx] .atm{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:0;
+  transition:opacity .9s var(--fx-ease)}
+html[data-fx] .atm.is-on{opacity:1}
+html[data-fx] .atm canvas{display:block;width:100%;height:100%}
+/* 內容區的星野略暗一階，讓氣象層的色溫接手（原版 .9） */
+html[data-fx="overdrive"] #star-canvas{opacity:.82}
+
+/* ── 1. AMBIENT LAYER（低顯著、持續）─────────────────────────────────────── */
+/* 極淡的掃描線：靜態的，不動、不閃。只在桌機且 overdrive。 */
+html[data-fx="overdrive"] body::after{
+  content:'';position:fixed;inset:0;z-index:3;pointer-events:none;
+  background:repeating-linear-gradient(180deg,rgba(255,255,255,.022) 0 1px,transparent 1px 3px);
+  mix-blend-mode:overlay;
+}
+/* app chrome 的遙測掃描：一條 1px 的亮線沿 apphead 下緣巡一圈（6s，慢到不會搶讀數） */
+html[data-fx] .apphead{position:sticky;overflow:hidden}
+html[data-fx="overdrive"] .apphead::after{
+  content:'';position:absolute;left:-20%;bottom:0;height:1px;width:20%;
+  background:linear-gradient(90deg,transparent,rgba(252,76,2,.85),rgba(255,214,150,.9),transparent);
+  animation:fxChromeScan 7s linear infinite;
+}
+@keyframes fxChromeScan{to{left:100%}}
+/* 側欄品牌帶上版本印記；導覽的現用項多一組取景框角標（鎖定目標） */
+html[data-fx] .side-brand small::after{content:' · OVERDRIVE';color:var(--fx-cy);opacity:.8}
+html[data-fx] .nav-i{position:relative}
+html[data-fx] .nav-i[aria-current="page"]{
+  background:linear-gradient(90deg,rgba(252,76,2,.13),rgba(252,76,2,.04));
+  box-shadow:inset 2px 0 0 rgba(252,76,2,.7);
+}
+html[data-fx] .nav-i[aria-current="page"]::after{
+  content:'';position:absolute;right:6px;top:50%;width:6px;height:6px;margin-top:-3px;
+  border:1px solid rgba(252,76,2,.55);border-radius:50%;pointer-events:none;
+}
+html[data-fx="overdrive"] .nav-i[aria-current="page"]::after{animation:fxLockPulse 2.4s ease-in-out infinite}
+@keyframes fxLockPulse{0%,100%{transform:scale(1);opacity:.55}50%{transform:scale(1.6);opacity:1}}
+/* 狀態儀表（側欄）：一圈很淡的內光，表示它是「熱的」 */
+html[data-fx] .rdy{border-radius:10px;box-shadow:inset 0 0 26px rgba(252,76,2,.05)}
+/* 氣象列的場景色點 */
+html[data-fx] .atm-scene[data-scene="fresh"] i{background:var(--fx-cy);box-shadow:0 0 8px var(--fx-cy)}
+html[data-fx] .atm-scene[data-scene="build"] i{background:var(--fx-vi);box-shadow:0 0 8px var(--fx-vi)}
+html[data-fx] .atm-scene[data-scene="redline"] i{background:var(--fx-red);box-shadow:0 0 8px var(--fx-red)}
+html[data-fx] .atm-scene[data-scene="nosignal"] i{background:transparent;border:1px solid var(--ink-3);box-shadow:none}
+html[data-fx="overdrive"] .atm-scene[data-scene="redline"] i{animation:fxRedBlink 1.1s steps(2) infinite}
+@keyframes fxRedBlink{50%{opacity:.35}}
+html[data-fx] .atm-scene.is-sim b::before{content:'SIMULATION · ';color:var(--fx-gold)}
+/* SCENE LAB（動效層掛進 #atm-lab）*/
+html[data-fx] .atm-lab{display:inline-flex;gap:4px;align-items:center;margin-left:auto}
+html[data-fx] .atm-lab u{text-decoration:none;font-size:8px;letter-spacing:1.8px;color:var(--ink-3);margin-right:4px}
+html[data-fx] .atm-lab button{
+  font:700 8.5px/1 var(--f-ui);letter-spacing:1.4px;text-transform:uppercase;
+  padding:6px 8px;border-radius:4px;border:1px solid var(--hair-2);background:transparent;
+  color:var(--ink-3);cursor:pointer;min-height:26px;transition:color .13s,border-color .13s,background .13s;
+}
+html[data-fx] .atm-lab button:hover{color:var(--ink-1);border-color:rgba(255,255,255,.3)}
+html[data-fx] .atm-lab button[aria-pressed="true"]{color:var(--fx-gold);border-color:rgba(255,210,77,.6);background:rgba(255,210,77,.08)}
+html[data-fx] .atm-lab button.live[aria-pressed="true"]{color:var(--fx-sig);border-color:rgba(252,76,2,.6);background:rgba(252,76,2,.08)}
+html[data-fx] .atm-lab button:focus-visible{outline:2px solid var(--fx-sig);outline-offset:1px}
+
+/* ── 2. 效果模式控制（app chrome）──────────────────────────────────────── */
+html[data-fx] .fxm{display:inline-flex;align-items:center;gap:2px;padding:2px;margin-left:8px;
+  border:1px solid var(--hair-2);border-radius:6px;background:rgba(255,255,255,.02);flex:none}
+html[data-fx] .fxm-b{
+  font:700 8.5px/1 var(--f-ui);letter-spacing:1.6px;text-transform:uppercase;
+  padding:6px 8px;border:0;border-radius:4px;background:transparent;color:var(--ink-3);
+  cursor:pointer;min-height:24px;transition:color .13s,background .13s;white-space:nowrap;
+}
+html[data-fx] .fxm-b:hover{color:var(--ink-1)}
+html[data-fx] .fxm-b[aria-pressed="true"]{color:var(--fx-sig);background:rgba(252,76,2,.14)}
+html[data-fx] .fxm-b:focus-visible{outline:2px solid var(--fx-sig);outline-offset:1px}
+html[data-fx] .fxm.is-locked .fxm-b{cursor:not-allowed;opacity:.6}
+html[data-fx] .fxm-lock{font:600 8px/1 var(--f-ui);letter-spacing:1px;color:var(--ink-3);padding:0 6px;white-space:nowrap}
+/* 手機：一顆 32px 的循環鈕，顯示現在的模式 */
+html[data-fx] .fxm-cycle{display:none}
+@media(max-width:767px){
+  html[data-fx] .fxm{padding:0;border:0;background:transparent;margin-left:4px}
+  html[data-fx] .fxm-b,html[data-fx] .fxm-lock{display:none}
+  html[data-fx] .fxm-cycle{
+    position:relative;display:inline-flex;align-items:center;justify-content:center;gap:4px;
+    min-width:44px;height:40px;padding:0 9px;border-radius:6px;
+    border:1px solid rgba(252,76,2,.4);background:rgba(252,76,2,.08);
+    font:700 8px/1 var(--f-ui);letter-spacing:1.2px;color:var(--fx-sig);cursor:pointer;white-space:nowrap;
+  }
+  html[data-fx] .fxm-cycle i{width:5px;height:5px;border-radius:50%;background:currentColor;box-shadow:0 0 6px currentColor}
+  html[data-fx="active"] .fxm-cycle{color:var(--fx-gold);border-color:rgba(255,210,77,.4);background:rgba(255,210,77,.08)}
+  html[data-fx="quiet"] .fxm-cycle{color:var(--ink-3);border-color:var(--hair-2);background:transparent}
+  html[data-fx] .fxm-cycle:focus-visible{outline:2px solid var(--fx-sig);outline-offset:1px}
+  /* 手機的 apphead 本來就滿：更新時間縮一階、允許折成兩行（42px 高的 chrome 放得下），
+     資料新鮮度一個字都不掉，也不會把 chrome 撐出橫向捲軸 */
+  html[data-fx] .ah-r{min-width:0;flex:0 1 auto;white-space:normal;text-align:right;line-height:1.25;
+    font-size:8px;letter-spacing:.6px;max-width:128px}
+  html[data-fx] .atm-lab button{font-size:8px;padding:8px 7px;letter-spacing:1px}
+}
+
+/* ── 3. NAVIGATION LAYER：艙室轉位 ───────────────────────────────────────── */
+/* 換 view 時掃過主區的一道光帶（方向＝導覽列上的左右）。動效層生成、跑完自刪。 */
+html[data-fx] .fx-sweep-wrap{position:absolute;inset:0;overflow:hidden;z-index:8;pointer-events:none}
+html[data-fx] .fx-sweep{
+  position:absolute;top:0;bottom:0;left:0;width:38%;pointer-events:none;
+  background:linear-gradient(90deg,transparent,rgba(252,76,2,.07) 40%,rgba(255,214,150,.13) 50%,rgba(252,76,2,.07) 60%,transparent);
+  mix-blend-mode:screen;
+}
+/* view 標題：進場時多一條從左描出的底線光（疊在既有的量尺上） */
+html[data-fx] .view-h{overflow:visible}
+html[data-fx] .view-h b{text-shadow:0 0 22px rgba(252,76,2,.18)}
+html[data-fx] .view-h.fx-in::before{
+  content:'';position:absolute;left:0;bottom:-1px;height:1px;width:100%;
+  background:linear-gradient(90deg,rgba(255,214,150,.95),rgba(252,76,2,.6) 40%,transparent 70%);
+  transform:scaleX(0);transform-origin:left;
+  animation:fxUnderline var(--fx-view-t) var(--fx-ease-out) forwards;
+}
+@keyframes fxUnderline{to{transform:scaleX(1)}}
+/* 手機底部導覽：現用籤的方向性閃光 */
+html[data-fx] .tab-i{position:relative}
+html[data-fx] .tab-i.fx-hit::after{
+  content:'';position:absolute;left:12px;right:12px;bottom:3px;height:2px;border-radius:1px;
+  background:linear-gradient(90deg,transparent,#FC4C02,transparent);
+  animation:fxTabFlash .5s var(--fx-ease-out) forwards;
+}
+@keyframes fxTabFlash{from{transform:scaleX(.2);opacity:0}40%{opacity:1}to{transform:scaleX(1);opacity:0}}
+
+/* ── 4. INTERACTION LAYER ──────────────────────────────────────────────── */
+/* 點按漣漪：動效層把一顆 <i class="fx-ripple"> 塞進被點的列／籤，動畫結束就移除 */
+html[data-fx] .fx-rip-host{position:relative;overflow:hidden}
+html[data-fx] .fx-ripple{
+  position:absolute;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,214,150,.55),rgba(252,76,2,.28) 45%,transparent 70%);
+  pointer-events:none;transform:scale(0);animation:fxRipple .55s var(--fx-ease-out) forwards;
+}
+@keyframes fxRipple{to{transform:scale(18);opacity:0}}
+/* 抽屜：來源元素短暫發光，抽屜開啟時一道由上而下的掃描（shared-origin 感） */
+html[data-fx] .fx-origin{box-shadow:inset 0 0 0 1px rgba(252,76,2,.55),0 0 18px rgba(252,76,2,.25)!important;
+  transition:box-shadow .5s}
+html[data-fx] .drawer.fx-arrive .dw-body::before{
+  content:'';position:absolute;left:0;right:0;top:0;height:60px;pointer-events:none;
+  background:linear-gradient(180deg,rgba(252,76,2,.16),transparent);
+  animation:fxDrawerScan .6s var(--fx-ease-out) forwards;
+}
+html[data-fx] .drawer .dw-body{position:relative}
+@keyframes fxDrawerScan{from{transform:translateY(-100%)}to{transform:translateY(600px);opacity:0}}
+/* 圖表游標帶要有一點物理回應（原版是瞬移） */
+html[data-fx="overdrive"] .hv-cursor,html[data-fx="active"] .hv-cursor{transition:left .12s var(--fx-ease),width .12s var(--fx-ease)}
+html[data-fx] .pcv-dot{transition:transform .16s var(--fx-ease),box-shadow .16s}
+html[data-fx] .pcv-dot:hover,html[data-fx] .pcv-dot:focus-visible{box-shadow:0 0 0 2px rgba(10,4,8,.9),0 0 18px rgba(252,76,2,.9)}
+html[data-fx] .pcw-b:focus-visible::after{background:rgba(255,255,255,.06);outline:1px solid rgba(252,76,2,.6)}
+html[data-fx] .row,html[data-fx] .ses,html[data-fx] .il-row{transition:background .13s,box-shadow .2s}
+html[data-fx] a.row:hover,html[data-fx] button.row:hover,html[data-fx] .ses:hover{box-shadow:inset 3px 0 0 rgba(252,76,2,.35)}
+/* theme-strava.css 會把活動列 hover 抬 2px 並上橘框（那是舊卡片時代的規則）：列不抬升，改成訊號光 */
+html[data-fx] .activity-card:hover{transform:none;border-color:var(--hair)!important;
+  box-shadow:inset 3px 0 0 rgba(252,76,2,.35),0 0 24px -12px rgba(252,76,2,.35)}
+
+/* ── 5. EVENT LAYER：只有真正的事件才有最高強度 ──────────────────────── */
+html[data-fx] .fx-burst{position:fixed;inset:0;z-index:70;pointer-events:none}
+html[data-fx] .fx-flash{
+  position:absolute;border-radius:14px;pointer-events:none;
+  box-shadow:0 0 0 0 rgba(255,215,0,.9),0 0 60px rgba(255,215,0,.5);
+  animation:fxFlash 1.1s var(--fx-ease-out) forwards;
+}
+@keyframes fxFlash{0%{opacity:0}12%{opacity:1;box-shadow:0 0 0 2px rgba(255,215,0,.95),0 0 90px rgba(255,215,0,.75)}100%{opacity:0;box-shadow:0 0 0 12px rgba(255,215,0,0),0 0 0 rgba(255,215,0,0)}}
+/* 下一堂就是今天：鎖定框脈衝（Overview 的 NEXT SESSION 格 ＋ Plan 的 .nx） */
+html[data-fx="overdrive"] .fx-today,html[data-fx="active"] .fx-today{position:relative}
+html[data-fx="overdrive"] .fx-today::before,html[data-fx="active"] .fx-today::before{
+  content:'';position:absolute;inset:-4px;border:1px solid rgba(252,76,2,.45);border-radius:10px;
+  pointer-events:none;animation:fxToday 2.6s ease-in-out infinite;
+}
+@keyframes fxToday{0%,100%{opacity:.35;transform:scale(1)}50%{opacity:1;transform:scale(1.012)}}
+/* PR 日的日期列：一道高能掃光（只在真的 PR 日出現的 .td-pr 上） */
+html[data-fx="overdrive"] .td-pr,html[data-fx="active"] .td-pr{position:relative;overflow:hidden;isolation:isolate}
+html[data-fx="overdrive"] .td-pr::after,html[data-fx="active"] .td-pr::after{
+  content:'';position:absolute;inset:0;z-index:-1;
+  background:linear-gradient(105deg,transparent 30%,rgba(255,215,0,.35) 50%,transparent 70%);
+  transform:translateX(-120%);animation:fxPrSweep 3.6s ease-in-out 1s infinite;
+}
+@keyframes fxPrSweep{0%{transform:translateX(-120%)}45%,100%{transform:translateX(120%)}}
+
+/* ── 6. 各 view 的 signature moment ────────────────────────────────────── */
+/* Overview · Flight Deck：本週讀數像點火前的主儀表，依序亮起 */
+html[data-fx] .meter{position:relative}
+html[data-fx] .meter.fx-ignite .v{animation:fxIgnite .7s var(--fx-ease-out) both;animation-delay:calc(var(--i,0)*90ms)}
+@keyframes fxIgnite{0%{opacity:0;text-shadow:0 0 0 rgba(252,76,2,0);transform:translateY(4px)}55%{text-shadow:0 0 24px rgba(252,76,2,.85)}100%{opacity:1;transform:none;text-shadow:0 0 12px rgba(252,76,2,.22)}}
+html[data-fx] .rider-card{box-shadow:0 18px 52px rgba(0,0,0,.5),0 0 80px -30px rgba(252,76,2,.45)}
+html[data-fx="overdrive"] .board-hero.lit .board-num{text-shadow:0 0 40px rgba(252,76,2,.55),0 0 90px rgba(252,76,2,.22)}
+
+/* Plan · Trajectory Room：課表列依時間方向進場，下一堂是鎖定目標 */
+html[data-fx] .ses.fx-in{animation:fxSes .42s var(--fx-ease-out) both;animation-delay:calc(var(--i,0)*24ms)}
+@keyframes fxSes{from{opacity:0;transform:translateX(-14px)}to{opacity:1;transform:none}}
+html[data-fx] .ses--next{box-shadow:inset 0 0 22px rgba(252,76,2,.055),0 0 30px -14px rgba(252,76,2,.6)}
+html[data-fx] .nx{box-shadow:inset 0 0 30px rgba(252,76,2,.05),0 0 60px -26px rgba(252,76,2,.7)}
+
+/* Log · Black Box：日期像飛行紀錄解碼；分段展開像封包解壓 */
+html[data-fx] .timeline-date.fx-decode{color:var(--ink-2);text-shadow:0 0 10px rgba(252,76,2,.35)}
+html[data-fx] .lap-strip.fx-unpack{animation:fxUnpack .38s var(--fx-ease-out) both;animation-delay:calc(var(--i,0)*45ms)}
+@keyframes fxUnpack{from{opacity:0;transform:translateY(-6px) scaleY(.6);transform-origin:top}to{opacity:1;transform:none}}
+
+/* ITT · Terrain Chamber：地形載入測量艙時一道掃描由上而下；重播中舞台有遙測邊光 */
+html[data-fx] .tsv-stage{overflow:hidden}
+html[data-fx] .tsv.fx-loaded .tsv-stage::after{
+  content:'';position:absolute;left:0;right:0;top:-8%;height:8%;z-index:4;pointer-events:none;
+  background:linear-gradient(180deg,transparent,rgba(232,124,26,.28),rgba(255,236,200,.5),transparent);
+  animation:fxTerrainScan 1.6s var(--fx-ease) forwards;
+}
+@keyframes fxTerrainScan{to{top:108%;opacity:0}}
+html[data-fx] .tsv.playing .tsv-stage{box-shadow:inset 0 0 0 1px rgba(252,76,2,.55),inset 0 0 40px rgba(252,76,2,.12)}
+html[data-fx="overdrive"] .tsv.playing .tsv-live .nu{text-shadow:0 0 14px rgba(252,76,2,.5)}
+html[data-fx] .tsv-prog{box-shadow:0 0 12px var(--ac,#e87c1a),0 0 30px rgba(232,124,26,.4)}
+
+/* Playbook · Pit Wall：問題 → 證據 → 處方 → 中止 的因果鏈 */
+html[data-fx] .pb-climb{position:relative}
+html[data-fx] .pb-sub{position:relative}
+html[data-fx] .pb-sub.fx-in::after{
+  content:'';position:absolute;left:0;bottom:-1px;height:1px;width:100%;
+  background:linear-gradient(90deg,rgba(252,76,2,.9),transparent);transform:scaleX(0);transform-origin:left;
+  animation:fxUnderline .6s var(--fx-ease-out) forwards;animation-delay:calc(var(--i,0)*160ms);
+}
+html[data-fx] .pb-rule.fx-in,html[data-fx] .pb-flag.fx-in{animation:fxSes .5s var(--fx-ease-out) both;animation-delay:calc(var(--i,0)*90ms)}
+html[data-fx] .pb-rule .k::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:6px;
+  background:#FC4C02;box-shadow:0 0 8px rgba(252,76,2,.8);vertical-align:1px}
+html[data-fx] .pb-flag.stop .k::before{content:'';display:inline-block;width:6px;height:6px;margin-right:6px;background:#FF6A6A;vertical-align:1px}
+
+/* Atlas · Orbital Survey：鏡頭飛行時的鎖定框與訊號環 */
+html[data-fx] .at-stage{isolation:isolate}
+html[data-fx] .at-lock{position:absolute;left:50%;top:50%;width:64px;height:64px;margin:-32px 0 0 -32px;
+  pointer-events:none;z-index:3;opacity:0}
+html[data-fx] .at-lock.on{animation:fxLock 1.4s var(--fx-ease-out) forwards}
+html[data-fx] .at-lock::before,html[data-fx] .at-lock::after{content:'';position:absolute;inset:0;border-radius:50%;
+  border:1px solid rgba(252,76,2,.75)}
+html[data-fx] .at-lock::after{animation:fxLockRing 1.4s var(--fx-ease-out) forwards}
+@keyframes fxLock{0%{opacity:0;transform:scale(2.6)}30%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1)}}
+@keyframes fxLockRing{from{transform:scale(1);opacity:.9}to{transform:scale(3.2);opacity:0}}
+html[data-fx] .at-chip.is-on{box-shadow:0 0 16px rgba(252,76,2,.45)}
+
+/* Trends · Engine Observatory */
+html[data-fx] .pcv-svg .c-line{filter:drop-shadow(0 0 4px rgba(252,76,2,.55))}
+html[data-fx] .race-svg .z-now{filter:drop-shadow(0 0 4px rgba(252,76,2,.45))}
+
+/* Harvest · Growth Chamber：投入先長、產出延後（動效層用 WAAPI 沿 x 軸排時間）*/
+html[data-fx] .hv-seed{box-shadow:inset 0 0 30px rgba(252,76,2,.08)}
+html[data-fx] .hv-m{box-shadow:0 0 6px rgba(255,215,0,.35),0 0 14px rgba(255,215,0,.18)}
+html[data-fx] .hd-arcs{position:absolute;left:0;right:0;top:0;bottom:26px;z-index:3;pointer-events:none;overflow:visible}
+html[data-fx] .hd-arcs path{fill:none;stroke:rgba(255,215,0,.42);stroke-width:1;vector-effect:non-scaling-stroke;stroke-dasharray:3 4}
+html[data-fx] .hd-arcs path.is-far{stroke:rgba(255,255,255,.18)}
+
+/* Body · Biosignal Lab */
+html[data-fx] .wl-mtab.fx-in{animation:fxSes .4s var(--fx-ease-out) both;animation-delay:calc(var(--i,0)*40ms)}
+html[data-fx] .wl-chart .wl-avg{filter:drop-shadow(0 0 3px rgba(255,176,32,.5))}
+
+/* ── 7. 新視覺化 ───────────────────────────────────────────────────────── */
+/* 共用：宿主 block 的標題沿用 .section-title；讀數列沿用 .row 語言 */
+html[data-fx] .fxv-read{min-height:34px;margin-top:10px;padding-top:9px;border-top:1px solid var(--hair);
+  font-size:11.5px;line-height:1.7;color:var(--ink-2);font-variant-numeric:tabular-nums}
+html[data-fx] .fxv-read b{font-family:var(--f-num);font-weight:800;font-size:17px;color:var(--ink-1);letter-spacing:-.2px}
+html[data-fx] .fxv-read em{font-style:normal;color:var(--ink-3)}
+html[data-fx] .fxv-note{margin:10px 0 0;font-size:11px;line-height:1.7;color:var(--ink-3);max-width:70ch}
+html[data-fx] .fxv-note b{color:var(--ink-2)}
+html[data-fx] .fxv-nil{font-size:11px;letter-spacing:1.2px;color:var(--ink-3);padding:10px 0}
+
+/* 7a · Readiness Reactor（Overview） */
+html[data-fx] .rx{display:flex;gap:22px;align-items:center;flex-wrap:wrap}
+html[data-fx] .rx-core{flex:0 0 270px;width:270px;height:270px;position:relative}
+html[data-fx] .rx-core svg{width:100%;height:100%;display:block;overflow:visible}
+html[data-fx] .rx-core .r-bg{fill:none;stroke:rgba(255,255,255,.07);stroke-width:7}
+html[data-fx] .rx-core .r-ctl{fill:none;stroke:#FC4C02;stroke-width:7;stroke-linecap:round;
+  filter:drop-shadow(0 0 6px rgba(252,76,2,.7))}
+html[data-fx] .rx-core .r-atl{fill:none;stroke:rgba(255,255,255,.55);stroke-width:4;stroke-linecap:round;stroke-dasharray:3 3}
+html[data-fx] .rx-core .r-atl.is-over{stroke:#FFB020;stroke-dasharray:none;filter:drop-shadow(0 0 6px rgba(255,176,32,.7))}
+html[data-fx] .rx-core .r-tick{stroke:rgba(255,255,255,.14);stroke-width:1}
+html[data-fx] .rx-core .r-core{transform-origin:170px 170px}
+html[data-fx="overdrive"] .rx-core .r-core,html[data-fx="active"] .rx-core .r-core{animation:fxCore var(--rx-period,2s) ease-in-out infinite}
+@keyframes fxCore{0%,100%{transform:scale(1);opacity:.85}50%{transform:scale(1.06);opacity:1}}
+html[data-fx] .rx-core .r-halo{transform-origin:170px 170px;opacity:.55}
+html[data-fx="overdrive"] .rx-core .r-halo{animation:fxHalo calc(var(--rx-period,2s)*2) ease-in-out infinite}
+@keyframes fxHalo{0%,100%{transform:scale(.92);opacity:.35}50%{transform:scale(1.08);opacity:.7}}
+html[data-fx] .rx-core .r-sat{fill:none;stroke-width:3;stroke-linecap:round}
+html[data-fx] .rx-core .r-satbg{fill:none;stroke:rgba(255,255,255,.08);stroke-width:3}
+html[data-fx] .rx-core .r-lab{fill:var(--ink-3);font:700 8.5px var(--f-ui);letter-spacing:1.6px;text-transform:uppercase}
+html[data-fx] .rx-core .r-num{fill:var(--ink-1);font-family:var(--f-num);font-weight:800;font-size:44px;letter-spacing:-1px}
+html[data-fx] .rx-core .r-num.is-na{font-family:var(--f-ui);font-size:20px;fill:var(--ink-3)}
+html[data-fx] .rx-core .r-sub{fill:var(--ink-3);font:600 9px var(--f-ui);letter-spacing:1.4px}
+html[data-fx] .rx-core .r-needle{stroke:#fff;stroke-width:2;stroke-linecap:round;filter:drop-shadow(0 0 4px rgba(255,255,255,.8))}
+html[data-fx] .rx-core .r-wave{fill:none;stroke:rgba(252,76,2,.7);stroke-width:1.5;transform-origin:170px 170px;opacity:0}
+html[data-fx] .rx-core .r-wave.go{animation:fxWave 1.2s var(--fx-ease-out) forwards}
+@keyframes fxWave{from{transform:scale(.4);opacity:.9}to{transform:scale(1.35);opacity:0}}
+html[data-fx] .rx-side{flex:1 1 240px;min-width:220px}
+html[data-fx] .rx-rows{border-top:1px solid var(--hair)}
+html[data-fx] .rx-row{display:grid;grid-template-columns:5.2rem minmax(0,1fr) auto;gap:0 12px;align-items:baseline;
+  padding:8px 4px;border-bottom:1px solid var(--hair);font-size:11px;color:var(--ink-3)}
+html[data-fx] .rx-row .k{font-size:9px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;white-space:nowrap}
+html[data-fx] .rx-row .v{font-family:var(--f-num);font-size:19px;font-weight:800;color:var(--ink-1);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+html[data-fx] .rx-row .v small{font-family:var(--f-ui);font-size:9px;font-weight:700;color:var(--ink-3);margin-left:3px;letter-spacing:.6px}
+html[data-fx] .rx-row .v.is-na{font-family:var(--f-ui);font-size:12px;color:var(--ink-3)}
+html[data-fx] .rx-row .s{min-width:0;font-size:10.5px;line-height:1.5}
+html[data-fx] .rx-row.is-good .v{color:var(--fx-green)}
+html[data-fx] .rx-row.is-warn .v{color:#FFB020}
+html[data-fx] .rx-row.is-bad .v{color:#FF6A6A}
+@media(max-width:600px){html[data-fx] .rx-core{flex-basis:240px;width:240px;height:240px;margin:0 auto}}
+
+/* 7b · Training Trajectory（Plan） */
+html[data-fx] .tj{position:relative;padding:6px 0 0}
+html[data-fx] .tj-plot{position:relative;height:210px}
+html[data-fx] .tj-svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+html[data-fx] .tj-svg path,html[data-fx] .tj-svg line{vector-effect:non-scaling-stroke}
+html[data-fx] .tj-svg .t-grid{stroke:var(--hair);stroke-width:1}
+html[data-fx] .tj-svg .t-plan{fill:none;stroke:rgba(244,240,234,.42);stroke-width:1.4;stroke-dasharray:5 4}
+html[data-fx] .tj-svg .t-planf{fill:rgba(255,255,255,.03)}
+html[data-fx] .tj-svg .t-act{fill:none;stroke:#FC4C02;stroke-width:2.2;stroke-linejoin:round;filter:drop-shadow(0 0 4px rgba(252,76,2,.6))}
+html[data-fx] .tj-svg .t-gap{fill:rgba(255,106,106,.14)}
+html[data-fx] .tj-svg .t-gap.is-ahead{fill:rgba(95,208,96,.14)}
+html[data-fx] .tj-svg .t-now{stroke:rgba(255,255,255,.3);stroke-width:1}
+html[data-fx] .tj-svg .t-fut{fill:rgba(255,255,255,.022)}
+html[data-fx] .tj-node{position:absolute;width:30px;height:30px;margin:-15px 0 0 -15px;padding:0;border:0;
+  background:transparent;cursor:pointer;border-radius:50%;-webkit-tap-highlight-color:transparent}
+html[data-fx] .tj-node::before{content:'';position:absolute;left:50%;top:50%;width:9px;height:9px;margin:-4.5px 0 0 -4.5px;
+  border-radius:50%;background:rgba(244,240,234,.35);border:1.5px solid rgba(244,240,234,.6);box-sizing:border-box}
+html[data-fx] .tj-node.is-ok::before{background:#5FD060;border-color:#5FD060;box-shadow:0 0 8px rgba(95,208,96,.6)}
+html[data-fx] .tj-node.is-over::before{background:#5FD060;border-color:#fff;box-shadow:0 0 10px rgba(95,208,96,.9)}
+html[data-fx] .tj-node.is-under::before{background:#FF6A6A;border-color:#FF6A6A}
+html[data-fx] .tj-node.is-missed::before{background:transparent;border-color:rgba(255,106,106,.6);border-style:dashed}
+html[data-fx] .tj-node.is-sub::before{background:transparent;border-color:#FFB020;border-style:dashed}
+html[data-fx] .tj-node.is-sched::before{background:transparent;border-color:rgba(244,240,234,.45)}
+html[data-fx] .tj-node.is-sup::before{width:5px;height:5px;margin:-2.5px 0 0 -2.5px;background:transparent;border:1px dashed rgba(252,76,2,.5)}
+html[data-fx] .tj-node.is-next::before{background:#FC4C02;border-color:#FC4C02;box-shadow:0 0 12px rgba(252,76,2,.9)}
+html[data-fx] .tj-node.is-next::after{content:'';position:absolute;inset:2px;border-radius:50%;border:1px solid rgba(252,76,2,.7)}
+html[data-fx="overdrive"] .tj-node.is-next::after,html[data-fx="active"] .tj-node.is-next::after{animation:fxReticle 2s ease-in-out infinite}
+@keyframes fxReticle{0%,100%{transform:scale(1);opacity:.9}50%{transform:scale(1.35);opacity:.3}}
+html[data-fx] .tj-node:focus-visible{outline:2px solid var(--fx-sig);outline-offset:-4px}
+html[data-fx] .tj-node.is-hot::before{transform:scale(1.5)}
+html[data-fx] .tj-lab{position:absolute;font-size:9px;letter-spacing:.6px;color:var(--ink-3);white-space:nowrap;pointer-events:none;font-variant-numeric:tabular-nums}
+html[data-fx] .tj-lab.is-hi{color:var(--ink-2)}
+html[data-fx] .tj-yl{position:absolute;right:calc(100% + 6px);transform:translateY(-50%);font-size:9px;color:var(--ink-3);white-space:nowrap;font-variant-numeric:tabular-nums}
+html[data-fx] .tj-wrap{padding-left:36px}
+html[data-fx] .tj-leg{display:flex;flex-wrap:wrap;gap:5px 14px;margin-top:8px;font-size:10px;color:var(--ink-3)}
+html[data-fx] .tj-leg span{display:inline-flex;align-items:center;gap:6px}
+html[data-fx] .tj-leg i{display:inline-block;width:9px;height:9px;border-radius:50%;box-sizing:border-box}
+@media(max-width:600px){html[data-fx] .tj-plot{height:180px}html[data-fx] .tj-wrap{padding-left:30px}}
+
+/* 7c · Power Time Slices（Trends） */
+html[data-fx] .ps{padding-left:36px}
+html[data-fx] .ps-plot{position:relative;height:250px}
+html[data-fx] .ps-svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+html[data-fx] .ps-svg path,html[data-fx] .ps-svg line{vector-effect:non-scaling-stroke}
+html[data-fx] .ps-svg .s-grid{stroke:var(--hair);stroke-width:1}
+html[data-fx] .ps-svg .s-fill{stroke:none}
+html[data-fx] .ps-svg .s-line{fill:none;stroke-width:1.8;stroke-linejoin:round;stroke-linecap:round}
+html[data-fx] .ps-svg .s-all .s-fill{fill:rgba(255,215,0,.08)}
+html[data-fx] .ps-svg .s-all .s-line{stroke:rgba(255,215,0,.85);filter:drop-shadow(0 0 4px rgba(255,215,0,.45))}
+html[data-fx] .ps-svg .s-prev .s-fill{fill:rgba(244,240,234,.05)}
+html[data-fx] .ps-svg .s-prev .s-line{stroke:rgba(244,240,234,.45);stroke-dasharray:5 4}
+html[data-fx] .ps-svg .s-now .s-fill{fill:rgba(252,76,2,.12)}
+html[data-fx] .ps-svg .s-now .s-line{stroke:#FC4C02;stroke-width:2.2;filter:drop-shadow(0 0 5px rgba(252,76,2,.6))}
+html[data-fx] .ps-col{position:absolute;top:0;bottom:0;width:0;border-left:1px dashed rgba(255,255,255,.22);pointer-events:none;opacity:0;transition:opacity .13s}
+html[data-fx] .ps-col.on{opacity:1}
+html[data-fx] .ps-hit{position:absolute;inset:0;display:grid}
+html[data-fx] .ps-hit button{border:0;background:transparent;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+html[data-fx] .ps-hit button:focus-visible{outline:1px solid rgba(252,76,2,.7);outline-offset:-1px;border-radius:3px}
+html[data-fx] .ps-dot{position:absolute;width:7px;height:7px;margin:-3.5px 0 0 -3.5px;border-radius:50%;pointer-events:none;box-shadow:0 0 0 2px rgba(10,4,8,.9)}
+html[data-fx] .ps-yl{position:absolute;right:calc(100% + 6px);transform:translateY(-50%);font-size:9px;color:var(--ink-3);white-space:nowrap;font-variant-numeric:tabular-nums;pointer-events:none}
+html[data-fx] .ps-ax{position:relative;height:15px;margin-top:5px}
+html[data-fx] .ps-ax span{position:absolute;transform:translateX(-50%);font-size:9px;color:var(--ink-3);white-space:nowrap}
+html[data-fx] .ps-leg{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:9px;font-size:10.5px;color:var(--ink-3)}
+html[data-fx] .ps-leg span{display:flex;align-items:center;gap:6px}
+html[data-fx] .ps-leg i{width:15px;height:0;border-top:2px solid currentColor;flex-shrink:0}
+@media(max-width:600px){html[data-fx] .ps{padding-left:30px}html[data-fx] .ps-plot{height:200px}}
+
+/* 7d · Harvest Delay Field（Harvest） */
+html[data-fx] .hd-bars{display:flex;gap:8px;align-items:flex-end;height:96px;margin-top:6px}
+html[data-fx] .hd-b{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;gap:5px;min-width:0}
+html[data-fx] .hd-b i{display:block;width:70%;border-radius:2px 2px 0 0;background:linear-gradient(180deg,#FFD700,#a8830a);
+  box-shadow:0 0 12px rgba(255,215,0,.25);transform-origin:bottom}
+html[data-fx] .hd-b.is-none i{background:rgba(244,240,234,.22);box-shadow:none}
+html[data-fx] .hd-b b{font-family:var(--f-num);font-size:17px;font-weight:800;color:var(--ink-1);font-variant-numeric:tabular-nums;line-height:1}
+html[data-fx] .hd-b.is-none b{color:var(--ink-3)}
+html[data-fx] .hd-ax{display:flex;gap:8px;margin-top:5px}
+html[data-fx] .hd-ax span{flex:1;text-align:center;font-size:9px;letter-spacing:.4px;color:var(--ink-3);white-space:nowrap}
+html[data-fx] .hd-ax span em{display:block;font-style:normal;font-size:8px;color:rgba(255,215,0,.7)}
+
+/* 7e · Biometric Constellation（Body） */
+html[data-fx] .bc{display:flex;gap:22px;align-items:center;flex-wrap:wrap}
+html[data-fx] .bc-map{flex:1 1 300px;max-width:400px;min-width:250px;position:relative}
+html[data-fx] .bc-map svg{display:block;width:100%;height:auto;overflow:visible}
+html[data-fx] .bc-map .b-ring{fill:none;stroke:var(--hair);stroke-width:1}
+html[data-fx] .bc-map .b-spoke{stroke:var(--hair);stroke-width:1}
+html[data-fx] .bc-map .b-braid{fill:none;stroke:rgba(255,176,32,.85);stroke-width:1;stroke-linejoin:round}
+html[data-fx] .bc-map .b-today{fill:rgba(255,176,32,.14);stroke:#FFB020;stroke-width:1.8;stroke-linejoin:round;filter:drop-shadow(0 0 5px rgba(255,176,32,.5))}
+html[data-fx] .bc-map .b-band{fill:rgba(255,255,255,.04);stroke:rgba(255,255,255,.12);stroke-width:1;stroke-dasharray:3 3}
+html[data-fx] .bc-map .b-node{stroke-width:1.5}
+html[data-fx] .bc-map .b-node.is-good{fill:#4AD07A;stroke:#4AD07A;filter:drop-shadow(0 0 6px rgba(74,208,122,.7))}
+html[data-fx] .bc-map .b-node.is-mid{fill:#FFB020;stroke:#FFB020;filter:drop-shadow(0 0 6px rgba(255,176,32,.6))}
+html[data-fx] .bc-map .b-node.is-bad{fill:#FF6A6A;stroke:#FF6A6A;filter:drop-shadow(0 0 6px rgba(255,106,106,.7))}
+html[data-fx] .bc-map .b-node.is-na{fill:transparent;stroke:rgba(244,240,234,.4);stroke-dasharray:2 2}
+html[data-fx] .bc-map .b-ax{fill:var(--ink-2);font-size:12px;letter-spacing:.4px}
+html[data-fx] .bc-map .b-axv{fill:var(--ink-3);font-size:10px;font-family:var(--f-num);font-weight:800}
+html[data-fx] .bc-map .b-axv.is-na{font-family:var(--f-ui);font-weight:600;font-size:8.5px;letter-spacing:.6px}
+html[data-fx] .bc-side{flex:1 1 220px;min-width:200px}
+html[data-fx] .bc-row{display:grid;grid-template-columns:4.6rem auto minmax(0,1fr);gap:0 10px;align-items:baseline;
+  padding:7px 0;border-bottom:1px solid var(--hair);font-size:11px;color:var(--ink-3)}
+html[data-fx] .bc-row .k{font-size:9.5px;letter-spacing:1px;color:var(--ink-2);white-space:nowrap}
+html[data-fx] .bc-row .v{font-family:var(--f-num);font-size:17px;font-weight:800;color:var(--ink-1);font-variant-numeric:tabular-nums;white-space:nowrap}
+html[data-fx] .bc-row .v small{font-family:var(--f-ui);font-size:9px;font-weight:700;color:var(--ink-3);margin-left:2px}
+html[data-fx] .bc-row .v.is-na{font-family:var(--f-ui);font-size:11px;color:var(--ink-3)}
+html[data-fx] .bc-row .s{font-size:10px;line-height:1.5;min-width:0}
+html[data-fx] .bc-row.is-good .v{color:var(--fx-green)}html[data-fx] .bc-row.is-mid .v{color:#FFB020}html[data-fx] .bc-row.is-bad .v{color:#FF6A6A}
+@media(max-width:600px){html[data-fx] .bc-map{max-width:none;min-width:0;flex-basis:100%}}
+
+/* ── 8. 模式降階 ───────────────────────────────────────────────────────── */
+/* ACTIVE：關掉持續的背景效果，留轉場、圖表進場與資料事件 */
+html[data-fx="active"] .df-neb.a,html[data-fx="active"] .df-neb.b,html[data-fx="active"] .df-aur,
+html[data-fx="active"] .side-rocket,html[data-fx="active"] .sr-flame,html[data-fx="active"] .rdy-scan{animation:none}
+html[data-fx="active"] .rdy-scan{opacity:0}
+html[data-fx="active"] .pwr-achv.pr::after{animation:none;transform:translateX(120%)}
+/* QUIET：全部裝飾性動畫落到終態；操作回饋（hover／focus 顏色）保留 */
+html[data-fx="quiet"] .df-neb.a,html[data-fx="quiet"] .df-neb.b,html[data-fx="quiet"] .df-aur,
+html[data-fx="quiet"] .side-rocket,html[data-fx="quiet"] .sr-flame,html[data-fx="quiet"] .rdy-scan,
+html[data-fx="quiet"] .nav-i em.is-fresh,html[data-fx="quiet"] .tsv-live .dot,html[data-fx="quiet"] .tsv-tag,
+html[data-fx="quiet"] .td-pr::after,html[data-fx="quiet"] .fx-today::before,html[data-fx="quiet"] .tj-node.is-next::after,
+html[data-fx="quiet"] .rx-core .r-core,html[data-fx="quiet"] .rx-core .r-halo,html[data-fx="quiet"] .nav-i[aria-current="page"]::after,
+html[data-fx="quiet"] .atm-scene i,html[data-fx="quiet"] .view-h.fx-in::before,html[data-fx="quiet"] .pb-sub.fx-in::after,
+html[data-fx="quiet"] .tsv.fx-loaded .tsv-stage::after,html[data-fx="quiet"] .meter.fx-ignite .v,
+html[data-fx="quiet"] .ses.fx-in,html[data-fx="quiet"] .pb-rule.fx-in,html[data-fx="quiet"] .pb-flag.fx-in,
+html[data-fx="quiet"] .wl-mtab.fx-in,html[data-fx="quiet"] .lap-strip.fx-unpack,html[data-fx="quiet"] .fx-ripple,
+html[data-fx="quiet"] .at-lock.on,html[data-fx="quiet"] .at-lock::after,html[data-fx="quiet"] .fx-flash{animation:none}
+html[data-fx="quiet"] .rdy-scan{opacity:0}
+html[data-fx="quiet"] .pwr-achv.pr::after{animation:none;transform:translateX(120%)}
+html[data-fx="quiet"] .view-h.fx-in::before,html[data-fx="quiet"] .pb-sub.fx-in::after{transform:scaleX(1)}
+html[data-fx="quiet"] .tsv.fx-loaded .tsv-stage::after,html[data-fx="quiet"] .fx-sweep,html[data-fx="quiet"] .fx-ripple,
+html[data-fx="quiet"] .drawer.fx-arrive .dw-body::before,html[data-fx="quiet"] .at-lock{display:none}
+html[data-fx="quiet"] .view.is-on{animation:none}
+html[data-fx="quiet"] .drawer{transition:none}
+html[data-fx="quiet"] .main{transition:none}
+html[data-fx="quiet"] .tj-node.is-hot::before{transform:none}
+html[data-fx="quiet"] .hv-cursor{transition:none}
+html[data-fx="quiet"] .board-num{transition:none}
+/* reduced motion：頁面已經把 data-fx 壓成 quiet，這裡是不靠 JS 也成立的保險 */
+@media (prefers-reduced-motion:reduce){
+  html[data-fx] body::after,html[data-fx] .apphead::after,html[data-fx] .fx-sweep,html[data-fx] .fx-ripple,
+  html[data-fx] .at-lock,html[data-fx] .tsv.fx-loaded .tsv-stage::after{display:none}
+  html[data-fx] .nav-i[aria-current="page"]::after,html[data-fx] .atm-scene i,html[data-fx] .td-pr::after,
+  html[data-fx] .fx-today::before,html[data-fx] .tj-node.is-next::after,html[data-fx] .rx-core .r-core,
+  html[data-fx] .rx-core .r-halo,html[data-fx] .view-h.fx-in::before,html[data-fx] .pb-sub.fx-in::after,
+  html[data-fx] .meter.fx-ignite .v,html[data-fx] .ses.fx-in,html[data-fx] .pb-rule.fx-in,html[data-fx] .pb-flag.fx-in,
+  html[data-fx] .wl-mtab.fx-in,html[data-fx] .lap-strip.fx-unpack,html[data-fx] .fx-flash{animation:none}
+  html[data-fx] .view-h.fx-in::before,html[data-fx] .pb-sub.fx-in::after{transform:scaleX(1)}
+  html[data-fx] .td-pr::after{transform:translateX(120%)}
+}
+
+/* ── 9. 手機與大螢幕 ───────────────────────────────────────────────────── */
+@media(max-width:767px){
+  html[data-fx] body::after{display:none}                /* 掃描線在手機上只是雜訊 */
+  html[data-fx] .apphead::after{display:none}
+  html[data-fx] .rider-card{box-shadow:0 18px 52px rgba(0,0,0,.5)}
+  html[data-fx] .atm-bar{margin:-6px 0 14px}
+  html[data-fx] .atm-lab{margin-left:0;flex-wrap:wrap}
+  html[data-fx] .atm-lab button{min-height:36px;padding:8px 10px}   /* touch target */
+  html[data-fx] .fx-sweep{width:60%}
+  html[data-fx] .tj-node{width:44px;height:44px;margin:-22px 0 0 -22px}
+}
+@media(min-width:1600px){
+  html[data-fx] .fxm-b{font-size:9.5px;padding:7px 10px}
+  html[data-fx] .rx-core{flex-basis:280px;width:280px;height:280px}
+}
+
+/* ── 10. 補遺（動效層生成的小元件）──────────────────────────────────────── */
+html[data-fx] .fx-lockring{position:absolute;left:11px;top:50%;width:12px;height:12px;margin:-6px 0 0 -4px;
+  border:1px solid rgba(252,76,2,.85);border-radius:50%;pointer-events:none;box-shadow:0 0 8px rgba(252,76,2,.6)}
+html[data-fx="overdrive"] .il-seg.open .il-det,html[data-fx="active"] .il-seg.open .il-det{animation:fxUnpack .32s var(--fx-ease-out) both}
+html[data-fx] .fx-burst{position:fixed;inset:0;z-index:70;pointer-events:none;width:100%;height:100%}
+
+/* ══ 11. 2026-09-02 第二輪：字體、七艙室、Launch Hero ══════════════════════════ */
+/* 字體：實測 Saira Condensed 沒有 tabular numerals（1111 與 9999 差 50px），DESIGN.md 的 tabular 規則在讀數字體上其實一直沒生效。
+   換成有 tnum 的 Barlow Condensed（同樣是窄長讀數體、收筆圓）；拉丁標籤 Space Grotesk、代碼與時間戳 JetBrains Mono（兩者都有 tnum）。
+   中文仍交還系統字，窄體拉丁不與中文同行混排 —— 那條規矩沒動。 */
+html[data-fx]{
+  --f-num:'Barlow Condensed','Saira Condensed','Oswald','Arial Narrow',sans-serif;
+  --f-ui:'Space Grotesk','Archivo',-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang TC','Noto Sans TC','Microsoft JhengHei',sans-serif;
+  --f-mono:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+  --vp-x:26px;--vp-t:26px;
+}
+@media(max-width:1023px){html[data-fx]{--vp-x:18px;--vp-t:22px}}
+@media(max-width:767px){html[data-fx]{--vp-x:14px;--vp-t:16px}}
+@media(min-width:1600px){html[data-fx]{--vp-x:34px;--vp-t:30px}}
+@media(min-width:2200px){html[data-fx]{--vp-x:44px;--vp-t:34px}}
+/* Barlow 的字碗比 Saira 大一點，讀數的負字距收一階 */
+html[data-fx] .board-num{letter-spacing:-2.5px}
+html[data-fx] .ds-val,html[data-fx] .row-v,html[data-fx] .meter .v{letter-spacing:-.8px}
+
+/* 側欄：七個艙室像任務清單，前面帶 01–07 的編號（mono、有 tnum） */
+html[data-fx] .nav{counter-reset:deck}
+html[data-fx] .nav-i{counter-increment:deck}
+html[data-fx] .nav-i::before{content:counter(deck,decimal-leading-zero);font:600 8.5px/1 var(--f-mono);letter-spacing:1px;
+  color:var(--ink-3);width:15px;flex:none;font-variant-numeric:tabular-nums}
+html[data-fx] .nav-i[aria-current="page"]::before{color:var(--fx-sig)}
+html[data-fx] .nav-i i{display:none}   /* 圓點的工作交給編號與左緣訊號條 */
+
+/* 子艙標題（訓練裡的攻略、引擎裡的收成）：同一支量尺，退一階、上方多留一段 */
+html[data-fx] .view-h--sub{margin-top:52px}
+html[data-fx] .view-h--sub b{font-size:16px}
+html[data-fx] .view-h--sub::after{background:linear-gradient(90deg,rgba(252,76,2,.6),rgba(252,76,2,.03)) left bottom/100% 1px no-repeat,
+  repeating-linear-gradient(90deg,rgba(252,76,2,.3) 0 1px,transparent 1px 12px) left bottom/100% 4px no-repeat}
+
+/* ── Launch Hero：指揮艙頂端的全幅舞台 ──
+   畫布住在裡面（不是 fixed 全幅），行星邊緣在畫面下緣、名片與大讀數壓在行星的暗面上（它就是 scrim）。
+   跟 Anthropic 發布頁 hero 學的是舞台方法：全幅畫布、遠中近景深、柔焦前景、慢速環境運動、
+   看板（looks）切換時整個場景共同轉換 —— 內容全是自己的程序式圖形。 */
+/* 全幅：.view 是置中的 1140/1280/1440 欄，hero 要鋪滿整個主欄（側欄以外的全部）。
+   用 container 單位算負邊距（.viewport 是 inline-size container），不用 100vw —— 100vw 含捲軸，Windows 上會撐出橫向溢位。 */
+html[data-fx] .viewport{container-type:inline-size}
+html[data-fx] .hero{
+  position:relative;overflow:hidden;isolation:isolate;
+  margin:calc(-1*var(--vp-t)) calc(-1*var(--vp-x)) 36px;
+  min-height:min(78vh,820px);display:flex;flex-direction:column;justify-content:flex-end;
+  border-bottom:1px solid var(--sig-hair);
+  background:radial-gradient(120% 80% at 50% 100%,rgba(12,6,20,.6),transparent 70%);
+}
+@supports (width:1cqw){
+  /* cqw 量的是 container 的 content box（不含 .viewport 的 padding），所以還要再減掉 --vp-x 才會貼到主欄邊緣 */
+  html[data-fx] .hero{margin-left:calc(50% - 50cqw - var(--vp-x));margin-right:calc(50% - 50cqw - var(--vp-x))}
+}
+html[data-fx] .hero .atm{position:absolute;inset:0;z-index:0;opacity:0;transition:opacity 1.2s var(--fx-ease)}
+html[data-fx] .hero .atm.is-on{opacity:1}
+html[data-fx] .hero-in{position:relative;z-index:2;width:100%;max-width:calc(var(--main-max) + 2*var(--vp-x));margin:0 auto;
+  padding:26px var(--vp-x) 16px}
+html[data-fx] .hero-eyebrow{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+html[data-fx] .hero-eyebrow b{font-size:19px;font-weight:700;letter-spacing:.6px;color:var(--ink-1);text-shadow:0 0 22px rgba(252,76,2,.25)}
+html[data-fx] .hero-eyebrow i{font-style:normal;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:rgba(252,76,2,.75)}
+html[data-fx] .hero-eyebrow span{margin-left:auto;font:600 9px/1 var(--f-mono);letter-spacing:1.6px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+/* 名片在 hero 裡不再是一張卡：拿掉底、框、投影、角標，讓它變成壓在行星上的讀數 */
+html[data-fx] .hero .rider-card{background:transparent;border:0;box-shadow:none;border-radius:0;overflow:visible}
+html[data-fx] .hero .rider-card::before,html[data-fx] .hero .rider-card::after{display:none}
+html[data-fx] .hero .nc-canvas{opacity:.42}
+html[data-fx] .hero .rc-scrim{background:linear-gradient(180deg,transparent 30%,rgba(5,3,9,.55))}
+html[data-fx] .hero .rc-body{padding:0}
+html[data-fx] .hero .rc-rule{margin:0}
+html[data-fx] .hero .board-num{font-size:clamp(72px,13vw,168px);text-shadow:0 0 44px rgba(252,76,2,.32),0 0 120px rgba(252,76,2,.14)}
+html[data-fx] .hero .board-hero.lit .board-num{text-shadow:0 0 44px rgba(252,76,2,.6),0 0 140px rgba(252,76,2,.22)}
+html[data-fx] .hero .board-unit{font-size:clamp(26px,3.6vw,40px)}
+html[data-fx] .hero .board-tape,html[data-fx] .hero .deck-strip{margin-left:0;margin-right:0}
+html[data-fx] .hero .deck-stat{padding:14px 18px 16px 0}
+html[data-fx] .hero .deck-stat+.deck-stat{padding-left:18px}
+html[data-fx] .hero .rc-foot{border-top-color:rgba(252,76,2,.18)}
+/* 氣象列：hero 底部的一條 HUD 帶，場景鈕帶色票 */
+html[data-fx] .hero .atm-bar{margin:12px 0 0;padding-top:12px;border-top:1px solid var(--hair);font-size:11.5px}
+html[data-fx] .atm-lab button i{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px;vertical-align:1px;
+  background:var(--sw,var(--fx-sig));box-shadow:0 0 6px var(--sw,var(--fx-sig));opacity:.75}
+html[data-fx] .atm-lab button[aria-pressed="true"] i{opacity:1}
+@media(max-width:767px){
+  html[data-fx] .hero{min-height:min(74vh,700px);margin-bottom:22px}
+  html[data-fx] .hero-in{padding:18px var(--vp-x) 12px}
+  html[data-fx] .hero .board-num{font-size:clamp(66px,17vw,120px)}
+  html[data-fx] .hero .deck-stat{padding:12px 11px 13px 0}
+  html[data-fx] .hero .deck-stat+.deck-stat{padding-left:11px}
+  html[data-fx] .hero-eyebrow span{display:none}
+}
+
+/* 艙室版面：寬螢幕上指揮艙與引擎分成兩欄（圖表類的大塊仍滿版） */
+@media(min-width:1400px){
+  html[data-fx] .view[data-view="deck"].is-on,html[data-fx] .view[data-view="engine"].is-on{
+    display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:44px;align-items:start}
+  html[data-fx] .view[data-view="deck"].is-on>.hero,html[data-fx] .view[data-view="deck"].is-on>#rdy-mobile,
+  html[data-fx] .view[data-view="deck"].is-on>.fx-host,html[data-fx] .view[data-view="deck"].is-on>.block:has(.tcal),
+  html[data-fx] .view[data-view="deck"].is-on>.block:has(.ov-2),html[data-fx] .view[data-view="deck"].is-on>.ov-quote,
+  html[data-fx] .view[data-view="engine"].is-on>.view-h,html[data-fx] .view[data-view="engine"].is-on>.view-sub,
+  html[data-fx] .view[data-view="engine"].is-on>.block:has(#hv-body),html[data-fx] .view[data-view="engine"].is-on>.block:has(.pcv-plot),
+  html[data-fx] .view[data-view="engine"].is-on>.fx-host{grid-column:1/-1}
+}
+
+/* ══ 12. 第三輪：使用者選的字體、Ridge Dawn hero、全站底 ══════════════════════════
+   字體（使用者在比較圖上選的）：大讀數 Michroma（寬、幾何、單一字重的 HUD 體）、內文與標籤 Inter Tight、代碼 JetBrains Mono。
+   Michroma 很寬，只給 ≥22px 的讀數；表格與列裡的小數字仍用窄而有 tnum 的 Barlow Condensed，不然 4.4rem 的欄位會被撐爆。
+   Michroma 只有 400 一個字重：一律 font-weight:400，不讓瀏覽器合成粗體。 */
+html[data-fx]{
+  --f-num:'Barlow Condensed','Saira Condensed','Oswald','Arial Narrow',sans-serif;
+  --f-disp:'Michroma','Barlow Condensed','Saira Condensed',sans-serif;
+  --f-ui:'Inter Tight','Archivo',-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang TC','Noto Sans TC','Microsoft JhengHei',sans-serif;
+}
+html[data-fx] .board-num,html[data-fx] .board-unit,html[data-fx] .ds-val,html[data-fx] .meter .v,html[data-fx] .rdy-tsb b,
+html[data-fx] .mc-test-v,html[data-fx] .mc-ftp b,html[data-fx] .tsv-stats .nu,html[data-fx] .tsv-live .nu,html[data-fx] .pm-dial-val,
+html[data-fx] .wl-now b,html[data-fx] .pb-arc .v,html[data-fx] .tb-vol b,html[data-fx] .rx-core .r-num,html[data-fx] .nx-cmp>b,
+html[data-fx] .at-read .n,html[data-fx] .row-v,html[data-fx] .hv-mh b,html[data-fx] .rc-year{
+  font-family:var(--f-disp);font-weight:400;letter-spacing:0}
+html[data-fx] .board-num{font-size:clamp(58px,9.4vw,136px);letter-spacing:-1px;line-height:.92}
+html[data-fx] .hero .board-num{font-size:clamp(58px,9.6vw,140px);letter-spacing:-1px}
+html[data-fx] .board-unit{font-size:clamp(22px,2.8vw,32px)}
+html[data-fx] .hero .board-unit{font-size:clamp(22px,2.9vw,34px)}
+html[data-fx] .ds-val{font-size:clamp(22px,3vw,32px);letter-spacing:0}
+html[data-fx] .meter .v{font-size:21px;letter-spacing:0}
+html[data-fx] .rdy-tsb b{font-size:23px;letter-spacing:0}
+html[data-fx] .mc-test-v{font-size:26px}
+html[data-fx] .mc-ftp b{font-size:21px}
+html[data-fx] .tsv-stats .nu,html[data-fx] .tsv-live .nu{font-size:21px}
+html[data-fx] .pm-dial-val{font-size:42px}
+html[data-fx] .wl-now b{font-size:28px;letter-spacing:0}
+html[data-fx] .pb-arc .v{font-size:22px;letter-spacing:0}
+html[data-fx] .tb-vol b{font-size:19px}
+html[data-fx] .nx-cmp>b{font-size:16px}
+html[data-fx] .row-v{font-size:15px;letter-spacing:0}
+html[data-fx] .rx-core .r-num{font-size:34px;letter-spacing:0}
+html[data-fx] .hv-mh b{font-size:14px}
+html[data-fx] .rc-year{font-size:17px}
+html[data-fx] .at-read .n{font-size:18px}
+@media(max-width:767px){
+  html[data-fx] .hero .board-num{font-size:clamp(44px,12vw,84px)}
+  html[data-fx] .ds-val{font-size:18px}
+  html[data-fx] .meter .v{font-size:18px}
+  html[data-fx] .row-v{font-size:14px}
+}
+@media(min-width:1600px){
+  html[data-fx] .rdy-tsb b{font-size:27px}
+}
+/* 全站底：從「兩團星雲」換成高海拔夜空 —— 一道斜向的靛紫薄霧帶、下緣一抹晨光的暖暈（跟 hero 的晨光同一個方向），星野稍收 */
+html[data-fx] #deepfield{background:radial-gradient(140% 100% at 50% 0%,#0b0a18 0%,#090510 45%,#050308 100%)}
+html[data-fx] .df-neb.a{
+  left:-40vmax;top:-46vmax;width:150vmax;height:120vmax;
+  background:linear-gradient(-24deg,transparent 34%,rgba(72,56,160,.13) 46%,rgba(124,72,204,.10) 52%,rgba(255,120,60,.045) 60%,transparent 70%);
+  animation-duration:54s;
+}
+html[data-fx] .df-neb.b{
+  right:-36vmax;bottom:-62vmax;width:130vmax;height:90vmax;
+  background:radial-gradient(ellipse at 50% 100%,rgba(255,132,48,.14),rgba(140,44,8,.05) 42%,transparent 68%);
+  animation-duration:44s;
+}
+html[data-fx] .df-aur{background:conic-gradient(from 200deg at 60% 40%,rgba(90,60,200,.045),transparent 30%,rgba(40,120,255,.035) 55%,transparent 80%,rgba(255,140,60,.035))}
+html[data-fx] #star-canvas{opacity:.72}
+html[data-fx="overdrive"] #star-canvas{opacity:.72}
+
+/* ══ 13. Signal Spine：側欄背後的畫布 ═══════════════════════════════════════════
+   七個艙室是船脊上的七個站：一條垂直的軌、每站一個刻度、現用站有鎖定光點（換站時沿軌滑過去）、
+   訊號包偶爾從頂端流下來停在現用站、極淡的塵埃視差；色溫跟著 hero 的氣象。
+   畫布在 .side 最底層（.side 是 sticky，本來就是定位元素），內容全部墊到 z-index 1 上面。 */
+html[data-fx] .side>*{position:relative;z-index:1}
+html[data-fx] .side>.side-cv{position:absolute;inset:0;z-index:0;pointer-events:none;width:100%;height:100%;display:block}
+html[data-fx] .side>.side-rocket{z-index:2}
+html[data-fx] .side{background:rgba(7,4,3,.82)}
+html[data-fx] .nav-i::before{position:relative}
+
+/* ══ 14. Ghost Roads：全站底圖 ═══════════════════════════════════════════════
+   星野與星雲退役（動效層掛好底圖時在 <html> 標 data-bg；fx 檔擋掉就沒有這個屬性，原本的星野照舊）。
+   #bgfield 是固定的畫布，畫他騎過的路網、谷霧、山脊剪影與暗角；內容照舊在 .app 的 z-index 2 之上。 */
+html[data-bg] #star-canvas{display:none}
+html[data-bg] #deepfield i{display:none}
+html[data-bg] #deepfield{background:#06040c}
+#bgfield{position:fixed;inset:0;width:100%;height:100%;z-index:1;pointer-events:none}
