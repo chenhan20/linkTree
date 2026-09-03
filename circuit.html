@@ -14,9 +14,9 @@
 :root{
   --f-num:'Saira Condensed','Oswald','Arial Narrow',sans-serif;
   --f-ui:'Archivo',-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang TC','Noto Sans TC','Microsoft JhengHei',sans-serif;
-  --ink-1:#f4f0ea;--ink-2:rgba(244,240,234,.66);--ink-3:rgba(244,240,234,.38);
-  --sig:#FC4C02;--hair:rgba(255,255,255,.065);--hair-2:rgba(255,255,255,.11);
-  --surface:rgba(255,255,255,.02);
+  --ink-1:#f5f3ef;--ink-2:rgba(245,243,239,.72);--ink-3:rgba(245,243,239,.42);
+  --sig:#FC4C02;--hair:rgba(255,255,255,.075);--hair-2:rgba(255,255,255,.135);
+  --surface:#16181e;--surface-2:#1e222b;--bg:#0e1014;
   --ok:#4ad07a;--warn:#ffb020;--cool:#4AB4FF;
   /* 手指的最小尺寸。運動中的主操作再往上加到 --tap-hot */
   --tap:44px;--tap-hot:54px;
@@ -24,7 +24,7 @@
 html,body{height:100%}
 body{
   font-family:var(--f-ui);color:var(--ink-2);line-height:1.6;
-  background:radial-gradient(120% 90% at 50% 0%,#0d0510 0%,#0a0408 46%,#050308 100%) fixed,#0a0408;
+  background:var(--bg);
   -webkit-font-smoothing:antialiased;
 }
 .n{font-family:var(--f-num);font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1;font-weight:800}
@@ -440,6 +440,74 @@ body{
   border:1px solid var(--hair-2);border-radius:100px;font-size:13px;color:var(--ink-2);text-decoration:none
 }
 .hc-yt:hover{border-color:var(--sig);color:var(--sig)}
+/* 動作圖卡 Stage 與細部樣式 */
+.hc.hc-avoid{border-color:rgba(255,70,70,.35)}
+/* 姿勢台不再是「框裡面再包兩個框」：外層只負責間距，兩張姿勢卡自己是細線板 */
+.hc-stage{margin:14px 0 12px}
+.hc-poses{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center}
+.hc-pose-box{border:1px solid var(--hair);border-radius:6px;padding:10px 13px;min-height:78px;display:flex;flex-direction:column;justify-content:space-between}
+.hc-pose-tag{font-size:10px;font-weight:700;letter-spacing:2px;color:var(--ink-3);text-transform:uppercase}
+.hc-pose-main{font-size:13px;font-weight:600;color:var(--ink-1);line-height:1.45;margin-top:3px}
+.hc-pose-sub{font-size:11.5px;color:var(--ink-3);line-height:1.4;margin-top:2px}
+.hc-pose-arrow{color:var(--hair-2);font-size:16px;font-weight:800;user-select:none}
+.hc-muscles{margin-top:9px;font-size:12px;color:var(--ink-3);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.hc-muscles b{color:var(--ink-2);font-weight:600}
+.hc-cue{margin-top:10px;padding:10px 13px;border-radius:8px;background:rgba(252,76,2,.06);border-left:3px solid var(--sig);font-size:14px;line-height:1.65;color:var(--ink-1)}
+.hc-persona{
+  margin-top:12px;padding:1px 0 1px 12px;border-left:2px solid var(--hair-2);
+  font-size:12.5px;line-height:1.75;color:var(--ink-2)
+}
+.hc-persona b{
+  display:block;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  color:var(--ink-3);margin-bottom:3px
+}
+/* 只有孕期那三級是真的分輕重,才配得上顏色。男生/女生不是嚴重程度,所以沒有顏色 */
+.hc-persona.p-preg-safe{border-left-color:rgba(74,208,122,.55)}
+.hc-persona.p-preg-safe b{color:var(--ok)}
+.hc-persona.p-preg-modify{border-left-color:var(--warn)}
+.hc-persona.p-preg-modify b{color:var(--warn)}
+.hc-persona.p-preg-avoid{
+  border-left-color:#ff4646;border-radius:0 6px 6px 0;
+  padding:9px 12px;background:rgba(255,70,70,.07);color:#ffc8c8
+}
+.hc-persona.p-preg-avoid b{color:#ff8e8e}
+.hc-ref{margin-top:11px;font-size:11px;color:var(--ink-3);line-height:1.5;letter-spacing:.2px;display:flex;align-items:center;gap:5px}
+/* 頂部身分切換列 */
+/* 這一列是頁面節奏的一部分,不是浮在上面的卡片 —— 只用一條線收邊 */
+.persona-row{margin:0 0 26px;padding:0 0 15px;border-bottom:1px solid var(--hair);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.persona-lbl{font-size:11.5px;font-weight:700;letter-spacing:1.5px;color:var(--ink-3);margin-right:2px}
+.persona-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;width:100%}
+.persona-chips{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.p-chip{appearance:none;border:1px solid var(--hair-2);background:transparent;color:var(--ink-2);min-height:36px;padding:0 14px;border-radius:100px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s ease;display:inline-flex;align-items:center;gap:6px}
+.p-chip:hover{border-color:var(--sig);color:var(--ink-1)}
+/* 整份檔案只有一種「選中」長相:橘底 16% ＋ 橘框 ＋ 橘字。實心橘留給真正的主要動作 */
+.p-chip.active{background:rgba(252,76,2,.16);border-color:var(--sig);color:var(--sig);font-weight:700}
+.persona-guide{width:100%;margin-top:11px;font-size:13px;color:var(--ink-2);line-height:1.7;max-width:58ch}
+.persona-recs{display:flex;gap:7px;margin-top:9px;flex-wrap:wrap;align-items:center}
+.persona-recs span{font-size:11px;color:var(--ink-3);font-weight:700;letter-spacing:.8px}
+.p-rec-btn{appearance:none;display:inline-flex;align-items:center;min-height:32px;background:transparent;border:1px solid var(--hair);border-radius:100px;font-size:12.5px;color:var(--ink-2);padding:0 13px;cursor:pointer;font-family:inherit;transition:border-color .13s,color .13s}
+.p-rec-btn:hover{border-color:var(--sig);color:var(--sig);background:rgba(252,76,2,.1)}
+/* 菜單卡片身分標籤 */
+.ptags .tag-persona{font-weight:700;letter-spacing:.3px}
+.ptags .tag-persona.p-male,.ptags .tag-persona.p-female{background:rgba(255,255,255,.07);color:var(--ink-2)}
+.ptags .tag-persona.p-preg-safe{background:rgba(74,208,122,.15);color:#70f39e;border-color:rgba(74,208,122,.35)}
+.ptags .tag-persona.p-preg-warn{background:rgba(255,70,70,.18);color:#ff9e9e;border-color:rgba(255,70,70,.35)}
+/* 今日菜單 孕期安全警示橫幅 */
+.preg-banner{margin:0 0 12px;padding:10px 14px;border-radius:10px;background:rgba(255,70,70,.12);border:1px solid rgba(255,70,70,.35);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.pb-text{font-size:13px;color:#ffc8c8;line-height:1.5}
+.pb-btn{background:#e03e3e;border:0;color:#fff;border-radius:6px;font-size:12px;font-weight:700;padding:6px 12px;cursor:pointer;white-space:nowrap;font-family:inherit;transition:.12s}
+.pb-btn:hover{background:#ff4b4b}
+/* 今日菜單列 標籤與狀態 */
+.pr.pr-avoid{border-color:rgba(255,70,70,.35);background:rgba(255,70,70,.05)}
+.pr-tag-avoid{display:inline-block;padding:0 5px;border-radius:3px;font-size:10px;font-weight:700;background:rgba(255,70,70,.22);color:#ff8e8e;border:1px solid rgba(255,70,70,.4);margin-left:5px}
+.pr-tag-mod{display:inline-block;padding:0 5px;border-radius:3px;font-size:10px;font-weight:600;background:rgba(255,176,32,.15);color:#ffd278;border:1px solid rgba(255,176,32,.3);margin-left:5px}
+.pr-tag-safe{display:inline-block;padding:0 5px;border-radius:3px;font-size:10px;font-weight:600;background:rgba(74,208,122,.12);color:#70f39e;border:1px solid rgba(74,208,122,.3);margin-left:5px}
+.pr-tag-female,.pr-tag-male{display:inline-block;padding:0 5px;border-radius:3px;font-size:10px;font-weight:600;background:rgba(255,255,255,.06);color:var(--ink-3);border:1px solid var(--hair);margin-left:5px}
+/* 挑選器每列 身分標記 */
+.pk-tag-avoid{display:inline-block;padding:1px 5px;border-radius:3px;font-size:10.5px;font-weight:700;background:rgba(255,70,70,.2);color:#ff8e8e;margin-left:6px}
+.pk-tag-mod{display:inline-block;padding:1px 5px;border-radius:3px;font-size:10.5px;font-weight:600;background:rgba(255,176,32,.15);color:#ffd278;margin-left:6px}
+.pk-tag-safe{display:inline-block;padding:1px 5px;border-radius:3px;font-size:10.5px;font-weight:600;background:rgba(74,208,122,.12);color:#70f39e;margin-left:6px}
+.pk-tag-female,.pk-tag-male{display:inline-block;padding:1px 5px;border-radius:3px;font-size:10.5px;font-weight:600;background:rgba(255,255,255,.06);color:var(--ink-3);margin-left:6px}
 /* 影片區：三張只載縮圖的摘要卡，點下去才把那一格換成單一 iframe。
    全頁同時最多存在一個播放器 —— 一次開三個既慢又會互相搶聲音。 */
 .hc-vid{margin-top:14px;padding-top:12px;border-top:1px dashed var(--hair-2)}
@@ -478,7 +546,7 @@ body{
 }
 .vid-play .cap button:hover{border-color:var(--sig);color:var(--sig)}
 .hc-add{
-  display:block;width:100%;margin-top:16px;min-height:var(--tap-hot);padding:0 18px;
+  display:block;width:100%;max-width:420px;margin-top:18px;min-height:var(--tap-hot);padding:0 18px;
   border:1px solid var(--sig);border-radius:8px;background:var(--sig);color:#0a0408;
   font-family:inherit;font-size:15px;font-weight:700;letter-spacing:1.2px;cursor:pointer
 }
@@ -499,74 +567,78 @@ body{
   color:var(--ink-1);font-family:inherit;font-size:15px;font-weight:700;letter-spacing:1.4px;
   cursor:pointer;transition:.13s;white-space:nowrap
 }
-.ghost:hover{border-color:var(--sig);color:var(--sig)}
 .ghost.mini{min-height:var(--tap);padding:0 14px;font-size:13px;letter-spacing:.6px;display:inline-flex;align-items:center}
+.ghost.mini.on{border-color:var(--sig);color:var(--sig);background:rgba(252,76,2,.12)}
 
-/* ══ 動作挑選器 ═════════════════════════════════════════
-   桌面：左結果、右詳情，同一層 modal。
-   手機：同一個全螢幕面板由「列表頁」推進「詳情頁」，不疊第二層視窗。 */
-.pick-body{flex:1;display:grid;grid-template-columns:minmax(0,1fr);min-height:0}
-@media(min-width:900px){.pick-body{grid-template-columns:minmax(0,1fr) minmax(0,1.05fr)}}
-.pk-list{display:flex;flex-direction:column;min-height:0;border-right:1px solid var(--hair)}
-.pk-top{flex:none;padding:12px 14px 0}
-.pk-q{position:relative;display:flex;align-items:center}
+/* ══ 動作挑選器（私人教練板） ═════════════════════════
+   桌面：左側40%動作清單、右側60%固定為教練預覽板，不允許右側空白。
+   手機：列表頁推進詳情頁，保持簡潔。 */
+.pick-body{flex:1;display:grid;grid-template-columns:minmax(0,1fr);min-height:0;background:var(--bg)}
+@media(min-width:900px){.pick-body{grid-template-columns:390px minmax(0,1fr)}}
+.pk-list{display:flex;flex-direction:column;min-height:0;border-right:1px solid var(--hair);background:var(--bg)}
+.pk-top{flex:none;padding:12px 14px 6px;border-bottom:1px solid var(--hair)}
+.pk-top-row1{display:flex;align-items:center;gap:8px}
+.pk-q{position:relative;flex:1;display:flex;align-items:center}
 .pk-q input{
-  width:100%;min-height:var(--tap);padding:0 44px 0 14px;border:1px solid var(--hair-2);border-radius:9px;
-  background:rgba(0,0,0,.32);color:var(--ink-1);font-family:inherit;font-size:15px
+  width:100%;min-height:38px;padding:0 36px 0 12px;border:1px solid var(--hair-2);border-radius:8px;
+  background:var(--surface);color:var(--ink-1);font-family:inherit;font-size:14px;transition:border-color .12s
 }
-.pk-q input:focus{outline:1px solid var(--sig);outline-offset:1px;border-color:var(--sig)}
+.pk-q input:focus{outline:1px solid var(--sig);border-color:var(--sig)}
 .pk-q button{
-  position:absolute;right:2px;width:var(--tap);height:var(--tap);border:0;border-radius:8px;
-  background:transparent;color:var(--ink-3);font-size:15px;cursor:pointer
+  position:absolute;right:2px;width:34px;height:34px;border:0;border-radius:6px;
+  background:transparent;color:var(--ink-3);font-size:14px;cursor:pointer
 }
-.pk-q button:hover{color:var(--sig)}
-.pk-sub{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:2px 0 8px;font-size:12.5px;color:var(--ink-3)}
+.pk-quick-cats{
+  display:flex;align-items:center;gap:6px;margin:8px 0 6px;overflow-x:auto;-webkit-overflow-scrolling:touch;
+  scrollbar-width:none;padding-bottom:2px
+}
+.pk-quick-cats::-webkit-scrollbar{display:none}
+.pk-quick-cats .chip{min-height:30px;padding:0 12px;font-size:12.5px;font-weight:600;white-space:nowrap;border-radius:6px}
+.pk-quick-cats .chip.on{font-weight:700}
+.pk-sub{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--ink-3);margin:4px 0 6px}
 .pk-sub .sp{flex:1}
 .pk-sheet{
-  margin:0 0 10px;padding:10px 12px;border:1px solid var(--hair-2);border-radius:9px;background:var(--surface)
+  margin:6px 0 10px;padding:12px;border:1px solid var(--hair-2);border-radius:8px;background:var(--surface)
 }
-.pk-sheet u{text-decoration:none;display:block;font-size:10px;font-weight:700;letter-spacing:2px;
-  color:rgba(252,76,2,.6);text-transform:uppercase;margin:6px 0 4px}
-.pk-sheet .filters{margin:0}
-.pk-rows{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 14px calc(14px + env(safe-area-inset-bottom))}
+.pk-sheet u{text-decoration:none;display:block;font-size:10px;font-weight:700;letter-spacing:1.5px;
+  color:var(--sig);text-transform:uppercase;margin:6px 0 4px}
+.pk-sheet .filters{margin:0 0 6px}
+.pk-rows{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:8px 10px calc(14px + env(safe-area-inset-bottom))}
+/* 乾淨教練板列：移除亮藍直線與圓形 ⓘ */
 .pk{
-  display:grid;grid-template-columns:3px minmax(0,1fr) auto auto;align-items:center;gap:0 8px;
-  border-bottom:1px solid var(--hair)
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:10px 12px;margin-bottom:3px;border-radius:8px;border:1px solid transparent;
+  background:transparent;cursor:pointer;transition:all .12s
 }
-.pk .bar{align-self:stretch;border-radius:2px;margin:6px 0}
-.pk-main{
-  display:block;min-width:0;padding:9px 2px;border:0;background:transparent;color:inherit;
-  font-family:inherit;text-align:left;cursor:pointer
+.pk:hover{background:rgba(255,255,255,.03)}
+.pk.is-selected{background:rgba(252,76,2,.09);border-color:rgba(252,76,2,.3)}
+.pk.is-selected .pk-name b{color:var(--sig)}
+.pk-info{flex:1;min-width:0}
+.pk-name{font-size:15px;font-weight:600;color:var(--ink-1);line-height:1.35;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.pk-subtxt{font-size:11.5px;color:var(--ink-3);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pk-btn-add{
+  appearance:none;background:rgba(255,255,255,.04);border:1px solid var(--hair-2);color:var(--ink-2);
+  font-size:12px;font-weight:700;padding:6px 13px;border-radius:6px;cursor:pointer;
+  white-space:nowrap;font-family:inherit;transition:all .12s;flex:none
 }
-.pk-main b{display:block;font-size:15px;font-weight:600;color:var(--ink-1);line-height:1.35}
-.pk-main i{display:block;font-style:normal;font-size:11.5px;color:var(--ink-3);margin-top:2px;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.pk-main:hover b{color:var(--sig)}
-.pk-why,.pk-add{
-  width:var(--tap);height:var(--tap);flex:none;display:grid;place-items:center;border:0;border-radius:7px;
-  background:transparent;color:var(--ink-3);font-size:17px;cursor:pointer;font-family:inherit
-}
-.pk-why:hover{background:rgba(255,255,255,.05);color:var(--ink-1)}
-.pk-add{color:var(--sig);font-weight:700}
-.pk-add:hover{background:rgba(252,76,2,.14)}
-.pk-add.has{width:auto;padding:0 10px;font-size:11.5px;font-weight:700;color:var(--ok);background:rgba(74,208,122,.12)}
-.pk.on{background:rgba(252,76,2,.06)}
+.pk-btn-add:hover{background:var(--sig);border-color:var(--sig);color:#0a0408}
+.pk-btn-add.has{background:rgba(74,208,122,.12);border-color:rgba(74,208,122,.3);color:var(--ok)}
 .pk-ft{
   flex:none;display:flex;align-items:center;gap:10px;
-  padding:9px 14px calc(9px + env(safe-area-inset-bottom));border-top:1px solid var(--hair);
-  background:#050308;font-size:13px;color:var(--ink-2)
+  padding:10px 16px calc(10px + env(safe-area-inset-bottom));border-top:1px solid var(--hair);
+  background:#111317;font-size:13px;color:var(--ink-2)
 }
 .pk-ft .sp{flex:1}
 .pk-ft b{font-family:var(--f-num);font-weight:800;font-size:17px;color:var(--ink-1);font-variant-numeric:tabular-nums}
-.pk-ft .go{flex:none;min-width:150px}
-.pk-detail{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 18px calc(24px + env(safe-area-inset-bottom))}
-.pk-empty{padding:34px 4px;font-size:13.5px;color:var(--ink-3);text-align:center}
-/* 新手模式開關。切了就記住，不會做完第一堂自己關掉 */
-.tgl{display:inline-flex;align-items:center;gap:7px;min-height:var(--tap);padding:0 12px;
-  border:1px solid var(--hair-2);border-radius:100px;font-size:12.5px;color:var(--ink-2);cursor:pointer;white-space:nowrap}
-.tgl input{width:16px;height:16px;accent-color:var(--sig);cursor:pointer}
-.tgl.on{border-color:var(--sig);color:var(--sig);background:rgba(252,76,2,.1);font-weight:700}
-/* 手機：詳情是「推進去的第二頁」，不是第二層視窗 */
+.pk-ft .go{flex:none;min-width:140px;height:40px;padding:0 20px;font-size:14px}
+.pk-detail{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:20px 24px calc(24px + env(safe-area-inset-bottom));background:#13151b}
+.pk-empty{padding:40px 10px;font-size:13.5px;color:var(--ink-3);text-align:center}
+/* 教練引導開關 */
+.tgl{display:inline-flex;align-items:center;gap:7px;min-height:34px;padding:0 12px;
+  border:1px solid var(--hair-2);border-radius:6px;font-size:12px;color:var(--ink-2);cursor:pointer;white-space:nowrap}
+.tgl input{width:15px;height:15px;accent-color:var(--sig);cursor:pointer}
+.tgl.on{border-color:var(--sig);color:var(--sig);background:rgba(252,76,2,.08);font-weight:700}
+/* 手機：詳情推進頁 */
 @media(max-width:899px){
   .pk-detail{display:none}
   .pick.detail .pk-list{display:none}
@@ -575,6 +647,50 @@ body{
 }
 @media(min-width:900px){
   .pick.detail .pk-list{display:flex}
+}
+
+/* 動作進退階階梯 */
+.hc-ladder{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0 10px}
+@media(max-width:540px){.hc-ladder{grid-template-columns:1fr}}
+.hc-step{padding:8px 10px;border-radius:6px;border:1px solid var(--hair-2);background:rgba(255,255,255,.02);display:flex;align-items:center;justify-content:space-between;gap:6px}
+.hc-step span{font-size:11px;color:var(--ink-3);display:block}
+.hc-step b{font-size:12.5px;color:var(--ink-1)}
+.btn-swap{appearance:none;background:transparent;border:1px solid var(--sig);color:var(--sig);font-size:11px;font-weight:700;padding:3px 8px;border-radius:4px;cursor:pointer;font-family:inherit}
+.btn-swap:hover{background:var(--sig);color:#0a0408}
+
+/* 摺疊深入說明與學術來源 */
+.hc-more-details{margin-top:14px;border-top:1px dashed var(--hair-2);padding-top:10px}
+.hc-more-details summary{font-size:12px;font-weight:600;color:var(--ink-3);cursor:pointer;padding:4px 0;user-select:none}
+.hc-more-details summary:hover{color:var(--sig)}
+.hc-more-in{padding-top:10px}
+
+/* 訓練執行中休息控制項 */
+.run-rest-ctrls{display:flex;align-items:center;justify-content:center;gap:12px;margin:14px 0 6px}
+.rb-mini{appearance:none;background:rgba(255,255,255,.07);border:1px solid var(--hair-2);color:var(--ink-1);font-family:inherit;font-size:13px;font-weight:700;padding:8px 18px;border-radius:100px;cursor:pointer;transition:all .12s}
+.rb-mini:hover{border-color:var(--sig);color:var(--sig)}
+.rb-mini.hot{background:var(--sig);border-color:var(--sig);color:#0a0408}
+
+/* 智慧組課小幫手彈窗 */
+.gen-body{padding:26px 24px calc(30px + env(safe-area-inset-bottom));overflow-y:auto}
+.gen-box{max-width:620px;margin:0}
+.gen-desc{font-size:14.5px;color:var(--ink-2);line-height:1.9;margin-bottom:26px;max-width:38ch}
+.gen-sect{margin-bottom:20px}
+.gen-sect label{display:block;font-size:12px;font-weight:700;letter-spacing:1.2px;color:var(--sig);text-transform:uppercase;margin-bottom:8px}
+.gen-chips{display:flex;flex-wrap:wrap;gap:8px}
+.gen-chips .chip{font-size:13px;min-height:36px;padding:0 14px;border-radius:8px}
+.gen-chips .chip.on{font-weight:700}
+/* 整頁只有底部那條「開始訓練」配得上實心橘的寬度。這顆照自己的字寬走 */
+.gen-submit{display:inline-flex;align-items:center;justify-content:center;width:auto;min-width:170px;height:var(--tap-hot);padding:0 30px;border-radius:8px;font-size:15px;font-weight:700;letter-spacing:1.4px;margin-top:26px}
+/* 三個問題撐不滿一整片黑。桌機讓它變回一張浮在遮罩上的面板 ——
+   卡片這個形狀是用來表示「浮起來」的,不是用來裝東西的。 */
+@media(min-width:768px){
+  .ov.gen-modal{background:rgba(4,2,6,.86);backdrop-filter:blur(4px)}
+  .ov.gen-modal .ohd{background:transparent;border-bottom:0}
+  .ov.gen-modal .gen-body{display:flex;align-items:flex-start;justify-content:center;padding-top:4vh}
+  .ov.gen-modal .gen-box{
+    width:100%;max-width:560px;margin:0;padding:26px 30px 32px;
+    border:1px solid var(--hair-2);border-radius:12px;background:var(--surface)
+  }
 }
 
 /* 加進課表的飛行殘影。position:fixed ＋ 量起訖矩形（FLIP），
@@ -678,11 +794,23 @@ body{
       每秒有節拍、最後五秒加重、時間到有結束音（執行畫面右上角的聲音開關）。</p>
   </header>
 
-  <div class="sect">現成菜單 <span>· MENUS · 按一下就套用</span></div>
+  <div class="persona-row" id="persona-row">
+    <div class="persona-top">
+      <span class="persona-lbl">身分</span>
+      <div class="persona-chips">
+        <button class="p-chip active" type="button" data-persona="male">男生</button>
+        <button class="p-chip" type="button" data-persona="female">女生</button>
+        <button class="p-chip p-chip-preg" type="button" data-persona="preg">孕期</button>
+      </div>
+    </div>
+    <div class="persona-guide" id="persona-guide"></div>
+  </div>
+
+  <div class="sect">現成菜單<span class="sp"></span><button class="sect-go" id="btn-generator" type="button">幫我配一張</button></div>
   <div class="filters" id="f-menu"></div>
   <div class="presets" id="presets"></div>
 
-  <div class="sect">今日菜單 <span>· TODAY</span><span class="sp"></span></div>
+  <div class="sect">今日菜單<span class="sp"></span><button class="ghost mini" id="btn-untimed" type="button">👶 顧小孩模式</button><button class="ghost mini" id="btn-save-custom" type="button">存成我的</button><button class="ghost mini" id="btn-share-plan" type="button">複製連結</button></div>
   <div class="pnote" id="pnote" hidden></div>
   <div class="plan" id="plan"></div>
 
@@ -701,7 +829,7 @@ body{
         <button type="button" data-nudge="15">＋</button><em>秒</em></div></div>
   </div>
 
-  <div class="sect">收操伸展 <span>· STRETCH · 只做一輪，不進組數</span><span class="sp"></span>
+  <div class="sect">收操伸展<span class="sp"></span>
     <button class="ghost mini" id="lib-stretch" type="button">＋ 加伸展</button>
     <button class="sect-go" id="go-stretch" type="button">▶ 單獨做收操</button></div>
   <div class="plan" id="stretch"></div>
@@ -714,12 +842,12 @@ body{
         伸展之間換姿勢的時間。每側之間另外固定 5 秒換邊。</div></div>
   </div>
 
-  <div class="sect">動作庫 <span>· LIBRARY</span></div>
+  <div class="sect">動作庫</div>
   <div class="libbar">
     <div>
       <b>動作庫 · <span id="nmv2">—</span> 個動作</b>
       <i>依部位、名稱或難度挑選；目前菜單 <span id="lib-now">—</span> 個動作。
-        每個動作都有分段步驟、常見錯誤與 3 支教學影片。</i>
+        每個動作都有分段步驟、常見錯誤與示範教學影片。</i>
     </div>
     <button class="ghost mini" id="lib-browse" type="button">瀏覽全部</button>
     <button class="ghost" id="lib-open" type="button">＋ 新增動作</button>
@@ -738,13 +866,13 @@ body{
 <div class="ov how" id="how" hidden>
   <div class="ohd">
     <button class="oback" id="how-x" type="button"><span>←</span><span id="how-back">返回今日菜單</span></button>
-    <b id="how-t">教學</b>
+    <b id="how-t">動作教學</b>
     <span class="sp"></span>
   </div>
   <div class="ov-body how-body"><div class="how-in" id="how-body"></div></div>
 </div>
 
-<!-- 更新紀錄：什麼時候加了哪些動作與菜單。名稱是即時解析的，改名不用回來補 -->
+<!-- 更新紀錄 -->
 <div class="ov" id="log" hidden>
   <div class="ohd">
     <button class="oback" id="log-x" type="button"><span>←</span><span>返回今日菜單</span></button>
@@ -754,29 +882,92 @@ body{
   <div class="ov-body log-body"><div class="log-in" id="log-body"></div></div>
 </div>
 
-<!-- 動作挑選器：桌面左右兩欄、手機列表→詳情推進。整個流程只有一層 modal -->
+<!-- 智慧組課小幫手彈窗 -->
+<div class="ov gen-modal" id="gen-modal" hidden>
+  <div class="ohd">
+    <button class="oback" id="gen-close" type="button"><span>←</span><span>返回菜單</span></button>
+    <b>自動配一張</b>
+    <span class="sp"></span>
+  </div>
+  <div class="ov-body gen-body">
+    <div class="gen-box">
+      <div class="gen-desc">
+        推、拉、下肢輪著排，同一組肌肉不連做兩次。<br>前兩個一定是熱身，最後補兩個伸展。
+      </div>
+      <div class="gen-sect">
+        <label>練哪裡</label>
+        <div class="gen-chips" id="gen-goal">
+          <button class="chip on" type="button" data-goal="full">全身</button>
+          <button class="chip" type="button" data-goal="glute">臀腿後鏈</button>
+          <button class="chip" type="button" data-goal="upper">背部與姿勢</button>
+          <button class="chip" type="button" data-goal="core">核心</button>
+          <button class="chip" type="button" data-goal="ride">騎乘專項</button>
+          <button class="chip" type="button" data-goal="mobility">活動度</button>
+        </div>
+      </div>
+      <div class="gen-sect">
+        <label>多久</label>
+        <div class="gen-chips" id="gen-time">
+          <button class="chip" type="button" data-time="10">10 分鐘</button>
+          <button class="chip on" type="button" data-time="15">15 分鐘</button>
+          <button class="chip" type="button" data-time="20">20 分鐘</button>
+        </div>
+      </div>
+      <div class="gen-sect">
+        <label>條件</label>
+        <div class="gen-chips" id="gen-flags">
+          <button class="chip on" type="button" data-flag="nogear">徒手免器材</button>
+          <button class="chip" type="button" data-flag="quiet">安靜無跳躍</button>
+          <button class="chip" type="button" data-flag="dumbbell">包含啞鈴</button>
+        </div>
+      </div>
+      <button class="go gen-submit" id="gen-submit" type="button">配一張</button>
+    </div>
+  </div>
+</div>
+
+<!-- 動作挑選器（教練板） -->
 <div class="ov pick" id="pick" hidden>
   <div class="ohd">
     <button class="oback" id="pk-back" type="button"><span>←</span><span id="pk-back-t">返回今日菜單</span></button>
-    <b id="pk-title">新增動作</b>
+    <b id="pk-title">動作庫</b>
     <span class="sp"></span>
-    <button class="odone" id="pk-done" type="button">完成</button>
   </div>
   <div class="pick-body">
     <div class="pk-list">
       <div class="pk-top">
-        <div class="pk-q">
-          <input id="pk-q" type="search" placeholder="搜尋深蹲、核心、啞鈴…" autocomplete="off">
-          <button id="pk-qx" type="button" aria-label="清除搜尋" hidden>✕</button>
+        <div class="pk-top-row1">
+          <div class="pk-q">
+            <input id="pk-q" type="search" placeholder="搜尋動作名稱、部位、啞鈴…" autocomplete="off">
+            <button id="pk-qx" type="button" aria-label="清除搜尋" hidden>✕</button>
+          </div>
+          <button class="chip" id="pk-filt" type="button">篩選 ▾</button>
         </div>
-        <div class="filters" id="pk-cats"></div>
+        <div class="pk-quick-cats" id="pk-quick-cats">
+          <button class="chip on" type="button" data-qcat="feat">推薦</button>
+          <button class="chip" type="button" data-qcat="warmup">熱身</button>
+          <button class="chip" type="button" data-qcat="strength">力量</button>
+          <button class="chip" type="button" data-qcat="stretch">收操</button>
+          <button class="chip" type="button" data-qcat="all">全部 125 個</button>
+        </div>
         <div class="pk-sub">
-          <button class="chip" id="pk-filt" type="button">篩選</button>
-          <label class="tgl" id="pk-beg-w"><input type="checkbox" id="pk-beg"><span>新手模式</span></label>
-          <span id="pk-count">—</span><span class="sp"></span>
+          <span id="pk-count">—</span>
+          <span class="sp"></span>
           <span id="pk-tgt"></span>
         </div>
-        <div class="pk-sheet" id="pk-sheet" hidden></div>
+        <div class="pk-sheet" id="pk-sheet" hidden>
+          <div class="pk-sheet-sec">
+            <u>部位分類</u>
+            <div class="filters" id="pk-cats"></div>
+          </div>
+          <div class="pk-sheet-sec" style="margin-top:8px">
+            <u>教練模式與安全開關</u>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
+              <label class="tgl" id="pk-beg-w"><input type="checkbox" id="pk-beg"><span>教練引導說明</span></label>
+              <label class="tgl" id="pk-preg-w" hidden><input type="checkbox" id="pk-preg" checked><span>隱藏孕期禁做</span></label>
+            </div>
+          </div>
+        </div>
       </div>
       <div class="pk-rows" id="pk-rows"></div>
     </div>
@@ -793,7 +984,7 @@ body{
   <div class="run-hd">
     <button class="run-quit" id="r-x" type="button">結束</button>
     <span id="r-set">—</span><span class="sp"></span><span id="r-pos">—</span>
-    <button class="run-snd" id="r-snd" type="button"><span id="r-snd-i">♪</span><span id="r-snd-t">聲音開</span></button>
+    <button class="run-snd" id="r-snd" type="button"><span id="r-snd-i">♪</span><span id="r-snd-t">語音＋節拍</span></button>
   </div>
   <div class="run-bar"><i id="r-bar"></i></div>
   <div class="run-body">
@@ -804,9 +995,13 @@ body{
     <div class="run-cue" id="r-cue"></div>
     <div class="run-wake" id="r-wake" hidden></div>
     <button class="run-yt" id="r-yt" type="button" hidden>▶ 動作教學</button>
-    <button class="run-yt" id="r-copy" type="button" hidden>⧉ 複製今天的大綱</button>
+    <button class="run-yt" id="r-copy" type="button" hidden>複製今天的大綱</button>
     <textarea id="r-copy-t" readonly aria-hidden="true" tabindex="-1"></textarea>
     <div class="run-next" id="r-next"></div>
+  </div>
+  <div class="run-rest-ctrls" id="r-rest-ctrls" hidden>
+    <button class="rb-mini" id="r-add15" type="button">＋15 秒休息</button>
+    <button class="rb-mini hot" id="r-skiprest" type="button">跳過休息 ▶</button>
   </div>
   <div class="run-ft">
     <button class="rb" id="r-prev" type="button">← 上一個</button>
@@ -876,7 +1071,7 @@ function toast(html) {
 
 /* ── 標籤字典 ────────────────────────────────────────────────── */
 const GEAR_ZH = { dumbbell:'啞鈴', kettlebell:'壺鈴' };
-const TAG_ZH  = { quiet:'安靜', 'no-legs':'不練腿', 'low-doms':'低 DOMS', 'high-doms':'⚠️ 離心高' };
+const TAG_ZH  = { quiet:'安靜', 'no-legs':'不練腿', 'low-doms':'低 DOMS', 'high-doms':'離心高', 'no-mat':'免瑜伽墊', 'parenting':'顧小孩專用' };
 const CAT_ZH  = { full:'全身', prepost:'運動前後', targeted:'局部強化', weights:'重量' };
 /* 挑選器的六個大類：11 個 pattern 對第一次使用的人太細,收成人話 */
 const CATS = [
@@ -939,6 +1134,7 @@ function planFromPreset(p) {
     stretches:(p.stretches||[]).map(normMove).filter(r => byId(r.id)),
     shift: p.shift != null ? p.shift : 8,
     restBlock: p.restBlock != null ? p.restBlock : 30,
+    untimed: !!p.untimed,
   };
 }
 function moveSecs(r) {
@@ -981,12 +1177,16 @@ function buildSteps(mode) {
       b.moves.forEach((r, i) => {
         const m = byId(r.id); if (!m) return;
         const meta = { move:m, set:s, sets:b.sets, idx:i+1, of:b.moves.length, block:named ? b.name : '' };
-        if (isEach(m.unit) && isTime(m.unit)) {
+        if (isEach(m.unit) && isTime(m.unit) && !plan.untimed) {
           S.push({ kind:'work', side:'左', secs:r.amt, ...meta });
           S.push({ kind:'switch', secs:SIDE, ...meta });
           S.push({ kind:'work', side:'右', secs:r.amt, ...meta });
+        } else if (isEach(m.unit) && plan.untimed) {
+          S.push({ kind:'work', side:'左', secs:null, amt:r.amt, ...meta });
+          S.push({ kind:'switch', secs:SIDE, ...meta });
+          S.push({ kind:'work', side:'右', secs:null, amt:r.amt, ...meta });
         } else {
-          S.push({ kind:'work', secs:isTime(m.unit)?r.amt:null, amt:r.amt, ...meta });
+          S.push({ kind:'work', secs:(isTime(m.unit) && !plan.untimed)?r.amt:null, amt:r.amt, ...meta });
         }
         if (i < b.moves.length - 1 && b.restMove > 0)
           S.push({ kind:'rest', secs:b.restMove, ...meta });
@@ -1013,13 +1213,28 @@ function buildSteps(mode) {
   return S;
 }
 
-/* ── 提示音：Web Audio，不載任何檔案 ──
-   拿筆電當計時器時眼睛不一定在螢幕上，所以聲音要能單獨講完進度：
-   每秒「搭…答…」兩個交替音高＝時鐘在走；最後五秒加重；時間到是雙音。 */
-let AC = null, SND = true;
-try { SND = localStorage.getItem('circuit-snd') !== '0'; } catch (e) {}
+/* ── 提示音與自然語音播報（Web Audio ＋ Web Speech API） ── */
+let AC = null, SND_MODE = 'voice'; // 'voice' | 'beep' | 'mute'
+try {
+  const sm = localStorage.getItem('circuit-snd-mode');
+  if (sm && ['voice', 'beep', 'mute'].includes(sm)) SND_MODE = sm;
+  else if (localStorage.getItem('circuit-snd') === '0') SND_MODE = 'mute';
+} catch (e) {}
+
+function speak(text) {
+  if (SND_MODE !== 'voice' || !('speechSynthesis' in window)) return;
+  try {
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'zh-TW';
+    u.rate = 1.08;
+    u.pitch = 1.0;
+    window.speechSynthesis.speak(u);
+  } catch (e) {}
+}
+
 function beep(freq, ms, vol, force) {
-  if (!SND && !force) return;
+  if (SND_MODE === 'mute' && !force) return;
   try {
     AC = AC || new (window.AudioContext || window.webkitAudioContext)();
     if (AC.state === 'suspended') AC.resume();
@@ -1029,20 +1244,37 @@ function beep(freq, ms, vol, force) {
     g.gain.exponentialRampToValueAtTime(.0001, AC.currentTime + ms/1000);
     o.connect(g); g.connect(AC.destination);
     o.start(); o.stop(AC.currentTime + ms/1000);
-  } catch (e) { /* 靜音裝置或不支援：不影響流程 */ }
+  } catch (e) {}
   try { if (navigator.vibrate && ms >= 80) navigator.vibrate(ms > 200 ? [90,60,90] : 45); } catch (e) {}
 }
-/* 鐘擺：奇偶秒換音高做出「搭…答…」。長休息時放輕，不然兩分鐘會吵死。 */
+
+function cycleSound() {
+  if (SND_MODE === 'voice') SND_MODE = 'beep';
+  else if (SND_MODE === 'beep') SND_MODE = 'mute';
+  else SND_MODE = 'voice';
+  try { localStorage.setItem('circuit-snd-mode', SND_MODE); } catch (e) {}
+  paintSound();
+  if (SND_MODE === 'voice') speak('語音播報開');
+  else if (SND_MODE === 'beep') beep(1040, 60, .18, true);
+  toast('<b>聲音模式</b>：' + (SND_MODE === 'voice' ? '語音＋節拍' : SND_MODE === 'beep' ? '僅節拍' : '靜音'));
+}
+
+function paintSound() {
+  const btn = $('#r-snd');
+  if (!btn) return;
+  btn.classList.toggle('off', SND_MODE === 'mute');
+  $('#r-snd-i').textContent = SND_MODE === 'mute' ? '♪̸' : '♪';
+  $('#r-snd-t').textContent = SND_MODE === 'voice' ? '語音＋節拍' : SND_MODE === 'beep' ? '僅節拍' : '靜音';
+}
+
 function tick(left) {
   const soft = left > 30 ? .028 : .055;
   beep(left % 2 === 0 ? 1040 : 760, 24, soft);
 }
-/* 時間到：兩個上行音，跟每秒的搭答答明顯不同 */
 function endTone() {
   beep(760, 150, .26);
   setTimeout(() => beep(1180, 340, .26), 165);
 }
-/* 預備結束＝GO:比一般結束音更短促上揚。收工＝號角式四連音,一年只聽得到這裡 */
 function goTone() { beep(880, 110, .24); setTimeout(() => beep(1320, 300, .26), 120); }
 function fanfare() {
   [[660,120],[880,120],[990,120],[1320,560]].forEach(([f,d],i) =>
@@ -1066,23 +1298,83 @@ document.addEventListener('click', e => {
   const b = e.target.closest && e.target.closest('button,a,[tabindex]');
   if (b) lastTrigger = b;
 }, true);
+let navLock = 0;
 function layerOpen(l) {
   const a = document.activeElement;
   l.focus = (a && a !== document.body && a.focus) ? a : lastTrigger;
+  // 防止重複推入相同名稱的覆蓋層（例如切換身分重新渲染時重複呼叫 openHow）
+  if (NAV.length && topLayer().name === l.name) {
+    NAV[NAV.length - 1] = l;
+    return;
+  }
   NAV.push(l);
   /* url 只有瀏覽模式會給 —— #moves/<id> 是可以貼給別人的連結 */
-  try { history.pushState({ circuit:NAV.length }, '', l.url || null); } catch (e) {}
+  try { history.pushState({ circuit: NAV.length }, '', l.url || null); } catch (e) {}
 }
-function layerBack() { if (NAV.length) { try { history.back(); } catch (e) { popTo(NAV.length-1); } } }
-function layerCloseAll() { if (NAV.length) { try { history.go(-NAV.length); } catch (e) { popTo(0); } } }
+
+function layerBack() {
+  const now = Date.now();
+  if (now - navLock < 260) return; // 防連點，避免連續觸發 history.back() 導致瀏覽器跳回上一頁網站
+  navLock = now;
+
+  if (NAV.length) {
+    const l = NAV.pop();
+    if (l && l.close) l.close();
+    if (l && l.focus && document.contains(l.focus)) { try { l.focus.focus(); } catch (e) {} }
+    // 只有在當前歷史確實有 circuit 狀態時才 back()，避免跳出本站回上一頁
+    if (history.state && history.state.circuit > 0) {
+      try { history.back(); } catch (e) {}
+    } else {
+      cleanUrlHash();
+    }
+  } else {
+    // 兜底：若 NAV 空了但還有彈窗開著，強制關閉以返回今日菜單
+    forceCloseOverlays();
+  }
+}
+
+function layerCloseAll() {
+  const now = Date.now();
+  if (now - navLock < 260) return;
+  navLock = now;
+
+  const count = NAV.length;
+  const hadState = history.state && history.state.circuit > 0;
+  popTo(0);
+  forceCloseOverlays();
+  if (hadState && count > 0) {
+    try { history.go(-Math.min(count, history.state.circuit)); } catch (e) {}
+  } else {
+    cleanUrlHash();
+  }
+}
+
 function popTo(depth) {
   while (NAV.length > depth) {
     const l = NAV[NAV.length - 1];
-    if (l.guard && !l.guard()) { try { history.pushState({ circuit:NAV.length }, ''); } catch (e) {} return false; }
-    NAV.pop(); l.close();
-    if (l.focus && document.contains(l.focus)) { try { l.focus.focus(); } catch (e) {} }
+    if (l.guard && !l.guard()) { try { history.pushState({ circuit: NAV.length }, ''); } catch (e) {} return false; }
+    NAV.pop();
+    if (l && l.close) l.close();
+    if (l && l.focus && document.contains(l.focus)) { try { l.focus.focus(); } catch (e) {} }
+  }
+  if (depth === 0) {
+    forceCloseOverlays();
+    cleanUrlHash();
   }
   return true;
+}
+
+function forceCloseOverlays() {
+  if (!$('#how').hidden) closeHow();
+  if (!$('#log').hidden) closeLog();
+  if (!$('#pick').hidden) closePick();
+  lockScroll(false);
+}
+
+function cleanUrlHash() {
+  if (location.hash && /#moves/.test(location.hash)) {
+    try { history.replaceState({ circuit: 0 }, '', location.pathname + location.search); } catch (e) {}
+  }
 }
 addEventListener('popstate', e => popTo((e.state && e.state.circuit) || 0));
 const topLayer = () => NAV[NAV.length - 1];
@@ -1126,8 +1418,8 @@ function paintWake() {
   const bad = R.wakeOk === false && !$('#run').hidden;
   el.hidden = !bad;
   if (bad) el.innerHTML = !('wakeLock' in navigator)
-    ? '⚠️ 這個瀏覽器不會讓螢幕保持常亮 —— <b>先把自動鎖定關掉</b>，不然中途會暗掉。'
-    : '⚠️ 螢幕常亮被擋住了（多半是<b>省電模式</b>）—— 關掉省電模式，或先把自動鎖定關掉。';
+    ? '這個瀏覽器不會讓螢幕保持常亮 —— <b>先把自動鎖定關掉</b>，不然中途會暗掉。'
+    : '螢幕常亮被擋住了（多半是<b>省電模式</b>）—— 關掉省電模式，或先把自動鎖定關掉。';
 }
 
 const MODE_ZH = { full:'訓練', warmup:'熱身', stretch:'收操' };
@@ -1173,7 +1465,13 @@ function showStep() {
   repop(document.querySelector('.run-body'), 'in');
   fx('step', { kind: st.kind, side: st.side || null, stretch: !!st.stretch });
 
-  if (st.kind === 'done') return showDone();
+  const restCtrls = $('#r-rest-ctrls');
+  if (restCtrls) restCtrls.hidden = !(rest || cool);
+
+  if (st.kind === 'done') {
+    speak('訓練完成！今天辛苦了。');
+    return showDone();
+  }
 
   $('#r-prev').hidden = false; $('#r-skip').hidden = false;
   $('#r-bar').style.transform = 'scaleX(' + (R.i / (R.steps.length - 1)).toFixed(4) + ')';
@@ -1193,11 +1491,14 @@ function showStep() {
     $('#r-k').textContent = '預備';
     $('#r-name').textContent = nx ? nx.move.zh : '開始';
     $('#r-unit').textContent = '秒';
-    $('#r-cue').innerHTML = SND
-      ? '🔊 每秒有節拍、<b>最後五秒加重</b>、時間到有結束音。站到位，倒數完就開始！'
-      : '🔇 <b>聲音是關的</b> —— 點右上角的聲音鍵打開，才聽得到倒數節拍與結束音。';
+    $('#r-cue').innerHTML = plan.untimed
+      ? '<b>顧小孩自由節奏</b>：每個動作看次數，沒有倒數在催。做完點「完成此動作」，中間要抱小孩就抱。'
+      : (SND_MODE !== 'mute'
+        ? '每秒有節拍、<b>最後五秒加重</b>、時間到有結束音。站到位，倒數完就開始。'
+        : '<b>聲音是關的</b> —— 點右上角的聲音鍵打開，才聽得到倒數節拍與結束音。');
     $('#r-next').textContent = '';
     $('#r-main').textContent = '暫停';
+    speak('預備，' + (nx ? nx.move.zh : '準備開始') + (plan.untimed ? '，自由節奏，做完按完成！' : '，倒數開始！'));
     return countdown(st.secs);
   }
 
@@ -1212,7 +1513,9 @@ function showStep() {
     $('#r-cue').innerHTML = st.kind === 'bigrest'
       ? '第 ' + st.set + ' 輪完成，還剩 ' + (st.sets - st.set) + ' 輪。<b>喝水、把呼吸放回鼻子</b>再開始下一輪。'
       : st.kind === 'shift' ? '換姿勢、找好支撐點再開始，不要邊調整邊算秒。' : '';
-    $('#r-main').textContent = '暫停';
+    $('#r-main').textContent = plan.untimed ? '下一個 →' : '暫停';
+    if (st.kind === 'switch') speak('換邊！');
+    else speak('休息，下一個動作：' + (nx ? nx.move.zh : ''));
     return countdown(st.secs);
   }
 
@@ -1220,20 +1523,21 @@ function showStep() {
   $('#r-k').textContent = st.stretch ? '伸展' : (DB.patterns[m.pattern] || {}).zh || '';
   $('#r-name').textContent = m.zh + (st.side ? ' · ' + st.side : '');
   $('#r-cue').innerHTML = md(m.cue);
-  /* 訓練中要看教學：先暫停再開,關掉之後有 3 秒重新就位。
-     原本是直接開新分頁,回來時那個動作早就跑掉了。 */
   $('#r-yt').hidden = false;
 
-  if (isTime(m.unit)) {
+  if (st.secs != null) {
     $('#r-unit').textContent = '秒' + (m.hint ? ' · ' + m.hint : '');
     $('#r-main').textContent = '暫停';
+    speak(m.zh + (st.side ? ' ' + st.side : '') + '，開始！');
     countdown(st.secs);
   } else {
-    /* 全部動作都是計時的（見 movements.json 的 _why_time）。
-       這條分支留著只是防呆:資料如果哪天又冒出次數類,不要整個畫面空掉。 */
     $('#r-num').textContent = st.amt;
-    $('#r-unit').textContent = '次';
-    $('#r-main').textContent = '完成';
+    $('#r-unit').textContent = isEach(m.unit) ? '次／側' : '次';
+    $('#r-main').textContent = '完成此動作 →';
+    if (plan.untimed) {
+      $('#r-cue').innerHTML = md(m.cue) + '<div style="margin-top:10px;font-size:13px;color:var(--sig);font-weight:600">👶 自由節奏：做完再按「完成此動作」，隨時丟下去顧小孩！</div>';
+    }
+    speak(m.zh + (st.side ? ' ' + st.side : '') + '，做 ' + st.amt + (isEach(m.unit) ? ' 次每側' : ' 次') + '，開始！');
   }
 }
 /* ── 今天的大綱 ──────────────────────────────────────────────
@@ -1274,7 +1578,7 @@ async function copySummary() {
   btn.textContent = ok ? '✓ 已複製，可以貼進 Strava 了' : '複製失敗 —— 長按下面的文字自己選';
   btn.classList.toggle('ok', ok);
   if (!ok) { const ta = $('#r-copy-t'); ta.style.cssText = 'position:static;width:100%;height:9em;opacity:1;pointer-events:auto;background:rgba(0,0,0,.4);color:var(--ink-1);font:13px/1.7 inherit;padding:10px;border-radius:7px'; }
-  else setTimeout(() => { btn.textContent = '⧉ 複製今天的大綱'; btn.classList.remove('ok'); }, 2600);
+  else setTimeout(() => { btn.textContent = '複製今天的大綱'; btn.classList.remove('ok'); }, 2600);
   beep(ok ? 1040 : 440, 70, .16);
 }
 
@@ -1293,7 +1597,7 @@ function showDone() {
           : '收工。明後天有點痠是正常的，痠到影響動作就把下一堂的組數往下調一組。');
   $('#r-yt').hidden = true; $('#r-wake').hidden = true;
   $('#r-copy').hidden = false;
-  $('#r-copy').textContent = '⧉ 複製今天的大綱'; $('#r-copy').classList.remove('ok');
+  $('#r-copy').textContent = '複製今天的大綱'; $('#r-copy').classList.remove('ok');
   $('#r-next').textContent = R.mode === 'stretch'
     ? plan.stretches.length + ' 個收操伸展'
     : nMoves + ' 個動作' + (R.mode === 'full' && plan.stretches.length ? ' ＋ ' + plan.stretches.length + ' 伸展' : '');
@@ -1398,12 +1702,6 @@ function confetti() {
   run.appendChild(box);
   setTimeout(() => box.remove(), 4400);
 }
-function paintSound() {
-  $('#r-snd').classList.toggle('off', !SND);
-  $('#r-snd-i').textContent = SND ? '♪' : '♪̸';
-  $('#r-snd-t').textContent = SND ? '聲音開' : '聲音關';
-}
-
 /* ══ 教學影片 ══════════════════════════════════════════════════
    data/movement-videos.json 是離線採集的（見 docs/gemini-movement-video-research-prompt.md）。
    前端不打 YouTube Data API：金鑰會外洩、每次開動作都要等搜尋，而且結果每天都在變。
@@ -1479,33 +1777,356 @@ function mountPlayer(key) {
   box.scrollIntoView({ block:'nearest', behavior:'smooth' });
 }
 
-/* ══ 動作詳情 ══════════════════════════════════════════════════
-   同一個渲染器三種用法:整份課表（看教學）、單一動作（課表列／執行畫面）、
-   挑選器的詳情欄。新手模式與一般模式看到的是同一份內容,差別只在
-   「什麼時候會被推到你面前」。 */
+/* ══ 動作圖卡資料庫 ══════════════════════════════════════════════
+   125 個動作的圖卡視覺（預備/底端姿勢、受力肌群、性別/孕期專屬建議、學術出處）。 */
+let CARDS = null, cardState = 0;
+function loadCards() {
+  if (cardState) return;
+  cardState = 1;
+  fetch('data/movement-cards.json', { cache: 'no-cache' })
+    .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(j => { CARDS = j.cards || {}; cardState = 2; renderPresets(); renderPlan(); refreshCardsIfOpen(); })
+    .catch(() => { cardState = 3; });
+}
+let PERSONA = 'male';
+let PREG_ONLY = true;
+try {
+  const sp = localStorage.getItem('circuit-persona');
+  if (sp && ['male', 'female', 'preg'].includes(sp)) PERSONA = sp;
+} catch (e) {}
+
+const PERSONA_INFO = {
+  male: {
+    desc: '練<b>向心發力</b>：單車的大扭力踩踏、垂直起跳，還有全身核心的剛性。',
+    recs: [
+      { id: 'quick-full', label: '10 分鐘爆發全身' },
+      { id: 'home-dumbbell-b1', label: '家用啞鈴力量 B1' },
+      { id: 'ride-primer', label: '騎乘前下肢啟動' }
+    ]
+  },
+  female: {
+    desc: '重心放在<b>臀腿後鏈與背部姿勢</b>，少讓大腿前側代償。',
+    recs: [
+      { id: 'posterior-hip', label: '後鏈＋髖穩定' },
+      { id: 'ankle-knee', label: '足踝與膝蓋' },
+      { id: 'mobility', label: '活動度／胸椎' }
+    ]
+  },
+  preg: {
+    desc: '<b>零腹壓、不跳</b>，以四足跪姿與靠牆支撐為主。依 ACOG 孕期運動指引。',
+    recs: [
+      { id: 'ankle-knee', label: '足踝與膝蓋保養' },
+      { id: 'mobility', label: '活動度／脊椎' },
+      { id: 'cooldown-ride', label: '溫和收操拉筋' }
+    ]
+  }
+};
+
+const PREG_REPLACE = {
+  'pull-superman': 'pull-wallslide', 'pull-snowangel': 'pull-wallslide', 'pull-w': 'pull-wallslide',
+  'pull-y': 'pull-wallslide', 'pull-t': 'pull-wallslide', 'warm-armcircle': 'pull-wallslide',
+  'loco-burpee': 'loco-stepjack', 'loco-jack': 'loco-stepjack', 'loco-highknee': 'loco-stepjack',
+  'loco-mtn': 'co-crosscrawl', 'loco-duck': 'sq-bw',
+  'core-plank': 'core-quad-tap', 'core-hollow': 'core-quad-tap', 'core-hollow-rock': 'core-quad-tap',
+  'core-rkc': 'core-quad-tap', 'core-plank-tap': 'core-quad-tap',
+  'sq-jump': 'sq-bw', 'sq-bulgarian': 'sq-bw', 'sq-curtsy': 'sq-bw', 'sq-pistol': 'sq-bw',
+  'sq-sissy': 'sq-bw', 'sq-skater': 'sq-bw',
+  'hinge-bridge-1': 'hinge-wall', 'hinge-longlever': 'hinge-wall', 'hinge-walkout': 'hinge-wall',
+  'hinge-nordic': 'hinge-wall', 'hinge-kb-swing': 'hinge-wall', 'hinge-sl-rdl-w': 'hinge-wall',
+  'hinge-clean': 'hinge-wall', 'hinge-snatch': 'hinge-wall',
+  'lat-cph-knee': 'lat-clam', 'lat-cph-full': 'lat-clam', 'lat-sideplank-raise': 'lat-clam',
+  'lat-skater': 'lat-clam', 'lat-mtn-side': 'lat-sidelying', 'lat-cossack': 'lat-clam',
+  'lat-shuff-jump': 'lat-stand-abd', 'lat-hipdip': 'lat-sidelying',
+  'co-spiderman': 'co-crosscrawl', 'co-crabreach': 'st-chest', 'co-carioca': 'co-crosscrawl',
+  'co-scorpion': 'st-openbook', 'co-bear-rev': 'warm-birddog', 'co-sl-eyes': 'co-toetap',
+  'co-bear-rot': 'warm-birddog', 'co-tgu': 'warm-birddog', 'co-tgu-kb': 'warm-birddog',
+  'push-pike': 'push-incline', 'push-decline': 'push-incline', 'push-decline-pike': 'push-incline',
+  'push-wall-hspu': 'push-db-press', 'push-hindu': 'push-incline',
+  'pull-table-row-1': 'pull-db-row', 'st-couch': 'st-hipflexor'
+};
+
+function cleanPlanForPregnancy() {
+  let count = 0;
+  plan.blocks.forEach(b => {
+    b.moves = b.moves.map(m => {
+      const rep = PREG_REPLACE[m.id];
+      if (rep) { count++; return { id: rep, amt: (byId(rep)||{}).default || m.amt }; }
+      return m;
+    });
+  });
+  plan.stretches = plan.stretches.map(m => {
+    const rep = PREG_REPLACE[m.id];
+    if (rep) { count++; return { id: rep, amt: (byId(rep)||{}).default || m.amt }; }
+    return m;
+  });
+  renderPlan();
+  toast('<b>✓ 換好了</b> ' + count + ' 個動作換成孕期安全版本');
+}
+
+function setPersona(p) {
+  PERSONA = p;
+  try { localStorage.setItem('circuit-persona', p); } catch (e) {}
+  paintPersona();
+  renderPresets();
+  renderPlan();
+  if (!$('#pick').hidden) renderPicker();
+  refreshCardsIfOpen();
+}
+function paintPersona() {
+  document.querySelectorAll('[data-persona]').forEach(el => {
+    el.classList.toggle('active', el.dataset.persona === PERSONA);
+  });
+  const guide = $('#persona-guide');
+  if (guide) {
+    const info = PERSONA_INFO[PERSONA] || PERSONA_INFO.male;
+    guide.innerHTML = info.desc +
+      '<div class="persona-recs"><span>' + (PERSONA === 'preg' ? '安全的：' : '常用：') + '</span>' +
+      info.recs.map(r => '<button class="p-rec-btn" type="button" data-p="' + r.id + '">' + esc(r.label) + '</button>').join('') +
+      '</div>';
+  }
+}
+function refreshCardsIfOpen() {
+  const pkDet = $('#pk-detail');
+  if (pkDet && pkDet.dataset.cur) {
+    const curM = byId(pkDet.dataset.cur);
+    if (curM) pkDet.innerHTML = howCard(curM, null, { add:true });
+  }
+  const howEl = $('#how');
+  if (howEl && !howEl.hidden) {
+    openHow(howEl.dataset.curId || null);
+  }
+}
+
+const PROGRESSIONS = {
+  // Push
+  'push-incline':      { down: null, up: 'push-up' },
+  'push-up':           { down: 'push-incline', up: 'push-diamond' },
+  'push-wide':         { down: 'push-incline', up: 'push-up' },
+  'push-diamond':      { down: 'push-up', up: 'push-pike' },
+  'push-pike':         { down: 'push-diamond', up: 'push-decline-pike' },
+  'push-decline-pike': { down: 'push-pike', up: 'push-wall-hspu' },
+  'push-wall-hspu':    { down: 'push-decline-pike', up: null },
+  'push-tempo':        { down: 'push-up', up: 'push-diamond' },
+  // Squat
+  'sq-wall-sit':       { down: null, up: 'sq-bw' },
+  'sq-bw':             { down: 'sq-wall-sit', up: 'sq-split' },
+  'sq-split':          { down: 'sq-bw', up: 'sq-bulgarian' },
+  'sq-split-iso':      { down: 'sq-bw', up: 'sq-split' },
+  'sq-stepup':         { down: 'sq-bw', up: 'sq-bulgarian' },
+  'sq-reverse-lunge':  { down: 'sq-bw', up: 'sq-split' },
+  'sq-walking-lunge':  { down: 'sq-split', up: 'sq-bulgarian' },
+  'sq-lateral':        { down: 'sq-bw', up: 'sq-lateral-iso' },
+  'sq-lateral-iso':    { down: 'sq-lateral', up: 'lat-cossack' },
+  'sq-bulgarian':      { down: 'sq-split', up: 'sq-pistol' },
+  'sq-pistol':         { down: 'sq-bulgarian', up: null },
+  'sq-skater':         { down: 'sq-split', up: 'sq-pistol' },
+  // Hinge
+  'hinge-wall':        { down: null, up: 'hinge-sl-rdl' },
+  'hinge-sl-rdl':      { down: 'hinge-wall', up: 'hinge-bridge-1' },
+  'hinge-bridge-1':    { down: 'hinge-sl-rdl', up: 'hinge-walkout' },
+  'hinge-longlever':   { down: 'warm-bridge', up: 'hinge-bridge-1' },
+  'hinge-walkout':     { down: 'hinge-bridge-1', up: 'hinge-nordic' },
+  'hinge-nordic':      { down: 'hinge-walkout', up: null },
+  'hinge-kb-dl':       { down: 'hinge-wall', up: 'hinge-sl-rdl-w' },
+  'hinge-sl-rdl-w':    { down: 'hinge-kb-dl', up: 'hinge-kb-swing' },
+  'hinge-kb-swing':    { down: 'hinge-sl-rdl-w', up: null },
+  'hinge-airplane':    { down: 'hinge-sl-rdl', up: null },
+  // Pull
+  'pull-wallslide':    { down: null, up: 'pull-w' },
+  'pull-snowangel':    { down: 'pull-wallslide', up: 'pull-w' },
+  'pull-y':            { down: 'pull-wallslide', up: 'pull-w' },
+  'pull-t':            { down: 'pull-wallslide', up: 'pull-w' },
+  'pull-w':            { down: 'pull-wallslide', up: 'pull-superman' },
+  'pull-superman':     { down: 'pull-w', up: 'pull-table-row' },
+  'pull-towel-row':    { down: 'pull-w', up: 'pull-table-row' },
+  'pull-table-row':    { down: 'pull-superman', up: 'pull-table-row-1' },
+  'pull-table-row-1':  { down: 'pull-table-row', up: null },
+  'pull-db-row':       { down: 'pull-w', up: 'pull-table-row' },
+  // Core
+  'core-quad-tap':     { down: null, up: 'core-deadbug' },
+  'core-deadbug':      { down: 'core-quad-tap', up: 'core-plank' },
+  'core-plank':        { down: 'core-deadbug', up: 'core-plank-tap' },
+  'core-plank-tap':    { down: 'core-plank', up: 'core-hollow' },
+  'core-sideplank':    { down: 'lat-clam', up: 'lat-cph-knee' },
+  'core-hollow':       { down: 'core-plank-tap', up: 'core-rkc' },
+  'core-hollow-rock':  { down: 'core-hollow', up: 'core-rkc' },
+  'core-rkc':          { down: 'core-hollow', up: null },
+  // Lateral
+  'lat-clam':          { down: null, up: 'lat-sidelying' },
+  'lat-sidelying':     { down: 'lat-clam', up: 'lat-stand-abd' },
+  'lat-stand-abd':     { down: 'lat-sidelying', up: 'lat-hipdip' },
+  'lat-squat-walk':    { down: 'lat-clam', up: 'lat-crab' },
+  'lat-crab':          { down: 'lat-squat-walk', up: 'lat-stepup' },
+  'lat-bearside':      { down: 'co-bearhold', up: 'lat-mtn-side' },
+  'lat-hipdip':        { down: 'lat-stand-abd', up: 'lat-cph-knee' },
+  'lat-cph-knee':      { down: 'lat-hipdip', up: 'lat-cph-full' },
+  'lat-cph-full':      { down: 'lat-cph-knee', up: null },
+  // Calf
+  'calf-tib':          { down: null, up: 'calf-raise' },
+  'calf-raise':        { down: 'calf-tib', up: 'calf-soleus' },
+  'calf-soleus':       { down: 'calf-raise', up: 'calf-sl' },
+  'calf-sl':           { down: 'calf-soleus', up: null },
+  // Loco
+  'loco-stepjack':     { down: null, up: 'loco-jack' },
+  'loco-jack':         { down: 'loco-stepjack', up: 'loco-highknee' },
+  'loco-highknee':     { down: 'loco-jack', up: 'loco-mtn' },
+  'loco-mtn':          { down: 'loco-highknee', up: 'loco-burpee' },
+  'loco-burpee':       { down: 'loco-mtn', up: null },
+  // Warmup
+  'warm-armcircle':    { down: null, up: 'warm-scap' },
+  'warm-scap':         { down: 'warm-armcircle', up: 'push-incline' },
+  'warm-bridge':       { down: null, up: 'hinge-sl-rdl' },
+  'warm-birddog':      { down: 'core-quad-tap', up: 'core-deadbug' },
+  'warm-9090':         { down: null, up: 'st-9090' }
+};
+
+function swapMove(fromId, toId) {
+  const targetM = byId(toId);
+  if (!targetM) return;
+  let count = 0;
+  plan.blocks.forEach(b => {
+    b.moves.forEach(m => {
+      if (m.id === fromId) {
+        m.id = toId;
+        m.amt = targetM.default || m.amt;
+        count++;
+      }
+    });
+  });
+  plan.stretches.forEach(m => {
+    if (m.id === fromId) {
+      m.id = toId;
+      m.amt = targetM.default || m.amt;
+      count++;
+    }
+  });
+  renderPlan();
+  refreshCardsIfOpen();
+  if (count > 0) {
+    toast('<b>✓ 換好了</b> 今日菜單改成 ' + esc(targetM.zh));
+  } else {
+    addMove(toId);
+    toast('<b>✓</b> ' + esc(targetM.zh) + ' 加進今日菜單了');
+  }
+}
+
+/* ══ 動作詳情（教練預覽板） ═════════════════════════════════════
+   1. 姿勢圖解與大型影片
+   2. 動作名稱、時間、難度、肌群
+   3. 三句核心口令
+   4. 一個常見代償錯誤
+   5. 明顯的大按鈕「加入今日菜單」
+   6. 深入說明、學術來源與另外兩支影片收合在「展開更多」 */
 function countOf(id) { return allRows(plan).filter(r => r.id === id).length; }
 function howCard(m, amt, opt) {
   const o = opt || {}, p = DB.patterns[m.pattern] || {};
   const n = countOf(m.id);
-  return '<div class="hc">' +
-    '<div class="hc-h"><b>' + esc(m.zh) + '</b>' +
-      '<s class="' + (m.tier[0] === 'B' ? 't-B' : '') + '">' + m.tier + '</s>' +
-      '<i>' + esc(p.zh || '') + ' · ' + esc(m.en) + '</i></div>' +
-    '<div class="hc-amt">做 <b>' + (amt != null ? amt : m.default) + '</b> ' + UNIT[m.unit] +
-      (m.hint ? '　<span style="color:var(--ink-3)">（' + esc(m.hint) + '）</span>' : '') + '</div>' +
-    (m.steps && m.steps.length
-      ? '<ol class="hc-steps">' + m.steps.map(s => '<li>' + md(s) + '</li>').join('') + '</ol>'
-      : '<div class="hc-cue">' + md(m.cue) + '</div>') +
-    (m.wrong ? '<div class="hc-wrong">' + md(m.wrong) + '</div>' : '') +
-    (m.note ? '<div class="hc-note">' + md(m.note) + '</div>' : '') +
-    (m.doms >= 4 ? '<div class="hc-warn">⚠️ 離心損傷高（' + m.doms + '／5）—— ' +
-      (ME ? '週二門檻課與週末測驗前 48 小時不要做這個。'
-          : '重要測驗或高強度課表前 48 小時不要做這個。') + '</div>' : '') +
-    (m.gear.length ? '<div class="hc-warn">需要器材：' +
-      m.gear.map(g => GEAR_ZH[g] || g).join('／') + '</div>' : '') +
-    '<div class="hc-vid" data-vidfor="' + m.id + '"><u>熱門教學</u>' + videoHtml(m) + '</div>' +
-    (o.add ? '<button class="hc-add' + (n ? ' done' : '') + '" type="button" data-add="' + m.id + '">' +
-      (n ? '再加一次（已加入 ' + n + '）' : '加入' + (m.pattern === 'stretch' ? '收操' : '今日菜單')) + '</button>' : '') +
+  const cd = (CARDS && CARDS[m.id]) || null;
+  const vs = vidsOf(m.id);
+
+  // 1. 大型動作姿勢示意
+  let stageHtml = '';
+  if (cd && cd.start && cd.finish) {
+    stageHtml = '<div class="hc-stage">' +
+      '<div class="hc-poses">' +
+        '<div class="hc-pose-box">' +
+          '<span class="hc-pose-tag">起始</span>' +
+          '<div class="hc-pose-main">' + esc(cd.start.main) + '</div>' +
+          (cd.start.sub ? '<div class="hc-pose-sub">' + esc(cd.start.sub) + '</div>' : '') +
+        '</div>' +
+        '<div class="hc-pose-arrow">→</div>' +
+        '<div class="hc-pose-box">' +
+          '<span class="hc-pose-tag">底端／頂端</span>' +
+          '<div class="hc-pose-main">' + esc(cd.finish.main) + '</div>' +
+          (cd.finish.sub ? '<div class="hc-pose-sub">' + esc(cd.finish.sub) + '</div>' : '') +
+        '</div>' +
+      '</div>' +
+      (cd.muscles && cd.muscles.length ? '<div class="hc-muscles">受力：<b>' + cd.muscles.map(esc).join(' · ') + '</b></div>' : '') +
+    '</div>';
+  }
+
+  // 首支重點示範影片（大型預覽）
+  let topVidHtml = '';
+  if (vs && vs[0]) {
+    const v = vs[0];
+    topVidHtml = '<div class="vids" style="margin-bottom:12px">' +
+      '<button class="vid" type="button" data-vid="' + m.id + ':0">' +
+        '<span class="vid-th"><img loading="lazy" alt="" src="https://i.ytimg.com/vi/' + v.videoId + '/mqdefault.jpg">' +
+          '<em>首選</em><s>' + vSecs(v.durationSec) + '</s></span>' +
+        '<span class="vid-m"><b>' + esc(v.title) + '</b>' +
+          '<i>' + esc(v.channel) + ' · ' + nView(v.viewCountAtSelection) + '</i></span>' +
+      '</button></div>';
+  }
+
+  // 2. 動作名稱、時間與難度
+  const titleHtml = '<div class="hc-h">' +
+    '<b>' + esc(m.zh) + '</b>' +
+    '<span class="hc-meta">' + esc(p.zh || '') + ' · ' + m.tier + ' · ' +
+      (m.gear.length ? m.gear.map(g => GEAR_ZH[g] || g).join('／') : '免器材') + '</span>' +
+    '</div>' +
+    '<div class="hc-amt">預設：做 <b>' + (amt != null ? amt : m.default) + '</b> ' + UNIT[m.unit] +
+    (m.hint ? '　<span style="color:var(--ink-3)">（' + esc(m.hint) + '）</span>' : '') + '</div>';
+
+  // 3. 口令與動作步驟
+  const cueHtml = '<div class="hc-cue">' + md(m.cue) + '</div>' +
+    (m.steps && m.steps.length ? '<ol class="hc-steps">' + m.steps.map(s => '<li>' + md(s) + '</li>').join('') + '</ol>' : '');
+
+  // 4. 一個常見錯誤
+  const wrongHtml = m.wrong ? '<div class="hc-wrong">' + md(m.wrong) + '</div>' : '';
+
+  // 身分專屬叮嚀
+  let personaHtml = '';
+  if (cd) {
+    if (PERSONA === 'male' && cd.male) {
+      personaHtml = '<div class="hc-persona p-male"><b>男生力量</b>' + esc(cd.male) + '</div>';
+    } else if (PERSONA === 'female' && cd.female) {
+      personaHtml = '<div class="hc-persona p-female"><b>女生體態</b>' + esc(cd.female) + '</div>';
+    } else if (PERSONA === 'preg' && cd.preg) {
+      const pCls = cd.preg.status === 'avoid' ? 'p-preg-avoid' : cd.preg.status === 'modify' ? 'p-preg-modify' : 'p-preg-safe';
+      const pLbl = cd.preg.status === 'avoid' ? '孕期禁做' : cd.preg.status === 'modify' ? '孕期退階' : '孕期安全';
+      personaHtml = '<div class="hc-persona ' + pCls + '"><b>' + pLbl + '</b>' + esc(cd.preg.note) + '</div>';
+    }
+  }
+
+  // 動作進退階梯
+  let ladderHtml = '';
+  const prog = PROGRESSIONS[m.id];
+  if (prog && (prog.down || prog.up)) {
+    const dM = prog.down ? byId(prog.down) : null;
+    const uM = prog.up ? byId(prog.up) : null;
+    ladderHtml = '<div class="hc-ladder">' +
+      (dM ? '<div class="hc-step"><div><span>← 退階（更輕鬆）</span><b>' + esc(dM.zh) + '</b></div><button class="btn-swap" type="button" data-swap="' + m.id + ':' + dM.id + '">替換</button></div>' : '') +
+      (uM ? '<div class="hc-step"><div><span>進階（更挑戰） →</span><b>' + esc(uM.zh) + '</b></div><button class="btn-swap" type="button" data-swap="' + m.id + ':' + uM.id + '">替換</button></div>' : '') +
+      '</div>';
+  }
+
+  // 5. 明顯的「加入今日菜單」按鈕
+  const addBtnHtml = (o.add ? '<button class="hc-add' + (n ? ' done' : '') + '" type="button" data-add="' + m.id + '">' +
+    (n ? '再加一次（已加入 ' + n + '）' : '＋ 加入' + (m.pattern === 'stretch' ? '收操' : '今日菜單')) + '</button>' : '');
+
+  // 6. 其他深入說明、研究來源及另外兩支影片收進「展開更多」
+  let refHtml = cd && cd.ref ? '<div class="hc-ref">來源：' + esc(cd.ref) + '</div>' : '';
+  const moreDetailsHtml = '<details class="hc-more-details">' +
+    '<summary>參考來源、器材、其他影片 ▾</summary>' +
+    '<div class="hc-more-in">' +
+      (m.note ? '<div class="hc-note">' + md(m.note) + '</div>' : '') +
+      (m.doms >= 4 ? '<div class="hc-warn">離心損傷高（' + m.doms + '／5）—— 重要測驗前 48 小時不要做這個。</div>' : '') +
+      (m.gear.length ? '<div class="hc-warn">需要器材：' + m.gear.map(g => GEAR_ZH[g] || g).join('／') + '</div>' : '') +
+      refHtml +
+      '<div class="hc-vid" data-vidfor="' + m.id + '"><u>全部教學影片</u>' + videoHtml(m) + '</div>' +
+    '</div>' +
+  '</details>';
+
+  return '<div class="hc' + (PERSONA === 'preg' && cd && cd.preg && cd.preg.status === 'avoid' ? ' hc-avoid' : '') + '">' +
+    stageHtml +
+    topVidHtml +
+    titleHtml +
+    cueHtml +
+    wrongHtml +
+    personaHtml +
+    ladderHtml +
+    addBtnHtml +
+    moreDetailsHtml +
   '</div>';
 }
 /* ── 更新紀錄 ────────────────────────────────────────────────
@@ -1552,8 +2173,13 @@ function closeLog() {
 
 function openHow(id, backLabel) {
   const body = $('#how-body');
-  $('#how-back').textContent = backLabel ||
-    (!$('#log').hidden ? '返回更新紀錄' : !$('#pick').hidden ? '返回動作庫' : '返回今日菜單');
+  loadCards();
+  const alreadyOpen = !$('#how').hidden;
+  $('#how').dataset.curId = id || '';
+  if (!alreadyOpen || backLabel) {
+    $('#how-back').textContent = backLabel ||
+      (!$('#log').hidden ? '返回更新紀錄' : !$('#pick').hidden ? '返回動作庫' : '返回今日菜單');
+  }
   if (id) {
     const m = byId(id); if (!m) return;
     const row = allRows(plan).find(r => r.id === id);
@@ -1572,9 +2198,11 @@ function openHow(id, backLabel) {
   killPlayer(); loadVideos();
   $('#how').hidden = false;
   lockScroll(true);
-  $('#how').querySelector('.ov-body').scrollTop = 0;
-  layerOpen({ name:'how', close:closeHow });
-  $('#how-x').focus();
+  if (!alreadyOpen) {
+    $('#how').querySelector('.ov-body').scrollTop = 0;
+    layerOpen({ name:'how', close:closeHow });
+    $('#how-x').focus();
+  }
 }
 function closeHow() {
   killPlayer();
@@ -1591,13 +2219,9 @@ function openHowFromRun() {
 }
 
 /* ══ 動作挑選器 ════════════════════════════════════════════════ */
-let BEG = false;                                    // 新手模式
-const PF = { cat:'all', q:'', lvl:'all', pat:'all', flags:{} };
+let BEG = false;                                    // 新手模式 / 教練引導
+const PF = { cat:'all', qcat:'feat', q:'', lvl:'all', pat:'all', flags:{} };
 let pkTarget = 0;                                   // 多段課表時要加到哪一段
-/* 同一個面板兩種來意：
-   'add'    從「＋新增動作」進來 —— 點列＝直接加（新手模式除外）
-   'browse' 從「瀏覽全部」或 #moves 連結進來 —— 點列＝先看教學,因為你是來讀的
-   兩邊共用同一份列表、詳情與影片,不會有第二份會漂掉的動作卡。 */
 let pkMode = 'add';
 
 function shortCue(m) {
@@ -1605,6 +2229,17 @@ function shortCue(m) {
   return s.length > 24 ? s.slice(0, 23) + '…' : s;
 }
 function pkMatch(m) {
+  // 快速分類群組
+  if (PF.qcat === 'feat') {
+    if (m.doms > 2 || m.tier === 'C4' || m.tier === 'B2') return false;
+  } else if (PF.qcat === 'warmup') {
+    if (m.pattern !== 'warmup') return false;
+  } else if (PF.qcat === 'strength') {
+    if (!['push', 'pull', 'squat', 'hinge', 'lateral', 'calf'].includes(m.pattern)) return false;
+  } else if (PF.qcat === 'stretch') {
+    if (m.pattern !== 'stretch') return false;
+  }
+  // 細部篩選
   const cat = catOf(PF.cat);
   if (cat[2] && cat[2].indexOf(m.pattern) < 0) return false;
   if (PF.pat !== 'all' && m.pattern !== PF.pat) return false;
@@ -1614,6 +2249,7 @@ function pkMatch(m) {
   if (PF.flags.nogear && m.gear.length) return false;
   if (PF.flags.quiet && m.noisy) return false;
   if (PF.flags.lowdoms && m.doms > 2) return false;
+  if (PERSONA === 'preg' && PREG_ONLY && CARDS && CARDS[m.id] && CARDS[m.id].preg && CARDS[m.id].preg.status === 'avoid') return false;
   const q = PF.q.trim().toLowerCase();
   if (q) {
     /* 中英都要吃得到：搜「core」找核心、搜「dumbbell」跟「啞鈴」是同一批 */
@@ -1629,27 +2265,59 @@ function nFilters() {
     Object.keys(PF.flags).filter(k => PF.flags[k]).length;
 }
 function renderPicker() {
+  const pregW = $('#pk-preg-w');
+  if (pregW) {
+    pregW.hidden = PERSONA !== 'preg';
+    const chk = $('#pk-preg');
+    if (chk) chk.checked = PREG_ONLY;
+    pregW.classList.toggle('on', PREG_ONLY);
+  }
   const ms = DB.moves.filter(pkMatch);
   $('#pk-count').textContent = ms.length + ' 個動作';
   const nf = nFilters();
-  $('#pk-filt').textContent = nf ? '篩選 · ' + nf : '篩選';
+  $('#pk-filt').textContent = nf ? '篩選 · ' + nf : '篩選 ▾';
   $('#pk-filt').classList.toggle('on', !!nf);
   $('#pk-qx').hidden = !PF.q;
+  const curDetId = $('#pk-detail').dataset.cur;
   $('#pk-rows').innerHTML = ms.length ? ms.map(m => {
     const n = countOf(m.id), p = DB.patterns[m.pattern] || {};
-    return '<div class="pk' + (n ? ' on' : '') + '">' +
-      '<span class="bar" style="background:' + (p.hue || '#888') + '"></span>' +
-      '<button class="pk-main" type="button" data-row="' + m.id + '">' +
-        '<b>' + esc(m.zh) + '</b><i>' + esc(p.zh || '') + ' · ' + m.tier + ' · ' +
-        m.default + ' ' + UNIT[m.unit] + (shortCue(m) ? ' · ' + esc(shortCue(m)) : '') +
-        (m.gear.length ? ' · ' + m.gear.map(g => GEAR_ZH[g] || g).join('／') : '') +
-        (m.doms >= 4 ? ' · ⚠️' : '') + '</i></button>' +
-      '<button class="pk-why" type="button" data-open="' + m.id + '" aria-label="看教學">ⓘ</button>' +
-      '<button class="pk-add' + (n ? ' has' : '') + '" type="button" data-plus="' + m.id + '" ' +
-        'aria-label="加入 ' + esc(m.zh) + '">' + (n ? '已加入 · ' + n : '＋') + '</button>' +
+    const cd = (CARDS && CARDS[m.id]) || null;
+    let ptag = '';
+    if (cd) {
+      if (PERSONA === 'preg' && cd.preg) {
+        if (cd.preg.status === 'avoid') ptag = '<s class="pk-tag-avoid">禁做</s>';
+        else if (cd.preg.status === 'modify') ptag = '<s class="pk-tag-mod">退階</s>';
+        else ptag = '<s class="pk-tag-safe">安全</s>';
+      } else if (PERSONA === 'female') {
+        const isGlute = cd.muscles && cd.muscles.some(x => /臀|骨盆/.test(x));
+        const isPosture = cd.muscles && cd.muscles.some(x => /胸椎|肩胛|背/.test(x));
+        if (isGlute) ptag = '<s class="pk-tag-female">臀腿</s>';
+        else if (isPosture) ptag = '<s class="pk-tag-female">背部</s>';
+      } else if (PERSONA === 'male') {
+        if (/C[34]|B[12]/.test(m.tier) || /push|pull|squat|loco/.test(m.pattern)) ptag = '<s class="pk-tag-male">力量</s>';
+      }
+    }
+    const isSelected = curDetId === m.id;
+    return '<div class="pk' + (n ? ' on' : '') + (isSelected ? ' is-selected' : '') + '" data-row="' + m.id + '">' +
+      '<div class="pk-info">' +
+        '<div class="pk-name"><b>' + esc(m.zh) + '</b>' + ptag + '</div>' +
+        '<div class="pk-subtxt">' + esc(p.zh || '') + ' · ' + m.tier + ' · ' +
+        m.default + ' ' + UNIT[m.unit] +
+        (m.gear.length ? ' · ' + m.gear.map(g => GEAR_ZH[g] || g).join('／') : ' · 免器材') +
+        (m.doms >= 4 ? ' · 離心高' : '') + '</div>' +
+      '</div>' +
+      '<button class="pk-btn-add' + (n ? ' has' : '') + '" type="button" data-plus="' + m.id + '">' +
+        (n ? '已加 ' + n : '＋ 加入') + '</button>' +
     '</div>';
   }).join('') : '<div class="pk-empty">這個條件沒有動作。清掉搜尋或篩選再看看。</div>';
   paintPickFoot();
+
+  // 桌機版初次進入或篩選變更：若右側為空，立即選中第一項，絕不空白！
+  if (window.innerWidth >= 900 && ms.length > 0) {
+    if (!curDetId || !ms.find(x => x.id === curDetId)) {
+      previewPickDetail(ms[0].id);
+    }
+  }
 }
 function paintPickFoot() {
   const n = plan.blocks.reduce((t,b) => t + b.moves.length, 0) + plan.stretches.length;
@@ -1657,13 +2325,25 @@ function paintPickFoot() {
   $('#pk-t').textContent = mmss(estimate(plan, 'full'));
 }
 function renderPickChrome() {
+  const qcats = [
+    ['feat', '推薦'],
+    ['warmup', '熱身'],
+    ['strength', '力量'],
+    ['stretch', '收操'],
+    ['all', '全部 125 個']
+  ];
+  $('#pk-quick-cats').innerHTML = qcats.map(c =>
+    '<button class="chip' + (PF.qcat === c[0] ? ' on' : '') + '" type="button" data-qcat="' + c[0] + '">' +
+      esc(c[1]) + '</button>').join('');
+
   $('#pk-cats').innerHTML = CATS.map(c =>
     '<button class="chip' + (PF.cat === c[0] ? ' on' : '') + '" type="button" data-pcat="' + c[0] + '">' +
       esc(c[1]) + '</button>').join('');
   const sub = catOf(PF.cat)[2];
   const lvls = [['all','全部'],['C1','入門 C1'],['C2','基礎 C2'],['C34','進階 C3／C4'],['B','重量 B1／B2']];
   const flags = [['nogear','免器材'],['quiet','安靜'],['lowdoms','低 DOMS']];
-  $('#pk-sheet').innerHTML =
+  const sheetSecMore = $('#pk-sheet-more');
+  const sheetMoreContent =
     '<u>難度</u><div class="filters">' + lvls.map(l =>
       '<button class="chip' + (PF.lvl === l[0] ? ' on' : '') + '" type="button" data-plvl="' + l[0] + '">' +
       esc(l[1]) + '</button>').join('') + '</div>' +
@@ -1674,6 +2354,8 @@ function renderPickChrome() {
       ['all'].concat(sub).map(k =>
         '<button class="chip' + (PF.pat === k ? ' on' : '') + '" type="button" data-ppat="' + k + '">' +
         esc(k === 'all' ? '全部' : (DB.patterns[k] || {}).zh || k) + '</button>').join('') + '</div>' : '');
+  if (sheetSecMore) sheetSecMore.innerHTML = sheetMoreContent;
+
   const multi = plan.blocks.length > 1;
   /* 分段課表要先講清楚「這一次加到哪一段」,不然加完才發現跑到別段去 */
   $('#pk-tgt').innerHTML = multi
@@ -1687,8 +2369,6 @@ function openPick(preset) {
   const o = preset || {};
   pkMode = o.mode === 'browse' ? 'browse' : 'add';
   if (o.cat) PF.cat = o.cat;
-  /* 重新打開＝新的來意，搜尋字清掉；難度與限制留著（常常是同一批條件要再加一個）。
-     從詳情「返回動作庫」不會走到這裡，所以那條路上搜尋字照樣保留。 */
   PF.q = ''; $('#pk-q').value = '';
   $('#pk-beg').checked = BEG;
   $('#pk-beg-w').classList.toggle('on', BEG);
@@ -1698,6 +2378,10 @@ function openPick(preset) {
   $('#pick').hidden = false;
   lockScroll(true);
   layerOpen({ name:'pick', close:closePick, url: pkMode === 'browse' ? '#moves' : null });
+  if (window.innerWidth >= 900) {
+    const ms = DB.moves.filter(pkMatch);
+    if (ms.length > 0) previewPickDetail(ms[0].id);
+  }
   if (!BEG && pkMode === 'add') setTimeout(() => { try { $('#pk-q').focus({ preventScroll:true }); } catch (e) {} }, 30);
 }
 function closePick() {
@@ -1714,18 +2398,30 @@ function showPickList() {
 }
 function pkTitle() {
   if (pkMode === 'browse') return '動作庫';
-  return plan.blocks.length > 1 ? '新增動作 → ' + (plan.blocks[pkTarget].name || '主課') : '新增動作';
+  return plan.blocks.length > 1 ? '挑選動作 → ' + (plan.blocks[pkTarget].name || '主課') : '挑選動作';
 }
-/* 詳情是同一個面板的第二頁,不是第二層視窗 —— 焦點鎖定與返回鍵才不會打架 */
+function previewPickDetail(id) {
+  const m = byId(id); if (!m) return;
+  loadCards();
+  $('#pk-detail').dataset.cur = m.id;
+  $('#pk-detail').innerHTML = howCard(m, null, { add:true });
+  document.querySelectorAll('.pk').forEach(el => {
+    el.classList.toggle('is-selected', el.dataset.row === m.id);
+  });
+}
 function openPickDetail(id) {
   const m = byId(id); if (!m) return;
   killPlayer();
-  $('#pk-detail').innerHTML = howCard(m, null, { add:true });
-  $('#pk-detail').scrollTop = 0;
-  $('#pick').classList.add('detail');
-  $('#pk-back-t').textContent = '返回動作庫';
-  $('#pk-title').textContent = m.zh;
-  layerOpen({ name:'pkd', close:showPickList, url: pkMode === 'browse' ? '#moves/' + m.id : null });
+  previewPickDetail(id);
+  if (window.innerWidth < 900) {
+    const alreadyDetail = $('#pick').classList.contains('detail');
+    $('#pick').classList.add('detail');
+    $('#pk-back-t').textContent = '返回動作庫';
+    $('#pk-title').textContent = m.zh;
+    if (!alreadyDetail) {
+      layerOpen({ name:'pkd', close:showPickList, url: pkMode === 'browse' ? '#moves/' + m.id : null });
+    }
+  }
 }
 function setBeginner(on) {
   BEG = !!on;
@@ -1735,7 +2431,17 @@ function setBeginner(on) {
 }
 /* 加動作：伸展一律進收操，其餘進目前選定的那一段 */
 function addMove(id, fromEl) {
-  const m = byId(id); if (!m) return;
+  let m = byId(id); if (!m) return;
+  if (PERSONA === 'preg' && CARDS && CARDS[m.id] && CARDS[m.id].preg && CARDS[m.id].preg.status === 'avoid') {
+    const rep = PREG_REPLACE[m.id];
+    if (rep && byId(rep)) {
+      toast('<b>孕期禁做</b> ' + esc(m.zh) + '；已自動替換為安全動作：<b>' + esc(byId(rep).zh) + '</b>');
+      id = rep; m = byId(rep);
+    } else {
+      toast('<b>孕期不宜</b> ' + esc(m.zh) + '（' + esc(CARDS[m.id].preg.note) + '）');
+      return;
+    }
+  }
   const st = m.pattern === 'stretch';
   const list = st ? plan.stretches : plan.blocks[Math.min(pkTarget, plan.blocks.length - 1)].moves;
   list.push({ id:m.id, amt:m.default });
@@ -1762,12 +2468,34 @@ function stepHtml(attr, val, min, max, nudge, unit) {
 }
 function rowHtml(r, i, key, n) {
   const m = byId(r.id); if (!m) return '';
-  return '<div class="pr' + (key === 'st' ? ' is-stretch' : '') + '">' +
+  const cd = (CARDS && CARDS[m.id]) || null;
+  let ptag = '', rowCls = '';
+  if (cd) {
+    if (PERSONA === 'preg' && cd.preg) {
+      if (cd.preg.status === 'avoid') {
+        ptag = '<s class="pr-tag-avoid">孕期禁做</s>';
+        rowCls = ' pr-avoid';
+      } else if (cd.preg.status === 'modify') {
+        ptag = '<s class="pr-tag-mod">需退階</s>';
+      } else {
+        ptag = '<s class="pr-tag-safe">安全</s>';
+      }
+    } else if (PERSONA === 'female') {
+      const isGlute = cd.muscles && cd.muscles.some(x => /臀|骨盆/.test(x));
+      const isPosture = cd.muscles && cd.muscles.some(x => /胸椎|肩胛|背/.test(x));
+      if (isGlute) ptag = '<s class="pr-tag-female">臀腿</s>';
+      else if (isPosture) ptag = '<s class="pr-tag-female">背部</s>';
+    } else if (PERSONA === 'male') {
+      const isPower = /C[34]|B[12]/.test(m.tier) || /push|pull|squat|loco/.test(m.pattern);
+      if (isPower) ptag = '<s class="pr-tag-male">力量</s>';
+    }
+  }
+  return '<div class="pr' + (key === 'st' ? ' is-stretch' : '') + rowCls + '">' +
     '<span class="pr-i">' + (i+1) + '</span>' +
-    '<span class="pr-n" data-how="' + m.id + '"><b><button class="lnk" type="button" data-how="' + m.id + '">' + esc(m.zh) + '</button></b>' +
+    '<span class="pr-n" data-how="' + m.id + '"><b><button class="lnk" type="button" data-how="' + m.id + '">' + esc(m.zh) + '</button>' + ptag + '</b>' +
       '<s>' + m.tier + '</s><i>' + (m.hint ? esc(m.hint) + ' · ' : '') + esc(m.en) +
-        (m.doms >= 4 ? ' · ⚠️ 離心高' : '') + '</i></span>' +
-    '<span class="pr-amt">' + stepHtml('data-amt="' + key + ':' + i + '"', r.amt, 1, 600, 5, UNIT[m.unit]) + '</span>' +
+        (m.doms >= 4 ? ' · 離心高' : '') + '</i></span>' +
+    '<span class="pr-amt">' + stepHtml('data-amt="' + key + ':' + i + '"', r.amt, 1, 600, (plan && plan.untimed) ? 1 : 5, (plan && plan.untimed) ? (isEach(m.unit) ? '次／側' : '次') : UNIT[m.unit]) + '</span>' +
     '<span class="pr-act">' +
       '<button class="ib" data-mv="' + key + ':' + i + ':-1" aria-label="上移"' + (i === 0 ? ' disabled' : '') + '>↑</button>' +
       '<button class="ib" data-mv="' + key + ':' + i + ':1" aria-label="下移"' + (i === n-1 ? ' disabled' : '') + '>↓</button>' +
@@ -1787,12 +2515,28 @@ function blkHead(b, bi) {
 function renderPlan() {
   const multi = plan.blocks.length > 1;
   const hasMoves = plan.blocks.some(b => b.moves.length);
-  $('#plan').innerHTML = hasMoves || multi
+  const untimedBtn = $('#btn-untimed');
+  if (untimedBtn) {
+    untimedBtn.classList.toggle('on', !!plan.untimed);
+    untimedBtn.textContent = plan.untimed ? '👶 顧小孩模式 · 純次數' : '👶 顧小孩模式';
+  }
+  let pregBanner = '';
+  if (PERSONA === 'preg' && CARDS) {
+    const avoids = allRows(plan).filter(r => CARDS[r.id] && CARDS[r.id].preg && CARDS[r.id].preg.status === 'avoid');
+    if (avoids.length > 0) {
+      const avoidNames = avoids.slice(0, 3).map(r => (byId(r.id)||{}).zh).join('、');
+      pregBanner = '<div class="preg-banner">' +
+        '<div class="pb-text"><b>孕期不宜</b>：目前菜單有 <b>' + avoids.length + '</b> 個孕期不宜動作（' + esc(avoidNames) + (avoids.length > 3 ? ' 等' : '') + '）。</div>' +
+        '<button class="pb-btn" type="button" data-clean-preg="1">整批換成安全版本</button>' +
+        '</div>';
+    }
+  }
+  $('#plan').innerHTML = pregBanner + (hasMoves || multi
     ? plan.blocks.map((b,bi) =>
         (multi ? blkHead(b, bi) : '') +
         (b.moves.length ? b.moves.map((r,i) => rowHtml(r, i, 'b'+bi, b.moves.length)).join('')
           : '<div class="nil">這一段還沒有動作。</div>')).join('')
-    : '<div class="nil">還沒有動作。挑一張上面的菜單，或按「＋ 新增動作」加幾個進來。</div>';
+    : '<div class="nil">還沒有動作。挑一張上面的菜單，或按「＋ 新增動作」加幾個進來。</div>');
   $('#stretch').innerHTML = plan.stretches.length
     ? plan.stretches.map((r,i) => rowHtml(r, i, 'st', plan.stretches.length)).join('')
     : '<div class="nil">沒有收操伸展。按「＋ 加伸展」從動作庫挑幾個進來。</div>';
@@ -1810,6 +2554,7 @@ function renderPlan() {
      只有收操的菜單不該還寫著泛稱的「開始訓練」 */
   $('#go').textContent = !hasMoves && !plan.stretches.length ? '開始訓練'
     : !hasMoves ? '開始收操 · ' + mmss(total)
+    : plan.untimed ? '開始自由訓練 · ' + mmss(total)
     : plan.stretches.length ? '開始完整訓練 · ' + mmss(total)
     : '開始訓練 · ' + mmss(total);
   $('#go-stretch').disabled = !plan.stretches.length;
@@ -1846,18 +2591,198 @@ function presetMeta(p) {
 }
 const MENU_FILTERS = [
   ['feat', '精選',    p => p.featured],
-  ['t20',  '10～20 分', p => { const s = META[p.id].secs; return s >= 600 && s <= 1200; }],
+  ['nomat', '免瑜伽墊', p => (p.tags||[]).includes('no-mat')],
+  ['custom', '我的自訂', p => p.category === 'custom'],
+  ['t20',  '10～20 分', p => { const s = (META[p.id]||{}).secs || 0; return s >= 600 && s <= 1200; }],
   ['full', '全身',    p => p.category === 'full'],
   ['prepost','運動前後', p => p.category === 'prepost'],
   ['targeted','局部強化', p => p.category === 'targeted'],
   ['weights','重量',  p => p.category === 'weights'],
   ['all',  '全部',    () => true],
 ];
+
+function loadCustomPresets() {
+  try {
+    const list = JSON.parse(localStorage.getItem('circuit-custom-presets') || '[]');
+    if (DB && DB.presets) {
+      DB.presets = DB.presets.filter(p => !p.id.startsWith('custom-'));
+      list.forEach(p => {
+        META[p.id] = presetMeta(p);
+        DB.presets.unshift(p);
+      });
+    }
+  } catch (e) {}
+}
+
+function saveCustomPreset() {
+  const name = prompt('這張菜單叫什麼？', '我的菜單');
+  if (!name || !name.trim()) return;
+  const newPreset = {
+    id: 'custom-' + Date.now(),
+    name: name.trim(),
+    category: 'custom',
+    sub: '自訂 · ' + allRows(plan).length + ' 個動作',
+    tags: ['custom'],
+    blocks: JSON.parse(JSON.stringify(plan.blocks)),
+    stretches: JSON.parse(JSON.stringify(plan.stretches))
+  };
+  let customPresets = [];
+  try {
+    customPresets = JSON.parse(localStorage.getItem('circuit-custom-presets') || '[]');
+  } catch (e) {}
+  customPresets.unshift(newPreset);
+  try {
+    localStorage.setItem('circuit-custom-presets', JSON.stringify(customPresets));
+  } catch (e) {}
+  loadCustomPresets();
+  menuFilt = 'custom';
+  renderPresets();
+  toast('<b>✓ 存好了</b> 「' + esc(name) + '」在上面的「我的自訂」裡');
+}
+
+function sharePlanUrl() {
+  try {
+    const data = {
+      n: plan.name || '自訂課表',
+      b: plan.blocks,
+      s: plan.stretches
+    };
+    const str = encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(data)))));
+    const url = location.origin + location.pathname + '#share=' + str;
+    navigator.clipboard.writeText(url).then(() => {
+      toast('<b>✓ 連結複製好了</b> 貼給別人或在別台裝置打開');
+    }).catch(() => {
+      prompt('複製這個網址：', url);
+    });
+  } catch (e) {
+    toast('分享失敗：' + e.message);
+  }
+}
+
+function checkShareUrl() {
+  if (location.hash && location.hash.startsWith('#share=')) {
+    try {
+      const raw = decodeURIComponent(location.hash.slice(7));
+      const json = JSON.parse(decodeURIComponent(escape(atob(raw))));
+      if (json && json.b) {
+        plan = {
+          name: json.n || '分享課表',
+          blocks: json.b,
+          stretches: json.s || [],
+          from: null,
+          shift: 5
+        };
+        renderPlan();
+        toast('<b>✓ 載入了</b> 「' + esc(plan.name) + '」');
+        history.replaceState({ circuit: 0 }, '', location.pathname + location.search);
+      }
+    } catch (e) {
+      console.warn('Share URL error', e);
+    }
+  }
+}
+
+/* ══ 智慧組課小幫手（Exercise Science PHA & RAMP） ════════════ */
+const GEN_STATE = { goal: 'full', time: 15, flags: { nogear: true, quiet: false, dumbbell: false } };
+
+function openGenerator() {
+  $('#gen-modal').hidden = false;
+  lockScroll(true);
+  layerOpen({ name: 'gen', close: closeGenerator });
+}
+function closeGenerator() {
+  $('#gen-modal').hidden = true;
+  if (!anyOverlay()) lockScroll(false);
+}
+
+function generateRoutine(goal, targetMins, flags) {
+  let pool = DB.moves.slice();
+  if (flags.nogear) pool = pool.filter(m => !m.gear || m.gear.length === 0);
+  if (flags.quiet) pool = pool.filter(m => !m.noisy);
+  if (PERSONA === 'preg' && CARDS) {
+    pool = pool.filter(m => !CARDS[m.id] || !CARDS[m.id].preg || CARDS[m.id].preg.status !== 'avoid');
+  }
+
+  const byPat = p => pool.filter(m => m.pattern === p);
+  const pick = list => list.length ? list[Math.floor(Math.random() * list.length)] : null;
+
+  const warmups = byPat('warmup'), squats = byPat('squat'), hinges = byPat('hinge');
+  const pushes = byPat('push'), pulls = byPat('pull'), cores = byPat('core');
+  const lats = byPat('lateral'), calfs = byPat('calf'), stretches = byPat('stretch');
+
+  let chosen = [], chosenStretches = [];
+
+  if (goal === 'glute') {
+    chosen = [pick(squats), pick(hinges), pick(lats), pick(squats), pick(calfs)];
+    chosenStretches = [byId('st-9090') || stretches[0], byId('st-hipflexor') || stretches[1]];
+  } else if (goal === 'upper') {
+    chosen = [pick(pushes), pick(pulls), pick(pushes), pick(pulls), pick(cores)];
+    chosenStretches = [byId('st-chest') || stretches[0], byId('st-openbook') || stretches[1]];
+  } else if (goal === 'core') {
+    chosen = [pick(cores), pick(byPat('coord')), pick(cores), pick(lats), pick(cores)];
+    chosenStretches = [byId('st-catcow') || stretches[0], byId('st-child') || stretches[1]];
+  } else if (goal === 'ride') {
+    chosen = [byId('warm-9090') || pick(warmups), byId('sq-bw') || pick(squats), byId('hinge-sl-rdl') || pick(hinges), byId('lat-clam') || pick(lats), byId('calf-soleus') || pick(calfs)];
+    chosenStretches = [byId('st-soleus') || stretches[0], byId('st-hipflexor') || stretches[1]];
+  } else if (goal === 'mobility') {
+    chosen = [byId('warm-9090') || pick(warmups), byId('warm-tspine') || pick(warmups), byId('co-spiderman') || pick(byPat('coord')), byId('sq-lateral') || pick(squats), byId('hinge-airplane') || pick(hinges)];
+    chosenStretches = [byId('st-greatest') || stretches[0], byId('st-openbook') || stretches[1]];
+  } else {
+    // 全身功能
+    chosen = [pick(squats), pick(pushes), pick(hinges), pick(pulls), pick(cores)];
+    chosenStretches = [byId('st-hipflexor') || stretches[0], byId('st-chest') || stretches[1]];
+  }
+
+  chosen = chosen.filter(Boolean);
+  chosen = chosen.filter((m, i, arr) => arr.findIndex(x => x.id === m.id) === i);
+  chosenStretches = chosenStretches.filter(Boolean);
+
+  let sets = targetMins <= 10 ? 2 : targetMins >= 20 ? 3 : 2;
+  if (targetMins <= 10 && chosen.length > 4) chosen = chosen.slice(0, 4);
+
+  const goalName = goal === 'glute' ? '臀腿後鏈' : goal === 'upper' ? '背部與姿勢' : goal === 'core' ? '核心' : goal === 'ride' ? '騎乘專項' : goal === 'mobility' ? '活動度' : '全身';
+
+  plan = {
+    v: 2,
+    name: goalName + ' · ' + targetMins + ' 分',
+    blocks: [{
+      name: '主課',
+      sets: sets,
+      restMove: 15,
+      restSet: 45,
+      moves: chosen.map(m => ({ id: m.id, amt: m.default }))
+    }],
+    stretches: chosenStretches.map(m => ({ id: m.id, amt: m.default })),
+    from: null,
+    shift: 5,
+    /* estimate() 會算 (段數-1) × restBlock。少了這個欄位,單段課表也會變成 0 × undefined = NaN */
+    restBlock: 30,
+    untimed: false
+  };
+
+  renderPlan();
+  closeGenerator();
+  const hasMoves = plan.blocks.some(b => b.moves.length);
+  window.scrollTo({ top: $(hasMoves ? '#plan' : '#stretch').offsetTop - 90, behavior: 'smooth' });
+  toast('<b>✓ 配好了</b> ' + goalName + ' ' + targetMins + ' 分，' + allRows(plan).length + ' 個動作');
+}
+
 let META = {}, menuFilt = 'feat';
 function renderPresets() {
-  const f = MENU_FILTERS.find(x => x[0] === menuFilt) || MENU_FILTERS[0];
+  const filters = MENU_FILTERS.slice();
+  if (PERSONA === 'preg') {
+    filters.unshift(['preg-safe', '孕期全安全', p => {
+      if (!CARDS) return true;
+      const allMoves = [];
+      if (p.blocks) p.blocks.forEach(b => (b.moves || []).forEach(m => allMoves.push(typeof m === 'string' ? m : m.id)));
+      if (p.moves) p.moves.forEach(m => allMoves.push(typeof m === 'string' ? m : m.id));
+      if (p.stretches) p.stretches.forEach(m => allMoves.push(typeof m === 'string' ? m : m.id));
+      return allMoves.every(id => !CARDS[id] || !CARDS[id].preg || CARDS[id].preg.status !== 'avoid');
+    }]);
+  }
+  const f = filters.find(x => x[0] === menuFilt) || filters[0];
   const list = DB.presets.filter(f[2]);
-  $('#f-menu').innerHTML = MENU_FILTERS.map(x =>
+  $('#f-menu').innerHTML = filters.map(x =>
     '<button class="chip' + (menuFilt === x[0] ? ' on' : '') + '" type="button" data-mf="' + x[0] + '">' +
       esc(x[1]) + '</button>').join('');
   $('#presets').innerHTML = list.map(p => {
@@ -1865,10 +2790,37 @@ function renderPresets() {
     const tags = (p.tags || []).slice(0, 2).map(t =>
       '<s class="' + (t === 'high-doms' ? 'warn' : '') + '">' + esc(TAG_ZH[t] || t) + '</s>').join('');
     const gearTag = M.gear !== '免器材' ? '<s class="gear">' + esc(M.gear) + '</s>' : '';
+
+    let ptag = '';
+    if (CARDS) {
+      if (PERSONA === 'preg') {
+        const allMoves = [];
+        if (p.blocks) p.blocks.forEach(b => (b.moves || []).forEach(m => allMoves.push(typeof m === 'string' ? m : m.id)));
+        if (p.moves) p.moves.forEach(m => allMoves.push(typeof m === 'string' ? m : m.id));
+        if (p.stretches) p.stretches.forEach(m => allMoves.push(typeof m === 'string' ? m : m.id));
+        const avoids = allMoves.filter(id => CARDS[id] && CARDS[id].preg && CARDS[id].preg.status === 'avoid');
+        if (avoids.length === 0) {
+          ptag = '<s class="tag-persona p-preg-safe">孕期全安全</s>';
+        } else {
+          ptag = '<s class="tag-persona p-preg-warn">含 ' + avoids.length + ' 個禁做</s>';
+        }
+      } else if (PERSONA === 'female') {
+        if (['posterior-hip', 'ankle-knee', 'mobility', 'quick-full'].includes(p.id)) {
+          const lbl = p.id === 'posterior-hip' ? '臀腿後鏈' : p.id === 'ankle-knee' ? '足踝膝蓋' : p.id === 'mobility' ? '開胸活動度' : '全身';
+          ptag = '<s class="tag-persona p-female">' + lbl + '</s>';
+        }
+      } else if (PERSONA === 'male') {
+        if (['home-dumbbell-b1', 'upper-core', 'quick-full', 'ride-primer'].includes(p.id)) {
+          const lbl = p.id === 'home-dumbbell-b1' ? '力量' : p.id === 'upper-core' ? '胸背上肢' : p.id === 'ride-primer' ? '踩踏專項' : '爆發';
+          ptag = '<s class="tag-persona p-male">' + lbl + '</s>';
+        }
+      }
+    }
+
     return '<button class="pcard' + (plan && plan.from === p.id ? ' on' : '') + '" type="button" data-p="' + p.id + '">' +
       '<b>' + esc(p.name) + '</b>' +
       '<i>約 <u>' + Math.round(M.secs / 60) + '</u> 分 · ' + M.tier + ' · ' + esc(M.gear) + '</i>' +
-      (tags || gearTag ? '<span class="ptags">' + gearTag + tags + '</span>' : '') +
+      ((tags || gearTag || ptag) ? '<span class="ptags">' + ptag + gearTag + tags + '</span>' : '') +
       '<em>' + md(p.sub) + '</em></button>';
   }).join('') || '<div class="nil">這個篩選沒有菜單。</div>';
 }
@@ -1883,7 +2835,12 @@ function applyPreset(p, opt) {
       const el = $(s); repop(el, 'stagger');
       setTimeout(() => el.classList.remove('stagger'), 900);
     });
-    toast('<b>✓</b> 已套用 ' + esc(p.name));
+    let warnExtra = '';
+    if (PERSONA === 'preg' && CARDS) {
+      const avoids = allRows(plan).filter(r => CARDS[r.id] && CARDS[r.id].preg && CARDS[r.id].preg.status === 'avoid');
+      if (avoids.length) warnExtra = '（含 ' + avoids.length + ' 個不宜動作，在今日菜單可以整批換掉）';
+    }
+    toast('<b>✓</b> 已套用 ' + esc(p.name) + warnExtra);
   }
   /* 第一次進站是程式自己套的預設,不該把人從菜單區捲走 —— 只有親手點卡片才捲 */
   if (o.scroll !== false) {
@@ -1951,12 +2908,16 @@ fetch('data/movements.json', { cache: 'no-cache' })
       else BEG = b === '1';
     } catch (e) { BEG = !hadPlan; }
     META = {}; db.presets.forEach(p => { META[p.id] = presetMeta(p); });
+    loadCustomPresets();
     let saved = null;
     try { saved = migrate(JSON.parse(localStorage.getItem(LS) || 'null')); } catch (e) {}
     if (saved && allRows(saved).length) plan = saved;
     else plan = planFromPreset(db.presets[0]);   // 第一次進站不捲、不彈 toast
     renderPresets(); renderPlan();
+    paintPersona();
+    loadCards();
     openFromHash();
+    checkShareUrl();
     /* 給 headless 驗證用的把手：只讀,不改變任何行為 */
     window.__circuit = { estimate, blockSecs, stretchSecs, buildSteps, activeBlocks,
       presetMeta, planFromPreset, R, frame, openPick, summaryText,
@@ -1969,6 +2930,9 @@ fetch('data/movements.json', { cache: 'no-cache' })
 
 /* ══ 事件（全部委派，重繪後不必重綁）══════════════════════════ */
 document.addEventListener('click', e => {
+  if (e.target.closest('[data-clean-preg]')) return cleanPlanForPregnancy();
+  const personaBtn = e.target.closest('[data-persona]');
+  if (personaBtn) return setPersona(personaBtn.dataset.persona);
   const vid = e.target.closest('[data-vid]');
   if (vid) return mountPlayer(vid.dataset.vid);
   if (e.target.closest('[data-vidoff]')) return killPlayer();
@@ -1980,14 +2944,36 @@ document.addEventListener('click', e => {
     inp.dispatchEvent(new Event('input', { bubbles:true }));
     return;
   }
+  const goalBtn = e.target.closest('[data-goal]');
+  if (goalBtn) {
+    GEN_STATE.goal = goalBtn.dataset.goal;
+    document.querySelectorAll('[data-goal]').forEach(b => b.classList.toggle('on', b === goalBtn));
+    return;
+  }
+  const timeBtn = e.target.closest('[data-time]');
+  if (timeBtn) {
+    GEN_STATE.time = +timeBtn.dataset.time;
+    document.querySelectorAll('[data-time]').forEach(b => b.classList.toggle('on', b === timeBtn));
+    return;
+  }
+  const flagBtn = e.target.closest('[data-flag]');
+  if (flagBtn) {
+    const f = flagBtn.dataset.flag;
+    GEN_STATE.flags[f] = !GEN_STATE.flags[f];
+    flagBtn.classList.toggle('on', !!GEN_STATE.flags[f]);
+    return;
+  }
+
   const t = e.target.closest('[data-how],[data-p],[data-add],[data-rm],[data-mv],[data-mf],' +
-    '[data-pcat],[data-plvl],[data-pflag],[data-ppat],[data-row],[data-open],[data-plus],[data-warm],[data-tgt]');
+    '[data-pcat],[data-plvl],[data-pflag],[data-ppat],[data-row],[data-open],[data-plus],[data-warm],[data-tgt],[data-swap],[data-qcat]');
   if (!t) return;
   const d = t.dataset;
   if (d.how != null)  return openHow(d.how);
   if (d.p)            return applyPreset(DB.presets.find(p => p.id === d.p));
   if (d.warm)         return startRun('warmup');
   if (d.add)          return addMove(d.add, t);
+  if (d.swap) { const [f, to] = d.swap.split(':'); return swapMove(f, to); }
+  if (d.qcat) { PF.qcat = d.qcat; renderPickChrome(); return renderPicker(); }
   if (d.rm) { const [k,i] = d.rm.split(':'); listOf(k).splice(+i,1); plan.from = null; renderPlan(); if (!$('#pick').hidden) renderPicker(); return; }
   if (d.mv) {
     const [k,i,dir] = d.mv.split(':'); const a = listOf(k), j = +i + +dir;
@@ -2000,11 +2986,8 @@ document.addEventListener('click', e => {
   if (d.ppat) { PF.pat = d.ppat; renderPickChrome(); return renderPicker(); }
   if (d.pflag){ PF.flags[d.pflag] = !PF.flags[d.pflag]; renderPickChrome(); return renderPicker(); }
   if (d.tgt)  { pkTarget = +d.tgt; renderPickChrome(); return; }
-  /* 一般模式：點列＝直接加入,ⓘ 才看教學。
-     新手模式與瀏覽模式：兩個都先進詳情 —— 那兩種情況你是來讀的,不是來加的。 */
-  const read = BEG || pkMode === 'browse';
-  if (d.row)  return read ? openPickDetail(d.row) : addMove(d.row, t);
-  if (d.plus) return read ? openPickDetail(d.plus) : addMove(d.plus, t);
+  if (d.plus) return addMove(d.plus, t);
+  if (d.row)  return openPickDetail(d.row);
   if (d.open) return openPickDetail(d.open);
 });
 document.addEventListener('input', e => {
@@ -2037,26 +3020,54 @@ $('#lib-open').addEventListener('click', () => openPick());
 $('#lib-browse').addEventListener('click', () => openPick({ mode:'browse' }));
 $('#lib-stretch').addEventListener('click', () => openPick({ cat:'stretch' }));
 $('#pk-back').addEventListener('click', layerBack);
-$('#pk-done').addEventListener('click', layerCloseAll);
+const pkDoneBtn = $('#pk-done'); if (pkDoneBtn) pkDoneBtn.addEventListener('click', layerCloseAll);
 $('#pk-fin').addEventListener('click', layerCloseAll);
 $('#pk-qx').addEventListener('click', () => { PF.q = ''; $('#pk-q').value = ''; $('#pk-q').focus(); renderPicker(); });
 $('#pk-filt').addEventListener('click', () => {
   const s = $('#pk-sheet'); s.hidden = !s.hidden;
 });
 $('#pk-beg').addEventListener('change', e => { setBeginner(e.target.checked); renderPicker(); });
+const pkPregEl = $('#pk-preg');
+if (pkPregEl) pkPregEl.addEventListener('change', e => { PREG_ONLY = e.target.checked; renderPicker(); });
+
+// 智慧組課與自訂菜單按鈕
+const btnGen = $('#btn-generator'); if (btnGen) btnGen.addEventListener('click', openGenerator);
+const genClose = $('#gen-close'); if (genClose) genClose.addEventListener('click', closeGenerator);
+const genSubmit = $('#gen-submit'); if (genSubmit) genSubmit.addEventListener('click', () => generateRoutine(GEN_STATE.goal, GEN_STATE.time, GEN_STATE.flags));
+const btnSaveCust = $('#btn-save-custom'); if (btnSaveCust) btnSaveCust.addEventListener('click', saveCustomPreset);
+const btnShare = $('#btn-share-plan'); if (btnShare) btnShare.addEventListener('click', sharePlanUrl);
+const btnUntimed = $('#btn-untimed');
+if (btnUntimed) btnUntimed.addEventListener('click', () => {
+  plan.untimed = !plan.untimed;
+  renderPlan();
+  toast(plan.untimed
+    ? '<b>👶 顧小孩自由節奏</b><br>改成純次數，沒有倒數在催，做完自己按「完成此動作」。'
+    : '<b>回到標準計時模式</b>');
+});
 
 $('#r-x').addEventListener('click', askQuit);
 $('#r-conf-no').addEventListener('click', () => { $('#r-conf').hidden = true; if (R.paused && R.timer) reReady(); });
 $('#r-conf-yes').addEventListener('click', endRun);
 $('#r-yt').addEventListener('click', openHowFromRun);
 $('#r-copy').addEventListener('click', copySummary);
-$('#r-snd').addEventListener('click', () => {
-  SND = !SND;
-  paintSound();
-  try { localStorage.setItem('circuit-snd', SND ? '1' : '0'); } catch (e) {}
-  if (SND) beep(1040, 60, .18, true);
-  /* 預備頁的提醒文字跟著開關切換（重進會重數五秒,當作重新就位） */
-  if (!$('#run').hidden && R.steps[R.i] && R.steps[R.i].kind === 'ready') showStep();
+$('#r-snd').addEventListener('click', cycleSound);
+const rAdd15 = $('#r-add15');
+if (rAdd15) rAdd15.addEventListener('click', () => {
+  if (R.timer && R.deadline) {
+    R.deadline += 15000;
+    frame();
+    toast('<b>＋15 秒</b> 已延長休息時間');
+    speak('延長十五秒');
+  }
+});
+const rSkipRest = $('#r-skiprest');
+if (rSkipRest) rSkipRest.addEventListener('click', () => {
+  if (R.timer) {
+    clearInterval(R.timer);
+    R.timer = null;
+    speak('立即開始');
+    next();
+  }
 });
 $('#r-prev').addEventListener('click', prev);
 $('#r-skip').addEventListener('click', next);

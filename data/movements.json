@@ -119,6 +119,33 @@
       "featured": true
     },
     {
+      "id": "parenting-livingroom",
+      "name": "顧小孩客廳微訓練（免瑜伽墊）",
+      "sub": "全站姿、零鋪墊、純次數不倒數，隨時去抱小孩也不慌張。",
+      "note": "專為顧小孩、零碎時間設計：100% 免鋪瑜伽墊、免躺地、不跪地，穿拖鞋站在客廳或扶桌椅就能練。每個動作採純次數制，做完自己點「完成」，沒有時間倒數催促，中途小孩哭鬧隨時丟下！",
+      "moves": [
+        "sq-bw",
+        "push-incline",
+        "pull-w",
+        "hinge-sl-rdl",
+        "calf-raise"
+      ],
+      "stretches": [
+        "st-chest",
+        "st-quad"
+      ],
+      "sets": 2,
+      "restMove": 15,
+      "restSet": 45,
+      "untimed": true,
+      "category": "targeted",
+      "tags": [
+        "no-mat",
+        "parenting"
+      ],
+      "featured": false
+    },
+    {
       "id": "company-c1-quiet",
       "name": "入門循環 C1（安靜版）",
       "sub": "樓下有人的時候用這張，不跳不跺地。",
@@ -3423,6 +3450,14 @@
   "_blocks": "preset 可以用 blocks[] 取代 moves/sets/restMove/restSet:每一段有自己的輪數與休息。沒有 blocks 的舊 preset 會被當成單一段,10 張舊菜單不必改寫。blocks[].warm=true 的段可以單獨跑（只做熱身）。restBlock＝段與段之間的轉場,shift＝伸展之間的換動作秒數。",
   "_me": "noteMe＝只跟我自己的訓練週期有關的排課備註（週幾、測驗、戴錶、DOMS 門檻）。circuit.html 預設不顯示,只有在網址帶 ?me=1（會記在 localStorage）時才會出現 —— 其他人看到的是一般的循環訓練工具。菜單結構與參數不受影響,所以「我做了哪一張」照樣能拿去問 AI。",
   "changelog": [
+    {
+      "date": "2026-09-03",
+      "title": "新增「顧小孩客廳微訓練（免瑜伽墊）」專屬菜單與自由次數模式",
+      "presets": [
+        "parenting-livingroom"
+      ],
+      "note": "專為顧小孩與居家零碎時間打造：100% 免瑜伽墊、免躺地、不跪地，穿拖鞋扶桌椅就能練。支援純次數自由節奏，無時間倒數催促，隨時抱小孩零負擔。"
+    },
     {
       "date": "2026-08-30",
       "title": "補上五個最常漏掉的伸展",

@@ -53,7 +53,7 @@ db.moves.forEach(m => {
 
 /* ── 菜單 ── */
 const CATS = ['full','prepost','targeted','weights'];
-const TAGS = ['quiet','no-legs','low-doms','high-doms'];
+const TAGS = ['quiet','no-legs','low-doms','high-doms','no-mat','parenting'];
 const pseen = new Set();
 /* 轉換也共用頁面那份 planFromPreset —— 只共用估時的話，
    「preset 的 stretches 被轉丟了」這種錯兩邊算出來的數字會不一樣卻都不報錯 */
@@ -142,6 +142,29 @@ try {
     if (extra.length) E(`影片檔有來源不存在的動作 id：${extra.join(' ')}`);
   }
 } catch (e) { W('影片檔讀不起來：' + e.message); }
+
+/* 動作圖卡檔檢查 */
+try {
+  const cf = path.join(ROOT, 'data/movement-cards.json');
+  if (fs.existsSync(cf)) {
+    const cards = JSON.parse(fs.readFileSync(cf, 'utf8')).cards || {};
+    const miss = db.moves.filter(m => !cards[m.id]).map(m => m.id);
+    const extra = Object.keys(cards).filter(id => !byId(id));
+    if (miss.length) W(`${miss.length} 個動作還沒有圖卡：${miss.join(' ')}`);
+    if (extra.length) E(`圖卡檔有來源不存在的動作 id：${extra.join(' ')}`);
+    // 檢查卡片必備屬性
+    Object.entries(cards).forEach(([id, cd]) => {
+      if (!cd.start || !cd.start.main) E(`圖卡 ${id}: 缺 start.main`);
+      if (!cd.finish || !cd.finish.main) E(`圖卡 ${id}: 缺 finish.main`);
+      if (!Array.isArray(cd.muscles) || !cd.muscles.length) E(`圖卡 ${id}: 缺 muscles`);
+      if (!cd.male) E(`圖卡 ${id}: 缺 male 建議`);
+      if (!cd.female) E(`圖卡 ${id}: 缺 female 建議`);
+      if (!cd.preg || !['safe','modify','avoid'].includes(cd.preg.status) || !cd.preg.note)
+        E(`圖卡 ${id}: preg 格式不符 (safe|modify|avoid + note)`);
+      if (!cd.ref) E(`圖卡 ${id}: 缺 ref 參考來源`);
+    });
+  }
+} catch (e) { W('圖卡檔讀不起來：' + e.message); }
 
 /* ── 六張新菜單的估時基準（計畫 §1E-2）──
    計畫寫的 10:45／21:00／22:45／11:35／19:55／15:40 是「收操沒有換位時間」

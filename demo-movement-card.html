@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>動作圖卡預覽 · DEMO</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Saira+Condensed:wght@600;700;800&display=swap">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --f-num:'Saira Condensed','Oswald','Arial Narrow',sans-serif;
+  --f-ui:'Archivo',-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang TC','Noto Sans TC',sans-serif;
+  --ink-1:#f4f0ea;--ink-2:rgba(244,240,234,.72);--ink-3:rgba(244,240,234,.4);
+  --sig:#FC4C02;--sig-dim:rgba(252,76,2,.15);
+  --hair:rgba(255,255,255,.08);--hair-2:rgba(255,255,255,.14);
+  --surface:rgba(255,255,255,.03);
+  --ok:#4ad07a;--warn:#ffb020;--cool:#4AB4FF;--purple:#b37feb;
+  --card-bg:#120a14;
+}
+body{
+  font-family:var(--f-ui);color:var(--ink-2);background:#070308;line-height:1.6;
+  padding:24px 16px 80px;-webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:760px;margin:0 auto}
+
+/* ── 頂部切換列 ────────────────────────────────────────── */
+.top-bar{margin-bottom:28px;padding-bottom:20px;border-bottom:1px solid var(--hair)}
+.top-title{font-size:22px;font-weight:700;color:var(--ink-1);margin-bottom:14px;letter-spacing:-.3px}
+.bar-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.bar-lbl{font-size:12px;font-weight:700;color:var(--ink-3);letter-spacing:1.5px;min-width:65px}
+.chip{
+  appearance:none;border:1px solid var(--hair-2);background:var(--surface);color:var(--ink-2);
+  padding:6px 14px;border-radius:100px;font-size:13px;font-weight:600;cursor:pointer;
+  transition:all .15s ease;display:inline-flex;align-items:center;gap:5px;
+}
+.chip:hover{border-color:var(--sig);color:var(--ink-1)}
+.chip.active{
+  background:var(--sig);border-color:var(--sig);color:#fff;
+  box-shadow:0 2px 10px rgba(252,76,2,.35);
+}
+.chip-purple.active{
+  background:var(--purple);border-color:var(--purple);color:#fff;
+  box-shadow:0 2px 10px rgba(179,127,235,.35);
+}
+
+/* ── 圖卡卡片元件 (Movement Card) ───────────────────────── */
+.m-card{
+  background:var(--card-bg);border:1px solid var(--hair-2);border-radius:16px;
+  overflow:hidden;margin-bottom:24px;box-shadow:0 8px 30px rgba(0,0,0,.5);
+  transition:border-color .2s;
+}
+.m-card:hover{border-color:rgba(252,76,2,.4)}
+
+/* 卡片 Header */
+.m-head{padding:18px 20px 14px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.m-name-box{display:flex;flex-direction:column;gap:3px}
+.m-name{font-size:21px;font-weight:700;color:var(--ink-1);display:flex;align-items:center;gap:9px}
+.m-tier{
+  font-size:11px;font-weight:800;font-family:var(--f-num);letter-spacing:.8px;
+  padding:2px 7px;border-radius:4px;background:var(--sig-dim);color:var(--sig);
+}
+.m-en{font-size:12.5px;color:var(--ink-3);letter-spacing:.3px}
+.m-tags{display:flex;gap:6px;flex-wrap:wrap}
+.tag{
+  font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:6px;
+  background:rgba(255,255,255,.05);color:var(--ink-2);border:1px solid var(--hair);
+}
+.tag-quiet{background:rgba(74,208,122,.1);color:var(--ok);border-color:rgba(74,208,122,.2)}
+.tag-gear{background:rgba(74,180,255,.1);color:var(--cool);border-color:rgba(74,180,255,.2)}
+.tag-doms{background:rgba(255,176,32,.1);color:var(--warn);border-color:rgba(255,176,32,.2)}
+
+/* 視覺姿勢分解 Stage */
+.m-stage{
+  background:linear-gradient(180deg,rgba(255,255,255,.02) 0%,rgba(0,0,0,.35) 100%);
+  border-top:1px solid var(--hair);border-bottom:1px solid var(--hair);
+  padding:16px 20px;
+}
+.m-poses{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center}
+.m-pose-box{
+  background:rgba(0,0,0,.45);border:1px solid var(--hair);border-radius:10px;
+  padding:12px 14px;min-height:108px;display:flex;flex-direction:column;justify-content:space-between;
+}
+.m-pose-tag{
+  font-size:10.5px;font-weight:700;letter-spacing:1.5px;color:var(--sig);
+  text-transform:uppercase;display:inline-block;margin-bottom:6px;
+}
+.m-pose-main{font-size:14px;font-weight:600;color:var(--ink-1);line-height:1.45}
+.m-pose-sub{font-size:12px;color:var(--ink-3);margin-top:4px}
+.m-pose-arrow{color:var(--hair-2);font-size:18px;font-weight:800;user-select:none}
+.m-muscles{
+  margin-top:12px;font-size:12px;color:var(--ink-3);display:flex;align-items:center;gap:6px;
+}
+.m-muscles b{color:var(--ink-2);font-weight:600}
+
+/* 口訣膠囊 */
+.m-cue-box{
+  margin:16px 20px 0;padding:12px 14px;border-radius:10px;
+  background:rgba(252,76,2,.06);border-left:3px solid var(--sig);
+  font-size:14.5px;line-height:1.65;color:var(--ink-1);
+}
+.m-cue-box b{color:#fff}
+
+/* 動作三步驟 */
+.m-body{padding:14px 20px}
+.m-steps{list-style:none;counter-reset:stps;margin-bottom:14px}
+.m-steps li{
+  counter-increment:stps;position:relative;padding-left:32px;margin-top:8px;
+  font-size:14px;line-height:1.65;color:var(--ink-2);
+}
+.m-steps li::before{
+  content:counter(stps);position:absolute;left:0;top:2px;width:20px;height:20px;
+  border-radius:50%;background:rgba(255,255,255,.07);border:1px solid var(--hair-2);
+  font-family:var(--f-num);font-weight:800;font-size:11px;color:var(--sig);
+  display:grid;place-items:center;
+}
+.m-steps li b{color:var(--ink-1)}
+
+/* 地雷禁忌 */
+.m-wrong{
+  padding:10px 13px;border-radius:8px;background:rgba(255,70,70,.06);
+  border:1px solid rgba(255,70,70,.18);font-size:13px;color:rgba(255,180,180,.9);line-height:1.6;
+}
+.m-wrong b{color:#ff7a7a}
+
+/* 身分專屬動態叮嚀 */
+.m-persona-tip{
+  margin-top:12px;padding:11px 14px;border-radius:8px;font-size:13px;line-height:1.6;
+  display:flex;align-items:flex-start;gap:8px;transition:all .2s;
+}
+.tip-male{background:rgba(74,180,255,.07);border:1px solid rgba(74,180,255,.2);color:#bde2ff}
+.tip-male b{color:#5bc0ff}
+.tip-female{background:rgba(255,130,170,.08);border:1px solid rgba(255,130,170,.25);color:#ffd3e0}
+.tip-female b{color:#ff85a8}
+.tip-preg{background:rgba(179,127,235,.1);border:1px solid rgba(179,127,235,.35);color:#eed9ff}
+.tip-preg b{color:#c490ff}
+
+/* 底部教學影片摺疊 */
+.m-vids-toggle{
+  border-top:1px solid var(--hair);padding:12px 20px;background:rgba(0,0,0,.25);
+  display:flex;align-items:center;justify-content:space-between;cursor:pointer;
+  font-size:12.5px;font-weight:600;color:var(--ink-3);user-select:none;
+}
+.m-vids-toggle:hover{color:var(--sig)}
+.m-vids-toggle span{display:flex;align-items:center;gap:6px}
+.m-vids-drawer{padding:14px 20px;border-top:1px dashed var(--hair);background:rgba(0,0,0,.35);display:none}
+.m-vids-drawer.open{display:block}
+.vids-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.v-thumb-card{
+  background:rgba(255,255,255,.02);border:1px solid var(--hair);border-radius:8px;padding:8px;
+  cursor:pointer;transition:border-color .15s;text-decoration:none;color:inherit;display:block;
+}
+.v-thumb-card:hover{border-color:var(--sig)}
+.v-img{aspect-ratio:16/9;background:#000;border-radius:4px;overflow:hidden;position:relative;margin-bottom:6px}
+.v-img img{width:100%;height:100%;object-fit:cover;display:block}
+.v-t{font-size:12px;font-weight:600;color:var(--ink-1);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.v-c{font-size:11px;color:var(--ink-3);margin-top:3px}
+
+/* 孕期排除提示 (當動作不適合時) */
+.m-card-disabled{opacity:.4;filter:grayscale(80%);position:relative}
+.m-ban-banner{
+  background:rgba(255,50,50,.15);border:1px solid rgba(255,70,70,.4);color:#ffa0a0;
+  padding:8px 12px;border-radius:6px;font-size:12px;font-weight:600;margin:12px 20px 0;
+  display:flex;align-items:center;gap:6px;
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- ── 頂部控制面板 ── -->
+  <header class="top-bar">
+    <h1 class="top-title">⚡ 動作圖卡速查系統 · DEMO</h1>
+    
+    <!-- 身分模式切換 -->
+    <div class="bar-row">
+      <span class="bar-lbl">身分模式</span>
+      <button class="chip active" id="btn-m" onclick="setPersona('m')">🧑 男生（預設）</button>
+      <button class="chip" id="btn-f" onclick="setPersona('f')">👩 女生（體態）</button>
+      <button class="chip chip-purple" id="btn-p" onclick="setPersona('p')">🤰 孕期友善（安全防護）</button>
+    </div>
+
+    <!-- 追求目標切換 -->
+    <div class="bar-row">
+      <span class="bar-lbl">訓練目標</span>
+      <button class="chip active" onclick="setGoal(this)">全部</button>
+      <button class="chip" onclick="setGoal(this)">🚴 單車專項</button>
+      <button class="chip" onclick="setGoal(this)">🏀 籃球爆發</button>
+      <button class="chip" onclick="setGoal(this)">🔥 線條體態</button>
+      <button class="chip" onclick="setGoal(this)">🧘 關節保養</button>
+      <button class="chip" onclick="setGoal(this)">🏠 安靜居家</button>
+    </div>
+  </header>
+
+  <!-- ── 範例卡片 1：酒杯深蹲（適合男女、孕期有專屬退階） ── -->
+  <article class="m-card" id="card-sq">
+    <div class="m-head">
+      <div class="m-name-box">
+        <div class="m-name">酒杯深蹲 <span class="m-tier">B1</span></div>
+        <div class="m-en">Goblet Squat · 深蹲模式</div>
+      </div>
+      <div class="m-tags">
+        <span class="tag tag-quiet">安靜免跳</span>
+        <span class="tag tag-gear">啞鈴/壺鈴</span>
+        <span class="tag tag-doms">DOMS 3/5</span>
+      </div>
+    </div>
+
+    <!-- 關鍵姿勢圖解 Stage -->
+    <div class="m-stage">
+      <div class="m-poses">
+        <div class="m-pose-box">
+          <span class="m-pose-tag">① 起始預備</span>
+          <div class="m-pose-main" id="pose-sq-1">雙腳略比肩寬，腳尖微外開 20°</div>
+          <div class="m-pose-sub" id="sub-sq-1">重量緊抱胸口，手肘垂直朝下</div>
+        </div>
+        <div class="m-pose-arrow">➔</div>
+        <div class="m-pose-box">
+          <span class="m-pose-tag">② 蹲到底端</span>
+          <div class="m-pose-main" id="pose-sq-2">手肘走進雙膝內側，軀幹挺直</div>
+          <div class="m-pose-sub" id="sub-sq-2">重心均勻壓在腳掌中後側</div>
+        </div>
+      </div>
+      <div class="m-muscles">
+        🎯 核心受力：<b>臀大肌</b> · <b>股四頭肌</b> · <b>足踝背屈</b>
+      </div>
+    </div>
+
+    <!-- 口訣 -->
+    <div class="m-cue-box">
+      🎯 <b>核心口訣：</b><span id="cue-sq">重量抱胸前，手肘走膝蓋內側。<b>負重反而讓深蹲重心更穩更好蹲</b>。</span>
+    </div>
+
+    <!-- 步驟與地雷 -->
+    <div class="m-body">
+      <ol class="m-steps" id="steps-sq">
+        <li><b>托住重量</b>：重量抱胸前，雙肘貼近身體垂直朝下。</li>
+        <li><b>平穩下蹲</b>：臀部向後下方自然沉下，手肘走進雙膝內側。</li>
+        <li><b>推地站直</b>：全腳掌踩實地面，臀肌主動發力推回起始位置。</li>
+      </ol>
+
+      <div class="m-wrong">
+        <b>❌ 絕對避免：</b>重量離胸太遠變成手臂死扛；下蹲時圓背塌腰、膝蓋內夾。
+      </div>
+
+      <!-- 動態身分叮嚀 -->
+      <div class="m-persona-tip tip-male" id="tip-sq">
+        <span>💡</span> <div><b>🧑 男生力量提示：</b>下蹲時維持骨盆與胸腔剛性，推蹬時雙膝對齊第二腳趾，強化單車爬坡的推蹬動力。</div>
+      </div>
+    </div>
+
+    <!-- 底部教學影片展開 -->
+    <div class="m-vids-toggle" onclick="toggleVids('vids-sq', this)">
+      <span>🎬 3 支精選 YouTube 教學影片</span>
+      <span class="v-arrow">▼ 點擊展開</span>
+    </div>
+    <div class="m-vids-drawer" id="vids-sq">
+      <div class="vids-grid">
+        <a class="v-thumb-card" href="https://www.youtube.com/watch?v=MeIiIdhvXT4" target="_blank">
+          <div class="v-img"><img src="https://i.ytimg.com/vi/MeIiIdhvXT4/mqdefault.jpg" alt=""></div>
+          <div class="v-t">How To Goblet Squat Properly</div>
+          <div class="v-c">Buff Dudes · 240萬次</div>
+        </a>
+        <a class="v-thumb-card" href="https://www.youtube.com/watch?v=5Y3KW5rUMh4" target="_blank">
+          <div class="v-img"><img src="https://i.ytimg.com/vi/5Y3KW5rUMh4/mqdefault.jpg" alt=""></div>
+          <div class="v-t">Goblet Squat Form - 3 Common Mistakes</div>
+          <div class="v-c">Jeremy Ethier · 115萬次</div>
+        </a>
+        <a class="v-thumb-card" href="https://www.youtube.com/watch?v=M9NnZqeqBco" target="_blank">
+          <div class="v-img"><img src="https://i.ytimg.com/vi/M9NnZqeqBco/mqdefault.jpg" alt=""></div>
+          <div class="v-t">Squat University - Goblet Squat Fixes</div>
+          <div class="v-c">Squat University · 85萬次</div>
+        </a>
+      </div>
+    </div>
+  </article>
+
+
+  <!-- ── 範例卡片 2：超人式（趴姿動作，孕期必須過濾排除） ── -->
+  <article class="m-card" id="card-superman">
+    <div class="m-head">
+      <div class="m-name-box">
+        <div class="m-name">超人式 <span class="m-tier">C1</span></div>
+        <div class="m-en">Superman Hold · 趴姿拉模式</div>
+      </div>
+      <div class="m-tags">
+        <span class="tag tag-quiet">安靜免跳</span>
+        <span class="tag">徒手免器材</span>
+        <span class="tag">DOMS 1/5</span>
+      </div>
+    </div>
+
+    <!-- 孕期模式下的警示條 -->
+    <div class="m-ban-banner" id="ban-superman" style="display:none">
+      ⚠️ 孕期安全排除：本動作為趴姿（Prone），會直接壓迫腹部與胎兒，孕期全階段皆嚴禁執行。
+    </div>
+
+    <div class="m-stage">
+      <div class="m-poses">
+        <div class="m-pose-box">
+          <span class="m-pose-tag">① 起始俯臥</span>
+          <div class="m-pose-main">趴於瑜伽墊上，雙臂向前伸直</div>
+          <div class="m-pose-sub">雙腿打直併攏，額頭微收看向地面</div>
+        </div>
+        <div class="m-pose-arrow">➔</div>
+        <div class="m-pose-box">
+          <span class="m-pose-tag">② 頂峰等長</span>
+          <div class="m-pose-main">胸口與雙腿同時向上抬起離開地墊</div>
+          <div class="m-pose-sub">夾緊臀部與後背肌群，保持呼吸</div>
+        </div>
+      </div>
+      <div class="m-muscles">
+        🎯 核心受力：<b>豎脊肌群</b> · <b>臀大肌</b> · <b>下斜方肌</b>
+      </div>
+    </div>
+
+    <div class="m-cue-box">
+      🎯 <b>核心口訣：</b><span>像飛行一樣把手腳拉長延展，<b>用背和屁股發力，不要只死命仰頭折脖子</b>。</span>
+    </div>
+
+    <div class="m-body">
+      <ol class="m-steps">
+        <li><b>趴姿準備</b>：俯臥於地面，雙臂雙腿自然伸直延伸。</li>
+        <li><b>收緊後鏈</b>：吐氣同時將手臂、胸部、大腿向上微抬離地。</li>
+        <li><b>等長維持</b>：感受整條後背與臀部收縮，脖子保持自然放鬆。</li>
+      </ol>
+      <div class="m-wrong">
+        <b>❌ 絕對避免：</b>用力仰頭看天花板造成頸椎壓迫；腰部猛烈彈震借力。
+      </div>
+
+      <div class="m-persona-tip tip-male" id="tip-superman">
+        <span>💡</span> <div><b>🧑 男生平衡提示：</b>專門抵銷平時公路車騎乘彎腰駝背的體態，強化背側抗疲勞續航力。</div>
+      </div>
+    </div>
+
+    <div class="m-vids-toggle" onclick="toggleVids('vids-sm', this)">
+      <span>🎬 3 支精選 YouTube 教學影片</span>
+      <span class="v-arrow">▼ 點擊展開</span>
+    </div>
+    <div class="m-vids-drawer" id="vids-sm">
+      <div class="vids-grid">
+        <a class="v-thumb-card" href="https://www.youtube.com/watch?v=z6PJMT2y8GQ" target="_blank">
+          <div class="v-img"><img src="https://i.ytimg.com/vi/z6PJMT2y8GQ/mqdefault.jpg" alt=""></div>
+          <div class="v-t">How To Do A Superman | Back Workout</div>
+          <div class="v-c">Bowflex · 90萬次</div>
+        </a>
+      </div>
+    </div>
+  </article>
+
+</div>
+
+<script>
+let currentPersona = 'm';
+
+function setPersona(p) {
+  currentPersona = p;
+  document.getElementById('btn-m').className = 'chip' + (p === 'm' ? ' active' : '');
+  document.getElementById('btn-f').className = 'chip' + (p === 'f' ? ' active' : '');
+  document.getElementById('btn-p').className = 'chip chip-purple' + (p === 'p' ? ' active' : '');
+
+  // 1. 更新酒杯深蹲的叮嚀與圖示
+  const tipSq = document.getElementById('tip-sq');
+  const subSq1 = document.getElementById('sub-sq-1');
+  const subSq2 = document.getElementById('sub-sq-2');
+  const cueSq = document.getElementById('cue-sq');
+
+  if (p === 'm') {
+    tipSq.className = 'm-persona-tip tip-male';
+    tipSq.innerHTML = '<span>💡</span> <div><b>🧑 男生力量提示：</b>下蹲時維持骨盆與胸腔剛性，推蹬時雙膝對齊第二腳趾，強化單車爬坡的推蹬動力。</div>';
+    subSq1.textContent = '重量緊抱胸口，手肘垂直朝下';
+    subSq2.textContent = '手肘走進雙膝內側，重心壓全腳掌';
+    cueSq.innerHTML = '重量抱胸前，手肘走膝蓋內側。<b>負重反而讓深蹲重心更穩更好蹲</b>。';
+  } else if (p === 'f') {
+    tipSq.className = 'm-persona-tip tip-female';
+    tipSq.innerHTML = '<span>🍑</span> <div><b>👩 女生體態提示：</b>站起頂峰時專注夾緊臀大肌，重心置於腳跟，防止大腿前側代償粗壯，打造飽滿翹臀線條。</div>';
+    subSq1.textContent = '重量貼胸，核心微收保持骨盆中立';
+    subSq2.textContent = '膝蓋順著腳尖開，感受臀肌充分拉長';
+    cueSq.innerHTML = '下蹲吸氣延展臀大肌，<b>站起吐氣夾屁股，骨盆不前傾</b>。';
+  } else if (p === 'p') {
+    tipSq.className = 'm-persona-tip tip-preg';
+    tipSq.innerHTML = '<span>🤰</span> <div><b>🤰 孕期安全退階：</b>可改為徒手或手扶穩固椅背；雙腳站比平常更寬給肚子空間。若肚子中央出現甜甜圈隆起（Coning）或下腹緊繃請立即停止！</div>';
+    subSq1.textContent = '雙腳寬站距，手可扶椅背或徒手';
+    subSq2.textContent = '下蹲幅度以舒適為準，後方可放椅子';
+    cueSq.innerHTML = '<b>吸氣下蹲骨盆底放鬆，吐氣推起輕收骨盆底</b>，全程順暢呼吸絕對不憋氣。';
+  }
+
+  // 2. 超人式（趴姿動作在孕期切換時的過濾示範）
+  const cardSuperman = document.getElementById('card-superman');
+  const banSuperman = document.getElementById('ban-superman');
+  const tipSuperman = document.getElementById('tip-superman');
+
+  if (p === 'p') {
+    cardSuperman.classList.add('m-card-disabled');
+    banSuperman.style.display = 'flex';
+  } else {
+    cardSuperman.classList.remove('m-card-disabled');
+    banSuperman.style.display = 'none';
+    if (p === 'f') {
+      tipSuperman.className = 'm-persona-tip tip-female';
+      tipSuperman.innerHTML = '<span>💡</span> <div><b>👩 女生美背提示：</b>收緊肩胛骨與背部，撫平背部肉，改善圓肩駝背。</div>';
+    } else {
+      tipSuperman.className = 'm-persona-tip tip-male';
+      tipSuperman.innerHTML = '<span>💡</span> <div><b>🧑 男生平衡提示：</b>專門抵銷平時公路車騎乘彎腰駝背的體態，強化背側抗疲勞續航力。</div>';
+    }
+  }
+}
+
+function setGoal(btn) {
+  btn.parentNode.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function toggleVids(id, toggleBtn) {
+  const drawer = document.getElementById(id);
+  const isOpen = drawer.classList.toggle('open');
+  toggleBtn.querySelector('.v-arrow').textContent = isOpen ? '▲ 收合影片' : '▼ 點擊展開';
+}
+</script>
+
+</body>
+</html>
