@@ -10757,6 +10757,40 @@ Promise.all([
       <span><i>先看</i>${hotZh}</span>` }
   }
 
+  /* 路上的標籤避讓：手機一次只顯示「下一堂」與前後測門兩個標籤，但兩者日期相近時
+     （實測 09/08 LOAD 與 09/10 後測只差 12px）會整塊疊在一起。這裡在真的看得見之後
+     量一次盒子，把撞到的那個往下推；下面沒空間就往上翻，兩邊都不夠就推到還塞得下的位置。
+     只寫 --ly（純 transform，不進版面），所以節點的圓點與路的位置一格都不會動。
+     隱藏中的 view 量不到寬度，所以 mount 當下不做，交給 __cinemaView 與 resize。 */
+  function rdSpread(stage) {
+    if (!stage || !stage.offsetWidth) return
+    const labs = [...stage.querySelectorAll('.rd-l')].filter(el => el.offsetWidth && getComputedStyle(el).display !== 'none')
+    labs.forEach(el => el.style.removeProperty('--ly'))
+    if (labs.length < 2) return
+    const sb = stage.getBoundingClientRect()
+    const box = el => { const r = el.getBoundingClientRect(); return { el, l: r.left - sb.left, r: r.right - sb.left, t: r.top - sb.top, b: r.bottom - sb.top } }
+    const items = labs.map(box).sort((a, b) => a.t - b.t || a.l - b.l)
+    const PAD = 4
+    for (let i = 0; i < items.length; i++) {
+      for (let j = i + 1; j < items.length; j++) {
+        const a = items[i], b = items[j]
+        if (a.r <= b.l + 2 || b.r <= a.l + 2) continue          // x 沒重疊就不用管
+        if (a.b <= b.t + 1 || b.b <= a.t + 1) continue          // y 已經錯開
+        const down = a.b + PAD - b.t                             // 往下推需要的距離
+        const up = a.t - PAD - b.b                               // 往上翻需要的距離（負值）
+        const roomDown = sb.height - 2 - b.b, roomUp = b.t - 2
+        let dy = down <= roomDown ? down : (-up <= roomUp ? up : (roomDown >= roomUp ? roomDown : -roomUp))
+        if (!dy) continue
+        const cur = parseFloat(b.el.style.getPropertyValue('--ly')) || 0
+        b.el.style.setProperty('--ly', (cur + dy).toFixed(1) + 'px')
+        b.t += dy; b.b += dy
+      }
+    }
+  }
+  const rdSpreadNow = () => document.querySelectorAll('#content .view[data-view="plan"] .rd-stage').forEach(rdSpread)
+  let _rdRaf = 0
+  addEventListener('resize', () => { if (_rdRaf) cancelAnimationFrame(_rdRaf); _rdRaf = requestAnimationFrame(() => { _rdRaf = 0; rdSpreadNow() }) })
+
   function mountTrain(data) {
     const B = window._trainingBlock
     const plan = document.querySelector('#content .view[data-view="plan"]')
@@ -11122,6 +11156,7 @@ Promise.all([
   }
 
   window.__cinemaView = function(v, hub, was) {
+    if (v === 'plan') requestAnimationFrame(rdSpreadNow)      // 隱藏時量不到寬度，顯示出來才推得準
     if (v === 'itt' && _ittPlateDirty && typeof window.__ittRebuild === 'function') requestAnimationFrame(() => window.__ittRebuild())
     const hero = document.getElementById('td-hero')
     if (!hero || !hero._video || hero.classList.contains('is-poster')) return

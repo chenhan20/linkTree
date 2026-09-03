@@ -329,14 +329,14 @@ body[data-hub="today"] .hubhead{display:none}
 .rd-n.is-gate i{width:14px;height:22px;border-radius:4px}
 .rd-n:hover i{transform:scale(1.25)}
 .rd-n:focus-visible i{outline:2px solid rgba(var(--amber-rgb),.8);outline-offset:2px}
-.rd-l{display:flex;flex-direction:column;align-items:center;gap:1px;white-space:nowrap}
+.rd-l{display:flex;flex-direction:column;align-items:center;gap:1px;white-space:nowrap;transform:translate(var(--lx,0),var(--ly,0))}
 .rd-l b{font-size:11px;font-weight:700;letter-spacing:.3px;color:var(--ink-1)}
 .rd-l em{font-style:normal;font-size:9px;letter-spacing:1px;color:var(--ink-3);font-variant-numeric:tabular-nums}
 .rd-n.is-next .rd-l b{color:var(--amber)}
 .rd-n.is-missed .rd-l b,.rd-n.is-under .rd-l b{color:#FF9A9A}
 .rd-n.is-past .rd-l b{color:var(--ink-2)}
-.rd-n.is-edge-l .rd-l{align-items:flex-start;transform:translateX(calc(50% - 7px))}
-.rd-n.is-edge-r .rd-l{align-items:flex-end;transform:translateX(calc(-50% + 7px))}
+.rd-n.is-edge-l .rd-l{align-items:flex-start;--lx:calc(50% - 7px)}
+.rd-n.is-edge-r .rd-l{align-items:flex-end;--lx:calc(-50% + 7px)}
 .rd-n.is-sup{transform:translate(-50%,0)}
 .rd-n.is-sup i{width:7px;height:7px;border-width:1.5px;border-color:rgba(243,239,230,.35)}
 .rd-n.is-sup.is-done i{background:rgba(243,239,230,.6);border-color:rgba(243,239,230,.6)}
@@ -982,4 +982,17 @@ body.cn-in3 #content{animation:cnDissolve .18s ease-out both}
   .bs-grid{display:flex;overflow-x:auto;gap:8px;padding:2px 32px 8px 2px;scrollbar-width:none;scroll-snap-type:x proximity;grid-auto-rows:auto}
   .bs-grid::-webkit-scrollbar{display:none}
   .bs-i{flex:0 0 156px;scroll-snap-align:start}
+}
+
+/* ══ 手機的負荷之路：標籤字級與避讓 ═══════════════════════════════════════
+   「字級整體放大」那段在媒體查詢之後，同權重會蓋掉 @media 裡的 10px，
+   手機因此吃到 13px —— 標籤變寬，兩個日期相近的標籤（下一堂與前後測門）就疊住。
+   這裡把手機字級寫回來（放在檔尾，權重之外靠順序贏），縱向避讓交給 rdSpread()。 */
+@media(max-width:767px){
+  .rd-l b{font-size:10.5px}
+  .rd-l em{font-size:9px}
+  .rd-gate{font-size:8.5px}
+  .rd-gate b{font-size:14px}
+  .rd-wk{font-size:8.5px}
+  .rd-today{font-size:8.5px}
 }
