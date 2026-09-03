@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>系統架構 · SteveChuang Personal Hub</title>
+<meta name="description" content="Garmin 手錶到 GitHub Pages 的三段式架構：資料怎麼進來、CI 算了什麼、前端怎麼呈現。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;600&family=Noto+Serif+TC:wght@400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#f5f5f5; --paper-2:#ececec; --node:#ffffff;
+  --ink:#2d3142; --muted:#4f5d75; --soft:#7a8399;
+  --rule:rgba(45,49,66,0.12); --rule-solid:#bfc0c0;
+  --accent:#eb6c36; --accent-tint:rgba(235,108,54,0.08);
+  --fill-05:rgba(45,49,66,0.05); --fill-03:rgba(45,49,66,0.03);
+  --fill-02:rgba(45,49,66,0.02); --fill-mut:rgba(79,93,117,0.10);
+  --ink-30:rgba(45,49,66,0.30); --ink-20:rgba(45,49,66,0.20);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --paper:#2d3142; --paper-2:#393e53; --node:#393e53;
+    --ink:#f5f5f5; --muted:#bfc0c0; --soft:#8e98ac;
+    --rule:rgba(245,245,245,0.12); --rule-solid:rgba(191,192,192,0.25);
+    --accent:#f08a59; --accent-tint:rgba(240,138,89,0.10);
+    --fill-05:rgba(245,245,245,0.05); --fill-03:rgba(245,245,245,0.03);
+    --fill-02:rgba(245,245,245,0.02); --fill-mut:rgba(191,192,192,0.10);
+    --ink-30:rgba(245,245,245,0.30); --ink-20:rgba(245,245,245,0.20);
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:'Geist','Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif;
+  line-height:1.75; padding:0 24px 96px;
+}
+.wrap{max-width:1096px; margin:0 auto}
+header{padding:96px 0 8px; border-bottom:1px solid var(--rule)}
+.eyebrow{
+  font-family:'Geist Mono',monospace; font-size:8px; font-weight:500;
+  letter-spacing:.18em; text-transform:uppercase; color:var(--soft); margin:0 0 12px;
+}
+h1{
+  font-family:'Instrument Serif','Noto Serif TC',serif; font-weight:400;
+  font-size:40px; line-height:1.2; margin:0 0 16px;
+}
+.lede{max-width:680px; color:var(--muted); margin:0 0 40px; font-size:16px}
+.lede strong{color:var(--ink); font-weight:600}
+section{padding:64px 0 0; border-top:1px solid var(--rule); margin-top:64px}
+section:first-of-type{border-top:none; margin-top:0}
+h2{
+  font-family:'Instrument Serif','Noto Serif TC',serif; font-weight:400;
+  font-size:28px; line-height:1.3; margin:0 0 12px;
+}
+h2 .num{font-family:'Geist Mono',monospace; font-size:12px; color:var(--accent); vertical-align:super; margin-right:12px}
+p{max-width:680px; font-size:16px; margin:0 0 24px; color:var(--muted)}
+p strong{color:var(--ink); font-weight:600}
+code{
+  font-family:'Geist Mono',monospace; font-size:.88em;
+  background:var(--fill-05); padding:2px 6px; border-radius:4px; color:var(--ink);
+}
+.scroller{overflow-x:auto; margin:32px 0 24px; padding-bottom:8px}
+svg.dg{display:block; max-width:100%; height:auto; min-width:0}
+@media (max-width:1096px){ svg.dg{max-width:none} }
+.nd-name{font-family:'Geist','Noto Sans TC','PingFang TC',sans-serif; font-size:12px; font-weight:600; fill:var(--ink)}
+.nd-sub{font-family:'Geist','Noto Sans TC','PingFang TC',sans-serif; font-size:12px; font-weight:400; fill:var(--muted)}
+.nd-mono{font-family:'Geist Mono',monospace; font-size:12px; font-weight:400; fill:var(--muted)}
+.zn{font-family:'Geist Mono','Noto Sans TC',monospace; font-size:12px; font-weight:500; fill:var(--ink)}
+.zn-sub{font-family:'Geist','Noto Sans TC','PingFang TC',sans-serif; font-size:12px; fill:var(--muted)}
+.zn-mono{font-family:'Geist Mono',monospace; font-size:12px; fill:var(--muted)}
+.ar-cjk{font-family:'Geist','Noto Sans TC','PingFang TC',sans-serif; font-size:12px; font-weight:500; fill:var(--muted)}
+.ar-mono{font-family:'Geist Mono',monospace; font-size:8px; letter-spacing:.06em; fill:var(--muted)}
+.lg{font-family:'Geist','Noto Sans TC','PingFang TC',sans-serif; font-size:12px; font-weight:400; fill:var(--muted)}
+.callout{
+  font-family:'Instrument Serif','Noto Serif TC',serif; font-style:italic;
+  font-size:16px; color:var(--ink); border-left:1px solid var(--accent);
+  padding-left:20px; margin:32px 0; max-width:640px; line-height:1.7;
+}
+footer{margin-top:96px; padding-top:32px; border-top:1px solid var(--rule); color:var(--soft); font-size:12px}
+footer a{color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <p class="eyebrow">SteveChuang · Personal Hub</p>
+  <h1>一支手錶到一個網站,<br>中間沒有任何伺服器</h1>
+  <p class="lede">這個專案把 Garmin 手錶錄下來的原始 FIT 檔,變成一整套訓練分析網站。
+  全程<strong>零後端、零推論成本、沒有 build step</strong> —— 排程跑完 <code>git commit</code>,那就是線上版。
+  以下三張圖照著資料的流向排:先看它怎麼進來,再看機器算了什麼,最後看畫面怎麼長出來。</p>
+</header>
+
+<section>
+  <h2><span class="num">01</span>資料怎麼進來</h2>
+  <p>手錶錄完自己上傳到 Garmin Connect,之後<strong>不需要任何手動操作</strong>。
+  真正的主線是 <code>intervals.icu</code> —— 它免費、有開放 API、而且會把原始 FIT 檔完整交出來,
+  所以逐秒的功率、心率、踏頻、齒比才拿得到。</p>
+  <p>Strava 那條線刻意畫成虛線:它現在<strong>只剩年度統計和歷史成績</strong>,
+  留著是因為總覽的年度數字還住在 <code>data/strava.json</code>。室內騎乘尤其不能信它 ——
+  Rouvy 會自己上傳一份虛擬距離進去,那份不是訓練資料。</p>
+  <div class="scroller"><svg class="dg" viewBox="0 0 968 384" width="968" height="384"
+     role="img" aria-labelledby="collect-title collect-desc">
+<title id="collect-title">資料怎麼進來</title>
+<desc id="collect-desc">架構圖：Garmin 手錶的 FIT 檔上傳到 Garmin Connect，由 intervals.icu 自動同步後開放 API 供 GitHub Actions 取用；Garmin Connect 同時推送到 Strava，但 Strava 現在只提供年度統計與歷史資料。</desc>
+<defs>
+  <marker id="ah-muted-collect" viewBox="0 0 8 8" refX="8" refY="4" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+    <path d="M 0 0 L 8 4 L 0 8 z" fill="var(--muted)"/></marker>
+  <marker id="ah-accent-collect" viewBox="0 0 8 8" refX="8" refY="4" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+    <path d="M 0 0 L 8 4 L 0 8 z" fill="var(--accent)"/></marker>
+</defs>
+<path d="M 192 144 L 256 144" fill="none" stroke="var(--muted)" stroke-width="1" marker-end="url(#ah-muted-collect)"/>
+<path d="M 416 144 L 504 144" fill="none" stroke="var(--muted)" stroke-width="1" marker-end="url(#ah-muted-collect)"/>
+<rect x="424" y="120" width="64" height="16" fill="var(--paper)"/>
+<text class="ar-cjk" x="456" y="132" text-anchor="middle">自動同步</text>
+<path d="M 680 144 L 744 144" fill="none" stroke="var(--muted)" stroke-width="1" marker-end="url(#ah-muted-collect)"/>
+<path d="M 336 184 L 336 272 A 8 8 0 0 0 344 280 L 504 280" fill="none" stroke="var(--muted)" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#ah-muted-collect)"/>
+<rect x="388" y="256" width="64" height="16" fill="var(--paper)"/>
+<text class="ar-cjk" x="420" y="268" text-anchor="middle">自動推送</text>
+<path d="M 680 280 L 792 280 A 8 8 0 0 0 800 272 L 800 184" fill="none" stroke="var(--muted)" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#ah-muted-collect)"/>
+<rect x="688" y="256" width="96" height="16" fill="var(--paper)"/>
+<text class="ar-mono" x="736" y="268" text-anchor="middle">fetch-strava.js</text>
+<g><rect x="32" y="104" width="160" height="80" rx="6" fill="var(--fill-mut)" stroke="var(--soft)" stroke-width="1"/>
+<text class="nd-name" x="112" y="132" text-anchor="middle">Garmin 手錶</text>
+<text class="nd-mono" x="112" y="148" text-anchor="middle">Forerunner</text>
+<text class="nd-sub" x="112" y="164" text-anchor="middle">原始 FIT 檔</text>
+</g>
+<g><rect x="256" y="104" width="160" height="80" rx="6" fill="var(--fill-03)" stroke="var(--ink-30)" stroke-width="1"/>
+<text class="nd-name" x="336" y="132" text-anchor="middle">Garmin Connect</text>
+<text class="nd-sub" x="336" y="148" text-anchor="middle">原廠雲端</text>
+<text class="nd-sub" x="336" y="164" text-anchor="middle">唯一的上傳出口</text>
+</g>
+<g><rect x="504" y="104" width="176" height="80" rx="6" fill="var(--accent-tint)" stroke="var(--accent)" stroke-width="1.2"/>
+<text class="nd-name" x="592" y="132" text-anchor="middle">intervals.icu</text>
+<text class="nd-sub" x="592" y="148" text-anchor="middle">開放 API · 免費</text>
+<text class="nd-sub" x="592" y="164" text-anchor="middle">訓練資料主線</text>
+</g>
+<g><rect x="744" y="104" width="192" height="80" rx="6" fill="var(--node)" stroke="var(--ink)" stroke-width="1"/>
+<text class="nd-name" x="840" y="132" text-anchor="middle">GitHub Actions</text>
+<text class="nd-sub" x="840" y="148" text-anchor="middle">每天 10:30 / 22:30</text>
+<text class="nd-sub" x="840" y="164" text-anchor="middle">零自架伺服器</text>
+</g>
+<g><rect x="504" y="248" width="176" height="64" rx="6" fill="var(--fill-02)" stroke="var(--ink-20)" stroke-width="1" stroke-dasharray="4,3"/>
+<text class="nd-name" x="592" y="276" text-anchor="middle">Strava</text>
+<text class="nd-sub" x="592" y="292" text-anchor="middle">只剩年度統計與歷史</text>
+</g>
+<line x1="32" y1="336" x2="936" y2="336" stroke="var(--rule)" stroke-width="1"/>
+<rect x="32" y="352" width="16" height="12" rx="4" fill="var(--accent-tint)" stroke="var(--accent)" stroke-width="1.2"/>
+<text class="lg" x="56" y="364">訓練資料主線</text>
+<rect x="168" y="352" width="16" height="12" rx="4" fill="var(--fill-03)" stroke="var(--ink-30)" stroke-width="1"/>
+<text class="lg" x="192" y="364">外部服務</text>
+<rect x="280" y="352" width="16" height="12" rx="4" fill="var(--fill-02)" stroke="var(--ink-20)" stroke-width="1" stroke-dasharray="4,3"/>
+<text class="lg" x="304" y="364">只剩歷史相依</text>
+</svg></div>
+  <p class="callout">選 intervals.icu 不是因為它比較好看,是因為它肯把原始檔還給你。<br>
+  資料的所有權決定了這整條管線能做到多深。</p>
+</section>
+
+<section>
+  <h2><span class="num">02</span>CI 算了什麼</h2>
+  <p>兩班排程,一天各跑兩到三次。主線 <code>fit-sync.yml</code> 依序跑六支腳本,
+  順序不能換 —— 後面每一支都吃前面的產出。</p>
+  <p>橘色那支是這個專案真正的自建部分:<strong>不採用 Strava 給的路段成績</strong>,
+  而是從自己的 FIT 逐秒重算閘門通過時間。同理,坡度也不讀 Strava 的高程 ——
+  路段 altitude stream 的均坡是對的,但在山壁窄路上局部坡度會高估兩到三倍。</p>
+  <div class="scroller"><svg class="dg" viewBox="0 0 1040 576" width="1040" height="576"
+     role="img" aria-labelledby="compute-title compute-desc">
+<title id="compute-title">CI 算了什麼</title>
+<desc id="compute-desc">流程圖：fit-sync.yml 依序執行六支 Python 腳本，從抓取 FIT 到推導代辦，其中自建 ITT 閘門計時是核心；另一條 strava-sync.yml 只補年度統計；兩者的產出都以 git commit 版本化，commit 完即上線。</desc>
+<defs>
+  <marker id="ah-muted-compute" viewBox="0 0 8 8" refX="8" refY="4" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+    <path d="M 0 0 L 8 4 L 0 8 z" fill="var(--muted)"/></marker>
+  <marker id="ah-accent-compute" viewBox="0 0 8 8" refX="8" refY="4" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+    <path d="M 0 0 L 8 4 L 0 8 z" fill="var(--accent)"/></marker>
+</defs>
+<path d="M 256 172 L 288 172" fill="none" stroke="var(--muted)" stroke-width="1" marker-end="url(#ah-muted-compute)"/>
+<path d="M 480 172 L 512 172" fill="none" stroke="var(--muted)" stroke-width="1" marker-end="url(#ah-muted-compute)"/>
+<path d="M 608 208 L 608 224 A 8 8 0 0 1 600 232 L 168 232 A 8 8 0 0 0 160 240 L 160 256" fill="none" stroke="var(--muted)" stroke-width="1" marker-end="url(#ah-muted-compute)"/>
+<path d="M 256 292 L 288 292" fill="none" stroke="var(--muted)" stroke-width="1" marker-end="url(#ah-muted-compute)"/>
+<path d="M 480 292 L 512 292" fill="none" stroke="var(--muted)" stroke-width="1" marker-end="url(#ah-muted-compute)"/>
+<path d="M 704 292 L 800 292" fill="none" stroke="var(--muted)" stroke-width="1" marker-end="url(#ah-muted-compute)"/>
+<path d="M 424 452 L 856 452 A 8 8 0 0 0 864 444 L 864 320" fill="none" stroke="var(--muted)" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#ah-muted-compute)"/>
+<rect x="544" y="428" width="192" height="16" fill="var(--paper)"/>
+<text class="ar-cjk" x="640" y="440" text-anchor="middle">唯一還沒斷乾淨的 Strava 相依</text>
+<g><rect x="32" y="88" width="704" height="272" rx="8" fill="none" stroke="var(--rule-solid)" stroke-width="1" stroke-dasharray="4,4"/>
+<text class="zn" x="56" y="116">fit-sync.yml</text>
+<text class="zn-sub" x="56" y="132">每天 10:30 與 22:30 各跑一次 · Python 3.12</text>
+</g>
+<g><rect x="64" y="136" width="192" height="72" rx="6" fill="var(--node)" stroke="var(--ink)" stroke-width="1"/>
+<text class="nd-name" x="160" y="168" text-anchor="middle">sync-intervals.py</text>
+<text class="nd-sub" x="160" y="184" text-anchor="middle">抓 FIT 與 wellness</text>
+</g>
+<g><rect x="288" y="136" width="192" height="72" rx="6" fill="var(--node)" stroke="var(--ink)" stroke-width="1"/>
+<text class="nd-name" x="384" y="168" text-anchor="middle">build-ride-reports.py</text>
+<text class="nd-sub" x="384" y="184" text-anchor="middle">逐秒解析 · 產單日報告</text>
+</g>
+<g><rect x="512" y="136" width="192" height="72" rx="6" fill="var(--accent-tint)" stroke="var(--accent)" stroke-width="1.2"/>
+<text class="nd-name" x="608" y="160" text-anchor="middle">backfill-itt-efforts.py</text>
+<text class="nd-sub" x="608" y="176" text-anchor="middle">自建 ITT 閘門計時</text>
+<text class="nd-sub" x="608" y="192" text-anchor="middle">不信 Strava 的成績</text>
+</g>
+<g><rect x="64" y="256" width="192" height="72" rx="6" fill="var(--node)" stroke="var(--ink)" stroke-width="1"/>
+<text class="nd-name" x="160" y="288" text-anchor="middle">estimate-indoor-distance.py</text>
+<text class="nd-sub" x="160" y="304" text-anchor="middle">室內等效平路里程</text>
+</g>
+<g><rect x="288" y="256" width="192" height="72" rx="6" fill="var(--node)" stroke="var(--ink)" stroke-width="1"/>
+<text class="nd-name" x="384" y="288" text-anchor="middle">build-coach-context.py</text>
+<text class="nd-sub" x="384" y="304" text-anchor="middle">給外部 AI 的脈絡檔</text>
+</g>
+<g><rect x="512" y="256" width="192" height="72" rx="6" fill="var(--node)" stroke="var(--ink)" stroke-width="1"/>
+<text class="nd-name" x="608" y="288" text-anchor="middle">build-tasks.py</text>
+<text class="nd-sub" x="608" y="304" text-anchor="middle">推導代辦，不手動維護</text>
+</g>
+<g><rect x="32" y="408" width="392" height="88" rx="6" fill="var(--fill-02)" stroke="var(--ink-20)" stroke-width="1" stroke-dasharray="4,3"/>
+<text class="nd-name" x="228" y="440" text-anchor="middle">strava-sync.yml</text>
+<text class="nd-mono" x="228" y="456" text-anchor="middle">fetch-strava.js · fetch-segment-terrain.js</text>
+<text class="nd-sub" x="228" y="472" text-anchor="middle">每天 10:00 / 18:00 / 22:00</text>
+</g>
+<g><rect x="800" y="216" width="208" height="104" rx="6" fill="var(--fill-05)" stroke="var(--muted)" stroke-width="1"/>
+<text class="nd-name" x="904" y="248" text-anchor="middle">git commit</text>
+<text class="nd-sub" x="904" y="264" text-anchor="middle">data/*.json （22 個）</text>
+<text class="nd-sub" x="904" y="280" text-anchor="middle">rides/*.html （72 頁）</text>
+<text class="nd-sub" x="904" y="296" text-anchor="middle">commit 完就是線上版</text>
+</g>
+<line x1="32" y1="528" x2="1008" y2="528" stroke="var(--rule)" stroke-width="1"/>
+<rect x="32" y="544" width="16" height="12" rx="4" fill="var(--accent-tint)" stroke="var(--accent)" stroke-width="1.2"/>
+<text class="lg" x="56" y="556">自建演算法</text>
+<rect x="156" y="544" width="16" height="12" rx="4" fill="var(--node)" stroke="var(--ink)" stroke-width="1"/>
+<text class="lg" x="180" y="556">CI 腳本</text>
+<rect x="280" y="544" width="16" height="12" rx="4" fill="var(--fill-05)" stroke="var(--muted)" stroke-width="1"/>
+<text class="lg" x="304" y="556">版本化產出</text>
+<rect x="404" y="544" width="16" height="12" rx="4" fill="var(--fill-02)" stroke="var(--ink-20)" stroke-width="1" stroke-dasharray="4,3"/>
+<text class="lg" x="428" y="556">待退場</text>
+</svg></div>
+  <p>最後一支 <code>build-tasks.py</code> 比較特別:它不維護狀態,而是<strong>從現況推導代辦</strong>。
+  該做的事做完了,重跑一次它自己就消失。</p>
+</section>
+
+<section>
+  <h2><span class="num">03</span>前端怎麼呈現</h2>
+  <p>五個視覺世界共用同一份 <code>data/*.json</code>,但<strong>各自是一個獨立單檔</strong>,
+  CSS 和 JS 全部 inline,彼此不共用 bundle。這是刻意的:每個世界有自己的設計語言,
+  硬要抽共用元件會把它們拉成同一種長相。</p>
+  <p>右邊那 72 頁單日報告是另一種東西 —— 它們由 CI 直接烤成靜態 HTML,
+  <strong>打開後不 fetch 任何資料</strong>。所以報告模版改了不會自動傳播到舊頁面,
+  要重生得逐日指定。</p>
+  <div class="scroller"><svg class="dg" viewBox="0 0 1048 536" width="1048" height="536"
+     role="img" aria-labelledby="publish-title publish-desc">
+<title id="publish-title">前端怎麼呈現</title>
+<desc id="publish-desc">巢狀架構圖：linkTreeIndex.html 是唯一入口，通往五個各自單檔的視覺世界，它們在瀏覽器端讀同一份 data 目錄；另有 72 頁單日報告由 CI 直接產生、不做任何 runtime fetch，以及五支已退出導覽的舊主題頁。</desc>
+<defs>
+  <marker id="ah-muted-publish" viewBox="0 0 8 8" refX="8" refY="4" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+    <path d="M 0 0 L 8 4 L 0 8 z" fill="var(--muted)"/></marker>
+  <marker id="ah-accent-publish" viewBox="0 0 8 8" refX="8" refY="4" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+    <path d="M 0 0 L 8 4 L 0 8 z" fill="var(--accent)"/></marker>
+</defs>
+<path d="M 128 104 L 128 56 A 8 8 0 0 1 136 48 L 912 48 A 8 8 0 0 1 920 56 L 920 104" fill="none" stroke="var(--muted)" stroke-width="1" marker-end="url(#ah-muted-publish)"/>
+<rect x="480" y="24" width="88" height="16" fill="var(--paper)"/>
+<text class="ar-cjk" x="524" y="36" text-anchor="middle">單日報告索引</text>
+<path d="M 224 140 L 304 140" fill="none" stroke="var(--muted)" stroke-width="1" marker-end="url(#ah-muted-publish)"/>
+<rect x="240" y="116" width="40" height="16" fill="var(--paper)"/>
+<text class="ar-cjk" x="260" y="128" text-anchor="middle">導覽</text>
+<path d="M 224 332 L 304 332" fill="none" stroke="var(--muted)" stroke-width="1" marker-end="url(#ah-muted-publish)"/>
+<rect x="232" y="308" width="56" height="16" fill="var(--paper)"/>
+<text class="ar-mono" x="260" y="320" text-anchor="middle">fetch()</text>
+<g><rect x="304" y="72" width="456" height="296" rx="8" fill="none" stroke="var(--rule-solid)" stroke-width="1" stroke-dasharray="4,4"/>
+<text class="zn" x="328" y="100">五個現行視覺世界</text>
+<text class="zn-sub" x="328" y="116">各自一個單檔 · 不共用 bundle · 讀同一份資料</text>
+</g>
+<g><rect x="336" y="120" width="392" height="56" rx="6" fill="var(--accent-tint)" stroke="var(--accent)" stroke-width="1.2"/>
+<text class="nd-name" x="532" y="144" text-anchor="middle">strava.html</text>
+<text class="nd-sub" x="532" y="160" text-anchor="middle">深空觀測站 · 9 個頁籤 · 讀 14 個資料檔</text>
+</g>
+<g><rect x="336" y="200" width="184" height="56" rx="6" fill="var(--node)" stroke="var(--ink)" stroke-width="1"/>
+<text class="nd-name" x="428" y="224" text-anchor="middle">strava_cinema.html</text>
+<text class="nd-mono" x="428" y="240" text-anchor="middle">Taiwan Ride Cinema</text>
+</g>
+<g><rect x="544" y="200" width="184" height="56" rx="6" fill="var(--node)" stroke="var(--ink)" stroke-width="1"/>
+<text class="nd-name" x="636" y="224" text-anchor="middle">strava_pitwall.html</text>
+<text class="nd-sub" x="636" y="240" text-anchor="middle">賽車維修站</text>
+</g>
+<g><rect x="336" y="280" width="184" height="56" rx="6" fill="var(--node)" stroke="var(--ink)" stroke-width="1"/>
+<text class="nd-name" x="428" y="304" text-anchor="middle">strava_helicorder.html</text>
+<text class="nd-sub" x="428" y="320" text-anchor="middle">記震紙</text>
+</g>
+<g><rect x="544" y="280" width="184" height="56" rx="6" fill="var(--node)" stroke="var(--ink)" stroke-width="1"/>
+<text class="nd-name" x="636" y="304" text-anchor="middle">strava_opus5_max.html</text>
+<text class="nd-sub" x="636" y="320" text-anchor="middle">遙測 OPUS</text>
+</g>
+<g><rect x="304" y="408" width="456" height="56" rx="6" fill="var(--fill-02)" stroke="var(--ink-20)" stroke-width="1" stroke-dasharray="4,3"/>
+<text class="nd-name" x="532" y="432" text-anchor="middle">ARCHIVE · 5 支舊主題頁</text>
+<text class="nd-sub" x="532" y="448" text-anchor="middle">不在導覽，直接開網址仍可用</text>
+</g>
+<g><rect x="32" y="104" width="192" height="72" rx="6" fill="var(--fill-03)" stroke="var(--ink-30)" stroke-width="1"/>
+<text class="nd-name" x="128" y="136" text-anchor="middle">linkTreeIndex.html</text>
+<text class="nd-sub" x="128" y="152" text-anchor="middle">首頁 · 唯一入口</text>
+</g>
+<g><rect x="32" y="296" width="192" height="72" rx="6" fill="var(--fill-05)" stroke="var(--muted)" stroke-width="1"/>
+<text class="nd-name" x="128" y="320" text-anchor="middle">data/*.json</text>
+<text class="nd-sub" x="128" y="336" text-anchor="middle">22 個檔 · 2.2 MB</text>
+<text class="nd-sub" x="128" y="352" text-anchor="middle">瀏覽器端 fetch</text>
+</g>
+<g><rect x="824" y="104" width="192" height="88" rx="6" fill="var(--fill-05)" stroke="var(--muted)" stroke-width="1"/>
+<text class="nd-name" x="920" y="136" text-anchor="middle">rides/*.html</text>
+<text class="nd-sub" x="920" y="152" text-anchor="middle">72 頁 · CI 直接烤好</text>
+<text class="nd-sub" x="920" y="168" text-anchor="middle">零 runtime fetch</text>
+</g>
+<line x1="32" y1="496" x2="1016" y2="496" stroke="var(--rule)" stroke-width="1"/>
+<rect x="32" y="512" width="16" height="12" rx="4" fill="var(--accent-tint)" stroke="var(--accent)" stroke-width="1.2"/>
+<text class="lg" x="56" y="524">主力頁</text>
+<rect x="132" y="512" width="16" height="12" rx="4" fill="var(--node)" stroke="var(--ink)" stroke-width="1"/>
+<text class="lg" x="156" y="524">現行世界</text>
+<rect x="244" y="512" width="16" height="12" rx="4" fill="var(--fill-05)" stroke="var(--muted)" stroke-width="1"/>
+<text class="lg" x="268" y="524">靜態產出</text>
+<rect x="356" y="512" width="16" height="12" rx="4" fill="var(--fill-02)" stroke="var(--ink-20)" stroke-width="1" stroke-dasharray="4,3"/>
+<text class="lg" x="380" y="524">已退場</text>
+</svg></div>
+  <p class="callout">沒有 build step 是一個功能,不是一個還沒做的待辦。<br>
+  它換到的是:任何一頁都能單獨存檔、單獨打開、單獨活過十年。</p>
+</section>
+
+<footer>
+  <p>原始碼 <a href="https://github.com/chenhan20/linkTree">github.com/chenhan20/linkTree</a> ·
+  圖表遵循 <a href="https://github.com/cathrynlavery/diagram-design">diagram-design</a> 規範
+  （單一 accent、4px 格線、正交圓角連接線）· 本頁為自足靜態檔,無任何 build step。</p>
+</footer>
+
+</div>
+</body>
+</html>

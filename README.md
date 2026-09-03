@@ -6,13 +6,13 @@
 > 全自動、免費、**沒有任何 LLM 參與、零推論成本**。
 
 🔗 **Live：** https://chenhan20.github.io/linkTree/linkTreeIndex.html  
-🏛️ **系統架構圖與說明書：** [ARCHITECTURE.md](ARCHITECTURE.md) *(13 張窄版向量圖，原始碼在 `docs/architecture/src/*.mmd`，用 `node tools/architecture/render.mjs` 重畫)*
+🏛️ **系統架構：** [architecture.html](https://chenhan20.github.io/linkTree/architecture.html) *(三章、三張圖：資料怎麼進來 → CI 算了什麼 → 前端怎麼呈現。自足靜態頁，無工具鏈)*
 
 ---
 
 ## 目錄
 
-- [系統架構圖與說明 (ARCHITECTURE.md)](ARCHITECTURE.md)
+- [系統架構（三章圖解）](https://chenhan20.github.io/linkTree/architecture.html)
 - [這條管線在做什麼](#這條管線在做什麼)
 - [為什麼是 intervals.icu](#為什麼是-intervalsicu)
 - [完整串接教學（Garmin → intervals.icu → 這個 repo）](#完整串接教學garmin--intervalsicu--這個-repo)
@@ -505,7 +505,7 @@ python3 tools/tcx/score.py data/fit/2026-08-13_*.fit --date 2026-08-13
 
 | 文件 | 內容 |
 |---|---|
-| [ARCHITECTURE.md](ARCHITECTURE.md) | **全系統端到端架構、資料管線與自建演算法說明書（13 張窄版向量圖，可重新產生）** |
+| [architecture.html](https://chenhan20.github.io/linkTree/architecture.html) | **全系統架構圖解：資料採集、CI 運算、前端呈現三章（手寫 SVG，取代已退役的 ARCHITECTURE.md）** |
 | [docs/fit-pipeline.md](docs/fit-pipeline.md) | FIT 管線全貌與驗證紀錄 |
 | [docs/intervals-api-survey.md](docs/intervals-api-survey.md) | intervals.icu API 盤點（還有哪些欄位沒挖） |
 | [docs/ride-report-pipeline.md](docs/ride-report-pipeline.md) | 單日訓練報告的產生流程 |
