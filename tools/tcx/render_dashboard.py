@@ -55,6 +55,7 @@ TEMPLATE = r"""<!DOCTYPE html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>__TITLE__</title>
+<link rel="icon" type="image/svg+xml" href="ride-report-icon.svg">
 <style>
 :root{
   color-scheme:light;

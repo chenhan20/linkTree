@@ -78,6 +78,7 @@ def main():
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>訓練報告 · Steve Chuang</title>
+<link rel="icon" type="image/svg+xml" href="ride-report-icon.svg">
 <style>
 :root{{
   color-scheme:light;

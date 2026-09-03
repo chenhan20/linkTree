@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
+  <title id="title">Taiwan Ride Cinema — 騎行報告</title>
+  <desc id="desc">暗色底上的琥珀色爬升路線與終點光點</desc>
+  <defs>
+    <linearGradient id="bg" x1="8" y1="6" x2="56" y2="60" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#18201d"/>
+      <stop offset="1" stop-color="#080b0a"/>
+    </linearGradient>
+    <linearGradient id="route" x1="9" y1="50" x2="53" y2="14" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ff6a19"/>
+      <stop offset="1" stop-color="#ffc45b"/>
+    </linearGradient>
+    <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="2.2"/>
+    </filter>
+  </defs>
+
+  <rect x="1" y="1" width="62" height="62" rx="15" fill="url(#bg)"/>
+  <rect x="1.75" y="1.75" width="60.5" height="60.5" rx="14.25" fill="none" stroke="#f0aa39" stroke-opacity=".32" stroke-width="1.5"/>
+
+  <path d="M9 49C15 49 17 46 21 41C25 36 28 39 32 35C36 31 37 25 42 24C46 23 48 18 53 14"
+        fill="none" stroke="#5d3b1f" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" opacity=".7"/>
+  <path d="M9 49C15 49 17 46 21 41C25 36 28 39 32 35C36 31 37 25 42 24C46 23 48 18 53 14"
+        fill="none" stroke="url(#route)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <circle cx="10" cy="49" r="3.25" fill="#0c100e" stroke="#ff7a20" stroke-width="2.5"/>
+  <circle cx="53" cy="14" r="7" fill="#ffb347" opacity=".22" filter="url(#glow)"/>
+  <circle cx="53" cy="14" r="3.5" fill="#fff2cf"/>
+
+  <path d="M13 18h12M13 24h8" stroke="#f6efe2" stroke-width="2.5" stroke-linecap="round" opacity=".92"/>
+</svg>
