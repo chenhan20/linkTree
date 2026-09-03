@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
+  <title id="title">Steve Chuang — Taiwan Ride Cinema</title>
+  <desc id="desc">電影取景框中的發光公路車手</desc>
+  <defs>
+    <radialGradient id="bg" cx="68%" cy="30%" r="92%">
+      <stop stop-color="#382012"/>
+      <stop offset=".44" stop-color="#15110e"/>
+      <stop offset="1" stop-color="#070a09"/>
+    </radialGradient>
+    <linearGradient id="signal" x1="12" y1="51" x2="49" y2="13" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fc4c02"/>
+      <stop offset="1" stop-color="#ffc45b"/>
+    </linearGradient>
+    <filter id="glow" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur stdDeviation="2.4"/>
+    </filter>
+  </defs>
+
+  <rect x="1" y="1" width="62" height="62" rx="15" fill="url(#bg)"/>
+  <rect x="1.75" y="1.75" width="60.5" height="60.5" rx="14.25" fill="none" stroke="#ff9b32" stroke-opacity=".36" stroke-width="1.5"/>
+
+  <path d="M10 19v-7h7M47 12h7v7M54 45v7h-7M17 52h-7v-7"
+        fill="none" stroke="#f7ead8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity=".88"/>
+
+  <path d="M7 39h10M8 34h7" stroke="#fc4c02" stroke-width="2.5" stroke-linecap="round" opacity=".72"/>
+
+  <circle cx="21" cy="43" r="8" fill="none" stroke="#f7ead8" stroke-width="2.6"/>
+  <circle cx="46" cy="43" r="8" fill="none" stroke="#f7ead8" stroke-width="2.6"/>
+  <path d="M21 43l9-14 7 14H21l12-8 13 8-8-18h7"
+        fill="none" stroke="url(#signal)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M30 29l5-7 7 4" fill="none" stroke="#ffae42" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <circle cx="36" cy="17" r="7" fill="#ff9f31" opacity=".2" filter="url(#glow)"/>
+  <circle cx="36" cy="17" r="4" fill="#ffe4ae"/>
+</svg>

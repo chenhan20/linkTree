@@ -232,28 +232,48 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
   0%{transform:translateX(-100%)} 60%,100%{transform:translateX(150%)}
 }
 
-/* 專用版三選一：這一列不是連結而是容器，所以拿掉整列的 hover 位移
-   （會位移的東西應該是可以點的東西），真正可點的是下面那三顆 */
-.sp-btn-multi{flex-wrap:wrap;cursor:default}
-.sp-btn-multi:hover,.sp-btn-multi:active{transform:none}
-/* 欄數跟著 variants 的數量走，不要寫死 —— 寫死 3 欄的時候加第四個世界，
-   第四顆會掉到第二列去，看起來像壞掉。auto-fit 讓它自己排滿一列。 */
-.btn-vers{flex:1 0 100%;display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:6px;margin-top:11px}
-/* 每顆鈕帶自己那個世界的招牌色，點進去之前就先看到它長什麼調性 */
-.btn-ver{
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
-  min-height:44px;padding:7px 4px;border-radius:4px;text-decoration:none;
-  border:1px solid rgba(var(--vr),.3);background:rgba(var(--vr),.07);
-  color:var(--vc);font-family:monospace;
-  transition:background .16s,border-color .16s,transform .14s ease;
-  -webkit-tap-highlight-color:transparent;
-}
-.btn-ver b{font-size:11px;font-weight:700;letter-spacing:.4px;white-space:nowrap}
-.btn-ver i{font-size:8px;font-style:normal;letter-spacing:1.3px;text-transform:uppercase;opacity:.6}
-.btn-ver:hover,.btn-ver:active{
-  background:rgba(var(--vr),.17);border-color:rgba(var(--vr),.6);transform:translateY(-1px);
-}
-.btn-ver:focus-visible{outline:2px solid var(--vc);outline-offset:2px}
+/* ══ RIDE CINEMA：現行主版本一張卡（這一列約七成的視覺重量），歷代實驗版本收在 ARCHIVE ══
+   這一列是容器不是連結，拿掉整列的 hover 位移與掃光；真正可點的是主卡與展開後的四個小項。 */
+.sp-btn-cinema{flex-direction:column;align-items:stretch;gap:9px;cursor:default;padding:12px 14px 10px;
+  border-color:rgba(255,179,71,.26);background:linear-gradient(180deg,rgba(255,150,40,.06),rgba(6,10,25,.74) 58%)}
+.sp-btn-cinema:hover,.sp-btn-cinema:active{transform:none;border-color:rgba(255,179,71,.34);background:linear-gradient(180deg,rgba(255,150,40,.07),rgba(8,12,30,.82) 58%)}
+.sp-btn-cinema::before,.sp-btn-cinema::after{display:none}
+.rc-head{display:flex;align-items:center;gap:11px}
+.rc-title{display:flex;flex-direction:column;gap:2px;font-size:13px;font-weight:700;letter-spacing:1.6px;color:#ffe3c2}
+.rc-title i{font-style:normal;font-size:10px;font-weight:400;letter-spacing:.8px;color:rgba(255,205,160,.5)}
+/* 主卡：車手電影 icon ＋ 背景預覽（壓暗、左側留給文字）＋ 橘金色亮邊 */
+.rc-card{position:relative;display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:6px;overflow:hidden;
+  text-decoration:none;color:#ffe8d0;border:1px solid rgba(255,179,71,.45);background:#0b0f0e;
+  box-shadow:0 0 0 1px rgba(255,140,50,.08),0 8px 24px rgba(0,0,0,.35);transition:border-color .18s,transform .16s,box-shadow .18s}
+.rc-card::before{content:'';position:absolute;inset:0;background:var(--pv) 62% 42%/cover no-repeat;opacity:.55;transition:opacity .25s,transform .6s}
+.rc-card::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,rgba(6,9,8,.94) 0,rgba(6,9,8,.8) 42%,rgba(6,9,8,.22) 100%)}
+.rc-card>*{position:relative;z-index:1}
+.rc-card:hover,.rc-card:active{border-color:rgba(255,179,71,.9);transform:translateY(-1px);
+  box-shadow:0 0 0 1px rgba(255,179,71,.22),0 10px 28px rgba(0,0,0,.45),0 0 26px rgba(255,160,60,.2)}
+.rc-card:hover::before{opacity:.72;transform:scale(1.03)}
+.rc-card:focus-visible{outline:2px solid #ffb347;outline-offset:2px}
+.rc-ico{width:44px;height:44px;flex-shrink:0;border-radius:11px;box-shadow:0 0 14px rgba(255,150,50,.28)}
+.rc-txt{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0}
+.rc-txt b{font-size:13.5px;font-weight:700;letter-spacing:2px;color:#fff1de;white-space:nowrap}
+.rc-txt i{font-style:normal;font-size:9.5px;letter-spacing:1.6px;color:#ffb347}
+.rc-go{font-size:11px;letter-spacing:1px;color:#ffb347;white-space:nowrap;opacity:.85;transition:transform .18s}
+.rc-card:hover .rc-go{transform:translateX(3px)}
+/* ARCHIVE：預設收合，只顯示名稱與數量；展開後是細小的灰色清單，不放動畫、不放大圖，hover 才稍微亮 */
+.rc-arch-t{display:flex;align-items:center;gap:8px;width:100%;padding:5px 2px 2px;border:0;background:transparent;
+  color:rgba(150,150,190,.55);font:inherit;font-size:9.5px;letter-spacing:1.6px;text-transform:uppercase;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.rc-arch-t em{font-style:normal;padding:0 6px;border-radius:9px;border:1px solid rgba(150,150,190,.25);font-size:9px;line-height:1.5}
+.rc-arch-t u{text-decoration:none;margin-left:auto;display:inline-block;transition:transform .2s}
+.rc-arch-t u.on{transform:rotate(180deg)}
+.rc-arch-t:hover{color:rgba(190,190,230,.85)}
+.rc-arch-t:focus-visible{outline:2px solid rgba(190,190,230,.6);outline-offset:2px;border-radius:3px}
+.rc-arch{display:flex;flex-direction:column;border-top:1px solid rgba(255,255,255,.06);margin-top:2px}
+.rc-arch-i{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:7px 6px;text-decoration:none;
+  color:rgba(150,150,180,.72);border-bottom:1px solid rgba(255,255,255,.04);transition:color .15s,background .15s}
+.rc-arch-i:last-child{border-bottom:0}
+.rc-arch-i b{font-size:12px;font-weight:500}
+.rc-arch-i i{font-style:normal;font-size:9px;letter-spacing:1.6px;color:rgba(150,150,180,.45)}
+.rc-arch-i:hover,.rc-arch-i:active{color:#e2e2f4;background:rgba(255,255,255,.035)}
+.rc-arch-i:hover i{color:rgba(255,179,71,.7)}
 
 @media(max-width:480px){
   .lt-page{padding:2rem .9rem 3.5rem}
@@ -285,11 +305,49 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 }
 .ver-switch .dot{width:7px;height:7px;border-radius:50%;background:#ff8c32;animation:verPulse 1.5s ease-in-out infinite;box-shadow:0 0 10px #ff8c32}
 @keyframes verPulse{50%{opacity:.3;transform:scale(.7)}}
+
+/* ══ 立體感（2026-09-03）：星空分層視差、暗角、卡片浮起、主卡真 3D 傾斜、火箭底光 ══
+   視差只跟滑鼠走（觸控裝置改成很慢的自動漂移），reduced-motion 全部關掉，只留陰影。 */
+:root{--px:0;--py:0}
+.grid-bg{transform:translate3d(calc(var(--px) * -10px),calc(var(--py) * -7px),0);transition:transform .5s cubic-bezier(.2,.7,.2,1)}
+.vignette{position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse 72% 64% at 50% 44%,transparent 42%,rgba(1,2,8,.62) 100%)}
+.rocket-scene::before{content:'';position:absolute;left:-90px;right:-90px;top:-30px;bottom:-80px;z-index:-1;pointer-events:none;
+  background:radial-gradient(55% 45% at 50% 82%,rgba(255,120,30,.18),rgba(255,80,10,.05) 45%,transparent 72%)}
+.links{perspective:1100px}
+.sp-btn{border-top-color:rgba(255,255,255,.1);background:linear-gradient(180deg,rgba(12,18,42,.84),rgba(6,10,25,.78));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.035),0 12px 28px -12px rgba(0,0,0,.75),0 2px 6px rgba(0,0,0,.35)}
+.sp-btn:hover,.sp-btn:active{transform:translate(5px,-2px);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 18px 36px -12px rgba(0,0,0,.85),0 3px 8px rgba(0,0,0,.4),0 0 0 1px rgba(var(--br,127,119,221),.18)}
+.sp-btn:active{transform:translate(5px,-1px) scale(.985)}
+@keyframes btn-in{from{transform:translate3d(-18px,0,-70px) rotateX(8deg);opacity:0}to{transform:none;opacity:1}}
+.sp-btn-cinema{overflow:visible}
+.sp-btn-cinema:hover,.sp-btn-cinema:active{transform:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 18px 40px -12px rgba(0,0,0,.85),0 0 0 1px rgba(255,179,71,.14)}
+/* 主卡：真的 3D —— 預覽在最底層（自己裁圓角），icon 與文字各自浮起，游標帶動傾斜與預覽的反向位移 */
+.rc-card{overflow:visible;transform-style:preserve-3d;transform:perspective(720px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));
+  transition:transform .18s ease-out,border-color .18s,box-shadow .18s}
+.rc-card::before,.rc-card::after{display:none}
+.rc-pv{position:absolute;inset:0;border-radius:inherit;overflow:hidden;transform:translateZ(0)}
+.rc-pv::before{content:'';position:absolute;inset:-7%;background:var(--pv) 62% 42%/cover no-repeat;opacity:.55;
+  transform:translate(var(--sx,0px),var(--sy,0px));transition:opacity .25s,transform .18s ease-out}
+.rc-pv::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,rgba(6,9,8,.94) 0,rgba(6,9,8,.8) 42%,rgba(6,9,8,.22) 100%)}
+.rc-card:hover .rc-pv::before{opacity:.72}
+.rc-card:hover,.rc-card:active{transform:perspective(720px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)) translateY(-1px)}
+.rc-ico{transform:translateZ(26px);box-shadow:0 10px 22px rgba(0,0,0,.5),0 0 14px rgba(255,150,50,.28)}
+.rc-txt{transform:translateZ(16px)}
+.rc-go{transform:translateZ(14px)}
+.rc-card:hover .rc-go{transform:translateZ(14px) translateX(3px)}
+@media (prefers-reduced-motion:reduce){
+  .grid-bg{transform:none}
+  .rc-card,.rc-card:hover{transform:none}
+  .rc-pv::before{transform:none}
+  @keyframes btn-in{from{opacity:0}to{opacity:1}}
+}
 </style>
 </head>
 <body>
 <canvas id="star-canvas"></canvas>
 <div class="grid-bg"></div>
+<div class="vignette"></div>
 <div class="hud tl"></div><div class="hud tr"></div><div class="hud bl"></div><div class="hud br"></div>
 <div class="telemetry"><span class="tele-inner">FALCON 9 · STAGE SEP CONFIRMED · MECO · ENTRY BURN INITIATED · MAX-Q PASSED · T+02:34 · FAIRING SEP · SECO-1 · DRAGON NOMINAL · ORBIT INSERTION 400KM · BOOSTER LANDING CONFIRMED · MISSION: MARS 2026 · GO FOR LAUNCH · COMMIT · &nbsp;&nbsp;&nbsp;</span></div>
 
@@ -327,20 +385,25 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
       </div>
       <div class="links">
         <template v-for="(link,i) in links" :key="link.label">
-          <!-- 有 variants 的那一列不是單一連結，是多選一：整列改成容器，每顆鈕各自是 <a> -->
-          <div v-if="link.variants" class="sp-btn sp-btn-vip sp-btn-multi"
+          <!-- RIDE CINEMA：這一列是容器；主卡是 <a>，ARCHIVE 是一顆收合鈕加四個細小的 <a> -->
+          <div v-if="link.current" class="sp-btn sp-btn-cinema"
             :style="{'--bc':'rgb('+link.rgb+')','--br':link.rgb,animationDelay:(0.28+i*0.07)+'s'}">
-            <span class="btn-seq">{{ String(i+1).padStart(2,'0') }}</span>
-            <span class="btn-icon" :style="{borderColor:'rgba('+link.rgb+',.22)',background:'rgba('+link.rgb+',.07)'}">
-              <svg viewBox="0 0 24 24" :style="{fill:'rgb('+link.rgb+')'}"><path :d="link.icon"/></svg>
-            </span>
-            <span class="btn-label">{{ link.label }}<span v-if="link.badge" class="btn-badge">{{ link.badge }}</span></span>
-            <span class="btn-vers">
-              <a v-for="v in link.variants" :key="v.url" class="btn-ver" :href="v.url"
-                :style="{'--vc':'rgb('+v.rgb+')','--vr':v.rgb}">
-                <b>{{ v.label }}</b><i>{{ v.sub }}</i>
-              </a>
-            </span>
+            <div class="rc-head">
+              <span class="btn-seq">{{ String(i+1).padStart(2,'0') }}</span>
+              <span class="rc-title">{{ link.label }}<i>{{ link.sub }}</i></span>
+            </div>
+            <a class="rc-card" :href="link.current.url" :style="{'--pv':'url('+link.current.preview+')'}">
+              <span class="rc-pv" aria-hidden="true"></span>
+              <img class="rc-ico" :src="link.current.icon" alt="">
+              <span class="rc-txt"><b>{{ link.current.title }}</b><i>{{ link.current.tag }}</i></span>
+              <span class="rc-go">進入 →</span>
+            </a>
+            <button type="button" class="rc-arch-t" :aria-expanded="archiveOpen" @click.stop="archiveOpen=!archiveOpen">
+              <span>歷代實驗版本 · ARCHIVE</span><em>{{ link.archive.length }}</em><u :class="{on:archiveOpen}">⌄</u>
+            </button>
+            <div class="rc-arch" v-show="archiveOpen">
+              <a v-for="v in link.archive" :key="v.url" class="rc-arch-i" :href="v.url"><b>{{ v.label }}</b><i>{{ v.sub }}</i></a>
+            </div>
           </div>
           <button v-else class="sp-btn"
             :class="{' sp-btn-vip':link.badge}"
@@ -442,6 +505,7 @@ createApp({
   setup() {
     const page = ref('home')
     const skillsVisible = ref(false)
+    const archiveOpen = ref(false)   // 歷代實驗版本預設收合
 
     /* ── links ── */
     const links = [
@@ -453,16 +517,16 @@ createApp({
         icon:'M23.495 6.205a3.007 3.007 0 0 0-2.088-2.088c-1.87-.501-9.396-.501-9.396-.501s-7.507-.01-9.396.501A3.007 3.007 0 0 0 .527 6.205a31.247 31.247 0 0 0-.522 5.805 31.247 31.247 0 0 0 .522 5.783 3.007 3.007 0 0 0 2.088 2.088c1.868.502 9.396.502 9.396.502s7.506 0 9.396-.502a3.007 3.007 0 0 0 2.088-2.088 31.247 31.247 0 0 0 .5-5.783 31.247 31.247 0 0 0-.5-5.805zM9.609 15.601V8.408l6.264 3.602z' },
       { label:'Strava', url:'https://www.strava.com/athletes/161539959', rgb:'252,76,2',
         icon:'M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169' },
-      // 專用版有四種視覺世界，直接在這一列給四顆鈕讓人挑，不預設跳去哪一版。
-      // 每顆鈕帶自己世界的招牌色：橘＝深空觀測站、粉筆白＝維修站牆、青＝遙測 OPUS MAX、
-      // 鏽紅＝記震紙（取它負片沖印的墨色，正片的淡青灰在這片深色底上會糊掉）
-      { label:'Strava · STEVE專用版', rgb:'255,140,50', badge:'STEVE',
-        icon:'M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169',
-        variants:[
-          { label:'深空觀測站', sub:'Classic',    url:'strava.html',            rgb:'252,76,2'    },
-          { label:'維修站牆',   sub:'Pit Wall',   url:'strava_pitwall.html',    rgb:'237,234,227' },
-          { label:'遙測 MAX',   sub:'Opus Max',   url:'strava_opus5_max.html',  rgb:'37,224,255'  },
-          { label:'記震紙',     sub:'Helicorder', url:'strava_helicorder.html', rgb:'233,136,108' },
+      // 現行主版本是 Taiwan Ride Cinema：一張帶車手電影 icon 與背景預覽的卡（這一列約七成的視覺重量）。
+      // 四個歷代實驗版本收在 ARCHIVE 裡，預設收合、展開後是細小的灰色清單，不逐項寫「舊版」。
+      { label:'STEVE · RIDE CINEMA', sub:'個人騎行資料與訓練控制台', rgb:'255,179,71',
+        current:{ title:'TAIWAN RIDE CINEMA', tag:'現行主版本 · CURRENT', url:'strava_cinema.html',
+                  icon:'assets/strava-cinema/ride-cinema-icon.svg', preview:'assets/strava-cinema/hero-poster-lightning-v2-clean.jpg' },
+        archive:[
+          { label:'深空觀測站', sub:'CLASSIC',    url:'strava.html' },
+          { label:'維修站牆',   sub:'PIT WALL',   url:'strava_pitwall.html' },
+          { label:'遙測 MAX',   sub:'OPUS MAX',   url:'strava_opus5_max.html' },
+          { label:'記震紙',     sub:'HELICORDER', url:'strava_helicorder.html' },
         ] },
       // 每趟 TCX 自動產生的訓練分析頁：分圈、區間、爬坡、停等判讀與教練評語。
       { label:'訓練報告', url:'rides/', rgb:'235,104,52', badge:'NEW',
@@ -520,7 +584,7 @@ createApp({
       else skillsVisible.value=false
     })
 
-    return { page, links, experience, projects, skills, education, interests,
+    return { page, links, archiveOpen, experience, projects, skills, education, interests,
              skillsVisible, handleLink }
   }
 }).mount('#app')
@@ -536,16 +600,47 @@ createApp({
   function initS(){
     stars=[]
     const n=Math.floor(W*H/1600)
-    for(let i=0;i<n;i++) stars.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.6+.2,a:Math.random(),da:(Math.random()-.5)*.006,sp:Math.random()*.1+.01,cold:Math.random()<.15})
+    // z 是深度（.15 近 … 1 遠的反向：值越大越近）：近的星大、亮、漂得快、視差大；遠的小而慢
+    for(let i=0;i<n;i++){const z=Math.pow(Math.random(),1.6)*.85+.15;stars.push({x:Math.random()*W,y:Math.random()*H,z,r:(Math.random()*1.3+.2)*z+.15,a:Math.random(),da:(Math.random()-.5)*.006,sp:(Math.random()*.1+.01)*z,cold:Math.random()<.15})}
   }
-  function draw(){
+  const rm=matchMedia('(prefers-reduced-motion: reduce)').matches
+  let hasMouse=false
+  addEventListener('pointermove',e=>{if(e.pointerType==='mouse')hasMouse=true},{passive:true,once:true})
+  function draw(t){
     ctx.clearRect(0,0,W,H)
-    nebs.forEach(n=>{const g=ctx.createRadialGradient(n.x,n.y,0,n.x,n.y,n.r);g.addColorStop(0,n.cr+'.18)');g.addColorStop(1,'transparent');ctx.fillStyle=g;ctx.beginPath();ctx.arc(n.x,n.y,n.r,0,Math.PI*2);ctx.fill()})
-    stars.forEach(s=>{s.a+=s.da;if(s.a<0||s.a>1)s.da*=-1;s.y-=s.sp;if(s.y<0)s.y=H;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fillStyle=(s.cold?'rgba(180,210,255,':'rgba(200,195,255,')+s.a+')';ctx.fill()})
+    // 視差：滑鼠給 __ltPar（下面的立體 IIFE 寫），觸控裝置沒有滑鼠就很慢地自己漂
+    let px=0,py=0
+    if(!rm){ if(hasMouse&&window.__ltPar){px=window.__ltPar.x;py=window.__ltPar.y} else {px=Math.sin(t/9000)*.35;py=Math.cos(t/13000)*.25} }
+    nebs.forEach(n=>{const x=n.x+px*36,y=n.y+py*22;const g=ctx.createRadialGradient(x,y,0,x,y,n.r);g.addColorStop(0,n.cr+'.18)');g.addColorStop(1,'transparent');ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,n.r,0,Math.PI*2);ctx.fill()})
+    stars.forEach(s=>{s.a+=s.da;if(s.a<0||s.a>1)s.da*=-1;s.y-=s.sp;if(s.y<0)s.y=H
+      let x=s.x-px*26*s.z,y=s.y-py*16*s.z; if(x<0)x+=W;else if(x>W)x-=W; if(y<0)y+=H;else if(y>H)y-=H
+      ctx.beginPath();ctx.arc(x,y,s.r,0,Math.PI*2);ctx.fillStyle=(s.cold?'rgba(180,210,255,':'rgba(200,195,255,')+(s.a*(.45+.55*s.z)).toFixed(3)+')';ctx.fill()})
     requestAnimationFrame(draw)
   }
-  resize();initS();draw()
+  resize();initS();requestAnimationFrame(draw)
   window.addEventListener('resize',()=>{resize();initS()})
+})()
+
+/* ── 立體：指標視差（星空、格線）與主卡 3D 傾斜 ── */
+;(()=>{
+  const rm=matchMedia('(prefers-reduced-motion: reduce)').matches
+  const root=document.documentElement
+  let tx=0,ty=0,cx=0,cy=0,raf=0
+  window.__ltPar={x:0,y:0}
+  function tick(){raf=0;cx+=(tx-cx)*.08;cy+=(ty-cy)*.08;window.__ltPar.x=cx;window.__ltPar.y=cy
+    root.style.setProperty('--px',cx.toFixed(3));root.style.setProperty('--py',cy.toFixed(3))
+    if(Math.abs(tx-cx)>.001||Math.abs(ty-cy)>.001)raf=requestAnimationFrame(tick)}
+  if(!rm)addEventListener('pointermove',e=>{if(e.pointerType!=='mouse')return;tx=(e.clientX/innerWidth-.5)*2;ty=(e.clientY/innerHeight-.5)*2;if(!raf)raf=requestAnimationFrame(tick)},{passive:true})
+  // 主卡：游標在卡片上的位置 → 傾斜 ±5°、預覽反向位移；離開就回正
+  const app=document.getElementById('app')
+  app.addEventListener('pointermove',e=>{
+    if(rm||e.pointerType!=='mouse')return
+    const card=e.target.closest&&e.target.closest('.rc-card');if(!card)return
+    const r=card.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5
+    card.style.setProperty('--ry',(x*10).toFixed(2)+'deg');card.style.setProperty('--rx',(-y*8).toFixed(2)+'deg')
+    card.style.setProperty('--sx',(-x*8).toFixed(1)+'px');card.style.setProperty('--sy',(-y*6).toFixed(1)+'px')
+  },{passive:true})
+  app.addEventListener('pointerout',e=>{const card=e.target.closest&&e.target.closest('.rc-card');if(!card||(e.relatedTarget&&card.contains(e.relatedTarget)))return;['--rx','--ry','--sx','--sy'].forEach(k=>card.style.removeProperty(k))})
 })()
 
 /* ── SHOOTING STARS ── */
