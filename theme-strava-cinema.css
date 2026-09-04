@@ -870,19 +870,25 @@ html{font-size:15px}
    body.cn-focus：首次進站——標題與核心資訊在對焦後半段以 opacity＋6px 出現。
    body.cn-in2：跨 hub——hub 標題與 rail 淡入（區塊 stagger 由動效層做）。
    body.cn-in3：同 hub 子頁——#content 的 ~200ms dissolve。 */
-.td-scene{position:absolute;inset:0;pointer-events:none;transform-origin:63% 52%}   /* 全幅之後車手在 63%：scale 以他為中心 */
+.td-scene{position:absolute;inset:0;pointer-events:none;isolation:isolate}
+/* 運鏡（scale／origin）只套在 .td-media（影片、poster、canvas、底片 overlay）；.td-dof 留在 .td-scene 裡不縮放——
+   backdrop-filter 的元素一伸出視窗，Chrome 會用鏡射邊緣採樣，畫面右邊會多一個糊的車手鬼影。遮罩與對焦框由 JS 依運鏡對位。 */
+.td-media{position:absolute;inset:0;transform-origin:63% 52%}   /* 全幅之後車手在 63%：scale 以他為中心；isolate 讓底片 overlay 的混合只發生在媒體層裡 */
 #cn-canvas{transform-origin:50% 45%}
-body.cn-defocused #cn-canvas,body.cn-defocused .td-scene{filter:blur(22px) saturate(.82) contrast(.92) brightness(1.05);transform:scale(1.038)}
+body.cn-defocused #cn-canvas{filter:blur(14px) saturate(.86) contrast(.94) brightness(.78);transform:none}
+body.cn-defocused .td-scene{filter:blur(14px) saturate(.86) contrast(.94) brightness(.78)}
+body.cn-defocused .td-media{transform:scale(1.6);transform-origin:0% 58%}   /* 開場：貼很近對著左側 → 拉遠到全景 → 鎖定後再依框推近（fx 的 CAM 第一格同一組值） */   /* 半按快門：稍暗、輕微失焦（跟 fx 的 DEFOCUS 同一組值） */
 @keyframes cnRise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 @keyframes cnDissolve{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
-body.cn-focus .hh-t,body.cn-focus #rail,body.cn-focus .td-panel,body.cn-focus .view.is-on>.view-h{animation:cnRise .6s cubic-bezier(.2,.7,.2,1) 1.25s both}
-body.cn-focus .view.is-on>:not(.td-hero):not(.view-h){animation:cnRise .6s cubic-bezier(.2,.7,.2,1) 1.4s both}
+body.cn-focus .hh-t,body.cn-focus #rail,body.cn-focus .td-panel,body.cn-focus .view.is-on>.view-h{animation:cnRise .6s cubic-bezier(.2,.7,.2,1) 2.8s both}   /* 拉到全景那一刻才出字 */
+body.cn-focus .view.is-on>:not(.td-hero):not(.view-h){animation:cnRise .6s cubic-bezier(.2,.7,.2,1) 2.95s both}
 body.cn-in2 .hh-t,body.cn-in2 #rail{animation:cnRise .38s cubic-bezier(.2,.7,.2,1) both}
 body.cn-in3 #content{animation:cnDissolve .18s ease-out both}
 .view.is-on{animation:none}                          /* 原版 viewIn 關掉：進場由鏡頭轉場負責 */
-@media(max-width:767px){.td-scene{transform-origin:52% 42%}}
+@media(max-width:767px){.td-media{transform-origin:52% 42%}body.cn-defocused .td-media{transform:scale(1.5);transform-origin:20% 50%}}
 @media (prefers-reduced-motion:reduce){
   body.cn-defocused #cn-canvas,body.cn-defocused .td-scene{filter:none;transform:none}
+  body.cn-defocused .td-media{transform:none}
   body.cn-focus .hh-t,body.cn-focus #rail,body.cn-focus .td-panel,body.cn-focus .view.is-on>.view-h,
   body.cn-focus .view.is-on>:not(.td-hero):not(.view-h),body.cn-in2 .hh-t,body.cn-in2 #rail,body.cn-in3 #content{animation:none}
 }
@@ -920,8 +926,9 @@ body.cn-in3 #content{animation:cnDissolve .18s ease-out both}
 .td-mf{
   position:absolute;right:24px;bottom:40px;width:min(38%,520px);height:30px;z-index:3;
   opacity:0;transition:opacity .3s ease;touch-action:none;cursor:ew-resize;user-select:none;-webkit-user-select:none;
+  pointer-events:none;   /* 淡出時只是看不見，還是照吃點擊；手機那條橫跨上緣的 344×28 會連捲動一起吞掉（touch-action:none），所以沒亮就不收事件 */
 }
-.td-mf.is-on{opacity:.88}
+.td-mf.is-on{opacity:.88;pointer-events:auto}
 .td-mf.is-drag{opacity:1}
 .td-mf i,.td-mf em{font-style:normal}
 .td-mf-line{position:absolute;left:0;right:0;top:20px;height:1px;background:rgba(255,255,255,.5)}
@@ -933,7 +940,7 @@ body.cn-in3 #content{animation:cnDissolve .18s ease-out both}
 .td-peak{position:absolute;left:0;top:0;pointer-events:none;opacity:0;transition:opacity .25s ease;mix-blend-mode:screen;filter:blur(.5px)}   /* 尺寸由 JS 對齊影片矩形；半像素模糊讓脊線不像像素 */
 .td-peak.is-on{opacity:.9}
 @media(max-width:767px){
-  .td-mf{top:12px;left:30px;right:16px;bottom:auto;width:auto;height:28px}
+  .td-mf,.td-peak,.td-dof-l{display:none}   /* 手機不做景深層與距離尺（strava-cinema-fx.js mount 也不會建），這裡是保險 */
 }
 @media (prefers-reduced-motion:reduce){.td-mf,.td-peak{display:none}}
 
@@ -996,3 +1003,154 @@ body.cn-in3 #content{animation:cnDissolve .18s ease-out both}
   .rd-wk{font-size:8.5px}
   .rd-today{font-size:8.5px}
 }
+
+
+/* ══ 富士鏡頭模式（2026-09-04）：觀景窗 HUD、底片模擬、光圈、FX 面板 ═══════════════════════
+   strava-cinema-fx.js 的 __cinemaLook／__cinemaLens。濾鏡只指到媒體層：#cinema（照片／canvas／霧）與
+   .td-scene 裡的影片、poster、canvas。UI 全部在這些元素之外，一個字都不會糊。 */
+
+/* ── 觀景窗 HUD：hero 裡、媒體層之上、面板之下；鎖定前很淡，鎖定後 ~30%，8 秒後再淡；滑鼠停在媒體區或開 FX 面板才回來 ── */
+.td-hud{
+  position:absolute;inset:0;z-index:2;pointer-events:none;
+  font-family:var(--f-ui);color:#f3efe6;letter-spacing:1.6px;font-variant-numeric:tabular-nums;
+  opacity:var(--hud,.14);transition:opacity .6s ease;
+}
+body.cn-locked .td-hud{--hud:.32}
+body.cn-settled .td-hud{--hud:.2}
+.td-hero:hover .td-hud,body.fx-open .td-hud{--hud:.58;transition-duration:.25s}
+.td-hud>*{position:absolute;text-shadow:0 0 1px rgba(0,0,0,.7),0 1px 3px rgba(0,0,0,.6)}
+.td-hud-f{pointer-events:auto;cursor:pointer;border:0;background:transparent;padding:4px 6px;margin:-4px -6px;border-radius:6px;font:inherit;color:inherit;letter-spacing:inherit;text-shadow:inherit}
+.td-hud-f:hover{background:rgba(255,255,255,.08)}
+.td-hud-f:focus-visible{outline:1px solid rgba(var(--amber-rgb),.7)}
+.td-hud-af{left:calc(50% - 40px);top:30px;font-size:12px;font-weight:600}
+.td-hud-af::before{content:'';display:inline-block;width:6px;height:6px;border:1px solid currentColor;margin-right:8px;vertical-align:1px}
+.td-hud-rec{right:36px;top:28px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:7px}
+.td-hud-rec i{width:7px;height:7px;border-radius:50%;background:#ff3b30;box-shadow:0 0 6px rgba(255,59,48,.9);animation:hudRec 2s steps(1) infinite}
+@keyframes hudRec{50%{opacity:.25}}
+body.cn-settled .td-hud-rec i{animation-duration:3s}
+.td-hud-exp{left:max(46%,580px);bottom:34px;display:flex;align-items:baseline;gap:22px;font-size:12px;font-weight:600}   /* 面板卡片右緣 552px 之外、距離尺（右 24px、寬 38%）之前 */
+.td-hud-exp small{font-size:8.5px;font-weight:700;letter-spacing:1.4px;opacity:.75;margin-right:3px}
+.td-hud-ev{right:36px;top:52px;display:flex;flex-direction:column;align-items:stretch;gap:3px;width:min(18vw,240px);font-size:9.5px;font-weight:600}   /* REC 下方；右下留給距離尺 */
+.td-hud-ev b{display:flex;justify-content:space-between;font-weight:600}
+.td-hud-ev i{position:relative;display:block;height:9px;
+  background:repeating-linear-gradient(90deg,currentColor 0 1px,transparent 1px calc(100% / 30)) left bottom/100% 4px no-repeat,
+             repeating-linear-gradient(90deg,currentColor 0 1px,transparent 1px calc(100% / 6)) left bottom/100% 9px no-repeat}
+.td-hud-ev em{position:absolute;left:calc(50% + var(--ev,0) * 50% / 3);bottom:-3px;width:2px;height:13px;margin-left:-1px;background:currentColor;box-shadow:0 0 0 1px rgba(0,0,0,.4)}
+.td-hud-ev i{position:relative;overflow:visible}
+@media(max-width:1279px){.td-hud-exp{left:calc(50% + 40px);bottom:auto;top:30px}}   /* 窄桌機：底部擠不下，曝光列上移到 AF-C 旁 */
+@media(max-width:1099px){.td-hud-ev{display:none}}
+@media(max-width:767px){
+  .td-hud-af{left:14px;top:16px;font-size:10px}      /* 手機沒有距離尺了，HUD 回到上緣 */
+  .td-hud-rec{right:14px;top:15px;font-size:10px}
+  .td-hud-exp{left:14px;right:auto;top:38px;bottom:auto;gap:16px;font-size:10.5px}
+  .td-hud-ev{display:none}
+}
+@media (prefers-reduced-motion:reduce){.td-hud{transition:none;--hud:.26}.td-hud-rec i{animation:none}}
+body[data-fx="quiet"] .td-hud-rec i{animation:none}
+.td-hud-rec.is-still i{animation:none;background:rgba(243,239,230,.7);box-shadow:none}   /* 影片停在 poster：不是在錄 */
+
+/* ── 底片模擬：只指到媒體層。overlay（.cn-film／.td-film）用混合模式做冷暖，不碰任何 UI ── */
+#cinema,.td-media>.td-still,.td-media>.td-video,.td-media>.td-canvas{transition:filter .25s ease}
+.cn-film,.td-film{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .25s ease}
+.td-film{z-index:1}
+/* STD：中性，資料頁安全 */
+/* CC：低飽和、暖高光、偏紀實 */
+body[data-film="cc"] #cinema,body[data-film="cc"] .td-media>.td-still,body[data-film="cc"] .td-media>.td-video,body[data-film="cc"] .td-media>.td-canvas{filter:saturate(.78) contrast(1.06) sepia(.14) brightness(1.01)}
+body[data-film="cc"] .cn-film,body[data-film="cc"] .td-film{opacity:1;mix-blend-mode:soft-light;background:linear-gradient(180deg,rgba(255,214,160,.28),rgba(38,48,58,.34))}
+/* ETERNA：柔和高光、低對比電影色（TODAY 預設） */
+body[data-film="eterna"] #cinema,body[data-film="eterna"] .td-media>.td-still,body[data-film="eterna"] .td-media>.td-video,body[data-film="eterna"] .td-media>.td-canvas{filter:saturate(.86) contrast(.92) brightness(1.04) sepia(.05)}
+body[data-film="eterna"] .cn-film,body[data-film="eterna"] .td-film{opacity:1;mix-blend-mode:screen;background:linear-gradient(180deg,rgba(28,38,42,.36),rgba(34,40,40,.26))}   /* screen 一點點暗青：黑位微抬、高光不爆 */
+/* CN：微冷陰影、暖色主體（城市與夜景） */
+body[data-film="cn"] #cinema,body[data-film="cn"] .td-media>.td-still,body[data-film="cn"] .td-media>.td-video,body[data-film="cn"] .td-media>.td-canvas{filter:saturate(.92) contrast(1.08) sepia(.06)}
+/* multiply：邊緣乘上淡藍＝陰影變冷、稍暗；主體附近乘上近白的暖色＝幾乎不動、微暖。overlay 會把黃車衣洗白，不用 */
+body[data-film="cn"] .cn-film{opacity:.6;mix-blend-mode:multiply;background:radial-gradient(70% 80% at 50% 45%,#fff0dc 0,#c4d0ea 80%)}
+body[data-film="cn"] .td-film{opacity:.6;mix-blend-mode:multiply;background:radial-gradient(50% 78% at 63% 52%,#fff0dc 0,#c4d0ea 80%)}
+/* ACROS：黑白、高階灰階（只在使用者主動選） */
+body[data-film="acros"] #cinema,body[data-film="acros"] .td-media>.td-still,body[data-film="acros"] .td-media>.td-video,body[data-film="acros"] .td-media>.td-canvas{filter:grayscale(1) contrast(1.12) brightness(1.03)}
+@media(max-width:767px){body[data-film="cn"] .td-film{background:radial-gradient(60% 60% at 52% 42%,#fff0dc 0,#c4d0ea 80%)}}
+@media (prefers-reduced-motion:reduce){#cinema,.td-media>.td-still,.td-media>.td-video,.td-media>.td-canvas,.cn-film,.td-film{transition:none}}
+
+/* ── FX 面板：頂列 FX 鈕下方的小面板（≤360px）；手機改底部 sheet、鈕 ≥44px ── */
+.fx-backdrop{position:fixed;inset:0;z-index:38;background:rgba(var(--cn-bg-rgb),0);transition:background .2s ease}
+.fx-backdrop.is-on{background:transparent}   /* 桌機只負責「點外側收起」，不壓暗 */
+.fx-panel{
+  position:fixed;top:calc(var(--topbar-h) + 8px);right:20px;z-index:40;width:min(340px,calc(100vw - 24px));
+  padding:14px 16px 12px;border:1px solid var(--hair-2);border-radius:14px;
+  background:rgba(6,9,8,.82);-webkit-backdrop-filter:blur(18px) saturate(140%);backdrop-filter:blur(18px) saturate(140%);
+  box-shadow:0 18px 50px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.06);
+  color:var(--ink-2);opacity:0;transform:translateY(-6px);transition:opacity .2s ease,transform .2s cubic-bezier(.2,.7,.2,1);
+}
+.fx-panel.is-on{opacity:1;transform:none}
+.fx-head{display:flex;align-items:baseline;gap:10px;margin-bottom:10px}
+.fx-head b{font-size:11px;font-weight:700;letter-spacing:2.6px;color:var(--amber)}
+.fx-head span{font-size:11px;color:var(--ink-3)}
+.fx-close{margin-left:auto;min-width:28px;min-height:28px;border:0;border-radius:8px;background:transparent;color:var(--ink-3);font:inherit;font-size:13px;cursor:pointer}
+.fx-close:hover{color:var(--ink-1);background:rgba(255,255,255,.06)}
+.fx-close:focus-visible,.fx-opt:focus-visible{outline:1px solid rgba(var(--amber-rgb),.7);outline-offset:1px}
+.fx-row{padding:8px 0 4px;border-top:1px solid var(--hair)}
+.fx-k{display:flex;align-items:baseline;gap:8px;font-size:9.5px;font-weight:700;letter-spacing:2.2px;text-transform:uppercase;color:var(--ink-3);margin-bottom:7px}
+.fx-k span{font-weight:500;letter-spacing:.4px;text-transform:none;font-size:11px}
+.fx-opts{display:flex;flex-wrap:wrap;gap:6px}
+.fx-opt{
+  display:flex;flex-direction:column;align-items:flex-start;gap:1px;min-width:74px;min-height:38px;padding:6px 10px 5px;
+  border:1px solid var(--hair);border-radius:9px;background:rgba(255,255,255,.03);color:var(--ink-2);
+  font-family:inherit;cursor:pointer;text-align:left;transition:border-color .15s,background .15s,color .15s;-webkit-tap-highlight-color:transparent;
+}
+.fx-opt b{font-size:11.5px;font-weight:700;letter-spacing:1.6px;color:var(--ink-1)}
+.fx-opt small{font-size:9.5px;color:var(--ink-3);letter-spacing:.3px}
+.fx-opt:hover{border-color:var(--hair-2);background:rgba(255,255,255,.06)}
+.fx-opt.is-on{border-color:rgba(var(--amber-rgb),.75);background:rgba(var(--amber-rgb),.08);box-shadow:inset 0 0 0 1px rgba(var(--amber-rgb),.25)}
+.fx-opt.is-on b{color:var(--amber)}
+.fx-opt[disabled]{opacity:.45;cursor:default}
+.fx-note{margin:8px 0 0;font-size:10.5px;line-height:1.55;color:var(--ink-3)}
+.fx-tier[aria-expanded="true"],body.fx-open .fx-tier{border-color:rgba(var(--amber-rgb),.6);color:var(--amber)}
+@media(max-width:767px){
+  .fx-panel{
+    top:auto;right:0;left:0;bottom:0;width:auto;border-radius:18px 18px 0 0;border-bottom:0;
+    padding:14px 16px calc(14px + env(safe-area-inset-bottom,0px));transform:translateY(24px);
+  }
+  .fx-panel.is-on{transform:none}
+  .fx-backdrop.is-on{background:rgba(var(--cn-bg-rgb),.45)}
+  .fx-opt{min-height:44px;flex:1 1 calc(33.33% - 6px);padding:8px 10px 7px}
+  .fx-close{min-width:44px;min-height:44px}
+  .fx-panel .fx-row[data-group="tier"] .fx-opt{flex:1 1 calc(33.33% - 6px)}
+}
+@media (prefers-reduced-motion:reduce){.fx-panel,.fx-backdrop{transition:none}}
+
+/* ── 機頂三顆圓轉盤（2026-09-04，照富士 X-T 頂蓋）：FILM／LENS／FX。刻度在盤緣、指標固定在 12 點、盤自己轉。
+   點一下轉一格、滾輪或拖著轉、方向鍵撥格；盤下一行小字是目前值（AUTO 時寫 A → 解析出來的值）。 ── */
+.fx-dials{display:flex;align-items:center;gap:12px;margin-right:8px}
+.fx-dial{
+  display:flex;flex-direction:column;align-items:center;gap:1px;width:52px;padding:2px 0 0;border:0;background:transparent;
+  font-family:inherit;color:var(--ink-3);cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:none;user-select:none;-webkit-user-select:none;
+}
+.fx-dial svg{width:44px;height:44px;display:block;overflow:visible}
+.fx-dial .knurl{fill:#151a19;stroke:rgba(255,255,255,.22);stroke-width:2.2;stroke-dasharray:1.2 1.6}   /* 滾花外圈 */
+.fx-dial .face{fill:#0d1211;stroke:rgba(255,255,255,.12);stroke-width:.6}
+.fx-dial .hub{fill:#1a201f;stroke:rgba(255,255,255,.14);stroke-width:.6}
+.fx-dial .tk{stroke:rgba(243,239,230,.55);stroke-width:1}
+.fx-dial .tk-s{stroke:rgba(243,239,230,.22);stroke-width:.7}
+.fx-dial .lb{fill:rgba(243,239,230,.5);font-family:var(--f-ui);font-size:6.2px;font-weight:700;letter-spacing:.3px;text-anchor:middle;font-variant-numeric:tabular-nums}
+.fx-dial .lb-a{fill:rgba(var(--amber-rgb),.6);font-size:7px}
+.fx-dial .lb.is-on{fill:#fff}
+.fx-dial .lb-a.is-on{fill:var(--amber)}
+.fx-dial .idx{fill:var(--amber)}
+.fx-dial .rot{transition:transform .38s cubic-bezier(.2,.8,.2,1)}
+.fx-dial small{font-size:7px;font-weight:700;letter-spacing:1px;color:var(--ink-3);white-space:nowrap;line-height:1;max-width:60px;overflow:hidden;text-overflow:ellipsis}
+.fx-dial:hover .knurl{stroke:rgba(255,255,255,.4)}
+.fx-dial:hover small{color:var(--ink-2)}
+.fx-dial:focus-visible{outline:1px solid rgba(var(--amber-rgb),.7);outline-offset:2px;border-radius:8px}
+.fx-dial[disabled]{opacity:.5;cursor:default}
+/* 引擎原本那顆 .fx-tier 的膠囊樣式，在轉盤裡全部歸零 */
+.fx-dials .fx-tier,body[data-fx="overdrive"] .fx-dials .fx-tier{padding:2px 0 0;border:0;border-radius:0;background:transparent;min-height:0;font-size:inherit;letter-spacing:inherit;color:var(--ink-3)}
+.fx-dials .fx-tier:hover,body[data-fx="overdrive"] .fx-dials .fx-tier:hover{border-color:transparent;color:var(--ink-3)}
+.fx-dials .fx-tier[aria-expanded]{border-color:transparent}
+@media(max-width:1599px){.tb-r .ah-r{display:none}}   /* 三顆轉盤要位子：更新時間在 TODAY 的狀態日期與身分卡頁尾都有 */
+@media(max-width:767px){
+  .fx-dials{gap:6px;margin-right:0}
+  .fx-dial{width:40px}
+  .fx-dial svg{width:34px;height:34px}
+  .fx-dial small{display:none}
+  .fx-dial .lb{font-size:7px}
+}
+@media (prefers-reduced-motion:reduce){.fx-dial .rot{transition:none}}

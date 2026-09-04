@@ -3010,7 +3010,7 @@ button.ov-cell:focus-visible{outline:1px solid rgba(252,76,2,.6);outline-offset:
   .at-read{right:8px;top:8px;min-width:0;padding:7px 9px}
 }
 </style>
-<link rel="stylesheet" href="theme-strava-cinema.css?v=20260903">
+<link rel="stylesheet" href="theme-strava-cinema.css?v=20260904">
 </head>
 <body>
 
@@ -3022,6 +3022,7 @@ button.ov-cell:focus-visible{outline:1px solid rgba(252,76,2,.6);outline-offset:
   <div class="cn-photo"></div>
   <canvas id="cn-canvas"></canvas>
   <div class="cn-fog"></div>
+  <div class="cn-film"></div>
   <div class="cn-scrim"></div>
 </div>
 
@@ -10325,6 +10326,18 @@ Promise.all([
      theme-strava-cinema.css 的 .td-still 指向同一張 poster。 */
   const POSTER = 'assets/strava-cinema/hero-poster-lightning-v2-clean.jpg'
   const HERO_MP4 = 'assets/strava-cinema/hero-climb-lightning-v2-clean.mp4'   // 使用者 2026-09-03 提供的 lightning-v2，右下角生成標記已用 delogo 補掉後重編（1280×720 24fps 17s，無音軌）
+  /* 依 todayVerdict() 四種狀態換片的接口（2026-09-04）：新影片到位只要在這裡補路徑，UI 邏輯不用再動。
+     每個狀態可以只給 mp4、只給 poster、或都不給——沒給的一律 fallback 到 default，永遠不會出現空白 hero，
+     也不會隨機播天氣。注意：景深層的深度圖（strava-cinema-fx.js 的 buildDepth）是照 default 這支構圖畫的，
+     換了構圖差很多的影片時，那張深度圖也要跟著換。 */
+  const HERO_MEDIA = {
+    default: { mp4: HERO_MP4, poster: POSTER },
+    go:     {},   // 照表：例如晴天出發
+    ease:   {},   // 保守
+    rest:   {},   // 恢復：例如雨中／黃昏
+    nodata: {},   // 資料不足
+  }
+  const heroMedia = level => { const m = HERO_MEDIA[level] || {}, d = HERO_MEDIA.default; return { mp4: m.mp4 || d.mp4, poster: m.poster || d.poster } }
   const tpeToday = () => new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10)
   const WDZ = ['日', '一', '二', '三', '四', '五', '六']
   const mdz = d => d ? d.slice(5).replace('-', '/') : ''
@@ -10459,13 +10472,26 @@ Promise.all([
       <span class="v">${nT || 0}</span>
       <span class="s">${nT ? V.tasks.slice(0, 2).map(t => esc(t.title)).join('　') : '同步管線沒有發現漏記或重複'}</span></button>`)
     const kickSes = V.todaySes ? `${V.todaySes.name}${V.todaySes.actual ? '（已完成）' : ''}` : (V.next ? `沒排主課表 · 對 ${mdz(V.next.date)} 的判讀` : '沒排主課表')
-    const heroHtml = `<div class="td-hero${matchMedia('(prefers-reduced-motion: reduce)').matches ? ' is-poster' : ''}" id="td-hero" data-verdict="${V.level}">
+    const media = heroMedia(V.level)
+    // 觀景窗 HUD（純裝飾、aria-hidden、pointer-events:none）：AF-C、REC、曝光列。F 值跟 LENS 選項連動（__cinemaLook）；
+    // 曝光補償刻度上的那條線是 TSB／10（±3 夾住）——狀態越正越偏向 +，是 HUD 上唯一一個讀資料的東西。
+    const ev = Math.max(-3, Math.min(3, (V.tsb ?? 0) / 10))
+    const heroHtml = `<div class="td-hero${matchMedia('(prefers-reduced-motion: reduce)').matches ? ' is-poster' : ''}" id="td-hero" data-verdict="${V.level}" data-mp4="${esc(media.mp4)}">
       <div class="td-scene" aria-hidden="true">
-        <div class="td-still"></div>
-        <video class="td-video" muted loop playsinline preload="metadata" poster="${POSTER}" aria-hidden="true"></video>
-        <canvas class="td-canvas" id="td-canvas" aria-hidden="true"></canvas>
+        <div class="td-media">
+          <div class="td-still" style="background-image:url(${esc(media.poster)})"></div>
+          <video class="td-video" muted loop playsinline preload="metadata" poster="${esc(media.poster)}" aria-hidden="true"></video>
+          <canvas class="td-canvas" id="td-canvas" aria-hidden="true"></canvas>
+          <div class="td-film"></div>
+        </div>
       </div>
       <div class="td-grad"></div>
+      <div class="td-hud" aria-hidden="true">
+        <span class="td-hud-af">AF-C</span>
+        <span class="td-hud-rec"><i></i>REC</span>
+        <div class="td-hud-exp"><button type="button" class="td-hud-f" title="光圈環：點一下換下一檔"><small>F</small><b>2.8</b></button><span>1/250</span><span><small>ISO</small>400</span></div>
+        <div class="td-hud-ev" title="曝光補償 = TSB／10"><b><span>-3</span><span>-2</span><span>-1</span><span>0</span><span>+1</span><span>+2</span><span>+3</span></b><i><em style="--ev:${ev.toFixed(2)}"></em></i></div>
+      </div>
       <span class="td-sign" aria-label="Made with Claude Fable 5.1">Made with Claude Fable 5.1</span>
       <div class="td-panel">
         <div class="td-k"><span>Today · ${mdz(V.today)} 週${wdz(V.today)}</span><span><b>${esc(kickSes)}</b></span>${V.tsbDate && V.tsbDate !== V.today ? `<span>狀態 ${mdz(V.tsbDate)}</span>` : ''}</div>
@@ -10514,12 +10540,12 @@ Promise.all([
   function initHeroVideo(hero) {
     const v = hero.querySelector('.td-video')
     if (!v) return
-    const usePoster = () => { hero.classList.add('is-poster'); try { v.pause() } catch (e) {} }
+    const usePoster = () => { hero.classList.add('is-poster'); try { v.pause() } catch (e) {}; const rec = hero.querySelector('.td-hud-rec'); if (rec) rec.classList.add('is-still') }
     const conn = navigator.connection || {}
     if (hero.classList.contains('is-poster') || conn.saveData || /(^|[^3-9])2g/.test(conn.effectiveType || '')) { usePoster(); return }
     // innerHTML 插進來的 <video muted> 在 Chrome 不一定把 muted 特性設起來，autoplay 會被擋：明確設一次
     v.muted = true; v.defaultMuted = true; v.autoplay = true
-    const src = document.createElement('source'); src.src = HERO_MP4; src.type = 'video/mp4'
+    const src = document.createElement('source'); src.src = hero.dataset.mp4 || HERO_MP4; src.type = 'video/mp4'
     v.appendChild(src); v.load()
     v.addEventListener('error', usePoster, { once: true })
     src.addEventListener('error', usePoster, { once: true })
@@ -10530,7 +10556,7 @@ Promise.all([
       if (retried) return
       retried = true
       const p = v.play()
-      if (p && p.then) p.then(() => hero.classList.remove('is-poster')).catch(() => {})
+      if (p && p.then) p.then(() => { hero.classList.remove('is-poster'); const rec = hero.querySelector('.td-hud-rec'); if (rec) rec.classList.remove('is-still') }).catch(() => {})
     }
     const tryPlay = () => {
       const p = v.play()
@@ -11569,7 +11595,7 @@ function motionLayer({ animate, createDrawable, stagger }) {
 <link rel="stylesheet" href="activity-modal.css?v=20260827">
 <link rel="stylesheet" href="theme-strava.css?v=20260827">
 <style>:root{--am-accent:#FC4C02;--am-accent-soft:rgba(252,76,2,.18);--am-panel:#14100c;--am-panel-2:#1c160f}</style>
-<script src="strava-cinema-fx.js?v=20260903" defer></script>
+<script src="strava-cinema-fx.js?v=20260904" defer></script>
 <script src="itt-achievements.js?v=20260827" defer></script>
 <script src="activity-modal.js?v=20260827" defer></script>
 </body>
