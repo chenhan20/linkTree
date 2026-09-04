@@ -875,17 +875,16 @@ html{font-size:15px}
    backdrop-filter 的元素一伸出視窗，Chrome 會用鏡射邊緣採樣，畫面右邊會多一個糊的車手鬼影。遮罩與對焦框由 JS 依運鏡對位。 */
 .td-media{position:absolute;inset:0;transform-origin:63% 52%}   /* 全幅之後車手在 63%：scale 以他為中心；isolate 讓底片 overlay 的混合只發生在媒體層裡 */
 #cn-canvas{transform-origin:50% 45%}
-body.cn-defocused #cn-canvas{filter:blur(14px) saturate(.86) contrast(.94) brightness(.78);transform:none}
-body.cn-defocused .td-scene{filter:blur(14px) saturate(.86) contrast(.94) brightness(.78)}
-body.cn-defocused .td-media{transform:scale(1.6);transform-origin:0% 58%}   /* 開場：貼很近對著左側 → 拉遠到全景 → 鎖定後再依框推近（fx 的 CAM 第一格同一組值） */   /* 半按快門：稍暗、輕微失焦（跟 fx 的 DEFOCUS 同一組值） */
+body.cn-defocused #cn-canvas,body.cn-defocused .td-scene{filter:blur(2.5px) saturate(.95) contrast(.98) brightness(.95);transform:none}   /* 全景、清楚、稍暗：沒抓到由 AF 框與景深層來說 */
+body.cn-defocused .td-media{transform:none}   /* 開場：貼很近對著左側 → 拉遠到全景 → 鎖定後再依框推近（fx 的 CAM 第一格同一組值） */   /* 半按快門：稍暗、輕微失焦（跟 fx 的 DEFOCUS 同一組值） */
 @keyframes cnRise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 @keyframes cnDissolve{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
-body.cn-focus .hh-t,body.cn-focus #rail,body.cn-focus .td-panel,body.cn-focus .view.is-on>.view-h{animation:cnRise .6s cubic-bezier(.2,.7,.2,1) 2.8s both}   /* 拉到全景那一刻才出字 */
-body.cn-focus .view.is-on>:not(.td-hero):not(.view-h){animation:cnRise .6s cubic-bezier(.2,.7,.2,1) 2.95s both}
+body.cn-focus .hh-t,body.cn-focus #rail,body.cn-focus .td-panel,body.cn-focus .view.is-on>.view-h{animation:cnRise .6s cubic-bezier(.2,.7,.2,1) 2.9s both}   /* 鎖定那一刻才出字 */
+body.cn-focus .view.is-on>:not(.td-hero):not(.view-h){animation:cnRise .6s cubic-bezier(.2,.7,.2,1) 3.05s both}
 body.cn-in2 .hh-t,body.cn-in2 #rail{animation:cnRise .38s cubic-bezier(.2,.7,.2,1) both}
 body.cn-in3 #content{animation:cnDissolve .18s ease-out both}
 .view.is-on{animation:none}                          /* 原版 viewIn 關掉：進場由鏡頭轉場負責 */
-@media(max-width:767px){.td-media{transform-origin:52% 42%}body.cn-defocused .td-media{transform:scale(1.5);transform-origin:20% 50%}}
+@media(max-width:767px){.td-media{transform-origin:52% 42%}body.cn-defocused .td-media{transform:none}}
 @media (prefers-reduced-motion:reduce){
   body.cn-defocused #cn-canvas,body.cn-defocused .td-scene{filter:none;transform:none}
   body.cn-defocused .td-media{transform:none}
@@ -916,9 +915,11 @@ body.cn-in3 #content{animation:cnDissolve .18s ease-out both}
   border:1.5px solid rgba(255,255,255,.92);box-shadow:0 0 0 1px rgba(0,0,0,.45),inset 0 0 0 1px rgba(0,0,0,.3);
 }
 .td-af.is-on{opacity:1}
+.td-af.is-miss{border-color:rgba(255,92,72,.85);animation:afMiss .5s steps(1) infinite}   /* 富士：對不到焦的框閃紅 */
+@keyframes afMiss{50%{opacity:.55}}
 .td-af.is-lock{border-color:#39d675;box-shadow:0 0 0 1px rgba(0,0,0,.45),inset 0 0 0 1px rgba(0,0,0,.3),0 0 10px rgba(57,214,117,.35)}
 .td-af.is-out{opacity:0;transition:opacity .3s ease}
-@media (prefers-reduced-motion:reduce){.td-af.is-out{transition:none}}
+@media (prefers-reduced-motion:reduce){.td-af.is-out{transition:none}.td-af.is-miss{animation:none}}
 
 /* ══ 距離尺（富士 MF 尺）與峰值 ═══════════════════════════════════════════════
    尺在 hero 裡（不在 .td-scene，不會被糊也不會跟著呼吸）：桌機右下、簽名上方；手機在影片區上緣。

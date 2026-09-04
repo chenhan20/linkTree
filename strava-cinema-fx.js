@@ -850,25 +850,27 @@
   const contentEl = () => document.getElementById('content')
   const media = () => [q('#cn-canvas'), q('.td-scene')].filter(Boolean)
   const ID = { blur: 0, scale: 1, sat: 1, con: 1, bri: 1, bokeh: 0 }
-  const DEFOCUS = { blur: 14, scale: 1, sat: .86, con: .94, bri: .78, bokeh: .8 }   // 跟 CSS body.cn-defocused 同一組值：半按快門，畫面稍暗、輕微失焦；scale 留在 1＝開場是原始尺寸，之後只往裡推
+  const DEFOCUS = { blur: 2.5, scale: 1, sat: .95, con: .98, bri: .95, bokeh: .3 }   // 跟 CSS body.cn-defocused 同一組值：全景、清楚、只稍暗一點——「沒抓到」由 AF 框與景深層來說，不靠整張糊
   const cur = Object.assign({}, ID)
   const easeOut = p => 1 - Math.pow(1 - p, 3)
   const easeIn = p => p * p * p
   const easeInOut = p => p < .5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2
   let segs = [], raf = 0
   let phase = 'idle', level = 0, swapFn = null, swapAt = 0, endAt = 0, guardTimer = 0, fadeTimer = 0, introTimer = 0
-  /* 一次性的開場運鏡（2026-09-04 第四版，他要的順序）：
-       ① 0–0.9s   一進來就貼很近（1.6×）對著畫面最左邊，半按快門、失焦；
-       ② 0.9–1.8s 掃到最右邊（山坡那側），還是近的、還是糊的——像鏡頭在找人；
-       ③ 1.8–2.8s 往中間靠、同時拉遠到原始尺寸，整個人入鏡；
-       ④ 2.8–3.3s 對焦框在頭部尋焦、鎖定（鏡頭停住）；
-       ⑤ 3.3–4.6s 依框猛推到 1.3×（快進慢停，轉播那一下）；4.6–7.5s 再慢飄到 1.36× 停住。不縮回、不循環。
+  /* 一次性的開場運鏡（2026-09-04 第五版：模擬追焦）。兩個角色：攝影師（鏡頭）與相機的 AF（框與焦點），最後在車手身上會合。
+       ① 0–0.6s   全景、清楚、不動——但 AF 框在錯的地方（左邊護欄），焦點在遠山，車手是軟的：沒抓到
+       ② 0.6–1.4s 往左掃、微放大 1.15×，框跟到左邊，焦點拉到近處芒草
+       ③ 1.4–2.3s 換向掃到右邊 1.2×（換向帶一點過衝），框到右邊山坡，焦點拉回遠
+       ④ 2.3–2.9s 收回中間、回到 1×，框跳到臉上、兩下小 hunt、變綠，景深這時才到 6 m
+       ⑤ 2.9–4.2s 猛推到 1.3×（快進慢停，AF-C 追蹤）；4.2–7s 慢飄到 1.35× 停住。不縮回、不循環。
      整個頁面生命週期只演一次；深連結先進別的 view 時，等第一次顯示 TODAY 再演。
      取景中心＝origin 與 scale 一起算（origin 只在 scale>1 時有作用），關鍵格之間 easeInOut。 */
   const CAM = () => mobileMQ.matches
-    ? [{ t: 0, s: 1.5, x: 20, y: 50 }, { t: 900, s: 1.5, x: 10, y: 48 }, { t: 1800, s: 1.4, x: 90, y: 44 }, { t: 2800, s: 1, x: 52, y: 42 }, { t: 3300, s: 1, x: 52, y: 42, ease: 'out' }, { t: 4600, s: 1.25, x: 52, y: 42 }, { t: 7500, s: 1.3, x: 52, y: 42 }]
-    : [{ t: 0, s: 1.6, x: 0, y: 58 }, { t: 900, s: 1.55, x: 4, y: 56 }, { t: 1800, s: 1.45, x: 85, y: 52 }, { t: 2800, s: 1, x: 63, y: 52 }, { t: 3300, s: 1, x: 63, y: 52, ease: 'out' }, { t: 4600, s: 1.3, x: 63, y: 52 }, { t: 7500, s: 1.36, x: 63, y: 52 }]
-  const LOCK_AT = 3300
+    ? [{ t: 0, s: 1, x: 52, y: 42 }, { t: 600, s: 1, x: 52, y: 42 }, { t: 1400, s: 1.15, x: 22, y: 44 }, { t: 1600, s: 1.16, x: 26, y: 44 },
+       { t: 2300, s: 1.2, x: 82, y: 42 }, { t: 2450, s: 1.2, x: 78, y: 42 }, { t: 2900, s: 1, x: 52, y: 42 }, { t: 3000, s: 1, x: 52, y: 42, ease: 'out' }, { t: 4200, s: 1.25, x: 52, y: 42 }, { t: 7000, s: 1.3, x: 52, y: 42 }]
+    : [{ t: 0, s: 1, x: 63, y: 52 }, { t: 600, s: 1, x: 63, y: 52 }, { t: 1400, s: 1.15, x: 18, y: 55 }, { t: 1600, s: 1.16, x: 22, y: 55 },
+       { t: 2300, s: 1.2, x: 84, y: 52 }, { t: 2450, s: 1.2, x: 80, y: 52 }, { t: 2900, s: 1, x: 63, y: 52 }, { t: 3000, s: 1, x: 63, y: 52, ease: 'out' }, { t: 4200, s: 1.3, x: 63, y: 52 }, { t: 7000, s: 1.35, x: 63, y: 52 }]
+  const LOCK_AT = 2900
   let push = CAM()[0].s, pushOx = CAM()[0].x, pushOy = CAM()[0].y, pushStart = 0, pushEnd = 0, pushDone = false
   function pushTick(now) {
     if (pushDone || !pushEnd) return false
@@ -1056,21 +1058,19 @@
     // 0–500 畫面稍暗、輕微失焦（曝光資訊淡淡地在）→ 500–1200 光圈張開：亮度與景深一起回來
     // → 1200–1700 對焦框在車手頭部搜尋、鎖定 → 1700–8000 極慢的 tracking push-in（只推這一次）
     const t0 = performance.now()
-    Object.assign(cur, { blur: 14, scale: 1, sat: .86, con: .94, bri: .78, bokeh: .8 })
+    Object.assign(cur, DEFOCUS)
     apply()
-    // 0–500 暗、失焦（鏡頭貼很近）→ 500–2200 光圈張開、拉遠到全景 → 2200–2700 尋焦、鎖定 → 之後依框推近（關鍵格在 CAM）
+    // 場景層（#cn-canvas）只有很輕的呼吸：全景清楚，找人的戲在 hero 的景深層與 AF 框
     setProgram([
-      { dur: 900,  to: { blur: 12, scale: 1, sat: .86, con: .94, bri: .8, bokeh: .8 }, ease: easeInOut },     // 貼左
-      { dur: 900,  to: { blur: 8, scale: 1, sat: .9, con: .96, bri: .9, bokeh: .6 }, ease: easeInOut },       // 掃到右
-      { dur: 1000, to: { blur: 3, scale: 1, sat: .95, con: .98, bri: 1.02, bokeh: .3 }, ease: easeInOut },    // 往中間靠、拉遠
-      { dur: 260,  to: { blur: 1.6, scale: 1, sat: .97, con: .99, bri: 1, bokeh: .12 }, ease: easeInOut },
-      { dur: 120,  to: { blur: 2.4 }, ease: easeInOut },
-      { dur: 120,  to: { blur: 0, scale: 1, sat: 1.02, con: 1.02, bri: 1, bokeh: 0 }, ease: easeOut },
+      { dur: 600,  to: { blur: 2.5, scale: 1, sat: .95, con: .98, bri: .95, bokeh: .3 }, ease: easeInOut },    // 全景沒抓到
+      { dur: 1700, to: { blur: 1.4, scale: 1, sat: .97, con: .99, bri: 1, bokeh: .15 }, ease: easeInOut },     // 左掃、右掃
+      { dur: 600,  to: { blur: 1.2, scale: 1, sat: .97, con: .99, bri: 1, bokeh: .12 }, ease: easeInOut },     // 收回中間
+      { dur: 120,  to: { blur: 0, scale: 1, sat: 1.02, con: 1.02, bri: 1, bokeh: 0 }, ease: easeOut },        // 鎖定
       { dur: 140,  to: ID, ease: easeInOut },
     ])
     if (window.__cinemaHero) window.__cinemaHero.intro()
     armPushOnToday()
-    phase = 'in'; level = 1; endAt = t0 + 3500
+    phase = 'in'; level = 1; endAt = t0 + 3300
     armGuard()
   }
   /* 換底片：約 250ms 的微型光圈閉合 → 換色 → 張開。不黑屏、不重播開場；reduced-motion 直接換。 */
@@ -1117,7 +1117,7 @@
   const easeInOut = p => p < .5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2
   const sm = (a, b, t) => { t = Math.max(0, Math.min(1, (t - a) / (b - a))); return t * t * (3 - 2 * t) }
   let hero = null, scene = null, dof = null, layers = [], af = null, depth = null
-  let uCur = 2, segs = [], raf = 0, lastK = -1, afTimer = 0, mode = 'auto', armed = false
+  let uCur = 2, segs = [], raf = 0, lastK = -1, afTimer = 0, mode = 'auto', armed = false, introRestore = null
   const cache = new Map()
   const mcv = document.createElement('canvas'); mcv.width = DW; mcv.height = DH
   const mctx = mcv.getContext('2d')
@@ -1233,7 +1233,7 @@
     if (!af) return
     clearTimeout(afTimer)
     afPos = { x, y }; positionAf()
-    af.classList.remove('is-lock', 'is-out'); af.classList.add('is-on')
+    af.classList.remove('is-lock', 'is-out', 'is-miss'); af.classList.add('is-on')
   }
   function lockAf() {
     if (!af || !af.classList.contains('is-on')) return
@@ -1241,7 +1241,7 @@
     clearTimeout(afTimer)
     afTimer = setTimeout(() => { af.classList.add('is-out'); afTimer = setTimeout(hideAf, 320) }, 800)
   }
-  function hideAf() { if (!af) return; clearTimeout(afTimer); af.classList.remove('is-on', 'is-lock', 'is-out') }
+  function hideAf() { if (!af) return; clearTimeout(afTimer); af.classList.remove('is-on', 'is-lock', 'is-out', 'is-miss') }
   // 尋焦到 uT：越過一點再回來（hunt），到了鎖框
   function rackTo(uT, opts) {
     opts = opts || {}
@@ -1259,25 +1259,32 @@
     if (!armed || reduceMQ.matches) return
     ensureLayout()
     mode = 'auto'; hideAf()
-    applyU(2)
-    // 跟鏡頭層同一條時間軸：0–500 還沒對到（畫面偏暗）→ 500–1200 光圈張開、遠景先對到 → 1200–1700 框在車手頭部尋焦、鎖定
+    // 找人期間光圈先收到 F5.6 的量（A=16）：焦點在錯的地方時整張不會糊成一片，只看得出「焦點不在他身上」；鎖定那一下光圈才開回使用者的檔位
+    const A0 = A; A = Math.min(A, 16); lastK = -1
+    const tmpA = Math.min(A0, 16)
+    const restoreA = () => { if (A === tmpA && A0 !== tmpA) { A = A0; lastK = -1; applyU(uCur) } }
+    applyU(0)
+    // AF 的戲：先對錯地方兩次，最後才到臉上（框的位置是影片幀的比例：左邊護欄、左下芒草、右邊山坡、車手的臉）
+    const miss = (x, y) => { showAf(x, y); if (af) af.classList.add('is-miss') }
+    miss(.14, .70)
     setProgram([
-      { dur: 900,  to: 1.4, ease: easeInOut },                                                  // 貼左：還沒對到
-      { dur: 900,  to: 1.0, ease: easeInOut },                                                  // 掃到右
-      { dur: 1000, to: .02, ease: easeInOut, done: () => showAf(RIDER_AF.x - .012, RIDER_AF.y + .01) },  // 往中間靠、拉遠；到全景時框出現在頭部附近開始搜尋
-      { dur: 260, to: U_RIDER + .05, ease: easeInOut, done: () => showAf(RIDER_AF.x + .008, RIDER_AF.y - .006) },   // 拉到車手，框微調
-      { dur: 120, to: U_RIDER - .025, ease: easeInOut, done: () => showAf(RIDER_AF.x, RIDER_AF.y) },   // hunt
-      { dur: 120, to: U_RIDER, ease: easeOut, done: lockAf },                                   // 1700：鎖定，框亮綠一下
+      { dur: 600, to: 0, ease: easeInOut, done: () => miss(.07, .80) },                       // 全景：焦點在遠山，框在護欄→沒抓到
+      { dur: 800, to: 1 / 3.2, ease: easeInOut, done: () => miss(.92, .40) },                // 往左掃：焦點拉到近處→還是不對
+      { dur: 900, to: 1 / 40, ease: easeInOut, done: () => showAf(RIDER_AF.x - .01, RIDER_AF.y + .01) },   // 往右掃：焦點到右邊山坡；收回中間時框跳到臉上
+      { dur: 380, to: U_RIDER + .03, ease: easeInOut, done: () => showAf(RIDER_AF.x, RIDER_AF.y) },       // 拉到車手
+      { dur: 110, to: U_RIDER - .02, ease: easeInOut },                                        // hunt
+      { dur: 110, to: U_RIDER, ease: easeOut, done: () => { restoreA(); lockAf() } },          // 2.9s 鎖定，變綠，光圈開回來
     ])
+    introRestore = restoreA
   }
   function arrive() {   // 跨 hub 回到 TODAY：短暫重新尋焦，不顯示框
     if (!armed || reduceMQ.matches) return
     ensureLayout()
-    mode = 'auto'; hideAf(); stop()
+    mode = 'auto'; hideAf(); stop(); if (introRestore) { introRestore(); introRestore = null }
     applyU(1 / 12)
     setProgram([{ dur: 420, to: U_RIDER, ease: easeOut }])
   }
-  function reset() { if (!armed) return; stop(); hideAf(); mode = 'auto'; peakOff(0); if (mf) mf.classList.remove('is-on'); applyU(U_RIDER) }
+  function reset() { if (!armed) return; stop(); hideAf(); if (introRestore) { introRestore(); introRestore = null } mode = 'auto'; peakOff(0); if (mf) mf.classList.remove('is-on'); applyU(U_RIDER) }
   // 點對焦：輕點（沒有拖、沒有捲）才算；面板、簽名、距離尺上的點擊不算
   function bindTap() {
     let sx = 0, sy = 0, st = 0, id = null
@@ -1426,7 +1433,7 @@
     if (!lite) buildScale()
     layout()
     lastK = -1
-    applyU(reduceMQ.matches ? U_RIDER : (document.body.classList.contains('cn-defocused') ? 2 : U_RIDER))
+    applyU(reduceMQ.matches ? U_RIDER : (document.body.classList.contains('cn-defocused') ? 0 : U_RIDER))   // 還沒開演：焦點在遠山＝「沒抓到」
     bindTap()
     armed = true
     const L = window.__cinemaLens; if (L && L.cam) { const c = L.cam(); camera(c.s, c.x, c.y) }
