@@ -281,9 +281,11 @@
     function photo(W, H, img, o) {  // CC0 照片：cover 裁切、構圖焦點、壓暗與調色，保住閱讀場
       o = o || {}
       const c = mk(W, H), x = c.getContext('2d')
-      const s = Math.max(W / img.naturalWidth, H / img.naturalHeight) * (o.zoom || 1), dw = img.naturalWidth * s, dh = img.naturalHeight * s
+      // crop＝來源影像的一塊（0–1 的 [x, y, w, h]）：同一支影片的靜格可以裁出不同的「地方」（避開中間的車手）
+      const cr = o.crop || [0, 0, 1, 1], sx = cr[0] * img.naturalWidth, sy = cr[1] * img.naturalHeight, sw = cr[2] * img.naturalWidth, sh = cr[3] * img.naturalHeight
+      const s = Math.max(W / sw, H / sh) * (o.zoom || 1), dw = sw * s, dh = sh * s
       const fx = o.focus ? o.focus[0] : .5, fy = o.focus ? o.focus[1] : .5
-      x.drawImage(img, (W - dw) * fx, (H - dh) * fy, dw, dh)
+      x.drawImage(img, sx, sy, sw, sh, (W - dw) * fx, (H - dh) * fy, dw, dh)
       if (o.tint) { x.globalCompositeOperation = 'multiply'; x.fillStyle = o.tint; x.fillRect(0, 0, W, H); x.globalCompositeOperation = 'source-over' }
       if (o.desat) { x.globalCompositeOperation = 'saturation'; x.fillStyle = `rgba(128,128,128,${o.desat})`; x.fillRect(0, 0, W, H); x.globalCompositeOperation = 'source-over' }
       x.fillStyle = `rgba(8,12,11,${o.dark != null ? o.dark : .42})`; x.fillRect(0, 0, W, H)
@@ -377,7 +379,23 @@
     /* CC0 照片底層（assets/strava-cinema/env/credits.json 有出處）。
        drop ＝ 照片取代掉的畫師層索引（天空、遠山、水面…），留下的多半是霧、芒草與底部壓暗。
        焦點、壓暗、調色都是為了讓照片退成場景而不是主角：文字永遠站在暗場上。 */
-    const photos = {
+    /* 2026-09-06：整站一部片——其它 hub 的底層改用 TODAY 那支影片的靜格（assets/strava-cinema/env/film-*.jpg），
+       每個 hub 裁不同的一塊（左邊的雲海、右邊的芒草坡、上面的雲），避開中間的車手，各自調色壓暗。
+       原本七張 CC0 照片留在 photosCC0，ENV_SOURCE 改 'cc0' 就切回去（credits.json 照舊）。 */
+    const ENV_SOURCE = 'film'
+    const F = t => `assets/strava-cinema/env/film-${t}s.jpg`
+    const photosFilm = {
+      yangmingshan:        { src: F(2),  drop: [0, 1],       crop: [0, .02, .52, .9],  focus: [.5, .4],  dark: .42, tint: 'rgba(200,210,214,.9)', desat: .2 },
+      'yangmingshan-night':{ src: F(2),  drop: [0, 1],       crop: [0, 0, .55, .62],   focus: [.5, .5],  dark: .62, tint: 'rgba(120,150,190,.85)', desat: .3 },
+      riverside:           { src: F(2),  drop: [0, 1, 2, 3, 5], crop: [0, .06, .5, .86], focus: [.5, .55], dark: .3,  tint: 'rgba(236,200,170,.95)' },
+      'mountain-road':     { src: F(6),  drop: [0, 1, 3, 4], crop: [.66, .1, .34, .9], focus: [.4, .6], dark: .22, tint: 'rgba(190,205,200,.95)' },
+      'north-coast':       { src: F(10), drop: [0, 1, 2, 4], crop: [0, .08, .48, .86], focus: [.5, .42], dark: .34, tint: 'rgba(176,200,212,.95)', desat: .15 },
+      'mountain-mist':     { src: F(14), drop: [0, 1, 3],    crop: [0, .12, .5, .82],  focus: [.5, .3],  dark: .42, tint: 'rgba(184,204,204,.95)', desat: .3 },
+      'basin-night':       { src: F(16), drop: [0, 1, 2],    crop: [0, 0, .7, .5],     focus: [.5, .6],  dark: .5,  tint: 'rgba(110,140,190,.9)',  desat: .25 },
+      'rice-paddies':      { src: F(6),  drop: [0, 1, 2, 4], crop: [.68, .36, .32, .6], focus: [.5, .62], dark: .32, tint: 'rgba(236,214,176,.95)' },
+      'forest-fog':        { src: F(14), drop: [0, 1],       crop: [.04, .18, .42, .72], focus: [.5, .5], dark: .44, tint: 'rgba(190,206,196,.95)', desat: .35 },
+    }
+    const photosCC0 = {
       yangmingshan:    { src: 'assets/strava-cinema/env/yangmingshan-valley.jpg',   drop: [0, 1],       focus: [.5, .35], dark: .4,  tint: 'rgba(196,208,214,.9)', desat: .25 },
       riverside:       { src: 'assets/strava-cinema/env/tamsui-river-sunset.jpg',   drop: [0, 1, 2, 3, 5], focus: [.5, .58], dark: .26, tint: 'rgba(222,196,180,.95)' },
       'north-coast':   { src: 'assets/strava-cinema/env/northeast-coast.jpg',       drop: [0, 1, 2, 4], focus: [.5, .42], dark: .36, tint: 'rgba(176,200,212,.95)', desat: .2 },
@@ -386,6 +404,7 @@
       'basin-night':   { src: 'assets/strava-cinema/env/taipei-basin-night.jpg',    drop: [0, 1, 2],    focus: [.5, .6],  dark: .2 },
       'rice-paddies':  { src: 'assets/strava-cinema/env/changbin-rice-dawn.jpg',    drop: [0, 1, 2, 4], focus: [.5, .62], dark: .34, tint: 'rgba(230,214,186,.95)', desat: .15 },
     }
+    const photos = ENV_SOURCE === 'film' ? photosFilm : photosCC0
     const imgCache = {}
     const cache = new Map()
     function get(name, W, H, onPhoto) {
@@ -850,40 +869,65 @@
   const contentEl = () => document.getElementById('content')
   const media = () => [q('#cn-canvas'), q('.td-scene')].filter(Boolean)
   const ID = { blur: 0, scale: 1, sat: 1, con: 1, bri: 1, bokeh: 0 }
-  const DEFOCUS = { blur: 2.5, scale: 1, sat: .95, con: .98, bri: .95, bokeh: .3 }   // 跟 CSS body.cn-defocused 同一組值：全景、清楚、只稍暗一點——「沒抓到」由 AF 框與景深層來說，不靠整張糊
+  const DEFOCUS = { blur: 0, scale: 1, sat: 1, con: 1, bri: 1, bokeh: 0 }   // 開場就是清楚的全景（跟 CSS body.cn-defocused 同一組值：什麼都不做）
   const cur = Object.assign({}, ID)
   const easeOut = p => 1 - Math.pow(1 - p, 3)
   const easeIn = p => p * p * p
   const easeInOut = p => p < .5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2
   let segs = [], raf = 0
   let phase = 'idle', level = 0, swapFn = null, swapAt = 0, endAt = 0, guardTimer = 0, fadeTimer = 0, introTimer = 0
-  /* 一次性的開場運鏡（2026-09-04 第五版：模擬追焦）。兩個角色：攝影師（鏡頭）與相機的 AF（框與焦點），最後在車手身上會合。
-       ① 0–0.6s   全景、清楚、不動——但 AF 框在錯的地方（左邊護欄），焦點在遠山，車手是軟的：沒抓到
-       ② 0.6–1.4s 往左掃、微放大 1.15×，框跟到左邊，焦點拉到近處芒草
-       ③ 1.4–2.3s 換向掃到右邊 1.2×（換向帶一點過衝），框到右邊山坡，焦點拉回遠
-       ④ 2.3–2.9s 收回中間、回到 1×，框跳到臉上、兩下小 hunt、變綠，景深這時才到 6 m
-       ⑤ 2.9–4.2s 猛推到 1.3×（快進慢停，AF-C 追蹤）；4.2–7s 慢飄到 1.35× 停住。不縮回、不循環。
-     整個頁面生命週期只演一次；深連結先進別的 view 時，等第一次顯示 TODAY 再演。
-     取景中心＝origin 與 scale 一起算（origin 只在 scale>1 時有作用），關鍵格之間 easeInOut。 */
-  const CAM = () => mobileMQ.matches
-    ? [{ t: 0, s: 1, x: 52, y: 42 }, { t: 600, s: 1, x: 52, y: 42 }, { t: 1400, s: 1.15, x: 22, y: 44 }, { t: 1600, s: 1.16, x: 26, y: 44 },
-       { t: 2300, s: 1.2, x: 82, y: 42 }, { t: 2450, s: 1.2, x: 78, y: 42 }, { t: 2900, s: 1, x: 52, y: 42 }, { t: 3000, s: 1, x: 52, y: 42, ease: 'out' }, { t: 4200, s: 1.25, x: 52, y: 42 }, { t: 7000, s: 1.3, x: 52, y: 42 }]
-    : [{ t: 0, s: 1, x: 63, y: 52 }, { t: 600, s: 1, x: 63, y: 52 }, { t: 1400, s: 1.15, x: 18, y: 55 }, { t: 1600, s: 1.16, x: 22, y: 55 },
-       { t: 2300, s: 1.2, x: 84, y: 52 }, { t: 2450, s: 1.2, x: 80, y: 52 }, { t: 2900, s: 1, x: 63, y: 52 }, { t: 3000, s: 1, x: 63, y: 52, ease: 'out' }, { t: 4200, s: 1.3, x: 63, y: 52 }, { t: 7000, s: 1.35, x: 63, y: 52 }]
-  const LOCK_AT = 2900
+  /* 開場運鏡（2026-09-05）：五個預設，demo 列可切、可重播（?camdemo=1）。選項存 localStorage cinema-cam，預設「靜止」。
+       still   靜止：一顆固定鏡頭，讓影片自己動（紀錄片）
+       push    慢推：1.2s 穩住 → 6s 推到 1.06 → 10s 到 1.08 停住
+       dolly   橫移推近：開場全景 1×，鎖定後從畫面中央往車手推到 1.15×（取景中心邊推邊移＝橫移感）
+       pullout 拉遠再推：貼很近對著左側 1.6× → 拉遠到全景 → 對焦鎖定 → 猛推 1.3×、慢飄 1.35×
+       search  追焦找人：全景沒抓到（框在護欄閃紅）→ 左掃 → 右掃 → 收回中間鎖定 → 猛推 1.3×
+     關鍵格 {t, s, x, y}（origin 與 scale 一起算取景中心）；手機由桌機關鍵格換算。整頁只演一次，demo 列的重播例外。 */
+  const CAM_PRESETS = {
+    still:   { zh: '靜止',     lock: 0,    af: 'none',   k: [{ t: 0, s: 1, x: 63, y: 52 }, { t: 1, s: 1, x: 63, y: 52 }] },
+    push:    { zh: '慢推',     lock: 0,    af: 'none',   k: [{ t: 0, s: 1, x: 63, y: 52 }, { t: 1200, s: 1, x: 63, y: 52 }, { t: 6000, s: 1.06, x: 63, y: 52 }, { t: 10000, s: 1.08, x: 63, y: 52 }] },
+    dolly:   { zh: '橫移推近', lock: 1700, af: 'lock',   k: [{ t: 0, s: 1, x: 50, y: 52 }, { t: 1700, s: 1, x: 50, y: 52 }, { t: 6700, s: 1.15, x: 63, y: 52 }] },   // 2026-09-06：開場全景 1×（他嫌之前都放太大），鎖定後才從畫面中央往車手推到 1.15
+    pullout: { zh: '拉遠再推', lock: 2700, af: 'lock',   k: [{ t: 0, s: 1.6, x: 12, y: 58 }, { t: 2200, s: 1, x: 63, y: 52 }, { t: 2700, s: 1, x: 63, y: 52, ease: 'out' }, { t: 4000, s: 1.3, x: 63, y: 52 }, { t: 7000, s: 1.35, x: 63, y: 52 }] },
+    search:  { zh: '追焦找人', lock: 2900, af: 'search', k: [{ t: 0, s: 1, x: 63, y: 52 }, { t: 600, s: 1, x: 63, y: 52 }, { t: 1400, s: 1.15, x: 18, y: 55 }, { t: 1600, s: 1.16, x: 22, y: 55 }, { t: 2300, s: 1.2, x: 84, y: 52 }, { t: 2450, s: 1.2, x: 80, y: 52 }, { t: 2900, s: 1, x: 63, y: 52 }, { t: 3000, s: 1, x: 63, y: 52, ease: 'out' }, { t: 4200, s: 1.3, x: 63, y: 52 }, { t: 7000, s: 1.35, x: 63, y: 52 }] },
+  }
+  const CAM_IDS = Object.keys(CAM_PRESETS)
+  let camId = 'dolly'     // 2026-09-05 他選了 C 橫移推近；鍵名換成 cinema-cam2，demo 期間存的舊值不算
+  try { const v = localStorage.getItem('cinema-cam2'); if (CAM_PRESETS[v]) camId = v } catch (e) {}
+  try { const q = new URLSearchParams(location.search).get('cam'); if (CAM_PRESETS[q]) camId = q } catch (e) {}
+  const toMobile = k => k.map(f => Object.assign({}, f, { x: Math.max(15, Math.min(85, 52 + (f.x - 63) * .7)), y: 42 + (f.y - 52) * .8 }))
+  // 關鍵格裡的 63/52 是「車手」的代號；換了影片就換成那支的 origin（左邊的車手＝橫移方向也跟著鏡像：從右邊推過去）
+  const forMedia = k => {
+    const M = window.__heroMedia; if (!M || !M.origin) return k
+    const [ox, oy] = M.origin, left = M.side === 'left'
+    return k.map(f => { const g = Object.assign({}, f); if (f.x === 63 && f.y === 52) { g.x = ox; g.y = oy } else if (left) { g.x = 100 - f.x }; if (M.zoomMax) g.s = Math.min(g.s, M.zoomMax); return g })
+  }
+  const CAM = () => { const k = forMedia(CAM_PRESETS[camId].k); return mobileMQ.matches ? toMobile(k) : k }
+  const LOCK_AT = () => CAM_PRESETS[camId].lock
   let push = CAM()[0].s, pushOx = CAM()[0].x, pushOy = CAM()[0].y, pushStart = 0, pushEnd = 0, pushDone = false
   function pushTick(now) {
     if (pushDone || !pushEnd) return false
-    const K = CAM(), t = now - pushStart
+    const K = retargetK || CAM(), t = now - pushStart
     let a = K[0], b = K[K.length - 1]
     for (let i = 0; i < K.length - 1; i++) if (t >= K[i].t && t < K[i + 1].t) { a = K[i]; b = K[i + 1]; break }
-    if (t >= b.t) { push = b.s; pushOx = b.x; pushOy = b.y; pushDone = true; return false }
+    if (t >= b.t) { push = b.s; pushOx = b.x; pushOy = b.y; pushDone = true; retargetK = null; return false }
     if (t < 0) { push = K[0].s; pushOx = K[0].x; pushOy = K[0].y; return true }
     const p = (t - a.t) / (b.t - a.t), e = a.ease === 'out' ? easeOut(p) : easeInOut(p)
     push = a.s + (b.s - a.s) * e; pushOx = a.x + (b.x - a.x) * e; pushOy = a.y + (b.y - a.y) * e
     return true
   }
   function pushFinal() { const K = CAM(), b = K[K.length - 1]; push = b.s; pushOx = b.x; pushOy = b.y; pushDone = true; pushEnd = 0; clearTimeout(lockTimer); clearTimeout(settleTimer); B.classList.add('cn-locked', 'cn-settled') }
+  // 場景層（#cn-canvas）的程式：找人的預設有一點點失焦與偏暗，鎖定時收掉；其餘一進來就清楚
+  function lensProgram() {
+    const af = CAM_PRESETS[camId].af, lock = LOCK_AT()
+    if (af === 'none') { setProgram([{ dur: 300, to: ID, ease: easeOut }]); return }
+    Object.assign(cur, { blur: 2.5, scale: 1, sat: .95, con: .98, bri: .95, bokeh: .3 }); apply()
+    setProgram([
+      { dur: Math.max(200, lock - 400), to: { blur: 1.4, scale: 1, sat: .97, con: .99, bri: 1, bokeh: .15 }, ease: easeInOut },
+      { dur: 260, to: { blur: 1.2, scale: 1, sat: .97, con: .99, bri: 1, bokeh: .12 }, ease: easeInOut },
+      { dur: 140, to: { blur: 0, scale: 1, sat: 1.02, con: 1.02, bri: 1, bokeh: 0 }, ease: easeOut },
+      { dur: 140, to: ID, ease: easeInOut },
+    ])
+  }
   let lockTimer = 0, settleTimer = 0, pushArmed = false
   function armPush(delay) {      // 從「現在 + delay」開始跑整段關鍵格
     if (pushDone || pushArmed) return
@@ -891,7 +935,7 @@
     const K = CAM(), t0 = performance.now(), total = K[K.length - 1].t
     pushStart = t0 + delay; pushEnd = pushStart + total
     clearTimeout(lockTimer); clearTimeout(settleTimer)
-    lockTimer = setTimeout(() => B.classList.add('cn-locked'), delay + LOCK_AT)     // HUD 降到第二層
+    lockTimer = setTimeout(() => B.classList.add('cn-locked'), delay + LOCK_AT())     // HUD 降到第二層
     settleTimer = setTimeout(() => B.classList.add('cn-settled'), delay + total)     // 推鏡停住，HUD 再淡一階
     if (!raf) raf = requestAnimationFrame(tick)
   }
@@ -919,17 +963,19 @@
       const tEl = isHero ? (el.querySelector('.td-media') || el) : el
       const heroOrigin = `${pushOx.toFixed(2)}% ${pushOy.toFixed(2)}%`
       const heroScale = (idle ? 1 : cur.scale) * push
+      const shift = isHero && !mobileMQ.matches && window.__heroMedia && window.__heroMedia.shift ? window.__heroMedia.shift : 0   // 整支影片橫移（%），見 HERO_MEDIA.shift
+      const heroT = s => `${shift ? `translateX(${shift}%) ` : ''}scale(${s.toFixed(4)})`
       if (idle) {   // 對到焦就一個 filter 都不留；hero 只留運鏡的 transform
         el.style.filter = ''
-        if (isHero && heroScale > 1.0005) { tEl.style.transformOrigin = heroOrigin; tEl.style.transform = `scale(${heroScale.toFixed(4)})` }
+        if (isHero && (heroScale > 1.0005 || shift)) { tEl.style.transformOrigin = heroOrigin; tEl.style.transform = heroT(heroScale) }
         else { tEl.style.transform = ''; tEl.style.transformOrigin = '' }
       } else {
         tEl.style.transformOrigin = isHero ? heroOrigin : o.canvas
         const blur = isHero && dof ? 0 : cur.blur
         el.style.filter = `blur(${blur.toFixed(2)}px) saturate(${cur.sat.toFixed(3)}) contrast(${cur.con.toFixed(3)}) brightness(${cur.bri.toFixed(3)})`
-        tEl.style.transform = `scale(${(isHero ? heroScale : cur.scale).toFixed(4)})`
+        tEl.style.transform = isHero ? heroT(heroScale) : `scale(${cur.scale.toFixed(4)})`
       }
-      if (isHero && window.__cinemaHero && window.__cinemaHero.camera) window.__cinemaHero.camera(heroScale > 1.0005 ? heroScale : 1, pushOx, pushOy)
+      if (isHero && window.__cinemaHero && window.__cinemaHero.camera) window.__cinemaHero.camera(heroScale > 1.0005 ? heroScale : 1, pushOx, pushOy, shift)
     })
     const fx = window.__cinemaFx
     if (fx && fx.setDefocus) fx.setDefocus(idle ? 0 : cur.bokeh)
@@ -1060,21 +1106,36 @@
     const t0 = performance.now()
     Object.assign(cur, DEFOCUS)
     apply()
-    // 場景層（#cn-canvas）只有很輕的呼吸：全景清楚，找人的戲在 hero 的景深層與 AF 框
-    setProgram([
-      { dur: 600,  to: { blur: 2.5, scale: 1, sat: .95, con: .98, bri: .95, bokeh: .3 }, ease: easeInOut },    // 全景沒抓到
-      { dur: 1700, to: { blur: 1.4, scale: 1, sat: .97, con: .99, bri: 1, bokeh: .15 }, ease: easeInOut },     // 左掃、右掃
-      { dur: 600,  to: { blur: 1.2, scale: 1, sat: .97, con: .99, bri: 1, bokeh: .12 }, ease: easeInOut },     // 收回中間
-      { dur: 120,  to: { blur: 0, scale: 1, sat: 1.02, con: 1.02, bri: 1, bokeh: 0 }, ease: easeOut },        // 鎖定
-      { dur: 140,  to: ID, ease: easeInOut },
-    ])
+    lensProgram()
     if (window.__cinemaHero) window.__cinemaHero.intro()
     armPushOnToday()
-    phase = 'in'; level = 1; endAt = t0 + 3300
+    phase = 'in'; level = 1; endAt = t0 + 400
     armGuard()
   }
   /* 換底片：約 250ms 的微型光圈閉合 → 換色 → 張開。不黑屏、不重播開場；reduced-motion 直接換。 */
   let irisTimer = 0
+  /* 換片用的長版：600ms 失焦收暗 → fn（換片）→ 600ms 回來。運鏡狀態不動，retarget 另外處理 */
+  function irisLong(fn) {
+    if (isQuiet() || document.hidden) { run(fn); return }
+    clearTimeout(irisTimer)
+    setProgram([
+      { dur: 600, to: { blur: 6, scale: 1.01, sat: .85, con: .95, bri: .45, bokeh: .5 }, ease: easeInOut },
+      { dur: 700, to: ID, ease: easeOut },
+    ])
+    irisTimer = setTimeout(() => run(fn), 600)
+  }
+  /* 換了影片：取景中心換成新那支的車手，從稍微遠一點再慢慢推到位（不重演開場） */
+  function retarget() {
+    const K = CAM(), last = K[K.length - 1]
+    const from = { t: 0, s: Math.max(1, last.s - .12), x: last.x, y: last.y }
+    pushDone = false; pushArmed = false
+    push = from.s; pushOx = from.x; pushOy = from.y
+    const t0 = performance.now()
+    pushStart = t0; pushEnd = t0 + 6000
+    retargetK = [from, { t: 6000, s: last.s, x: last.x, y: last.y }]
+    if (!raf) raf = requestAnimationFrame(tick)
+  }
+  let retargetK = null
   function iris(fn) {
     if (isQuiet() || document.hidden || phase !== 'idle') { run(fn); return }
     clearTimeout(irisTimer)
@@ -1090,7 +1151,38 @@
     introTimer = setTimeout(() => { if (B.classList.contains('cn-defocused')) { Object.assign(cur, DEFOCUS); apply(); B.classList.remove('cn-defocused'); setProgram([{ dur: 900, to: ID, ease: easeOut }]) } }, 9000)
   }
   document.addEventListener('visibilitychange', () => { if (document.hidden && (phase !== 'idle' || segs.length || B.classList.contains('cn-defocused'))) finish() })
-  window.__cinemaLens = { go, intro, finish, iris, active: () => phase !== 'idle', level: () => level, push: () => push, pushDone: () => pushDone, cam: () => ({ s: push, x: pushOx, y: pushOy }) }
+  function setCam(id, andReplay) {
+    if (!CAM_PRESETS[id]) return
+    camId = id
+    try { localStorage.setItem('cinema-cam2', id) } catch (e) {}
+    paintDemo()
+    if (andReplay) replay()
+  }
+  function replay() {      // demo 用：把「只演一次」的狀態歸零，從第一格重演（不重播文字進場）
+    if (isQuiet()) return
+    clearTimeout(lockTimer); clearTimeout(settleTimer)
+    pushDone = false; pushArmed = false; pushEnd = 0; retargetK = null
+    const K = CAM()[0]; push = K.s; pushOx = K.x; pushOy = K.y
+    B.classList.remove('cn-locked', 'cn-settled')
+    segs = []; Object.assign(cur, ID); apply()
+    if (window.__cinemaHero) window.__cinemaHero.intro()
+    lensProgram()
+    if (!raf) raf = requestAnimationFrame(tick)
+    armPushOnToday()
+  }
+  let demoEl = null
+  function paintDemo() { if (demoEl) demoEl.querySelectorAll('[data-cam]').forEach(b => b.classList.toggle('is-on', b.dataset.cam === camId)) }
+  function mountDemo() {
+    let on = false
+    try { on = /[?&]camdemo=1/.test(location.search) || localStorage.getItem('cinema-camdemo') === '1'; if (/[?&]camdemo=1/.test(location.search)) localStorage.setItem('cinema-camdemo', '1'); if (/[?&]camdemo=0/.test(location.search)) { localStorage.removeItem('cinema-camdemo'); on = false } } catch (e) {}
+    if (!on || demoEl) return
+    demoEl = document.createElement('div'); demoEl.className = 'cam-demo'; demoEl.setAttribute('aria-label', '運鏡 demo')
+    demoEl.innerHTML = `<b>運鏡</b>${CAM_IDS.map((id, i) => `<button type="button" data-cam="${id}"><i>${'ABCDE'[i]}</i>${CAM_PRESETS[id].zh}</button>`).join('')}<button type="button" data-replay>↻ 重播</button>`
+    demoEl.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; if (b.dataset.cam) setCam(b.dataset.cam, true); else replay() })
+    document.body.appendChild(demoEl); paintDemo()
+  }
+  mountDemo()
+  window.__cinemaLens = { go, intro, finish, iris, active: () => phase !== 'idle', level: () => level, push: () => push, pushDone: () => pushDone, cam: () => ({ s: push, x: pushOx, y: pushOy }), camPreset: () => camId, camAf: () => CAM_PRESETS[camId].af, cams: CAM_IDS, setCam, replay, irisLong, retarget }
 })()
 
 /* ══ Hero 鏡頭：景深、對焦框、點對焦（TODAY 的影片）═══════════════════════════
@@ -1112,7 +1204,8 @@
   // A ＝ 光圈：CoC = A·|1/d − 1/f|（px·m）。F2.0 最淺、F8 幾乎全清楚；由 __cinemaLook 依 LENS 選項設定
   const APERTURE_A = { '2': 60, '2.8': 38, '5.6': 16, '8': 6 }   // headless 實測：60 已經是「背景全化開」的上限，F2.8 要留得住路面
   let A = 38
-  const RIDER = { x: .63, y: .56 }, RIDER_AF = { x: .635, y: .42 }   // 橢圓中心／對焦框（臉）
+  const MEDIA = () => window.__heroMedia || {}
+  const RIDER = { x: .63, y: .56 }, RIDER_AF = { x: .635, y: .42 }   // 預設（山路那支）；mount 時依 __heroMedia 覆寫
   const easeOut = p => 1 - Math.pow(1 - p, 3)
   const easeInOut = p => p < .5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2
   const sm = (a, b, t) => { t = Math.max(0, Math.min(1, (t - a) / (b - a))); return t * t * (3 - 2 * t) }
@@ -1123,6 +1216,8 @@
   const mctx = mcv.getContext('2d')
 
   function buildDepth() {
+    const M = MEDIA()
+    if (M.depth === 'flat') return buildDepthFlat(M)
     const d = new Float32Array(DW * DH), yh = .46
     for (let j = 0; j < DH; j++) for (let i = 0; i < DW; i++) {
       const x = (i + .5) / DW, y = (j + .5) / DH
@@ -1139,6 +1234,47 @@
     }
     return d
   }
+  // 平地（河濱）的深度圖：地平線以上 ∞、遠岸 300 m、路面依透視平面連續（地平線 → 下緣 2.5 m）、車手橢圓；邊界柔邊
+  let riderSize = 1     // track 給的大小（1＝原始橢圓）
+  function buildDepthFlat(M) {
+    const d = new Float32Array(DW * DH), yh = M.horizon != null ? M.horizon : .42, rx = RIDER.x, ry = RIDER.y, k = riderSize
+    const uRider = U_RIDER
+    for (let j = 0; j < DH; j++) for (let i = 0; i < DW; i++) {
+      const x = (i + .5) / DW, y = (j + .5) / DH
+      let u = y <= yh ? INF : INF + (1 / 2.5 - INF) * Math.pow((y - yh) / (1 - yh), 1.6)
+      const mix = (uu, w) => { u = u + (uu - u) * w }
+      mix(1 / 300, sm(yh - .06, yh - .02, y) * (1 - sm(yh + .02, yh + .06, y)))          // 遠岸、遠山
+      const e = ((x - rx) / (.085 * k)) ** 2 + ((y - ry) / (.34 * k)) ** 2
+      mix(uRider, 1 - sm(.85, 1.15, e))                                                  // 車手：橢圓（大小隨 track），邊緣羽化
+      d[j * DW + i] = u
+    }
+    return d
+  }
+  /* ── 追蹤：影片有 track 關鍵格時，依 currentTime 把臉、身體、大小插值出來，變化超過門檻就重算深度圖與遮罩（最多 5 次/秒） ── */
+  let trackRaf = 0, trackLast = 0, trackKey = ''
+  function trackAt(track, t) {
+    let a = track[0], b = track[track.length - 1]
+    for (let i = 0; i < track.length - 1; i++) if (t >= track[i][0] && t < track[i + 1][0]) { a = track[i]; b = track[i + 1]; break }
+    const f = b[0] === a[0] ? 0 : Math.max(0, Math.min(1, (t - a[0]) / (b[0] - a[0])))
+    return a.slice(1).map((v, i) => v + (b[i + 1] - v) * f)
+  }
+  function trackTick() {
+    trackRaf = 0
+    const M = MEDIA(), v = hero && hero.querySelector('.td-video')
+    if (!armed || !M.track || !v || !hero.isConnected) return
+    trackRaf = requestAnimationFrame(trackTick)
+    const now = performance.now(); if (now - trackLast < 200) return
+    trackLast = now
+    const [fx, fy, bx, by, sz] = trackAt(M.track, v.currentTime || 0)
+    const key = [fx, fy, bx, by, sz].map(n => n.toFixed(2)).join(',')
+    if (key === trackKey) return
+    trackKey = key
+    RIDER_AF.x = fx; RIDER_AF.y = fy; RIDER.x = bx; RIDER.y = by; riderSize = sz
+    if (mode === 'auto') afPos = { x: fx, y: fy }
+    depth = buildDepth(); cache.clear(); lastK = -1
+    applyU(uCur); positionAf()
+  }
+  function trackStart() { trackKey = ''; if (!trackRaf && MEDIA().track) trackRaf = requestAnimationFrame(trackTick) }
   const stepU = k => k >= STEPS ? 2 : k / (STEPS - 1)
   const stepOf = u => u >= 1.5 ? STEPS : Math.round(Math.max(0, Math.min(1, u)) * (STEPS - 1))
   function masks(k) {
@@ -1168,10 +1304,10 @@
   // 顯示中的影片矩形（object-fit:cover 之後）：用 layout 尺寸，不受 .td-scene 的 scale 影響
   let laidOut = false, geom = null, afPos = { x: RIDER_AF.x, y: RIDER_AF.y }
   // 運鏡狀態（__cinemaLens 每幀餵進來）：.td-media 以 (x%,y%) 為中心放大 s 倍；景深層與框留在原地，靠這組值對位
-  const cam = { s: 1, x: 63, y: 52 }
-  const camRect = () => {     // 顯示中的影片矩形經過運鏡之後的位置（相對 .td-dof）
-    const Ox = cam.x / 100 * geom.W, Oy = cam.y / 100 * geom.H
-    return { x: Ox + (geom.ox - Ox) * cam.s, y: Oy + (geom.oy - Oy) * cam.s, w: geom.dw * cam.s, h: geom.dh * cam.s }
+  const cam = { s: 1, x: 63, y: 52, dx: 0 }
+  const camRect = () => {     // 顯示中的影片矩形經過運鏡（含整支橫移 dx%）之後的位置（相對 .td-dof）
+    const Ox = cam.x / 100 * geom.W, Oy = cam.y / 100 * geom.H, sh = cam.dx / 100 * geom.W
+    return { x: sh + Ox + (geom.ox - Ox) * cam.s, y: Oy + (geom.oy - Oy) * cam.s, w: geom.dw * cam.s, h: geom.dh * cam.s }
   }
   function placeMedia() {
     if (!geom) return
@@ -1179,9 +1315,10 @@
     layers.forEach(l => { l.style.webkitMaskSize = ms; l.style.maskSize = ms; l.style.webkitMaskPosition = mp; l.style.maskPosition = mp })
     placePeak(); positionAf()
   }
-  function camera(s, x, y) {
-    if (cam.s === s && cam.x === x && cam.y === y) return
-    cam.s = s; cam.x = x; cam.y = y
+  function camera(s, x, y, dx) {
+    dx = dx || 0
+    if (cam.s === s && cam.x === x && cam.y === y && cam.dx === dx) return
+    cam.s = s; cam.x = x; cam.y = y; cam.dx = dx
     if (laidOut || layout()) placeMedia()
   }
   // .td-dof ＝ 可見的影片框（.td-still 的盒子），不伸出畫面：backdrop-filter 的元素伸出視窗外時 Chrome 會把採樣到的背景畫偏（手機會多出一個鬼影）。
@@ -1255,34 +1392,44 @@
       { dur: 70, to: uT, ease: easeOut, done: opts.noLock ? null : lockAf },
     ])
   }
-  function intro() {
+  function intro() {   // 依運鏡預設：none＝焦點從第一秒就在車手；lock＝遠景先對到、鎖定那刻框變綠；search＝先對錯兩次
     if (!armed || reduceMQ.matches) return
     ensureLayout()
-    mode = 'auto'; hideAf()
-    // 找人期間光圈先收到 F5.6 的量（A=16）：焦點在錯的地方時整張不會糊成一片，只看得出「焦點不在他身上」；鎖定那一下光圈才開回使用者的檔位
-    const A0 = A; A = Math.min(A, 16); lastK = -1
-    const tmpA = Math.min(A0, 16)
+    mode = 'auto'; hideAf(); stop()
+    if (introRestore) { introRestore(); introRestore = null }
+    const L = window.__cinemaLens, af = L && L.camAf ? L.camAf() : 'none'
+    if (af === 'none') { applyU(U_RIDER); return }
+    // 找人期間光圈先收到 F5.6 的量（A=16），鎖定那一下才開回使用者的檔位
+    const A0 = A, tmpA = Math.min(A0, 16); A = tmpA; lastK = -1
     const restoreA = () => { if (A === tmpA && A0 !== tmpA) { A = A0; lastK = -1; applyU(uCur) } }
-    applyU(0)
-    // AF 的戲：先對錯地方兩次，最後才到臉上（框的位置是影片幀的比例：左邊護欄、左下芒草、右邊山坡、車手的臉）
-    const miss = (x, y) => { showAf(x, y); if (af) af.classList.add('is-miss') }
-    miss(.14, .70)
-    setProgram([
-      { dur: 600, to: 0, ease: easeInOut, done: () => miss(.07, .80) },                       // 全景：焦點在遠山，框在護欄→沒抓到
-      { dur: 800, to: 1 / 3.2, ease: easeInOut, done: () => miss(.92, .40) },                // 往左掃：焦點拉到近處→還是不對
-      { dur: 900, to: 1 / 40, ease: easeInOut, done: () => showAf(RIDER_AF.x - .01, RIDER_AF.y + .01) },   // 往右掃：焦點到右邊山坡；收回中間時框跳到臉上
-      { dur: 380, to: U_RIDER + .03, ease: easeInOut, done: () => showAf(RIDER_AF.x, RIDER_AF.y) },       // 拉到車手
-      { dur: 110, to: U_RIDER - .02, ease: easeInOut },                                        // hunt
-      { dur: 110, to: U_RIDER, ease: easeOut, done: () => { restoreA(); lockAf() } },          // 2.9s 鎖定，變綠，光圈開回來
-    ])
     introRestore = restoreA
+    applyU(0)
+    if (af === 'search') {
+      const missAt = (x, y) => { showAf(x, y); const el = hero.querySelector('.td-af'); if (el) el.classList.add('is-miss') }
+      missAt(.14, .70)
+      setProgram([
+        { dur: 600, to: 0, ease: easeInOut, done: () => missAt(.07, .80) },
+        { dur: 800, to: 1 / 3.2, ease: easeInOut, done: () => missAt(.92, .40) },
+        { dur: 900, to: 1 / 40, ease: easeInOut, done: () => showAf(RIDER_AF.x - .01, RIDER_AF.y + .01) },
+        { dur: 380, to: U_RIDER + .03, ease: easeInOut, done: () => showAf(RIDER_AF.x, RIDER_AF.y) },
+        { dur: 110, to: U_RIDER - .02, ease: easeInOut },
+        { dur: 110, to: U_RIDER, ease: easeOut, done: () => { restoreA(); lockAf() } },
+      ])
+    } else {   // lock：遠景先清楚，拉遠／橫移到位時框跳到臉上，小 hunt，變綠
+      const lockAt = Math.max(1200, (window.__cinemaLens && { dolly: 1700, pullout: 2700 }[window.__cinemaLens.camPreset()]) || 1700)
+      setProgram([
+        { dur: lockAt - 600, to: .02, ease: easeInOut, done: () => showAf(RIDER_AF.x - .01, RIDER_AF.y + .01) },
+        { dur: 380, to: U_RIDER + .03, ease: easeInOut, done: () => showAf(RIDER_AF.x, RIDER_AF.y) },
+        { dur: 110, to: U_RIDER - .02, ease: easeInOut },
+        { dur: 110, to: U_RIDER, ease: easeOut, done: () => { restoreA(); lockAf() } },
+      ])
+    }
   }
   function arrive() {   // 跨 hub 回到 TODAY：短暫重新尋焦，不顯示框
     if (!armed || reduceMQ.matches) return
     ensureLayout()
     mode = 'auto'; hideAf(); stop(); if (introRestore) { introRestore(); introRestore = null }
-    applyU(1 / 12)
-    setProgram([{ dur: 420, to: U_RIDER, ease: easeOut }])
+    applyU(U_RIDER)   // 回到 TODAY 也不重新尋焦：一顆鏡頭，焦點一直在他身上
   }
   function reset() { if (!armed) return; stop(); hideAf(); if (introRestore) { introRestore(); introRestore = null } mode = 'auto'; peakOff(0); if (mf) mf.classList.remove('is-on'); applyU(U_RIDER) }
   // 點對焦：輕點（沒有拖、沒有捲）才算；面板、簽名、距離尺上的點擊不算
@@ -1418,7 +1565,11 @@
     if (!el || el === hero) return
     hero = el; scene = el.querySelector('.td-scene')
     if (!scene) return
-    if (!depth) depth = buildDepth()
+    const M = MEDIA()
+    if (M.rider) { RIDER.x = M.rider[0]; RIDER.y = M.rider[1] }
+    if (M.af) { RIDER_AF.x = M.af[0]; RIDER_AF.y = M.af[1] }
+    afPos = { x: RIDER_AF.x, y: RIDER_AF.y }
+    depth = buildDepth(); cache.clear()
     dof = document.createElement('div'); dof.className = 'td-dof'; dof.setAttribute('aria-hidden', 'true')
     layers = []
     /* 手機（≤767px）不做景深層也不做距離尺／峰值（2026-09-04）：
@@ -1433,13 +1584,26 @@
     if (!lite) buildScale()
     layout()
     lastK = -1
-    applyU(reduceMQ.matches ? U_RIDER : (document.body.classList.contains('cn-defocused') ? 0 : U_RIDER))   // 還沒開演：焦點在遠山＝「沒抓到」
+    applyU(U_RIDER)
     bindTap()
     armed = true
     const L = window.__cinemaLens; if (L && L.cam) { const c = L.cam(); camera(c.s, c.x, c.y) }
+    trackStart()
   }
   addEventListener('resize', () => { laidOut = false; layout() })
   addEventListener('strava:hub', e => { if (e.detail && e.detail.view === 'overview') requestAnimationFrame(() => layout()) })   // TODAY 顯示出來那一刻重量一次
+  function setMedia(M) {         // 換片：車手位置、深度圖跟著換，焦點直接放在新車手上
+    if (!armed) return
+    if (M.rider) { RIDER.x = M.rider[0]; RIDER.y = M.rider[1] }
+    if (M.af) { RIDER_AF.x = M.af[0]; RIDER_AF.y = M.af[1] }
+    afPos = { x: RIDER_AF.x, y: RIDER_AF.y }
+    riderSize = 1
+    depth = buildDepth(); cache.clear(); lastK = -1
+    stop(); hideAf(); mode = 'auto'
+    laidOut = false; layout()
+    applyU(U_RIDER)
+    trackStart()
+  }
   function setAperture(f) {      // 換光圈：遮罩全部重算（快取依 A 分開），焦距不動
     const a = APERTURE_A[String(f)] || 60
     if (a === A) return
@@ -1447,7 +1611,7 @@
     if (layers.length) applyU(uCur)
     else updateScale(uCur)
   }
-  window.__cinemaHero = { mount, intro, arrive, reset, focusAt, setAperture, camera, aperture: () => A, ready: () => armed && layers.length > 0, u: () => uCur, mode: () => mode, peaking: () => peakActive }
+  window.__cinemaHero = { mount, intro, arrive, reset, focusAt, setAperture, setMedia, camera, aperture: () => A, ready: () => armed && layers.length > 0, u: () => uCur, mode: () => mode, peaking: () => peakActive }
   const existing = document.querySelector('.td-hero')
   if (existing) mount(existing)
 })()
@@ -1486,7 +1650,7 @@
     { id: 'quiet',     label: 'QUIET',     zh: '靜態' },
   ]
   const AUTO_FILM = { today: 'eterna', train: 'std', ride: 'cc', review: 'std', all: 'cn' }
-  const AUTO_LENS = { today: '2.8', ride: '2.8', train: '5.6', review: '5.6', all: '8' }
+  const AUTO_LENS = { today: '8', ride: '2.8', train: '5.6', review: '5.6', all: '8' }   // TODAY 先用影片本身的景深（F8 幾乎不加）；要電影感自己轉到 F2.8
   const LS_FILM = 'cinema-film', LS_LENS = 'cinema-lens'
   const FILM_IDS = FILMS.map(f => f.id), LENS_IDS = LENSES.map(l => l.id)
   let userFilm = 'auto', userLens = 'auto'
@@ -1496,7 +1660,7 @@
   } catch (e) {}
   const save = (k, v) => { try { if (v === 'auto') localStorage.removeItem(k); else localStorage.setItem(k, v) } catch (e) {} }
   const hub = () => B.dataset.hub || 'today'
-  const filmNow = () => userFilm === 'auto' ? (AUTO_FILM[hub()] || 'std') : userFilm
+  const filmNow = () => userFilm === 'auto' ? ((hub() === 'today' && window.__heroMedia && FILM_IDS.includes(window.__heroMedia.film) && window.__heroMedia.film) || AUTO_FILM[hub()] || 'std') : userFilm   // TODAY 的 AUTO 先看這支影片自己的 film（天氣）
   const lensNow = () => userLens === 'auto' ? (AUTO_LENS[hub()] || '2.8') : userLens
   const fx = () => window.__cinemaFx, hero = () => window.__cinemaHero, lens = () => window.__cinemaLens
   const fLabel = id => (LENSES.find(l => l.id === id) || {}).label || ('F' + id)
@@ -1549,6 +1713,12 @@
       <path d="M${C - 3.2} 1.2 L${C + 3.2} 1.2 L${C} 6.4 Z" class="idx"/>
     </svg>`
   }
+  /* 轉盤住在觀景窗裡（TODAY hero 右上，REC 旁）：相機的控制跟相機的畫面在同一個框裡，頂列回去只做導覽。
+     hero 是資料到了才建的，所以先掛在頂列右側，hero 出現那一刻搬進去（strava:hub）。 */
+  function placeDials() {
+    const strip = document.querySelector('.fx-dials'), hero = document.querySelector('.td-hero')
+    if (strip && hero && strip.parentNode !== hero) { hero.appendChild(strip); strip.classList.add('in-hero') }
+  }
   function mountDials() {
     const host = document.querySelector('.topbar .tb-r'), tier = document.getElementById('fx-tier')
     if (!host || document.querySelector('.fx-dials')) return
@@ -1576,6 +1746,8 @@
       b.addEventListener('pointerup', up); b.addEventListener('pointercancel', up)
     })
     host.insertBefore(strip, host.firstChild)
+    placeDials()
+    addEventListener('strava:hub', placeDials)
     strip.addEventListener('wheel', e => { const b = e.target.closest('.fx-dial'); if (!b) return; e.preventDefault(); const d = e.deltaY || e.deltaX; if (Math.abs(d) < 4) return; step(b.dataset.dial, d > 0 ? 1 : -1) }, { passive: false })
     strip.addEventListener('keydown', e => { const b = e.target.closest('.fx-dial'); if (!b) return; const g = b.dataset.dial; if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); step(g, 1) } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); step(g, -1) } })
     // hero 底部的 F 值＝光圈環：點一下換下一檔（AUTO 之外的四檔輪流）

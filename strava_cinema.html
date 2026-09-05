@@ -3010,7 +3010,7 @@ button.ov-cell:focus-visible{outline:1px solid rgba(252,76,2,.6);outline-offset:
   .at-read{right:8px;top:8px;min-width:0;padding:7px 9px}
 }
 </style>
-<link rel="stylesheet" href="theme-strava-cinema.css?v=20260904">
+<link rel="stylesheet" href="theme-strava-cinema.css?v=20260906">
 </head>
 <body>
 
@@ -3153,37 +3153,49 @@ button.ov-cell:focus-visible{outline:1px solid rgba(252,76,2,.6);outline-offset:
 
 <!-- 3D route replay modal (Three.js, lazy-loaded on first open) -->
 <div id="r3d-overlay" class="r3d-overlay" onclick="if(event.target===this)closeRoute3D()">
-  <div class="r3d-box">
-    <button class="r3d-close" onclick="closeRoute3D()">✕</button>
-    <button class="r3d-compass" onclick="r3dFaceNorth()" title="轉回正北朝上"><div class="r3d-compass-inner" id="r3dCompassInner"><span class="r3d-compass-arrow">▲</span><span class="r3d-compass-n">N</span></div></button>
-    <div class="r3d-minimap">
-      <canvas id="r3dMiniMapCanvas"></canvas>
-      <canvas id="r3dMiniMapCursor"></canvas>
-    </div>
-    <div id="r3dCanvasWrap">
-      <canvas id="r3dCanvas"></canvas>
-      <div class="r3d-loading" id="r3dLoading">建立航跡模型…</div>
-    </div>
-    <div class="r3d-hud">
-      <div class="r3d-title" id="r3dTitle">—</div>
-      <div class="r3d-stats">
-        <div><span id="r3dDist">0.0</span><small>km</small></div>
-        <div id="r3dElevWrap"><span id="r3dElev">0</span><small>m</small></div>
-        <div><span id="r3dSpeed">0.0</span><small>km/h</small></div>
-        <div id="r3dHrWrap" style="display:none"><span id="r3dHr">0</span><small>bpm</small></div>
-        <div id="r3dWattsWrap" style="display:none"><span id="r3dWatts">0</span><small>w</small></div>
+  <div class="r3d-box rp" id="rpBox">
+    <!-- 遙測回放（2026-09-05）：上半舞台依路線自動選 3D（爬坡）或 2D 俯視（其餘）；下半四格數字＋三條同步走勢線＋播放列。 -->
+    <header class="rp-head">
+      <div class="rp-crumb"><i></i>RIDE / REPLAY</div>
+      <div class="rp-meta">RECORDED GPS · <b id="rpSamples">0</b> SAMPLES</div>
+      <h2 class="rp-title" id="r3dTitle">—</h2>
+      <div class="rp-sub" id="rpSub"></div>
+      <button class="r3d-close" onclick="closeRoute3D()" aria-label="關閉">✕</button>
+    </header>
+    <div class="rp-stage" id="rpStage">
+      <div id="r3dCanvasWrap">
+        <canvas id="r3dCanvas"></canvas>
+        <div class="r3d-loading" id="r3dLoading">建立航跡模型…</div>
       </div>
-      <input type="range" id="r3dScrub" min="0" max="1000" value="0">
-      <div class="r3d-controls">
-        <button id="r3dPlayBtn" onclick="r3dTogglePlay()">▶ 播放</button>
-        <button data-speed="1" onclick="r3dSetSpeed(1,this)" class="active">1x</button>
-        <button data-speed="2" onclick="r3dSetSpeed(2,this)">2x</button>
-        <button data-speed="4" onclick="r3dSetSpeed(4,this)">4x</button>
-        <button onclick="r3dReset()">↺ 重來</button>
-        <button id="r3dSpinBtn" onclick="r3dToggleSpin()">⟳ 自轉</button>
+      <canvas id="rp2d" class="rp-2d" aria-label="路線俯視圖"></canvas>
+      <div class="rp-tl" id="rpGps">GPS —</div>
+      <div class="rp-tr">
+        <div class="rp-cams" id="rpCams">
+          <button data-cam="orbit" class="active" onclick="r3dSetCam('orbit')" title="鳥瞰：整條路線，拖曳環繞（1）">鳥瞰</button>
+          <button data-cam="chase" onclick="r3dSetCam('chase')" title="追蹤：跟在你後面，拖曳可換到側面（2）">追蹤</button>
+          <button data-cam="top" onclick="r3dSetCam('top')" title="俯視：正上方跟著走，拖曳旋轉地圖（3）">俯視</button>
+        </div>
+        <button class="rp-dim" id="rpDim" onclick="rpToggleDim()" title="切換 2D／3D">3D</button>
       </div>
-      <div class="r3d-hint">預設正北朝上，點左上指北針可回正 · 拖曳旋轉視角 · 滾輪/雙指縮放 · 顏色 = 沿途速度 · 桁架 = 對地高度 · 金球 = 起點 · 暗紅球 = 終點</div>
+      <button class="r3d-compass" onclick="r3dFaceNorth()" title="轉回正北朝上"><div class="r3d-compass-inner" id="r3dCompassInner"><span class="r3d-compass-arrow">▲</span><span class="r3d-compass-n">N</span></div></button>
+      <div class="r3d-camtag" id="r3dCamTag" aria-live="polite"><i></i><span>CAM 1 · 鳥瞰</span></div>
+      <div class="rp-bl"><span id="rpExag"></span><b>SAMPLE <span id="rpSample">001</span> / <span id="rpN">000</span></b></div>
+      <div class="rp-br"><span id="rpHint">拖曳旋轉</span><b><span id="r3dDist">0.0</span> / <span id="rpTotal">0.0</span> km</b></div>
     </div>
+    <div class="rp-tiles">
+      <div class="rp-tile w"><small>Power</small><b><span id="r3dWatts">—</span><i>W</i></b></div>
+      <div class="rp-tile hr"><small>Heart rate</small><b><span id="r3dHr">—</span><i>bpm</i></b></div>
+      <div class="rp-tile sp"><small>Speed</small><b><span id="r3dSpeed">0.0</span><i>km/h</i></b></div>
+      <div class="rp-tile al"><small>Altitude</small><b><span id="r3dElev">—</span><i>m</i></b></div>
+    </div>
+    <div class="rp-strips" id="rpStrips"><canvas id="rpStripCv" aria-label="功率、心率、海拔走勢"></canvas></div>
+    <div class="rp-bar">
+      <button id="r3dPlayBtn" class="rp-play" onclick="r3dTogglePlay()" aria-label="播放">▶</button>
+      <input type="range" id="r3dScrub" min="0" max="1000" value="0" aria-label="回放進度">
+      <button class="rp-speed" id="rpSpeedBtn" onclick="rpCycleSpeed()" title="倍速">1×</button>
+      <span class="rp-pct" id="rpPct">0%</span>
+    </div>
+    <div class="rp-foot"><span>GPS 取樣重播 · 非原始時間軸</span><a id="rpReport" href="#" target="_blank" rel="noopener" hidden>這趟紀錄 ↗</a></div>
   </div>
 </div>
 
@@ -4408,9 +4420,12 @@ function buildRouteModel(stream) {
   const horizExtent = Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...zs) - Math.min(...zs), 10)
   const elevRange = maxElev - minElev
   const exaggeration = hasElev ? Math.min(28, Math.max(4, 0.22 * horizExtent / Math.max(1, elevRange))) : 1
+  // 總爬升：5 點平滑後只加正的變化量（原始 GPS 高度一上一下會把平路加出幾百公尺）
+  let gain = 0
+  if (hasElev) { const sm = rawElevs.map((_, i) => { let a = 0, c = 0; for (let k = -2; k <= 2; k++) { const j = i + k; if (j >= 0 && j < rawElevs.length) { a += rawElevs[j]; c++ } } return a / c }); for (let i = 1; i < sm.length; i++) { const d = sm[i] - sm[i - 1]; if (d > 0) gain += d } }
   const maxSpeed = Math.max(1, ...pts.map(p => p.speed))
   // lat0/lng0/mLat/mLng 一併回傳：地標要投影進同一個座標系，才能跟路線對齊
-  return { pts, horizExtent, elevRange, hasElev, hasHR, hasWatts, minElev, exaggeration, maxSpeed, totalDist: cum, lat0, lng0, mLat, mLng }
+  return { pts, horizExtent, elevRange, gain, hasElev, hasHR, hasWatts, minElev, exaggeration, maxSpeed, totalDist: cum, lat0, lng0, mLat, mLng }
 }
 // 速度漸層沿用暖橘太空主題：餘燼紅 → Strava 橘 → 熾金，不引入冷色
 function r3dSpeedColor(ratio) {
@@ -4472,42 +4487,198 @@ function r3dSampleAt(model, u) {
   // elev 回傳「絕對海拔」（elevRaw 是相對最低點的高度，畫 3D 用）
   return { dist: lerp(pts[i0].dist, pts[i1].dist), elev: model.minElev + lerp(pts[i0].elevRaw, pts[i1].elevRaw), speed: lerp(pts[i0].speed, pts[i1].speed), hr, watts }
 }
+/* ── 回放狀態（2026-09-05）：一個播放器、兩種舞台。RP 管 u／播放／倍速／2D；R3D 只在 3D 舞台存在。 ── */
+let RP = null
+const RP_SPEEDS = [1, 2, 4]
+let RP_SPEED = 1
+function rpUse3D(model) {   // 爬坡才有第三軸的資訊：總爬升 ≥300 m 或高低差 ≥120 m 才開 3D，其餘 2D 俯視（平路、室內、沒高度的舊資料）
+  return !!(model.hasElev && (model.gain >= 300 || model.elevRange >= 120))
+}
 function openRoute3D(activityId) {
   const feed = window.__rideFeed || []
   const a = feed.find(x => x.id === activityId)
   if (!a || !a.route_stream || a.route_stream.length < 2) return
   document.getElementById('r3d-overlay').classList.add('open')
-  const loading = document.getElementById('r3dLoading')
-  loading.style.display = 'flex'
-  loading.textContent = '建立航跡模型…'
-  document.getElementById('r3dCanvasWrap').querySelectorAll('.r3d-error').forEach(e => e.remove())
   const model = buildRouteModel(a.route_stream)
   const titleEl = document.getElementById('r3dTitle')
   titleEl.textContent = a.name || '—'
-  if (!model.hasElev) {
-    const tag = document.createElement('span')
-    tag.className = 'r3d-flat-tag'
-    tag.textContent = '此路線尚無高度資料'
-    titleEl.appendChild(tag)
+  if (!model.hasElev) { const tag = document.createElement('span'); tag.className = 'r3d-flat-tag'; tag.textContent = '此路線尚無高度資料'; titleEl.appendChild(tag) }
+  const mins = a.moving_time_sec ? Math.round(a.moving_time_sec / 60) : null
+  document.getElementById('rpSub').innerHTML = [a.date, a.distance_km != null ? `${(+a.distance_km).toFixed(1)} km` : '', a.elevation_m != null ? `↑ ${Math.round(a.elevation_m)} m` : '', mins ? `${mins} min` : '', a.sport_type === 'VirtualRide' ? '室內 · 虛擬路線' : ''].filter(Boolean).map(t => `<span>${t}</span>`).join('')
+  document.getElementById('rpSamples').textContent = a.route_stream.length
+  document.getElementById('rpN').textContent = String(a.route_stream.length).padStart(3, '0')
+  document.getElementById('rpTotal').textContent = (model.totalDist / 1000).toFixed(1)
+  document.getElementById('rpExag').textContent = model.hasElev ? `高度放大 ${model.exaggeration.toFixed(1)}×` : ''
+  const rep = document.getElementById('rpReport'), href = rpReportHref(a)
+  if (href) { rep.href = href; rep.hidden = false } else rep.hidden = true
+  RP = { a, model, u: 0, playing: false, raf: null, dim: rpUse3D(model) ? '3d' : '2d', strips: null }
+  rpSetSpeedBtn()
+  rpMountStage()
+  rpLoop()
+}
+function rpReportHref(a) {   // 單日報告只有 TSS ≥100 那些天才有：訓練區塊裡 actual.ride 記的就是有報告的日期（drawer 的「打開這一趟的報告」同一個來源）
+  const B = window._trainingBlock
+  if (!B || !Array.isArray(B.sessions)) return null
+  return B.sessions.some(s => s.actual && s.actual.ride === a.date) ? `rides/${a.date}.html` : null
+}
+function rpMountStage() {   // 依 RP.dim 掛舞台：3D 載 three 建場景；2D 直接畫
+  const box = document.getElementById('rpBox'), loading = document.getElementById('r3dLoading')
+  box.dataset.dim = RP.dim
+  document.getElementById('rpDim').textContent = RP.dim === '3d' ? '2D' : '3D'
+  document.getElementById('rpDim').title = RP.dim === '3d' ? '改成 2D 俯視' : '改成 3D 航跡'
+  document.getElementById('rpHint').textContent = RP.dim === '3d' ? '拖曳旋轉 · 滾輪縮放' : '正北朝上'
+  document.getElementById('r3dCanvasWrap').querySelectorAll('.r3d-error').forEach(e => e.remove())
+  rpSizeStrips(); rpDrawStrips(RP.u)
+  if (RP.dim === '3d') {
+    loading.style.display = 'flex'; loading.textContent = '建立航跡模型…'
+    const a = RP.a, model = RP.model
+    loadThreeJS()
+      .then(() => { if (RP && RP.a === a && RP.dim === '3d') requestAnimationFrame(() => requestAnimationFrame(() => init3D(a, model))) })
+      .catch(err => {
+        loading.style.display = 'none'
+        const wrap = document.getElementById('r3dCanvasWrap'), box2 = document.createElement('div')
+        box2.className = 'r3d-error'; box2.textContent = '3D 模組載入失敗：' + err.message + '（改用 2D）'; wrap.appendChild(box2)
+        setTimeout(() => { if (RP && RP.dim === '3d') { RP.dim = '2d'; rpMountStage() } }, 1200)
+      })
+  } else {
+    teardown3D(); loading.style.display = 'none'
+    rp2dSize(); rp2dDraw(RP.u)
   }
-  document.getElementById('r3dHrWrap').style.display = model.hasHR ? '' : 'none'
-  document.getElementById('r3dWattsWrap').style.display = model.hasWatts ? '' : 'none'
-  document.getElementById('r3dElevWrap').style.display = model.hasElev ? '' : 'none'
-  // 小地圖不依賴 Three.js，開窗當下先畫，不用等 3D 場景載入完
-  drawTaipeiMiniMap(document.getElementById('r3dMiniMapCanvas'), window._taipeiMiniMap, a.route_stream)
-  loadThreeJS()
-    .then(() => requestAnimationFrame(() => requestAnimationFrame(() => init3D(a, model))))
-    .catch(err => {
-      loading.style.display = 'none'
-      const wrap = document.getElementById('r3dCanvasWrap')
-      const box = document.createElement('div')
-      box.className = 'r3d-error'
-      box.textContent = '3D 模組載入失敗：' + err.message
-      wrap.appendChild(box)
-    })
+  rpSetU(RP.u)
+}
+function rpToggleDim() {
+  if (!RP) return
+  RP.playing = false; rpPaintPlay()
+  RP.dim = RP.dim === '3d' ? '2d' : '3d'
+  rpMountStage()
+}
+function rpLoop(t) {   // 統一的播放迴圈：3D／2D 都由它推進 u；R3D 自己的迴圈只畫場景
+  if (!RP) return
+  RP.raf = requestAnimationFrame(rpLoop)
+  const dt = (RP.lastT == null || t == null) ? 16 : Math.min(100, t - RP.lastT)
+  if (t != null) RP.lastT = t
+  if (RP.playing) {
+    RP.u += (dt / 18500) * RP_SPEED
+    if (RP.u >= 1) { RP.u = 1; RP.playing = false; rpPaintPlay() }
+    rpSetU(RP.u)
+  }
+}
+function rpSetU(u) {
+  if (!RP) return
+  RP.u = Math.max(0, Math.min(1, u))
+  if (R3D) r3dSetU(RP.u)
+  const m = RP.model, s = r3dSampleAt(m, RP.u), n = m.pts.length
+  const idx = Math.round(RP.u * (n - 1)), p = m.pts[idx]
+  document.getElementById('r3dScrub').value = Math.round(RP.u * 1000)
+  document.getElementById('rpPct').textContent = Math.round(RP.u * 100) + '%'
+  document.getElementById('rpSample').textContent = String(idx + 1).padStart(3, '0')
+  document.getElementById('r3dDist').textContent = (s.dist / 1000).toFixed(1)
+  document.getElementById('r3dSpeed').textContent = s.speed.toFixed(1)
+  document.getElementById('r3dElev').textContent = m.hasElev ? Math.round(s.elev) : '—'
+  document.getElementById('r3dHr').textContent = s.hr != null ? Math.round(s.hr) : '—'
+  document.getElementById('r3dWatts').textContent = s.watts != null ? Math.round(s.watts) : '—'
+  const raw = RP.a.route_stream[idx]
+  document.getElementById('rpGps').textContent = raw ? `GPS ${(+raw[0]).toFixed(3)} / ${(+raw[1]).toFixed(3)}` : 'GPS —'
+  rpDrawStrips(RP.u)
+  if (RP.dim === '2d') rp2dDraw(RP.u)
+}
+function rpPaintPlay() { const b = document.getElementById('r3dPlayBtn'); if (b) { b.textContent = RP && RP.playing ? '❚❚' : '▶'; b.setAttribute('aria-label', RP && RP.playing ? '暫停' : '播放') } }
+function rpSetSpeedBtn() { const b = document.getElementById('rpSpeedBtn'); if (b) b.textContent = RP_SPEED + '×' }
+function rpCycleSpeed() { RP_SPEED = RP_SPEEDS[(RP_SPEEDS.indexOf(RP_SPEED) + 1) % RP_SPEEDS.length]; rpSetSpeedBtn() }
+/* ── 走勢線：功率、心率、海拔（沒有的略過）共用時間軸；游標跟 u；拖走勢線＝拉進度 ── */
+function rpSizeStrips() {
+  const cv = document.getElementById('rpStripCv'); if (!cv) return
+  const dpr = Math.min(2, window.devicePixelRatio || 1), W = cv.clientWidth, H = cv.clientHeight
+  if (W && H && (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr))) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr) }
+}
+function rpDrawStrips(u) {
+  const cv = document.getElementById('rpStripCv'); if (!cv || !RP) return
+  const dpr = Math.min(2, window.devicePixelRatio || 1), W = cv.clientWidth, H = cv.clientHeight
+  if (!W || !H) return
+  const x = cv.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, W, H)
+  const m = RP.model, pts = m.pts, mobile = W < 520
+  const series = []
+  if (m.hasWatts) series.push({ k: 'W', col: '#ffb347', get: p => p.watts })
+  if (m.hasHR) series.push({ k: 'bpm', col: '#e9a9a0', get: p => p.hr })
+  if (m.hasElev && !mobile) series.push({ k: 'm', col: '#a9cfc6', get: p => m.minElev + p.elevRaw })
+  if (!series.length) series.push({ k: 'km/h', col: '#ffb347', get: p => p.speed })
+  const L = 44, Rr = 52, rowH = H / series.length, total = m.totalDist || 1
+  const X = p => L + p.dist / total * (W - L - Rr)
+  series.forEach((sr, i) => {
+    const vals = pts.map(sr.get), ok = vals.filter(v => v != null)
+    if (!ok.length) return
+    const lo = Math.min(...ok), hi = Math.max(...ok), span = (hi - lo) || 1
+    const y0 = i * rowH + 8, h = rowH - 16
+    const Y = v => y0 + h - (v - lo) / span * h
+    x.strokeStyle = 'rgba(243,239,230,.08)'; x.lineWidth = 1; x.beginPath(); x.moveTo(L, y0 + h + .5); x.lineTo(W - Rr, y0 + h + .5); x.stroke()
+    x.beginPath(); let started = false
+    pts.forEach((p, j) => { const v = vals[j]; if (v == null) return; const px = X(p), py = Y(v); started ? x.lineTo(px, py) : x.moveTo(px, py); started = true })
+    x.strokeStyle = sr.col; x.lineWidth = 1.4; x.lineJoin = 'round'; x.stroke()
+    // 走過的部分再描亮一次
+    x.save(); x.beginPath(); x.rect(0, 0, L + u * (W - L - Rr), H); x.clip(); x.strokeStyle = '#fff'; x.globalAlpha = .55; x.lineWidth = 1.4; x.beginPath(); started = false
+    pts.forEach((p, j) => { const v = vals[j]; if (v == null) return; const px = X(p), py = Y(v); started ? x.lineTo(px, py) : x.moveTo(px, py); started = true }); x.stroke(); x.restore()
+    x.fillStyle = sr.col; x.font = '700 10px ' + getComputedStyle(document.body).fontFamily; x.textBaseline = 'middle'; x.textAlign = 'left'; x.fillText(sr.k, 6, y0 + h / 2)
+    const cur = r3dSampleAt(m, u), cv2 = sr.k === 'W' ? cur.watts : sr.k === 'bpm' ? cur.hr : sr.k === 'm' ? cur.elev : cur.speed
+    x.fillStyle = 'rgba(243,239,230,.85)'; x.textAlign = 'right'; x.font = '600 11px ' + getComputedStyle(document.body).fontFamily
+    x.fillText(cv2 != null ? String(Math.round(cv2)) : '—', W - 6, y0 + h / 2)
+  })
+  const cx = L + u * (W - L - Rr)
+  x.setLineDash([3, 3]); x.strokeStyle = 'rgba(243,239,230,.7)'; x.lineWidth = 1; x.beginPath(); x.moveTo(cx + .5, 4); x.lineTo(cx + .5, H - 4); x.stroke(); x.setLineDash([])
+}
+/* ── 2D 舞台：正北朝上的俯視圖。格線、路線（走過亮、前方暗）、彗星尾、起終點、標記光暈、比例尺 ── */
+function rp2dSize() {
+  const cv = document.getElementById('rp2d'); if (!cv) return
+  const dpr = Math.min(2, window.devicePixelRatio || 1), W = cv.clientWidth, H = cv.clientHeight
+  if (W && H && (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr))) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr) }
+}
+function rp2dDraw(u) {
+  const cv = document.getElementById('rp2d'); if (!cv || !RP) return
+  const dpr = Math.min(2, window.devicePixelRatio || 1), W = cv.clientWidth, H = cv.clientHeight
+  if (!W || !H) return
+  const x = cv.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, W, H)
+  const m = RP.model, pts = m.pts
+  const xs = pts.map(p => p.x), zs = pts.map(p => p.z)
+  const minX = Math.min(...xs), maxX = Math.max(...xs), minZ = Math.min(...zs), maxZ = Math.max(...zs)
+  const pad = 46, sc = Math.min((W - pad * 2) / Math.max(1, maxX - minX), (H - pad * 2) / Math.max(1, maxZ - minZ))
+  const ox = (W - (maxX - minX) * sc) / 2 - minX * sc, oz = (H - (maxZ - minZ) * sc) / 2 - minZ * sc
+  const P = p => [ox + p.x * sc, oz + p.z * sc]
+  // 格線：1 km（路線小於 3 km 時 250 m）
+  const g = m.horizExtent < 3000 ? 250 : 1000
+  x.strokeStyle = 'rgba(243,239,230,.07)'; x.lineWidth = 1
+  for (let gx = Math.floor(minX / g) * g - g; gx <= maxX + g; gx += g) { const sx = ox + gx * sc; x.beginPath(); x.moveTo(sx, 0); x.lineTo(sx, H); x.stroke() }
+  for (let gz = Math.floor(minZ / g) * g - g; gz <= maxZ + g; gz += g) { const sz = oz + gz * sc; x.beginPath(); x.moveTo(0, sz); x.lineTo(W, sz); x.stroke() }
+  const n = pts.length, ui = u * (n - 1)
+  const seg = (from, to, col, lw) => { x.beginPath(); for (let i = from; i <= to; i++) { const [px, py] = P(pts[i]); i === from ? x.moveTo(px, py) : x.lineTo(px, py) } x.strokeStyle = col; x.lineWidth = lw; x.lineJoin = 'round'; x.lineCap = 'round'; x.stroke() }
+  const cut = Math.floor(ui)
+  if (cut < n - 1) seg(cut, n - 1, 'rgba(255,179,71,.28)', 3)          // 前方：暗
+  if (cut > 0) seg(0, cut, 'rgba(255,179,71,.85)', 3)                  // 走過：亮
+  const tail = Math.max(0, Math.floor(ui - n * .035))                  // 彗星尾
+  if (cut > tail) { x.save(); x.shadowColor = 'rgba(255,220,160,.9)'; x.shadowBlur = 10; seg(tail, cut, 'rgba(255,240,210,.95)', 3.5); x.restore() }
+  const cur = RP.model && r3dPos2d(m, u, P)
+  // 起終點
+  const [sx0, sy0] = P(pts[0]), [ex, ey] = P(pts[n - 1])
+  x.fillStyle = '#ffd27a'; x.beginPath(); x.arc(sx0, sy0, 4, 0, 6.283); x.fill()
+  x.fillStyle = '#8c1d0a'; x.beginPath(); x.arc(ex, ey, 4, 0, 6.283); x.fill()
+  x.fillStyle = 'rgba(243,239,230,.7)'; x.font = '700 9px ' + getComputedStyle(document.body).fontFamily; x.textBaseline = 'middle'
+  x.fillText('START', sx0 + 8, sy0); x.fillText('END', ex + 8, ey)
+  // 標記：光暈＋白心
+  const rg = x.createRadialGradient(cur[0], cur[1], 0, cur[0], cur[1], 22)
+  rg.addColorStop(0, 'rgba(255,255,255,.95)'); rg.addColorStop(.25, 'rgba(255,224,170,.6)'); rg.addColorStop(1, 'rgba(255,179,71,0)')
+  x.fillStyle = rg; x.beginPath(); x.arc(cur[0], cur[1], 22, 0, 6.283); x.fill()
+  x.fillStyle = '#fff'; x.beginPath(); x.arc(cur[0], cur[1], 3.5, 0, 6.283); x.fill()
+  // 比例尺與 N
+  const bar = g * sc
+  x.strokeStyle = 'rgba(243,239,230,.6)'; x.lineWidth = 1; x.beginPath(); x.moveTo(W - 18 - bar, H - 18.5); x.lineTo(W - 18, H - 18.5); x.stroke()
+  x.fillStyle = 'rgba(243,239,230,.6)'; x.font = '600 9px ' + getComputedStyle(document.body).fontFamily; x.textAlign = 'right'; x.fillText(g >= 1000 ? `${g / 1000} km` : `${g} m`, W - 18, H - 27)
+  x.textAlign = 'center'; x.fillText('N', W / 2, 14); x.beginPath(); x.moveTo(W / 2, 20); x.lineTo(W / 2 - 3, 26); x.lineTo(W / 2 + 3, 26); x.closePath(); x.fill()
+}
+function r3dPos2d(m, u, P) {
+  const pts = m.pts, idx = u * (pts.length - 1), i0 = Math.floor(idx), i1 = Math.min(pts.length - 1, i0 + 1), f = idx - i0
+  const a = P(pts[i0]), b = P(pts[i1]); return [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f]
 }
 function closeRoute3D() {
   document.getElementById('r3d-overlay').classList.remove('open')
+  if (RP) { cancelAnimationFrame(RP.raf); RP = null }
   teardown3D()
 }
 // 開窗預設取景。舊版用 horizExtent*0.9 硬估距離，實測整條路線會爆出畫面 2~3 倍
@@ -4577,6 +4748,92 @@ function r3dSetSpin(on) {
   const btn = document.getElementById('r3dSpinBtn')
   if (btn) btn.classList.toggle('active', on)
 }
+/* ── 三種鏡頭（2026-09-05）：鳥瞰＝整條路線的 OrbitControls；追蹤＝跟在標記後面、鏡頭方位跟著航向轉，拖曳可換到側面；
+   俯視＝正上方跟著標記走、拖曳只轉方位（地圖轉）。切換時鏡頭用 900ms 滑過去，不是跳。模式跨開關記住。 ── */
+let R3D_CAM = 'orbit'
+const R3D_CAM_ZH = { orbit: 'CAM 1 · 鳥瞰', chase: 'CAM 2 · 追蹤', top: 'CAM 3 · 俯視' }
+function r3dPaintCam() {
+  document.querySelectorAll('#rpCams button[data-cam]').forEach(b => b.classList.toggle('active', b.dataset.cam === R3D_CAM))
+  const tag = document.querySelector('#r3dCamTag span'); if (tag) tag.textContent = R3D_CAM_ZH[R3D_CAM]
+}
+function r3dCamPose(mode) {   // 該模式在目前 u 的理想鏡頭：{pos, target}
+  const { curve, model, camera } = R3D
+  const p = curve.getPointAt(R3D.u), tan = curve.getTangentAt(R3D.u)
+  if (mode === 'chase') {
+    const d = Math.max(model.horizExtent * (innerWidth < 768 ? .48 : .3), 60)   // 管子半徑是 extent 的 .5%，鏡頭太近整個畫面只剩一條帶子；手機直幅要再退一點
+    const flat = new THREE.Vector3(tan.x, 0, tan.z); if (flat.lengthSq() < 1e-6) flat.set(0, 0, 1); flat.normalize()
+    return { pos: p.clone().sub(flat.clone().multiplyScalar(d)).add(new THREE.Vector3(0, d * .42, 0)), target: p.clone().add(flat.clone().multiplyScalar(d * .3)) }
+  }
+  if (mode === 'top') {
+    const d = Math.max(model.horizExtent * .55, 80)
+    return { pos: p.clone().add(new THREE.Vector3(0, d, d * .002)), target: p.clone() }
+  }
+  const cam2 = camera.clone(), ctl2 = { target: new THREE.Vector3() }
+  r3dFitCamera(cam2, ctl2, model, R3D.cx, R3D.cz)
+  return { pos: cam2.position.clone(), target: ctl2.target }
+}
+function r3dSetCam(mode) {
+  if (!R3D_CAM_ZH[mode]) return
+  R3D_CAM = mode; r3dPaintCam()
+  if (!R3D) return
+  r3dSetSpin(false)
+  const { controls } = R3D
+  controls.minPolarAngle = 0; controls.maxPolarAngle = Math.PI
+  const to = r3dCamPose(mode)
+  R3D.tween = { t0: performance.now(), dur: 900, p0: R3D.camera.position.clone(), q0: controls.target.clone(), p1: to.pos, q1: to.target }
+  R3D.marker.scale.setScalar(mode === 'orbit' ? 1 : .55)   // 鏡頭近的時候標記縮小，不然半個畫面都是球
+  const tan = R3D.curve.getTangentAt(R3D.u)
+  R3D.heading = Math.atan2(tan.x, tan.z)
+}
+function r3dCamTick(now) {   // 每幀：模式的跟隨；使用者拖曳／縮放由 OrbitControls 疊在上面（它從目前 camera-target 重算球座標）
+  const { controls, camera, curve } = R3D
+  if (R3D.tween) {
+    const tw = R3D.tween, p = Math.min(1, (now - tw.t0) / tw.dur), e = p < .5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2
+    camera.position.lerpVectors(tw.p0, tw.p1, e); controls.target.lerpVectors(tw.q0, tw.q1, e)
+    if (p >= 1) { R3D.tween = null; if (R3D_CAM === 'top') { controls.minPolarAngle = 0; controls.maxPolarAngle = .03 } }
+    return
+  }
+  if (R3D_CAM === 'orbit') return
+  const p = curve.getPointAt(R3D.u), tan = curve.getTangentAt(R3D.u)
+  const off = camera.position.clone().sub(controls.target)
+  if (R3D_CAM === 'chase') {
+    // 航向平滑（GPS 切線會抖）：鏡頭方位跟著航向的「變化量」轉，使用者拖出來的側面角度因此保得住
+    let h = Math.atan2(tan.x, tan.z), d = h - R3D.heading
+    while (d > Math.PI) d -= Math.PI * 2; while (d < -Math.PI) d += Math.PI * 2
+    const dh = d * .08; R3D.heading += dh
+    off.applyAxisAngle(new THREE.Vector3(0, 1, 0), dh)
+    const flat = new THREE.Vector3(Math.sin(R3D.heading), 0, Math.cos(R3D.heading))
+    const want = p.clone().add(flat.multiplyScalar(Math.max(R3D.model.horizExtent * .06, 18)))
+    controls.target.lerp(want, .18)
+  } else {
+    controls.target.lerp(p, .14)
+  }
+  camera.position.copy(controls.target).add(off)
+}
+/* ── 彗星尾：走過的路全亮、前方壓暗，標記後面 3.5% 的路拖一段白熱光。只改 tube 的 color attribute，幾何不動。 ── */
+function r3dRecolor(u) {
+  if (!R3D || !R3D.baseColors) return
+  const attr = R3D.tube.geometry.attributes.color, base = R3D.baseColors, rows = R3D.tubRows, per = 9
+  const a = attr.array
+  for (let i = 0; i < rows; i++) {
+    const ur = i / (rows - 1), behind = u - ur
+    let m = 1, w = 0
+    if (behind < 0) m = .5
+    else if (behind < .035) w = (1 - behind / .035) * .9
+    for (let j = 0; j < per; j++) {
+      const o = (i * per + j) * 3
+      a[o] = base[o] * m + (1 - base[o] * m) * w; a[o + 1] = base[o + 1] * m + (1 - base[o + 1] * m) * w; a[o + 2] = base[o + 2] * m + (1 - base[o + 2] * m) * w
+    }
+  }
+  attr.needsUpdate = true
+}
+function r3dGlowTexture() {
+  const c = document.createElement('canvas'); c.width = c.height = 128
+  const x = c.getContext('2d'), g = x.createRadialGradient(64, 64, 0, 64, 64, 64)
+  g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(.18, 'rgba(255,224,170,.85)'); g.addColorStop(.45, 'rgba(255,179,71,.28)'); g.addColorStop(1, 'rgba(255,179,71,0)')
+  x.fillStyle = g; x.fillRect(0, 0, 128, 128)
+  const t = new THREE.CanvasTexture(c); return t
+}
 function r3dToggleSpin() {
   if (R3D) r3dSetSpin(!R3D.controls.autoRotate)
 }
@@ -4609,6 +4866,9 @@ function init3D(a, model) {
     geometry.setAttribute('color', new THREE.Float32BufferAttribute(buildTubeColors(tubularSegments, 8, model), 3))
     const tube = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ vertexColors: true }))
     scene.add(tube)
+    const baseColors = Float32Array.from(geometry.attributes.color.array)   // 彗星尾每幀從這份重算
+    // 距離霧：格線、桁架與星空往遠處淡出，路線才有前後
+    scene.fog = new THREE.FogExp2(0x0a0603, .28 / model.horizExtent)
 
     // 桁架下弦：路線的地面投影。原本是深棕幾乎看不見，改亮一點才撐得起結構感
     const groundPts = model.pts.map(p => new THREE.Vector3(p.x, 0.4, p.z))
@@ -4662,6 +4922,12 @@ function init3D(a, model) {
       new THREE.SphereGeometry(Math.max(radius * 4.2, 8), 16, 16),
       new THREE.MeshBasicMaterial({ color: 0xfc4c02, transparent: true, opacity: .3 })
     ))
+    // 發光：加色混合的光暈貼圖（不受霧影響）＋地面脈衝環
+    const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: r3dGlowTexture(), blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, fog: false }))
+    const gs = Math.max(radius * 11, 30); glow.scale.set(gs, gs, 1); marker.add(glow)
+    const ringR = Math.max(radius * 5, 10)
+    const ring = new THREE.Mesh(new THREE.RingGeometry(ringR * .8, ringR, 40), new THREE.MeshBasicMaterial({ color: 0xffb347, transparent: true, opacity: .5, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }))
+    ring.rotation.x = -Math.PI / 2; ring.position.y = .8; scene.add(ring)
     scene.add(marker)
 
     const controls = new THREE.OrbitControls(camera, renderer.domElement)
@@ -4750,10 +5016,10 @@ function init3D(a, model) {
     }
     window.addEventListener('resize', resize)
 
-    // speed 沿用上次選的倍速按鈕，不然重開後畫面標 2x 實際跑 1x
-    const activeSpeedBtn = document.querySelector('.r3d-controls button[data-speed].active')
-    R3D = { scene, camera, renderer, controls, curve, marker, dropLine, model, tags, playing: false, speed: activeSpeedBtn ? +activeSpeedBtn.dataset.speed : 1, u: 0, raf: null, resizeHandler: resize }
+    R3D = { scene, camera, renderer, controls, curve, marker, dropLine, model, tags, tube, baseColors, tubRows: tubularSegments + 1, ring, cx, cz, tween: null, heading: 0, u: RP ? RP.u : 0, raf: null, resizeHandler: resize }
     r3dSetSpin(false)  // 重開時把「自轉」按鈕的 active 狀態一起清掉
+    r3dPaintCam()
+    if (R3D_CAM !== 'orbit') { marker.scale.setScalar(.55); const to = r3dCamPose(R3D_CAM); camera.position.copy(to.pos); controls.target.copy(to.target); const tan = curve.getTangentAt(0); R3D.heading = Math.atan2(tan.x, tan.z); if (R3D_CAM === 'top') controls.maxPolarAngle = .03 }
 
     const compassInner = document.getElementById('r3dCompassInner')
     let lastT = null
@@ -4762,19 +5028,18 @@ function init3D(a, model) {
       // 指北針跟著水平旋轉角轉（北 = -z，相機在正南時 azimuth=0 → 箭頭朝上）
       compassInner.style.transform = `rotate(${controls.getAzimuthalAngle()}rad)`
       // 用實際時間差推進（1x 全程約 18.5 秒），不依賴 60fps 假設，120Hz 螢幕不會變兩倍速
-      const dt = (lastT == null || t == null) ? 16 : Math.min(100, t - lastT)
-      if (t != null) lastT = t
-      if (R3D.playing) {
-        R3D.u += (dt / 18500) * R3D.speed
-        if (R3D.u >= 1) { R3D.u = 1; R3D.playing = false; document.getElementById('r3dPlayBtn').textContent = '▶ 播放' }
-        r3dSetU(R3D.u)
-      }
+      // u 由 rpLoop 推進（3D／2D 同一個播放器）；這裡只畫場景
+      r3dCamTick(t || performance.now())
       controls.update()
+      // 地面環：在標記正下方呼吸；播放時脈衝快一點
+      const pos = R3D.marker.position; ring.position.x = pos.x; ring.position.z = pos.z
+      const pl = !!(RP && RP.playing), ph = ((t || 0) % (pl ? 900 : 1800)) / (pl ? 900 : 1800)
+      ring.scale.setScalar(1 + ph * 1.6); ring.material.opacity = .55 * (1 - ph)
       layoutTags()
       renderer.render(scene, camera)
     }
     loading.style.display = 'none'
-    r3dSetU(0)
+    r3dSetU(R3D.u)
     loop()
   } catch (err) {
     console.error(err)
@@ -4785,7 +5050,7 @@ function init3D(a, model) {
     wrap.appendChild(box)
   }
 }
-function r3dSetU(u) {
+function r3dSetU(u) {   // 3D 場景的部分：標記、落線、彗星尾。數字與走勢線在 rpSetU
   if (!R3D) return
   R3D.u = Math.max(0, Math.min(1, u))
   const pos = R3D.curve.getPointAt(R3D.u)
@@ -4794,35 +5059,43 @@ function r3dSetU(u) {
   dp.setXYZ(0, pos.x, pos.y, pos.z)
   dp.setXYZ(1, pos.x, 0, pos.z)
   dp.needsUpdate = true
-  document.getElementById('r3dScrub').value = Math.round(R3D.u * 1000)
-  const s = r3dSampleAt(R3D.model, R3D.u)
-  document.getElementById('r3dDist').textContent = (s.dist / 1000).toFixed(2)
-  document.getElementById('r3dElev').textContent = Math.round(s.elev)
-  document.getElementById('r3dSpeed').textContent = s.speed.toFixed(1)
-  if (s.hr != null) document.getElementById('r3dHr').textContent = Math.round(s.hr)
-  if (s.watts != null) document.getElementById('r3dWatts').textContent = Math.round(s.watts)
-  drawMiniMapCursor(R3D.u)
+  r3dRecolor(R3D.u)
 }
-function r3dTogglePlay() {
-  if (!R3D) return
-  R3D.playing = !R3D.playing
-  if (R3D.playing && R3D.u >= 1) R3D.u = 0
-  document.getElementById('r3dPlayBtn').textContent = R3D.playing ? '⏸ 暫停' : '▶ 播放'
-}
-function r3dSetSpeed(v, btn) {
-  if (R3D) R3D.speed = v
-  document.querySelectorAll('.r3d-controls button[data-speed]').forEach(b => b.classList.toggle('active', b === btn))
-}
-function r3dReset() {
-  if (!R3D) return
-  R3D.playing = false; document.getElementById('r3dPlayBtn').textContent = '▶ 播放'
-  r3dSetU(0)
-}
-document.getElementById('r3dScrub').addEventListener('input', e => {
-  if (!R3D) return
-  R3D.playing = false; document.getElementById('r3dPlayBtn').textContent = '▶ 播放'
-  r3dSetU(e.target.value / 1000)
+// 鍵盤：只在 3D 模態開著時吃（空白鍵播放、1/2/3 鏡頭、←→ 拉時間、Esc 關）
+document.addEventListener('keydown', e => {
+  const ov = document.getElementById('r3d-overlay')
+  if (!ov || !ov.classList.contains('open') || !RP) return
+  if (e.target && /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) && e.target.id !== 'r3dScrub') return
+  const k = e.key
+  if (k === ' ') { e.preventDefault(); r3dTogglePlay() }
+  else if (k === '1' || k === '2' || k === '3') { if (RP.dim === '3d') r3dSetCam(['orbit', 'chase', 'top'][+k - 1]) }
+  else if (k === 'ArrowLeft' || k === 'ArrowRight') { e.preventDefault(); RP.playing = false; rpPaintPlay(); rpSetU(RP.u + (k === 'ArrowRight' ? .01 : -.01) * (e.shiftKey ? 5 : 1)) }
+  else if (k === 'Escape') closeRoute3D()
 })
+function r3dTogglePlay() {
+  if (!RP) return
+  RP.playing = !RP.playing
+  if (RP.playing && RP.u >= 1) RP.u = 0
+  rpPaintPlay()
+}
+function r3dSetSpeed(v) { if (RP_SPEEDS.includes(v)) { RP_SPEED = v; rpSetSpeedBtn() } }
+function r3dReset() { if (!RP) return; RP.playing = false; rpPaintPlay(); rpSetU(0) }
+document.getElementById('r3dScrub').addEventListener('input', e => {
+  if (!RP) return
+  RP.playing = false; rpPaintPlay()
+  rpSetU(e.target.value / 1000)
+})
+// 走勢線上按著拖＝拉進度
+;(function () {
+  const el = document.getElementById('rpStrips'); if (!el) return
+  let down = false
+  const at = e => { const r = el.getBoundingClientRect(); const L = 44, Rr = 52; return Math.max(0, Math.min(1, (e.clientX - r.left - L) / (r.width - L - Rr))) }
+  el.addEventListener('pointerdown', e => { if (!RP) return; down = true; RP.playing = false; rpPaintPlay(); rpSetU(at(e)); try { el.setPointerCapture(e.pointerId) } catch (x) {} })
+  el.addEventListener('pointermove', e => { if (down && RP) rpSetU(at(e)) })
+  const up = () => { down = false }
+  el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up)
+  window.addEventListener('resize', () => { if (!RP) return; rpSizeStrips(); rpDrawStrips(RP.u); if (RP.dim === '2d') { rp2dSize(); rp2dDraw(RP.u) } })
+})()
 function teardown3D() {
   if (!R3D) return
   cancelAnimationFrame(R3D.raf)
@@ -10330,14 +10603,38 @@ Promise.all([
      每個狀態可以只給 mp4、只給 poster、或都不給——沒給的一律 fallback 到 default，永遠不會出現空白 hero，
      也不會隨機播天氣。注意：景深層的深度圖（strava-cinema-fx.js 的 buildDepth）是照 default 這支構圖畫的，
      換了構圖差很多的影片時，那張深度圖也要跟著換。 */
+  /* 每支影片除了路徑還有它自己的構圖：
+       side   車手在哪一邊（'right'＝面板在左，'left'＝面板在右；HUD 與漸層跟著鏡像）
+       rider  車手橢圓中心、af 對焦框（臉）、origin 運鏡的取景中心，都是影片幀的比例
+       depth  景深層用哪張深度圖：'mountain'（山路：右側山坡、遠山雲海）或 'flat'（河濱：地平線＋路面平面）
+       shift  桌機把整支影片橫移的百分比（負值往左），讓車手離面板那一側遠一點；手機不套
+       fit    object-position：視窗比 16:9 矮而必須裁切時，保留哪一邊（河濱的頭在上緣→'50% 0%'）
+       zoomMax 這支影片推鏡的上限（1＝不推），運鏡關鍵格的 s 會被夾到這個值
+       film   這支影片在 TODAY 的 AUTO 底片（沒寫就用 hub 的預設 ETERNA）
+       track  車手會動的影片：[t, 臉x, 臉y, 身體x, 身體y, 大小] 關鍵格，景深橢圓與對焦點依影片秒數跟著走 */
   const HERO_MEDIA = {
-    default: { mp4: HERO_MP4, poster: POSTER },
-    go:     {},   // 照表：例如晴天出發
+    default: { mp4: HERO_MP4, poster: POSTER, side: 'right', rider: [.63, .56], af: [.635, .42], origin: [63, 52], depth: 'mountain' },
+    go:     { mp4: 'assets/strava-cinema/hero-riverside-v2-clean.mp4', poster: 'assets/strava-cinema/hero-poster-riverside-v2-clean.jpg',   // 2026-09-06 河濱 v2（使用者提供第二版，臉比較像；去標記、去音軌、整支 10s 播完：最後 1.5s 他騎過鏡頭，剛好當出場接山路）
+              side: 'left', rider: [.53, .55], af: [.535, .245], origin: [50, 16], depth: 'flat', horizon: .42, shift: -17, fit: '50% 0%', zoomMax: 1.08,   // 頭在畫面上緣：裁切對齊上方、取景中心放頭附近；推鏡只到 1.08
+              film: 'cc',   // 天氣：陰天河濱配 CC（低飽和、暖高光、紀實），跟山路的 ETERNA 分開，換片時色調一起換
+              // track：他朝鏡頭騎過來、往左下漂，臉一直在動 → 依影片秒數給關鍵格 [t, 臉x, 臉y, 身體x, 身體y, 大小]，
+              // 景深的車手橢圓與對焦點跟著走，後段臉才不會被路面那層深度糊掉
+              track: [[0, .53, .19, .53, .45, 1], [3, .53, .17, .52, .45, 1.05], [6, .50, .14, .50, .45, 1.3], [7.3, .40, .08, .40, .42, 1.7], [8.3, .25, .05, .25, .40, 2.2], [10, .25, .05, .25, .40, 2.2]] },
     ease:   {},   // 保守
     rest:   {},   // 恢復：例如雨中／黃昏
     nodata: {},   // 資料不足
+    climb2: { mp4: 'assets/strava-cinema/hero-climb-v2-clean.mp4', poster: 'assets/strava-cinema/hero-poster-climb-v2-clean.jpg',   // 2026-09-06 山路第二版（使用者提供；去標記、去音軌、整支 10s）。不對應狀態，只進播放清單
+              side: 'right', rider: [.68, .48], af: [.69, .22], origin: [68, 40], depth: 'flat', horizon: .3, fit: '50% 0%', zoomMax: 1.1, film: 'eterna' },
   }
-  const heroMedia = level => { const m = HERO_MEDIA[level] || {}, d = HERO_MEDIA.default; return { mp4: m.mp4 || d.mp4, poster: m.poster || d.poster } }
+  const heroMedia = level => Object.assign({}, HERO_MEDIA.default, HERO_MEDIA[level] || {})
+  /* 接著播（2026-09-06）：狀態對應的那支先播，播完轉場接其它支，最後一支播完再接回第一支。
+     每支只播一遍不 loop；中間的轉場在 heroSwapTo：失焦收暗 → 換片、換邊、換深度圖 → 回焦，面板淡出再從另一邊淡入。 */
+  const heroPlaylist = level => {
+    const first = heroMedia(level), list = [first]
+    Object.keys(HERO_MEDIA).forEach(k => { if (k === 'default') return; const m = heroMedia(k); if (m.mp4 && !list.some(x => x.mp4 === m.mp4)) list.push(m) })
+    if (!list.some(x => x.mp4 === HERO_MEDIA.default.mp4)) list.push(heroMedia('default'))
+    return list
+  }
   const tpeToday = () => new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10)
   const WDZ = ['日', '一', '二', '三', '四', '五', '六']
   const mdz = d => d ? d.slice(5).replace('-', '/') : ''
@@ -10473,14 +10770,16 @@ Promise.all([
       <span class="s">${nT ? V.tasks.slice(0, 2).map(t => esc(t.title)).join('　') : '同步管線沒有發現漏記或重複'}</span></button>`)
     const kickSes = V.todaySes ? `${V.todaySes.name}${V.todaySes.actual ? '（已完成）' : ''}` : (V.next ? `沒排主課表 · 對 ${mdz(V.next.date)} 的判讀` : '沒排主課表')
     const media = heroMedia(V.level)
+    window.__heroPlaylist = heroPlaylist(V.level)
     // 觀景窗 HUD（純裝飾、aria-hidden、pointer-events:none）：AF-C、REC、曝光列。F 值跟 LENS 選項連動（__cinemaLook）；
     // 曝光補償刻度上的那條線是 TSB／10（±3 夾住）——狀態越正越偏向 +，是 HUD 上唯一一個讀資料的東西。
     const ev = Math.max(-3, Math.min(3, (V.tsb ?? 0) / 10))
-    const heroHtml = `<div class="td-hero${matchMedia('(prefers-reduced-motion: reduce)').matches ? ' is-poster' : ''}" id="td-hero" data-verdict="${V.level}" data-mp4="${esc(media.mp4)}">
+    window.__heroMedia = media   // 景深層、對焦框、運鏡讀這個（strava-cinema-fx.js）
+    const heroHtml = `<div class="td-hero${matchMedia('(prefers-reduced-motion: reduce)').matches ? ' is-poster' : ''}" id="td-hero" data-verdict="${V.level}" data-mp4="${esc(media.mp4)}" data-side="${media.side}">
       <div class="td-scene" aria-hidden="true">
         <div class="td-media">
-          <div class="td-still" style="background-image:url(${esc(media.poster)})"></div>
-          <video class="td-video" muted loop playsinline preload="metadata" poster="${esc(media.poster)}" aria-hidden="true"></video>
+          <div class="td-still" style="background-image:url(${esc(media.poster)});background-position:${esc(media.fit || '50% 50%')}"></div>
+          <video class="td-video" muted playsinline preload="metadata" poster="${esc(media.poster)}" aria-hidden="true" style="object-position:${esc(media.fit || '50% 50%')}"></video>
           <canvas class="td-canvas" id="td-canvas" aria-hidden="true"></canvas>
           <div class="td-film"></div>
         </div>
@@ -10547,8 +10846,15 @@ Promise.all([
     v.muted = true; v.defaultMuted = true; v.autoplay = true
     const src = document.createElement('source'); src.src = hero.dataset.mp4 || HERO_MP4; src.type = 'video/mp4'
     v.appendChild(src); v.load()
-    v.addEventListener('error', usePoster, { once: true })
-    src.addEventListener('error', usePoster, { once: true })
+    // 影片載不到（例如只留本機、沒推上 GitHub Pages 的那幾支）：先試播放清單裡的下一支，都不行才退到 poster
+    const onErr = () => {
+      const list = window.__heroPlaylist || [], cur = hero.dataset.mp4
+      const alt = list.find(m => m.mp4 !== cur && !(hero._badMp4 || []).includes(m.mp4))
+      hero._badMp4 = (hero._badMp4 || []).concat(cur)
+      if (alt) heroSwapTo(hero, alt); else usePoster()
+    }
+    v.addEventListener('error', onErr, { once: true })
+    src.addEventListener('error', onErr, { once: true })
     // 自動播放被擋（NotAllowedError）就先顯示 poster；使用者第一次互動時再安靜地試一次，
     // 成功就換回影片，失敗就維持 poster —— 不彈提示、不強迫。
     let retried = false
@@ -10573,6 +10879,45 @@ Promise.all([
       if (document.hidden) v.pause(); else if (document.body.dataset.view === 'overview') tryPlay()
     })
     hero._video = v; hero._tryPlay = tryPlay
+    // 播完接下一支
+    let idx = 0, swapping = false
+    const list = window.__heroPlaylist || []
+    v.addEventListener('ended', () => {
+      if (swapping || list.length < 2 || document.hidden || document.body.dataset.view !== 'overview') { if (!swapping) { v.currentTime = 0; tryPlay() } return }
+      swapping = true
+      idx = (idx + 1) % list.length
+      if ((hero._badMp4 || []).includes(list[idx].mp4)) idx = (idx + 1) % list.length
+      heroSwapTo(hero, list[idx]).finally(() => { swapping = false })
+    })
+  }
+  /* 換片轉場：鏡頭失焦收暗（__cinemaLens.iris 的長版）→ 換 src／poster／side／構圖 → 等 canplay → 播、回焦；面板淡出後從另一邊淡入 */
+  function heroSwapTo(hero, media) {
+    const v = hero._video, still = hero.querySelector('.td-still'), lens = window.__cinemaLens
+    return new Promise(resolve => {
+      hero.classList.add('is-swapping')
+      const doSwap = () => {
+        window.__heroMedia = media
+        hero.dataset.mp4 = media.mp4; hero.dataset.side = media.side
+        if (still) { still.style.backgroundImage = `url(${media.poster})`; still.style.backgroundPosition = media.fit || '50% 50%' }
+        v.poster = media.poster; v.style.objectPosition = media.fit || '50% 50%'
+        v.querySelectorAll('source').forEach(x => x.remove())
+        const src = document.createElement('source'); src.src = media.mp4; src.type = 'video/mp4'; v.appendChild(src)
+        if (window.__cinemaHero && window.__cinemaHero.setMedia) window.__cinemaHero.setMedia(media)
+        if (window.__cinemaLook && window.__cinemaLook.apply) window.__cinemaLook.apply()   // 這支影片自己的底片（天氣）
+        let done = false
+        const go = () => {
+          if (done) return; done = true
+          v.play().catch(() => {})
+          if (lens && lens.retarget) lens.retarget()
+          setTimeout(() => { hero.classList.remove('is-swapping'); resolve() }, 80)
+        }
+        v.addEventListener('canplay', go, { once: true })
+        src.addEventListener('error', () => { hero._badMp4 = (hero._badMp4 || []).concat(media.mp4); const list = window.__heroPlaylist || []; const alt = list.find(m => !(hero._badMp4 || []).includes(m.mp4)); if (alt && !done) { done = true; hero.classList.remove('is-swapping'); resolve(); heroSwapTo(hero, alt) } }, { once: true })
+        v.load()
+        setTimeout(go, 2500)   // 網路慢也不能永遠糊著
+      }
+      if (lens && lens.irisLong) lens.irisLong(doSwap); else doSwap()
+    })
   }
 
   function mountToday(data) {
@@ -11595,7 +11940,7 @@ function motionLayer({ animate, createDrawable, stagger }) {
 <link rel="stylesheet" href="activity-modal.css?v=20260827">
 <link rel="stylesheet" href="theme-strava.css?v=20260827">
 <style>:root{--am-accent:#FC4C02;--am-accent-soft:rgba(252,76,2,.18);--am-panel:#14100c;--am-panel-2:#1c160f}</style>
-<script src="strava-cinema-fx.js?v=20260904" defer></script>
+<script src="strava-cinema-fx.js?v=20260906" defer></script>
 <script src="itt-achievements.js?v=20260827" defer></script>
 <script src="activity-modal.js?v=20260827" defer></script>
 </body>

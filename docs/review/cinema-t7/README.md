@@ -23,3 +23,5 @@ python3 -m http.server 8934 --bind 127.0.0.1
   FX 面板（底片／光圈／動態）開關與 Esc、ACROS 只套到媒體層（.td-panel／.topbar 的 filter 必須是 none）、AUTO 依 hub 換檔。`MOBILE=1` 切 390×844。
 - `fuji-modes.mjs <outdir>`：`MODE=reduced|quiet|iris|deep`（`PORT=` 各自不同才能並行）：reduced-motion／QUIET 直接停在最終構圖、換底片的光圈閉合取樣、
   深連結（#itt/segment、#log/activity、#atlas）、舊 hash、back／forward、drawer 與 Esc。headless 沒有 WebGL，`THREE ... Error creating WebGL context` 是環境的，不是回歸。
+- `r3d.mjs`：3D 回放（2026-09-05 三種鏡頭版）快檢：用 `--use-angle=swiftshader --enable-unsafe-swiftshader` 拿到軟體 WebGL，
+  開 #log 第一筆有 route_stream 的活動，鳥瞰／追蹤／俯視各截一張、播放、鍵盤（空白／1／Esc）、關閉再開。`MOBILE=1` 切 390×844。

@@ -875,12 +875,12 @@ html{font-size:15px}
    backdrop-filter 的元素一伸出視窗，Chrome 會用鏡射邊緣採樣，畫面右邊會多一個糊的車手鬼影。遮罩與對焦框由 JS 依運鏡對位。 */
 .td-media{position:absolute;inset:0;transform-origin:63% 52%}   /* 全幅之後車手在 63%：scale 以他為中心；isolate 讓底片 overlay 的混合只發生在媒體層裡 */
 #cn-canvas{transform-origin:50% 45%}
-body.cn-defocused #cn-canvas,body.cn-defocused .td-scene{filter:blur(2.5px) saturate(.95) contrast(.98) brightness(.95);transform:none}   /* 全景、清楚、稍暗：沒抓到由 AF 框與景深層來說 */
+body.cn-defocused #cn-canvas,body.cn-defocused .td-scene{filter:none;transform:none}   /* 開場就是清楚的全景（2026-09-05 紀錄片鏡頭） */
 body.cn-defocused .td-media{transform:none}   /* 開場：貼很近對著左側 → 拉遠到全景 → 鎖定後再依框推近（fx 的 CAM 第一格同一組值） */   /* 半按快門：稍暗、輕微失焦（跟 fx 的 DEFOCUS 同一組值） */
 @keyframes cnRise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 @keyframes cnDissolve{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
-body.cn-focus .hh-t,body.cn-focus #rail,body.cn-focus .td-panel,body.cn-focus .view.is-on>.view-h{animation:cnRise .6s cubic-bezier(.2,.7,.2,1) 2.9s both}   /* 鎖定那一刻才出字 */
-body.cn-focus .view.is-on>:not(.td-hero):not(.view-h){animation:cnRise .6s cubic-bezier(.2,.7,.2,1) 3.05s both}
+body.cn-focus .hh-t,body.cn-focus #rail,body.cn-focus .td-panel,body.cn-focus .view.is-on>.view-h{animation:cnRise .6s cubic-bezier(.2,.7,.2,1) .25s both}   /* 資料立刻可讀，不等鏡頭 */
+body.cn-focus .view.is-on>:not(.td-hero):not(.view-h){animation:cnRise .6s cubic-bezier(.2,.7,.2,1) .4s both}
 body.cn-in2 .hh-t,body.cn-in2 #rail{animation:cnRise .38s cubic-bezier(.2,.7,.2,1) both}
 body.cn-in3 #content{animation:cnDissolve .18s ease-out both}
 .view.is-on{animation:none}                          /* 原版 viewIn 關掉：進場由鏡頭轉場負責 */
@@ -1014,11 +1014,9 @@ body.cn-in3 #content{animation:cnDissolve .18s ease-out both}
 .td-hud{
   position:absolute;inset:0;z-index:2;pointer-events:none;
   font-family:var(--f-ui);color:#f3efe6;letter-spacing:1.6px;font-variant-numeric:tabular-nums;
-  opacity:var(--hud,.14);transition:opacity .6s ease;
+  opacity:var(--hud,0);transition:opacity .6s ease;   /* 預設收起（2026-09-05）：滑鼠進入媒體區或開 FX 才淡淡出現 */
 }
-body.cn-locked .td-hud{--hud:.32}
-body.cn-settled .td-hud{--hud:.2}
-.td-hero:hover .td-hud,body.fx-open .td-hud{--hud:.58;transition-duration:.25s}
+.td-hero:hover .td-hud,body.fx-open .td-hud{--hud:.5;transition-duration:.35s}
 .td-hud>*{position:absolute;text-shadow:0 0 1px rgba(0,0,0,.7),0 1px 3px rgba(0,0,0,.6)}
 .td-hud-f{pointer-events:auto;cursor:pointer;border:0;background:transparent;padding:4px 6px;margin:-4px -6px;border-radius:6px;font:inherit;color:inherit;letter-spacing:inherit;text-shadow:inherit}
 .td-hud-f:hover{background:rgba(255,255,255,.08)}
@@ -1046,7 +1044,7 @@ body.cn-settled .td-hud-rec i{animation-duration:3s}
   .td-hud-exp{left:14px;right:auto;top:38px;bottom:auto;gap:16px;font-size:10.5px}
   .td-hud-ev{display:none}
 }
-@media (prefers-reduced-motion:reduce){.td-hud{transition:none;--hud:.26}.td-hud-rec i{animation:none}}
+@media (prefers-reduced-motion:reduce){.td-hud{transition:none}.td-hud-rec i{animation:none}}
 body[data-fx="quiet"] .td-hud-rec i{animation:none}
 .td-hud-rec.is-still i{animation:none;background:rgba(243,239,230,.7);box-shadow:none}   /* 影片停在 poster：不是在錄 */
 
@@ -1155,3 +1153,168 @@ body[data-film="acros"] #cinema,body[data-film="acros"] .td-media>.td-still,body
   .fx-dial .lb{font-size:7px}
 }
 @media (prefers-reduced-motion:reduce){.fx-dial .rot{transition:none}}
+
+/* ══ 3D 回放（2026-09-05）：cinema 版的外觀——琥珀取代 Strava 橘、上下遮幅、REC＋鏡頭標、高度剖面、三種鏡頭鈕 ══
+   引擎在 strava_cinema.html 的 openRoute3D／init3D；這裡只管樣子。 */
+.r3d-overlay{background:radial-gradient(ellipse at center,rgba(var(--cn-bg-rgb),.86) 0%,rgba(2,3,3,.97) 70%)}
+.r3d-box{background:#070a09;border-color:var(--hair-2);box-shadow:0 30px 80px -24px rgba(0,0,0,.9),0 0 60px -20px rgba(var(--amber-rgb),.35);border-radius:14px}
+.r3d-box::before,.r3d-box::after{content:'';position:absolute;left:0;right:0;height:14px;background:#000;z-index:2;pointer-events:none}   /* 遮幅 */
+.r3d-hud{padding-bottom:22px}
+.r3d-box::before{top:0}.r3d-box::after{bottom:0}
+#r3dCanvasWrap::after{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(120% 90% at 50% 45%,transparent 55%,rgba(0,0,0,.55) 100%)}   /* 暗角 */
+.r3d-close{top:26px;right:16px;background:rgba(255,255,255,.06);border-color:var(--hair-2)}
+.r3d-close:hover{background:var(--amber);border-color:var(--amber);color:#000}
+.r3d-compass{top:26px;left:16px;border-color:var(--hair-2)}
+.r3d-compass:hover{background:rgba(var(--amber-rgb),.16);border-color:rgba(var(--amber-rgb),.6)}
+.r3d-compass-arrow{color:var(--amber);text-shadow:0 0 6px rgba(var(--amber-rgb),.6)}
+.r3d-minimap{top:26px;border-color:var(--hair-2)}
+.r3d-camtag{
+  position:absolute;top:32px;right:58px;z-index:3;display:flex;align-items:center;gap:8px;pointer-events:none;
+  font-family:var(--f-ui);font-size:10.5px;font-weight:700;letter-spacing:2px;color:rgba(243,239,230,.85);text-shadow:0 1px 3px rgba(0,0,0,.7);
+}
+.r3d-camtag i{width:7px;height:7px;border-radius:50%;background:#ff3b30;box-shadow:0 0 6px rgba(255,59,48,.9);animation:hudRec 2s steps(1) infinite}
+.r3d-title{font-family:var(--f-disp);font-weight:900;font-size:16px;letter-spacing:0;text-shadow:none;color:var(--ink-1)}
+.r3d-flat-tag{color:rgba(var(--amber-rgb),.8)}
+.r3d-stats span{font-family:var(--f-num);color:var(--ink-1);text-shadow:none;font-size:20px}
+.r3d-stats small{color:rgba(var(--amber-rgb),.8);font-weight:700;letter-spacing:1px}
+.r3d-scrubwrap{position:relative;height:38px;margin-bottom:10px}
+#r3dProfile{position:absolute;inset:0;width:100%;height:100%;display:block;border-bottom:1px solid var(--hair-2)}
+.r3d-scrubwrap #r3dScrub{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:ew-resize}   /* 透明的 range 疊在剖面上：鍵盤與拖拉都還是原生的 */
+.r3d-scrubwrap #r3dScrub:focus-visible{opacity:1;accent-color:var(--amber)}
+.r3d-controls{gap:6px}
+.r3d-controls button{background:rgba(255,255,255,.04);border-color:var(--hair-2);color:var(--ink-2);border-radius:7px;font-size:11px;letter-spacing:.6px;padding:6px 11px}
+.r3d-controls button:hover{background:rgba(var(--amber-rgb),.12);border-color:rgba(var(--amber-rgb),.5)}
+.r3d-controls button.active{background:rgba(var(--amber-rgb),.16);border-color:var(--amber);color:var(--amber)}
+.r3d-controls button[data-cam]{min-width:52px;font-weight:700}
+.r3d-sep{width:1px;height:18px;background:var(--hair-2);margin:0 4px}
+.r3d-hint{color:var(--ink-3);letter-spacing:.3px}
+.r3d-tag{border-color:var(--hair-2)}
+.r3d-tag.steep{color:var(--amber)}
+@media(max-width:640px){
+  .r3d-camtag{top:34px;right:54px;font-size:9px;letter-spacing:1.4px}
+  .r3d-controls button{padding:7px 9px;min-height:32px}
+  .r3d-controls button[data-cam]{min-width:44px}
+}
+
+/* ══ 遙測回放（2026-09-05 第二版）：上半舞台（3D 或 2D 俯視）＋四格數字＋三條同步走勢線＋播放列 ═══════
+   舞台依路線自動選：爬坡 3D、其餘 2D（rpUse3D）。上面那段 .r3d-* 樣式仍適用於 3D 舞台內的元素。 */
+.r3d-box.rp{display:flex;flex-direction:column;max-width:1120px;max-height:900px;border-radius:12px;background:#0a0e0d}
+.r3d-box.rp::before,.r3d-box.rp::after{display:none}
+.rp-head{position:relative;flex:0 0 auto;padding:16px 60px 14px 22px;border-bottom:1px solid var(--hair);display:grid;grid-template-columns:1fr auto;gap:2px 16px;align-items:baseline}
+.rp-crumb{display:flex;align-items:center;gap:8px;font-size:10px;font-weight:700;letter-spacing:2.6px;color:var(--ink-3)}
+.rp-crumb i{width:7px;height:7px;background:var(--amber)}
+.rp-meta{font-size:10px;letter-spacing:2px;color:var(--ink-3);font-variant-numeric:tabular-nums;text-align:right}
+.rp-meta b{color:var(--ink-2)}
+.rp-title{grid-column:1/-1;margin:6px 0 0;font-family:var(--f-disp);font-size:20px;font-weight:900;letter-spacing:0;color:var(--ink-1);line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rp-sub{grid-column:1/-1;display:flex;gap:18px;font-size:12px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.rp-sub span:empty{display:none}
+.r3d-box.rp .r3d-close{top:14px;right:14px}
+.rp-stage{position:relative;flex:1 1 auto;min-height:280px;overflow:hidden;background:radial-gradient(120% 100% at 50% 40%,#101816 0%,#0a0e0d 70%)}
+.rp-stage #r3dCanvasWrap{position:absolute;inset:0}
+.rp-stage #r3dCanvasWrap::after{display:none}
+.rp-2d{position:absolute;inset:0;width:100%;height:100%;display:none}
+.r3d-box[data-dim="2d"] .rp-2d{display:block}
+.r3d-box[data-dim="2d"] #r3dCanvasWrap,.r3d-box[data-dim="2d"] .r3d-compass,.r3d-box[data-dim="2d"] .r3d-camtag,.r3d-box[data-dim="2d"] .rp-cams{display:none}
+.rp-tl,.rp-bl,.rp-br{position:absolute;z-index:3;pointer-events:none;font-family:var(--f-ui);font-size:10.5px;letter-spacing:1.4px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.rp-tl{left:18px;top:16px}
+.rp-bl{left:18px;bottom:14px;display:flex;flex-direction:column;gap:6px}
+.rp-br{right:18px;bottom:14px;display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+.rp-bl b,.rp-br b{font-weight:700;color:var(--ink-2);letter-spacing:1.8px}
+.rp-tr{position:absolute;right:14px;top:12px;z-index:3;display:flex;gap:6px;align-items:center}
+.rp-cams{display:flex;padding:3px;border:1px solid var(--hair-2);border-radius:8px;background:rgba(var(--cn-bg-rgb),.7);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.rp-cams button{min-width:48px;min-height:30px;padding:0 10px;border:0;border-radius:6px;background:transparent;color:var(--ink-3);font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;transition:background .15s,color .15s}
+.rp-cams button:hover{color:var(--ink-1)}
+.rp-cams button.active{background:var(--amber);color:#1a1207}
+.rp-dim{min-width:40px;min-height:36px;padding:0 10px;border:1px solid var(--hair-2);border-radius:8px;background:rgba(var(--cn-bg-rgb),.7);color:var(--ink-2);font-family:inherit;font-size:11px;font-weight:700;letter-spacing:1px;cursor:pointer}
+.rp-dim:hover{border-color:rgba(var(--amber-rgb),.6);color:var(--amber)}
+.r3d-box.rp .r3d-compass{top:auto;bottom:52px;left:18px;width:36px;height:36px}
+.r3d-box.rp .r3d-camtag{top:auto;bottom:58px;right:18px}
+.rp-tiles{flex:0 0 auto;display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--hair);border-bottom:1px solid var(--hair)}
+.rp-tile{padding:14px 20px 12px;border-left:1px solid var(--hair)}
+.rp-tile:first-child{border-left:0}
+.rp-tile small{display:block;font-size:10px;font-weight:700;letter-spacing:2.4px;text-transform:uppercase;color:var(--ink-3)}
+.rp-tile b{display:flex;align-items:baseline;gap:6px;margin-top:6px;font-family:var(--f-num);font-size:40px;font-weight:800;line-height:1;color:var(--ink-1);font-variant-numeric:tabular-nums}
+.rp-tile b i{font-family:var(--f-ui);font-style:normal;font-size:11px;font-weight:700;color:var(--ink-3);letter-spacing:.6px}
+.rp-tile.w b{color:#ffd27a}
+.rp-tile.hr b{color:#e9a9a0}
+.rp-tile.al b{color:#a9cfc6}
+.rp-strips{flex:0 0 auto;height:150px;padding:6px 8px 2px;cursor:ew-resize;touch-action:none}
+#rpStripCv{display:block;width:100%;height:100%}
+.rp-bar{flex:0 0 auto;display:flex;align-items:center;gap:14px;padding:6px 18px 4px}
+.rp-play{width:40px;height:34px;border:0;border-radius:6px;background:var(--amber);color:#1a1207;font-size:13px;font-weight:900;cursor:pointer;font-family:inherit}
+.rp-play:hover{filter:brightness(1.08)}
+.rp-bar #r3dScrub{flex:1;height:22px;margin:0;accent-color:var(--amber);cursor:ew-resize}
+.rp-speed{min-width:46px;min-height:32px;border:1px solid var(--hair-2);border-radius:6px;background:transparent;color:var(--amber);font-family:var(--f-num);font-size:14px;font-weight:800;cursor:pointer}
+.rp-pct{min-width:34px;text-align:right;font-family:var(--f-num);font-size:12px;font-weight:700;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.rp-foot{flex:0 0 auto;display:flex;justify-content:space-between;align-items:center;padding:4px 18px 12px;font-size:11px;color:var(--ink-3)}
+.rp-foot a{color:var(--ink-2);text-decoration:none;font-weight:700}
+.rp-foot a:hover{color:var(--amber)}
+.rp-foot a[hidden]{display:none}
+.r3d-box.rp .r3d-flat-tag{margin-left:10px;font-size:11px}
+@media(max-width:767px){
+  .r3d-box.rp{max-width:none;max-height:none;border-radius:0;margin:0}
+  .rp-head{padding:14px 52px 10px 14px}
+  .rp-title{font-size:16px;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+  .rp-sub{gap:12px;font-size:11px;flex-wrap:wrap}
+  .rp-stage{min-height:220px}
+  .rp-tl{display:none}
+  .rp-tr{right:10px;top:10px}
+  .rp-cams button{min-width:44px;min-height:34px;font-size:11.5px}
+  .rp-tiles{grid-template-columns:repeat(2,1fr)}
+  .rp-tile{padding:10px 14px 9px;border-top:1px solid var(--hair)}
+  .rp-tile:nth-child(-n+2){border-top:0}
+  .rp-tile:nth-child(3){border-left:0}
+  .rp-tile b{font-size:30px}
+  .rp-strips{height:110px}
+  .rp-bar{padding:6px 12px 4px;gap:10px}
+  .rp-foot{padding:2px 12px calc(10px + env(safe-area-inset-bottom,0px))}
+}
+
+/* ── 相機轉盤住在觀景窗裡（2026-09-05）：TODAY hero 右上、REC 旁；hero 出現前暫掛頂列，其它 hub 不顯示。設定照樣套到所有 view ── */
+body:not([data-hub="today"]) .fx-dials{display:none}
+.fx-dials.in-hero{position:absolute;right:30px;top:18px;z-index:4;gap:10px;margin:0;padding:6px 8px 4px;border-radius:12px;background:rgba(6,9,8,.42);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.06)}
+.fx-dials.in-hero .fx-dial small{color:rgba(243,239,230,.55)}
+.td-hero .td-hud-rec{top:92px}          /* REC 與曝光刻度往下讓位給轉盤 */
+.td-hero .td-hud-ev{top:116px}
+@media(max-width:767px){
+  .fx-dials.in-hero{right:8px;top:8px;gap:4px;padding:4px 6px 3px}
+  .td-hero .td-hud-rec{top:58px;right:14px}
+  .td-hero .td-hud-af{top:58px}
+  .td-hero .td-hud-exp{top:80px}
+}
+/* ── 運鏡 demo 列（?camdemo=1 開、?camdemo=0 關）：固定在左下，只在 TODAY ── */
+.cam-demo{
+  position:fixed;left:14px;bottom:14px;z-index:35;display:none;align-items:center;gap:4px;padding:6px 8px;
+  border:1px solid var(--hair-2);border-radius:10px;background:rgba(6,9,8,.85);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);
+  font-family:var(--f-ui);
+}
+body[data-hub="today"] .cam-demo{display:flex}
+.cam-demo b{font-size:9px;font-weight:700;letter-spacing:2px;color:var(--ink-3);margin:0 6px 0 2px}
+.cam-demo button{display:flex;align-items:center;gap:5px;min-height:28px;padding:0 9px;border:1px solid transparent;border-radius:7px;background:transparent;color:var(--ink-2);font-family:inherit;font-size:11.5px;font-weight:600;cursor:pointer}
+.cam-demo button i{font-style:normal;font-size:9.5px;font-weight:800;letter-spacing:1px;color:var(--ink-3)}
+.cam-demo button:hover{background:rgba(255,255,255,.06);color:var(--ink-1)}
+.cam-demo button.is-on{border-color:rgba(var(--amber-rgb),.7);background:rgba(var(--amber-rgb),.1);color:var(--amber)}
+.cam-demo button.is-on i{color:var(--amber)}
+.cam-demo button[data-replay]{margin-left:4px;color:var(--ink-3)}
+@media(max-width:767px){.cam-demo{left:8px;right:8px;bottom:calc(76px + env(safe-area-inset-bottom,0px));flex-wrap:wrap;justify-content:center}.cam-demo button{min-height:34px}}
+
+/* ── 車手在左邊的影片（HERO_MEDIA.side='left'，例如河濱）：面板靠右、閱讀漸層鏡像、HUD 左右對調 ── */
+@media(min-width:768px){
+  .td-hero[data-side="left"]{justify-content:flex-end}
+  .td-hero[data-side="left"] .td-grad{background:
+    linear-gradient(270deg,rgba(var(--cn-bg-rgb),.93) 0,rgba(var(--cn-bg-rgb),.86) 28%,rgba(var(--cn-bg-rgb),.58) 46%,rgba(var(--cn-bg-rgb),.12) 66%,transparent 100%),
+    linear-gradient(180deg,rgba(var(--cn-bg-rgb),.66) 0,transparent 24%,transparent 68%,rgba(var(--cn-bg-rgb),.92) 100%)}
+  .td-hero[data-side="left"] .td-hud-exp{left:auto;right:max(46%,580px)}
+  .td-hero[data-side="left"] .td-hud-af{left:auto;right:calc(50% - 40px)}
+  .td-hero[data-side="left"] .td-mf{right:auto;left:24px}
+  .td-hero[data-side="left"] .td-sign{right:auto;left:24px}
+  .td-hero[data-side="left"] .td-hud-rec{right:auto;left:36px}
+  .td-hero[data-side="left"] .td-hud-ev{right:auto;left:36px}
+  .td-hero[data-side="left"] .fx-dials.in-hero{right:auto;left:30px}
+}
+
+/* ── 接著播的換片轉場：面板與 HUD 淡出，換邊後淡入（鏡頭的失焦收暗由 fx 的 irisLong 做）── */
+.td-panel,.td-hud,.fx-dials.in-hero,.td-sign{transition:opacity .35s ease}
+.td-hero.is-swapping .td-panel,.td-hero.is-swapping .td-hud,.td-hero.is-swapping .fx-dials.in-hero,.td-hero.is-swapping .td-sign{opacity:0}
+.td-hero.is-swapping .td-hud{--hud:0}
+@media (prefers-reduced-motion:reduce){.td-panel,.td-hud,.fx-dials.in-hero,.td-sign{transition:none}}
