@@ -1,0 +1,315 @@
+/* APEX / Codex edition. The Cinema component snapshot supplies the data views;
+   this layer owns the shell, hierarchy, palette and responsive composition. */
+:root {
+  --cn-bg: #111410;
+  --cn-bg-rgb: 17,20,16;
+  --ink-1: #f4f6ed;
+  --ink-2: #bec5b8;
+  --ink-3: #929c8a;
+  --amber: #d5f558;
+  --amber-rgb: 213,245,88;
+  --sig: #d5f558;
+  --hair: #30372b;
+  --hair-2: #4c5842;
+  --surface: #1a1f17;
+  --f-disp: 'Archivo','Noto Sans TC',sans-serif;
+  --main-max: 1440px;
+  --gutter: clamp(24px,3.2vw,56px);
+  --apex-side: 212px;
+  --topbar-h: 0px;
+  --bp-on-color: #d5f558;
+  --bp-on-glow: rgba(213,245,88,.3);
+}
+.apex { background: var(--cn-bg); color: var(--ink-2); }
+.apex ::selection { color: #111410; background: var(--amber); }
+.apex :is(button,a,input,select,summary):focus-visible {
+  outline: 2px solid var(--amber); outline-offset: 4px;
+}
+.apex button { -webkit-tap-highlight-color: transparent; }
+.apex-skip {
+  position: fixed; left: 24px; top: -80px; z-index: 10000; padding: 14px 20px;
+  color: #111410; background: var(--amber); font-weight: 700;
+}
+.apex-skip:focus { top: 16px; }
+.apex #cinema { background: #111410; }
+.apex .cn-photo {
+  inset: 0; opacity: .075;
+  background: url('assets/strava-cinema/env/yangmingshan-valley.jpg') center / cover;
+}
+.apex[data-hub="train"] .cn-photo { background-image: url('assets/strava-cinema/env/taroko-mist.jpg'); }
+.apex[data-hub="ride"] .cn-photo { background-image: url('assets/strava-cinema/env/northeast-coast.jpg'); }
+.apex[data-hub="review"] .cn-photo { background-image: url('assets/strava-cinema/env/taipei-basin-night.jpg'); }
+.apex :is(.cn-fog,.cn-film,.cn-scrim) { display: none; }
+
+/* A permanent rail keeps the five destinations in the same place. */
+.apex .topbar {
+  position: fixed; inset: 0 auto 0 0; width: var(--apex-side); height: 100dvh;
+  display: flex; flex-direction: column; align-items: stretch; gap: 0;
+  padding: 32px 18px 22px; border: 0; border-right: 1px solid var(--hair);
+  background: #0c0f0c; backdrop-filter: none; -webkit-backdrop-filter: none;
+  overflow-y: auto;
+}
+.apex .brand { padding: 0 12px 35px; }
+.apex .brand b {
+  display: flex; align-items: center; justify-content: space-between;
+  font-family: 'Archivo',sans-serif; font-size: 40px; line-height: 1;
+  font-weight: 700; letter-spacing: -3px; color: var(--amber);
+}
+.apex .brand b span { font-size: 34px; font-weight: 400; letter-spacing: 0; }
+.apex .brand small { margin-top: 12px; font-size: 12px; letter-spacing: 4px; color: var(--ink-2); }
+.apex .hubs { display: flex; flex-direction: column; gap: 7px; margin: 0; counter-reset: hub; }
+.apex .hub-i {
+  counter-increment: hub; position: relative; display: grid;
+  grid-template-columns: 1fr auto; align-items: center; gap: 5px;
+  padding: 16px 14px; border: 1px solid transparent; border-radius: 3px;
+  text-align: left; min-height: 72px;
+}
+.apex .hub-i b { font-size: 12px; letter-spacing: 1.8px; font-weight: 500; }
+.apex .hub-i span { grid-column: 1; font-size: 16px; color: var(--ink-1); letter-spacing: 1px; }
+.apex .hub-i::after {
+  content: '0' counter(hub); grid-column: 2; grid-row: 1 / 3;
+  color: var(--ink-3); font-family: var(--f-mono); font-size: 12px;
+}
+.apex .hub-i:hover { background: #1b2117; border-color: #343e29; }
+.apex .hub-i[aria-current="page"] { background: var(--amber); color: #233015; box-shadow: none; }
+.apex .hub-i[aria-current="page"] :is(span,b),.apex .hub-i[aria-current="page"]::after { color: #17200d; }
+.apex-athlete { display: flex; align-items: center; gap: 10px; margin-top: auto; padding: 32px 9px 20px; }
+.apex-avatar {
+  display: grid; place-items: center; width: 35px; height: 35px; flex-shrink: 0;
+  border: 1px solid var(--hair-2); border-radius: 50%; color: var(--amber); font-size: 12px;
+}
+.apex-athlete b { display: block; font-size: 13px; font-weight: 500; color: var(--ink-1); }
+.apex-athlete small { display: block; margin-top: 5px; font: 10px var(--f-mono); letter-spacing: .5px; color: var(--ink-3); }
+.apex .tb-r { display: flex; flex-direction: column; align-items: flex-start; gap: 15px; margin: 0 9px; border-top: 1px solid var(--hair); padding-top: 16px; }
+.apex .tb-r .ah-r { font: 10px/1.8 var(--f-mono); white-space: normal; color: var(--ink-3); letter-spacing: .4px; }
+.apex-original { color: var(--ink-2); font-size: 12px; text-decoration: none; }
+.apex-original:hover { color: var(--amber); }
+.apex .main { margin-left: var(--apex-side); }
+.apex .hubhead,.apex[data-hub="today"] .hubhead {
+  display: flex; min-height: 138px; padding: 28px var(--gutter) 23px;
+  align-items: flex-end; gap: 20px; border-bottom: 1px solid var(--hair);
+}
+.apex .hh-t { flex-direction: row; align-items: baseline; flex-wrap: wrap; gap: 8px 16px; }
+.apex-eyebrow { flex-basis: 100%; font: 11px var(--f-mono); letter-spacing: 2px; color: var(--amber); margin-bottom: 7px; }
+.apex .hh-title { font-size: 36px; letter-spacing: -.02em; line-height: 1.2; color: var(--ink-1); }
+.apex .hh-sub { font-size: 12px; letter-spacing: .7px; color: var(--ink-3); }
+.apex .rail { padding: 0; gap: 5px; margin-left: auto; }
+.apex .rail-i { border-radius: 3px; min-width: 100px; background: #141911; padding: 10px 14px; }
+.apex .rail-i span { font-size: 14px; }
+.apex .rail-i i { font-size: 10px; }
+.apex .rail-i[aria-current="page"] { border-color: var(--amber); background: #222b17; }
+.apex .viewport { padding: 28px var(--gutter) 64px; }
+.apex .view-h { padding-bottom: 16px; border-bottom: 1px solid var(--hair); }
+.apex .view-h::after { display: none; }
+.apex .view-h b { font-size: 24px; }
+.apex .view-h i { font-size: 12px; color: var(--amber); }
+.apex .view-sub { font-size: 15px; line-height: 1.8; color: var(--ink-2); }
+
+/* Readiness is a working panel beside the film, with neither obscuring the other. */
+.apex .td-hero {
+  display: grid; grid-template-columns: minmax(0,1.06fr) minmax(0,1fr);
+  width: 100%; height: auto; min-height: 430px; max-height: none; aspect-ratio: auto;
+  margin: 0; align-items: stretch; overflow: hidden;
+  background: #181e15; border: 1px solid var(--hair); border-radius: 4px;
+}
+.apex .td-panel { grid-column: 1; grid-row: 1; width: 100%; padding: clamp(22px,2.6vw,42px); }
+.apex .td-k { font-size: 12px; letter-spacing: .2px; gap: 5px 12px; line-height: 1.8; }
+.apex .td-k b { color: var(--ink-2); font-weight: 500; }
+.apex-form-label { display: flex; justify-content: space-between; gap: 10px; margin-top: 27px; font: 11px/1.5 var(--f-mono); letter-spacing: 1px; color: var(--amber); }
+.apex-form-label span { color: var(--ink-3); font-family: var(--f-ui); font-size: 11px; letter-spacing: .5px; }
+.apex .td-verdict { display: flex; align-items: center; flex-wrap: wrap; gap: 12px 18px; margin-top: 12px; }
+.apex .td-verdict b { font-size: clamp(56px,6vw,86px); font-weight: 900; letter-spacing: -.07em; line-height: 1.14; color: var(--amber); }
+.apex .td-verdict i { border: 1px solid #586637; padding: 6px 9px; color: var(--ink-2); font-size: 10px; letter-spacing: 1.5px; }
+.apex .td-hero[data-verdict="ease"] .td-verdict b { color: #f5cd77; }
+.apex .td-hero[data-verdict="rest"] .td-verdict b { color: #ff9475; }
+.apex .td-hero[data-verdict="nodata"] .td-verdict b { font-size: clamp(42px,4.8vw,64px); color: var(--ink-2); }
+.apex .td-why { max-width: 100%; font-size: 16px; line-height: 1.9; margin-top: 13px; color: var(--ink-2); }
+.apex .td-chips { gap: 0; margin-top: 24px; display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); }
+.apex .td-chip {
+  min-width: 0; width: auto; border: 0; border-top: 1px solid var(--hair-2); border-radius: 0;
+  background: transparent; padding: 14px 12px 8px 0; text-align: left; box-shadow: none;
+}
+.apex .td-chip+.td-chip { padding-left: 15px; border-left: 1px solid var(--hair); }
+.apex .td-chip span { color: var(--ink-2); font-size: 11px; letter-spacing: 1px; }
+.apex .td-chip b { font-size: 37px; line-height: 1.1; color: var(--ink-1); }
+.apex .td-chip b small { font-size: 11px; color: var(--ink-3); }
+.apex .td-chip i { color: var(--ink-3); font-size: 11px; line-height: 1.65; overflow-wrap: anywhere; }
+.apex .td-chip.lvl1 b { color: #f5cd77; }
+.apex .td-chip.lvl2 b { color: #ff9475; }
+.apex .td-chip.is-tap:hover { background: #252d1d; }
+.apex .td-cards { margin-top: 22px; }
+.apex .td-card { border-radius: 2px; background: #20271a; border: 1px solid #3f4a30; padding: 15px; grid-template-columns: 45px minmax(0,1fr) auto; gap: 7px 10px; }
+.apex .td-card:hover { border-color: var(--amber); background: #2b3521; }
+.apex .td-card .k { font-size: 10px; color: var(--amber); }
+.apex .td-card .t { font-size: 14px; line-height: 1.65; }
+.apex .td-card .t em { display: block; margin: 3px 0 0; font-size: 11px; }
+.apex .td-card .s { font-size: 12px; line-height: 1.8; }
+.apex .td-card .v { font-size: 21px; }
+.apex .td-card .v small { display: block; font-size: 10px; margin: 4px 0 0; }
+.apex .td-scene { position: relative; inset: auto; grid-column: 2; grid-row: 1; min-height: 430px; overflow: hidden; border-left: 1px solid var(--hair); }
+.apex .td-media { position: absolute; inset: 0; transform: none; }
+.apex :is(.td-video,.td-still) { width: 100%; height: 100%; object-fit: cover; object-position: 62% 50%; background-position: 62% 50%; filter: saturate(.7) contrast(1.08); }
+.apex .td-scene::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg,rgba(0,0,0,.35),transparent 28%,transparent 66%,rgba(0,0,0,.75)); pointer-events: none; }
+.apex :is(.td-grad,.td-film) { display: none; }
+.apex-frame-label { position: absolute; left: calc(51.45% + 24px); right: 24px; top: 24px; display: flex; justify-content: space-between; gap: 10px; color: #f3f5e8; font: 11px var(--f-mono); letter-spacing: 1.5px; pointer-events: none; }
+.apex-frame-label span:first-child::before { content: ''; display: inline-block; width: 6px; height: 6px; margin: 0 8px 1px 0; background: var(--amber); }
+.apex-film-caption { position: absolute; left: calc(51.45% + 24px); right: 24px; bottom: 24px; display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 13px; color: #f3f5e8; }
+.apex-film-caption small { margin-left: 6px; font: 10px var(--f-mono); opacity: .65; }
+#apex-motion { display: flex; gap: 16px; align-items: center; padding: 10px 12px; min-height: 40px; color: #f4f6ed; background: rgba(16,22,12,.72); border: 1px solid rgba(244,246,237,.4); border-radius: 2px; font: 12px var(--f-ui); cursor: pointer; }
+#apex-motion:hover { border-color: var(--amber); color: var(--amber); }
+#apex-motion:disabled { opacity: .55; cursor: default; }
+.apex .td-snap { margin-top: 28px; }
+.apex .td-snapline { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); border: 1px solid var(--hair); background: #11160f; }
+.apex .td-snapline .sn { min-width: 0; padding: 20px; gap: 9px; }
+.apex .td-snapline .sn+.sn { padding-left: 20px; }
+.apex .td-snapline .sn b { font-size: clamp(28px,3.1vw,44px); }
+.apex .td-snapline .sn:last-child b { font-size: clamp(22px,2.3vw,34px); }
+.apex .td-snapline .sn b small { color: var(--amber); font-size: 11px; }
+.apex .td-snapline .sn i { font-size: 11px; letter-spacing: 1px; color: var(--ink-3); line-height: 1.7; }
+.apex .td-evidence { padding: 22px; border: 1px solid var(--hair); background: #141a11; margin-top: 24px; }
+.apex .td-evidence .td-chips { display: flex; flex-wrap: wrap; margin-top: 0; }
+.apex .td-evidence .td-chip { flex: 1 1 145px; padding: 12px 16px; border-top: 0; }
+.apex .td-evidence .td-chip b { font-size: 29px; }
+.apex .td-evidence .td-cards { gap: 12px; }
+.apex .td-grid { gap: 0 28px; margin-top: 28px; grid-template-columns: minmax(0,1.15fr) minmax(0,1fr); }
+.apex .section-title { font-size: 16px; line-height: 1.8; padding-bottom: 12px; color: var(--ink-1); }
+.apex .section-title .muted { font: 10px/1.8 var(--f-mono); color: var(--ink-3); letter-spacing: .6px; }
+.apex .td-col>.block { padding: 22px; border: 1px solid var(--hair); background: rgba(21,27,17,.93); margin-bottom: 20px; }
+
+/* Component geometry follows the same squared, quiet instrument-panel language. */
+.apex :is(.rows,.wl-panel,.mc-wrap,.pk-card,.bs-panel,.tw-panel,.at-stage,.rt-stage,.rd-stage,.pm-wrap,.tsv,.sig,.rider-card,.all-i,.page-links a,.activity-item,.ac-item) { border-radius: 3px; }
+.apex :is(.wl-panel,.mc-wrap,.pk-card,.bs-panel,.tw-panel,.pm-wrap,.rt-stage,.tsv) { background-color: rgba(20,26,16,.96); border-color: var(--hair); }
+.apex :is(.drawer,.dw-head,.itt-level-popup,.r3d-box) { background-color: #161d12; border-color: #465238; }
+.apex .dw-head { border-bottom: 1px solid var(--hair); }
+.apex .dw-t { font-size: 24px; }
+.apex .dw-back,.apex .dw-x { min-width: 40px; min-height: 40px; }
+.apex .all-grid { gap: 16px; }
+.apex .all-i { min-height: 170px; padding: 24px; background: #171e12; border-color: var(--hair); }
+.apex .all-i:hover { background: #242f19; border-color: var(--amber); }
+.apex .all-i b { font-size: 27px; margin-top: 12px; }
+.apex .all-n { font-family: var(--f-mono); color: var(--amber); font-size: 12px; }
+.apex .all-i i,.apex .all-hub { font-size: 11px; }
+.apex .all-i em { font-size: 12px; }
+.apex .all-links a { font-size: 14px; border-radius: 2px; padding: 12px 16px; }
+.apex .all-credits { margin-top: 44px; }
+.apex .all-credit-list { font-size: 13px; line-height: 1.8; }
+.apex .page-links { margin-top: 30px; padding-top: 20px; gap: 12px; }
+.apex .page-links a { border: 0; padding: 8px 0; margin-right: 14px; font-size: 13px; background: transparent; color: var(--ink-3); }
+.apex .page-links a:hover { color: var(--amber); }
+.apex #to-top-btn { color: var(--amber); border-color: var(--hair-2); background: #1d2616; }
+.apex .view.is-on { animation: apex-enter .28s ease-out; }
+@keyframes apex-enter { from { opacity: .65; transform: translateY(5px); } to { opacity: 1; transform: none; } }
+
+@media (min-width: 1600px) { :root { --apex-side: 238px; } .apex .topbar { padding-left: 25px; padding-right: 25px; } }
+@media (min-width: 768px) and (max-height: 750px) {
+  .apex .topbar { padding-top: 20px; }
+  .apex .brand { padding-bottom: 24px; }
+  .apex .hub-i { min-height: 62px; padding-block: 11px; }
+  .apex-athlete { padding-top: 20px; }
+}
+@media (min-width: 768px) and (max-width: 1199px) {
+  :root { --apex-side: 172px; --gutter: 24px; }
+  .apex .topbar { padding-left: 12px; padding-right: 12px; }
+  .apex .brand b { font-size: 34px; }
+  .apex .brand b span { font-size: 27px; }
+  .apex .td-panel { padding: 24px; }
+  .apex .td-chips { grid-template-columns: repeat(auto-fit,minmax(95px,1fr)); }
+  .apex .td-chip b { font-size: 31px; }
+  .apex .td-card { grid-template-columns: 1fr auto; }
+  .apex .td-card .k { grid-column: 1 / -1; }
+  .apex .td-card .s { grid-column: 1 / -1; }
+  .apex .td-snapline .sn { padding: 16px 12px; }
+  .apex .td-snapline .sn+.sn { padding-left: 12px; }
+  .apex .td-grid { grid-template-columns: 1fr; }
+  .apex .rail-i { min-width: 80px; padding: 9px; }
+}
+@media (min-width: 768px) and (max-width: 949px) {
+  .apex .td-hero { grid-template-columns: minmax(0,1.4fr) minmax(0,1fr); }
+  .apex .apex-frame-label,.apex .apex-film-caption { left: calc(58.33% + 16px); right: 16px; }
+  .apex-film-caption { flex-direction: column; align-items: flex-start; }
+  .apex .td-snapline { grid-template-columns: repeat(3,minmax(0,1fr)); }
+  .apex .td-snapline .sn { border-bottom: 1px solid var(--hair); }
+  .apex .all-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}
+@media (max-width: 767px) {
+  :root { --apex-side: 0px; --gutter: 18px; --topbar-h: 65px; }
+  .apex .topbar { position: sticky; inset: 0 0 auto; width: 100%; height: 65px; padding: 12px 18px; flex-direction: row; align-items: center; border: 0; border-bottom: 1px solid var(--hair); overflow: visible; }
+  .apex .brand { padding: 0; flex-direction: row; align-items: center; gap: 16px; }
+  .apex .brand b { font-size: 31px; letter-spacing: -2px; gap: 9px; }
+  .apex .brand b span { font-size: 27px; }
+  .apex .brand small { display: block; margin: 0; font-size: 11px; letter-spacing: 2px; }
+  .apex .hubs,.apex .tb-r { display: none; }
+  .apex-athlete { padding: 0; margin: 0 0 0 auto; }
+  .apex-athlete>div { display: none; }
+  .apex-avatar { width: 30px; height: 30px; font-size: 10px; }
+  .apex .main { margin: 0; }
+  .apex .hubhead,.apex[data-hub="today"] .hubhead { min-height: 116px; padding: 20px 18px; gap: 16px; }
+  .apex .hh-t { gap: 7px 14px; }
+  .apex-eyebrow { margin-bottom: 4px; font-size: 10px; letter-spacing: 1.5px; }
+  .apex .hh-title { font-size: 29px; }
+  .apex .hh-sub { font-size: 11px; }
+  .apex .rail { flex-basis: 100%; margin: 0; width: 100%; gap: 7px; padding: 0 0 2px; }
+  .apex .rail-i { flex: 1 0 90px; min-width: 0; padding: 10px 12px; }
+  .apex .viewport { padding: 18px 18px calc(104px + env(safe-area-inset-bottom,0px)); }
+  .apex .td-hero { display: grid; grid-template-columns: 1fr; grid-template-rows: auto 240px; min-height: 0; width: 100%; margin: 0; }
+  .apex .td-panel { grid-column: 1; grid-row: 1; padding: 23px 20px; }
+  .apex .td-k { font-size: 11px; }
+  .apex-form-label { margin-top: 21px; font-size: 10px; }
+  .apex-form-label span { font-size: 10px; }
+  .apex .td-verdict { margin-top: 12px; }
+  .apex .td-verdict b { font-size: 70px; }
+  .apex .td-why { font-size: 16px; line-height: 1.85; }
+  .apex .td-chips { margin-top: 21px; }
+  .apex .td-chip { padding-right: 7px; }
+  .apex .td-chip+.td-chip { padding-left: 10px; }
+  .apex .td-chip b { font-size: 34px; }
+  .apex .td-chip i { font-size: 11px; }
+  .apex .td-cards { margin-top: 19px; }
+  .apex .td-card { grid-template-columns: 1fr auto; padding: 13px; }
+  .apex .td-card .k { grid-column: 1 / -1; }
+  .apex .td-card .s { grid-column: 1 / -1; }
+  .apex .td-card .t { font-size: 14px; }
+  .apex .td-scene { grid-row: 2; grid-column: 1; min-height: 240px; border-left: 0; border-top: 1px solid var(--hair); }
+  .apex :is(.td-video,.td-still) { height: 100%; width: 100%; object-position: 62% 45%; background-position: 62% 45%; }
+  .apex .apex-frame-label { left: 16px; right: 16px; top: auto; bottom: 204px; font-size: 10px; }
+  .apex .apex-film-caption { left: 16px; right: 16px; bottom: 16px; font-size: 12px; }
+  .apex .td-snap { margin-top: 22px; }
+  .apex .td-snapline { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .apex .td-snapline .sn,.apex .td-snapline .sn+.sn { padding: 16px; border: 0; border-bottom: 1px solid var(--hair); }
+  .apex .td-snapline .sn:nth-child(even) { border-left: 1px solid var(--hair); }
+  .apex .td-snapline .sn:last-child { grid-column: 1 / -1; border-bottom: 0; }
+  .apex .td-snapline .sn b { font-size: 38px; }
+  .apex .td-snapline .sn:last-child b { font-size: 30px; }
+  .apex .td-evidence { padding: 17px; margin-top: 20px; }
+  .apex .td-evidence .td-chip { flex: 1 1 110px; border: 0; padding: 10px 8px; }
+  .apex .td-evidence .td-cards { grid-template-columns: 1fr; }
+  .apex .td-grid { grid-template-columns: 1fr; margin-top: 20px; }
+  .apex .td-col>.block { padding: 17px; }
+  .apex .section-title { font-size: 15px; }
+  .apex .section-title .muted { font-size: 10px; }
+  .apex .all-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+  .apex .all-i { min-height: 158px; padding: 17px; }
+  .apex .all-i b { font-size: 23px; }
+  .apex .all-i em { position: static; font-size: 11px; order: 5; margin-top: 6px; }
+  .apex .all-i i,.apex .all-hub { font-size: 10px; letter-spacing: 1px; }
+  .apex .tabbar { display: flex; padding: 6px 8px calc(8px + env(safe-area-inset-bottom,0px)); min-height: 70px; height: auto; border-top: 1px solid #3f4b32; background: #0c100b; backdrop-filter: none; -webkit-backdrop-filter: none; }
+  .apex .tab-i { flex: 1; min-height: 52px; border-radius: 3px; gap: 5px; padding: 8px 0; }
+  .apex .tab-i span { font-size: 14px; color: var(--ink-2); }
+  .apex .tab-i small { font: 9px var(--f-mono); letter-spacing: 1px; color: var(--ink-3); }
+  .apex .tab-i i { display: none; }
+  .apex .tab-i[aria-current="page"] { background: var(--amber); box-shadow: none; }
+  .apex .tab-i[aria-current="page"] :is(span,small) { color: #1a240c; }
+  .apex .page-links { padding-bottom: 0; }
+}
+@media (max-width: 359px) {
+  :root { --gutter: 12px; }
+  .apex .viewport { padding-left: 12px; padding-right: 12px; }
+  .apex .td-panel { padding: 20px 15px; }
+  .apex .td-verdict b { font-size: 60px; }
+  .apex .td-chip b { font-size: 28px; }
+  .apex-form-label span { letter-spacing: 0; }
+  .apex .brand small { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .apex *, .apex *::before, .apex *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
