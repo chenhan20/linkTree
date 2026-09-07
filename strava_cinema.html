@@ -1334,6 +1334,42 @@ a.row:hover .row-go,button.row:hover .row-go{color:#FC4C02}
 .dw-kv .u{font-size:9.5px;letter-spacing:1.4px;color:var(--ink-3);text-transform:uppercase}
 .dw-kv .m{margin-left:auto;font-size:10px;font-weight:800;letter-spacing:1.4px}
 .dw-kv .m.ok{color:#5FD060}.dw-kv .m.no{color:#FF6A6A}.dw-kv .m.dim{color:var(--ink-3)}
+/* 逐段時間軸：一條依分鐘等比切分的條，加一張逐段表。顏色不新增 ——
+   工作段走主墨、熱身／恢復／收操走弱墨、全力段是唯一給橘的（「需要立刻被看見」）。 */
+.dw-tlbar{display:flex;width:100%;height:12px;border-radius:3px;overflow:hidden;
+  background:var(--surface);border:1px solid var(--hair);margin-bottom:4px}
+.dw-tlbar i{display:block;height:100%;min-width:1px;border-right:1px solid rgba(10,4,8,.55)}
+.dw-tlbar i:last-child{border-right:0}
+.dw-tlbar i[data-r="work"]{background:rgba(244,240,234,.62)}
+.dw-tlbar i[data-r="allout"]{background:rgba(252,76,2,.82)}
+.dw-tlbar i[data-r="warmup"]{background:rgba(244,240,234,.24)}
+.dw-tlbar i[data-r="recovery"],.dw-tlbar i[data-r="cooldown"]{background:rgba(244,240,234,.13)}
+.dw-tlsc{display:flex;justify-content:space-between;font-size:9px;font-weight:700;letter-spacing:1.4px;
+  color:var(--ink-3);font-variant-numeric:tabular-nums;margin-bottom:12px}
+.dw-tt{width:100%;border-collapse:collapse;font-size:12.5px;color:var(--ink-2);
+  font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+.dw-tt th{font-size:8.5px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;
+  color:var(--ink-3);text-align:left;padding:0 8px 6px 0;border-bottom:1px solid var(--hair);white-space:nowrap}
+.dw-tt th.r,.dw-tt td.r{text-align:right;padding-right:0}
+.dw-tt td{padding:7px 8px 7px 0;border-bottom:1px solid var(--hair);vertical-align:baseline}
+.dw-tt tr:last-child td{border-bottom:0}
+.dw-tt .t{color:var(--ink-3);font-size:11.5px;white-space:nowrap}
+.dw-tt .n{color:var(--ink-1);font-weight:700}
+.dw-tt .w{color:var(--ink-1);font-family:var(--f-num);font-size:15px;font-weight:800;letter-spacing:-.2px;white-space:nowrap}
+.dw-tt tr[data-r="allout"] .w{color:#FC4C02}
+.dw-tt tr[data-r="warmup"] .n,.dw-tt tr[data-r="recovery"] .n,.dw-tt tr[data-r="cooldown"] .n{color:var(--ink-2);font-weight:400}
+.dw-tt .c{color:var(--ink-3);font-size:11.5px;white-space:nowrap}
+.dw-tt .note{display:block;margin-top:3px;font-size:11.5px;line-height:1.55;color:var(--ink-3);white-space:normal}
+.dw-li{margin:0;padding:0;list-style:none}
+.dw-li li{position:relative;padding:6px 0 6px 15px;font-size:12.5px;line-height:1.6;color:var(--ink-2);
+  border-bottom:1px solid var(--hair)}
+.dw-li li:last-child{border-bottom:0}
+.dw-li li::before{content:'';position:absolute;left:2px;top:13px;width:4px;height:1px;background:var(--ink-3)}
+.dw-li li b{color:var(--ink-1);font-weight:700}
+.dw-budget{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:var(--ink-3);margin-top:9px}
+.dw-budget b{color:var(--ink-1);font-family:var(--f-num);font-size:14px;font-weight:800;
+  font-variant-numeric:tabular-nums;margin-right:3px}
+.dw-budget .warn b{color:#FFB020}
 .dw-cta{
   display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;
   padding:11px 14px;margin-top:4px;border-radius:8px;
@@ -3829,6 +3865,100 @@ const mdBold = txt => String(txt)
   .replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]))
   .replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
 
+/* ── 逐段處方時間軸（data/plan.json）─────────────────────────────
+   training-block.json 的 `plan` 只有一行字串（「110 分 @185-195W ＋ 3×1 分開腿」），
+   看得到強度看不到形狀。plan.json 才有段落分鐘、瓦數帶、迴轉、規則與執行要點，
+   而且它就是 tools/tcx/score.py 逐段對帳用的同一份 —— 畫面上讀到的跟評分讀到的是同一個東西。
+   有 execution.start_local 就把累計分鐘換算成當天的牆上時鐘（他早上照著錶騎，
+   「06:00 工作段開始」比「+20 分」好用）。缺檔或那天沒排就整段不出現。 */
+const RX_ROLE = { warmup: '熱身', work: '工作', allout: '全力', recovery: '恢復', cooldown: '收操' }
+const rxClock = (startHHMM, offsetMin) => {
+  if (!startHHMM) return (offsetMin < 60 ? '' : Math.floor(offsetMin / 60) + ':') +
+    (offsetMin < 60 ? '+' + offsetMin + '′' : String(offsetMin % 60).padStart(2, '0'))
+  const [h, m] = startHHMM.split(':').map(Number)
+  const t = h * 60 + m + offsetMin
+  return String(Math.floor(t / 60) % 24).padStart(2, '0') + ':' + String(t % 60).padStart(2, '0')
+}
+const rxWatts = w => {
+  if (!w) return '—'
+  if (w.allout) return '全力'
+  if (w.lo != null && w.hi != null) return w.ramp ? `${w.lo}→${w.hi}W` : `${w.lo}–${w.hi}W`
+  if (w.about != null) return `~${w.about}W`
+  if (w.lo != null) return `≥${w.lo}W`
+  return '—'
+}
+const rxCad = c => (c && c.lo != null && c.hi != null) ? `${c.lo}–${c.hi} rpm` : ''
+function renderRxTimeline(date) {
+  const rx = ((window._planRx || {}).days || {})[date]
+  const segs = rx && Array.isArray(rx.segments) ? rx.segments : null
+  if (!segs || !segs.length) return ''
+  const total = segs.reduce((a, s) => a + (s.minutes || 0), 0)
+  if (!total) return ''
+  const exec = rx.execution || {}
+  const start = exec.start_local || null
+  let acc = 0
+  const bar = segs.map(s => {
+    const w = ((s.minutes || 0) / total * 100).toFixed(3)
+    return `<i data-r="${s.role || 'work'}" style="width:${w}%" title="${mdBold(s.name || '')} ${s.minutes} 分"></i>`
+  }).join('')
+  const rows = segs.map(s => {
+    const at = rxClock(start, acc); acc += s.minutes || 0
+    const cad = rxCad(s.target_cadence)
+    return `<tr data-r="${s.role || 'work'}">
+      <td class="t">${at}</td>
+      <td><span class="n">${mdBold(s.name || '')}</span>${s.note ? `<span class="note">${mdBold(s.note)}</span>` : ''}</td>
+      <td class="r">${s.minutes}</td>
+      <td class="r w">${rxWatts(s.target_w)}</td>
+      <td class="c">${cad || (RX_ROLE[s.role] || '')}</td>
+    </tr>`
+  }).join('')
+  const tb = rx.time_budget || {}
+  const slack = (tb.window_min != null && tb.ride_min != null) ? tb.window_min - tb.ride_min : null
+  const budget = (tb.window_min == null && !start) ? '' : `<div class="dw-budget">
+    ${start ? `<span><b>${start}</b>出發</span><span><b>${rxClock(start, total)}</b>結束</span>` : ''}
+    <span><b>${total}</b>分騎乘</span>
+    ${tb.window_min != null ? `<span><b>${tb.window_min}</b>分窗口</span>` : ''}
+    ${slack != null ? `<span class="${slack <= 0 ? 'warn' : ''}"><b>${slack}</b>分餘裕</span>` : ''}
+  </div>`
+  const timeline = `<div class="dw-sec"><h4>逐段時間軸 · Timeline</h4>
+    <div class="dw-tlbar">${bar}</div>
+    <div class="dw-tlsc"><span>${start ? start : '0′'}</span><span>${total} 分</span><span>${start ? rxClock(start, total) : total + '′'}</span></div>
+    <table class="dw-tt"><thead><tr>
+      <th>${start ? '時刻' : '累計'}</th><th>段</th><th class="r">分</th><th class="r">目標</th><th>迴轉</th>
+    </tr></thead><tbody>${rows}</tbody></table>
+    ${budget}
+    ${tb.note ? `<div class="dw-p" style="margin-top:10px;font-size:11.5px;color:var(--ink-3)">${mdBold(tb.note)}</div>` : ''}
+  </div>`
+  const lc = exec.landmarks_clock
+  const clock = (lc && typeof lc === 'object' && Object.keys(lc).length)
+    ? `<div class="dw-sec"><h4>路線時鐘 · Route clock</h4><table class="dw-tt"><tbody>${
+        Object.entries(lc).map(([k, v]) => {
+          const m = String(k).match(/^(\d{1,2}:\d{2})\s*(.*)$/)
+          return `<tr><td class="t">${m ? m[1] : ''}</td><td><span class="n">${mdBold(m ? m[2] : k)}</span></td><td class="c">${mdBold(v || '')}</td></tr>`
+        }).join('')}</tbody></table>
+      ${exec.route ? `<div class="dw-p" style="margin-top:10px;font-size:11.5px;color:var(--ink-3)">${mdBold(exec.route)}</div>` : ''}</div>`
+    : ''
+  const ruleList = []
+  ;(rx.rules || []).forEach(r => r && r.label && ruleList.push(r.label))
+  ;(exec.power_rules || []).forEach(r => ruleList.push(r))
+  const rules = ruleList.length
+    ? `<div class="dw-sec"><h4>規則 · Rules</h4><ul class="dw-li">${
+        ruleList.map(r => `<li>${mdBold(r)}</li>`).join('')}</ul></div>`
+    : ''
+  const NOTE_KEYS = [
+    ['turnaround_rule', '折返'], ['wind_check', '風向'], ['lap_rule', '單圈'],
+    ['checkpoint_0720', '檢查點'], ['cut_order', '裁切順序'], ['daylight', '天光'],
+    ['rough_section', '難守段'], ['fueling', '補給'], ['allout_purpose', '全力段用途'],
+    ['basketball', '當晚'], ['note', '備註'],
+  ]
+  const notes = NOTE_KEYS.filter(([k]) => exec[k])
+  const execSec = notes.length
+    ? `<div class="dw-sec"><h4>執行要點 · Execution</h4><ul class="dw-li">${
+        notes.map(([k, lab]) => `<li><b>${lab}</b>　${mdBold(exec[k])}</li>`).join('')}</ul></div>`
+    : ''
+  return timeline + clock + rules + execSec
+}
+
 /* 課表細節抽屜：資料全部來自 renderMesocycle 已經算好的 detail map，這裡只負責排版。 */
 function openSessionDrawer(date) {
   const d = (window.__mcDetail || {})[date]
@@ -3853,6 +3983,7 @@ function openSessionDrawer(date) {
     </div>`
   const body =
     (s.plan ? `<div class="dw-sec"><h4>處方 · Prescription</h4><div class="dw-p">${mdBold(s.plan)}</div></div>` : '') +
+    renderRxTimeline(s.date) +
     (s.support ? `<div class="dw-sec"><h4>輔助課表 · Support</h4>
       <div class="dw-p">${mdBold(s.metrics || '')}${s.why ? `<br><br>${mdBold(s.why)}` : ''}</div></div>` : '') +
     (a?.substituted ? `<div class="dw-sec"><h4>替代執行 · Substituted</h4>
@@ -10477,6 +10608,9 @@ Promise.all([
   fetchData(QUOTES_URL).then(r => r.ok ? r.json() : null).catch(() => null),
   // 手寫的訓練週期計畫（見 data/training-block.json 的 _howToUse）；缺檔就不顯示週期章
   fetchData('data/training-block.json').then(r => r.ok ? r.json() : null).catch(() => null),
+  // 逐段處方（data/plan.json，tools/tcx/score.py 拿它逐段對帳）。training-block.json 只有
+  // 一行 plan 字串，段落分鐘／瓦數帶／規則／執行要點全在這支。缺檔就只是抽屜少掉時間軸幾節。
+  fetchData('data/plan.json').then(r => r.ok ? r.json() : null).catch(() => null),
   // ITT 成績的權威檔。strava.json 裡也有一份 segments，但那份只有 strava-sync 跑過才會更新，
   // 而 FIT 自建偵測器（scripts/backfill-itt-efforts.py）寫的是 itt-segments.json。
   // 實測撞過：三條新路段在 itt-segments.json 有 10 筆，strava.json 只有 1 筆，畫面就是空的。
@@ -10501,7 +10635,7 @@ Promise.all([
   fetchData('data/tasks.json').then(r => r.ok ? r.json() : null).catch(() => null),
   fetchData('data/playbook.json').then(r => r.ok ? r.json() : null).catch(() => null),
 ])
-  .then(([data, ittConfig, segStreams, segTerrain, segGrades, landmarks, rivals, taipeiOutline, quotesData, trainingBlock, ittSegments, wellness, doms, activities, powerHr, powerShift, tasks, playbook]) => {
+  .then(([data, ittConfig, segStreams, segTerrain, segGrades, landmarks, rivals, taipeiOutline, quotesData, trainingBlock, planRx, ittSegments, wellness, doms, activities, powerHr, powerShift, tasks, playbook]) => {
     mergeIttSegments(data, ittSegments)
     window._wellness = wellness || null
     window._doms = doms || null
@@ -10526,6 +10660,7 @@ Promise.all([
       return [String(s.id), pr || null]
     }))
     window._trainingBlock = trainingBlock || null
+    window._planRx = planRx || null
     window._playbook = playbook || null
     window._powerShift = powerShift || null
     window._taipeiMiniMap = buildTaipeiMiniMap(taipeiOutline)
