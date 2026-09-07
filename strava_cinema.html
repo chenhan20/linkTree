@@ -3407,7 +3407,10 @@ function qbRenderCard(q) {
     : (q.source || '')
   const icon = q._src === 'movie' ? '🎬' : '✨'
   const favKey = 'qbFav:' + q.id
-  const isFav = localStorage.getItem(favKey) === '1'
+  // 這支跑在 Promise.all 的 .then() 裡，丟出去會被最外層的 .catch 接走 →
+  // 已經畫好的整個儀表板被換成「載入失敗」。Safari 無痕模式讀這個就會丟。
+  let isFav = false
+  try { isFav = localStorage.getItem(favKey) === '1' } catch (e) {}
   // 影劇原文是英文、動畫原文是日文，字體分流；欄位空的話這一塊完全不輸出
   const origCls = q._src === 'movie' ? 'en' : 'jp'
   // 全形括號整句包起來的是編輯註記（「（找不到確切原話，此為…）」，200 則裡 34 則），
@@ -3446,7 +3449,7 @@ function qbRenderCard(q) {
   favBtn.addEventListener('click', () => {
     const nowFav = favBtn.classList.toggle('active')
     favBtn.textContent = (nowFav ? '♥' : '♡') + ' 收藏'
-    if (nowFav) localStorage.setItem(favKey, '1'); else localStorage.removeItem(favKey)
+    try { if (nowFav) localStorage.setItem(favKey, '1'); else localStorage.removeItem(favKey) } catch (e) {}
   })
   document.getElementById('qb-copy-btn').addEventListener('click', () => {
     const text = `${q.adaptedQuote}\n—— ${q.character || ''}《${work}》`
@@ -5515,6 +5518,7 @@ function setupIttPlates() {
       })
       it.tags.forEach(t => t.el.remove())
     }
+    if (TSV.vio) TSV.vio.disconnect()   // 不解掉的話，舊 observer 會抓著已經拔掉的 canvas 跟整組 Three.js 場景不放
     if (TSV.renderer) TSV.renderer.dispose()
     TSV = null
     window.__tsv = null
@@ -5648,8 +5652,8 @@ function setupIttPlates() {
     vio.observe(cv)
     items.push(it)
   })
-  if (!items.length) { renderer.dispose(); return }
-  TSV = { renderer, items, raf: null, lastT: null }
+  if (!items.length) { vio.disconnect(); renderer.dispose(); return }
+  TSV = { renderer, items, raf: null, lastT: null, vio }
   window.__tsv = TSV   // debug/測試用握把
 
   const yAxis = new THREE.Vector3(0, 1, 0), tagV = new THREE.Vector3()
@@ -8364,7 +8368,7 @@ function bindNameCard() {
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches
   const rnd = (a, b) => a + Math.random() * (b - a)
 
-  let W = 0, H = 0, stars = [], meteors = [], shape = null, t = 0, prog = 0, raf = 0
+  let W = 0, H = 0, stars = [], meteors = [], shape = null, t = 0, prog = 0, raf = 0, lastT = 0
 
   function fit() {
     const r = canvas.getBoundingClientRect()
@@ -8392,8 +8396,11 @@ function bindNameCard() {
   function px(nx) { return W * (0.24 + nx * 0.34) }
   function py(ny) { return H * (0.12 + ny * 0.76) }
 
-  function frame() {
-    t += 0.016
+  function frame(now) {
+    // 固定 0.016 等於假設 60Hz：120Hz 的 iPhone 上整個動畫跑兩倍速
+    const ts = now || performance.now()
+    t += lastT ? Math.min(.05, (ts - lastT) / 1000) : .016
+    lastT = ts
     ctx.clearRect(0, 0, W, H)
 
     // 背景散星
@@ -8461,19 +8468,25 @@ function bindNameCard() {
       ctx.shadowBlur = 0
     }
 
+    // 名片被切走（display:none）或分頁在背景就收工，不然這張裝飾畫布會一直以 60／120fps 燒著
+    if (document.hidden || !canvas.isConnected || !canvas.offsetParent) { raf = 0; lastT = 0; return }
     raf = requestAnimationFrame(frame)
   }
 
   function start() {
     cancelAnimationFrame(raf)
+    lastT = 0
     fit(); makeStars()
     if (!shape) setShape(0)
     frame()
   }
+  const resume = () => { if (!raf && !document.hidden && canvas.isConnected && canvas.offsetParent) start() }
   start()
 
-  const ro = new ResizeObserver(() => { fit(); makeStars() })
+  // 從 display:none 回到可見時 size 由 0 變回來，這裡順手把停掉的迴圈接回去
+  const ro = new ResizeObserver(() => { fit(); makeStars(); resume() })
   ro.observe(canvas)
+  document.addEventListener('visibilitychange', resume)
 
   const btn = document.getElementById('nc-reroll')
   if (btn) btn.addEventListener('click', e => { e.stopPropagation(); reroll() })
