@@ -272,6 +272,67 @@ body[data-hub="today"] .hubhead{display:none}
 .td-snapline .sn.is-tap{cursor:pointer;transition:background .15s}
 .td-snapline .sn.is-tap:hover{background:rgba(var(--amber-rgb),.06)}
 .td-snapline .sn.is-tap:focus-visible{outline:1px solid rgba(var(--amber-rgb),.7);outline-offset:-1px}
+/* ══ 目前狀態 · hero 正下方 ═══════════════════════════════════════════
+   資料與側欄那張狀態卡同源（_wellness.json），只是攤成一條橫的：
+   TSB 佔左、90 天 CTL/ATL 心電圖佔中、最近一筆量測靠右。
+   顏色只給 TSB —— 它是唯一一個「有沒有事」的判斷，其餘都是佐證。 */
+.td-state{margin-top:26px}
+.td-stateline{
+  display:grid;grid-template-columns:minmax(180px,auto) minmax(0,1fr) minmax(180px,auto);
+  gap:0 26px;align-items:center;border-top:1px solid var(--hair);padding-top:16px;
+}
+.ts-tsb i{display:block;font-style:normal;font-size:9px;font-weight:700;letter-spacing:2.4px;text-transform:uppercase;color:var(--ink-3)}
+.ts-tsb b{
+  display:block;margin:6px 0 5px;font-family:var(--f-num);font-size:clamp(48px,5.6vw,76px);
+  font-weight:800;line-height:.92;letter-spacing:-1px;color:var(--ink-1);font-variant-numeric:tabular-nums;
+}
+.ts-tsb em{font-style:normal;font-size:10px;letter-spacing:1px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.ts-tsb.rdy-fresh b{color:#4ad07a}
+.ts-tsb.rdy-ok    b{color:var(--ink-1)}
+.ts-tsb.rdy-tired b{color:#ffb020}
+.ts-tsb.rdy-deep  b{color:var(--amber)}
+.ts-chart{min-width:0}
+.ts-spark{display:block;width:100%;height:64px;overflow:visible}
+.ts-spark path{fill:none;stroke-width:1.5;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke}
+.ts-spark .rdy-ctl{stroke:var(--amber)}
+.ts-spark .rdy-atl{stroke:rgba(255,255,255,.28);stroke-dasharray:3 3}
+/* 掃描線：跟側欄同一個做法 —— 複製 CTL 那條 d，疊一小段亮的沿著它跑（pathLength 已正規化成 100） */
+.ts-spark .rdy-scan{
+  stroke:rgba(255,248,242,.95);stroke-width:1.9;stroke-dasharray:13 100;
+  filter:drop-shadow(0 0 3px rgba(var(--amber-rgb),.9));animation:rdy-scan 3.6s linear infinite;
+}
+@keyframes rdy-scan{from{stroke-dashoffset:13}to{stroke-dashoffset:-100}}
+@media(prefers-reduced-motion:reduce){.ts-spark .rdy-scan{animation:none;opacity:0}}
+.ts-lg{display:flex;align-items:center;gap:14px;margin-top:8px;font-size:9px;letter-spacing:1.6px;text-transform:uppercase;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.ts-lg span{display:inline-flex;align-items:center;gap:5px}
+.ts-lg span::before{content:"";width:14px;height:0;border-top:1.5px solid currentColor}
+.ts-lg .is-ctl{color:rgba(var(--amber-rgb),.9)}
+.ts-lg .is-atl::before{border-top-style:dashed}
+.ts-lg em{margin-left:auto;font-style:normal;opacity:.75}
+.ts-rows{display:flex;flex-direction:column;gap:1px;width:min(210px,100%);justify-self:end}
+.ts-row{
+  display:grid;grid-template-columns:42px 1fr auto;gap:9px;align-items:baseline;
+  padding:6px 8px;border:0;border-radius:7px;background:transparent;
+  font-family:inherit;font-size:12.5px;color:var(--ink-3);text-align:left;
+}
+.ts-row span{font-size:10px;letter-spacing:1.4px;color:var(--ink-3)}
+.ts-row b{font-family:var(--f-num);font-size:16px;font-weight:800;color:var(--ink-1);font-variant-numeric:tabular-nums}
+.ts-row em{font-style:normal;font-size:9px;letter-spacing:.6px;opacity:.6;font-variant-numeric:tabular-nums}
+.ts-row.is-tap{cursor:pointer;transition:background .15s}
+.ts-row.is-tap:hover{background:rgba(255,255,255,.05)}
+.ts-row.is-tap:focus-visible{outline:1px solid rgba(var(--amber-rgb),.7);outline-offset:1px}
+@media(max-width:899px){
+  .td-stateline{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px 20px}
+  .ts-chart{grid-column:1/-1;order:3}
+  .ts-rows{order:2;width:100%}
+}
+@media(max-width:520px){
+  .td-stateline{grid-template-columns:minmax(0,1fr)}
+  .ts-tsb b{font-size:52px}
+  .ts-rows{order:3}
+  .ts-chart{order:2}
+}
+
 /* 原本的年度計時板留在頁尾當身分卡，字級降一階 */
 .view[data-view="overview"] .board-num{font-size:clamp(44px,6vw,72px)}
 .view[data-view="overview"] .rider-card{box-shadow:none}

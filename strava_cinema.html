@@ -3046,7 +3046,7 @@ button.ov-cell:focus-visible{outline:1px solid rgba(252,76,2,.6);outline-offset:
   .at-read{right:8px;top:8px;min-width:0;padding:7px 9px}
 }
 </style>
-<link rel="stylesheet" href="theme-strava-cinema.css?v=20260906">
+<link rel="stylesheet" href="theme-strava-cinema.css?v=20260907">
 </head>
 <body>
 
@@ -10971,6 +10971,79 @@ Promise.all([
     </div>`
   }
 
+  /* hero 正下方的「目前狀態」：側欄那張狀態卡在 cinema 沒有落腳處（這一版沒有 .side，
+     #rdy-mobile 也被 CSS 收掉了），但「我現在到底什麼狀態」是每天第一個問題，
+     不能只剩 hero 裡那顆 TSB 籌碼。這裡把同一份資料攤成一條橫的：
+     左邊 TSB（顏色走 tsbMood 的四段）、中間 90 天 CTL/ATL 心電圖、右邊最近一筆量測。
+     資料源與 renderReadiness() 完全相同（_wellness.json），沒有第二套算法；
+     量測列一樣帶 data-wellness，點下去跳到「身體」那一頁的對應指標。 */
+  function todayStateHTML() {
+    const w = window._wellness
+    if (!w) return ''
+    const days = wellnessDays(w)
+    if (!days.length) return ''
+    const recent = days.slice(-RDY_DAYS)
+    // 最後一天不一定有 CTL（同步落後、或那天只有睡眠沒有負荷），往回找到有值的那天當「現在」
+    const last = [...days].reverse().find(d => w[d]?.ctl != null) || days[days.length - 1]
+    const ctl = w[last]?.ctl, atl = w[last]?.atl
+    const tsb = (ctl != null && atl != null) ? ctl - atl : null
+    const mood = tsbMood(tsb)
+
+    const ctlSeries = recent.map(d => w[d]?.ctl ?? null)
+    const atlSeries = recent.map(d => w[d]?.atl ?? null)
+    const W = 520, H = 64
+    // 兩條線共用值域才看得出「疲勞高於體能」的形狀
+    const all = [...ctlSeries, ...atlSeries].filter(v => v != null)
+    if (all.length < 2) return ''
+    const lo = Math.min(...all), hi = Math.max(...all), span = (hi - lo) || 1
+    const path = s => s.map((v, i) => v == null ? null
+        : `${(i / (s.length - 1) * W).toFixed(1)} ${(H - (v - lo) / span * H).toFixed(1)}`)
+      .filter(Boolean).map((p, i) => `${i ? 'L' : 'M'}${p}`).join(' ')
+
+    const hrv = latestField(w, days, 'hrv')
+    const rhr = latestField(w, days, 'restingHR')
+    const slp = latestField(w, days, 'sleepSecs')
+    const eftp = (() => {
+      for (let i = days.length - 1; i >= 0; i--) {
+        const si = w[days[i]]?.sportInfo
+        const ride = Array.isArray(si) ? si.find(x => x.type === 'Ride' && x.eftp) : null
+        if (ride) return Math.round(ride.eftp)
+      }
+      return null
+    })()
+    const md = d => d ? d.slice(5).replace('-', '/') : ''
+    const hhmm = s => s == null ? '—' : `${Math.floor(s / 3600)}:${String(Math.round(s % 3600 / 60)).padStart(2, '0')}`
+    // eFTP 不可點：它來自 sportInfo，不是每日量測，沒有同一條時間序列
+    const row = (k, v, date, metric) => metric
+      ? `<button class="ts-row is-tap" type="button" data-wellness="${metric}"><span>${k}</span><b>${v}</b><em>${md(date)}</em></button>`
+      : `<div class="ts-row"><span>${k}</span><b>${v}</b><em>${md(date)}</em></div>`
+
+    return `<div class="block td-state">
+      <div class="section-title">目前狀態 <span class="muted">· READINESS · ${RDY_DAYS} 天</span></div>
+      <div class="td-stateline">
+        <div class="ts-tsb ${mood.cls}">
+          <i>TSB · ${mood.txt}</i>
+          <b>${tsb == null ? '—' : (tsb > 0 ? '+' : '') + tsb.toFixed(1)}</b>
+          <em>CTL ${ctl == null ? '—' : ctl.toFixed(1)}　ATL ${atl == null ? '—' : atl.toFixed(1)}　${md(last)}</em>
+        </div>
+        <div class="ts-chart">
+          <svg class="ts-spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">
+            <path d="${path(atlSeries)}" class="rdy-atl"/>
+            <path d="${path(ctlSeries)}" class="rdy-ctl"/>
+            <path d="${path(ctlSeries)}" class="rdy-scan" pathLength="100"/>
+          </svg>
+          <div class="ts-lg"><span class="is-ctl">體能 CTL</span><span class="is-atl">疲勞 ATL</span><em>${md(recent[0])} → ${md(last)}</em></div>
+        </div>
+        <div class="ts-rows">
+          ${row('HRV', hrv.v == null ? '—' : Math.round(hrv.v), hrv.date, hrv.v == null ? null : 'hrv')}
+          ${row('靜息', rhr.v == null ? '—' : Math.round(rhr.v), rhr.date, rhr.v == null ? null : 'restingHR')}
+          ${row('睡眠', hhmm(slp.v), slp.date, slp.v == null ? null : 'sleepSecs')}
+          ${eftp ? row('eFTP', eftp + ' W', null) : ''}
+        </div>
+      </div>
+    </div>`
+  }
+
   function initHeroVideo(hero) {
     const v = hero.querySelector('.td-video')
     if (!v) return
@@ -11072,6 +11145,7 @@ Promise.all([
     const rider = kids.find(el => el.classList.contains('block') && el.querySelector('.rider-card'))
     const hero = document.createElement('div'); hero.innerHTML = todayHeroHTML(data, V)
     const evid = document.createElement('div'); evid.innerHTML = todayEvidenceHTML()
+    const state = document.createElement('div'); state.innerHTML = todayStateHTML()
     const snap = document.createElement('div'); snap.innerHTML = seasonSnapHTML(data)
     const tasksBlk = block('代辦'); if (tasksBlk) tasksBlk.dataset.anchor = 'tasks'
     const pmcBlk = block('體能與疲勞'); if (pmcBlk) pmcBlk.dataset.anchor = 'pmc'
@@ -11084,7 +11158,7 @@ Promise.all([
     const grid = document.createElement('div'); grid.className = 'td-grid'; grid.append(colL, colR)
     const order = [
       kids.find(el => el.classList.contains('view-h')), kids.find(el => el.id === 'rdy-mobile'),
-      hero.firstElementChild, evid.firstElementChild, snap.firstElementChild, grid,
+      hero.firstElementChild, state.firstElementChild, evid.firstElementChild, snap.firstElementChild, grid,
     ].filter(Boolean)
     order.forEach(el => sec.appendChild(el))
     const placed = new Set([...colL.children, ...colR.children, rhythmT, rhythm])
