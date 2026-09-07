@@ -24,8 +24,11 @@ plan.json 的 baseline.trainer_offset_w。兩者可並存但正常只該用其�
 熱身與收操不動。
 """
 import json, argparse, os, sys, datetime
+from xml.sax.saxutils import escape
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(ROOT, 'tools', 'tcx'))
+import plan_store
 
 
 def watts(seg, adjust):
@@ -51,6 +54,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('date', nargs='?', help='plan.json 裡的日期 YYYY-MM-DD（給 --all 時可省略）')
     ap.add_argument('--all', action='store_true', help='產生 plan.json 裡今天（含）以後的每一堂')
+    ap.add_argument('--plan', help='指定月計畫 JSON；預設合併舊計畫與 data/plans/*.json')
+    ap.add_argument('--variant', choices=['outdoor', 'rain', 'reserve_test'], help='指定晴天／雨備版本；只影響匯出，不更改已選處方')
     ap.add_argument('--offset', type=float, default=0.0,
                     help='比例式扣減 %%（舊模型，已證實錯誤，預設 0）')
     ap.add_argument('--offset-w', type=float, default=None,
@@ -63,7 +68,7 @@ def main():
     ap.add_argument('--stem', help='輸出檔名（不含副檔名）；預設 <日期>_<type>')
     a = ap.parse_args()
 
-    plan = json.load(open(os.path.join(ROOT, 'data', 'plan.json'), encoding='utf-8'))
+    plan = plan_store.load_plan(a.plan)
     if a.all:
         today = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=8))).strftime('%Y-%m-%d')
         dates = [d for d in sorted(plan.get('days') or {}) if d >= today]
@@ -82,11 +87,15 @@ def main():
 
 
 def emit(plan, date, a):
-    day = (plan.get('days') or {}).get(date)
+    raw = (plan.get('days') or {}).get(date)
+    if raw and (not raw.get('segments') or raw.get('export_mode') == 'none'):
+        print(f'{date}：休息／無功率輔助日，不匯出訓練台檔')
+        return 0
+    day = plan_store.resolve_day(plan, date, getattr(a, 'variant', None))
     if not day:
         print(f'plan.json 裡沒有 {date}', file=sys.stderr)
         return 1
-    base = plan.get('baseline') or {}
+    base = plan_store.baseline_for(plan, day)
     ftp = base.get('ftp_w') or 238
     off_w = base.get('trainer_offset_w', 0) if a.offset_w is None else a.offset_w
     k = 1 - a.offset / 100.0
@@ -95,6 +104,7 @@ def emit(plan, date, a):
         """曲柄瓦 → 訓練台該顯示的瓦。先比例後固定值,下限 50W。"""
         return max(50, round(w * k - off_w))
     allout = any(s.get('role') == 'allout' for s in day.get('segments', []))
+    free_ride = day.get('export_mode') == 'free_ride'
 
     segs = []
     for s in day.get('segments', []):
@@ -119,17 +129,20 @@ def emit(plan, date, a):
     desc = (f"{date} target {work['w0']}W on trainer = {work['crank0']}W at crank "
             f"({conv or 'no conversion'}"
             + (f", {a.adjust:+.0f}W same-day adjust" if a.adjust else '') + f"). Crank FTP {ftp}W. "
-            "Trainer under-reads vs crank by a fixed ~25W (measured 2026-08-20). "
-            "Hold the watts, do not drop. Indoor HR runs 5-10bpm higher, that is heat not fitness.")
+            "Use the stated power source. Device offsets require validation. "
+            "Adjust effort for recovery and conditions; heart rate alone does not identify the cause.")
+    if free_ride:
+        desc += " FreeRide cues only: use slope/level and read crank power; no automatic ERG control."
     outdir = os.path.join(ROOT, a.out)
     os.makedirs(outdir, exist_ok=True)
-    stem = a.stem or f"{date}_{day.get('type', 'workout')}"
+    suffix = f"_{day['selected_variant']}" if day.get('variants') else ''
+    stem = a.stem or f"{date}_{day.get('type', 'workout')}{suffix}"
     base = os.path.join(outdir, stem)
 
     # ── .erg（絕對瓦數）與 .mrc（FTP 百分比）──
     # 有全力段的日子不產 erg/mrc：那兩種格式只能寫死瓦數，ERG 會把「全力」鎖成一個固定值，
     # 測驗就毀了。那種日子只給 .zwo（FreeRide），或乾脆改用 slope 模式手動跑。
-    for ext, unit, val in (() if allout else
+    for ext, unit, val in (() if allout or free_ride else
                            (('erg', 'MINUTES WATTS', lambda s, w: f'{w}'),
                             ('mrc', 'MINUTES PERCENT', lambda s, w: f'{w / ftp * 100:.1f}'))):
         rows, t = [], 0.0
@@ -146,11 +159,14 @@ def emit(plan, date, a):
     # ── .zwo（Zwift workout XML；瓦數以 FTP 的比例表示）──
     def frac(w):
         return f'{w / ftp:.4f}'
-    xml = ['<workout_file>', '  <author>Claude coach</author>', f'  <name>{stem}</name>',
-           f'  <description>{desc}</description>', '  <sportType>bike</sportType>', '  <workout>']
+    xml = ['<workout_file>', '  <author>Training plan</author>', f'  <name>{escape(stem)}</name>',
+           f'  <description>{escape(desc)}</description>', '  <sportType>bike</sportType>', '  <workout>']
     for s in segs:
         dur = int(round(s['min'] * 60))
-        if s['role'] == 'warmup':
+        if free_ride:
+            cue = 'Self-paced test; finish at segment endpoint' if s['role'] == 'allout' else f"{s['role']}: crank {s['crank0']}-{s['crank1']}W; adjust for conditions"
+            xml.append(f'    <FreeRide Duration="{dur}" FlatRoad="1"><textevent timeoffset="0" message="{cue}"/></FreeRide>')
+        elif s['role'] == 'warmup':
             xml.append(f'    <Warmup Duration="{dur}" PowerLow="{frac(s["w0"])}" PowerHigh="{frac(s["w1"])}"/>')
         elif s['role'] == 'cooldown':
             xml.append(f'    <Cooldown Duration="{dur}" PowerLow="{frac(s["w0"])}" PowerHigh="{frac(s["w1"])}"/>')
@@ -173,7 +189,7 @@ def emit(plan, date, a):
         print(f"{s['name']:16}{s['min']:>5.0f}{tw:>9}{cw:>9}")
     for r in day.get('rules', []):
         print(f"  規則 · {r.get('label')}")
-    exts = ('zwo',) if allout else ('erg', 'mrc', 'zwo')
+    exts = ('zwo',) if allout or free_ride else ('erg', 'mrc', 'zwo')
     print('輸出：' + ', '.join(f'{stem}.{e}' for e in exts) + f'　→ {a.out}/')
     if allout:
         print('  ⚠️ 這一天有全力段：只給 .zwo（FreeRide）。**不要用 ERG 模式跑全力段** ——'

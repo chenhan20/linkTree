@@ -4202,6 +4202,7 @@ function renderMesocycle(block) {
       const p = MC_PASS(s.actual, s.target || {})
       const hits = ['if', 'tss', 'vi'].filter(k => p[k] === true).length
       const graded = ['if', 'tss', 'vi'].filter(k => p[k] != null).length
+      if (!graded) return { cls: 'recorded', badge: '✓ RECORDED', sub: s.actual.note || '已記錄 · 依主課段落檢討' }
       if (graded && hits === graded) {
         const over = s.actual.if != null && s.target?.if != null && s.actual.if >= s.target.if + 0.03
         return over
@@ -4217,7 +4218,7 @@ function renderMesocycle(block) {
   }
 
   // 狀態文字：不再是每一堂都掛一顆 badge，只留右對齊的一個小字（§45）
-  const ST_TXT = { ok:'達標', over:'超標', under:'未達', missed:'未執行', next:'下一堂', sched:'' }
+  const ST_TXT = { recorded:'已記錄', ok:'達標', over:'超標', under:'未達', missed:'未執行', next:'下一堂', sched:'' }
   // 三個層級（§23）：做過的＝低對比、未來的＝低對比、下一堂＝最高優先
   const tier = st => st.cls === 'next' ? 'next' : (st.cls === 'sched' ? 'future' : 'past')
 

@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
   "month": "2026-10",
-  "revision": 1,
-  "updated_at": "2026-09-05",
+  "revision": 2,
+  "updated_at": "2026-09-07",
   "status": "scheduled",
   "baseline": {
     "ftp_w": 234,
@@ -33,14 +33,16 @@
     "no_cycling_wednesday": true,
     "basketball": "週二晚照常視為負荷；測驗晚改休息／輕鬆。",
     "wednesday": "上肢／核心＋公司有氧；沒有額外安排單車高強度。",
-    "trainer": "只有週二／三／四可用；週末社區飛輪以RPE控。"
+    "trainer": "只有週二／三／四可用；週末社區飛輪以RPE控。",
+    "saturday_available": false,
+    "pending_confirmation": "9/7新版記錄週六無法安排，十月先取消；二180／四150是否常態尚待確認，十月仍按150／120上限。"
   },
   "rules": {
     "rain": "當天出發前依實際雨勢、路面與能見度選rain。雷雨、濕滑或不適合下坡直接室內；不必等大雨。晴雨只是方案，並非十月天氣預報。",
     "progress": "前週工作段穩定完成、RPE約6–8且恢復正常才升；否則同級再做。第二組已崩落就減5–10W或少一組。",
     "missed": "漏課不補到週三、不連兩天補硬課；一週少做不算欠帳。",
     "readiness": "實際睡眠、疲勞、腿部感覺與熱身共同判斷；單一HRV、DOMS或低心率不作診斷。",
-    "lap": "工作段起終按lap。路口、行人、下坡可正常滑行；被打斷的段另記，不為評分維持瓦數。",
+    "lap": "主課日關Auto Lap，工作段起終按手動lap；路口、行人、下坡正常滑行，被打斷另記。避免自動lap把完整工作段切碎。",
     "taper": "10/21–26比前一週同期減約40–60%騎乘量；其他運動也需降低，保留少量短提速即可。",
     "calibration": "未確認訓練台差值前採slope/level看曲柄；檔案只用FreeRide提示，不自動ERG鎖功率。"
   },
@@ -186,40 +188,16 @@
       "date": "2026-10-03",
       "week": "過渡",
       "block": "zhongshe-2026-10",
-      "label": "週末輕鬆踩",
-      "type": "SUPPORT",
-      "intent": "40分，RPE2–3、可完整說話；無可信功率就不看瓦數。",
+      "label": "休息／家庭時間",
+      "type": "REST",
+      "intent": "依9/7新增時段資訊，週六不排課；不算欠課。",
       "score_policy": "record_only",
-      "segments": [
-        {
-          "name": "輕鬆踩踏",
-          "role": "recovery",
-          "minutes": 40,
-          "target_w": {
-            "lo": null,
-            "hi": null,
-            "about": null
-          },
-          "target_cadence": null
-        }
-      ],
+      "segments": [],
       "time_budget": {
         "window_min": 60
       },
       "selected_variant": "outdoor",
-      "route": "可在家附近平路輕鬆騎；若時間不足就用社區飛輪。",
-      "rain_summary": "社區飛輪40分，RPE2–3；機台沒空可休息，不以跑步間歇補。",
-      "export_mode": "none",
-      "variants": {
-        "outdoor": {
-          "venue": "outdoor",
-          "summary": "40分，RPE2–3、可完整說話；無可信功率就不看瓦數。"
-        },
-        "rain": {
-          "venue": "indoor",
-          "summary": "社區飛輪40分，RPE2–3；機台沒空可休息，不以跑步間歇補。"
-        }
-      }
+      "export_mode": "none"
     },
     "2026-10-04": {
       "date": "2026-10-04",
@@ -608,40 +586,16 @@
       "date": "2026-10-10",
       "week": "W1",
       "block": "zhongshe-2026-10",
-      "label": "週末輕鬆踩",
-      "type": "SUPPORT",
-      "intent": "40分，RPE2–3、可完整說話；無可信功率就不看瓦數。",
+      "label": "休息／家庭時間",
+      "type": "REST",
+      "intent": "依9/7新增時段資訊，週六不排課；不算欠課。",
       "score_policy": "record_only",
-      "segments": [
-        {
-          "name": "輕鬆踩踏",
-          "role": "recovery",
-          "minutes": 40,
-          "target_w": {
-            "lo": null,
-            "hi": null,
-            "about": null
-          },
-          "target_cadence": null
-        }
-      ],
+      "segments": [],
       "time_budget": {
         "window_min": 60
       },
       "selected_variant": "outdoor",
-      "route": "可在家附近平路輕鬆騎；若時間不足就用社區飛輪。",
-      "rain_summary": "社區飛輪40分，RPE2–3；機台沒空可休息，不以跑步間歇補。",
-      "export_mode": "none",
-      "variants": {
-        "outdoor": {
-          "venue": "outdoor",
-          "summary": "40分，RPE2–3、可完整說話；無可信功率就不看瓦數。"
-        },
-        "rain": {
-          "venue": "indoor",
-          "summary": "社區飛輪40分，RPE2–3；機台沒空可休息，不以跑步間歇補。"
-        }
-      }
+      "export_mode": "none"
     },
     "2026-10-11": {
       "date": "2026-10-11",
@@ -1030,40 +984,16 @@
       "date": "2026-10-17",
       "week": "W2",
       "block": "zhongshe-2026-10",
-      "label": "週末輕鬆踩",
-      "type": "SUPPORT",
-      "intent": "40分，RPE2–3、可完整說話；無可信功率就不看瓦數。",
+      "label": "休息／家庭時間",
+      "type": "REST",
+      "intent": "依9/7新增時段資訊，週六不排課；不算欠課。",
       "score_policy": "record_only",
-      "segments": [
-        {
-          "name": "輕鬆踩踏",
-          "role": "recovery",
-          "minutes": 40,
-          "target_w": {
-            "lo": null,
-            "hi": null,
-            "about": null
-          },
-          "target_cadence": null
-        }
-      ],
+      "segments": [],
       "time_budget": {
         "window_min": 60
       },
       "selected_variant": "outdoor",
-      "route": "可在家附近平路輕鬆騎；若時間不足就用社區飛輪。",
-      "rain_summary": "社區飛輪40分，RPE2–3；機台沒空可休息，不以跑步間歇補。",
-      "export_mode": "none",
-      "variants": {
-        "outdoor": {
-          "venue": "outdoor",
-          "summary": "40分，RPE2–3、可完整說話；無可信功率就不看瓦數。"
-        },
-        "rain": {
-          "venue": "indoor",
-          "summary": "社區飛輪40分，RPE2–3；機台沒空可休息，不以跑步間歇補。"
-        }
-      }
+      "export_mode": "none"
     },
     "2026-10-18": {
       "date": "2026-10-18",
@@ -1300,7 +1230,7 @@
       "block": "zhongshe-2026-10",
       "label": "輕鬆恢復",
       "type": "ENDURANCE",
-      "intent": "60分含暖身收操；主段140–165W、RPE2–3，可完整說話。",
+      "intent": "75分含暖身收操；主段140–165W、RPE2–3，可完整說話。",
       "score_policy": "prescription",
       "segments": [
         {
@@ -1317,7 +1247,7 @@
         {
           "name": "輕鬆耐力",
           "role": "work",
-          "minutes": 40,
+          "minutes": 55,
           "target_w": {
             "lo": 140,
             "hi": 165,
@@ -1342,12 +1272,12 @@
       },
       "selected_variant": "outdoor",
       "route": "熟悉的河濱平路，依可用時間折返，不為爬升繞山。",
-      "rain_summary": "訓練台50分，主段140–165W；slope/level看曲柄，散熱與飲水照常。",
+      "rain_summary": "訓練台60分，主段140–165W；保留輕鬆踏頻，不追負荷。",
       "export_mode": "free_ride",
       "variants": {
         "outdoor": {
           "venue": "outdoor",
-          "summary": "60分含暖身收操；主段140–165W、RPE2–3，可完整說話。"
+          "summary": "75分含暖身收操；主段140–165W、RPE2–3，可完整說話。"
         },
         "rain": {
           "venue": "indoor",
@@ -1366,7 +1296,7 @@
             {
               "name": "輕鬆耐力",
               "role": "work",
-              "minutes": 30,
+              "minutes": 40,
               "target_w": {
                 "lo": 140,
                 "hi": 165,
@@ -1386,7 +1316,7 @@
               "target_cadence": null
             }
           ],
-          "summary": "訓練台50分，主段140–165W；slope/level看曲柄，散熱與飲水照常。"
+          "summary": "訓練台60分，主段140–165W；保留輕鬆踏頻，不追負荷。"
         }
       }
     },
@@ -1408,9 +1338,24 @@
       "date": "2026-10-24",
       "week": "W3",
       "block": "zhongshe-2026-10",
+      "label": "休息／家庭時間",
+      "type": "REST",
+      "intent": "依9/7新增時段資訊，週六不排課；不算欠課。",
+      "score_policy": "record_only",
+      "segments": [],
+      "time_budget": {
+        "window_min": 60
+      },
+      "selected_variant": "outdoor",
+      "export_mode": "none"
+    },
+    "2026-10-25": {
+      "date": "2026-10-25",
+      "week": "W3",
+      "block": "zhongshe-2026-10",
       "label": "週末輕鬆踩",
       "type": "SUPPORT",
-      "intent": "35分，RPE2–3、可完整說話；無可信功率就不看瓦數。",
+      "intent": "35分輕鬆踩，RPE2–3；無可信功率就不看瓦數。",
       "score_policy": "record_only",
       "segments": [
         {
@@ -1430,55 +1375,16 @@
       },
       "selected_variant": "outdoor",
       "route": "可在家附近平路輕鬆騎；若時間不足就用社區飛輪。",
-      "rain_summary": "社區飛輪35分，RPE2–3；機台沒空可休息，不以跑步間歇補。",
+      "rain_summary": "社區飛輪35分，RPE2–3；疲勞可休息。",
       "export_mode": "none",
       "variants": {
         "outdoor": {
           "venue": "outdoor",
-          "summary": "35分，RPE2–3、可完整說話；無可信功率就不看瓦數。"
+          "summary": "35分輕鬆踩，RPE2–3；無可信功率就不看瓦數。"
         },
         "rain": {
           "venue": "indoor",
-          "summary": "社區飛輪35分，RPE2–3；機台沒空可休息，不以跑步間歇補。"
-        }
-      }
-    },
-    "2026-10-25": {
-      "date": "2026-10-25",
-      "week": "W3",
-      "block": "zhongshe-2026-10",
-      "label": "週末輕鬆踩",
-      "type": "SUPPORT",
-      "intent": "25分，RPE2–3、可完整說話；無可信功率就不看瓦數。",
-      "score_policy": "record_only",
-      "segments": [
-        {
-          "name": "輕鬆踩踏",
-          "role": "recovery",
-          "minutes": 25,
-          "target_w": {
-            "lo": null,
-            "hi": null,
-            "about": null
-          },
-          "target_cadence": null
-        }
-      ],
-      "time_budget": {
-        "window_min": 60
-      },
-      "selected_variant": "outdoor",
-      "route": "可在家附近平路輕鬆騎；若時間不足就用社區飛輪。",
-      "rain_summary": "社區飛輪25分，RPE2–3；機台沒空可休息，不以跑步間歇補。",
-      "export_mode": "none",
-      "variants": {
-        "outdoor": {
-          "venue": "outdoor",
-          "summary": "25分，RPE2–3、可完整說話；無可信功率就不看瓦數。"
-        },
-        "rain": {
-          "venue": "indoor",
-          "summary": "社區飛輪25分，RPE2–3；機台沒空可休息，不以跑步間歇補。"
+          "summary": "社區飛輪35分，RPE2–3；疲勞可休息。"
         }
       }
     },
@@ -1780,40 +1686,16 @@
       "date": "2026-10-31",
       "week": "W4",
       "block": "zhongshe-2026-10",
-      "label": "週末輕鬆踩",
-      "type": "SUPPORT",
-      "intent": "35分，RPE2–3、可完整說話；無可信功率就不看瓦數。",
+      "label": "休息／家庭時間",
+      "type": "REST",
+      "intent": "依9/7新增時段資訊，週六不排課；不算欠課。",
       "score_policy": "record_only",
-      "segments": [
-        {
-          "name": "輕鬆踩踏",
-          "role": "recovery",
-          "minutes": 35,
-          "target_w": {
-            "lo": null,
-            "hi": null,
-            "about": null
-          },
-          "target_cadence": null
-        }
-      ],
+      "segments": [],
       "time_budget": {
         "window_min": 60
       },
       "selected_variant": "outdoor",
-      "route": "可在家附近平路輕鬆騎；若時間不足就用社區飛輪。",
-      "rain_summary": "社區飛輪35分，RPE2–3；機台沒空可休息，不以跑步間歇補。",
-      "export_mode": "none",
-      "variants": {
-        "outdoor": {
-          "venue": "outdoor",
-          "summary": "35分，RPE2–3、可完整說話；無可信功率就不看瓦數。"
-        },
-        "rain": {
-          "venue": "indoor",
-          "summary": "社區飛輪35分，RPE2–3；機台沒空可休息，不以跑步間歇補。"
-        }
-      }
+      "export_mode": "none"
     },
     "2026-11-01": {
       "date": "2026-11-01",

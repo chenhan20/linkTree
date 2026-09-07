@@ -27,6 +27,7 @@ rebuild:true）下「排序在後的肌力訓練覆蓋掉騎乘報告」的事�
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -40,6 +41,8 @@ FIT_DIR = Path(os.getenv("FIT_DIR", ROOT / "data/fit"))
 RIDES = ROOT / "rides"
 NOTES = RIDES / "notes"
 TOOLS = ROOT / "tools/tcx"
+sys.path.insert(0, str(TOOLS))
+import plan_store
 ITT = ROOT / "data/itt-segments.json"
 PLAN = ROOT / "data/plan.json"
 BLOCK = ROOT / "data/training-block.json"
@@ -85,11 +88,20 @@ def plan_dates() -> set[str]:
     if not PLAN.exists():
         return set()
     try:
-        data = json.loads(PLAN.read_text(encoding="utf-8"))
+        data = plan_store.load_plan()
     except json.JSONDecodeError:
         log("⚠️ plan.json 解析失敗，這批全部不做課表對帳")
         return set()
-    return {d for d in (data.get("days") or {}) if DATE_RE.fullmatch(str(d))}
+    return {d for d, day in (data.get("days") or {}).items()
+            if DATE_RE.fullmatch(str(d)) and day.get('segments')}
+
+
+def monthly_fingerprint(date):
+    plan = plan_store.load_plan()
+    day = plan_store.resolve_day(plan, date)
+    if not day or not day.get('_plan_source'):
+        return None
+    return hashlib.sha256(json.dumps(day, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
 
 
 def score(fit: Path, date: str, tmp: Path) -> Path | None:
@@ -142,16 +154,24 @@ def fill_training_block(date: str, score_path: Path) -> None:
     if/tss/vi 是**整趟**的數字（週期章看的是當天課表的整體強度），
     跟報告裡逐段對帳的分數是兩回事，兩個都要有才看得出全貌。
     """
-    if not BLOCK.exists():
+    block_path = BLOCK
+    if not block_path.exists():
         return
     try:
         res = json.loads(score_path.read_text(encoding="utf-8"))
-        blk = json.loads(BLOCK.read_text(encoding="utf-8"))
+        blk = json.loads(block_path.read_text(encoding="utf-8"))
     except (json.JSONDecodeError, OSError) as e:
         log(f"[週期] {date} 回填略過：{e}")
         return
 
     sess = next((s for s in blk.get("sessions", []) if s.get("date") == date), None)
+    if sess is None:
+        for candidate in sorted((ROOT / 'data/training-blocks').glob('*.json')) + sorted((ROOT / 'data/training-history').glob('*.json')):
+            other = json.loads(candidate.read_text(encoding='utf-8'))
+            found = next((s for s in other.get('sessions', []) if s.get('date') == date), None)
+            if found is not None:
+                block_path, blk, sess = candidate, other, found
+                break
     if sess is None:
         return
 
@@ -165,7 +185,7 @@ def fill_training_block(date: str, score_path: Path) -> None:
     pct = wt.get("pct")
     note = f"主課表對帳 {total.get('score')} 分（{total.get('grade')}）"
     if isinstance(pct, (int, float)):
-        note += f" · 主課表做到處方的 {pct:.0f}%"
+        note += f" · 主課表時間完成率 {pct:.0f}%"
     # 只覆寫這支算得出來的欄位，其餘原封不動。actual 裡還住著手寫的東西：
     # coach[]（教練評語）、substituted / sub_name / sub_metrics（替代課表）。
     # 先前這裡是整顆 actual 直接指派，於是重生一次報告就把當天的評語洗掉 ——
@@ -199,9 +219,9 @@ def fill_training_block(date: str, score_path: Path) -> None:
     if sess.get("actual") == actual:
         return
     sess["actual"] = actual
-    tmp = BLOCK.with_suffix(".tmp")
+    tmp = block_path.with_suffix(".tmp")
     tmp.write_text(json.dumps(blk, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    tmp.replace(BLOCK)
+    tmp.replace(block_path)
     log(f"[週期] {date} 回填：IF {actual['if']} · TSS {actual['tss']} · VI {actual['vi']}"
         + (f" · 前後測 {actual['test']}W" if "test" in actual else ""))
 
@@ -294,6 +314,9 @@ def qualifies(summary: dict, date: str, args, itt: set[str]) -> tuple[bool, str]
     if not pw.get("has_power"):
         return False, "沒有功率資料"
 
+    if date in plan_dates() and str((summary.get('meta') or {}).get('sport', '')).lower() in ('cycling', 'biking', 'ride', 'virtualride'):
+        return True, "有騎乘處方（不以TSS設門檻）"
+
     if date in itt:
         return True, "當天有 ITT 成績"
 
@@ -384,7 +407,9 @@ def main() -> int:
         want_title = desired_title((prev or {}).get("date") or date_of(fit) or "",
                                    fit, names)
         title_stale = bool(prev) and prev.get("title") != want_title
-        if prev and not (args.overwrite or args.force or args.dry_run or title_stale):
+        plan_fingerprint = monthly_fingerprint(date_of(fit))
+        plan_stale = bool(plan_fingerprint) and (prev or {}).get('plan_fingerprint') != plan_fingerprint
+        if prev and not (args.overwrite or args.force or args.dry_run or title_stale or plan_stale):
             # 之前處理過了。只有當它產出的報告被刪掉時才重做。
             if prev.get("skipped") or (RIDES / f"{prev['date']}.html").exists():
                 skipped += 1
@@ -427,7 +452,7 @@ def main() -> int:
                 title_stale = bool(prev) and prev.get("title") != want_title
                 out = RIDES / f"{date}.html"
                 if out.exists() and not (args.overwrite or args.force
-                                         or replacing or title_stale):
+                                         or replacing or title_stale or plan_stale):
                     # skipped:False＝「不是不合格，只是這次沒重生」——
                     # 報告被刪掉時（見上面的 prev 判斷）仍會重做。
                     done[fit.name] = {"date": date, "skipped": False,
@@ -464,7 +489,8 @@ def main() -> int:
                 if r.returncode != 0:
                     raise RuntimeError((r.stderr or r.stdout or "").strip()[:400])
             log(f"[產出] {date}.html（{why}{'，含評語' if note.exists() else ''}）")
-            done[fit.name] = {"date": date, "skipped": False, "title": want_title}
+            done[fit.name] = {"date": date, "skipped": False, "title": want_title,
+                              "plan_fingerprint": plan_fingerprint}
             made += 1
             made_dates[date] = cur_power
         except Exception as e:  # noqa: BLE001 — 單一檔案失敗不該中斷整批

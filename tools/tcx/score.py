@@ -36,6 +36,7 @@ from datetime import timedelta
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import analyze_tcx as A  # noqa: E402  （只讀，不改）
+import plan_store
 
 INF = float("inf")
 DEFAULT_PLAN = os.path.join(
@@ -100,14 +101,12 @@ WORK_ROLES = ("work", "allout")
 # ---------------------------------------------------------------- 處方檔
 def load_plan(path=None):
     """讀 data/plan.json。找不到就丟 FileNotFoundError，不要靜靜回傳空的。"""
-    path = path or DEFAULT_PLAN
-    with open(path, "r", encoding="utf-8") as f:
-        return json.load(f)
+    return plan_store.load_plan(path)
 
 
 def plan_for_date(plan, date_str):
     """回傳當天的處方，沒有就 None。"""
-    return (plan.get("days") or {}).get(date_str)
+    return plan_store.resolve_day(plan, date_str)
 
 
 def _params(plan):
@@ -1172,7 +1171,8 @@ def score_ride(path, date=None, plan=None, plan_path=None):
     S = read_series(path)
     date = date or S["start_local"].strftime("%Y-%m-%d")
     day = plan_for_date(plan, date)
-    base = plan.get("baseline") or {}
+    base = plan_store.baseline_for(plan, day or {})
+    plan = {**plan, 'baseline': base}
     fname = os.path.basename(path)
 
     if not day:
@@ -1180,6 +1180,12 @@ def score_ride(path, date=None, plan=None, plan_path=None):
                 "reason": "當天沒有處方",
                 "detail": "data/plan.json 的 days 裡沒有 %s。這趟不套課表標準，"
                           "自由騎不該被課表打分。" % date,
+                "sport": (S["meta"] or {}).get("sport"),
+                "start_local": S["start_local"].strftime("%Y-%m-%d %H:%M")}
+
+    if day.get('score_policy') == 'record_only':
+        return {"scored": False, "date": date, "file": fname,
+                "reason": "只記錄，不評處方分數", "detail": day.get('intent', ''),
                 "sport": (S["meta"] or {}).get("sport"),
                 "start_local": S["start_local"].strftime("%Y-%m-%d %H:%M")}
 
@@ -1278,7 +1284,8 @@ def score_ride(path, date=None, plan=None, plan_path=None):
         "date": date,
         "file": fname,
         "plan": {"type": day.get("type"), "label": day.get("label"), "block": day.get("block"),
-                 "week": day.get("week"), "weekday": day.get("weekday"), "intent": day.get("intent")},
+                 "week": day.get("week"), "weekday": day.get("weekday"), "intent": day.get("intent"),
+                 "variant": day.get('selected_variant'), "source": day.get('_plan_source', 'data/plan.json')},
         "ride": {
             "start_local": S["start_local"].strftime("%Y-%m-%d %H:%M"),
             "sport": (S["meta"] or {}).get("sport"),
@@ -1286,7 +1293,7 @@ def score_ride(path, date=None, plan=None, plan_path=None):
             "distance_km": round(S["dist_m"] / 1000, 2),
             "avg_w": round(sum(S["w"]) / S["n"], 1), "avg_w_moving": round(avg_moving, 1),
             "np_w": npw, "if": iff, "tss": tss, "vi": vi,
-            "ftp_used": ftp, "ftp_source": "data/plan.json baseline.ftp_w",
+            "ftp_used": ftp, "ftp_source": day.get('_plan_source', 'data/plan.json') + ' baseline.ftp_w',
             "device_ftp_w": base.get("device_ftp_w"),
         },
         "alignment": {

@@ -1,3 +1,5 @@
+> 月份規劃入口：先讀 `athlete/TRAINING_WORKFLOW.md`、`athlete/training-log.md` 與當月 `data/plans/YYYY-MM.json`。下方鬼月限制只適用原週期；十月起戶外優先並有雨備。舊文中的功率斷崖、DOMS、低心率與月時數因果判斷，須參照 `docs/review/fit-audit-2026-09-05/README.md`，不可當已驗證診斷。
+
 # 教練脈絡 · Steve Chuang
 
 > **這份檔案是給 AI 教練讀的。** 把它（或它的 raw 連結）連同你的問題一起貼給任何 AI，

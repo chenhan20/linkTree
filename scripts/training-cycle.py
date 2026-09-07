@@ -46,6 +46,8 @@ def validate(plan):
         weekday = dt.date.fromisoformat(date).weekday()
         if weekday == 2 and day['segments']:
             raise ValueError(f'{date}: Wednesday is not a cycling day')
+        if weekday == 5 and plan.get('constraints', {}).get('saturday_available') is False and day['segments']:
+            raise ValueError(f'{date}: Saturday is unavailable')
         for key in day.get('variants') or [None]:
             chosen = plan_store.resolve_day(plan, date, key)
             total = sum(s['minutes'] for s in chosen['segments'])
