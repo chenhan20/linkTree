@@ -1351,6 +1351,9 @@ a.row:hover .row-go,button.row:hover .row-go{color:#FC4C02}
 .dw-tt th{font-size:8.5px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;
   color:var(--ink-3);text-align:left;padding:0 8px 6px 0;border-bottom:1px solid var(--hair);white-space:nowrap}
 .dw-tt th.r,.dw-tt td.r{text-align:right;padding-right:0}
+/* 靠右欄的 padding-right 是 0，右鄰的欄就會直接黏上來（「20130→180W熱身」）。
+   間距補在右鄰身上，不動靠右欄本身的對齊。 */
+.dw-tt th.r+th,.dw-tt td.r+td{padding-left:14px}
 .dw-tt td{padding:7px 8px 7px 0;border-bottom:1px solid var(--hair);vertical-align:baseline}
 .dw-tt tr:last-child td{border-bottom:0}
 .dw-tt .t{color:var(--ink-3);font-size:11.5px;white-space:nowrap}
@@ -1399,6 +1402,57 @@ body.dw-open #to-top-btn{display:none!important}
 @media(min-width:1280px){
   .main{transition:padding-right .18s cubic-bezier(.2,.8,.3,1)}
   body.dw-open .main{padding-right:420px}
+}
+
+/* ══ 開窗模式（課表）══════════════════════════════════════════════════
+   420px 的側抽屜裝得下「一行處方」，裝不下逐段時間軸 —— 五欄的表格擠在最右邊
+   全部纏在一起。課表這一種改成置中的窗：寬度給到 1040px，版面照報告排 ——
+   處方與時間軸整幅、其餘分兩欄（column-span:all 做的，不是 grid：
+   各節高度差很多，grid 會把兩欄拉成一樣高留一堆洞，多欄流會自己平衡）。
+   只有 openDrawer({window:true}) 的呼叫者會進這個模式；ITT 當日與收成月份
+   仍然是側抽屜，那兩種本來就是窄清單，開窗只會變成一片空白。
+   手機不套用：那邊本來就是整屏子頁面，已經是最好的形狀。 */
+@media(min-width:768px){
+  .drawer.is-window{
+    top:50%;left:50%;right:auto;bottom:auto;
+    width:min(1040px,calc(100vw - 72px));height:min(86vh,880px);
+    border:1px solid var(--hair-2);border-radius:14px;
+    box-shadow:0 30px 90px rgba(0,0,0,.62);
+    transform:translate(-50%,-50%) scale(.985);opacity:0;
+    transition:transform .18s cubic-bezier(.2,.8,.3,1),opacity .18s,visibility .18s;
+  }
+  .drawer.is-window.open{transform:translate(-50%,-50%) scale(1);opacity:1}
+  /* 底層壓暗。用 body 的 ::before 就不必多一個節點，z-index 59 剛好躲在抽屜（60）底下 */
+  body.dw-window::before{
+    content:'';position:fixed;inset:0;z-index:59;
+    background:rgba(4,2,1,.72);opacity:0;transition:opacity .18s;
+  }
+  body.dw-window.dw-open::before{opacity:1}
+  .drawer.is-window .dw-head{padding:20px 26px 15px}
+  .drawer.is-window .dw-t{font-size:21px}
+  .drawer.is-window .dw-body{padding:20px 26px 30px}
+  /* 多欄一定要掛在「高度自動」的內層，不能掛在 .dw-body 上 ——
+     .dw-body 是固定高度的捲動容器，多欄在固定高度裡塞不下時不會往下長，
+     而是往右邊生出新的欄（實測 scrollWidth 2568 / clientWidth 1038，
+     後三節整個跑到畫面外）。包一層 .dw-flow 讓它自己長高、由 .dw-body 垂直捲。 */
+  .drawer.is-window .dw-flow{column-count:2;column-gap:34px;column-rule:1px solid var(--hair)}
+  /* 分欄的預設：一節不准被切成兩半。例外是 .is-long（執行要點那種十幾條的清單）——
+     不准它斷，兩欄就會變成「左欄空一半、右欄爆長」；讓它斷、但每一條自己不准斷。 */
+  .drawer.is-window .dw-sec{break-inside:avoid;margin-bottom:22px}
+  .drawer.is-window .dw-sec.is-long{break-inside:auto}
+  .drawer.is-window .dw-sec.is-long>h4{break-after:avoid}
+  .drawer.is-window .dw-sec.is-long .dw-li li{break-inside:avoid}
+  /* 整幅：處方是導言、時間軸的表有五欄，兩者都不該被塞進半欄 */
+  .drawer.is-window .dw-flow>.dw-sec.is-wide,
+  .drawer.is-window .dw-flow>.dw-cta{column-span:all}
+  .drawer.is-window .dw-flow>.dw-sec.is-wide{margin-bottom:24px}
+  .drawer.is-window .dw-tt{font-size:13px}
+  .drawer.is-window .dw-tt .note{max-width:none}
+  .drawer.is-window .dw-p{max-width:78ch}
+}
+/* 開窗時主欄不要被推開 —— 那是側抽屜的行為，窗是壓在正中間的 */
+@media(min-width:1280px){
+  body.dw-window.dw-open .main{padding-right:0}
 }
 
 /* ══ SESSION ROWS（Plan）══════════════════════════════════════════════
@@ -3924,7 +3978,7 @@ function renderRxTimeline(date) {
     ${tb.window_min != null ? `<span><b>${tb.window_min}</b>分窗口</span>` : ''}
     ${slack != null ? `<span class="${slack <= 0 ? 'warn' : ''}"><b>${slack}</b>分餘裕</span>` : ''}
   </div>`
-  const timeline = `<div class="dw-sec"><h4>逐段時間軸 · Timeline</h4>
+  const timeline = `<div class="dw-sec is-wide"><h4>逐段時間軸 · Timeline</h4>
     <div class="dw-tlbar">${bar}</div>
     <div class="dw-tlsc"><span>${start ? start : '0′'}</span><span>${total} 分</span><span>${start ? rxClock(start, total) : total + '′'}</span></div>
     <table class="dw-tt"><thead><tr>
@@ -3957,7 +4011,7 @@ function renderRxTimeline(date) {
   ]
   const notes = NOTE_KEYS.filter(([k]) => exec[k])
   const execSec = notes.length
-    ? `<div class="dw-sec"><h4>執行要點 · Execution</h4><ul class="dw-li">${
+    ? `<div class="dw-sec is-long"><h4>執行要點 · Execution</h4><ul class="dw-li">${
         notes.map(([k, lab]) => `<li><b>${lab}</b>　${mdBold(exec[k])}</li>`).join('')}</ul></div>`
     : ''
   return timeline + clock + rules + execSec
@@ -3986,7 +4040,7 @@ function openSessionDrawer(date) {
       ${pass == null ? '' : `<span class="m ${pass ? 'ok' : 'no'}">${pass ? '達標' : '未達'}</span>`}
     </div>`
   const body =
-    (s.plan ? `<div class="dw-sec"><h4>處方 · Prescription</h4><div class="dw-p">${mdBold(s.plan)}</div></div>` : '') +
+    (s.plan ? `<div class="dw-sec is-wide"><h4>處方 · Prescription</h4><div class="dw-p">${mdBold(s.plan)}</div></div>` : '') +
     renderRxTimeline(s.date) +
     (s.support ? `<div class="dw-sec"><h4>輔助課表 · Support</h4>
       <div class="dw-p">${mdBold(s.metrics || '')}${s.why ? `<br><br>${mdBold(s.why)}` : ''}</div></div>` : '') +
@@ -4012,6 +4066,7 @@ function openSessionDrawer(date) {
     title: s.name || '',
     sub: `${s.date} 週${wd(s.date)}`,
     body,
+    window: true,   // 課表的內容量已經超過側抽屜的 420px（見 .drawer.is-window）
   })
 }
 
@@ -8686,22 +8741,30 @@ function openDrawer(o) {
   const dw = document.getElementById('drawer')
   if (!dw) return
   _dwOpener = document.activeElement
+  // window:true ＝ 置中的窗（課表用），否則是原本的右側抽屜。
+  // aria-modal 跟著切：窗是真的把底層蓋掉，抽屜不是。
+  const win = !!o.window
+  dw.classList.toggle('is-window', win)
+  document.body.classList.toggle('dw-window', win)
+  dw.setAttribute('aria-modal', win ? 'true' : 'false')
   document.getElementById('dw-k').textContent = o.label || ''
   document.getElementById('dw-t').textContent = o.title || ''
   document.getElementById('dw-s').textContent = o.sub || ''
-  document.getElementById('dw-body').innerHTML = o.body || ''
+  document.getElementById('dw-body').innerHTML = win ? `<div class="dw-flow">${o.body || ''}</div>` : (o.body || '')
   dw.hidden = false
   requestAnimationFrame(() => { dw.classList.add('open'); document.body.classList.add('dw-open') })
-  // 手機是整屏子頁面，底層不該還能捲；桌機是側欄，底層照常
-  if (matchMedia('(max-width:767px)').matches) document.body.classList.add('dw-lock')
+  // 手機是整屏子頁面、桌機的窗是 modal，兩種都不該讓底層還能捲；
+  // 桌機的側抽屜不鎖（它沒有蓋住主欄，底層照常捲是對的）
+  if (win || matchMedia('(max-width:767px)').matches) document.body.classList.add('dw-lock')
   document.getElementById('dw-x').focus({ preventScroll: true })
 }
 function closeDrawer() {
   const dw = document.getElementById('drawer')
   if (!dw || dw.hidden) return
   dw.classList.remove('open')
-  document.body.classList.remove('dw-lock', 'dw-open')
-  setTimeout(() => { dw.hidden = true }, 200)
+  document.body.classList.remove('dw-lock', 'dw-open', 'dw-window')
+  // is-window 要等收合動畫跑完才拿掉，不然窗會在最後一格瞬間跳回右側抽屜的位置
+  setTimeout(() => { dw.hidden = true; dw.classList.remove('is-window') }, 200)
   if (_dwOpener && _dwOpener.isConnected) _dwOpener.focus({ preventScroll: true })
   _dwOpener = null
   appState.selectedSession = null
@@ -12163,7 +12226,7 @@ function motionLayer({ animate, createDrawable, stagger }) {
 <link rel="stylesheet" href="activity-modal.css?v=20260827">
 <link rel="stylesheet" href="theme-strava.css?v=20260827">
 <style>:root{--am-accent:#FC4C02;--am-accent-soft:rgba(252,76,2,.18);--am-panel:#14100c;--am-panel-2:#1c160f}</style>
-<script src="strava-cinema-fx.js?v=20260906" defer></script>
+<script src="strava-cinema-fx.js?v=20260907" defer></script>
 <script src="itt-achievements.js?v=20260827" defer></script>
 <script src="activity-modal.js?v=20260827" defer></script>
 </body>
