@@ -80,6 +80,7 @@ jobs:
           ATHLETE_WEIGHT: ${{ vars.ATHLETE_WEIGHT || '80' }}
           ATHLETE_HEIGHT: ${{ vars.ATHLETE_HEIGHT || '173' }}
         run: |
+          python scripts/training-cycle.py sync
           ARGS="--min-tss ${{ inputs.min_tss || '100' }}"
           [ "${{ inputs.rebuild }}" = "true" ] && ARGS="$ARGS --overwrite"
           python scripts/build-ride-reports.py $ARGS
@@ -105,7 +106,8 @@ jobs:
           # 平常看不出來（push 沒被拒就過了），一旦撞到別人先 push 就整班 exit 128。
           # 2026-09-01 實際爆過一次。strava-sync 不碰這個檔，所以擺進第一個 commit
           # 不會破壞「rebase 不可能衝突」那個前提。
-          git add data/fit rides data/training-block.json
+          git add data/fit rides data/training-block.json data/training-blocks athlete/plans
+          if [ -d data/training-history ]; then git add data/training-history; fi
           if git diff --staged --quiet; then
             echo "沒有 FIT／報告變更。"
           else
