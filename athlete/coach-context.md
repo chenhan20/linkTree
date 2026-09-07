@@ -1,3 +1,5 @@
+> **2026-09-07 時程更正優先：** 山路限制依使用者指定至9/10；9/11起回山過渡，9/22–10/19四週主週期。有效處方見 `data/plans/2026-09.json`／`athlete/plans/2026-09.md`。下方舊9/22風櫃嘴、十月才開始及雨天整組延到9/15、17的排程已被取代；9/8、9/10原處方保留，雨天不自動擠掉新週期。
+
 > 月份規劃入口：先讀 `athlete/TRAINING_WORKFLOW.md`、`athlete/training-log.md` 與當月 `data/plans/YYYY-MM.json`。下方鬼月限制只適用原週期；十月起戶外優先並有雨備。舊文中的功率斷崖、DOMS、低心率與月時數因果判斷，須參照 `docs/review/fit-audit-2026-09-05/README.md`，不可當已驗證診斷。
 
 # 教練脈絡 · Steve Chuang

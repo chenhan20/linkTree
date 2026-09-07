@@ -1,92 +1,72 @@
 # 可延續的 AI 訓練規劃
 
-採用方式：**每月規劃一次方向，每週用5分鐘回報微調，每次騎完由FIT留下量測。** 不需要每天換菜單，也不需要每天讓AI重新診斷你。
+**每四週規劃一次方向，每週回報微調；FIT同步負責留下實際量測。週期不必從每月1號開始。**
 
-## 原本的檔案如何運作
+## 目前有效時程
 
-| 檔案／程式 | 用途 |
+- 依使用者指定，山路限制為8/12子時起至9/10；9/8與9/10既有處方本次保留。
+- 9/11–21是回山過渡：9/15中社單次計時；9/17完整風櫃嘴控制騎，已確認該日150分窗口。9/15未測且9/17恢復正常，才改中社雨延，不兩條都做。
+- **四週主週期9/22–10/19**：W1 9/22–28、W2 9/29–10/5、W3 10/6–12、W4 10/13–19。10/13中社驗收、10/15條件雨延。
+- 10/18檢討；下一期從10/20開始。原本10月整月草案與10/27測驗已取消，封存在`athlete/plans/archive/2026-09-07-superseded-october/`，其中ZWO不要匯入執行。
+
+## 檔案怎麼設計
+
+| 檔案 | 用途 |
 |---|---|
-| `athlete/好兄弟月平路四週課表.md` | 原本人工撰寫的教練長文 |
-| `data/plan.json` | 原本的逐日處方：工作段、休息、時間、瓦數、FTP、計分規則 |
-| `data/training-block.json` | 網頁目前顯示的週期、每日摘要、target／actual |
-| `scripts/make-workout.py` | 把處方轉成ZWO／ERG／MRC |
-| `tools/tcx/score.py` | FIT逐段對帳；結果存在`data/fit/_scores/` |
-| `scripts/build-ride-reports.py` | 產生`rides/<日期>.html`，回填週期實際數據 |
-| `scripts/build-coach-context.py` | 更新教練脈絡的auto區段；auto之外的舊教練文字原本不會更新 |
+| `data/plan.json` | 歷史處方，包含9/8、9/10；保留當時FTP與協定 |
+| `data/plans/2026-09.json` | **有效主資料**，覆蓋9/11–10/19，含過渡週與跨月四週、晴雨版本、時段、工作FTP |
+| `athlete/plans/2026-09.md` | 由主資料產生的完整閱讀版 |
+| `data/training-blocks/2026-09.json` | 網頁週期摘要；9/11起FIT同步選定此週期 |
+| `data/training-block.json` | 網頁目前顯示的週期；9/7現在仍是舊期至9/10，保留actual |
+| `tools/tcx/plan_store.py` | 合併歷史與有效月檔，依日期選處方／FTP，重複日期直接拒絕 |
+| `scripts/training-cycle.py` | validate／render／choose／sync；以cycle起終判斷，不以檔名月份判斷 |
+| `scripts/make-workout.py` | 匯出已指定版本的ZWO；匯出本身不會替換已選版本 |
+| `tools/tcx/score.py`、`scripts/build-ride-reports.py` | 讀同一份主資料，FIT對帳、報告、actual回填 |
+| `athlete/training-log.md` | FIT無法知道的RPE、真實睡眠、漏課與籃球／公司課負荷 |
 
-原本三份課表需要分別改，導致文字、計分與網頁可能不一致。十月起以月計畫JSON為唯一處方，閱讀版與網頁摘要由它產生。舊月資料與當時FTP保留，不能拿新月FTP改寫歷史。
+`2026-09`是此計畫的索引，並不代表9/30停止；每天只能存在一份有效處方。此期延伸到10/19，下期可用`2026-10.json`但必須10/20才開始，不要把10/1–19再排一份。
 
-## 現在的檔案
+## 每四週一次：產生下期
 
-- **編輯主資料：**`data/plans/2026-10.json`，包含每天的戶外、雨備、選定版本、時間限制、工作FTP及檢討日期。以後依序新增月份，不能覆蓋舊月。
-- **你平常看：**`athlete/plans/2026-10.md`，包括整月表與每堂細節。
-- **網頁用：**`data/training-blocks/2026-10.json`。到週期開始，現有FIT同步流程會將它切為`data/training-block.json`；上一期連同actual存進`data/training-history/`。
-- **你補資訊：**`athlete/training-log.md`，只補FIT無法知道的RPE、真實睡眠、未錄活動與漏課原因。
-- **依據與限制：**`docs/review/fit-audit-2026-09-05/README.md`。舊教練文字中的DOMS診斷、固定月時數門檻、功率斷崖因果，不能直接延用。
+10/18前後可直接請AI：
 
-讀取處方的Python已合併舊`plan.json`與每月檔案。每天採其月份的FTP，雨備版本經選定後，匯出與FIT對帳讀同一份。月計畫變更也會讓該日報告在下次同步時重新計算。這只解決月課表的版本問題，前次審查列出的其他FIT演算法風險仍待另修。
+> 請讀 athlete/TRAINING_WORKFLOW.md、athlete/training-log.md、data/plans/2026-09.json 和 docs/review/fit-audit-2026-09-05/README.md。依最新FIT、有效中社測驗與主觀回報，檢討9/22–10/19，再從10/20規劃四週。保留歷史與actual；主目標中社PR，每堂戶外附雨備，週二150分、週四120分、週三不騎、週六不排、週日每次60分內且可選。9/17的150分是單日例外。先看實際籃球／公司課及功率來源，再決定進階。修改新主資料後驗證、產生閱讀版／網頁摘要／雨備ZWO，不讓日期重疊，也不以TSS或月時數補欠課。
 
-目前仍在九月，因此網站保留九月週期；十月檔已備妥。自動切換依賴這次變更部署到倉庫後的既有CI成功執行，並非本機已建立背景排程。沒有CI時，可手動執行sync。
+不需要每天重新排整份。一週回報一次，僅決定下週維持、進階或減量。9/14先確認能否9/15測驗；9/21用9/10、15實際結果複核第一週；10/4決定2×15是否適合；10/11確認10/13測驗狀態。這些日期是人工複核點，尚未建立提醒或AI自動重排。
 
-## 每月一次：決定下一個訓練方向
-
-月底最後一週，請AI先看當月結果再排下個月。十月目前以9/5資料排定，**9/28要複核九月結果與裝置狀態**，不是未來資料已經算進去。
-
-每月至少檢查：最近4–6週實際騎乘頻率與時間、功率來源、主課工作段、RPE、測驗有效性、籃球／公司課負荷、睡眠，以及下月能用的日期。不只看A+、CTL、eFTP。先選一個主要目標，不同時要求減重、衝刺、長距離與所有爬坡都破PR。
-
-可以直接在這個專案貼以下文字給任何AI：
-
-> 請先讀 athlete/TRAINING_WORKFLOW.md、athlete/training-log.md、最近月份的 data/plans/*.json，以及 docs/review/fit-audit-2026-09-05/README.md。用最新FIT對帳、ITT成績與wellness檢討本月，再規劃 YYYY-MM。保留歷史；每個戶外主課都有雨備；週三不騎、週二150分、週四120分、週末每次60分內；依9/7紀錄，十月週六不排課。確認未錄的籃球／有氧負荷與感測器口徑。先更新新的月JSON，再驗證與產生閱讀版、網頁摘要及雨備ZWO。不要把DOMS或不同日期的最佳功率當成確定診斷，也不要只為追TSS補課。
-
-若使用不能讀此專案檔案的外部AI，提供本檔、當月閱讀版、訓練日誌及最新對帳摘要；不要只貼舊對話記憶或一張功率曲線。新AI應先說明資料截至哪天、缺什麼，再排課。
-
-## 每週一次：只改下一週
-
-週末回報：主課是否完成、最吃力那組RPE、腿部痠痛0–10、實際睡眠、籃球／公司課有沒有參加、下週時段。AI只決定下週維持、進階或減量，不因一堂課數字差就重排整月。
-
-可用一句話：
-
-> 檢討本週，僅調整下週。FIT已同步；週二最後一組RPE__，腿痠__/10，實際睡眠__，籃球／公司課__，漏課原因__，下週可用時段__。請把變更理由寫進訓練日誌，再更新月主資料與衍生檔。
-
-## 每次騎車：先選晴雨，再記錄結果
-
-一般訓練遇雨，當天直接做已設計的雨備，不整週延期。出門前判斷雨勢、路面、能見度與下坡條件；十月的月計畫不是天氣預報。被交通打斷的工作段正常停踩，記下來，不為得分勉強維持功率。
-
-你可以只說「10/13改雨備」，由AI替你選定。也能自行執行：
+## 每次出門：先選版本
 
 ```bash
-python3 scripts/training-cycle.py choose --month 2026-10 --date 2026-10-13 --variant rain
+# 例如9/29下雨
+python3 scripts/training-cycle.py choose --month 2026-09 --date 2026-09-29 --variant rain
+
+# 改回戶外
+python3 scripts/training-cycle.py choose --month 2026-09 --date 2026-09-29 --variant outdoor
 ```
 
-改回戶外把rain改成outdoor。**只匯出一個雨備檔不等於已選定雨備**，事後FIT對帳需要知道你實際採用哪版；如果臨時變更，回來補選即可，下次同步會重算。
+`choose`是修改有效處方；若臨時改騎，回來補選，下次報告才能對同一版。主課雨備保留工作段，縮短通勤／額外續騎，不要求TSS相同。週末社區飛輪只用RPE，不把不明瓦數當曲柄功率。
 
-中社測驗是例外：10/27下雨改45分恢復；10/29只有在未做10/27測驗、恢復正常且天候適合時才啟用。兩天不能都排測驗：
+測驗有兩組條件雨延（或原日未能測驗）：9/15→9/17、10/13→10/15。先將原日設為rain（恢復版，未騎仍需在日誌記未完成），再選備用日；這不是宣稱有下雨或已完成。
 
 ```bash
-python3 scripts/training-cycle.py choose --month 2026-10 --date 2026-10-27 --variant rain
-python3 scripts/training-cycle.py choose --month 2026-10 --date 2026-10-29 --variant reserve_test
+python3 scripts/training-cycle.py choose --month 2026-09 --date 2026-09-15 --variant rain
+python3 scripts/training-cycle.py choose --month 2026-09 --date 2026-09-17 --variant reserve_test
 ```
 
-10/29又下雨就選rain，把測驗交給十一月，沒有需要補回的欠課。10/29下坡與往返若塞不進120分也延期。室內能力測驗不能取代戶外中社秒數。
+備用測驗取代當天原課，不能加做風櫃嘴。原日已完成測驗就不能用雨備選項假裝未測。備用日恢復差或天候不佳改rain，不把欠測塞進隔天。9/10若無法測，不自動把前置／後測移到9/15、17，9/15可改成新戶外基準；原疲勞後20分與中社全段不是同一個指標。
 
 ## 產檔與驗證
 
 ```bash
-# 改月JSON後，檢查完整日期、晴雨版本、時間上限、週三休騎與測驗衝突
-python3 scripts/training-cycle.py validate --month 2026-10
-
-# 自動產閱讀版與網頁週期摘要；保留既有actual
-python3 scripts/training-cycle.py render --month 2026-10
-
-# 批次產生此月所有雨備提示檔（休息、無功率週末不產）
-python3 scripts/make-workout.py --plan data/plans/2026-10.json --all --variant rain --out athlete/workouts/2026-10-rain
-
-# 按今天日期啟用適用週期；沒有對應月計畫就保留現狀，不擅自延伸處方
+python3 scripts/training-cycle.py validate --month 2026-09
+python3 scripts/training-cycle.py render --month 2026-09
+python3 scripts/make-workout.py --plan data/plans/2026-09.json --all --variant rain --out athlete/workouts/2026-09-cycle-rain
+python3 scripts/test-training-cycle.py
 python3 scripts/training-cycle.py sync
 ```
 
-十月ZWO是 **FreeRide提示檔**：用slope／level與曲柄功率，避免尚未驗證的固定25W換算進ERG控制。完成同步校正後才討論ERG。檔案已做XML和時長檢查，但尚未在你的訓練台App實機匯入；文字提示若不顯示，以閱讀版與手錶lap計時照做。
+sync依台北當天日期啟用週期，換期前把舊摘要連同actual存進`data/training-history/`。自動換期依賴程式已推送且既有FIT CI成功執行；本機目前的修改不等於已部署排程。
 
-之後新增月檔時，更新month、cycle起終、完整日期、revision、baseline來源、檢討日期與各日segments；星期規則和時間限制會驗證。週期可跨月，但不可重疊：十月延伸到11/1，因此下一期從11/2開始。改完主資料必須重生，不直接修改衍生Markdown或網頁摘要。
+ZWO是FreeRide提示，採slope／level看曲柄，不預設固定扣25W進ERG。已做XML及時長檢查，尚未在你的訓練台App實機匯入；提示未顯示就以閱讀版與手動lap執行。工作段關Auto Lap、起終手動lap；路口與下坡正常停踩，不能為計分冒險。
 
-這次未替你建立提醒或讓AI每月自行排課。你每月請AI規劃一次即可；既有同步負責收資料與報告，主觀回報與下一期目標仍由你補充。
+FIT報告仍有已記錄的功率曲線、掉訊與因果判讀限制，詳見審查文件。工作FTP234W是暫定分區值；不拿疲勞後20分直接乘0.95改FTP，不用不同日期的最佳20／60分判定唯一弱點。中社16:25、風櫃嘴28:29是歷史PR；控制騎與室內雨備不能冒充全力路段測驗。

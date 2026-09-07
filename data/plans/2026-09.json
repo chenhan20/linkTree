@@ -1,0 +1,2133 @@
+{
+  "schema_version": 1,
+  "month": "2026-09",
+  "revision": 1,
+  "updated_at": "2026-09-07",
+  "status": "scheduled",
+  "baseline": {
+    "ftp_w": 234,
+    "ftp_source": "工作值234W僅作分區，非新測驗結果；9/10疲勞後20分不得直接乘0.95更新FTP。9/14及9/21依同曲柄資料與RPE複核。",
+    "weight_kg": 80,
+    "height_cm": 173,
+    "threshold_hr": 163,
+    "max_hr": 188,
+    "trainer_offset_w": 0,
+    "trainer_offset_note": "採slope/level看曲柄；不預設固定扣25W。同步校正後才討論ERG。"
+  },
+  "cycle": {
+    "id": "zhongshe-2026-09-return",
+    "title": "鬼月後回山＋中社四週",
+    "title_en": "BACK TO CLIMB / FOUR WEEKS",
+    "start": "2026-09-11",
+    "end": "2026-10-19",
+    "goal": "9/15建立中社戶外基準；9/22–10/19四週漸進與減量，10/13中社單次驗收。長期PR16:25，不保證四週破紀錄。",
+    "review_before": "2026-09-14",
+    "test_date": "2026-10-13",
+    "rain_test_date": "2026-10-15",
+    "next_review": "2026-10-18",
+    "training_start": "2026-09-22"
+  },
+  "constraints": {
+    "tuesday_min": 150,
+    "thursday_min": 120,
+    "weekend_session_max_min": 60,
+    "no_cycling_wednesday": true,
+    "basketball": "週二晚照常視為負荷；測驗晚改休息／輕鬆。",
+    "wednesday": "上肢／核心＋公司有氧；沒有額外安排單車高強度。",
+    "trainer": "只有週二／三／四可用；週末社區飛輪以RPE控。",
+    "saturday_available": false,
+    "pending_confirmation": "9/17已確認150分鐘；其餘週四仍120、週二150，週六不排。",
+    "date_window_overrides": {
+      "2026-09-17": 150
+    }
+  },
+  "rules": {
+    "rain": "當天出發前依實際雨勢、路面與能見度選rain。雷雨、濕滑或不適合下坡直接室內；不必等大雨。晴雨只是方案，並非未來天氣預報。",
+    "progress": "前週工作段穩定完成、RPE約6–8且恢復正常才升；否則同級再做。第二組已崩落就減5–10W或少一組。",
+    "missed": "漏課不補到週三、不連兩天補硬課；一週少做不算欠帳。",
+    "readiness": "實際睡眠、疲勞、腿部感覺與熱身共同判斷；單一HRV、DOMS或低心率不作診斷。",
+    "lap": "主課日關Auto Lap，工作段起終按手動lap；路口、行人、下坡正常滑行，被打斷另記。避免自動lap把完整工作段切碎。",
+    "taper": "W4（10/13–19）相較W3減量，維持一趟中社測驗、其餘輕鬆；10/11週日提前降至25分，測驗週籃球與公司課降量。",
+    "calibration": "未確認訓練台差值前採slope/level看曲柄；檔案只用FreeRide提示，不自動ERG鎖功率。",
+    "calendar": "依使用者時程：鬼月限制8/12子時起至9/10，山路外騎9/11起；過渡9/11–21，四週9/22–10/19。9/8、9/10處方本次不改。舊「雨天整組延到9/15、17」不再自動套用；9/10若無法測，記未測，9/15可作新戶外基準，不把所有測驗塞在一起。",
+    "test_pair": "9/15中社與9/17風櫃嘴不排雙全力。9/17預設完整風櫃嘴控制強度，腿未恢復改平路或rain；9/15雨天／未測且9/17恢復正常，才選reserve_test做中社。10/13雨天／未測才可啟用10/15備用測驗。兩組雨延均不得重複全力。",
+    "route_time": "表列戶外時間是行程預算，需容納路口停等；固定工作段照lap，返程段依實際調整。二150／四120窗口保留至少15分；出發前核對起點到路段往返，若不夠即改附近河濱／雨備，不靠趕下坡完成。風櫃嘴完整路線舊紀錄約120分移動，不能塞進120分總窗口。 使用者另確認9/17有150分，故該日安排完整控制騎135分；其餘週四未延長。",
+    "test_pacing": "中社先漸進暖身，首3–4分RPE7–8、先以約235–245W試探；穩定才逐步加5–10W，最後一段再盡力。這是依舊戶外紀錄的暫定配速，不是FTP推導或270–285W硬性起跑。路況與當天感受優先；不鎖齒比、不為72rpm硬加瓦。",
+    "abort": "热身已異常吃力、踩踏疼痛或精神不濟，改輕鬆／休息。工作段維持不住且RPE達9，減5–10W或少一組；交通打斷記原因、不補衝。9/15若未恢復不勉強測，9/17僅在恢復正常時接手。",
+    "next": "10/18檢討，下一週期從10/20起；不再接舊10/27測驗。若10/13、15都雨，10/20可重新評估測驗，不能先宣稱已完成。"
+  },
+  "weekly_reviews": [
+    "實際完成／漏課原因",
+    "工作段均瓦、時間、RPE與路況中斷",
+    "是否戶外或雨備、使用哪個功率來源",
+    "實際睡眠與腿部痠痛0–10、籃球與公司課有無参加",
+    "下週時段或天氣限制；是否維持、減量、進階"
+  ],
+  "sources": [
+    {
+      "title": "自行車間歇訓練研究（支持一般原則，非此個人菜單直接驗證）",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/21812820/"
+    },
+    {
+      "title": "耐力減量綜述",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/37163550/"
+    }
+  ],
+  "blocks": [
+    {
+      "id": "zhongshe-2026-09-return",
+      "name": "鬼月後回山＋中社四週",
+      "start": "2026-09-11",
+      "end": "2026-10-19",
+      "source": "athlete/plans/2026-09.md",
+      "goal": "9/15建立中社戶外基準；9/22–10/19四週漸進與減量，10/13中社單次驗收。長期PR16:25，不保證四週破紀錄。"
+    }
+  ],
+  "days": {
+    "2026-09-11": {
+      "date": "2026-09-11",
+      "week": "過渡",
+      "block": "zhongshe-2026-09-return",
+      "label": "休息／輕柔活動",
+      "type": "REST",
+      "intent": "週六不排課；週三上肢／核心或公司課，測驗前降低腿部負荷。其餘日不補欠課。",
+      "score_policy": "record_only",
+      "segments": [],
+      "time_budget": {
+        "window_min": 60
+      },
+      "selected_variant": "outdoor",
+      "export_mode": "none"
+    },
+    "2026-09-12": {
+      "date": "2026-09-12",
+      "week": "過渡",
+      "block": "zhongshe-2026-09-return",
+      "label": "休息／家庭時間",
+      "type": "REST",
+      "intent": "週六不排課；週三上肢／核心或公司課，測驗前降低腿部負荷。其餘日不補欠課。",
+      "score_policy": "record_only",
+      "segments": [],
+      "time_budget": {
+        "window_min": 60
+      },
+      "selected_variant": "outdoor",
+      "export_mode": "none"
+    },
+    "2026-09-13": {
+      "date": "2026-09-13",
+      "week": "過渡",
+      "block": "zhongshe-2026-09-return",
+      "label": "週日可選輕鬆踩",
+      "type": "SUPPORT",
+      "intent": "可整堂跳過，不當成欠課；無可信功率只記錄。",
+      "score_policy": "record_only",
+      "segments": [
+        {
+          "name": "可選輕鬆踩",
+          "role": "recovery",
+          "minutes": 25,
+          "target_w": {
+            "lo": null,
+            "hi": null,
+            "about": null
+          },
+          "target_cadence": null
+        }
+      ],
+      "time_budget": {
+        "window_min": 60
+      },
+      "selected_variant": "outdoor",
+      "export_mode": "none",
+      "route": "住家附近安全平路／社區飛輪。",
+      "rain_summary": "社區飛輪25分；無機台或疲勞就休息。",
+      "variants": {
+        "outdoor": {
+          "venue": "outdoor",
+          "summary": "25分，RPE2–3，可完整說話。"
+        },
+        "rain": {
+          "venue": "indoor",
+          "segments": [
+            {
+              "name": "可選輕鬆踩",
+              "role": "recovery",
+              "minutes": 25,
+              "target_w": {
+                "lo": null,
+                "hi": null,
+                "about": null
+              },
+              "target_cadence": null
+            }
+          ],
+          "summary": "社區飛輪25分；無機台或疲勞就休息。"
+        }
+      }
+    },
+    "2026-09-14": {
+      "date": "2026-09-14",
+      "week": "過渡",
+      "block": "zhongshe-2026-09-return",
+      "label": "休息／輕柔活動",
+      "type": "REST",
+      "intent": "週六不排課；週三上肢／核心或公司課，測驗前降低腿部負荷。其餘日不補欠課。",
+      "score_policy": "record_only",
+      "segments": [],
+      "time_budget": {
+        "window_min": 60
+      },
+      "selected_variant": "outdoor",
+      "export_mode": "none"
+    },
+    "2026-09-15": {
+      "date": "2026-09-15",
+      "week": "過渡",
+      "block": "zhongshe-2026-09-return",
+      "label": "中社單次計時／PR機會",
+      "type": "TEST",
+      "intent": "9/15是基準與PR機會，不保證破16:25；10/13按9/15有效成績與後續主課重新配速。全段預留20分不是要求20分停止；不設全力達標分數。晚籃球降為休息／輕鬆。",
+      "score_policy": "record_only",
+      "segments": [
+        {
+          "name": "往返前半＋漸進熱身",
+          "role": "warmup",
+          "minutes": 35,
+          "target_w": {
+            "lo": 110,
+            "hi": 170,
+            "about": 140.0
+          },
+          "target_cadence": null
+        },
+        {
+          "name": "中社全段一次，20分僅是預算，以終點結束",
+          "role": "allout",
+          "minutes": 20,
+          "target_w": {
+            "allout": true
+          },
+          "target_cadence": null
+        },
+        {
+          "name": "安全下坡與返程",
+          "role": "recovery",
+          "minutes": 40,
+          "target_w": {
+            "lo": null,
+            "hi": null,
+            "about": 130
+          },
+          "target_cadence": null
+        },
+        {
+          "name": "收操",
+          "role": "cooldown",
+          "minutes": 10,
+          "target_w": {
+            "lo": null,
+            "hi": null,
+            "about": 110
+          },
+          "target_cadence": null
+        }
+      ],
+      "time_budget": {
+        "window_min": 150
+      },
+      "selected_variant": "outdoor",
+      "export_mode": "free_ride",
+      "route": "中社全段1761462，同起終點；先核對往返可塞入窗口。移除露營場、額外劍南衝坡。",
+      "rain_summary": "45分輕鬆踩；未測且恢復正常才改9/17中社，不用室內數值代替路段PR。",
+      "variants": {
+        "outdoor": {
+          "venue": "outdoor",
+          "summary": "105分行程預算，只測一次；首段保守、後段漸進，記錄時間／曲柄瓦數／RPE／環境。"
+        },
+        "rain": {
+          "venue": "indoor",
+          "segments": [
+            {
+              "name": "熱身",
+              "role": "warmup",
+              "minutes": 10,
+              "target_w": {
+                "lo": 110,
+                "hi": 145,
+                "about": 127.5
+              },
+              "target_cadence": null
+            },
+            {
+              "name": "輕鬆耐力",
+              "role": "work",
+              "minutes": 25,
+              "target_w": {
+                "lo": 120,
+                "hi": 145,
+                "about": 132.5
+              },
+              "target_cadence": null
+            },
+            {
+              "name": "收操",
+              "role": "cooldown",
+              "minutes": 10,
+              "target_w": {
+                "lo": null,
+                "hi": null,
+                "about": 110
+              },
+              "target_cadence": null
+            }
+          ],
+          "summary": "45分輕鬆踩；未測且恢復正常才改9/17中社，不用室內數值代替路段PR。"
+        }
+      }
+    },
+    "2026-09-16": {
+      "date": "2026-09-16",
+      "week": "過渡",
+      "block": "zhongshe-2026-09-return",
+      "label": "週三不騎；其他運動計入負荷",
+      "type": "REST",
+      "intent": "週六不排課；週三上肢／核心或公司課，測驗前降低腿部負荷。其餘日不補欠課。",
+      "score_policy": "record_only",
+      "segments": [],
+      "time_budget": {
+        "window_min": 60
+      },
+      "selected_variant": "outdoor",
+      "export_mode": "none"
+    },
+    "2026-09-17": {
+      "date": "2026-09-17",
+      "week": "過渡",
+      "block": "zhongshe-2026-09-return",
+      "label": "風櫃嘴全段控制騎",
+      "type": "ENDURANCE",
+      "intent": "使用者確認9/17可用150分鐘。9/15後恢復正常才爬完整段；180–200W為上限導向的暫定區間、RPE5–6，不追28:29 PR。腿重改平路60分或rain；坡度需要超過可控努力就降檔／折返。完整時間只作控制強度參考，不與全力PR直接判輸贏。 全段結束即結束，40分只是行程估算，因此本日只記錄、不以預算時間評完成分數。",
+      "score_policy": "record_only",
+      "segments": [
+        {
+          "name": "前往＋熱身",
+          "role": "warmup",
+          "minutes": 35,
+          "target_w": {
+            "lo": 110,
+            "hi": 160,
+            "about": 135.0
+          },
+          "target_cadence": null
+        },
+        {
+          "name": "風櫃嘴全段控制強度（40分預算，以終點結束）",
+          "role": "work",
+          "minutes": 40,
+          "target_w": {
+            "lo": 180,
+            "hi": 200,
+            "about": 190.0
+          },
+          "target_cadence": null
+        },
+        {
+          "name": "下坡返程",
+          "role": "recovery",
+          "minutes": 50,
+          "target_w": {
+            "lo": null,
+            "hi": null,
+            "about": 130
+          },
+          "target_cadence": null
+        },
+        {
+          "name": "收操",
+          "role": "cooldown",
+          "minutes": 10,
+          "target_w": {
+            "lo": null,
+            "hi": null,
+            "about": 110
+          },
+          "target_cadence": null
+        }
+      ],
+      "time_budget": {
+        "window_min": 150
+      },
+      "selected_variant": "outdoor",
+      "export_mode": "free_ride",
+      "route": "完整風櫃嘴熟悉路線；135分行程預算＋15分緩衝。暖身前往35、全段約40、下坡返程50、收操10分；出發前核對實際起點，無法安全塞入窗口就縮短路線。",
+      "rain_summary": "訓練台60分140–165W；9/15後腿重再降至120–145W。",
+      "variants": {
+        "outdoor": {
+          "venue": "outdoor",
+          "summary": "135分預算，風櫃嘴全段控制騎180–200W／RPE5–6，保留15分緩衝；不做第二趟全力。"
+        },
+        "rain": {
+          "venue": "indoor",
+          "segments": [
+            {
+              "name": "熱身",
+              "role": "warmup",
+              "minutes": 10,
+              "target_w": {
+                "lo": 110,
+                "hi": 145,
+                "about": 127.5
+              },
+              "target_cadence": null
+            },
+            {
+              "name": "輕鬆耐力",
+              "role": "work",
+              "minutes": 40,
+              "target_w": {
+                "lo": 140,
+                "hi": 165,
+                "about": 152.5
+              },
+              "target_cadence": null
+            },
+            {
+              "name": "收操",
+              "role": "cooldown",
+              "minutes": 10,
+              "target_w": {
+                "lo": null,
+                "hi": null,
+                "about": 110
+              },
+              "target_cadence": null
+            }
+          ],
+          "summary": "訓練台60分140–165W；9/15後腿重再降至120–145W。"
+        },
+        "reserve_test": {
+          "venue": "outdoor",
+          "label": "中社雨延單次測驗",
+          "type": "TEST",
+          "score_policy": "record_only",
+          "segments": [
+            {
+              "name": "往返前半＋漸進熱身",
+              "role": "warmup",
+              "minutes": 35,
+              "target_w": {
+                "lo": 110,
+                "hi": 170,
+                "about": 140.0
+              },
+              "target_cadence": null
+            },
+            {
+              "name": "中社全段一次，20分僅是預算，以終點結束",
+              "role": "allout",
+              "minutes": 20,
+              "target_w": {
+                "allout": true
+              },
+              "target_cadence": null
+            },
+            {
+              "name": "安全下坡與返程",
+              "role": "recovery",
+              "minutes": 40,
+              "target_w": {
+                "lo": null,
+                "hi": null,
+                "about": 130
+              },
+              "target_cadence": null
+            },
+            {
+              "name": "收操",
+              "role": "cooldown",
+              "minutes": 10,
+              "target_w": {
+                "lo": null,
+                "hi": null,
+                "about": 110
+              },
+              "target_cadence": null
+            }
+          ],
+          "summary": "9/15未測且選rain、9/17已恢復、天候與往返適合才做中社一次，取代風櫃嘴。105分行程、150分窗口。"
+        }
+      }
+    },
+    "2026-09-18": {
+      "date": "2026-09-18",
+      "week": "過渡",
+      "block": "zhongshe-2026-09-return",
+      "label": "休息／輕柔活動",
+      "type": "REST",
+      "intent": "週六不排課；週三上肢／核心或公司課，測驗前降低腿部負荷。其餘日不補欠課。",
+      "score_policy": "record_only",
+      "segments": [],
+      "time_budget": {
+        "window_min": 60
+      },
+      "selected_variant": "outdoor",
+      "export_mode": "none"
+    },
+    "2026-09-19": {
+      "date": "2026-09-19",
+      "week": "過渡",
+      "block": "zhongshe-2026-09-return",
+      "label": "休息／家庭時間",
+      "type": "REST",
+      "intent": "週六不排課；週三上肢／核心或公司課，測驗前降低腿部負荷。其餘日不補欠課。",
+      "score_policy": "record_only",
+      "segments": [],
+      "time_budget": {
+        "window_min": 60
+      },
+      "selected_variant": "outdoor",
+      "export_mode": "none"
+    },
+    "2026-09-20": {
+      "date": "2026-09-20",
+      "week": "過渡",
+      "block": "zhongshe-2026-09-return",
+      "label": "週日可選輕鬆踩",
+      "type": "SUPPORT",
+      "intent": "可整堂跳過，不當成欠課；無可信功率只記錄。",
+      "score_policy": "record_only",
+      "segments": [
+        {
+          "name": "可選輕鬆踩",
+          "role": "recovery",
+          "minutes": 30,
+          "target_w": {
+            "lo": null,
+            "hi": null,
+            "about": null
+          },
+          "target_cadence": null
+        }
+      ],
+      "time_budget": {
+        "window_min": 60
+      },
+      "selected_variant": "outdoor",
+      "export_mode": "none",
+      "route": "住家附近安全平路／社區飛輪。",
+      "rain_summary": "社區飛輪30分；無機台或疲勞就休息。",
+      "variants": {
+        "outdoor": {
+          "venue": "outdoor",
+          "summary": "30分，RPE2–3，可完整說話。"
+        },
+        "rain": {
+          "venue": "indoor",
+          "segments": [
+            {
+              "name": "可選輕鬆踩",
+              "role": "recovery",
+              "minutes": 30,
+              "target_w": {
+                "lo": null,
+                "hi": null,
+                "about": null
+              },
+              "target_cadence": null
+            }
+          ],
+          "summary": "社區飛輪30分；無機台或疲勞就休息。"
+        }
+      }
+    },
+    "2026-09-21": {
+      "date": "2026-09-21",
+      "week": "過渡",
+      "block": "zhongshe-2026-09-return",
+      "label": "休息／輕柔活動",
+      "type": "REST",
+      "intent": "週六不排課；週三上肢／核心或公司課，測驗前降低腿部負荷。其餘日不補欠課。",
+      "score_policy": "record_only",
+      "segments": [],
+      "time_budget": {
+        "window_min": 60
+      },
+      "selected_variant": "outdoor",
+      "export_mode": "none"
+    },
+    "2026-09-22": {
+      "date": "2026-09-22",
+      "week": "W1",
+      "block": "zhongshe-2026-09-return",
+      "label": "3×8分持續功率",
+      "type": "QUALITY",
+      "intent": "9/21依新紀錄複核；首週以210W附近起步。上週主段完整穩定、RPE6–8且恢復正常才進階，否則沿用上週或減5–10W。W3從3×10改2×15，總工作同30分，增加單段持續時間，不同時硬加瓦。",
+      "score_policy": "prescription",
+      "segments": [
+        {
+          "name": "前往＋熱身",
+          "role": "warmup",
+          "minutes": 25,
+          "target_w": {
+            "lo": 110,
+            "hi": 160,
+            "about": 135.0
+          },
+          "target_cadence": null
+        },
+        {
+          "name": "主課1/3",
+          "role": "work",
+          "minutes": 8,
+          "target_w": {
+            "lo": 210,
+            "hi": 220,
+            "about": 215.0
+          },
+          "target_cadence": null
+        },
+        {
+          "name": "組間恢復／安全下滑",
+          "role": "recovery",
+          "minutes": 4,
+          "target_w": {
+            "lo": null,
+            "hi": null,
+            "about": 115
+          },
+          "target_cadence": null
+        },
+        {
+          "name": "主課2/3",
+          "role": "work",
+          "minutes": 8,
+          "target_w": {
+            "lo": 210,
+            "hi": 220,
+            "about": 215.0
+          },
+          "target_cadence": null
+        },
+        {
+          "name": "組間恢復／安全下滑",
+          "role": "recovery",
+          "minutes": 4,
+          "target_w": {
+            "lo": null,
+            "hi": null,
+            "about": 115
+          },
+          "target_cadence": null
+        },
+        {
+          "name": "主課3/3",
+          "role": "work",
+          "minutes": 8,
+          "target_w": {
+            "lo": 210,
+            "hi": 220,
+            "about": 215.0
+          },
+          "target_cadence": null
+        },
+        {
+          "name": "輕鬆續騎／返程",
+          "role": "recovery",
+          "minutes": 38,
+          "target_w": {
+            "lo": null,
+            "hi": null,
+            "about": 145
+          },
+          "target_cadence": null
+        },
+        {
+          "name": "收操",
+          "role": "cooldown",
+          "minutes": 15,
+          "target_w": {
+            "lo": null,
+            "hi": null,
+            "about": 110
+          },
+          "target_cadence": null
+        }
+      ],
+      "time_budget": {
+        "window_min": 150
+      },
+      "selected_variant": "outdoor",
+      "export_mode": "free_ride",
+      "route": "9/22先用熟悉連續河濱；9/29、10/6可用中社較緩段，安全下滑不足預算則少做一組或改河濱。",
+      "rain_summary": "訓練台75分，同3×8分210–220W，組間4分。",
+      "variants": {
+        "outdoor": {
+          "venue": "outdoor",
+          "summary": "3×8分210–220W，恢復至少4分；含往返110分。"
+        },
+        "rain": {
+          "venue": "indoor",
+          "segments": [
+            {
+              "name": "熱身",
+              "role": "warmup",
+              "minutes": 15,
+              "target_w": {
+                "lo": 110,
+                "hi": 160,
+                "about": 135.0
+              },
+              "target_cadence": null
+            },
+            {
+              "name": "主課1/3",
+              "role": "work",
+              "minutes": 8,
+              "target_w": {
+                "lo": 210,
+                "hi": 220,
+                "about": 215.0
+              },
+              "target_cadence": null
+            },
+            {
+              "name": "組間恢復／安全下滑",
+              "role": "recovery",
+              "minutes": 4,
+              "target_w": {
+                "lo": null,
+                "hi": null,
+                "about": 115
+              },
+              "target_cadence": null
+            },
+            {
+              "name": "主課2/3",
+              "role": "work",
+              "minutes": 8,
+              "target_w": {
+                "lo": 210,
+                "hi": 220,
+                "about": 215.0
+              },
+              "target_cadence": null
+            },
+            {
+              "name": "組間恢復／安全下滑",
+              "role": "recovery",
+              "minutes": 4,
+              "target_w": {
+                "lo": null,
+                "hi": null,
+                "about": 115
+              },
+              "target_cadence": null
+            },
+            {
+              "name": "主課3/3",
+              "role": "work",
+              "minutes": 8,
+              "target_w": {
+                "lo": 210,
+                "hi": 220,
+                "about": 215.0
+              },
+              "target_cadence": null
+            },
+            {
+              "name": "輕鬆續騎／返程",
+              "role": "recovery",
+              "minutes": 18,
+              "target_w": {
+                "lo": null,
+                "hi": null,
+                "about": 145
+              },
+              "target_cadence": null
+            },
+            {
+              "name": "收操",
+              "role": "cooldown",
+              "minutes": 10,
+              "target_w": {
+                "lo": null,
+                "hi": null,
+                "about": 110
+              },
+              "target_cadence": null
+            }
+          ],
+          "summary": "訓練台75分，同3×8分210–220W，組間4分。"
+        }
+      }
+    },
+    "2026-09-23": {
+      "date": "2026-09-23",
+      "week": "W1",
+      "block": "zhongshe-2026-09-return",
+      "label": "週三不騎；其他運動計入負荷",
+      "type": "REST",
+      "intent": "週六不排課；週三上肢／核心或公司課，測驗前降低腿部負荷。其餘日不補欠課。",
+      "score_policy": "record_only",
+      "segments": [],
+      "time_budget": {
+        "window_min": 60
+      },
+      "selected_variant": "outdoor",
+      "export_mode": "none"
+    },
+    "2026-09-24": {
+      "date": "2026-09-24",
+      "week": "W1",
+      "block": "zhongshe-2026-09-return",
+      "label": "平路耐力",
+      "type": "ENDURANCE",
+      "intent": "週二後恢復正常才照表；籃球／公司課後腿重就減量，不以TSS補足。",
+      "score_policy": "prescription",
+      "segments": [
+        {
+          "name": "熱身",
+          "role": "warmup",
+          "minutes": 10,
+          "target_w": {
+            "lo": 110,
+            "hi": 145,
+            "about": 127.5
+          },
+          "target_cadence": null
+        },
+        {
+          "name": "輕鬆耐力",
+          "role": "work",
+          "minutes": 75,
+          "target_w": {
+            "lo": 140,
+            "hi": 165,
+            "about": 152.5
+          },
+          "target_cadence": null
+        },
+        {
+          "name": "收操",
+          "role": "cooldown",
+          "minutes": 10,
+          "target_w": {
+            "lo": null,
+            "hi": null,
+            "about": 110
+          },
+          "target_cadence": null
+        }
+      ],
+      "time_budget": {
+        "window_min": 120
+      },
+      "selected_variant": "outdoor",
+      "export_mode": "free_ride",
+      "route": "熟悉河濱平路，按返程時間折返；不串第二座山。",
+      "rain_summary": "訓練台70分，同主段瓦數；縮短額外騎乘。",
+      "variants": {
+        "outdoor": {
+          "venue": "outdoor",
+          "summary": "95分含往返，主段140–165W、RPE2–3。"
+        },
+        "rain": {
+          "venue": "indoor",
+          "segments": [
+            {
+              "name": "熱身",
+              "role": "warmup",
+              "minutes": 10,
+              "target_w": {
+                "lo": 110,
+                "hi": 145,
+                "about": 127.5
+              },
+              "target_cadence": null
+            },
+            {
+              "name": "輕鬆耐力",
+              "role": "work",
+              "minutes": 50,
+              "target_w": {
+                "lo": 140,
+                "hi": 165,
+                "about": 152.5
+              },
+              "target_cadence": null
+            },
+            {
+              "name": "收操",
+              "role": "cooldown",
+              "minutes": 10,
+              "target_w": {
+                "lo": null,
+                "hi": null,
+                "about": 110
+              },
+              "target_cadence": null
+            }
+          ],
+          "summary": "訓練台70分，同主段瓦數；縮短額外騎乘。"
+        }
+      }
+    },
+    "2026-09-25": {
+      "date": "2026-09-25",
+      "week": "W1",
+      "block": "zhongshe-2026-09-return",
+      "label": "休息／輕柔活動",
+      "type": "REST",
+      "intent": "週六不排課；週三上肢／核心或公司課，測驗前降低腿部負荷。其餘日不補欠課。",
+      "score_policy": "record_only",
+      "segments": [],
+      "time_budget": {
+        "window_min": 60
+      },
+      "selected_variant": "outdoor",
+      "export_mode": "none"
+    },
+    "2026-09-26": {
+      "date": "2026-09-26",
+      "week": "W1",
+      "block": "zhongshe-2026-09-return",
+      "label": "休息／家庭時間",
+      "type": "REST",
+      "intent": "週六不排課；週三上肢／核心或公司課，測驗前降低腿部負荷。其餘日不補欠課。",
+      "score_policy": "record_only",
+      "segments": [],
+      "time_budget": {
+        "window_min": 60
+      },
+      "selected_variant": "outdoor",
+      "export_mode": "none"
+    },
+    "2026-09-27": {
+      "date": "2026-09-27",
+      "week": "W1",
+      "block": "zhongshe-2026-09-return",
+      "label": "週日可選輕鬆踩",
+      "type": "SUPPORT",
+      "intent": "可整堂跳過，不當成欠課；無可信功率只記錄。",
+      "score_policy": "record_only",
+      "segments": [
+        {
+          "name": "可選輕鬆踩",
+          "role": "recovery",
+          "minutes": 40,
+          "target_w": {
+            "lo": null,
+            "hi": null,
+            "about": null
+          },
+          "target_cadence": null
+        }
+      ],
+      "time_budget": {
+        "window_min": 60
+      },
+      "selected_variant": "outdoor",
+      "export_mode": "none",
+      "route": "住家附近安全平路／社區飛輪。",
+      "rain_summary": "社區飛輪40分；無機台或疲勞就休息。",
+      "variants": {
+        "outdoor": {
+          "venue": "outdoor",
+          "summary": "40分，RPE2–3，可完整說話。"
+        },
+        "rain": {
+          "venue": "indoor",
+          "segments": [
+            {
+              "name": "可選輕鬆踩",
+              "role": "recovery",
+              "minutes": 40,
+              "target_w": {
+                "lo": null,
+                "hi": null,
+                "about": null
+              },
+              "target_cadence": null
+            }
+          ],
+          "summary": "社區飛輪40分；無機台或疲勞就休息。"
+        }
+      }
+    },
+    "2026-09-28": {
+      "date": "2026-09-28",
+      "week": "W1",
+      "block": "zhongshe-2026-09-return",
+      "label": "休息／輕柔活動",
+      "type": "REST",
+      "intent": "週六不排課；週三上肢／核心或公司課，測驗前降低腿部負荷。其餘日不補欠課。",
+      "score_policy": "record_only",
+      "segments": [],
+      "time_budget": {
+        "window_min": 60
+      },
+      "selected_variant": "outdoor",
+      "export_mode": "none"
+    },
+    "2026-09-29": {
+      "date": "2026-09-29",
+      "week": "W2",
+      "block": "zhongshe-2026-09-return",
+      "label": "3×10分持續功率",
+      "type": "QUALITY",
+      "intent": "9/21依新紀錄複核；首週以210W附近起步。上週主段完整穩定、RPE6–8且恢復正常才進階，否則沿用上週或減5–10W。W3從3×10改2×15，總工作同30分，增加單段持續時間，不同時硬加瓦。",
+      "score_policy": "prescription",
+      "segments": [
+        {
+          "name": "前往＋熱身",
+          "role": "warmup",
+          "minutes": 25,
+          "target_w": {
+            "lo": 110,
+            "hi": 160,
+            "about": 135.0
+          },
+          "target_cadence": null
+        },
+        {
+          "name": "主課1/3",
+          "role": "work",
+          "minutes": 10,
+          "target_w": {
+            "lo": 210,
+            "hi": 220,
+            "about": 215.0
+          },
+          "target_cadence": null
+        },
+        {
+          "name": "組間恢復／安全下滑",
+          "role": "recovery",
+          "minutes": 8,
+          "target_w": {
+            "lo": null,
+            "hi": null,
+            "about": 115
+          },
+          "target_cadence": null
+        },
+        {
+          "name": "主課2/3",
+          "role": "work",
+          "minutes": 10,
+          "target_w": {
+            "lo": 210,
+            "hi": 220,
+            "about": 215.0
+          },
+          "target_cadence": null
+        },
+        {
+          "name": "組間恢復／安全下滑",
+          "role": "recovery",
+          "minutes": 8,
+          "target_w": {
+            "lo": null,
+            "hi": null,
+            "about": 115
+          },
+          "target_cadence": null
+        },
+        {
+          "name": "主課3/3",
+          "role": "work",
+          "minutes": 10,
+          "target_w": {
+            "lo": 210,
+            "hi": 220,
+            "about": 215.0
+          },
+          "target_cadence": null
+        },
+        {
+          "name": "輕鬆續騎／返程",
+          "role": "recovery",
+          "minutes": 34,
+          "target_w": {
+            "lo": null,
+            "hi": null,
+            "about": 145
+          },
+          "target_cadence": null
+        },
+        {
+          "name": "收操",
+          "role": "cooldown",
+          "minutes": 15,
+          "target_w": {
+            "lo": null,
+            "hi": null,
+            "about": 110
+          },
+          "target_cadence": null
+        }
+      ],
+      "time_budget": {
+        "window_min": 150
+      },
+      "selected_variant": "outdoor",
+      "export_mode": "free_ride",
+      "route": "9/22先用熟悉連續河濱；9/29、10/6可用中社較緩段，安全下滑不足預算則少做一組或改河濱。",
+      "rain_summary": "訓練台85分，同3×10分210–220W，組間5分。",
+      "variants": {
+        "outdoor": {
+          "venue": "outdoor",
+          "summary": "3×10分210–220W，恢復至少8分；含往返120分。"
+        },
+        "rain": {
+          "venue": "indoor",
+          "segments": [
+            {
+              "name": "熱身",
+              "role": "warmup",
+              "minutes": 15,
+              "target_w": {
+                "lo": 110,
+                "hi": 160,
+                "about": 135.0
+              },
+              "target_cadence": null
+            },
+            {
+              "name": "主課1/3",
+              "role": "work",
+              "minutes": 10,
+              "target_w": {
+                "lo": 210,
+                "hi": 220,
+                "about": 215.0
+              },
+              "target_cadence": null
+            },
+            {
+              "name": "組間恢復／安全下滑",
+              "role": "recovery",
+              "minutes": 5,
+              "target_w": {
+                "lo": null,
+                "hi": null,
+                "about": 115
+              },
+              "target_cadence": null
+            },
+            {
+              "name": "主課2/3",
+              "role": "work",
+              "minutes": 10,
+              "target_w": {
+                "lo": 210,
+                "hi": 220,
+                "about": 215.0
+              },
+              "target_cadence": null
+            },
+            {
+              "name": "組間恢復／安全下滑",
+              "role": "recovery",
+              "minutes": 5,
+              "target_w": {
+                "lo": null,
+                "hi": null,
+                "about": 115
+              },
+              "target_cadence": null
+            },
+            {
+              "name": "主課3/3",
+              "role": "work",
+              "minutes": 10,
+              "target_w": {
+                "lo": 210,
+                "hi": 220,
+                "about": 215.0
+              },
+              "target_cadence": null
+            },
+            {
+              "name": "輕鬆續騎／返程",
+              "role": "recovery",
+              "minutes": 20,
+              "target_w": {
+                "lo": null,
+                "hi": null,
+                "about": 145
+              },
+              "target_cadence": null
+            },
+            {
+              "name": "收操",
+              "role": "cooldown",
+              "minutes": 10,
+              "target_w": {
+                "lo": null,
+                "hi": null,
+                "about": 110
+              },
+              "target_cadence": null
+            }
+          ],
+          "summary": "訓練台85分，同3×10分210–220W，組間5分。"
+        }
+      }
+    },
+    "2026-09-30": {
+      "date": "2026-09-30",
+      "week": "W2",
+      "block": "zhongshe-2026-09-return",
+      "label": "週三不騎；其他運動計入負荷",
+      "type": "REST",
+      "intent": "週六不排課；週三上肢／核心或公司課，測驗前降低腿部負荷。其餘日不補欠課。",
+      "score_policy": "record_only",
+      "segments": [],
+      "time_budget": {
+        "window_min": 60
+      },
+      "selected_variant": "outdoor",
+      "export_mode": "none"
+    },
+    "2026-10-01": {
+      "date": "2026-10-01",
+      "week": "W2",
+      "block": "zhongshe-2026-09-return",
+      "label": "平路耐力",
+      "type": "ENDURANCE",
+      "intent": "週二後恢復正常才照表；籃球／公司課後腿重就減量，不以TSS補足。",
+      "score_policy": "prescription",
+      "segments": [
+        {
+          "name": "熱身",
+          "role": "warmup",
+          "minutes": 10,
+          "target_w": {
+            "lo": 110,
+            "hi": 145,
+            "about": 127.5
+          },
+          "target_cadence": null
+        },
+        {
+          "name": "輕鬆耐力",
+          "role": "work",
+          "minutes": 85,
+          "target_w": {
+            "lo": 140,
+            "hi": 165,
+            "about": 152.5
+          },
+          "target_cadence": null
+        },
+        {
+          "name": "收操",
+          "role": "cooldown",
+          "minutes": 10,
+          "target_w": {
+            "lo": null,
+            "hi": null,
+            "about": 110
+          },
+          "target_cadence": null
+        }
+      ],
+      "time_budget": {
+        "window_min": 120
+      },
+      "selected_variant": "outdoor",
+      "export_mode": "free_ride",
+      "route": "熟悉河濱平路，按返程時間折返；不串第二座山。",
+      "rain_summary": "訓練台80分，同主段瓦數；縮短額外騎乘。",
+      "variants": {
+        "outdoor": {
+          "venue": "outdoor",
+          "summary": "105分含往返，主段140–165W、RPE2–3。"
+        },
+        "rain": {
+          "venue": "indoor",
+          "segments": [
+            {
+              "name": "熱身",
+              "role": "warmup",
+              "minutes": 10,
+              "target_w": {
+                "lo": 110,
+                "hi": 145,
+                "about": 127.5
+              },
+              "target_cadence": null
+            },
+            {
+              "name": "輕鬆耐力",
+              "role": "work",
+              "minutes": 60,
+              "target_w": {
+                "lo": 140,
+                "hi": 165,
+                "about": 152.5
+              },
+              "target_cadence": null
+            },
+            {
+              "name": "收操",
+              "role": "cooldown",
+              "minutes": 10,
+              "target_w": {
+                "lo": null,
+                "hi": null,
+                "about": 110
+              },
+              "target_cadence": null
+            }
+          ],
+          "summary": "訓練台80分，同主段瓦數；縮短額外騎乘。"
+        }
+      }
+    },
+    "2026-10-02": {
+      "date": "2026-10-02",
+      "week": "W2",
+      "block": "zhongshe-2026-09-return",
+      "label": "休息／輕柔活動",
+      "type": "REST",
+      "intent": "週六不排課；週三上肢／核心或公司課，測驗前降低腿部負荷。其餘日不補欠課。",
+      "score_policy": "record_only",
+      "segments": [],
+      "time_budget": {
+        "window_min": 60
+      },
+      "selected_variant": "outdoor",
+      "export_mode": "none"
+    },
+    "2026-10-03": {
+      "date": "2026-10-03",
+      "week": "W2",
+      "block": "zhongshe-2026-09-return",
+      "label": "休息／家庭時間",
+      "type": "REST",
+      "intent": "週六不排課；週三上肢／核心或公司課，測驗前降低腿部負荷。其餘日不補欠課。",
+      "score_policy": "record_only",
+      "segments": [],
+      "time_budget": {
+        "window_min": 60
+      },
+      "selected_variant": "outdoor",
+      "export_mode": "none"
+    },
+    "2026-10-04": {
+      "date": "2026-10-04",
+      "week": "W2",
+      "block": "zhongshe-2026-09-return",
+      "label": "週日可選輕鬆踩",
+      "type": "SUPPORT",
+      "intent": "可整堂跳過，不當成欠課；無可信功率只記錄。",
+      "score_policy": "record_only",
+      "segments": [
+        {
+          "name": "可選輕鬆踩",
+          "role": "recovery",
+          "minutes": 40,
+          "target_w": {
+            "lo": null,
+            "hi": null,
+            "about": null
+          },
+          "target_cadence": null
+        }
+      ],
+      "time_budget": {
+        "window_min": 60
+      },
+      "selected_variant": "outdoor",
+      "export_mode": "none",
+      "route": "住家附近安全平路／社區飛輪。",
+      "rain_summary": "社區飛輪40分；無機台或疲勞就休息。",
+      "variants": {
+        "outdoor": {
+          "venue": "outdoor",
+          "summary": "40分，RPE2–3，可完整說話。"
+        },
+        "rain": {
+          "venue": "indoor",
+          "segments": [
+            {
+              "name": "可選輕鬆踩",
+              "role": "recovery",
+              "minutes": 40,
+              "target_w": {
+                "lo": null,
+                "hi": null,
+                "about": null
+              },
+              "target_cadence": null
+            }
+          ],
+          "summary": "社區飛輪40分；無機台或疲勞就休息。"
+        }
+      }
+    },
+    "2026-10-05": {
+      "date": "2026-10-05",
+      "week": "W2",
+      "block": "zhongshe-2026-09-return",
+      "label": "休息／輕柔活動",
+      "type": "REST",
+      "intent": "週六不排課；週三上肢／核心或公司課，測驗前降低腿部負荷。其餘日不補欠課。",
+      "score_policy": "record_only",
+      "segments": [],
+      "time_budget": {
+        "window_min": 60
+      },
+      "selected_variant": "outdoor",
+      "export_mode": "none"
+    },
+    "2026-10-06": {
+      "date": "2026-10-06",
+      "week": "W3",
+      "block": "zhongshe-2026-09-return",
+      "label": "2×15分持續功率",
+      "type": "QUALITY",
+      "intent": "9/21依新紀錄複核；首週以210W附近起步。上週主段完整穩定、RPE6–8且恢復正常才進階，否則沿用上週或減5–10W。W3從3×10改2×15，總工作同30分，增加單段持續時間，不同時硬加瓦。",
+      "score_policy": "prescription",
+      "segments": [
+        {
+          "name": "前往＋熱身",
+          "role": "warmup",
+          "minutes": 25,
+          "target_w": {
+            "lo": 110,
+            "hi": 160,
+            "about": 135.0
+          },
+          "target_cadence": null
+        },
+        {
+          "name": "主課1/2",
+          "role": "work",
+          "minutes": 15,
+          "target_w": {
+            "lo": 210,
+            "hi": 225,
+            "about": 217.5
+          },
+          "target_cadence": null
+        },
+        {
+          "name": "組間恢復／安全下滑",
+          "role": "recovery",
+          "minutes": 12,
+          "target_w": {
+            "lo": null,
+            "hi": null,
+            "about": 115
+          },
+          "target_cadence": null
+        },
+        {
+          "name": "主課2/2",
+          "role": "work",
+          "minutes": 15,
+          "target_w": {
+            "lo": 210,
+            "hi": 225,
+            "about": 217.5
+          },
+          "target_cadence": null
+        },
+        {
+          "name": "輕鬆續騎／返程",
+          "role": "recovery",
+          "minutes": 38,
+          "target_w": {
+            "lo": null,
+            "hi": null,
+            "about": 145
+          },
+          "target_cadence": null
+        },
+        {
+          "name": "收操",
+          "role": "cooldown",
+          "minutes": 15,
+          "target_w": {
+            "lo": null,
+            "hi": null,
+            "about": 110
+          },
+          "target_cadence": null
+        }
+      ],
+      "time_budget": {
+        "window_min": 150
+      },
+      "selected_variant": "outdoor",
+      "export_mode": "free_ride",
+      "route": "9/22先用熟悉連續河濱；9/29、10/6可用中社較緩段，安全下滑不足預算則少做一組或改河濱。",
+      "rain_summary": "訓練台85分，同2×15分210–225W，組間6分。",
+      "variants": {
+        "outdoor": {
+          "venue": "outdoor",
+          "summary": "2×15分210–225W，恢復至少12分；含往返120分。"
+        },
+        "rain": {
+          "venue": "indoor",
+          "segments": [
+            {
+              "name": "熱身",
+              "role": "warmup",
+              "minutes": 15,
+              "target_w": {
+                "lo": 110,
+                "hi": 160,
+                "about": 135.0
+              },
+              "target_cadence": null
+            },
+            {
+              "name": "主課1/2",
+              "role": "work",
+              "minutes": 15,
+              "target_w": {
+                "lo": 210,
+                "hi": 225,
+                "about": 217.5
+              },
+              "target_cadence": null
+            },
+            {
+              "name": "組間恢復／安全下滑",
+              "role": "recovery",
+              "minutes": 6,
+              "target_w": {
+                "lo": null,
+                "hi": null,
+                "about": 115
+              },
+              "target_cadence": null
+            },
+            {
+              "name": "主課2/2",
+              "role": "work",
+              "minutes": 15,
+              "target_w": {
+                "lo": 210,
+                "hi": 225,
+                "about": 217.5
+              },
+              "target_cadence": null
+            },
+            {
+              "name": "輕鬆續騎／返程",
+              "role": "recovery",
+              "minutes": 24,
+              "target_w": {
+                "lo": null,
+                "hi": null,
+                "about": 145
+              },
+              "target_cadence": null
+            },
+            {
+              "name": "收操",
+              "role": "cooldown",
+              "minutes": 10,
+              "target_w": {
+                "lo": null,
+                "hi": null,
+                "about": 110
+              },
+              "target_cadence": null
+            }
+          ],
+          "summary": "訓練台85分，同2×15分210–225W，組間6分。"
+        }
+      }
+    },
+    "2026-10-07": {
+      "date": "2026-10-07",
+      "week": "W3",
+      "block": "zhongshe-2026-09-return",
+      "label": "週三不騎；其他運動計入負荷",
+      "type": "REST",
+      "intent": "週六不排課；週三上肢／核心或公司課，測驗前降低腿部負荷。其餘日不補欠課。",
+      "score_policy": "record_only",
+      "segments": [],
+      "time_budget": {
+        "window_min": 60
+      },
+      "selected_variant": "outdoor",
+      "export_mode": "none"
+    },
+    "2026-10-08": {
+      "date": "2026-10-08",
+      "week": "W3",
+      "block": "zhongshe-2026-09-return",
+      "label": "平路耐力",
+      "type": "ENDURANCE",
+      "intent": "週二後恢復正常才照表；籃球／公司課後腿重就減量，不以TSS補足。",
+      "score_policy": "prescription",
+      "segments": [
+        {
+          "name": "熱身",
+          "role": "warmup",
+          "minutes": 10,
+          "target_w": {
+            "lo": 110,
+            "hi": 145,
+            "about": 127.5
+          },
+          "target_cadence": null
+        },
+        {
+          "name": "輕鬆耐力",
+          "role": "work",
+          "minutes": 75,
+          "target_w": {
+            "lo": 140,
+            "hi": 165,
+            "about": 152.5
+          },
+          "target_cadence": null
+        },
+        {
+          "name": "收操",
+          "role": "cooldown",
+          "minutes": 10,
+          "target_w": {
+            "lo": null,
+            "hi": null,
+            "about": 110
+          },
+          "target_cadence": null
+        }
+      ],
+      "time_budget": {
+        "window_min": 120
+      },
+      "selected_variant": "outdoor",
+      "export_mode": "free_ride",
+      "route": "熟悉河濱平路，按返程時間折返；不串第二座山。",
+      "rain_summary": "訓練台75分，同主段瓦數；縮短額外騎乘。",
+      "variants": {
+        "outdoor": {
+          "venue": "outdoor",
+          "summary": "95分含往返，主段140–165W、RPE2–3。"
+        },
+        "rain": {
+          "venue": "indoor",
+          "segments": [
+            {
+              "name": "熱身",
+              "role": "warmup",
+              "minutes": 10,
+              "target_w": {
+                "lo": 110,
+                "hi": 145,
+                "about": 127.5
+              },
+              "target_cadence": null
+            },
+            {
+              "name": "輕鬆耐力",
+              "role": "work",
+              "minutes": 55,
+              "target_w": {
+                "lo": 140,
+                "hi": 165,
+                "about": 152.5
+              },
+              "target_cadence": null
+            },
+            {
+              "name": "收操",
+              "role": "cooldown",
+              "minutes": 10,
+              "target_w": {
+                "lo": null,
+                "hi": null,
+                "about": 110
+              },
+              "target_cadence": null
+            }
+          ],
+          "summary": "訓練台75分，同主段瓦數；縮短額外騎乘。"
+        }
+      }
+    },
+    "2026-10-09": {
+      "date": "2026-10-09",
+      "week": "W3",
+      "block": "zhongshe-2026-09-return",
+      "label": "休息／輕柔活動",
+      "type": "REST",
+      "intent": "週六不排課；週三上肢／核心或公司課，測驗前降低腿部負荷。其餘日不補欠課。",
+      "score_policy": "record_only",
+      "segments": [],
+      "time_budget": {
+        "window_min": 60
+      },
+      "selected_variant": "outdoor",
+      "export_mode": "none"
+    },
+    "2026-10-10": {
+      "date": "2026-10-10",
+      "week": "W3",
+      "block": "zhongshe-2026-09-return",
+      "label": "休息／家庭時間",
+      "type": "REST",
+      "intent": "週六不排課；週三上肢／核心或公司課，測驗前降低腿部負荷。其餘日不補欠課。",
+      "score_policy": "record_only",
+      "segments": [],
+      "time_budget": {
+        "window_min": 60
+      },
+      "selected_variant": "outdoor",
+      "export_mode": "none"
+    },
+    "2026-10-11": {
+      "date": "2026-10-11",
+      "week": "W3",
+      "block": "zhongshe-2026-09-return",
+      "label": "週日可選輕鬆踩",
+      "type": "SUPPORT",
+      "intent": "可整堂跳過，不當成欠課；無可信功率只記錄。",
+      "score_policy": "record_only",
+      "segments": [
+        {
+          "name": "可選輕鬆踩",
+          "role": "recovery",
+          "minutes": 25,
+          "target_w": {
+            "lo": null,
+            "hi": null,
+            "about": null
+          },
+          "target_cadence": null
+        }
+      ],
+      "time_budget": {
+        "window_min": 60
+      },
+      "selected_variant": "outdoor",
+      "export_mode": "none",
+      "route": "住家附近安全平路／社區飛輪。",
+      "rain_summary": "社區飛輪25分；無機台或疲勞就休息。",
+      "variants": {
+        "outdoor": {
+          "venue": "outdoor",
+          "summary": "25分，RPE2–3，可完整說話。"
+        },
+        "rain": {
+          "venue": "indoor",
+          "segments": [
+            {
+              "name": "可選輕鬆踩",
+              "role": "recovery",
+              "minutes": 25,
+              "target_w": {
+                "lo": null,
+                "hi": null,
+                "about": null
+              },
+              "target_cadence": null
+            }
+          ],
+          "summary": "社區飛輪25分；無機台或疲勞就休息。"
+        }
+      }
+    },
+    "2026-10-12": {
+      "date": "2026-10-12",
+      "week": "W3",
+      "block": "zhongshe-2026-09-return",
+      "label": "休息／輕柔活動",
+      "type": "REST",
+      "intent": "週六不排課；週三上肢／核心或公司課，測驗前降低腿部負荷。其餘日不補欠課。",
+      "score_policy": "record_only",
+      "segments": [],
+      "time_budget": {
+        "window_min": 60
+      },
+      "selected_variant": "outdoor",
+      "export_mode": "none"
+    },
+    "2026-10-13": {
+      "date": "2026-10-13",
+      "week": "W4",
+      "block": "zhongshe-2026-09-return",
+      "label": "中社四週驗收／PR機會",
+      "type": "TEST",
+      "intent": "9/15是基準與PR機會，不保證破16:25；10/13按9/15有效成績與後續主課重新配速。全段預留20分不是要求20分停止；不設全力達標分數。晚籃球降為休息／輕鬆。",
+      "score_policy": "record_only",
+      "segments": [
+        {
+          "name": "往返前半＋漸進熱身",
+          "role": "warmup",
+          "minutes": 35,
+          "target_w": {
+            "lo": 110,
+            "hi": 170,
+            "about": 140.0
+          },
+          "target_cadence": null
+        },
+        {
+          "name": "中社全段一次，20分僅是預算，以終點結束",
+          "role": "allout",
+          "minutes": 20,
+          "target_w": {
+            "allout": true
+          },
+          "target_cadence": null
+        },
+        {
+          "name": "安全下坡與返程",
+          "role": "recovery",
+          "minutes": 40,
+          "target_w": {
+            "lo": null,
+            "hi": null,
+            "about": 130
+          },
+          "target_cadence": null
+        },
+        {
+          "name": "收操",
+          "role": "cooldown",
+          "minutes": 10,
+          "target_w": {
+            "lo": null,
+            "hi": null,
+            "about": 110
+          },
+          "target_cadence": null
+        }
+      ],
+      "time_budget": {
+        "window_min": 150
+      },
+      "selected_variant": "outdoor",
+      "export_mode": "free_ride",
+      "route": "中社全段1761462，同起終點；先核對往返可塞入窗口。移除露營場、額外劍南衝坡。",
+      "rain_summary": "45分輕鬆踩；未測且恢復正常才改10/15中社，不用室內數值代替路段PR。",
+      "variants": {
+        "outdoor": {
+          "venue": "outdoor",
+          "summary": "105分行程預算，只測一次；首段保守、後段漸進，記錄時間／曲柄瓦數／RPE／環境。"
+        },
+        "rain": {
+          "venue": "indoor",
+          "segments": [
+            {
+              "name": "熱身",
+              "role": "warmup",
+              "minutes": 10,
+              "target_w": {
+                "lo": 110,
+                "hi": 145,
+                "about": 127.5
+              },
+              "target_cadence": null
+            },
+            {
+              "name": "輕鬆耐力",
+              "role": "work",
+              "minutes": 25,
+              "target_w": {
+                "lo": 120,
+                "hi": 145,
+                "about": 132.5
+              },
+              "target_cadence": null
+            },
+            {
+              "name": "收操",
+              "role": "cooldown",
+              "minutes": 10,
+              "target_w": {
+                "lo": null,
+                "hi": null,
+                "about": 110
+              },
+              "target_cadence": null
+            }
+          ],
+          "summary": "45分輕鬆踩；未測且恢復正常才改10/15中社，不用室內數值代替路段PR。"
+        }
+      }
+    },
+    "2026-10-14": {
+      "date": "2026-10-14",
+      "week": "W4",
+      "block": "zhongshe-2026-09-return",
+      "label": "週三不騎；其他運動計入負荷",
+      "type": "REST",
+      "intent": "週六不排課；週三上肢／核心或公司課，測驗前降低腿部負荷。其餘日不補欠課。",
+      "score_policy": "record_only",
+      "segments": [],
+      "time_budget": {
+        "window_min": 60
+      },
+      "selected_variant": "outdoor",
+      "export_mode": "none"
+    },
+    "2026-10-15": {
+      "date": "2026-10-15",
+      "week": "W4",
+      "block": "zhongshe-2026-09-return",
+      "label": "輕鬆恢復",
+      "type": "ENDURANCE",
+      "intent": "週二後恢復正常才照表；籃球／公司課後腿重就減量，不以TSS補足。",
+      "score_policy": "prescription",
+      "segments": [
+        {
+          "name": "熱身",
+          "role": "warmup",
+          "minutes": 10,
+          "target_w": {
+            "lo": 110,
+            "hi": 145,
+            "about": 127.5
+          },
+          "target_cadence": null
+        },
+        {
+          "name": "輕鬆耐力",
+          "role": "work",
+          "minutes": 30,
+          "target_w": {
+            "lo": 120,
+            "hi": 145,
+            "about": 132.5
+          },
+          "target_cadence": null
+        },
+        {
+          "name": "收操",
+          "role": "cooldown",
+          "minutes": 10,
+          "target_w": {
+            "lo": null,
+            "hi": null,
+            "about": 110
+          },
+          "target_cadence": null
+        }
+      ],
+      "time_budget": {
+        "window_min": 120
+      },
+      "selected_variant": "outdoor",
+      "export_mode": "free_ride",
+      "route": "熟悉河濱平路，按返程時間折返；不串第二座山。",
+      "rain_summary": "訓練台40分，同主段瓦數；縮短額外騎乘。",
+      "variants": {
+        "outdoor": {
+          "venue": "outdoor",
+          "summary": "50分含往返，主段120–145W、RPE2–3。"
+        },
+        "rain": {
+          "venue": "indoor",
+          "segments": [
+            {
+              "name": "熱身",
+              "role": "warmup",
+              "minutes": 10,
+              "target_w": {
+                "lo": 110,
+                "hi": 145,
+                "about": 127.5
+              },
+              "target_cadence": null
+            },
+            {
+              "name": "輕鬆耐力",
+              "role": "work",
+              "minutes": 20,
+              "target_w": {
+                "lo": 120,
+                "hi": 145,
+                "about": 132.5
+              },
+              "target_cadence": null
+            },
+            {
+              "name": "收操",
+              "role": "cooldown",
+              "minutes": 10,
+              "target_w": {
+                "lo": null,
+                "hi": null,
+                "about": 110
+              },
+              "target_cadence": null
+            }
+          ],
+          "summary": "訓練台40分，同主段瓦數；縮短額外騎乘。"
+        },
+        "reserve_test": {
+          "venue": "outdoor",
+          "label": "中社雨延單次測驗",
+          "type": "TEST",
+          "score_policy": "record_only",
+          "segments": [
+            {
+              "name": "往返前半＋漸進熱身",
+              "role": "warmup",
+              "minutes": 35,
+              "target_w": {
+                "lo": 110,
+                "hi": 170,
+                "about": 140.0
+              },
+              "target_cadence": null
+            },
+            {
+              "name": "中社全段一次，20分僅是預算，以終點結束",
+              "role": "allout",
+              "minutes": 20,
+              "target_w": {
+                "allout": true
+              },
+              "target_cadence": null
+            },
+            {
+              "name": "安全下坡與返程",
+              "role": "recovery",
+              "minutes": 40,
+              "target_w": {
+                "lo": null,
+                "hi": null,
+                "about": 130
+              },
+              "target_cadence": null
+            },
+            {
+              "name": "收操",
+              "role": "cooldown",
+              "minutes": 10,
+              "target_w": {
+                "lo": null,
+                "hi": null,
+                "about": 110
+              },
+              "target_cadence": null
+            }
+          ],
+          "summary": "只在本組週二未測且選rain、當天恢復正常、天候與往返適合時做中社一次；取代當日原課，不加做。105分預算、120分窗口。"
+        }
+      }
+    },
+    "2026-10-16": {
+      "date": "2026-10-16",
+      "week": "W4",
+      "block": "zhongshe-2026-09-return",
+      "label": "休息／輕柔活動",
+      "type": "REST",
+      "intent": "週六不排課；週三上肢／核心或公司課，測驗前降低腿部負荷。其餘日不補欠課。",
+      "score_policy": "record_only",
+      "segments": [],
+      "time_budget": {
+        "window_min": 60
+      },
+      "selected_variant": "outdoor",
+      "export_mode": "none"
+    },
+    "2026-10-17": {
+      "date": "2026-10-17",
+      "week": "W4",
+      "block": "zhongshe-2026-09-return",
+      "label": "休息／家庭時間",
+      "type": "REST",
+      "intent": "週六不排課；週三上肢／核心或公司課，測驗前降低腿部負荷。其餘日不補欠課。",
+      "score_policy": "record_only",
+      "segments": [],
+      "time_budget": {
+        "window_min": 60
+      },
+      "selected_variant": "outdoor",
+      "export_mode": "none"
+    },
+    "2026-10-18": {
+      "date": "2026-10-18",
+      "week": "W4",
+      "block": "zhongshe-2026-09-return",
+      "label": "週日可選輕鬆踩",
+      "type": "SUPPORT",
+      "intent": "可整堂跳過，不當成欠課；無可信功率只記錄。",
+      "score_policy": "record_only",
+      "segments": [
+        {
+          "name": "可選輕鬆踩",
+          "role": "recovery",
+          "minutes": 30,
+          "target_w": {
+            "lo": null,
+            "hi": null,
+            "about": null
+          },
+          "target_cadence": null
+        }
+      ],
+      "time_budget": {
+        "window_min": 60
+      },
+      "selected_variant": "outdoor",
+      "export_mode": "none",
+      "route": "住家附近安全平路／社區飛輪。",
+      "rain_summary": "社區飛輪30分；無機台或疲勞就休息。",
+      "variants": {
+        "outdoor": {
+          "venue": "outdoor",
+          "summary": "30分，RPE2–3，可完整說話。"
+        },
+        "rain": {
+          "venue": "indoor",
+          "segments": [
+            {
+              "name": "可選輕鬆踩",
+              "role": "recovery",
+              "minutes": 30,
+              "target_w": {
+                "lo": null,
+                "hi": null,
+                "about": null
+              },
+              "target_cadence": null
+            }
+          ],
+          "summary": "社區飛輪30分；無機台或疲勞就休息。"
+        }
+      }
+    },
+    "2026-10-19": {
+      "date": "2026-10-19",
+      "week": "W4",
+      "block": "zhongshe-2026-09-return",
+      "label": "休息／輕柔活動",
+      "type": "REST",
+      "intent": "週六不排課；週三上肢／核心或公司課，測驗前降低腿部負荷。其餘日不補欠課。",
+      "score_policy": "record_only",
+      "segments": [],
+      "time_budget": {
+        "window_min": 60
+      },
+      "selected_variant": "outdoor",
+      "export_mode": "none"
+    }
+  },
+  "test_pairs": [
+    {
+      "test_date": "2026-09-15",
+      "reserve_date": "2026-09-17"
+    },
+    {
+      "test_date": "2026-10-13",
+      "reserve_date": "2026-10-15"
+    }
+  ],
+  "planning_note": "資料截至9/7；9/10與9/15尚未發生。先按保守瓦數排定，9/21複核才决定W1是否降階；10/4決定W3是否進階。"
+}

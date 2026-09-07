@@ -28,7 +28,7 @@ reports = module('reports', 'scripts/build-ride-reports.py')
 
 class MonthlyPlans(unittest.TestCase):
     def setUp(self):
-        self.month = json.loads((ROOT / 'data/plans/2026-10.json').read_text())
+        self.month = json.loads((ROOT / 'data/plans/2026-09.json').read_text())
 
     def test_legacy_days_unchanged_and_ftp_isolated(self):
         legacy = json.loads((ROOT / 'data/plan.json').read_text())
@@ -40,10 +40,10 @@ class MonthlyPlans(unittest.TestCase):
 
     def test_all_days_variants_and_time_budgets(self):
         self.assertTrue(cycle.validate(self.month))
-        self.assertEqual(len(self.month['days']), 32)
+        self.assertEqual(len(self.month['days']), 39)
 
     def test_rain_preserves_work_but_shortens_total(self):
-        for date in ['2026-10-06', '2026-10-13', '2026-10-20']:
+        for date in ['2026-09-22', '2026-09-29', '2026-10-06']:
             outdoor = plan_store.resolve_day(self.month, date, 'outdoor')
             rain = plan_store.resolve_day(self.month, date, 'rain')
             work = lambda d: [(s['minutes'], s['target_w']) for s in d['segments'] if s['role'] == 'work']
@@ -52,13 +52,43 @@ class MonthlyPlans(unittest.TestCase):
         self.assertEqual(self.month['days']['2026-10-13']['selected_variant'], 'outdoor')
 
     def test_double_test_and_invalid_variant_rejected(self):
-        self.month['days']['2026-10-29']['selected_variant'] = 'reserve_test'
+        self.month['days']['2026-10-15']['selected_variant'] = 'reserve_test'
         with self.assertRaises(ValueError):
             cycle.validate(self.month)
-        self.month['days']['2026-10-27']['selected_variant'] = 'rain'
+        self.month['days']['2026-10-13']['selected_variant'] = 'rain'
         self.assertTrue(cycle.validate(self.month))
         with self.assertRaises(ValueError):
             plan_store.resolve_day(self.month, '2026-10-06', 'typo')
+
+    def test_bridge_reserve_checks_its_own_original_date(self):
+        # Rain in October must not unlock the September reserve test.
+        self.month['days']['2026-10-13']['selected_variant'] = 'rain'
+        self.month['days']['2026-09-17']['selected_variant'] = 'reserve_test'
+        with self.assertRaises(ValueError):
+            cycle.validate(self.month)
+        self.month['days']['2026-09-15']['selected_variant'] = 'rain'
+        self.assertTrue(cycle.validate(self.month))
+        chosen = plan_store.resolve_day(self.month, '2026-09-17')
+        self.assertEqual(chosen['type'], 'TEST')
+        self.assertEqual(chosen['score_policy'], 'record_only')
+
+    def test_cross_month_four_weeks_and_confirmed_single_day_window(self):
+        import datetime as dt
+        start = dt.date.fromisoformat(self.month['cycle']['training_start'])
+        end = dt.date.fromisoformat(self.month['cycle']['end'])
+        self.assertEqual((end - start).days + 1, 28)
+        for date, day in self.month['days'].items():
+            if date >= start.isoformat():
+                self.assertEqual(day['week'], 'W' + str((dt.date.fromisoformat(date) - start).days // 7 + 1))
+            if dt.date.fromisoformat(date).weekday() == 5:
+                self.assertEqual(day['segments'], [])
+            if dt.date.fromisoformat(date).weekday() == 3:
+                self.assertEqual(day['time_budget']['window_min'], 150 if date == '2026-09-17' else 120)
+            if dt.date.fromisoformat(date).weekday() in (1, 3):
+                for variant in day.get('variants', {}):
+                    chosen = plan_store.resolve_day(self.month, date, variant)
+                    self.assertLessEqual(sum(s['minutes'] for s in chosen['segments']),
+                                         day['time_budget']['window_min'] - 15)
 
     def test_low_tss_plan_day_report_and_no_running_override(self):
         args = type('Args', (), {'force': False, 'min_tss': 100})()
@@ -69,8 +99,8 @@ class MonthlyPlans(unittest.TestCase):
         self.assertFalse(reports.qualifies(summary, '2026-10-08', args, set())[0])
 
     def test_all_rain_zwo_are_free_ride_and_match_durations(self):
-        files = list((ROOT / 'athlete/workouts/2026-10-rain').glob('*.zwo'))
-        self.assertEqual(len(files), 9)
+        files = list((ROOT / 'athlete/workouts/2026-09-cycle-rain').glob('*.zwo'))
+        self.assertEqual(len(files), 10)
         for file in files:
             workout = ET.parse(file).getroot().find('workout')
             self.assertTrue(all(node.tag == 'FreeRide' for node in workout))
@@ -84,28 +114,28 @@ class MonthlyPlans(unittest.TestCase):
         block = cycle.block_view(self.month, before)
         session = next(s for s in block['sessions'] if s['date'] == '2026-10-06')
         self.assertEqual(session['actual'], before['sessions'][0]['actual'])
-        self.assertEqual(session['minutes'], 75)
+        self.assertEqual(session['minutes'], 85)
 
     def test_activation_archives_legacy_and_does_not_activate_early(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
             (root / 'data/plans').mkdir(parents=True)
-            source = root / 'data/plans/2026-10.json'
+            source = root / 'data/plans/2026-09.json'
             source.write_text(json.dumps(self.month))
             active = root / 'data/training-block.json'
             old = {'id': 'legacy-september', 'sessions': [{'date': '2026-09-03', 'actual': {'tss': 95}}]}
             active.write_text(json.dumps(old))
             with patch.object(cycle, 'ROOT', root), patch.object(plan_store, 'MONTHS', source.parent):
-                cycle.sync('2026-09-28')
+                cycle.sync('2026-09-10')
                 self.assertEqual(json.loads(active.read_text()), old)
-                cycle.sync('2026-10-01')
-                self.assertEqual(json.loads(active.read_text())['id'], 'zhongshe-2026-10')
+                cycle.sync('2026-09-11')
+                self.assertEqual(json.loads(active.read_text())['id'], 'zhongshe-2026-09-return')
                 archive = root / 'data/training-history/legacy-september.json'
                 self.assertEqual(json.loads(archive.read_text()), old)
                 current = json.loads(active.read_text())
                 current['sessions'][0]['actual'] = {'note': 'keep me'}
                 active.write_text(json.dumps(current))
-                cycle.sync('2026-10-02')
+                cycle.sync('2026-09-12')
                 self.assertEqual(json.loads(active.read_text())['sessions'][0]['actual'], {'note': 'keep me'})
 
 
