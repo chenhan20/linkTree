@@ -442,6 +442,16 @@
       "note": "砍鴨頭全段的半程窗口，8.71 km"
     },
     {
+      "id": 7032407,
+      "group": "shezidao",
+      "nameZh": "社子島砍鴨頭 反向",
+      "label": "反向",
+      "nameApi": "社子島砍鴨頭ITT 反向",
+      "type": "ENDURANCE",
+      "accent": "#4ab4ff",
+      "note": "16.24 km，全段的逆向版。同瓦數下與正向的時間差幾乎全是風向造成的"
+    },
+    {
       "id": 41498683,
       "nameZh": "黃港河 全段",
       "nameApi": "黃港河執行",
@@ -533,6 +543,66 @@
       "type": "ENDURANCE",
       "accent": "#5aa0d8",
       "note": "文山河濱 10 公里，木柵到永福，平路定速"
+    },
+    {
+      "id": 37816958,
+      "group": "danshui-south",
+      "nameZh": "社子島→馬場町 全段",
+      "label": "全段（南下）",
+      "nameApi": "淡水河右岸ITT 社子島到馬場町",
+      "type": "ENDURANCE",
+      "accent": "#7aa7ff",
+      "note": "16.19 km，南下全程。歷史 CV 0.104"
+    },
+    {
+      "id": 19411662,
+      "group": "danshui-south",
+      "nameZh": "馬場町→社子島 全段",
+      "label": "全段（北上）",
+      "nameApi": "淡水河右岸ITT 馬場町到社子島",
+      "type": "ENDURANCE",
+      "accent": "#7aa7ff",
+      "note": "15.80 km，北上全程，與南下全段互為對照"
+    },
+    {
+      "id": 18767553,
+      "group": "danshui-south",
+      "nameZh": "社子島公園→大稻埕",
+      "label": "社子島→大稻埕",
+      "nameApi": "淡水河右岸ITT 社子島公園到大稻埕",
+      "type": "ENDURANCE",
+      "accent": "#7aa7ff",
+      "note": "8.10 km，南下上半。接在既有「中山橋→社子島公園」之後"
+    },
+    {
+      "id": 30593390,
+      "group": "danshui-south",
+      "nameZh": "大稻埕→馬場町",
+      "label": "大稻埕→馬場町",
+      "nameApi": "淡水河右岸ITT 大稻埕到馬場町",
+      "type": "ENDURANCE",
+      "accent": "#7aa7ff",
+      "note": "6.43 km，南下下半"
+    },
+    {
+      "id": 11084166,
+      "group": "danshui-south",
+      "nameZh": "社子島南→大稻埕",
+      "label": "社子島南→大稻埕",
+      "nameApi": "淡水河右岸ITT 社子島南到大稻埕",
+      "type": "ENDURANCE",
+      "accent": "#7aa7ff",
+      "note": "4.40 km，全資料集騎最多天的一段（14 天）"
+    },
+    {
+      "id": 11084096,
+      "group": "danshui-south",
+      "nameZh": "大稻埕→社子島南",
+      "label": "大稻埕→社子島南",
+      "nameApi": "淡水河右岸ITT 大稻埕到社子島南",
+      "type": "ENDURANCE",
+      "accent": "#7aa7ff",
+      "note": "4.36 km，上一條的反向，成對比較 5 分鐘輸出"
     }
   ],
   "_groups": "groups[] 是母路線，segments[] 是它底下的分段。沒有 group 欄位的路段自成一張卡（河濱那四條是四條各自獨立的路線，不是同一條的分段，刻意不分組）。segments 刻意保持扁平，這樣 fetch-strava.js / fetch-segment-streams.js / fetch-segment-terrain.js / merge-harvested-streams.js 既有的 map(s => s.id) 讀法完全不用改。",
@@ -614,6 +684,13 @@
       "type": "CLIMB",
       "accent": "#c98b3a",
       "note": "連接劍南路與中社／楓林橋的那段至善路。五條完美巢狀（全部 100% 落在全段內），是現成的長度階梯。中社橋→明德坡頂騎了 15 天，全資料集第四高頻，先前完全沒計時。"
+    },
+    {
+      "id": "danshui-south",
+      "nameZh": "淡水河右岸・大稻埕–馬場町",
+      "type": "ENDURANCE",
+      "accent": "#7aa7ff",
+      "note": "社子島往南穿過大稻埕到馬場町的河右岸走廊，2026-09-08 首次完整往返。刻意收成往返成對：同一趟 185 W 不變，回程全段 31.9 km/h、去程 31.0 km/h，成績有一半是風給的，只留單向會分不出進步與順風。"
     }
   ]
 }

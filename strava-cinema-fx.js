@@ -1250,31 +1250,44 @@
     }
     return d
   }
-  /* ── 追蹤：影片有 track 關鍵格時，依 currentTime 把臉、身體、大小插值出來，變化超過門檻就重算深度圖與遮罩（最多 5 次/秒） ── */
-  let trackRaf = 0, trackLast = 0, trackKey = ''
+  /* ── 追蹤：影片有 track 關鍵格時，依 currentTime 把臉、身體、大小插值出來，重算深度圖與遮罩。
+     一幀一次（有 requestVideoFrameCallback 就跟著影片的解碼幀走，暫停時自然停下）——
+     原本是最多 5 次/秒，但河濱那支最後兩秒車手橫移很快，每次更新遮罩要跳 ~30px，
+     對焦區就在畫面上一格一格抖。整批重算量過：三張 192×108 的遮罩約 0.5ms，跟著影片幀跑綽綽有餘。 ── */
+  let trackRaf = 0, trackVfc = 0, trackKey = ''
   function trackAt(track, t) {
     let a = track[0], b = track[track.length - 1]
     for (let i = 0; i < track.length - 1; i++) if (t >= track[i][0] && t < track[i + 1][0]) { a = track[i]; b = track[i + 1]; break }
     const f = b[0] === a[0] ? 0 : Math.max(0, Math.min(1, (t - a[0]) / (b[0] - a[0])))
     return a.slice(1).map((v, i) => v + (b[i + 1] - v) * f)
   }
+  function trackSchedule(v) {
+    if (v.requestVideoFrameCallback) { if (!trackVfc) trackVfc = v.requestVideoFrameCallback(() => { trackVfc = 0; trackTick() }) }
+    else if (!trackRaf) trackRaf = requestAnimationFrame(trackTick)
+  }
   function trackTick() {
     trackRaf = 0
     const M = MEDIA(), v = hero && hero.querySelector('.td-video')
     if (!armed || !M.track || !v || !hero.isConnected) return
-    trackRaf = requestAnimationFrame(trackTick)
-    const now = performance.now(); if (now - trackLast < 200) return
-    trackLast = now
+    trackSchedule(v)
     const [fx, fy, bx, by, sz] = trackAt(M.track, v.currentTime || 0)
-    const key = [fx, fy, bx, by, sz].map(n => n.toFixed(2)).join(',')
+    RIDER_AF.x = fx; RIDER_AF.y = fy
+    if (mode === 'auto') { afPos = { x: fx, y: fy }; positionAf() }
+    const key = [bx, by, sz].map(n => n.toFixed(3)).join(',')
     if (key === trackKey) return
     trackKey = key
-    RIDER_AF.x = fx; RIDER_AF.y = fy; RIDER.x = bx; RIDER.y = by; riderSize = sz
-    if (mode === 'auto') afPos = { x: fx, y: fy }
+    RIDER.x = bx; RIDER.y = by; riderSize = sz
+    if (!layers.length) return     // 手機／reduced-motion 沒有景深層：只有框要跟，深度圖不必重畫
     depth = buildDepth(); cache.clear(); lastK = -1
-    applyU(uCur); positionAf()
+    applyU(uCur)
   }
-  function trackStart() { trackKey = ''; if (!trackRaf && MEDIA().track) trackRaf = requestAnimationFrame(trackTick) }
+  function trackStart() {
+    trackKey = ''
+    const v = hero && hero.querySelector('.td-video')
+    if (!v || !MEDIA().track) return
+    if (trackVfc && v.cancelVideoFrameCallback) { v.cancelVideoFrameCallback(trackVfc); trackVfc = 0 }
+    trackSchedule(v)
+  }
   const stepU = k => k >= STEPS ? 2 : k / (STEPS - 1)
   const stepOf = u => u >= 1.5 ? STEPS : Math.round(Math.max(0, Math.min(1, u)) * (STEPS - 1))
   function masks(k) {
