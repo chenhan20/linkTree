@@ -3708,7 +3708,9 @@ const mcNum = v => v == null
    計數、進度軌、下一堂三個地方都要走這個判斷，不能只看 s.actual。
    輔助課表（support：週六輕鬆跑那種）同理：它是為了補空窗與養重複訓練效應，
    做了不算區塊進度、沒做也不算欠帳，所以兩個判斷合成同一個函式。 */
-const SES_DONE = s => !!(s.actual && !s.actual.substituted && !s.support)
+/* actual.skipped：主課表「沒做，但有話要說」。原本只有 support 分支認這個旗標 ——
+   主課表為了掛教練評補一個 actual，這裡就會判成完成（2026-09-10 後測取消時撞到）。 */
+const SES_DONE = s => !!(s.actual && !s.actual.substituted && !s.actual.skipped && !s.support)
 const SES_KEY = s => !s.support
 const MC_PASS = (a, t) => ({
   if:  a.if  != null && t.if  != null ? a.if  >= t.if - 0.02      : null,
@@ -3745,6 +3747,8 @@ function renderMesocycle(block) {
         cls: 'missed', extra: 'is-sub', txt: '替代', badge: '🔁 SUBSTITUTED',
         sub: s.actual.note || '原課表未執行，做了替代課表',
       }
+      // 沒做，但有話要說：徽章走 MISSED，教練評照樣掛得住（抽屜讀的是 actual.coach）
+      if (s.actual.skipped) return { cls: 'missed', txt: '未執行', badge: '💀 MISSED', sub: s.actual.note || '未執行' }
       const p = MC_PASS(s.actual, s.target || {})
       const hits = ['if', 'tss', 'vi'].filter(k => p[k] === true).length
       const graded = ['if', 'tss', 'vi'].filter(k => p[k] != null).length
@@ -6603,7 +6607,7 @@ function render(data) {
 
   // 3. 最近做完的一堂有沒有達標。三個維度用的是 MC_PASS，全站同一套規則，
   //    不另立標準。附上評分卡的分數（寫在 note 的開頭）讓它可被追。
-  const lastDone = blkS.filter(x => x.actual && !x.support && !x.actual.substituted).pop()
+  const lastDone = blkS.filter(x => x.actual && !x.support && !x.actual.substituted && !x.actual.skipped).pop()
   if (lastDone) {
     const t = lastDone.target || {}, a = lastDone.actual, pass = MC_PASS(a, t)
     const miss = [
@@ -10870,7 +10874,7 @@ Promise.all([
     const S = (B && Array.isArray(B.sessions)) ? B.sessions.slice().sort((a, b) => a.date.localeCompare(b.date)) : []
     o.block = B
     o.next = S.find(x => !x.actual && !x.support && x.date >= today) || null
-    o.last = S.filter(x => x.actual && !x.support && !x.actual.substituted).pop() || null
+    o.last = S.filter(x => x.actual && !x.support && !x.actual.substituted && !x.actual.skipped).pop() || null
     o.todaySes = S.find(x => x.date === today && !x.support) || null
     // 判讀對準「下一個有主課表的早上」；三天內沒課就看今天
     o.judgeDay = (o.todaySes && !o.todaySes.actual) ? today
@@ -11300,7 +11304,7 @@ Promise.all([
       const x = X(s.date), y = Y(plan / total)
       road.push([x, y])
       const st = (D[s.date] || {}).st || {}
-      const done = !!(s.actual && !s.actual.substituted)
+      const done = !!(s.actual && !s.actual.substituted && !s.actual.skipped)
       if (done) { act += s.actual.tss != null ? s.actual.tss : ((s.target || {}).tss || 0); actual.push([x, Y(Math.min(1, act / total))]) }
       nodes.push({ s, x, y, cls: st.cls || 'sched', badge: st.badge || '', gate: s.code === 'CAL' || s.code === 'POST', done })
     })
