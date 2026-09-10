@@ -3711,6 +3711,7 @@ const mcNum = v => v == null
 /* actual.skipped：主課表「沒做，但有話要說」。原本只有 support 分支認這個旗標 ——
    主課表為了掛教練評補一個 actual，這裡就會判成完成（2026-09-10 後測取消時撞到）。 */
 const BLOCK_FILES = ['data/training-block.json', 'data/training-blocks/2026-09.json']
+const PLAN_FILES  = ['data/plan.json', 'data/plans/2026-09.json']
 const SES_DONE = s => !!(s.actual && !s.actual.substituted && !s.actual.skipped && !s.support)
 const SES_KEY = s => !s.support
 const MC_PASS = (a, t) => ({
@@ -4012,7 +4013,7 @@ function renderRxTimeline(date) {
     : ''
   const NOTE_KEYS = [
     ['turnaround_rule', '折返'], ['wind_check', '風向'], ['lap_rule', '單圈'],
-    ['checkpoint_0720', '檢查點'], ['cut_order', '裁切順序'], ['daylight', '天光'],
+    ['checkpoint_0720', '檢查點'], ['checkpoint', '檢查點'], ['cut_order', '裁切順序'], ['daylight', '天光'],
     ['rough_section', '難守段'], ['fueling', '補給'], ['allout_purpose', '全力段用途'],
     ['basketball', '當晚'], ['note', '備註'],
   ]
@@ -10707,7 +10708,19 @@ Promise.all([
     }).catch(() => null),
   // 逐段處方（data/plan.json，tools/tcx/score.py 拿它逐段對帳）。training-block.json 只有
   // 一行 plan 字串，段落分鐘／瓦數帶／規則／執行要點全在這支。缺檔就只是抽屜少掉時間軸幾節。
-  fetchData('data/plan.json').then(r => r.ok ? r.json() : null).catch(() => null),
+  /* 跟 BLOCK_FILES 同一個道理：逐段處方也是一個月一支（data/plans/YYYY-MM.json），
+     legacy 的 data/plan.json 是底。合併規則照 tools/tcx/plan_store.py：以 legacy 為底、
+     月檔往上疊，同一天重複時保留 legacy（那邊是直接 raise，網站不該為了一筆重複整章消失）。
+     不合併的話 9/15 之後的處方在抽屜裡全部是空的 —— 段落分鐘、瓦數帶、執行要點都在月檔裡。 */
+  Promise.all(PLAN_FILES.map(f => fetchData(f).then(r => r.ok ? r.json() : null).catch(() => null)))
+    .then(list => {
+      const base = list[0]
+      if (!base) return null
+      const out = Object.assign({}, base, { days: Object.assign({}, base.days || {}) })
+      list.slice(1).forEach(m => Object.entries((m && m.days) || {})
+        .forEach(([d, v]) => { if (!(d in out.days)) out.days[d] = v }))
+      return out
+    }).catch(() => null),
   // ITT 成績的權威檔。strava.json 裡也有一份 segments，但那份只有 strava-sync 跑過才會更新，
   // 而 FIT 自建偵測器（scripts/backfill-itt-efforts.py）寫的是 itt-segments.json。
   // 實測撞過：三條新路段在 itt-segments.json 有 10 筆，strava.json 只有 1 筆，畫面就是空的。
