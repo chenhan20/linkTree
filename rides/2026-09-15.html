@@ -1109,7 +1109,8 @@ let HERO_IN_MASTHEAD=false;
    評分卡已經有這條規則但只有一行字，跨趟追不了 —— 這張圖把當天的工作段
    放到他自己近三個月的常態曲線上，低多少一眼看到。 */
 (function(){
-  const rule=(SC.rules||[]).find(r=>r.kind==='hr_vs_curve');
+  /* 只記錄不評分的日子 SC 是 null —— 這裡沒擋的話整支腳本停在這，後面每一節都空白（2026-09-15） */
+  const rule=((SC&&SC.rules)||[]).find(r=>r.kind==='hr_vs_curve');
   const d=rule&&rule.detail;
   if(!d||!d.curve||d.curve.length<6||!d.rows||!d.rows.length) return;
   document.getElementById('hrc-wrap').hidden=false;
