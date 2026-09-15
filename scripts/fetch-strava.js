@@ -711,10 +711,31 @@ async function buildSegmentsData(token, newSegEfforts, existingSegments) {
       if (e.start_time) byKey.set(segEffortKey(e), e)
       if (!byLegacy.has(segEffortLegacyKey(e))) byLegacy.set(segEffortLegacyKey(e), e)
     }
+    // 自建（FIT）列沒有 activity_id，上面的鍵永遠對不到它 —— 以前每趟新騎乘都會多出一列
+    // Strava，接著 backfill-itt-efforts.py 把自建那筆刪掉。規則跟那支 merge() 一致：
+    // 有自建就以自建為主，Strava 收進 strava_check；差超過 30 秒才反過來顯示 Strava。
+    const ITT_MISMATCH_SEC = 30
+    const startSec = x => {
+      const p = String(x.start_time || '').split(':')
+      return p.length >= 2 ? (+p[0]) * 3600 + (+p[1]) * 60 : null
+    }
+    const sameNatural = (a, b) => a.date === b.date && startSec(a) !== null && startSec(b) !== null &&
+      Math.abs(startSec(a) - startSec(b)) <= 90
     let added = 0
     for (const e of (newSegEfforts[segId] || [])) {
       const hit = e.start_time ? byKey.get(segEffortKey(e)) : null
       if (hit) { Object.assign(hit, e); continue }
+      const fitIdx = existingEfforts.findIndex(x => x.source === 'fit' && sameNatural(x, e))
+      if (fitIdx >= 0) {
+        const f = existingEfforts[fitIdx]
+        const diff = Math.round((f.elapsed_sec - e.elapsed_sec) * 10) / 10
+        if (Math.abs(diff) <= ITT_MISMATCH_SEC) f.strava_check = { ...e }
+        else existingEfforts[fitIdx] = { ...e, fit_check: {
+          elapsed_sec: f.elapsed_sec, elapsed_str: f.elapsed_str, start_time: f.start_time,
+          avg_watts: f.avg_watts, avg_heartrate: f.avg_heartrate, fit: f.fit, diff_sec: diff,
+        } }
+        continue
+      }
       const legacy = byLegacy.get(segEffortLegacyKey(e))
       if (legacy && !legacy.start_time) {
         Object.assign(legacy, e)                 // 舊紀錄升級：補上 start_time

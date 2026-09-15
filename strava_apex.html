@@ -4328,7 +4328,7 @@ function ittEffortTableHTML(efforts, pr) {
         <td class="t">${e.elapsed_str}</td>
         <td class="n">${e.avg_watts ? e.avg_watts + 'w' : '—'}</td>
         <td class="n">${e.avg_heartrate || '—'}</td>
-        <td class="s">${e.source === 'fit' ? '自建' : 'STRAVA'}</td>
+        <td class="s" title="${e.fit_check ? `自建 ${e.fit_check.elapsed_str}，差 ${e.fit_check.diff_sec > 0 ? '+' : ''}${e.fit_check.diff_sec} 秒：偵測器待修，先顯示 Strava` : e.strava_check ? `Strava ${e.strava_check.elapsed_str}（對帳）` : ''}">${e.source === 'fit' ? '自建' : e.fit_check ? '⚠︎ STRAVA' : 'STRAVA'}</td>
       </tr>`
     }).join('')}</tbody>
   </table>`
@@ -10160,13 +10160,13 @@ function mergeIttSegments(data, ittSegments) {
   incoming.forEach(src => {
     const dst = byId.get(src.id)
     if (!dst) { main.push(src); return }
-    // 自建計時（source==='fit'）以 itt-segments.json 為唯一權威，整批取代；
-    // 純 union 會留下幽靈 —— 偵測器修正後某筆的起跑時刻變了，strava.json 裡
-    // 那筆舊的永遠刪不掉，同一趟就變成兩列（實測 2025-10-29 河濱10K）。
-    // Strava 來源的才走 union，因為 strava.json 可能有 itt 還沒收到的。
-    const efforts = (dst.efforts || []).filter(e => e.source !== 'fit')
-    ;(src.efforts || []).forEach(e => {
-      if (!efforts.some(x => ittSameEffort(e, x))) efforts.push(e)
+    // itt-segments.json 的每一列都是權威：有 FIT 就是自建、Strava 收在 strava_check 對帳，
+    // 差太多才顯示 Strava 並帶 fit_check（對齊規則在 backfill-itt-efforts.py 的 merge()）。
+    // strava.json 只補 itt 還沒收到、而且同一趟 itt 沒有任何一列的 Strava 成績；
+    // 自建列不從 strava.json 帶，否則偵測器修正後的舊起跑時刻會變幽靈（實測 2025-10-29 河濱10K）。
+    const efforts = (src.efforts || []).slice()
+    ;(dst.efforts || []).forEach(e => {
+      if (e.source !== 'fit' && !efforts.some(x => ittSameEffort(e, x))) efforts.push(e)
     })
     // 路段 metadata 以 itt-segments.json 為準，efforts 用上面併好的
     Object.keys(src).forEach(k => { if (k !== 'efforts') dst[k] = src[k] })

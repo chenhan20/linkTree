@@ -101,16 +101,17 @@ def main(argv=None):
             # 路段 metadata 以 itt-segments.json 為準（它是 fetch-strava.js 的完整副本，
             # 且之後又被 FIT 回補加過料）。
             #
-            # efforts 分兩種來源處理，不能一律 union：
-            #   ‧ source='fit' —— itt-segments.json 是唯一權威，整批取代。
-            #     union 會留下幽靈：偵測器修正後某筆的起跑時刻變了，舊的那筆在
-            #     strava.json 裡永遠刪不掉，同一趟就變成兩列（實測 2025-10-29 河濱10K）。
-            #   ‧ Strava 來源 —— 走 union，因為 strava.json 可能有 itt 還沒收到的。
-            existing = [e for e in (dst.get("efforts") or []) if e.get("source") != "fit"]
+            # efforts：itt-segments.json 的每一列都是權威（自建為主、Strava 對帳，
+            # 已經在 backfill-itt-efforts.py 的 merge() 對好）。strava.json 只補 itt
+            # 還沒收到的 Strava 列，而且同一趟 itt 已有任何一列就不補 ——
+            # 以前是 strava.json 的 Strava 列優先，同一趟有自建也顯示 STRAVA（2026-09-15 改掉）。
+            # 自建列一律不從 strava.json 帶：union 會留下幽靈，偵測器修正後起跑時刻變了，
+            # 舊的那筆永遠刪不掉，同一趟就變成兩列（實測 2025-10-29 河濱10K）。
             before = len(dst.get("efforts") or [])
-            for e in itt_seg.get("efforts") or []:
-                if not any(same_effort(e, x) for x in existing):
-                    existing.append(json.loads(json.dumps(e, ensure_ascii=False)))
+            existing = [json.loads(json.dumps(e, ensure_ascii=False)) for e in itt_seg.get("efforts") or []]
+            for e in dst.get("efforts") or []:
+                if e.get("source") != "fit" and not any(same_effort(e, x) for x in existing):
+                    existing.append(e)
             sort_efforts(existing)
             for k, v in itt_seg.items():
                 if k != "efforts":

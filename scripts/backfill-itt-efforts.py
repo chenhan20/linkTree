@@ -17,8 +17,9 @@ backfill-itt-efforts.py —— 用自建偵測器把 data/fit/*.fit 的 ITT 成�
 跟 fetch-strava.js 的關係：
   那支是「合併」不是「覆寫」（scripts/fetch-strava.js:693），會讀既有 efforts 再 push
   新的，所以這裡寫進去的 FIT 成績不會被下一班 strava-sync 洗掉。
-  反過來，若 Strava 事後才配對到同一趟，這支重跑時會把被取代的 FIT 筆數刪掉
-  （prune_superseded），不會留下兩列一樣的成績。
+  反過來，若 Strava 事後才配對到同一趟，這支重跑時會把兩列併成一列：
+  **有 FIT 就以自建為主**，Strava 收進 strava_check 對帳；差超過 MISMATCH_SEC 才顯示 Strava
+  （見 merge()）。2026-09-15 以前是 Strava 優先、自建那筆直接刪掉，畫面因此幾乎全是 STRAVA。
 
 去重鍵沿用 repo 慣例：同路段 + 同日 + 起跑時刻相近（見 SAME_START_TOL_SEC）。
 不要用 activity_id —— 同一趟刷四次中社是四筆，activity_id 全一樣。
@@ -147,8 +148,46 @@ def build_fit_efforts(only_ids=None, verbose=True):
     return out
 
 
+# 同一趟兩邊都有時，差超過這麼多秒就不信自建那筆（多半是偵測器框錯窗），先顯示 Strava。
+# 2026-09-15 對帳：586 筆裡 557 筆 ≤3 秒，>30 秒的 21 筆幾乎都是萬溪陡段固定偏移與少數錯窗。
+MISMATCH_SEC = 30
+
+
+def _without(e, *keys):
+    return {k: v for k, v in e.items() if k not in keys}
+
+
+_ARCHIVE = None
+
+
+def _archive_efforts(seg_id):
+    """Strava 封存檔（harvest-strava.js）裡這條路段的成績，只拿來抓「差太多」的那幾筆。
+
+    itt-segments.json 的 Strava 列只有歷來同步累積的一小部分；同一趟 itt 沒有 Strava 列、
+    封存檔卻有，而且跟自建差超過 MISMATCH_SEC 的，也要改顯示 Strava（萬溪陡段那 12 筆就是）。
+    不拿它補沒有 FIT 的日子 —— 那會一次多出幾十列從沒上過畫面的成績。
+    """
+    global _ARCHIVE
+    if _ARCHIVE is None:
+        _ARCHIVE = {}
+        if os.path.exists(HARVEST_CATALOG):
+            cat = json.load(open(HARVEST_CATALOG, encoding="utf-8"))
+            _ARCHIVE = {s["id"]: s.get("efforts") or [] for s in cat.get("segments", [])}
+    return [{"activity_id": e.get("activity_id"), "date": e["date"], "start_time": e.get("start_time"),
+             "elapsed_sec": e["elapsed_sec"], "elapsed_str": fmt_elapsed(e["elapsed_sec"] or 0),
+             "avg_watts": e.get("avg_watts"), "avg_heartrate": e.get("avg_heartrate"),
+             "pr_rank": e.get("pr_rank"), "source": "strava"}
+            for e in _ARCHIVE.get(seg_id, []) if e.get("elapsed_sec")]
+
+
 def merge(seg, fit_efforts, scanned=True, dry_run=False):
     """把某路段的 FIT efforts 併進既有 efforts，回傳 (新增數, 刪除數)。
+
+    **有 FIT 就以自建為主，Strava 只留著對帳**（2026-09-15 起；之前是反過來，
+    Strava 一配對到，自建那筆就被刪掉）。同一趟兩邊都有時：
+      ‧ 差 ≤ MISMATCH_SEC → 顯示自建，Strava 那筆收進 `strava_check`
+      ‧ 差 >  MISMATCH_SEC → 顯示 Strava，自建那筆收進 `fit_check`（畫面標 ⚠︎，偵測器待修）
+    沒有 FIT 的（FIT 起始日之前、或偵測器漏抓）照舊用 Strava 補。
 
     scanned=True 時，這條路段的 FIT 成績是「整批重算」而不是「累加」——
     偵測結果是 FIT 檔加演算法的純函數，演算法改了就該以新結果為準。
@@ -159,25 +198,56 @@ def merge(seg, fit_efforts, scanned=True, dry_run=False):
     scanned=False（--only 沒掃到這條）則完全不動它的 FIT 成績。
     """
     existing = seg.get("efforts") or []
-    strava = [e for e in existing if e.get("source") != "fit"]
     old_fit = [e for e in existing if e.get("source") == "fit"]
 
     if not scanned:
         return 0, 0
 
-    # ① 這次偵測到的就是 FIT 端的全部事實；Strava 已有的同一筆不重複列
-    kept_fit, added = [], 0
+    # ① Strava 端的觀測：獨立的 Strava 列，加上上一輪收進自建列的 strava_check。
+    #    同一趟可能兩處都有（fetch-strava.js 在這支之前又配對了一次），留第一個就好。
+    strava_obs = []
+    for s in ([_without(e, "is_pr", "fit_check") for e in existing if e.get("source") != "fit"]
+              + [dict(e["strava_check"]) for e in old_fit if e.get("strava_check")]):
+        s.setdefault("source", "strava")
+        if not any(same_effort(s, x) for x in strava_obs):
+            strava_obs.append(s)
+
+    # ② 逐筆配對：這次偵測到的就是 FIT 端的全部事實
+    merged, used, added = [], set(), 0
     for fe in fit_efforts:
-        if any(same_effort(fe, s) for s in strava):
-            continue
-        kept_fit.append(fe)
-        if not any(same_effort(fe, e) for e in old_fit):
+        hit = next((i for i, s in enumerate(strava_obs)
+                    if i not in used and same_effort(fe, s)), None)
+        fit_check = lambda d: {
+            "elapsed_sec": fe["elapsed_sec"], "elapsed_str": fe["elapsed_str"],
+            "start_time": fe.get("start_time"), "avg_watts": fe.get("avg_watts"),
+            "avg_heartrate": fe.get("avg_heartrate"), "fit": fe.get("fit"), "diff_sec": d,
+        }
+        if hit is None:
+            # itt 沒有 Strava 列：只在封存檔證明「差太多」時才換成 Strava，其餘照舊顯示自建
+            arc = next((a for a in _archive_efforts(seg["id"]) if same_effort(fe, a)), None)
+            if arc:
+                # 沒有起跑時刻的舊 Strava 列對不到自建（秒數差太多），卻對得到封存檔那筆 ——
+                # 不先認領掉，它會在下面被當成「沒配對的 Strava」多留一列（2025-08-19 中社實測）
+                used.update(i for i, s in enumerate(strava_obs) if i not in used and same_effort(arc, s))
+            diff = round(fe["elapsed_sec"] - arc["elapsed_sec"], 1) if arc else 0
+            row = dict(fe) if abs(diff) <= MISMATCH_SEC else dict(arc, fit_check=fit_check(diff))
+        else:
+            used.add(hit)
+            s = strava_obs[hit]
+            diff = round(fe["elapsed_sec"] - (s.get("elapsed_sec") or 0), 1)
+            if abs(diff) <= MISMATCH_SEC:
+                row = dict(fe, strava_check=_without(s, "is_pr", "strava_check"))
+            else:
+                row = dict(s, fit_check=fit_check(diff))
+        if row.get("source") == "fit" and not any(same_effort(row, e) for e in old_fit):
             added += 1
+        merged.append(row)
+    merged += [s for i, s in enumerate(strava_obs) if i not in used]
 
-    # ② 被丟掉的舊 FIT 筆：可能是 Strava 事後補配對到，也可能是演算法修正後不再成立
-    pruned = [e for e in old_fit if not any(same_effort(e, f) for f in kept_fit)]
+    # ③ 不再以自建顯示的舊 FIT 筆：演算法修正後不成立，或差太多改顯示 Strava
+    pruned = [e for e in old_fit
+              if not any(r.get("source") == "fit" and same_effort(e, r) for r in merged)]
 
-    merged = strava + kept_fit
     merged.sort(key=lambda e: f"{e.get('date','')} {e.get('start_time','')}", reverse=True)
 
     # ③ PR 重算。Strava 的 is_pr 只在 Strava 自己的集合裡成立，
@@ -280,8 +350,8 @@ def compare(data, fit_efforts):
     """對帳：同一趟兩邊都有時，自建偵測器與 Strava 官方差幾秒。
 
     這是偵測器的驗收方式 —— 不是「有沒有抓到」，是「抓到的準不準」。
-    寫入模式會把重複的 FIT 筆數 prune 掉（以官方為準），對帳要在 prune 之前做，
-    所以獨立成一個 read-only 模式。
+    寫入模式會把同一趟併成一列（自建為主、差太多才顯示 Strava，見 merge()），
+    併完之後就看不到兩邊原始秒數並排，所以對帳獨立成一個 read-only 模式。
     """
     strava_by_seg = strava_side(data)
     rows, only_strava, only_fit = [], [], []
