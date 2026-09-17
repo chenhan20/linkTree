@@ -4165,7 +4165,11 @@ const mcNum = v => v == null
    計數、進度軌、下一堂三個地方都要走這個判斷，不能只看 s.actual。
    輔助課表（support：週六輕鬆跑那種）同理：它是為了補空窗與養重複訓練效應，
    做了不算區塊進度、沒做也不算欠帳，所以兩個判斷合成同一個函式。 */
-const SES_DONE = s => !!(s.actual && !s.actual.substituted && !s.support)
+/* actual.skipped：主課表「沒做，但有話要說」。原本只有 support 分支認這個旗標 ——
+   主課表為了掛教練評補一個 actual，這裡就會判成完成（2026-09-10 後測取消時撞到）。 */
+const BLOCK_FILES = ['data/training-block.json', 'data/training-blocks/2026-09.json']
+const PLAN_FILES  = ['data/plan.json', 'data/plans/2026-09.json']
+const SES_DONE = s => !!(s.actual && !s.actual.substituted && !s.actual.skipped && !s.support)
 const SES_KEY = s => !s.support
 const MC_PASS = (a, t) => ({
   if:  a.if  != null && t.if  != null ? a.if  >= t.if - 0.02      : null,
@@ -4202,6 +4206,8 @@ function renderMesocycle(block) {
         cls: 'missed', extra: 'is-sub', txt: '替代', badge: '🔁 SUBSTITUTED',
         sub: s.actual.note || '原課表未執行，做了替代課表',
       }
+      // 沒做，但有話要說：徽章走 MISSED，教練評照樣掛得住（抽屜讀的是 actual.coach）
+      if (s.actual.skipped) return { cls: 'missed', txt: '未執行', badge: '💀 MISSED', sub: s.actual.note || '未執行' }
       const p = MC_PASS(s.actual, s.target || {})
       const hits = ['if', 'tss', 'vi'].filter(k => p[k] === true).length
       const graded = ['if', 'tss', 'vi'].filter(k => p[k] != null).length
@@ -4241,7 +4247,9 @@ function renderMesocycle(block) {
          p.tss == null ? '' : `<em class="${p.tss ? 'ok' : 'no'}">TSS ${Math.round(s.actual.tss ?? 0)}</em>`,
          p.vi  == null ? '' : `<em class="${p.vi  ? 'ok' : 'no'}">VI ${n2(s.actual.vi)}</em>`]
         .filter(Boolean).join(' ')
-      : `IF ${n2(t.if)} · TSS ${t.tss ?? '—'} · VI ≤${n2(t.vi)}`
+      /* VI 沒有目標就整段不印：平路課的 VI ≤1.06 那條規則套到爬坡沒有意義，
+         新週期（中社／風櫃嘴）就沒給 VI —— 印成「VI ≤—」等於畫一個永遠達不到的欄位。 */
+      : `IF ${n2(t.if)} · TSS ${t.tss ?? '—'}${t.vi != null ? ' · VI ≤' + n2(t.vi) : ''}`
     detail[s.date] = { s, st, p, i }
     return `<button class="ses ses--${tier(st)} is-${st.cls}${st.extra ? ' ' + st.extra : ''}" type="button" data-ses="${s.date}">
       <span class="ses-wk">${s.wk || ''}</span>
@@ -4462,7 +4470,7 @@ function renderRxTimeline(date) {
     : ''
   const NOTE_KEYS = [
     ['turnaround_rule', '折返'], ['wind_check', '風向'], ['lap_rule', '單圈'],
-    ['checkpoint_0720', '檢查點'], ['cut_order', '裁切順序'], ['daylight', '天光'],
+    ['checkpoint_0720', '檢查點'], ['checkpoint', '檢查點'], ['cut_order', '裁切順序'], ['daylight', '天光'],
     ['rough_section', '難守段'], ['fueling', '補給'], ['allout_purpose', '全力段用途'],
     ['basketball', '當晚'], ['note', '備註'],
   ]
@@ -6693,7 +6701,7 @@ function render(data) {
           <b class="ov-b">${nextSes.name || ''}</b>
           <span class="ov-n">${mdOf(nextSes.date)} 週${wdOf(nextSes.date)}${nextSes.date === todayStr ? ' · 就是今天' : ''}</span>
           <span class="ov-plan">${mdBold(nextSes.plan || '')}</span>
-          <span class="ov-n">目標 IF ${n2_(nextSes.target?.if)} · TSS ${nextSes.target?.tss ?? '—'} · VI ≤${n2_(nextSes.target?.vi)}</span>
+          <span class="ov-n">目標 IF ${n2_(nextSes.target?.if)} · TSS ${nextSes.target?.tss ?? '—'}${nextSes.target?.vi != null ? ' · VI ≤' + n2_(nextSes.target.vi) : ''}</span>
         </button>` : `
         <div class="ov-cell">
           <span class="ov-k">NEXT SESSION</span>
@@ -6797,7 +6805,7 @@ function render(data) {
 
   // 3. 最近做完的一堂有沒有達標。三個維度用的是 MC_PASS，全站同一套規則，
   //    不另立標準。附上評分卡的分數（寫在 note 的開頭）讓它可被追。
-  const lastDone = blkS.filter(x => x.actual && !x.support && !x.actual.substituted).pop()
+  const lastDone = blkS.filter(x => x.actual && !x.support && !x.actual.substituted && !x.actual.skipped).pop()
   if (lastDone) {
     const t = lastDone.target || {}, a = lastDone.actual, pass = MC_PASS(a, t)
     const miss = [
@@ -10803,11 +10811,37 @@ Promise.all([
   fetchData('data/taipei-outline.json').then(r => r.ok ? r.json() : null).catch(() => null),
   // 每日一句：語錄庫（steve-quotes repo → jsDelivr；404 或離線就走降級文案）
   fetchData(QUOTES_URL).then(r => r.ok ? r.json() : null).catch(() => null),
-  // 手寫的訓練週期計畫（見 data/training-block.json 的 _howToUse）；缺檔就不顯示週期章
-  fetchData('data/training-block.json').then(r => r.ok ? r.json() : null).catch(() => null),
+  /* 手寫的訓練週期計畫（見 data/training-block.json 的 _howToUse）；缺檔就不顯示週期章。
+     一個週期一支檔：data/training-block.json 是「好兄弟月平路」（2026-08-13 → 09-10），
+     之後每個週期各自一支 data/training-blocks/YYYY-MM.json。GitHub Pages 是純靜態、
+     列不了目錄，所以開新週期時要在 BLOCK_FILES 補一行 —— 這是刻意的，寧可多一行也不要
+     再加一支「目錄檔」讓兩邊對不起來（ITT 那兩份檔漂移就是這樣來的）。
+     選哪一支的規則跟人一樣：今天落在哪個週期就用哪個；都沒落在（週期之間的空窗）
+     就用最近已經開始的那一支，這樣區塊結束後畫面停在剛結束的那個，不會整章消失。
+     讀檔與合併規則跟 strava_cinema.html 同一套，改一邊要改兩邊。 */
+  Promise.all(BLOCK_FILES.map(f => fetchData(f).then(r => r.ok ? r.json() : null).catch(() => null)))
+    .then(list => {
+      const B = list.filter(b => b && b.start && b.end && Array.isArray(b.sessions))
+      const t = new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10)
+      return B.find(b => b.start <= t && t <= b.end)
+        || B.filter(b => b.start <= t).sort((a, b) => b.start.localeCompare(a.start))[0]
+        || B[0] || null
+    }).catch(() => null),
   // 逐段處方（data/plan.json，tools/tcx/score.py 拿它逐段對帳）。training-block.json 只有
   // 一行 plan 字串，段落分鐘／瓦數帶／規則／執行要點全在這支。缺檔就只是抽屜少掉時間軸幾節。
-  fetchData('data/plan.json').then(r => r.ok ? r.json() : null).catch(() => null),
+  /* 跟 BLOCK_FILES 同一個道理：逐段處方也是一個月一支（data/plans/YYYY-MM.json），
+     legacy 的 data/plan.json 是底。合併規則照 tools/tcx/plan_store.py：以 legacy 為底、
+     月檔往上疊，同一天重複時保留 legacy（那邊是直接 raise，網站不該為了一筆重複整章消失）。
+     不合併的話 9/11 之後的處方在抽屜裡全部是空的 —— 段落分鐘、瓦數帶、執行要點都在月檔裡。 */
+  Promise.all(PLAN_FILES.map(f => fetchData(f).then(r => r.ok ? r.json() : null).catch(() => null)))
+    .then(list => {
+      const base = list[0]
+      if (!base) return null
+      const out = Object.assign({}, base, { days: Object.assign({}, base.days || {}) })
+      list.slice(1).forEach(m => Object.entries((m && m.days) || {})
+        .forEach(([d, v]) => { if (!(d in out.days)) out.days[d] = v }))
+      return out
+    }).catch(() => null),
   // ITT 成績的權威檔。strava.json 裡也有一份 segments，但那份只有 strava-sync 跑過才會更新，
   // 而 FIT 自建偵測器（scripts/backfill-itt-efforts.py）寫的是 itt-segments.json。
   // 實測撞過：三條新路段在 itt-segments.json 有 10 筆，strava.json 只有 1 筆，畫面就是空的。
