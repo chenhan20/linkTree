@@ -76,6 +76,8 @@ class MonthlyPlans(unittest.TestCase):
         import datetime as dt
         start = dt.date.fromisoformat(self.month['cycle']['training_start'])
         end = dt.date.fromisoformat(self.month['cycle']['end'])
+        # 週四預設 120；只有使用者確認過、寫進 constraints.date_window_overrides 的日期可以放寬
+        overrides = self.month['constraints'].get('date_window_overrides', {})
         self.assertEqual((end - start).days + 1, 28)
         for date, day in self.month['days'].items():
             if date >= start.isoformat():
@@ -83,7 +85,7 @@ class MonthlyPlans(unittest.TestCase):
             if dt.date.fromisoformat(date).weekday() == 5:
                 self.assertEqual(day['segments'], [])
             if dt.date.fromisoformat(date).weekday() == 3:
-                self.assertEqual(day['time_budget']['window_min'], 150 if date == '2026-09-17' else 120)
+                self.assertEqual(day['time_budget']['window_min'], overrides.get(date, 120))
             if dt.date.fromisoformat(date).weekday() in (1, 3):
                 for variant in day.get('variants', {}):
                     chosen = plan_store.resolve_day(self.month, date, variant)
