@@ -1518,6 +1518,9 @@ if(REPS){
   if(H.length){
     const rows=[...H,{...RT.self,me:true}];
     const bT=Math.min(...rows.filter(r=>r.moving_sec).map(r=>r.moving_sec));
+    const bE=Math.min(...rows.filter(r=>r.elapsed_sec).map(r=>r.elapsed_sec));
+    /* 團騎的休息也是這條路線的一部分：停很久聊天跟一路順的移動時間可能一樣，總時間才分得出來 */
+    const stop=r=>(r.elapsed_sec&&r.moving_sec)?r.elapsed_sec-r.moving_sec:null;
     const bN=Math.max(...rows.map(r=>r.np_w||0)), bE=Math.max(...rows.map(r=>r.ef||0));
     document.getElementById('route-sub').textContent=
       '自動配對：起點 ±1.3 km、經過同一組計時路段、距離 ±5%。跟自己比：同樣是團騎才比得準——'+
@@ -1525,15 +1528,17 @@ if(REPS){
     document.getElementById('route-aside').innerHTML=
       `<div class="a1">${rows.length}<span style="font-size:14px;font-weight:500;margin-left:4px">次</span></div><div class="a2">同路線</div>`;
     document.getElementById('route-table').innerHTML=
-      `<thead><tr><th>日期</th><th>移動</th><th>km</th><th>爬升</th><th>NP</th><th>均瓦</th><th>心率</th><th>EF</th><th>VI</th><th>跟車</th></tr></thead><tbody>`+
+      `<thead><tr><th>日期</th><th>總時間</th><th>移動</th><th>停等</th><th>km</th><th>爬升</th><th>NP</th><th>均瓦</th><th>心率</th><th>EF</th><th>VI</th><th>跟車</th></tr></thead><tbody>`+
       rows.map(r=>`<tr class="${r.me?'me':''}"><td>${(r.href&&!r.me)?`<a href="${r.href}">${r.date}</a>`:r.date}${r.me?' <small>本趟</small>':''}</td>`+
-        `<td class="n${r.moving_sec===bT?' best':''}">${mm(r.moving_sec)}</td><td class="n">${f1(r.km)}</td><td class="n">${w0s(r.elev_m)}</td>`+
+        `<td class="n${r.elapsed_sec===bE?' best':''}">${mm(r.elapsed_sec)}</td>`+
+        `<td class="n${r.moving_sec===bT?' best':''}">${mm(r.moving_sec)}</td><td class="n">${stop(r)!=null?hm(stop(r)):'—'}</td>`+
+        `<td class="n">${f1(r.km)}</td><td class="n">${w0s(r.elev_m)}</td>`+
         `<td class="n${r.np_w===bN?' best':''}">${w0s(r.np_w)}</td><td class="n">${w0s(r.avg_w)}</td><td class="n">${w0s(r.avg_hr)}</td>`+
         `<td class="n${r.ef===bE?' best':''}">${f2(r.ef)}</td><td class="n">${f2(r.vi)}</td>`+
         `<td class="n">${(r.draft&&r.draft.draft_pct!=null)?r.draft.draft_pct+'%':'—'}</td></tr>`).join('')+`</tbody>`;
     const prev=H[H.length-1];
     document.getElementById('route-cap').innerHTML=
-      `橘字＝這幾趟裡最好的。上一次是 ${prev.date}：NP ${w0s(prev.np_w)} W、心率 ${w0s(prev.avg_hr)}、移動 ${mm(prev.moving_sec)}。`+
+      `橘字＝這幾趟裡最好的。上一次是 ${prev.date}：NP ${w0s(prev.np_w)} W、心率 ${w0s(prev.avg_hr)}、總時間 ${mm(prev.elapsed_sec)}（移動 ${mm(prev.moving_sec)}）。`+
       `EF 會跟著氣溫走（冷天心率低），跨季節比要打折。`;
   } else {
     document.getElementById('route-hist').hidden=true;
@@ -2081,7 +2086,7 @@ def route_context(ride, fit_path=None):
         me = route_sig.signature(fit_path)
     history = []
     for r in route_sig.same_route(me, list(routes.values()), itt, my_segs=segset):
-        row = {k: r.get(k) for k in ("date", "start_hm", "moving_sec", "km", "elev_m",
+        row = {k: r.get(k) for k in ("date", "start_hm", "elapsed_sec", "moving_sec", "km", "elev_m",
                                      "avg_w", "np_w", "avg_hr", "ef", "vi", "draft")}
         if os.path.exists(os.path.join(RIDES_DIR, f"{r['date']}.html")):
             row["href"] = f"{r['date']}.html"
@@ -2090,7 +2095,7 @@ def route_context(ride, fit_path=None):
         return None
     p, h = ride.get("power") or {}, ride.get("hr") or {}
     return {"efforts": efforts, "history": history, "seg_ids": sorted(segset),
-            "self": {"date": date, "start_hm": start, "moving_sec": t.get("moving_sec"),
+            "self": {"date": date, "start_hm": start, "elapsed_sec": t.get("elapsed_sec"), "moving_sec": t.get("moving_sec"),
                      "km": t.get("distance_km"), "elev_m": t.get("elev_gain_m"),
                      "avg_w": p.get("avg_w_moving"), "np_w": p.get("np_w"), "avg_hr": h.get("avg"),
                      "ef": h.get("ef"), "vi": p.get("vi"), "draft": ride.get("draft")}}
