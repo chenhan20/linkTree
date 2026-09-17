@@ -72,6 +72,20 @@ class MonthlyPlans(unittest.TestCase):
         self.assertEqual(chosen['type'], 'TEST')
         self.assertEqual(chosen['score_policy'], 'record_only')
 
+    def test_test_days_are_key_sessions_with_pre_post_codes(self):
+        # record_only 只代表不評分；測驗日仍是主課表（2026-09-11 CI sync 曾把它們洗回輔助）
+        view = {s['date']: s for s in cycle.block_view(self.month)['sessions']}
+        self.assertEqual((view['2026-09-15']['code'], view['2026-09-15']['support']), ('CAL', False))
+        self.assertEqual((view['2026-10-13']['code'], view['2026-10-13']['support']), ('POST', False))
+        self.assertTrue(view['2026-09-13']['support'])
+        self.assertTrue(view['2026-09-17']['support'])
+        # 9/15 雨備沒有全力段 → 不是測驗；雨延到 9/17 的那一堂接手當前測
+        self.month['days']['2026-09-15']['selected_variant'] = 'rain'
+        self.month['days']['2026-09-17']['selected_variant'] = 'reserve_test'
+        view = {s['date']: s for s in cycle.block_view(self.month)['sessions']}
+        self.assertTrue(view['2026-09-15']['support'])
+        self.assertEqual((view['2026-09-17']['code'], view['2026-09-17']['support']), ('CAL', False))
+
     def test_cross_month_four_weeks_and_confirmed_single_day_window(self):
         import datetime as dt
         start = dt.date.fromisoformat(self.month['cycle']['training_start'])

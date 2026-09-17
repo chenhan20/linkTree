@@ -85,12 +85,17 @@ def block_view(plan, previous=None):
         day = plan_store.resolve_day(plan, date)
         if not day['segments']:
             continue
-        sessions.append({'date': date, 'wk': day['week'], 'code': day['type'],
+        # 測驗日只記錄不評分（record_only），但它是週期的基準／驗收，不是可跳過的輔助課。
+        # 雨備版沒有全力段，就不算測驗。test_date 之前是前測 CAL、之後（含雨延）是 POST ——
+        # 網頁的前後測與關卡節點只認這兩個 code。
+        is_test = day['type'] == 'TEST' and any(s.get('role') == 'allout' for s in day['segments'])
+        code = ('POST' if date >= c.get('test_date', c['end']) else 'CAL') if is_test else day['type']
+        sessions.append({'date': date, 'wk': day['week'], 'code': code,
                          'name': day['label'], 'plan': day['summary'],
                          'metrics': '以主課段功率、時間、RPE與路段結果檢討；無整趟TSS達標線。',
                          'why': raw.get('route', '') + ' 雨備：' + raw.get('rain_summary', ''),
                          'minutes': sum(s['minutes'] for s in day['segments']),
-                         'support': day.get('score_policy') == 'record_only',
+                         'support': day.get('score_policy') == 'record_only' and not is_test,
                          'target': None, 'actual': actuals.get(date),
                          'selected_variant': day.get('selected_variant')})
     return {'id': c['id'], 'title': c['title'], 'title_en': c['title_en'],
