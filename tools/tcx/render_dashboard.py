@@ -1518,7 +1518,7 @@ if(REPS){
   if(H.length){
     const rows=[...H,{...RT.self,me:true}];
     const bT=Math.min(...rows.filter(r=>r.moving_sec).map(r=>r.moving_sec));
-    const bE=Math.min(...rows.filter(r=>r.elapsed_sec).map(r=>r.elapsed_sec));
+    const bEl=Math.min(...rows.filter(r=>r.elapsed_sec).map(r=>r.elapsed_sec));
     /* 團騎的休息也是這條路線的一部分：停很久聊天跟一路順的移動時間可能一樣，總時間才分得出來 */
     const stop=r=>(r.elapsed_sec&&r.moving_sec)?r.elapsed_sec-r.moving_sec:null;
     const bN=Math.max(...rows.map(r=>r.np_w||0)), bE=Math.max(...rows.map(r=>r.ef||0));
@@ -1530,7 +1530,7 @@ if(REPS){
     document.getElementById('route-table').innerHTML=
       `<thead><tr><th>日期</th><th>總時間</th><th>移動</th><th>停等</th><th>km</th><th>爬升</th><th>NP</th><th>均瓦</th><th>心率</th><th>EF</th><th>VI</th><th>跟車</th></tr></thead><tbody>`+
       rows.map(r=>`<tr class="${r.me?'me':''}"><td>${(r.href&&!r.me)?`<a href="${r.href}">${r.date}</a>`:r.date}${r.me?' <small>本趟</small>':''}</td>`+
-        `<td class="n${r.elapsed_sec===bE?' best':''}">${mm(r.elapsed_sec)}</td>`+
+        `<td class="n${r.elapsed_sec===bEl?' best':''}">${mm(r.elapsed_sec)}</td>`+
         `<td class="n${r.moving_sec===bT?' best':''}">${mm(r.moving_sec)}</td><td class="n">${stop(r)!=null?hm(stop(r)):'—'}</td>`+
         `<td class="n">${f1(r.km)}</td><td class="n">${w0s(r.elev_m)}</td>`+
         `<td class="n${r.np_w===bN?' best':''}">${w0s(r.np_w)}</td><td class="n">${w0s(r.avg_w)}</td><td class="n">${w0s(r.avg_hr)}</td>`+
