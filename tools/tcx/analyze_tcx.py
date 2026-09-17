@@ -899,6 +899,9 @@ def analyze(path, ftp=None, weight=None, height=None, age=None, maxhr=None,
         "splits_10min": ten_min_splits(pts),
         "training_quality": training_quality(blocks, moving),
     }
+    cells, _, _ = _ride_cells(pts, ftp or 250.0, weight or 80.0)
+    result["draft"] = draft_summary(cells, (weight or 80.0) + 8.0)
+    result["hr"]["decoupling_steady"] = steady_flat_decoupling(pts, blocks)
     result["strava"] = strava_context(load_strava(strava), result["when"]["date"])
     return result
 
@@ -1105,15 +1108,15 @@ def ten_min_splits(pts, win_sec=600):
     return out
 
 
-def classify_blocks(pts, ftp, weight=80.0, win=180):
-    """把整趟切成數個性質不同的路段，各自給出強度與判讀。
+def _ride_cells(pts, ftp, weight=80.0, win=180):
+    """把整趟切成 win 秒的格子，每格算強度、坡度、速度與「單騎所需功率」（exp_w）。
 
-    分類邏輯（依序判斷）：停等為主 → 市區走停 → 爬坡 → 下坡滑行 → 高強度平路 → 低強度巡航。
-    這樣「通勤 + 認真爬坡」的混合行程，可以把真正的訓練段獨立出來評估。
+    classify_blocks() 用它分類路段，draft_summary() 與 chart_series() 用它看跟車 ——
+    同一套格子、同一個單騎模型，三處的數字才對得起來。回傳 (cells, indoor, t0)。
     """
     n = len(pts)
     if n < win * 2:
-        return []
+        return [], False, pts[0]["t"] if pts else None
     t0 = pts[0]["t"]
     alts = smooth([p["alt"] for p in pts], 20)
     mass = (weight or 80.0) + 8.0
@@ -1169,6 +1172,18 @@ def classify_blocks(pts, ftp, weight=80.0, win=180):
             "v": v, "hr": (sum(hs) / len(hs)) if hs else None,
             "exp_w": exp,
         })
+    return cells, indoor, t0
+
+
+def classify_blocks(pts, ftp, weight=80.0, win=180):
+    """把整趟切成數個性質不同的路段，各自給出強度與判讀。
+
+    分類邏輯（依序判斷）：停等為主 → 市區走停 → 爬坡 → 下坡滑行 → 高強度平路 → 低強度巡航。
+    這樣「通勤 + 認真爬坡」的混合行程，可以把真正的訓練段獨立出來評估。
+    """
+    cells, indoor, t0 = _ride_cells(pts, ftp, weight, win)
+    if not cells:
+        return []
     # 合併相鄰同類
     blocks = []
     for c in cells:
@@ -1225,7 +1240,93 @@ def training_quality(blocks, total_moving):
     }
 
 
-def chart_series(path, target_points=480, gear_min_w=150.0):
+DRAFT_RATIO = 0.82   # 實際 ÷ 單騎所需 低於這條線＝疑似跟車（跟 classify_blocks 的 -18% 是同一條）
+
+
+def _draft_rows(cells):
+    """夠快的平路格子才有鑑別力：慢速時風阻佔比太低，滑行格會把比值拉到 0.2。"""
+    return [c for c in cells
+            if c.get("exp_w") and c["avg_w"] > 60 and c["stopped"] < c["sec"] * 0.3]
+
+
+def draft_summary(cells, mass=88.0):
+    """整趟的跟車指標：平路 3 分鐘格子「實際功率 ÷ 單騎在同樣速度所需」的分布。
+
+    為什麼要有這個：同一條平路，跟車時同樣速度只要 70–80% 的功率，NP、EF、VI 全部
+    會跟著變，不先標出來就會把「躲在後面」讀成「有氧變好」。實測（2026-09-17）：
+    小台北那一圈四次都是團騎，中位 0.85–0.95、23–41% 的格子低於 0.82；確定單騎的
+    9/08、8/13 中位 1.03–1.11、只有 2–3%。模型本身偏低估他約 5–10%，所以判讀看
+    「低於 0.82 的比例」而不是中位數離 1.0 多遠。
+    """
+    rows = _draft_rows(cells)
+    if len(rows) < 6:
+        return None
+    ratios = sorted(c["avg_w"] / c["exp_w"] for c in rows)
+    med = ratios[len(ratios) // 2]
+    low = sum(1 for r in ratios if r <= DRAFT_RATIO)
+    pct = round(low / len(rows) * 100)
+    kmh = sum(c["v"] for c in rows) / len(rows) * 3.6
+    if pct >= 15:
+        verdict = "團騎／跟車：%d%% 的平路時段功率明顯低於單騎所需" % pct
+    elif med >= 0.95:
+        verdict = "沒有跟車訊號，平路功率跟單騎模型一致"
+    else:
+        verdict = "偏低但不到跟車門檻（順風、緩下坡或模型偏差都可能）"
+    return {"cells": len(rows), "median_ratio": round(med, 2), "draft_pct": pct,
+            "mean_kmh": round(kmh, 1), "threshold": DRAFT_RATIO, "verdict": verdict,
+            "model": "CdA 0.36 · Crr 0.005 · 人車 %.0f kg · 傳動 3%%" % mass}
+
+
+STEADY_FLAT_KINDS = ("平路巡航", "平路加速", "市區走停")
+
+
+def steady_flat_decoupling(pts, blocks, min_moving_sec=2400):
+    """在最長的一段連續平路上算 Pw:HR 脫鉤，取代「整趟前後半」。
+
+    整趟前後半的版本只要後半混進一座山或一段衝刺就沒有意義（2026-09-17：整趟 -6.3%
+    還標「可信」，但後半是 133W 的山接 236W 的收尾）。這裡只拿連續的平路區塊
+    （紅燈走停算在內、坡度 ±1.5% 以內），移動時間至少 40 分鐘才算。
+    """
+    best, run = None, []
+
+    def flush():
+        nonlocal best
+        if run:
+            a = run[0]["start_sec"]
+            b = run[-1]["start_sec"] + run[-1]["sec"]
+            mv = sum(x["moving_sec"] for x in run)
+            if mv >= min_moving_sec and (best is None or mv > best[2]):
+                best = (a, b, mv)
+        run.clear()
+
+    for b in blocks or []:
+        # 紅燈、補水這種短停等（一格 3 分鐘）夾在平路中間不該把整段切成兩半：
+        # 2026-09-17 河濱 95 分鐘的平路被 48 分處一次停等切掉一半。移動秒數本來就不算它。
+        short_stop = b["kind"] == "停等／休息" and b["sec"] <= 240 and run
+        if (b["kind"] in STEADY_FLAT_KINDS and abs(b.get("grade_pct") or 0) < 1.5) or short_stop:
+            run.append(b)
+        else:
+            flush()
+    flush()
+    if not best:
+        return None
+    a, b, mv = best
+    seg = [p for p in pts[a:b] if p.get("spd") is None or (p["spd"] or 0) > 0.5]
+    res = decoupling(seg)
+    if not res:
+        return None
+    ws = [p["w"] for p in seg if p["w"] is not None]
+    hs = [p["hr"] for p in seg if p["hr"]]
+    aw = sum(ws) / len(ws) if ws else None
+    npw = normalized_power([p["w"] or 0 for p in seg]) if ws else None
+    return {"pct": res["pct"], "reliable": res["reliable"], "note": res["note"],
+            "start_sec": a, "end_sec": b, "moving_sec": mv,
+            "avg_w": round(aw) if aw else None, "np_w": round(npw) if npw else None,
+            "avg_hr": round(sum(hs) / len(hs)) if hs else None,
+            "vi": round(npw / aw, 2) if (npw and aw) else None}
+
+
+def chart_series(path, target_points=480, gear_min_w=150.0, weight=80.0):
     """輸出畫圖用的降採樣序列：[距離km, 海拔m, 功率W, 心率bpm]，外加每個分圈的距離區間。
 
     功率／心率先做 45 秒平滑，否則逐秒噪訊會讓折線變成一團毛球。
@@ -1276,6 +1377,13 @@ def chart_series(path, target_points=480, gear_min_w=150.0):
 
     out = {"profile": prof, "lap_km": lap_km, "x_axis": "min" if indoor_x else "km",
            "sport": meta.get("sport"), "total_km": round(dist[-1], 2)}
+    # ── 跟車序列：平路每 3 分鐘 [起km, 迄km, 實際W, 單騎所需W, km/h]，室內沒有速度所以沒有 ──
+    if not indoor_x:
+        cells, _, _ = _ride_cells(pts, 250.0, weight)
+        dr = [[round(xs[c["a"]], 3), round(xs[c["b"]], 3), round(c["avg_w"]), round(c["exp_w"]),
+               round(c["v"] * 3.6, 1)] for c in _draft_rows(cells)]
+        if len(dr) >= 6:
+            out["draft"] = dr
     if runs:
         out["gear"] = {
             "runs": runs,
@@ -1308,7 +1416,7 @@ def main():
                 maxhr=a.maxhr, resthr=a.resthr, strava=a.strava)
     if a.charts:
         with open(a.charts, "w", encoding="utf-8") as f:
-            json.dump(chart_series(a.tcx), f, ensure_ascii=False, separators=(",", ":"))
+            json.dump(chart_series(a.tcx, weight=float(a.weight or 80.0)), f, ensure_ascii=False, separators=(",", ":"))
         print(f"已寫出 {a.charts}")
     s = json.dumps(r, ensure_ascii=False, indent=2)
     if a.out:

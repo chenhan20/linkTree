@@ -474,7 +474,7 @@ def main() -> int:
                     continue
 
                 cmd = [sys.executable, str(TOOLS / "render_dashboard.py"),
-                       str(rj), str(cj), "-o", str(out)]
+                       str(rj), str(cj), "-o", str(out), "--fit", str(fit)]   # 同路線章要現算當趟路段
                 note = NOTES / f"{date}.json"
                 if note.exists():
                     cmd += ["--notes", str(note)]      # 評語不會被洗掉

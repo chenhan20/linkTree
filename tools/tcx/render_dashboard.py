@@ -339,6 +339,21 @@ table.zt{width:100%;border-collapse:collapse}
 .facts .v .u{font-size:11px;font-weight:500;color:var(--ink-3);margin-left:3px}
 .facts .n{font-size:11px;color:var(--ink-3);margin-top:1px}
 
+/* ── 同路線 / 路段成績 ─────────────────────────────────────────────── */
+.tw{overflow-x:auto}
+table.rt{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.rt th{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);
+ text-align:right;font-weight:500;padding:0 0 8px 14px;border-bottom:1px solid var(--rule-2);white-space:nowrap}
+.rt th:first-child,.rt td:first-child{text-align:left;padding-left:0}
+.rt td{padding:8px 0 8px 14px;border-bottom:1px solid var(--rule);font-size:12.5px;color:var(--ink-2);
+ text-align:right;white-space:nowrap;vertical-align:middle}
+.rt td.n{font-family:var(--mono);font-size:11.5px}
+.rt td small{font-family:var(--mono);font-size:10px;color:var(--ink-3)}
+.rt tr.me td{color:var(--ink-1);font-weight:650}
+.rt td.best{color:var(--s2);font-weight:650}
+.rt td.strip,.rt th.strip{padding-left:22px;width:184px;text-align:left}
+.rt a{color:inherit;text-decoration:none;border-bottom:1px solid var(--rule-2)}
+
 /* ── 裝置 ────────────────────────────────────────────────────────────── */
 .dev{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:0 34px;
  border-top:1px solid var(--rule)}
@@ -525,6 +540,34 @@ footer{color:var(--ink-3);font-size:11.5px;margin-top:56px;padding-top:18px;bord
       <div class="g2"><div><svg id="r-time" viewBox="0 0 420 220"></svg></div>
         <div><svg id="r-watt" viewBox="0 0 420 220"></svg></div></div>
     </div>
+
+    <div class="sub" id="draft-wrap" hidden>
+      <div class="sub-h"><span class="lab">Drafting</span><h3>實際功率 vs 單騎所需</h3>
+        <span class="meta" id="draft-meta"></span></div>
+      <div class="legend"><span><i style="background:var(--s2)"></i>實際（平路每 3 分鐘）</span>
+        <span><i style="background:var(--axis)"></i>單騎在同樣速度需要的功率</span></div>
+      <svg id="c-draft" viewBox="0 0 960 170"></svg>
+      <p class="cap" id="draft-cap"></p>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="s-route" data-label="Route" hidden>
+  <div class="sec-h"><div class="sec-n"></div><div>
+    <div class="sec-lab">Same route</div><h2>同一條路線</h2>
+    <p class="sec-sub" id="route-sub"></p>
+  </div><div class="sec-aside" id="route-aside"></div></div>
+  <div class="body">
+    <div id="route-hist">
+      <div class="tw"><table class="rt" id="route-table"></table></div>
+      <p class="cap" id="route-cap"></p>
+    </div>
+    <div class="sub" id="itt-wrap" hidden>
+      <div class="sub-h"><span class="lab">Segments</span><h3>這趟經過的計時路段</h3>
+        <span class="meta" id="itt-meta"></span></div>
+      <div class="tw"><table class="rt" id="itt-table"></table></div>
+      <p class="cap" id="itt-cap"></p>
+    </div>
   </div>
 </section>
 
@@ -595,7 +638,8 @@ footer{color:var(--ink-3);font-size:11.5px;margin-top:56px;padding-top:18px;bord
 </main>
 
 <script>
-const R = __RIDE__, CH = __CHART__, N = __NOTES__, SC = __SCORE__;
+const R = __RIDE__, CH = __CHART__, N = __NOTES__, SC = __SCORE__, RT = __ROUTE__;
+/* RT＝同路線歷史與這趟經過的計時路段（render_dashboard.route_context）。沒有就是 null。 */
 /* SC＝當天的課表對帳結果（tools/tcx/score.py）。沒有處方的日子是 null，
    下面所有跟課表有關的分支都會整段跳過，頁面回到「一趟騎乘的紀錄」那個樣子。 */
 const PLANDAY = !!(SC && SC.scored);
@@ -692,7 +736,11 @@ let HERO_IN_MASTHEAD=false;
   push('移動時間',hms(t.moving_sec),'',st&&st.total_sec>120?`停等 ${hm(st.total_sec)}`:'幾乎沒停');
   if(p.np_w) push('NP',p.np_w,'W',`移動均瓦 ${p.avg_w_moving} W`);
   if(p.tss) push('TSS',p.tss,'',`IF ${p.if} · VI ${p.vi}`);
-  if(!PLANDAY&&q) push('有效訓練',Math.round(q.effective_sec/60),'分鐘',`佔移動時間 ${q.effective_pct}%`);
+  /* 「有效訓練 %」是 IF>=0.75 的爬坡判準，套到平路自由騎會把一趟 IF 0.77 的團騎寫成
+     「混合行程」。平路（每公里爬升 <8 m）而且有跟車指標的日子改報跟車。 */
+  const flat=!t.distance_estimated&&t.climb_rate_m_per_km!=null&&t.climb_rate_m_per_km<8;
+  if(!PLANDAY&&flat&&R.draft) push('跟車',R.draft.draft_pct,'%',`平路時段 · 實際/單騎中位 ${R.draft.median_ratio}`);
+  else if(!PLANDAY&&q) push('有效訓練',Math.round(q.effective_sec/60),'分鐘',`佔移動時間 ${q.effective_pct}%`);
   if(R.hr.avg) push('平均心率',R.hr.avg,'bpm',`最高 ${R.hr.max} · ${R.hr.pct_of_max}% max`);
   if(R.energy.kcal) push('熱量',R.energy.kcal.toLocaleString(),'kcal',`脂肪約 ${R.energy.fat_g_est} g`);
   if(R.athlete.ftp&&R.athlete.weight_kg)
@@ -1427,6 +1475,93 @@ if(REPS){
   rc('r-watt','avg_w',v=>v+' W','平均功率','越高越好',[0,mw/2,mw],mw);
 }
 
+/* ---------- 跟車：平路實際功率 vs 單騎所需 ---------- */
+(function(){
+  const D=CH.draft, S=R.draft;
+  if(!D||D.length<6||!S) return;
+  document.getElementById('draft-wrap').hidden=false;
+  const s=document.getElementById('c-draft');
+  const W=960,L=44,Rr=16,T=18,B=30,H=170,ih=H-T-B,iw=W-L-Rr;
+  const maxX=CH.profile[CH.profile.length-1][0];
+  const top=niceScale(0,Math.max(...D.map(d=>Math.max(d[2],d[3])))*1.08,3);
+  const X=v=>L+iw*v/maxX, Y=v=>T+ih-ih*Math.min(v,top.hi)/top.hi;
+  for(let v=0;v<=top.hi+1e-9;v+=top.step){
+    s.appendChild(el('line',{x1:L,y1:Y(v),x2:L+iw,y2:Y(v),stroke:C('grid')}));
+    s.appendChild(txt(L-8,Y(v)+3.5,Math.round(v),{anchor:'end',fs:9.5}));}
+  D.forEach(d=>{const x0=X(d[0]),x1=Math.max(X(d[1]),x0+1.5), low=d[2]/d[3]<=S.threshold;
+    if(d[2]<d[3]) s.appendChild(el('rect',{x:x0,y:Y(d[3]),width:x1-x0,height:Math.max(0,Y(d[2])-Y(d[3])),
+      fill:C('s2'),opacity:low?.22:.08}));
+    s.appendChild(el('line',{x1:x0,y1:Y(d[3]),x2:x1,y2:Y(d[3]),stroke:C('axis'),'stroke-width':1.5}));
+    s.appendChild(el('line',{x1:x0,y1:Y(d[2]),x2:x1,y2:Y(d[2]),stroke:C('s2'),'stroke-width':2}));
+    const hit=el('rect',{x:x0,y:T,width:x1-x0,height:ih,fill:'transparent'}); hit.style.cursor='crosshair';
+    hit.addEventListener('mousemove',e=>showTip(e,`<b>${d[0].toFixed(1)}–${d[1].toFixed(1)} km</b> · ${d[4]} km/h<br>`+
+      `實際 ${d[2]} W · 單騎需 ${d[3]} W · ${(d[2]/d[3]).toFixed(2)}${low?' <b>疑似跟車</b>':''}`));
+    hit.addEventListener('mouseleave',hideTip); s.appendChild(hit);});
+  const stepK=maxX>60?10:maxX>30?5:2;
+  for(let k=0;k<=maxX+1e-9;k+=stepK){s.appendChild(el('line',{x1:X(k),y1:T+ih,x2:X(k),y2:T+ih+4,stroke:C('axis')}));
+    s.appendChild(txt(X(k),T+ih+16,k+' km',{anchor:'middle',fs:9.5}));}
+  s.appendChild(el('line',{x1:L,y1:T+ih,x2:L+iw,y2:T+ih,stroke:C('axis')}));
+  document.getElementById('draft-meta').textContent=`平路 ${S.cells} 格 · 中位 ${S.median_ratio} · ${S.draft_pct}% 低於 ${S.threshold}`;
+  document.getElementById('draft-cap').innerHTML=`<b>${esc(S.verdict)}</b>。只取夠快（>25 km/h）、坡度 ±1% 以內、沒有停等的 3 分鐘格子：`+
+    `灰線是單騎在那個速度需要的功率（${esc(S.model)}），橘線是實際；橘線明顯低於灰線＝有人幫你擋風（或順風）。`+
+    `模型對本人偏低估 5–10%，所以判讀看低於 ${S.threshold} 的比例，不看中位數離 1 多遠。`;
+})();
+
+/* ---------- 同一條路線：歷史對照 + 這趟經過的計時路段 ---------- */
+(function(){
+  if(!RT) return;
+  const H=RT.history||[], E=RT.efforts||[];
+  if(!H.length&&!E.length) return;
+  document.getElementById('s-route').hidden=false;
+  const f1=v=>v==null?'—':(+v).toFixed(1), f2=v=>v==null?'—':(+v).toFixed(2), w0s=v=>v==null?'—':Math.round(v);
+  const mm=v=>v==null?'—':hms(v).replace(/^0:/,'');
+  if(H.length){
+    const rows=[...H,{...RT.self,me:true}];
+    const bT=Math.min(...rows.filter(r=>r.moving_sec).map(r=>r.moving_sec));
+    const bN=Math.max(...rows.map(r=>r.np_w||0)), bE=Math.max(...rows.map(r=>r.ef||0));
+    document.getElementById('route-sub').textContent=
+      '自動配對：起點 ±1.3 km、經過同一組計時路段、距離 ±5%。跟自己比：同樣是團騎才比得準——'+
+      '「跟車」是平路時段裡功率明顯低於單騎所需的比例，越高代表躲得越多。';
+    document.getElementById('route-aside').innerHTML=
+      `<div class="a1">${rows.length}<span style="font-size:14px;font-weight:500;margin-left:4px">次</span></div><div class="a2">同路線</div>`;
+    document.getElementById('route-table').innerHTML=
+      `<thead><tr><th>日期</th><th>移動</th><th>km</th><th>爬升</th><th>NP</th><th>均瓦</th><th>心率</th><th>EF</th><th>VI</th><th>跟車</th></tr></thead><tbody>`+
+      rows.map(r=>`<tr class="${r.me?'me':''}"><td>${(r.href&&!r.me)?`<a href="${r.href}">${r.date}</a>`:r.date}${r.me?' <small>本趟</small>':''}</td>`+
+        `<td class="n${r.moving_sec===bT?' best':''}">${mm(r.moving_sec)}</td><td class="n">${f1(r.km)}</td><td class="n">${w0s(r.elev_m)}</td>`+
+        `<td class="n${r.np_w===bN?' best':''}">${w0s(r.np_w)}</td><td class="n">${w0s(r.avg_w)}</td><td class="n">${w0s(r.avg_hr)}</td>`+
+        `<td class="n${r.ef===bE?' best':''}">${f2(r.ef)}</td><td class="n">${f2(r.vi)}</td>`+
+        `<td class="n">${(r.draft&&r.draft.draft_pct!=null)?r.draft.draft_pct+'%':'—'}</td></tr>`).join('')+`</tbody>`;
+    const prev=H[H.length-1];
+    document.getElementById('route-cap').innerHTML=
+      `橘字＝這幾趟裡最好的。上一次是 ${prev.date}：NP ${w0s(prev.np_w)} W、心率 ${w0s(prev.avg_hr)}、移動 ${mm(prev.moving_sec)}。`+
+      `EF 會跟著氣溫走（冷天心率低），跨季節比要打折。`;
+  } else {
+    document.getElementById('route-hist').hidden=true;
+    document.getElementById('route-sub').textContent='這條路線第一次有紀錄；下次再騎同一圈，這裡會自動列出對照。';
+  }
+  if(E.length){
+    document.getElementById('itt-wrap').hidden=false;
+    document.getElementById('itt-meta').textContent=`${E.length} 條 · 排名對全史（含 Strava 時代）`;
+    const strip=e=>{const hist=e.history||[]; const all=[...hist.map(h=>h[0]),Math.round(e.elapsed_sec)];
+      const lo=Math.min(...all),hi=Math.max(...all),sp=Math.max(1,hi-lo),W2=180,P=6,best=lo;
+      const x=v=>(P+(W2-2*P)*(v-lo)/sp).toFixed(1);
+      return `<svg width="${W2}" height="16" viewBox="0 0 ${W2} 16"><line x1="${P}" y1="8" x2="${W2-P}" y2="8" stroke="${C('rule-2')}"/>`+
+        hist.map(h=>`<circle cx="${x(h[0])}" cy="8" r="${h[0]===best?3:2.2}" fill="${h[0]===best?'none':C('dim')}"`+
+          ` stroke="${h[0]===best?C('ink-1'):'none'}" stroke-width="1.2"><title>${h[1]} ${ms(h[0])}</title></circle>`).join('')+
+        `<circle cx="${x(Math.round(e.elapsed_sec))}" cy="8" r="3.6" fill="${C('s2')}"><title>本趟 ${e.elapsed_str}</title></circle></svg>`;};
+    document.getElementById('itt-table').innerHTML=
+      `<thead><tr><th>路段</th><th>起跑</th><th>時間</th><th>排名</th><th>最佳</th><th>中位</th><th>W</th><th>HR</th><th>rpm</th><th class="strip">快 ← 歷次分布 → 慢</th></tr></thead><tbody>`+
+      E.map(e=>`<tr class="${e.rank===1?'me':''}"><td>${esc(e.name)}${e.rank===1?' <b style="color:var(--s2)">PR</b>':''}${e.flag?' ⚠︎':''}</td>`+
+        `<td class="n">${e.start_time}</td><td class="n${e.rank===1?' best':''}">${e.elapsed_str}</td><td class="n">${e.rank}/${e.n+1}</td>`+
+        `<td class="n">${e.best.elapsed_str}<br><small>${e.best.date}</small></td><td class="n">${ms(e.median_sec)}</td>`+
+        `<td class="n">${w0s(e.avg_watts)}</td><td class="n">${w0s(e.avg_heartrate)}</td><td class="n">${w0s(e.avg_cadence)}</td>`+
+        `<td class="strip">${strip(e)}</td></tr>`).join('')+`</tbody>`;
+    document.getElementById('itt-cap').innerHTML=
+      '每一列是這趟經過的一條自建計時路段（起終點跟 Strava 路段相同，時間由 FIT 逐秒判定）。'+
+      '分布圖：灰點是以前每一次、空心圈是最佳、橘點是本趟，越左越快。⚠︎＝自建計時跟 Strava 差超過 30 秒，先顯示 Strava。';
+  }
+})();
+
 /* ---------- 生理反應：踏頻、脫鉤、區間 ---------- */
 (function(){
   const f=[];
@@ -1434,9 +1569,14 @@ if(REPS){
     `<div><div class="k">${k}</div><div class="v">${v}${u?`<span class="u">${u}</span>`:''}</div>`+
     `<div class="n">${n||''}</div></div>`);};
   if(R.hr.avg) add('平均心率',R.hr.avg,'bpm',`最高 ${R.hr.max} · 基準 ${R.athlete.max_hr}`);
-  const dc=R.hr.decoupling;
-  if(dc&&dc.pct!=null) add('心率脫鉤',(dc.pct>0?'+':'')+dc.pct,'%',
-    dc.reliable?'前後半 功率/心率 比值變化':'樣本不足，僅供參考');
+  const dc=R.hr.decoupling, ds=R.hr.decoupling_steady;
+  const clk=sec=>{const [h,m]=R.when.start_local.slice(11).split(':').map(Number);const x=h*60+m+Math.round(sec/60);
+    return String(Math.floor(x/60)%24).padStart(2,'0')+':'+String(x%60).padStart(2,'0');};
+  /* 整趟前後半的脫鉤，後半一混進山或衝刺就沒有意義；有連續 40 分鐘以上的平路時，先看那一段 */
+  if(ds&&ds.pct!=null) add('平路穩定段脫鉤',(ds.pct>0?'+':'')+ds.pct,'%',
+    `${clk(ds.start_sec)}–${clk(ds.end_sec)} · ${Math.round(ds.moving_sec/60)} 分 · 均瓦 ${ds.avg_w}${ds.reliable?'':' · 前後半強度不等'}`);
+  if(dc&&dc.pct!=null) add(ds?'整趟脫鉤':'心率脫鉤',(dc.pct>0?'+':'')+dc.pct,'%',
+    ds?'整趟前後半 · 混合地形時看左邊那格':(dc.reliable?'前後半 功率/心率 比值變化':'樣本不足，僅供參考'));
   // EF = NP / 平均心率。跟脫鉤放在一起：脫鉤看「這一趟之內」有沒有掉，
   // EF 看「跟以前比」同樣心率能不能出更多功率。兩個都要同型路線才比得準。
   if(R.hr.ef!=null) add('效率因子 EF',R.hr.ef.toFixed(2),'','NP ÷ 平均心率 · 同型路線比才準');
@@ -1828,7 +1968,17 @@ def auto_lede(r, score=None):
                     f"{wt['matched_min']} / {wt['planned_min']} 分，"
                     f"課表對帳 <b>{tot['score']} 分（{tot['grade']}）</b>")
     elif pct is not None:
-        if pct >= 60:
+        # 平路自由騎不用「有效訓練 %」（IF>=0.75 是爬坡判準，會把 IF 0.77 的團騎寫成混合行程）：
+        # 改報 NP／均瓦／VI／EF 與跟車比例，這組才是平路的實況。
+        flat = (t.get("climb_rate_m_per_km") or 99) < 8 and not t.get("distance_estimated")
+        d = r.get("draft")
+        if flat and d and p.get("np_w"):
+            hr = r.get("hr") or {}
+            bits.append(f"NP {p['np_w']}／均瓦 {p.get('avg_w_moving')}（VI {p.get('vi')}）"
+                        + (f"、EF {hr['ef']:.2f}" if hr.get("ef") else ""))
+            bits.append(f"平路有 <b>{d['draft_pct']}%</b> 的時段在跟車" if d["draft_pct"] >= 15
+                        else "平路沒有跟車訊號")
+        elif pct >= 60:
             bits.append(f"有效訓練佔 <b>{pct}%</b>，是一堂結構完整的課")
         elif pct >= 30:
             bits.append(f"有效訓練只佔 <b>{pct}%</b>，屬於訓練＋接駁的混合行程")
@@ -1842,7 +1992,7 @@ def slim(ride):
     全部塞進 HTML 會讓檔案膨脹三倍，這裡先剃掉。"""
     keep = ("meta", "athlete", "when", "totals", "power", "hr", "cadence", "energy",
             "zones", "laps", "climbs", "stop_summary", "blocks", "training_quality",
-            "splits_10min")
+            "splits_10min", "draft")
     out = {k: ride[k] for k in keep if k in ride}
     out["stops"] = [s for s in ride.get("stops", []) if s["dur_sec"] >= 90]
     sv = ride.get("strava") or {}
@@ -1862,6 +2012,90 @@ def slim_score(score):
     return {k: score[k] for k in SCORE_KEYS if k in score}
 
 
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+ITT_FILE = os.path.join(ROOT, "data", "itt-segments.json")
+RIDES_DIR = os.path.join(ROOT, "rides")
+
+
+def route_context(ride, fit_path=None):
+    """「同一條路線」章的資料：這趟經過的計時路段（含全史排名）＋ 同路線的其他趟。
+
+    路段成績優先讀 data/itt-segments.json（回補過的、帶 Strava 對帳）；新報告產出時
+    回補還沒跑（管線與 CI 都把回補排在產報告後面），就拿 FIT 現算當趟的，排名一樣
+    對成績檔查。同路線用 data/fit/_routes.json 的簽章配對（起點、路段組合、距離）；
+    本趟的簽章不在快取裡就現算。任何一份資料缺了就少一塊，不會讓報告失敗。
+    """
+    try:
+        import route_sig
+    except ImportError:
+        return None
+    w = ride.get("when") or {}
+    t = ride.get("totals") or {}
+    date, start = w.get("date"), (w.get("start_local") or "")[11:16]
+    if not date or not start or t.get("distance_estimated"):
+        return None
+    s0 = route_sig._hm_sec(start)
+    s1 = s0 + int(t.get("elapsed_sec") or 0)
+    try:
+        itt = json.load(open(ITT_FILE, encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        itt = []
+    by_id = {seg["id"]: seg for seg in itt}
+
+    def rank_row(seg, e, others):
+        secs = sorted(x["elapsed_sec"] for x in others + [e])
+        best = min(others + [e], key=lambda x: x["elapsed_sec"])
+        return {"id": seg["id"], "name": seg["name"], "start_time": e["start_time"],
+                "elapsed_sec": e["elapsed_sec"], "elapsed_str": e["elapsed_str"],
+                "avg_watts": e.get("avg_watts"), "avg_heartrate": e.get("avg_heartrate"),
+                "avg_cadence": e.get("avg_cadence"), "source": e.get("source"),
+                "flag": bool(e.get("fit_check")),
+                "rank": 1 + sum(1 for x in others if x["elapsed_sec"] < e["elapsed_sec"]),
+                "n": len(others), "best": {"elapsed_str": best["elapsed_str"], "date": best["date"]},
+                "median_sec": secs[len(secs) // 2], "distance_km": seg.get("distance_km"),
+                "history": [[round(x["elapsed_sec"]), x["date"]]
+                            for x in sorted(others, key=lambda x: (x["date"], x.get("start_time") or ""))][-60:]}
+
+    efforts, segset = [], set()
+    for seg in itt:
+        all_e = [e for e in (seg.get("efforts") or []) if e.get("elapsed_sec")]
+        mine = [e for e in all_e if route_sig._in_window(e, date, s0, s1)]
+        for e in mine:
+            segset.add(seg["id"])
+            efforts.append(rank_row(seg, e, [x for x in all_e if x is not e]))
+    if not efforts and fit_path:
+        for e in route_sig.detect_ride_efforts(fit_path):
+            seg = by_id.get(e["segment_id"])
+            if not seg:
+                continue
+            segset.add(seg["id"])
+            others = [x for x in (seg.get("efforts") or []) if x.get("elapsed_sec")
+                      and not route_sig._in_window(x, date, s0, s1)]
+            efforts.append(rank_row(seg, e, others))
+    efforts.sort(key=lambda e: e["start_time"])
+
+    routes = route_sig.load_routes()
+    me = next((r for r in routes.values() if r and r.get("date") == date
+               and abs((route_sig._hm_sec(r.get("start_hm")) or -9999) - s0) <= 180), None)
+    if me is None and fit_path:
+        me = route_sig.signature(fit_path)
+    history = []
+    for r in route_sig.same_route(me, list(routes.values()), itt, my_segs=segset):
+        row = {k: r.get(k) for k in ("date", "start_hm", "moving_sec", "km", "elev_m",
+                                     "avg_w", "np_w", "avg_hr", "ef", "vi", "draft")}
+        if os.path.exists(os.path.join(RIDES_DIR, f"{r['date']}.html")):
+            row["href"] = f"{r['date']}.html"
+        history.append(row)
+    if not efforts and not history:
+        return None
+    p, h = ride.get("power") or {}, ride.get("hr") or {}
+    return {"efforts": efforts, "history": history, "seg_ids": sorted(segset),
+            "self": {"date": date, "start_hm": start, "moving_sec": t.get("moving_sec"),
+                     "km": t.get("distance_km"), "elev_m": t.get("elev_gain_m"),
+                     "avg_w": p.get("avg_w_moving"), "np_w": p.get("np_w"), "avg_hr": h.get("avg"),
+                     "ef": h.get("ef"), "vi": p.get("vi"), "draft": ride.get("draft")}}
+
+
 SPORT_LABEL = {"Cycling": "Biking", "Biking": "Biking", "Running": "Running", "Swimming": "Swimming"}
 
 
@@ -1873,6 +2107,7 @@ def main():
     ap.add_argument("--notes")
     ap.add_argument("--title")
     ap.add_argument("--score", help="tools/tcx/score.py --json 的輸出；沒有處方的日子不要傳")
+    ap.add_argument("--fit", help="原始 FIT：同路線章要拿它現算當趟的計時路段與路線簽章")
     a = ap.parse_args()
 
     ride = json.load(open(a.ride_json, encoding="utf-8"))
@@ -1882,6 +2117,7 @@ def main():
     # scored:false（當天沒處方／這個檔沒有功率）就當作沒有評分，頁面完全維持原樣
     if score and not score.get("scored"):
         score = None
+    route = route_context(ride, a.fit)
 
     w = ride["when"]
     title = a.title or notes.get("title") or f"{w['date']} 訓練報告"
@@ -1900,6 +2136,7 @@ def main():
             .replace("__RIDE__", json.dumps(slim(ride), ensure_ascii=False, separators=(",", ":")))
             .replace("__CHART__", json.dumps(chart, ensure_ascii=False, separators=(",", ":")))
             .replace("__NOTES__", json.dumps(notes, ensure_ascii=False, separators=(",", ":")))
+            .replace("__ROUTE__", json.dumps(route, ensure_ascii=False, separators=(",", ":")) if route else "null")
             .replace("__SCORE__", json.dumps(slim_score(score), ensure_ascii=False,
                                              separators=(",", ":")) if score else "null"))
 

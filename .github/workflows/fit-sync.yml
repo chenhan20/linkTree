@@ -81,6 +81,8 @@ jobs:
           ATHLETE_HEIGHT: ${{ vars.ATHLETE_HEIGHT || '173' }}
         run: |
           python scripts/training-cycle.py sync
+          # 路線簽章快取要先於產報告：新報告的「同一條路線」章靠它找以前騎過同一圈的日子
+          python scripts/build-route-signatures.py -q
           ARGS="--min-tss ${{ inputs.min_tss || '100' }}"
           [ "${{ inputs.rebuild }}" = "true" ] && ARGS="$ARGS --overwrite"
           python scripts/build-ride-reports.py $ARGS

@@ -1,0 +1,35 @@
+{
+  "_comment": "路線模板：小台北一圈（公司→基隆河→社子島→淡水河右岸→馬場町→新店溪→一座 175 m 的山→回公司，67 km）。不是某一天的處方，是「下次再騎這圈要打分」時複製進 data/plans/<月>.json 那天 variants.outdoor.segments 用的骨架。",
+  "_howToUse": "1) 在當月 plans 檔的 days 加一天，type 依目的（ENDURANCE／TEMPO），selected_variant outdoor，把下面 segments 貼進 variants.outdoor.segments、rules 貼進 rules；2) 分鐘照當天窗口微調，段落順序不要動（對齊用功率序列做動態規劃，段落結構跟路線一致才對得上）；3) 團騎日先講好誰帶頭——跟車會讓河濱段的功率低於處方，那不是沒執行，是別人擋風；4) 報告的「同一條路線」章會自動把這圈的歷史列出來，不用另外做事。",
+  "route": "小台北一圈",
+  "signature": {"start": [25.0768, 121.5748], "km": 67.2, "segments": [7032136, 18767450, 37816958, 18767553, 11084166, 30593390], "baseline_ride": "2026-09-17"},
+  "baseline": {"date": "2026-09-17", "np_w": 178, "avg_w": 152, "avg_hr": 144, "moving": "2:25:08", "group_ride": true, "draft_pct": 26},
+  "segments": [
+    {"name": "公司→中山橋 熱身", "role": "warmup", "minutes": 16,
+     "target_w": {"lo": 110, "hi": 150, "about": 130, "ramp": true}, "target_cadence": null,
+     "note": "基隆河左岸到中山橋約 7 km。9/17 實際 127W／心率 129。"},
+    {"name": "社子島＋淡水河右岸（中山橋→馬場町）", "role": "work", "minutes": 62,
+     "target_w": {"lo": 170, "hi": 190, "about": 180}, "target_cadence": {"lo": 85, "hi": 95},
+     "note": "六條 ITT 路段全在這一段：砍鴨頭、中山橋→社子島公園、社子島→馬場町全段（含公園→大稻埕、南→大稻埕、大稻埕→馬場町）。9/17 團騎實際 168–170W／心率 149–152、踏頻 87。單騎照處方守 180；團騎帶頭時守、跟車時看速度不看瓦。"},
+    {"name": "新店溪→山腳", "role": "recovery", "minutes": 20,
+     "target_w": {"lo": null, "hi": null, "about": 140}, "target_cadence": null,
+     "note": "馬場町過橋沿新店溪到山腳，補給在這裡做完。"},
+    {"name": "山（3.5 km · 4%）", "role": "work", "minutes": 18,
+     "target_w": {"lo": 180, "hi": 200, "about": 190}, "target_cadence": {"lo": 75, "hi": 85},
+     "note": "最高 175 m、爬升約 190 m。9/17 只用 143W／踏頻 70 爬，1/14 是 168W。這是整圈唯一像坡的地方，不要用大盤磨。"},
+    {"name": "下坡＋回程", "role": "recovery", "minutes": 25,
+     "target_w": {"lo": null, "hi": null, "about": 120}, "target_cadence": null,
+     "note": "下坡到 20 m 再接平路，9/17 這段 96–124W。"},
+    {"name": "收尾 6 km", "role": "work", "minutes": 9,
+     "target_w": {"lo": 220, "hi": 240, "about": 230}, "target_cadence": {"lo": 85, "hi": 95},
+     "note": "9/17 第 5 圈：9 分鐘 236W／NP 240／心率 167，四次裡最重的收尾。要當全力段就把 target_w 改成 {\"allout\": true}。"},
+    {"name": "收操回公司", "role": "cooldown", "minutes": 8,
+     "target_w": {"lo": null, "hi": null, "about": 100}, "target_cadence": null, "note": ""}
+  ],
+  "rules": [
+    {"kind": "min_power_hold", "label": "河濱不准滑行", "scope": "work", "watts": 150, "max_below_sec": 20,
+     "note": "團騎跟車時會犯規，那天要在 intent 註明是團騎，扣分只看帶頭的段。"},
+    {"kind": "no_fade_last", "label": "山最後 3 分鐘不掉", "scope": "work", "minutes": 3}
+  ],
+  "time_budget_note": "段落合計 158 分，含停等約 2:38；9/17 實際 2:38 出頭（05:22–08:00）。週四 120 分窗口塞不下，要騎這圈得先問幾點出發。"
+}

@@ -21,6 +21,7 @@ Session 開始時 hook 會把 `data/tasks.json` 裡未完成的代辦印出來�
 set -a && . scripts/.env && set +a
 export SSL_CERT_FILE=$(python3 -c "import certifi;print(certifi.where())")   # 不設會 CERTIFICATE_VERIFY_FAILED
 python3 scripts/sync-intervals.py                     # 抓 FIT + wellness
+python3 scripts/build-route-signatures.py             # 路線簽章快取（報告的「同一條路線」章要查它，排在產報告前）
 python3 scripts/build-ride-reports.py --min-tss 100   # 產單日報告與評分
 python3 scripts/backfill-itt-efforts.py --quiet       # 從 FIT 重建 ITT 成績
 python3 scripts/tag-itt-sources.py
