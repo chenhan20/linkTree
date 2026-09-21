@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "month": "2026-09",
-  "revision": 7,
+  "revision": 8,
   "updated_at": "2026-09-21",
   "status": "scheduled",
   "baseline": {
@@ -665,7 +665,8 @@
             "hi": 180,
             "about": 145
           },
-          "target_cadence": null
+          "target_cadence": null,
+          "note": "不偷打"
         },
         {
           "name": "中社全段全力一趟（照配速腳本；20分是預算，以終點結束）",
@@ -677,7 +678,8 @@
           "target_cadence": {
             "lo": 75,
             "hi": 90
-          }
+          },
+          "note": "第1分≤270｜2–5分255–262、硬上限265｜第10分當圈≥250照跑、<245守240｜最後3分放開"
         },
         {
           "name": "安全下坡回中社橋",
@@ -702,7 +704,8 @@
           "target_cadence": {
             "lo": 75,
             "hi": 90
-          }
+          },
+          "note": "前3分撐不住205→改Z2"
         },
         {
           "name": "下坡轉露營場",
@@ -724,7 +727,8 @@
             "hi": 210,
             "about": 202.5
           },
-          "target_cadence": null
+          "target_cadence": null,
+          "note": "7:35沒到入口→跳過"
         },
         {
           "name": "下坡返程",
@@ -750,7 +754,8 @@
         }
       ],
       "time_budget": {
-        "window_min": 150
+        "window_min": 150,
+        "ride_min": 135
       },
       "selected_variant": "outdoor",
       "export_mode": "free_ride",
@@ -759,7 +764,7 @@
       "variants": {
         "outdoor": {
           "venue": "outdoor",
-          "summary": "135分：中社全力一趟（配速腳本：2–5分255–262W、265硬上限）＋中社全段SST 205–220W（可降階）＋露營場全段195–210W（可棄）；留15分緩衝。"
+          "summary": "①中社全力 255–262W（第1分≤270、硬上限265）→ ②中社SST 205–220W → ③露營場 195–210W（可棄）｜踏頻≥75"
         },
         "rain": {
           "venue": "indoor",
@@ -849,7 +854,17 @@
           "summary": "訓練台102分：全力20分（配速腳本）＋21分205–220W＋25分195–210W；slope模式看手錶功率，絕對不用ERG。"
         }
       },
-      "report": "rides/plan-2026-09-22.html"
+      "report": "rides/plan-2026-09-22.html",
+      "execution": {
+        "start_local": "06:00",
+        "power_rules": [
+          "**① 中社全力**：第 1 分 ≤270W；第 2–5 分 **255–262W**、硬上限 265W；第 10 分當圈 ≥250W 照跑、<245W 守 240W；最後 3 分放開",
+          "**② 中社 SST 205–220W**：前 3 分撐不住 205W → 整趟改 Z2",
+          "**③ 露營場 195–210W**：7:35 沒到入口 → 跳過",
+          "**踏頻 ≥75**，掉到 72 就下一檔",
+          "①中段心率到 175–176 → 守住功率不再加"
+        ]
+      }
     },
     "2026-09-23": {
       "date": "2026-09-23",
@@ -880,7 +895,8 @@
             "hi": 215,
             "about": 207.5
           },
-          "target_cadence": null
+          "target_cadence": null,
+          "note": "心率≤160｜前10分破160→185–195W｜最後1.8K穩210→可到225"
         },
         {
           "name": "原路下坡回至善路",
@@ -905,7 +921,8 @@
           "target_cadence": {
             "lo": 80,
             "hi": 95
-          }
+          },
+          "note": "踏頻≥80｜7:35沒到橋→跳過"
         },
         {
           "name": "下坡返程",
@@ -931,7 +948,8 @@
         }
       ],
       "time_budget": {
-        "window_min": 195
+        "window_min": 195,
+        "ride_min": 162
       },
       "selected_variant": "outdoor",
       "export_mode": "free_ride",
@@ -940,7 +958,7 @@
       "variants": {
         "outdoor": {
           "venue": "outdoor",
-          "summary": "162分：風櫃嘴全段200–215W／心率≤160＋中社全段185–200W、踏頻≥80（可棄）；緩衝夠再加露營場Z2。"
+          "summary": "風櫃嘴 200–215W／心率≤160 → 中社Z2 185–200W、踏頻≥80（可棄）｜加碼露營場≤185W"
         },
         "rain": {
           "venue": "indoor",
@@ -983,7 +1001,15 @@
         }
       },
       "wednesday_ride_ok": true,
-      "report": "rides/plan-2026-09-22.html"
+      "report": "rides/plan-2026-09-22.html",
+      "execution": {
+        "start_local": "05:15",
+        "power_rules": [
+          "**風櫃嘴 200–215W、心率 ≤160**；前 10 分就破 160 → 降到 185–195W；最後 1.8K 還穩在 210W → 可到 225W",
+          "**中社 Z2 185–200W、踏頻 ≥80**；7:35 沒到中社橋 → 跳過",
+          "**加碼露營場 ≤185W**：7:20 前下完中社才加；7:50 一律掉頭"
+        ]
+      }
     },
     "2026-09-24": {
       "date": "2026-09-24",
