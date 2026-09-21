@@ -56,6 +56,8 @@ td.t{font-family:var(--mono);font-size:12px;color:var(--ink-2);white-space:nowra
 td.w{font-weight:650;white-space:nowrap}
 td.k{font-weight:650}
 .r{text-align:right}
+table.cs th{font-size:11px;color:var(--ink-1);letter-spacing:.08em}
+table.cs td{padding:9px 12px 9px 0}
 .drop{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;color:var(--ink-3);border:1px solid var(--rule-2);
  padding:1px 5px;margin-left:6px;white-space:nowrap;vertical-align:1px}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:0 44px}
@@ -88,6 +90,45 @@ ul.rules li::before{content:"";position:absolute;left:2px;top:19px;width:9px;hei
   <p class="lede">這週可騎的日子從週二、週四改成週二、週三連著騎，兩天都是 8:30 到公司。原本排的河濱 3×8 與平路耐力整組換掉——河濱跟山路不順路，所以兩堂都留在山上，露營場排進週二。</p>
   <a class="back" href="index.html">← 騎乘報告清單</a>
 </header>
+
+<section>
+  <div class="lab">00 · Cheat sheet</div>
+  <h2>出門前背這張就好</h2>
+  <div class="two">
+    <div>
+      <table class="cs">
+        <tr><th colspan="3">週二 09-22 · 06:00 出發</th></tr>
+        <tr><td class="k">① 中社 全力</td><td class="w">255–262 W</td><td>第 1 分 ≤270 · 硬上限 265<br>第 10 分當圈 ≥250 照跑／&lt;245 守 240<br>最後 3 分放開</td></tr>
+        <tr><td class="k">② 中社 SST</td><td class="w">205–220 W</td><td>前 3 分撐不住 205 → 改 Z2</td></tr>
+        <tr><td class="k">③ 露營場</td><td class="w">195–210 W</td><td>7:35 沒到入口 → 跳過</td></tr>
+        <tr><td class="k">踏頻</td><td class="w">≥75 rpm</td><td>掉到 72 就下一檔</td></tr>
+      </table>
+    </div>
+    <div>
+      <table class="cs">
+        <tr><th colspan="3">週三 09-23 · 05:15 出發</th></tr>
+        <tr><td class="k">風櫃嘴</td><td class="w">200–215 W</td><td>心率 ≤160<br>前 10 分就破 160 → 185–195 W<br>最後 1.8K 穩 210 → 可到 225</td></tr>
+        <tr><td class="k">中社 Z2</td><td class="w">185–200 W</td><td>踏頻 ≥80 · 7:35 沒到橋 → 跳過</td></tr>
+        <tr><td class="k">加碼 露營場</td><td class="w">≤185 W</td><td>7:20 前下完中社才加 · 7:50 掉頭</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <h2 style="margin-top:44px;font-size:18px">錶面怎麼開</h2>
+  <p class="sub">你現在是心率／3 秒功率／當圈功率／時間。全力那趟建議把心率換成踏頻、時間改成當圈時間；控制騎維持原樣。</p>
+  <div class="scroll">
+  <table>
+    <tr><th>頁面</th><th>欄位</th><th>為什麼</th></tr>
+    <tr><td class="k">ITT 頁<br><span class="mono" style="color:var(--ink-3);font-size:11.5px;font-weight:400">① 全力用</span></td><td><b>3 秒功率</b>（最大格）<br><b>當圈功率</b><br><b>當圈時間</b><br><b>踏頻</b></td><td>腳本的每個關卡都是「第幾分鐘」＋「當圈平均」，所以要當圈時間，不是總時間。<br>踏頻 ≥75 要全程盯；9/15 掉到 68 就是沒看。<br>心率在 ITT 裡是落後指標——開太快，當圈功率第 1 分鐘就看得出來（&gt;265），比等心率到 176 早一分多鐘。</td></tr>
+    <tr><td class="k">控制頁<br><span class="mono" style="color:var(--ink-3);font-size:11.5px;font-weight:400">② ③ 與週三用</span></td><td>心率<br>3 秒功率<br>當圈功率<br>當圈時間</td><td>就是你現在這頁，只把時間換成當圈時間。週三風櫃嘴的上限是心率 160，這頁一定要有心率。週三中社 Z2 那趟練的是踏頻，爬之前切到 ITT 頁。</td></tr>
+  </table>
+  </div>
+  <ul class="rules">
+    <li><b>每一趟在起點按一次 Lap、終點再按一次。</b>當圈功率才會是那一趟的平均，事後也不用從 FIT 裡找邊界。</li>
+    <li><b>自動計圈（按距離）要關掉。</b>開著的話每公里歸零一次，第 10 分鐘那個關卡就沒有數字可看。</li>
+    <li>錶能放第 5 格的話，ITT 頁加心率，不要拿掉踏頻。</li>
+  </ul>
+</section>
 
 <section>
   <div class="lab">01 · Where you are</div>
