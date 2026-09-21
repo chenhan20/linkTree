@@ -47,7 +47,8 @@ def validate(plan):
             raise ValueError('Do not schedule both the original and reserve test')
     for date, day in plan['days'].items():
         weekday = dt.date.fromisoformat(date).weekday()
-        if weekday == 2 and day['segments']:
+        # 週三不騎是常規；某週日程整個挪動時，在那一天標 wednesday_ride_ok 逐日開例外。
+        if weekday == 2 and day['segments'] and not day.get('wednesday_ride_ok'):
             raise ValueError(f'{date}: Wednesday is not a cycling day')
         if weekday == 5 and plan.get('constraints', {}).get('saturday_available') is False and day['segments']:
             raise ValueError(f'{date}: Saturday is unavailable')

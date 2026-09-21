@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
   "month": "2026-09",
-  "revision": 2,
-  "updated_at": "2026-09-17",
+  "revision": 3,
+  "updated_at": "2026-09-21",
   "status": "scheduled",
   "baseline": {
     "ftp_w": 234,
@@ -36,10 +36,11 @@
     "wednesday": "上肢／核心＋公司有氧；沒有額外安排單車高強度。",
     "trainer": "只有週二／三／四可用；週末社區飛輪以RPE控。",
     "saturday_available": false,
-    "pending_confirmation": "9/17已確認150分鐘；10/1 06:00出發同樣150分鐘（2026-09-17確認）；其餘週四仍120、週二150，週六不排。",
+    "pending_confirmation": "9/17已確認150分鐘；10/1 06:00出發同樣150分鐘（2026-09-17確認）；其餘週四仍120、週二150，週六不排。 2026-09-21確認：本週改9/22 06:00、9/23 05:15出發，皆8:30到公司；9/24不騎。",
     "date_window_overrides": {
       "2026-09-17": 150,
-      "2026-10-01": 150
+      "2026-10-01": 150,
+      "2026-09-23": 195
     }
   },
   "rules": {
@@ -650,92 +651,87 @@
       "date": "2026-09-22",
       "week": "W1",
       "block": "zhongshe-2026-09-return",
-      "label": "3×8分持續功率",
+      "label": "中社配速課：全段均速＋下半段10分",
       "type": "QUALITY",
-      "intent": "9/21依新紀錄複核；首週以210W附近起步。上週主段完整穩定、RPE6–8且恢復正常才進階，否則沿用上週或減5–10W。W3從3×10改2×15，總工作同30分，增加單段持續時間，不同時硬加瓦。",
+      "intent": "2026-09-21改排：本週可騎日改為9/22（二）、9/23（三）連兩天，9/24不騎。9/15中社18:24／247W是286→217W崩出來的均值、踏頻68（PR是81），而中社齒比還有餘裕——所以第一堂不練河濱3×8，直接在中社練均速與下檔。第一趟不是全力：前5分上限250W、全程235–245W、踏頻≥75（掉到72就下一檔），後半功率≥前半才算成功。第二趟從橋再上10分230–240W，是可棄項目：前3分撐不住225W就整段改Z2；第一趟心率到175就收工。門檻區合計約28分，與原3×8→3×10同量級，不是補課。晚上籃球建議休息或只投籃（隔天4:30起床）。",
       "score_policy": "prescription",
       "segments": [
         {
-          "name": "前往＋熱身",
+          "name": "前往＋劍南北安側熱身",
           "role": "warmup",
-          "minutes": 25,
+          "minutes": 35,
           "target_w": {
             "lo": 110,
-            "hi": 160,
-            "about": 135.0
-          },
-          "target_cadence": null
-        },
-        {
-          "name": "主課1/3",
-          "role": "work",
-          "minutes": 8,
-          "target_w": {
-            "lo": 210,
-            "hi": 220,
-            "about": 215.0
-          },
-          "target_cadence": null
-        },
-        {
-          "name": "組間恢復／安全下滑",
-          "role": "recovery",
-          "minutes": 4,
-          "target_w": {
-            "lo": null,
-            "hi": null,
-            "about": 115
-          },
-          "target_cadence": null
-        },
-        {
-          "name": "主課2/3",
-          "role": "work",
-          "minutes": 8,
-          "target_w": {
-            "lo": 210,
-            "hi": 220,
-            "about": 215.0
-          },
-          "target_cadence": null
-        },
-        {
-          "name": "組間恢復／安全下滑",
-          "role": "recovery",
-          "minutes": 4,
-          "target_w": {
-            "lo": null,
-            "hi": null,
-            "about": 115
-          },
-          "target_cadence": null
-        },
-        {
-          "name": "主課3/3",
-          "role": "work",
-          "minutes": 8,
-          "target_w": {
-            "lo": 210,
-            "hi": 220,
-            "about": 215.0
-          },
-          "target_cadence": null
-        },
-        {
-          "name": "輕鬆續騎／返程",
-          "role": "recovery",
-          "minutes": 38,
-          "target_w": {
-            "lo": null,
-            "hi": null,
+            "hi": 180,
             "about": 145
+          },
+          "target_cadence": null
+        },
+        {
+          "name": "中社全段均速（19分是預算，以終點結束）",
+          "role": "work",
+          "minutes": 19,
+          "target_w": {
+            "lo": 235,
+            "hi": 245,
+            "about": 240
+          },
+          "target_cadence": {
+            "lo": 75,
+            "hi": 90
+          }
+        },
+        {
+          "name": "安全下坡回中社橋",
+          "role": "recovery",
+          "minutes": 10,
+          "target_w": {
+            "lo": null,
+            "hi": null,
+            "about": 100
+          },
+          "target_cadence": null
+        },
+        {
+          "name": "中社下半段10分（可棄）",
+          "role": "work",
+          "minutes": 10,
+          "target_w": {
+            "lo": 230,
+            "hi": 240,
+            "about": 235
+          },
+          "target_cadence": {
+            "lo": 75,
+            "hi": 90
+          }
+        },
+        {
+          "name": "Z2騎到頂或折返＋下坡",
+          "role": "recovery",
+          "minutes": 20,
+          "target_w": {
+            "lo": null,
+            "hi": null,
+            "about": 130
+          },
+          "target_cadence": null
+        },
+        {
+          "name": "平路返程",
+          "role": "recovery",
+          "minutes": 31,
+          "target_w": {
+            "lo": null,
+            "hi": null,
+            "about": 140
           },
           "target_cadence": null
         },
         {
           "name": "收操",
           "role": "cooldown",
-          "minutes": 15,
+          "minutes": 10,
           "target_w": {
             "lo": null,
             "hi": null,
@@ -749,12 +745,12 @@
       },
       "selected_variant": "outdoor",
       "export_mode": "free_ride",
-      "route": "9/22先用熟悉連續河濱；9/29、10/6可用中社較緩段，安全下滑不足預算則少做一組或改河濱。",
-      "rain_summary": "訓練台75分，同3×8分210–220W，組間4分。",
+      "route": "6:00出發、8:30到公司。劍南路北安側→下坡中社橋→中社全段→下坡→從橋再上10分→折返→平路回公司；135分行程預算＋15分緩衝，時間不夠先砍第二趟。",
+      "rain_summary": "訓練台77分：19分235–245W＋10分230–240W，組間8分；slope模式看手錶功率，不用ERG。",
       "variants": {
         "outdoor": {
           "venue": "outdoor",
-          "summary": "3×8分210–220W，恢復至少4分；含往返110分。"
+          "summary": "135分：中社全段均速235–245W（前5分≤250W、踏頻≥75）＋下半段10分230–240W（可棄）；留15分緩衝。"
         },
         "rain": {
           "venue": "indoor",
@@ -771,20 +767,23 @@
               "target_cadence": null
             },
             {
-              "name": "主課1/3",
+              "name": "中社全段均速（19分是預算，以終點結束）",
               "role": "work",
-              "minutes": 8,
+              "minutes": 19,
               "target_w": {
-                "lo": 210,
-                "hi": 220,
-                "about": 215.0
+                "lo": 235,
+                "hi": 245,
+                "about": 240
               },
-              "target_cadence": null
+              "target_cadence": {
+                "lo": 75,
+                "hi": 90
+              }
             },
             {
-              "name": "組間恢復／安全下滑",
+              "name": "組間恢復",
               "role": "recovery",
-              "minutes": 4,
+              "minutes": 8,
               "target_w": {
                 "lo": null,
                 "hi": null,
@@ -793,42 +792,23 @@
               "target_cadence": null
             },
             {
-              "name": "主課2/3",
+              "name": "中社下半段10分（可棄）",
               "role": "work",
-              "minutes": 8,
+              "minutes": 10,
               "target_w": {
-                "lo": 210,
-                "hi": 220,
-                "about": 215.0
+                "lo": 230,
+                "hi": 240,
+                "about": 235
               },
-              "target_cadence": null
+              "target_cadence": {
+                "lo": 75,
+                "hi": 90
+              }
             },
             {
-              "name": "組間恢復／安全下滑",
+              "name": "輕鬆續騎",
               "role": "recovery",
-              "minutes": 4,
-              "target_w": {
-                "lo": null,
-                "hi": null,
-                "about": 115
-              },
-              "target_cadence": null
-            },
-            {
-              "name": "主課3/3",
-              "role": "work",
-              "minutes": 8,
-              "target_w": {
-                "lo": 210,
-                "hi": 220,
-                "about": 215.0
-              },
-              "target_cadence": null
-            },
-            {
-              "name": "輕鬆續騎／返程",
-              "role": "recovery",
-              "minutes": 18,
+              "minutes": 15,
               "target_w": {
                 "lo": null,
                 "hi": null,
@@ -848,7 +828,7 @@
               "target_cadence": null
             }
           ],
-          "summary": "訓練台75分，同3×8分210–220W，組間4分。"
+          "summary": "訓練台77分：19分235–245W＋10分230–240W，組間8分；slope模式看手錶功率，不用ERG。"
         }
       }
     },
@@ -856,41 +836,48 @@
       "date": "2026-09-23",
       "week": "W1",
       "block": "zhongshe-2026-09-return",
-      "label": "週三不騎；其他運動計入負荷",
-      "type": "REST",
-      "intent": "週六不排課；週三上肢／核心或公司課，測驗前降低腿部負荷。其餘日不補欠課。",
-      "score_policy": "record_only",
-      "segments": [],
-      "time_budget": {
-        "window_min": 60
-      },
-      "selected_variant": "outdoor",
-      "export_mode": "none"
-    },
-    "2026-09-24": {
-      "date": "2026-09-24",
-      "week": "W1",
-      "block": "zhongshe-2026-09-return",
-      "label": "平路耐力",
+      "label": "風櫃嘴全段控制騎＋河濱Z2",
       "type": "ENDURANCE",
-      "intent": "週二後恢復正常才照表；籃球／公司課後腿重就減量，不以TSS補足。",
+      "intent": "2026-09-21改排：5:15出發、8:30到公司，195分窗口，是本月最長的一堂。9/17的風櫃嘴沒騎（改團騎），這堂補上『控制強度的長爬坡』而不是補量：帶著前一天的疲勞，全段200–215W、心率上限160，預計36–37分，不追28:28。前10分在200W心率就超過160→降到185–195W騎完，不算失敗；最後1.8K還穩在210W可拉到225W收尾，不站起來衝。風櫃嘴踏頻62–67是齒比卡的，不硬拉。原路下山後河濱140–165W填到8:15。當天重訓只做上肢或挪週四。",
       "score_policy": "prescription",
       "segments": [
         {
-          "name": "熱身",
+          "name": "前往＋至善路進場",
           "role": "warmup",
-          "minutes": 10,
+          "minutes": 40,
           "target_w": {
             "lo": 110,
-            "hi": 145,
-            "about": 127.5
+            "hi": 170,
+            "about": 150
           },
           "target_cadence": null
         },
         {
-          "name": "輕鬆耐力",
+          "name": "風櫃嘴全段控制強度（38分是預算，以終點結束）",
           "role": "work",
-          "minutes": 75,
+          "minutes": 38,
+          "target_w": {
+            "lo": 200,
+            "hi": 215,
+            "about": 207.5
+          },
+          "target_cadence": null
+        },
+        {
+          "name": "原路下坡",
+          "role": "recovery",
+          "minutes": 30,
+          "target_w": {
+            "lo": null,
+            "hi": null,
+            "about": 100
+          },
+          "target_cadence": null
+        },
+        {
+          "name": "河濱Z2",
+          "role": "work",
+          "minutes": 60,
           "target_w": {
             "lo": 140,
             "hi": 165,
@@ -899,9 +886,9 @@
           "target_cadence": null
         },
         {
-          "name": "收操",
+          "name": "收操進公司",
           "role": "cooldown",
-          "minutes": 10,
+          "minutes": 12,
           "target_w": {
             "lo": null,
             "hi": null,
@@ -911,16 +898,16 @@
         }
       ],
       "time_budget": {
-        "window_min": 120
+        "window_min": 195
       },
       "selected_variant": "outdoor",
       "export_mode": "free_ride",
-      "route": "熟悉河濱平路，按返程時間折返；不串第二座山。",
-      "rain_summary": "訓練台70分，同主段瓦數；縮短額外騎乘。",
+      "route": "5:15出發、8:30到公司。至善路→風櫃嘴全段→原路下山（不下萬里側）→河濱Z2→公司；180分行程預算＋15分緩衝，時間不夠砍河濱段。",
+      "rain_summary": "訓練台100分，主段140–165W；slope模式看手錶功率，不用ERG。",
       "variants": {
         "outdoor": {
           "venue": "outdoor",
-          "summary": "95分含往返，主段140–165W、RPE2–3。"
+          "summary": "180分：風櫃嘴全段200–215W／心率≤160＋河濱Z2 60分；留15分緩衝。"
         },
         "rain": {
           "venue": "indoor",
@@ -939,7 +926,7 @@
             {
               "name": "輕鬆耐力",
               "role": "work",
-              "minutes": 50,
+              "minutes": 80,
               "target_w": {
                 "lo": 140,
                 "hi": 165,
@@ -959,9 +946,25 @@
               "target_cadence": null
             }
           ],
-          "summary": "訓練台70分，同主段瓦數；縮短額外騎乘。"
+          "summary": "訓練台100分，主段140–165W；slope模式看手錶功率，不用ERG。"
         }
-      }
+      },
+      "wednesday_ride_ok": true
+    },
+    "2026-09-24": {
+      "date": "2026-09-24",
+      "week": "W1",
+      "block": "zhongshe-2026-09-return",
+      "label": "休息／輕柔活動",
+      "type": "REST",
+      "intent": "2026-09-21改排：本週騎乘日移到9/22、9/23，週四不騎；原週三的上肢／核心重訓可挪到今天。",
+      "score_policy": "record_only",
+      "segments": [],
+      "time_budget": {
+        "window_min": 120
+      },
+      "selected_variant": "outdoor",
+      "export_mode": "none"
     },
     "2026-09-25": {
       "date": "2026-09-25",
