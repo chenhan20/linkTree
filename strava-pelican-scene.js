@@ -5,7 +5,7 @@
  * 只依賴 vendor-three-r128.js 的全域 THREE。
  *
  * 座標（公尺）：車子永遠在原點、朝 -Z 前進，世界往 +Z 流過去（跑步機）。
- *   x > 0 是海側、x < 0 是山側；路面 y = 0，海平面 y = SEA_Y。
+ *   x > 0 是水那一側、x < 0 是陸地；路面 y = 0，水面 y = E.seaY（兩個地點的設定在 ENVS）。
  *   物件有固定的「世界座標」Zw（負值＝前方），畫面上的 z = Zw + dist。
  *
  * 油門不是鍵盤：頁面把一趟真實騎乘的逐秒功率／踏頻／心率丟進 setReplay()，
@@ -19,14 +19,24 @@
 const THREE = window.THREE
 if (!THREE) { window.PelicanCoast = null; return }
 
-/* ── 常數 ─────────────────────────────────────────────────────────── */
-const SEA_Y = -3.4
-const ROAD_X0 = -8.9, ROAD_X1 = 1.45
-const RAIL_X = 1.62
+/* ── 兩個地點共用同一套引擎 ─────────────────────────────────────── */
+// river：小台北・淡水河右岸往南經過大稻埕碼頭（環小台北逆時針就是這個方向，河在右手邊）。
+//   太陽：9 月底台北日落方位約 270°，沿岸往南南西騎＝在右前方約 70°；觀音山在西北＝右後方約 105°。
+// coast：北海岸台 2 線往西，海在右手邊。
+const ENVS = {
+  coast: { id: 'coast', name: '北海岸', seaY: -3.4, x0: -8.9, x1: 1.45, railX: 1.62, sunAz: 38, waveAmp: 1, ripAmp: 1, foam: 1,
+    deep: '#0a2634', shallow: '#174c4a', lamp: { sp: 32, x: 2.3, h: 7.4, arm: 2.15, dir: -1 }, slowX: -2.35, slowS: 1, kmX: -9.45, kmLabel: '台2線' },
+  river: { id: 'river', name: '大稻埕', seaY: -2.6, x0: -2.2, x1: 1.5, railX: 3.6, sunAz: 70, waveAmp: 0.1, ripAmp: 0.22, foam: 0,
+    deep: '#1f2f2a', shallow: '#2b3a31', lamp: { sp: 26, x: -2.75, h: 4.6, arm: 0.75, dir: 1 }, slowX: -1.25, slowS: 0.62, kmX: -3.3, kmLabel: '淡水河',
+    bankX: 360, bankNear: 6.3 },
+}
+let E = ENVS.coast                     // mount() 依 opts.env 換掉
 const CH = 96                          // 地形塊長度
 const Z_AHEAD = 1500, Z_BEHIND = 720   // 地形塊涵蓋的範圍（騎士座標）
-const LAMP_SP = 32, LAMP_X = 2.3, LAMP_H = 7.4, LAMP_ARM = 2.15
-const SUN_AZ = 38 * Math.PI / 180      // 太陽在前方偏右（海那一側）
+// 大稻埕：每 1300 m 重複一次「碼頭廣場（五號水門、貨櫃市集）→ 公園 → 橋」
+const R_PERIOD = 1300, WHARF_AT = 260, WHARF_LEN = 190, BRIDGE_AT = 910
+function riverZone(zw) { const p = (((-zw) % R_PERIOD) + R_PERIOD) % R_PERIOD; return { p, k: Math.floor(-zw / R_PERIOD), wharf: p > WHARF_AT && p < WHARF_AT + WHARF_LEN } }
+const riverEdge = zw => (riverZone(zw).wharf ? 10.5 : 3.6)   // 欄杆位置：碼頭廣場比較寬
 const MOON_DIR = new THREE.Vector3(-0.42, 0.5, 0.76).normalize()
 // 平路物理：跟 estimate-indoor-distance.py 的 flat_distance_m 同一組參數；m = 80 kg 人 + 8 kg 車
 const PHYS = { m: 88, g: 9.81, crr: 0.005, cda: 0.36, cdaStand: 0.41, rho: 1.18, eta: 0.975 }
@@ -59,8 +69,23 @@ const SHORE_K = [0.021, 0.057, 0.13]
 const shoreX = zw => 8.2 + 1.9 * Math.sin(zw * SHORE_K[0]) + 0.9 * Math.sin(zw * SHORE_K[1] + 1.3) + 0.45 * Math.sin(zw * SHORE_K[2] + 0.4)
 
 /* ── 地形高度 ─────────────────────────────────────────────────────── */
-function landY(x, zw) {                       // x <= ROAD_X0：山側
-  const d = ROAD_X0 - x
+function landY(x, zw) { return E.id === 'river' ? riverLandY(x, zw) : coastLandY(x, zw) }
+function stripY(x, zw) { return E.id === 'river' ? riverStripY(x, zw) : coastStripY(x, zw) }
+function riverLandY(x, zw) {                  // 堤外公園的草地，堤防在 x = -20
+  const d = E.x0 - x
+  if (d < 0.25) return 0.02
+  if (x < -20.2) return 0.35
+  return 0.04 + Math.min(d, 17) * 0.01 + (vnoise2(x * 0.07, zw * 0.07) - 0.5) * 0.22 * smooth(1, 4, d)
+}
+function riverStripY(x, zw) {                 // 河側：草帶／碼頭廣場 → 護岸斜坡 → 水
+  const edge = riverEdge(zw)
+  if (x < edge + 0.35) return 0.0
+  const t = (x - edge - 0.35) / 2.7
+  if (t < 1) return lerp(0, E.seaY - 0.25, Math.pow(Math.max(t, 0), 1.15))    // t 會因為浮點誤差變成 −1e-16，負數開非整數次方＝NaN
+  return E.seaY - 0.25 - (x - edge - 3.05) * 0.5
+}
+function coastLandY(x, zw) {                  // x <= x0：山側
+  const d = E.x0 - x
   if (d < 0.3) return 0.02
   const ditch = d < 1.3 ? -0.32 * Math.sin((d - 0.3) / 1.0 * Math.PI) : 0
   const ridge = 12 + 40 * vnoise1(zw * 0.0042 + 3.1)
@@ -68,12 +93,12 @@ function landY(x, zw) {                       // x <= ROAD_X0：山側
   const bump = (vnoise2(x * 0.045, zw * 0.045) - 0.5) * 1.0 * smooth(2, 12, d)
   return ditch + hill * smooth(0.8, 5, d) + bump
 }
-function stripY(x, zw) {                      // x >= ROAD_X1：海側岩坡
+function coastStripY(x, zw) {                 // x >= x1：海側岩坡
   if (x < 1.95) return 0.0
   const sx = shoreX(zw)
   const t = (x - 1.95) / (sx - 1.95)
-  if (t < 1) return lerp(0, SEA_Y - 0.15, Math.pow(t, 1.3)) + (vnoise2(x * 0.7, zw * 0.7) - 0.5) * 0.55 * Math.sin(Math.PI * t)
-  return SEA_Y - 0.15 - (x - sx) * 0.6
+  if (t < 1) return lerp(0, E.seaY - 0.15, Math.pow(t, 1.3)) + (vnoise2(x * 0.7, zw * 0.7) - 0.5) * 0.55 * Math.sin(Math.PI * t)
+  return E.seaY - 0.15 - (x - sx) * 0.6
 }
 
 /* ── GLSL 共用段 ──────────────────────────────────────────────────── */
@@ -141,6 +166,30 @@ vec3 skyFull(vec3 d, float disc, float clouds){
 }
 `
 
+// 對岸天際線：每 24 m 一棟，屋頂高度與窗格都用 hash 算；背板和水面倒影用同一組函式，兩邊一定對得上
+const GLSL_SKYLINE = `
+float bldH(float zw, float seed, float hmin, float hvar){
+  float cell = floor(zw / 24.0);
+  float a = hash12(vec2(cell, seed)), b = hash12(vec2(cell, seed + 7.0));
+  if (hash12(vec2(cell, seed + 3.0)) < 0.2) return hmin * 0.3 + 3.0;       // 空地、公園、矮房子：天際線有縫
+  float inset = step(fract(zw / 24.0), 0.08) + step(0.94, fract(zw / 24.0)); // 棟與棟之間留一條縫
+  return mix(hmin + hvar * pow(a, 1.6) + step(0.86, b) * hvar * 0.85, hmin * 0.5, inset * 0.7);
+}
+float bldTone(float zw, float seed){ return 0.72 + 0.56 * hash12(vec2(floor(zw / 24.0), seed + 5.0)); }
+vec3 bldWin(float zw, float hy, float seed, float night){
+  float cell = floor(zw / 24.0);
+  vec2 wv = vec2(floor(zw / 2.4), floor(hy / 3.1));
+  vec2 f = fract(vec2(zw / 2.4, hy / 3.1));
+  float win = step(0.22, f.x) * step(f.x, 0.78) * step(0.3, f.y) * step(f.y, 0.8);
+  float lit = step(0.55, hash12(wv + vec2(cell * 17.0, seed * 3.0)));
+  vec3 wc = mix(vec3(1.0, 0.74, 0.44), vec3(0.8, 0.88, 1.0), step(0.74, hash12(wv * 1.7 + seed)));
+  return wc * win * lit * night;
+}
+float bankLamp(float zw, float hy){
+  return (1.0 - smoothstep(0.0, 0.55, abs(hy - 4.4))) * (1.0 - smoothstep(0.0, 0.9, abs(fract(zw / 30.0) - 0.5) * 30.0));
+}
+`
+
 /* ── 時間 → 天色 ──────────────────────────────────────────────────── */
 // 顏色寫成 sRGB，進 shader 前轉線性；e 是太陽仰角（度）。2026-09-23 台北日落 17:51。
 const TOD_KEYS = [
@@ -170,7 +219,7 @@ const U = {
   uHorizonSun: { value: new THREE.Color() }, uSunGlow: { value: new THREE.Color() }, uSunColor: { value: new THREE.Color() },
   uCloudLit: { value: new THREE.Color() }, uCloudDark: { value: new THREE.Color() }, uMoonDir: { value: MOON_DIR.clone() },
   uStars: { value: 0 }, uTime: { value: 0 }, uSunDisc: { value: 0 }, uCloudAmt: { value: 0.85 }, uMoon: { value: 0 }, uDrift: { value: 0 },
-  uFogDensity: { value: 0.001 }, uSeaY: { value: SEA_Y }, uCamRot: { value: new THREE.Matrix3() },
+  uFogDensity: { value: 0.001 }, uSeaY: { value: -3.4 }, uCamRot: { value: new THREE.Matrix3() },
   uRim: { value: new THREE.Color(0, 0, 0) }, uWind: { value: 0.3 }, uNight: { value: 0 },
 }
 function patch(mat, key, opt) {
@@ -357,8 +406,24 @@ function makeGlowField(max) {
 /* ══ 世界 ════════════════════════════════════════════════════════════ */
 function roadTexture(aniso) {
   const W = 1024, H = 1024
-  const px = x => (x - ROAD_X0) / (ROAD_X1 - ROAD_X0) * W
+  const px = x => (x - E.x0) / (E.x1 - E.x0) * W
   const t = canvasTex(W, H, (g) => {
+    const r = rng(11)
+    if (E.id === 'river') {                            // 河濱自行車道：暖灰柏油、兩側白實線、中線白虛線（3 m 一段）
+      g.fillStyle = '#4a4647'; g.fillRect(0, 0, W, H)
+      for (let i = 0; i < 26000; i++) {
+        const x = r() * W, y = r() * H, sz = r() * 2.2 + 0.5, v = r()
+        g.fillStyle = v < 0.5 ? `rgba(22,20,21,${0.2 + r() * 0.3})` : `rgba(168,160,152,${0.1 + r() * 0.2})`
+        g.fillRect(x, y, sz, sz); if (y > H - 3) g.fillRect(x, y - H, sz, sz)
+      }
+      for (let i = 0; i < 6; i++) { const x = r() * W, y = r() * H, w = 60 + r() * 200, h = 80 + r() * 220; g.fillStyle = `rgba(30,28,30,${0.1 + r() * 0.1})`; for (const dy of [0, -H, H]) g.fillRect(x, y + dy, w, h) }
+      const line = (x, w) => { g.fillStyle = '#e8e3d8'; g.fillRect(px(x - w / 2), 0, px(x + w / 2) - px(x - w / 2), H) }
+      line(E.x0 + 0.16, 0.1); line(E.x1 - 0.16, 0.1)
+      const cx = (E.x0 + E.x1) / 2
+      for (let y = 0; y < H; y += H / 2) { g.fillStyle = '#e8e3d8'; g.fillRect(px(cx - 0.055), y, px(cx + 0.055) - px(cx - 0.055), H / 4) }
+      for (let i = 0; i < 1800; i++) { const xs = [E.x0 + 0.16, E.x1 - 0.16, cx][i % 3], x = px(xs) + (r() - 0.5) * 12, y = r() * H; g.fillStyle = `rgba(70,66,66,${0.25 + r() * 0.35})`; g.fillRect(x, y, 1 + r() * 2, 1 + r() * 3) }
+      return
+    }
     g.fillStyle = '#434346'; g.fillRect(0, 0, W, H)
     g.fillStyle = '#4b4a4c'; g.fillRect(px(-0.62), 0, W - px(-0.62), H)
     g.fillStyle = '#48474a'; g.fillRect(0, 0, px(-7.8), H)
@@ -367,7 +432,6 @@ function roadTexture(aniso) {
       gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(0.5, 'rgba(18,18,20,.2)'); gr.addColorStop(1, 'rgba(0,0,0,0)')
       g.fillStyle = gr; g.fillRect(px(x - 0.5), 0, px(x + 0.5) - px(x - 0.5), H)
     })
-    const r = rng(11)
     for (let i = 0; i < 9; i++) {                       // 補丁：舊柏油修補的深色塊
       const x = r() * W, y = r() * H, w = 40 + r() * 160, h = 60 + r() * 260
       g.fillStyle = `rgba(28,28,30,${0.12 + r() * 0.12})`
@@ -921,7 +985,7 @@ function buildRider(Q) {
 }
 
 /* ══ 相機 ════════════════════════════════════════════════════════════ */
-const SHOTS = [
+const SHOTS_COAST = [
   { name: 'front', dur: 8.5, a: { p: [-1.55, 1.25, -4.4], t: [0.05, 1.08, -0.1], f: 36 }, b: { p: [-1.05, 1.15, -3.5], t: [0.05, 1.12, -0.15], f: 36 } },
   { name: 'backlit', dur: 8, a: { p: [0.42, 0.3, 2.9], t: [0.1, 1.05, -1.2], f: 40 }, b: { p: [0.62, 0.36, 2.3], t: [0.1, 1.12, -1.2], f: 40 } },
   { name: 'drone', dur: 10, a: { p: [2.6, 3.2, 5.5], t: [0, 1.0, -4], f: 48 }, b: { p: [11, 24, 12], t: [0, 0, -22], f: 50 } },
@@ -929,6 +993,16 @@ const SHOTS = [
   { name: 'drive', dur: 6, a: { p: [0.78, 0.44, 0.95], t: [0.05, 0.33, 0.22], f: 38 }, b: { p: [0.7, 0.38, 0.12], t: [0.05, 0.3, 0.12], f: 38 } },
   { name: 'seaside', dur: 9, a: { p: [3.0, 1.45, 1.4], t: [0, 1.0, -0.3], f: 44 }, b: { p: [3.0, 1.35, -1.3], t: [0, 1.0, -0.6], f: 44 } },
 ]
+// 大稻埕：開場先往回看（河在畫面左邊、觀音山在河的盡頭），再來是逆光的剪影（河面、三重、夕陽）
+const SHOTS_RIVER = [
+  { name: 'front', dur: 8.5, a: { p: [-1.5, 1.2, -4.4], t: [0.1, 1.1, -0.1], f: 38 }, b: { p: [-1.05, 1.12, -3.5], t: [0.1, 1.12, -0.15], f: 38 } },
+  { name: 'silhouette', dur: 9, a: { p: [-5.6, 0.5, 1.5], t: [0.5, 1.25, -0.4], f: 40 }, b: { p: [-5.3, 0.58, -1.5], t: [0.5, 1.25, -0.6], f: 40 } },
+  { name: 'drone', dur: 10, a: { p: [2.6, 3.2, 5.5], t: [0, 1.0, -4], f: 48 }, b: { p: [14, 26, 14], t: [2, 0, -24], f: 50 } },
+  { name: 'face', dur: 7, a: { p: [0.95, 1.7, -1.75], t: [0, 1.6, -0.62], f: 30 }, b: { p: [0.62, 1.64, -1.42], t: [0, 1.61, -0.66], f: 30 } },
+  { name: 'drive', dur: 6, a: { p: [0.78, 0.44, 0.95], t: [0.05, 0.33, 0.22], f: 38 }, b: { p: [0.7, 0.38, 0.12], t: [0.05, 0.3, 0.12], f: 38 } },
+  { name: 'riverside', dur: 9, a: { p: [4.7, 1.45, 1.6], t: [0, 1.0, -0.3], f: 44 }, b: { p: [4.7, 1.35, -1.3], t: [0, 1.0, -0.6], f: 44 } },
+]
+let SHOTS = SHOTS_COAST
 const CAM_FIXED = {
   chase: { p: [1.0, 1.6, 3.7], t: [0, 1.05, -2.2], f: 50 },
   side: { p: [-3.9, 1.1, -0.25], t: [0, 0.95, -0.2], f: 40 },
@@ -1074,6 +1148,11 @@ function makeAudio() {
 /* ══ mount ═══════════════════════════════════════════════════════════ */
 function mount(host, opts) {
   opts = opts || {}
+  E = ENVS[opts.env] || ENVS.river
+  const COAST = E.id === 'coast', RIVER = E.id === 'river'
+  SHOTS = RIVER ? SHOTS_RIVER : SHOTS_COAST
+  U.uSeaY.value = E.seaY
+  const LP = E.lamp, LHX = LP.x + LP.dir * (LP.arm + 0.12)           // 路燈燈頭的 x
   const isMobile = matchMedia('(max-width: 760px)').matches || /Mobi|Android|iPhone|iPad/.test(navigator.userAgent)
   const qp = new URLSearchParams(location.search).get('q')
   let quality = qp === 'low' || qp === 'high' ? qp : (isMobile || (navigator.hardwareConcurrency || 4) < 4 ? 'low' : 'high')
@@ -1152,10 +1231,11 @@ function mount(host, opts) {
     return { dx: r[0] / l, dz: r[1] / l, k, s: 0.1 - i * 0.008, w: Math.sqrt(9.81 * k), ph0: i * 1.7 }
   })
   const seaU = {
-    uW: { value: W5.map(w => new THREE.Vector4(w.dx, w.dz, w.A, w.k)) }, uQ: { value: W5.map(w => w.Q) }, uPh: { value: W5.map(() => 0) },
-    uScrollMod: { value: 0 }, uShorePh: { value: new THREE.Vector3() }, uDeep: { value: lin('#0a2634') }, uShallow: { value: lin('#174c4a') },
+    uW: { value: W5.map(w => new THREE.Vector4(w.dx, w.dz, w.A * E.waveAmp, w.k)) }, uQ: { value: W5.map(w => w.Q) }, uPh: { value: W5.map(() => 0) },
+    uScrollMod: { value: 0 }, uShorePh: { value: new THREE.Vector3() }, uDeep: { value: lin(E.deep) }, uShallow: { value: lin(E.shallow) },
     uSunVis: { value: 1 }, uAmb: { value: 1 },
-    uRip: { value: RIP.map(r => new THREE.Vector4(r.dx, r.dz, r.s, r.k)) }, uRipPh: { value: RIP.map(() => 0) },
+    uRip: { value: RIP.map(r => new THREE.Vector4(r.dx, r.dz, r.s * E.ripAmp, r.k)) }, uRipPh: { value: RIP.map(() => 0) },
+    uRiver: { value: RIVER ? 1 : 0 }, uFoam: { value: E.foam }, uBankX: { value: E.bankX || 0 }, uBankNear: { value: E.bankNear || 8 }, uScrollAbs: { value: 0 },
   }
   const seaMat = new THREE.ShaderMaterial({
     uniforms: Object.assign({}, U, seaU), toneMapped: true,
@@ -1178,9 +1258,10 @@ function mount(host, opts) {
         vW = (modelMatrix * vec4(p, 1.0)).xyz; vN = normalize(n); vFoam = jac;
         gl_Position = projectionMatrix * viewMatrix * vec4(vW, 1.0);
       }`,
-    fragmentShader: GLSL_NOISE + GLSL_SKY_DECL + GLSL_SKY_FULL + `
+    fragmentShader: GLSL_NOISE + GLSL_SKY_DECL + GLSL_SKY_FULL + GLSL_SKYLINE + `
       uniform float uScrollMod; uniform vec3 uShorePh; uniform vec3 uDeep; uniform vec3 uShallow; uniform float uSunVis; uniform float uAmb;
       uniform vec4 uRip[6]; uniform float uRipPh[6];
+      uniform float uRiver; uniform float uFoam; uniform float uBankX; uniform float uBankNear; uniform float uScrollAbs; uniform float uNight;
       varying vec3 vW; varying vec3 vN; varying float vFoam;
       void main(){
         vec3 V = normalize(cameraPosition - vW);
@@ -1204,7 +1285,20 @@ function mount(host, opts) {
         #else
           vec3 refl = skyBase(normalize(R));
         #endif
-        float sx = 8.2 + 1.9 * sin(vW.z * ${SHORE_K[0]} - uShorePh.x) + 0.9 * sin(vW.z * ${SHORE_K[1]} + 1.3 - uShorePh.y) + 0.45 * sin(vW.z * ${SHORE_K[2]} + 0.4 - uShorePh.z);
+        float sx = uRiver > 0.5 ? uBankNear : 8.2 + 1.9 * sin(vW.z * ${SHORE_K[0]} - uShorePh.x) + 0.9 * sin(vW.z * ${SHORE_K[1]} + 1.3 - uShorePh.y) + 0.45 * sin(vW.z * ${SHORE_K[2]} + 0.4 - uShorePh.z);
+        // 河：沿反射光線打到對岸那面「樓」，打到就換成樓的顏色（黃昏是剪影、入夜是窗格燈）
+        if (uRiver > 0.5 && R.x > 0.015 && vW.x < uBankX) {
+          float tt = (uBankX - vW.x) / R.x;
+          vec3 H = vW + R * tt;
+          float hy = H.y - uSeaY, zw = H.z - uScrollAbs;
+          float bh = bldH(zw, 1.0, 12.0, 46.0);
+          if (hy < bh) {
+            float emb = 1.0 - smoothstep(2.2, 3.4, hy);
+            vec3 bc = mix(vec3(0.06, 0.068, 0.09), vec3(0.042, 0.058, 0.05), emb) * (0.4 + 0.6 * (1.0 - uNight));
+            bc += bldWin(zw, hy, 1.0, uNight) * (1.0 - emb) * 1.2 + vec3(1.0, 0.8, 0.5) * bankLamp(zw, hy) * uNight * 2.2;
+            refl = mix(refl, bc, 0.9);
+          }
+        }
         float dxs = vW.x - sx;
         float shallow = exp(-max(dxs, 0.0) / 7.0) * step(0.0, vW.x);
         vec3 water = mix(uDeep, uShallow, shallow * 0.8) * uAmb;
@@ -1218,6 +1312,7 @@ function mount(host, opts) {
         float foam = smoothstep(0.35, 0.95, vFoam) * 0.5;
         float surge = 0.55 + 0.45 * sin(uTime * 1.25 - dxs * 2.2 + vnoise(gp * 0.45) * 4.0);
         foam += smoothstep(2.4, 0.0, dxs) * step(0.0, vW.x) * surge * (0.55 + 0.45 * vnoise(gp * 2.2 + uTime * 0.3));
+        foam *= uFoam;
         col = mix(col, vec3(0.86, 0.9, 0.92) * (0.25 + 0.75 * uAmb), clamp(foam, 0.0, 1.0) * 0.85);
         col = mix(col, hazeCol(-V), hazeAmt(dist, vW.y));
         gl_FragColor = vec4(min(col, vec3(24.0)), 1.0);
@@ -1234,7 +1329,7 @@ function mount(host, opts) {
     for (let j = 0; j <= nz; j++) for (let i = 0; i <= nx; i++) { const k = (j * (nx + 1) + i) * 3; pos[k] = xs[i]; pos[k + 1] = 0; pos[k + 2] = zs[j] }
     for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) { const a = j * (nx + 1) + i, b = a + nx + 1; idx.push(a, b, a + 1, b, b + 1, a + 1) }
     const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setIndex(idx)
-    const sea = new THREE.Mesh(g, seaMat); sea.position.y = SEA_Y; sea.frustumCulled = false; sea.receiveShadow = false
+    const sea = new THREE.Mesh(g, seaMat); sea.position.y = E.seaY; sea.frustumCulled = false; sea.receiveShadow = false
     scene.add(sea)
   }
 
@@ -1255,6 +1350,7 @@ function mount(host, opts) {
       }`,
   })
   const farGroup = new THREE.Group(); scene.add(farGroup)
+  const coastFar = new THREE.Group(); if (COAST) farGroup.add(coastFar)
   ;[{ R: 2600, h0: 90, h1: 330, haze: 0.5, seed: 3 }, { R: 5200, h0: 220, h1: 620, haze: 0.66, seed: 7 }, { R: 9500, h0: 420, h1: 1050, haze: 0.8, seed: 11 }].forEach(L => {
     const n = 160, pos = [], hz = [], idx = []
     const a0 = -0.25, a1 = 2.75                         // 從正前方偏右一點，一路繞到左後方
@@ -1264,22 +1360,22 @@ function mount(host, opts) {
       const k = i / n
       let h = lerp(L.h0, L.h1, 0.5 + 0.5 * Math.sin(k * 5.1 + L.seed)) * (0.55 + 0.45 * fbm2(k * 9 + L.seed, L.seed, 4)) * (0.35 + 0.65 * smooth(0.0, 0.18, k))
       if (L.seed === 11) h += 420 * Math.exp(-Math.pow((k - 0.22) / 0.05, 2)) + 380 * Math.exp(-Math.pow((k - 0.3) / 0.04, 2))   // 大屯山、七星山
-      pos.push(x, SEA_Y - 30, z, x, h, z); hz.push(L.haze + 0.12, L.haze)
+      pos.push(x, E.seaY - 30, z, x, h, z); hz.push(L.haze + 0.12, L.haze)
     }
     for (let i = 0; i < n; i++) { const a = i * 2; idx.push(a, a + 2, a + 1, a + 1, a + 2, a + 3) }
     const g = new THREE.BufferGeometry()
     g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('aHaze', new THREE.Float32BufferAttribute(hz, 1)); g.setIndex(idx); g.computeVertexNormals()
-    const m = new THREE.Mesh(g, farMat); m.frustumCulled = false; m.renderOrder = -5; farGroup.add(m)
+    const m = new THREE.Mesh(g, farMat); m.frustumCulled = false; m.renderOrder = -5; coastFar.add(m)
   })
   // 富貴角：低矮岬角＋黑白橫紋燈塔（岬角遠在前方偏右的海上）
   const capeMat = farMat.clone(); capeMat.uniforms = Object.assign({}, U, { uBase: { value: lin('#2d3346') }, uHazeMul: { value: 1 } })
-  const CAPE = new THREE.Vector3(560, SEA_Y, -1350)
+  const CAPE = new THREE.Vector3(560, E.seaY, -1350)
   {
     const g = new THREE.SphereGeometry(1, 40, 14, 0, Math.PI * 2, 0, Math.PI / 2)
     const p = g.attributes.position, hz = []
     for (let i = 0; i < p.count; i++) { const x = p.getX(i), z = p.getZ(i); p.setY(i, p.getY(i) * (0.8 + 0.4 * vnoise2(x * 3, z * 3))); hz.push(0.42) }
     g.setAttribute('aHaze', new THREE.Float32BufferAttribute(hz, 1)); g.computeVertexNormals()
-    const m = new THREE.Mesh(g, capeMat); m.scale.set(260, 34, 150); m.position.copy(CAPE); m.rotation.y = -0.5; farGroup.add(m)
+    const m = new THREE.Mesh(g, capeMat); m.scale.set(260, 34, 150); m.position.copy(CAPE); m.rotation.y = -0.5; coastFar.add(m)
   }
   const lhMat = new THREE.ShaderMaterial({
     uniforms: Object.assign({}, U),
@@ -1297,7 +1393,7 @@ function mount(host, opts) {
   })
   const LH_TOP = new THREE.Vector3(CAPE.x - 40, CAPE.y + 34 + 16, CAPE.z + 30)
   {
-    const t = new THREE.Mesh(new THREE.CylinderGeometry(2.2, 3.1, 16, 8), lhMat); t.position.set(LH_TOP.x, CAPE.y + 34 + 8, LH_TOP.z); farGroup.add(t)
+    const t = new THREE.Mesh(new THREE.CylinderGeometry(2.2, 3.1, 16, 8), lhMat); t.position.set(LH_TOP.x, CAPE.y + 34 + 8, LH_TOP.z); coastFar.add(t)
   }
   const beamMat = new THREE.ShaderMaterial({
     transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
@@ -1306,13 +1402,94 @@ function mount(host, opts) {
     fragmentShader: 'uniform float uI; varying float vT; void main(){ float a = pow(1.0 - vT, 1.6) * uI; gl_FragColor = vec4(vec3(1.0, 0.93, 0.78) * a, 1.0);\n#include <tonemapping_fragment>\n#include <encodings_fragment>\n}',
   })
   const beamG = new THREE.ConeGeometry(55, 1400, 20, 1, true); beamG.translate(0, -700, 0); beamG.rotateZ(Math.PI / 2)
-  const beam = new THREE.Mesh(beamG, beamMat); beam.position.copy(LH_TOP); beam.frustumCulled = false; farGroup.add(beam)
+  const beam = new THREE.Mesh(beamG, beamMat); beam.position.copy(LH_TOP); beam.frustumCulled = false; coastFar.add(beam)
+
+  /* 大稻埕的遠景：對岸三重的樓（兩層）、堤防後的大同區、觀音山與台北盆地的山、101 */
+  const riverFar = new THREE.Group(); if (RIVER) farGroup.add(riverFar)
+  if (RIVER) {
+    const skylineMat = (seed, hmin, hvar, haze) => new THREE.ShaderMaterial({
+      uniforms: Object.assign({}, U, { uSeed: { value: seed }, uHmin: { value: hmin }, uHvar: { value: hvar }, uHaze: { value: haze }, uScrollAbs: seaU.uScrollAbs }),
+      side: THREE.DoubleSide,
+      vertexShader: 'varying vec3 vW; void main(){ vec4 w = modelMatrix * vec4(position, 1.0); vW = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }',
+      fragmentShader: GLSL_NOISE + GLSL_SKY_DECL + GLSL_SKYLINE + `uniform vec3 uSunColor; uniform float uNight; uniform float uSeed; uniform float uHmin; uniform float uHvar; uniform float uHaze; uniform float uScrollAbs; varying vec3 vW;
+        void main(){
+          float zw = vW.z - uScrollAbs, hy = vW.y - uSeaY;
+          float bh = bldH(zw, uSeed, uHmin, uHvar);
+          if (hy > bh) discard;
+          vec3 V = normalize(vW - cameraPosition); float dist = length(vW - cameraPosition);
+          float emb = (1.0 - smoothstep(2.2, 3.4, hy)) * step(uSeed, 1.5);
+          vec3 c = mix(vec3(0.072, 0.08, 0.105) * bldTone(zw, uSeed), vec3(0.045, 0.062, 0.052), emb) * (0.45 + 0.55 * (1.0 - uNight));
+          c += uSunColor * 0.02 * smoothstep(bh - 2.5, bh, hy) * (1.0 - uNight);
+          c += bldWin(zw, hy, uSeed, uNight) * (1.0 - emb) * 1.5;
+          c += vec3(1.0, 0.8, 0.5) * bankLamp(zw, hy) * uNight * 2.6 * step(uSeed, 1.5);
+          c = mix(c, hazeCol(V), clamp(1.0 - exp(-dist * uHaze), 0.0, 0.9));
+          gl_FragColor = vec4(c, 1.0);
+          #include <tonemapping_fragment>
+          #include <encodings_fragment>
+        }`,
+    })
+    const addBackdrop = (x, seed, hmin, hvar, haze, zNear, zFar) => {
+      const len = zNear - zFar, hgt = hmin + hvar * 2 + 12
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(len, hgt), skylineMat(seed, hmin, hvar, haze))
+      m.rotation.y = x > 0 ? -Math.PI / 2 : Math.PI / 2
+      m.position.set(x, E.seaY - 1 + hgt / 2, (zNear + zFar) / 2)
+      m.frustumCulled = false; m.renderOrder = -4
+      riverFar.add(m)
+    }
+    addBackdrop(E.bankX, 1, 12, 46, 0.0006, 2400, -4200)          // 對岸三重
+    addBackdrop(1600, 2, 26, 70, 0.0006, 6000, -7500)               // 更遠的新北
+    addBackdrop(-150, 3, 10, 40, 0.0011, 1600, -3200)               // 堤防後面的大同區
+    // 盆地四周的山：觀音山在右後方（沿河往下游看得到）、大屯七星在正後方、南邊丘陵
+    {
+      const n = 360, pos = [], hz = [], idx = [], RR = 11000
+      for (let i = 0; i <= n; i++) {
+        const phi = (i / n) * Math.PI * 2 - Math.PI, deg = phi * 180 / Math.PI
+        const x = Math.sin(phi) * RR, z = -Math.cos(phi) * RR
+        let h = 140 + 160 * fbm2(i * 0.05, 3.3, 4)
+        h += 640 * Math.exp(-Math.pow((deg - 158) / 4.2, 2)) + 300 * Math.exp(-Math.pow((deg - 150) / 9, 2))   // 觀音山：尖主峰＋往前拖的稜線
+        h += 760 * Math.exp(-Math.pow((deg + 172) / 8, 2)) + 700 * Math.exp(-Math.pow((deg + 158) / 7, 2))      // 大屯山、七星山
+        h += 200 * Math.exp(-Math.pow((deg + 35) / 22, 2))                                                   // 南港、深坑一帶
+        pos.push(x, E.seaY - 30, z, x, h, z); hz.push(0.84, 0.7)
+      }
+      for (let i = 0; i < n; i++) { const a = i * 2; idx.push(a, a + 2, a + 1, a + 1, a + 2, a + 3) }
+      const g = new THREE.BufferGeometry()
+      g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('aHaze', new THREE.Float32BufferAttribute(hz, 1)); g.setIndex(idx); g.computeVertexNormals()
+      const m = new THREE.Mesh(g, farMat); m.frustumCulled = false; m.renderOrder = -6; riverFar.add(m)
+    }
+    // 101：左前方 6 km，方形斷面的八節＋基座＋塔頂
+    {
+      const sq = (rTop, rBot, h, y) => { const g = new THREE.CylinderGeometry(rTop, rBot, h, 4, 1); g.rotateY(Math.PI / 4); g.translate(0, y + h / 2, 0); return g }
+      const parts = [sq(30, 36, 96, 0)]
+      for (let i = 0; i < 8; i++) parts.push(sq(26, 21, 31, 96 + i * 31))
+      parts.push(sq(12, 16, 36, 344), sq(3, 5, 26, 380), sq(0.8, 1.6, 70, 406))
+      const g = merge(parts)
+      const mat101 = new THREE.ShaderMaterial({
+        uniforms: Object.assign({}, U),
+        vertexShader: 'varying vec3 vW; varying float vY; void main(){ vY = position.y; vec4 w = modelMatrix * vec4(position, 1.0); vW = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }',
+        fragmentShader: GLSL_SKY_DECL + `uniform float uNight; varying vec3 vW; varying float vY;
+          void main(){ vec3 V = normalize(vW - cameraPosition);
+            vec3 c = vec3(0.1, 0.13, 0.16) * (0.4 + 0.6 * (1.0 - uNight));
+            float band = step(0.62, fract(vY / 4.0)) * step(vY, 400.0);
+            c += vec3(0.75, 0.9, 1.0) * band * uNight * 1.1;
+            c = mix(c, skyBase(normalize(vec3(V.x, 0.02, V.z))), 0.5);
+            gl_FragColor = vec4(c, 1.0);
+            #include <tonemapping_fragment>
+            #include <encodings_fragment>
+          }`,
+      })
+      const m = new THREE.Mesh(g, mat101)
+      const phi = -58 * Math.PI / 180
+      m.position.set(Math.sin(phi) * 6000, 0.4, -Math.cos(phi) * 6000); m.frustumCulled = false; m.renderOrder = -3
+      riverFar.add(m)
+      riverFar.userData.top101 = new THREE.Vector3(m.position.x, 478, m.position.z)
+    }
+  }
 
   /* 發光點 */
-  const glow = makeGlowField(160)
+  const glow = makeGlowField(560)
   scene.add(glow.mesh)
   const FISH = []
-  { const r = rng(21); for (let i = 0; i < 9; i++) FISH.push(new THREE.Vector3(900 + r() * 4200, SEA_Y + 1.5, -1500 - r() * 5200)) }
+  { const r = rng(21); for (let i = 0; i < 9; i++) FISH.push(new THREE.Vector3(900 + r() * 4200, E.seaY + 1.5, -1500 - r() * 5200)) }
 
   /* 材質（世界） */
   const MW = {
@@ -1334,8 +1511,10 @@ function mount(host, opts) {
 
   /* 地形塊 */
   const chunks = new Map(), chunkPool = []
-  const LX = [-8.9, -9.2, -9.55, -10.2, -11.2, -12.6, -14.5, -17, -20, -24, -29, -35, -42, -51, -62, -75, -90, -108, -130, -156, -186, -220, -260]
-  const SX = [1.45, 1.95, 2.0, 2.6, 3.3, 4.2, 5.2, 6.3, 7.5, 8.8, 10.2, 12, 14.5, 18]
+  const LX = RIVER ? [-2.2, -2.45, -3.2, -4.4, -6.2, -8.5, -11, -13.5, -16, -18.2, -19.6, -20.6, -26, -36, -52, -70]
+    : [-8.9, -9.2, -9.55, -10.2, -11.2, -12.6, -14.5, -17, -20, -24, -29, -35, -42, -51, -62, -75, -90, -108, -130, -156, -186, -220, -260]
+  const SX = RIVER ? [1.5, 1.8, 2.6, 3.4, 3.65, 3.95, 4.6, 5.4, 6.3, 7.4, 8.8, 10.45, 10.85, 11.6, 12.4, 13.3, 14.5, 16, 18, 20.5, 24]
+    : [1.45, 1.95, 2.0, 2.6, 3.3, 4.2, 5.2, 6.3, 7.5, 8.8, 10.2, 12, 14.5, 18]
   const NZ = 25
   const railGeo = railBeamGeometry(CH)
   function buildGround(geo, c) {
@@ -1358,6 +1537,7 @@ function mount(host, opts) {
     const P = pos.array, N = nor.array, C = cl.array
     const cGrass = lin('#4f7630'), cDry = lin('#7d8246'), cDark = lin('#35502a'), cSoil = lin('#6f6048'), cConc = lin('#8e8b84'), cForest = lin('#2c4428')
     const cRock = lin('#5e574e'), cWet = lin('#34322d'), cAlgae = lin('#3c6a37'), cStripGrass = lin('#56702f')
+    const cLawn = lin('#4c7a33'), cLawn2 = lin('#6a8a3e'), cPave = lin('#9b958a'), cPave2 = lin('#8a847a'), cRev = lin('#7a7468'), cRevWet = lin('#3a3833')
     const tmp = new THREE.Color()
     let k = 0
     const put = (x, y, z, zw, fnY, colorFn) => {
@@ -1375,8 +1555,13 @@ function mount(host, opts) {
       const lz = -CH * j / (NZ - 1), zw = zw0 + lz
       for (let i = 0; i < nL; i++) {
         const x = LX[i]
-        put(x, landY(x, zw), lz, zw, landY, (t, x2, y, zw2, ny) => {
-          const d = ROAD_X0 - x2
+        put(x, landY(x, zw), lz, zw, landY, RIVER ? (t, x2, y, zw2) => {
+          if (x2 > E.x0 - 0.3 || x2 < -19.5) { t.copy(cConc); return }
+          if (x2 > -12.5 && riverZone(zw2).wharf) { t.copy(cPave).lerp(cPave2, (Math.floor(x2 / 1.2) + Math.floor(zw2 / 1.2)) % 2 ? 0.6 : 0); return }
+          t.copy(cLawn).lerp(cLawn2, clamp(fbm2(x2 * 0.08, zw2 * 0.08, 3) * 1.5 - 0.45, 0, 1))
+          t.lerp(cDark, smooth(0.5, 0.72, vnoise2(x2 * 0.12, zw2 * 0.12)) * 0.4)
+        } : (t, x2, y, zw2, ny) => {
+          const d = E.x0 - x2
           if (d < 1.4) { t.copy(cConc); return }
           const n = fbm2(x2 * 0.06, zw2 * 0.06, 3)
           t.copy(cGrass).lerp(cDry, clamp(n * 1.4 - 0.35, 0, 1))
@@ -1390,11 +1575,20 @@ function mount(host, opts) {
       const lz = -CH * j / (NZ - 1), zw = zw0 + lz, sx = shoreX(zw)
       for (let i = 0; i < nS; i++) {
         const x = SX[i]
-        put(x, stripY(x, zw), lz, zw, stripY, (t, x2, y, zw2) => {
+        put(x, stripY(x, zw), lz, zw, stripY, RIVER ? (t, x2, y, zw2) => {
+          const edge = riverEdge(zw2)
+          if (x2 < E.x1 + 0.3) { t.copy(cConc); return }
+          if (x2 < edge + 0.35) {
+            if (riverZone(zw2).wharf) t.copy(cPave).lerp(cPave2, (Math.floor(x2 / 1.2) + Math.floor(zw2 / 1.2)) % 2 ? 0.6 : 0)   // 碼頭廣場的鋪面
+            else t.copy(cLawn).lerp(cLawn2, vnoise2(x2 * 0.5, zw2 * 0.1) * 0.6)
+            return
+          }
+          t.copy(cRev).lerp(cRevWet, smooth(E.seaY + 1.2, E.seaY + 0.1, y))
+        } : (t, x2, y, zw2) => {
           if (x2 < 2.0) { t.copy(cConc); return }
           if (x2 < 3.3) { t.copy(cStripGrass).lerp(cDry, vnoise2(x2 * 2, zw2 * 0.2) * 0.5); return }
-          t.copy(cRock).lerp(cWet, smooth(SEA_Y + 1.4, SEA_Y + 0.2, y))
-          const tide = smooth(SEA_Y + 1.1, SEA_Y + 0.3, y) * smooth(SEA_Y - 0.6, SEA_Y, y)
+          t.copy(cRock).lerp(cWet, smooth(E.seaY + 1.4, E.seaY + 0.2, y))
+          const tide = smooth(E.seaY + 1.1, E.seaY + 0.3, y) * smooth(E.seaY - 0.6, E.seaY, y)
           t.lerp(cAlgae, tide * smooth(0.35, 0.65, vnoise2(x2 * 0.8, zw2 * 0.12)))
         })
       }
@@ -1406,12 +1600,12 @@ function mount(host, opts) {
     let ch = chunkPool.pop()
     if (!ch) {
       const g = new THREE.Group()
-      const road = new THREE.Mesh(new THREE.PlaneGeometry(ROAD_X1 - ROAD_X0, CH, 1, 1), MW.road)
-      road.rotation.x = -Math.PI / 2; road.position.set((ROAD_X0 + ROAD_X1) / 2, 0, -CH / 2); road.receiveShadow = true
+      const road = new THREE.Mesh(new THREE.PlaneGeometry(E.x1 - E.x0, CH, 1, 1), MW.road)
+      road.rotation.x = -Math.PI / 2; road.position.set((E.x0 + E.x1) / 2, 0, -CH / 2); road.receiveShadow = true
       MW.road.map.repeat.set(1, CH / 12)
       const ground = new THREE.Mesh(new THREE.BufferGeometry(), MW.ground); ground.receiveShadow = true; ground.castShadow = false
-      const rail = new THREE.Mesh(railGeo, MW.rail); rail.position.set(RAIL_X, 0.5, 0); rail.castShadow = true; rail.receiveShadow = true
-      g.add(road, ground, rail)
+      g.add(road, ground)
+      if (COAST) { const rail = new THREE.Mesh(railGeo, MW.rail); rail.position.set(E.railX, 0.5, 0); rail.castShadow = true; rail.receiveShadow = true; g.add(rail) }
       ch = { g, ground }
       scene.add(g)
     }
@@ -1423,44 +1617,53 @@ function mount(host, opts) {
 
   /* 近景道具（Instanced；位置每幀依 dist 重算） */
   const R = rng(99)
-  const inst = (geo, mat, max, cast) => { const m = new THREE.InstancedMesh(geo, mat, max); m.castShadow = !!cast; m.receiveShadow = true; m.frustumCulled = false; m.count = 0; scene.add(m); return m }
-  const postI = inst(xf(new THREE.BoxGeometry(0.1, 0.84, 0.12), [0, 0.42, 0]), MW.post, 140, true)
-  const deliI = inst(xf(new THREE.BoxGeometry(0.02, 0.1, 0.07), [0, 0.66, 0]), MW.deli, 50, false)
+  const inst = (geo, mat, max, cast, colored) => {
+    const m = new THREE.InstancedMesh(geo, mat, max); m.castShadow = !!cast; m.receiveShadow = true; m.frustumCulled = false
+    // 每個實例自己的顏色：instanceColor 要在第一次算圖前就存在（shader 編譯時才會帶這個功能），
+    // 而且 r128 的 setColorAt 是用「當下的 count」開陣列——先把 count 歸零再設就是一個空陣列，全部變黑
+    if (colored) { const c = new THREE.Color(1, 1, 1); for (let i = 0; i < max; i++) m.setColorAt(i, c); m.instanceColor.needsUpdate = true }
+    m.count = 0
+    scene.add(m); return m
+  }
   const poleGeo = merge([
-    xf(new THREE.CylinderGeometry(0.07, 0.12, LAMP_H, 10), [0, LAMP_H / 2, 0]),
-    xf(new THREE.CylinderGeometry(0.045, 0.05, LAMP_ARM + 0.2, 8), [-LAMP_ARM / 2, LAMP_H + 0.28, 0], [0, 0, Math.PI / 2 - 0.12]),
+    xf(new THREE.CylinderGeometry(0.07, 0.12, LP.h, 10), [0, LP.h / 2, 0]),
+    xf(new THREE.CylinderGeometry(0.045, 0.05, LP.arm + 0.2, 8), [LP.dir * LP.arm / 2, LP.h + 0.28, 0], [0, 0, -LP.dir * (Math.PI / 2 - 0.12)]),
     xf(new THREE.CylinderGeometry(0.16, 0.2, 0.3, 10), [0, 0.15, 0]),
   ])
-  const poleI = inst(poleGeo, MW.pole, 32, true)
-  const headI = inst(xf(new THREE.BoxGeometry(0.62, 0.12, 0.26), [-LAMP_ARM - 0.12, LAMP_H + 0.4, 0]), MW.lampHead, 32, true)
-  const lensI = inst(xf(new THREE.PlaneGeometry(0.5, 0.18), [-LAMP_ARM - 0.12, LAMP_H + 0.335, 0], [Math.PI / 2, 0, 0]), MW.lampLens, 32, false)
+  const poleI = inst(poleGeo, MW.pole, 40, true)
+  const headI = inst(xf(new THREE.BoxGeometry(0.62, 0.12, 0.26), [LP.dir * (LP.arm + 0.12), LP.h + 0.4, 0]), MW.lampHead, 40, true)
+  const lensI = inst(xf(new THREE.PlaneGeometry(0.5, 0.18), [LP.dir * (LP.arm + 0.12), LP.h + 0.335, 0], [Math.PI / 2, 0, 0]), MW.lampLens, 40, false)
   const poolMat = new THREE.ShaderMaterial({
     transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, uniforms: { uI: { value: 0 }, uC: { value: lin('#ffcf8a') } },
     vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * instanceMatrix * vec4(position, 1.0); }',
     fragmentShader: 'uniform float uI; uniform vec3 uC; varying vec2 vUv; void main(){ float d = length(vUv - 0.5) * 2.0; float a = pow(max(1.0 - d, 0.0), 2.2) * uI; gl_FragColor = vec4(uC * a * 0.22, 1.0);\n#include <tonemapping_fragment>\n#include <encodings_fragment>\n}',
   })
-  const poolI = new THREE.InstancedMesh(xf(new THREE.PlaneGeometry(1, 1), [0, 0, 0], [-Math.PI / 2, 0, 0]), poolMat, 32)
+  const poolI = new THREE.InstancedMesh(xf(new THREE.PlaneGeometry(1, 1), [0, 0, 0], [-Math.PI / 2, 0, 0]), poolMat, 40)
   poolI.frustumCulled = false; poolI.count = 0; poolI.renderOrder = 2; scene.add(poolI)
-  const tetraI = inst(tetrapodGeometry(), MW.concrete, 260, true)
   const rockGeos = [rockGeometry(1), rockGeometry(2)]
-  const rockI = [inst(rockGeos[0], MW.rock, 110, true), inst(rockGeos[1], MW.rock, 110, true)]
-  const grassI = inst(silvergrassGeometry(), MW.grass, HIGH ? 520 : 260, false)
-  const shrubI = inst(merge([xf(new THREE.IcosahedronGeometry(0.7, 1), [0, 0.2, 0]), xf(new THREE.IcosahedronGeometry(0.55, 1), [0.55, 0.1, 0.2]), xf(new THREE.IcosahedronGeometry(0.5, 1), [-0.45, 0.05, -0.25]), xf(new THREE.IcosahedronGeometry(0.45, 1), [0.1, 0.55, -0.1])]), MW.shrub, 200, true)
-  // 木麻黃防風林：細高的樹幹＋幾層下垂的針葉（頂點色）
-  const treeGeo = (() => {
-    const parts = [tint(xf(new THREE.CylinderGeometry(0.07, 0.13, 3.2, 6), [0, 1.6, 0]), '#5b4d42')]
-    const r = rng(17)
-    for (let i = 0; i < 5; i++) {
-      const y = 2.4 + i * 1.05, rr = 1.25 - i * 0.18
-      const c = new THREE.ConeGeometry(rr, 1.7, 7, 1, true); c.translate((r() - 0.5) * 0.4, y, (r() - 0.5) * 0.4)
-      tint(c, i % 2 ? '#3d4b31' : '#4a5a38'); parts.push(c)
-    }
-    return merge(parts)
-  })()
-  const treeI = inst(treeGeo, std('tree', { vertexColors: true, roughness: 0.9, side: THREE.DoubleSide }, { rim: 0.5 }), 120, true)
-  // 風車
+  const rockI = [inst(rockGeos[0], MW.rock, 140, true, true), inst(rockGeos[1], MW.rock, 140, true, true)]
+
+  // ── 北海岸專屬：護欄立柱與反光片、消波塊、芒草、灌木、木麻黃、風車 ──
+  let postI, deliI, tetraI, grassI, shrubI, treeI
   const turb = []
-  {
+  if (COAST) {
+    postI = inst(xf(new THREE.BoxGeometry(0.1, 0.84, 0.12), [0, 0.42, 0]), MW.post, 140, true)
+    deliI = inst(xf(new THREE.BoxGeometry(0.02, 0.1, 0.07), [0, 0.66, 0]), MW.deli, 50, false)
+    tetraI = inst(tetrapodGeometry(), MW.concrete, 260, true)
+    grassI = inst(silvergrassGeometry(), MW.grass, HIGH ? 520 : 260, false)
+    shrubI = inst(merge([xf(new THREE.IcosahedronGeometry(0.7, 1), [0, 0.2, 0]), xf(new THREE.IcosahedronGeometry(0.55, 1), [0.55, 0.1, 0.2]), xf(new THREE.IcosahedronGeometry(0.5, 1), [-0.45, 0.05, -0.25]), xf(new THREE.IcosahedronGeometry(0.45, 1), [0.1, 0.55, -0.1])]), MW.shrub, 200, true, true)
+    // 木麻黃防風林：細高的樹幹＋幾層下垂的針葉（頂點色）
+    const treeGeo = (() => {
+      const parts = [tint(xf(new THREE.CylinderGeometry(0.07, 0.13, 3.2, 6), [0, 1.6, 0]), '#5b4d42')]
+      const r = rng(17)
+      for (let i = 0; i < 5; i++) {
+        const y = 2.4 + i * 1.05, rr = 1.25 - i * 0.18
+        const c = new THREE.ConeGeometry(rr, 1.7, 7, 1, true); c.translate((r() - 0.5) * 0.4, y, (r() - 0.5) * 0.4)
+        tint(c, i % 2 ? '#3d4b31' : '#4a5a38'); parts.push(c)
+      }
+      return merge(parts)
+    })()
+    treeI = inst(treeGeo, std('tree', { vertexColors: true, roughness: 0.9, side: THREE.DoubleSide }, { rim: 0.5 }), 120, true)
     const tower = xf(new THREE.CylinderGeometry(1.0, 2.1, 46, 12), [0, 23, 0])
     const nac = xf(new THREE.BoxGeometry(2.2, 2.4, 6.2), [0, 47.2, 1.2])
     const towerG = merge([tower, nac])
@@ -1475,6 +1678,110 @@ function mount(host, opts) {
       turb.push({ g, r, k: null })
     }
   }
+
+  // ── 大稻埕專屬：河岸欄杆、榕樹、堤防壁畫、五號水門、貨櫃市集、燈串、渡船、橋、飛機 ──
+  let railI, banyanI, contI, hatchI, stringPoleI, wall, wallTop, muralTex, gate, ferry, plane
+  const bridges = []
+  const CONT_COLS = ['#e0623f', '#f2b53c', '#2c9aa0', '#efe6d4', '#8d63b8', '#3f82c8', '#f07a55', '#5fae68'].map(lin)
+  if (RIVER) {
+    railI = inst(merge([
+      xf(new THREE.BoxGeometry(0.06, 1.1, 0.06), [0, 0.55, 0]),
+      xf(new THREE.BoxGeometry(0.05, 0.05, 2.0), [0, 1.08, -1.0]),
+      xf(new THREE.BoxGeometry(0.035, 0.035, 2.0), [0, 0.62, -1.0]),
+    ]), std('rrail', { color: lin('#3d4f47'), metalness: 0.55, roughness: 0.45 }), 260, true)
+    const banyanGeo = (() => {
+      const parts = [tint(xf(new THREE.CylinderGeometry(0.26, 0.42, 3.2, 8), [0, 1.6, 0]), '#5a4a3c')]
+      const r = rng(23)
+      for (let i = 0; i < 7; i++) {
+        const a = r() * 6.28, d = r() * 1.6, rr = 1.3 + r() * 1.1
+        const g = new THREE.IcosahedronGeometry(rr, 1); xf(g, [Math.cos(a) * d, 3.9 + r() * 1.2, Math.sin(a) * d], [0, 0, 0], [1, 0.72, 1])
+        tint(g, ['#3f5f2c', '#4b6b33', '#36532a', '#557539'][i % 4]); parts.push(g)
+      }
+      return merge(parts)
+    })()
+    banyanI = inst(banyanGeo, std('banyan', { vertexColors: true, roughness: 0.9, flatShading: true }, { rim: 0.45 }), 90, true)
+    // 貨櫃：每個顏色不同，面向步道那一面開一個會亮的窗口
+    contI = inst(xf(new THREE.BoxGeometry(2.44, 2.6, 6.06), [0, 1.3, 0]), std('cont', { color: 0xffffff, roughness: 0.5, metalness: 0.02, envMapIntensity: 1.1 }, { rim: 0.2 }), 24, true, true)
+    hatchI = new THREE.InstancedMesh(xf(new THREE.PlaneGeometry(2.6, 0.95), [1.235, 1.5, 0], [0, Math.PI / 2, 0]), new THREE.MeshBasicMaterial({ color: new THREE.Color(1, 0.7, 0.4) }), 24)
+    hatchI.frustumCulled = false; hatchI.count = 0; scene.add(hatchI)
+    stringPoleI = inst(xf(new THREE.CylinderGeometry(0.045, 0.06, 4.3, 6), [0, 2.15, 0]), MW.pole, 40, true)
+    // 堤防：一整面壁畫牆（x = −20），貼圖依距離捲動，比切塊少一大堆 draw call
+    muralTex = canvasTex(2048, 320, (g, w, h) => {
+      const r = rng(31), m = w / 48                                           // 48 m 一輪，42.7 px/m
+      g.fillStyle = '#b3ab9d'; g.fillRect(0, 0, w, h)
+      for (let i = 0; i < 9000; i++) { g.fillStyle = `rgba(${r() < 0.5 ? '70,66,60' : '220,214,202'},${0.05 + r() * 0.08})`; g.fillRect(r() * w, r() * h, 1 + r() * 3, 1 + r() * 3) }
+      // 左：河與小船（藍綠的橫紋）
+      for (let i = 0; i < 7; i++) { g.fillStyle = ['#2f6f78', '#3f8a8a', '#5aa3a0', '#2a5a6a'][i % 4]; g.beginPath(); g.moveTo(0.5 * m, (3.2 + i * 0.5) * m); for (let x = 0.5; x <= 14; x += 0.5) g.lineTo(x * m, (3.2 + i * 0.5 + Math.sin(x * 1.3 + i) * 0.12) * m); g.lineTo(14 * m, (3.45 + i * 0.5) * m); g.lineTo(0.5 * m, (3.45 + i * 0.5) * m); g.fill() }
+      g.fillStyle = '#3a2e2a'; g.beginPath(); g.moveTo(4 * m, 3.0 * m); g.lineTo(9 * m, 3.0 * m); g.lineTo(8.2 * m, 3.5 * m); g.lineTo(4.6 * m, 3.5 * m); g.fill(); g.fillRect(6.3 * m, 1.3 * m, 0.12 * m, 1.7 * m)
+      // 中：夕陽＋觀音山的輪廓
+      g.fillStyle = '#e9a25a'; g.fillRect(16 * m, 0.8 * m, 14 * m, 5.8 * m)
+      g.fillStyle = '#f2c46b'; g.beginPath(); g.arc(23 * m, 3.1 * m, 1.5 * m, 0, Math.PI * 2); g.fill()
+      g.fillStyle = '#7a4a52'; g.beginPath(); g.moveTo(16 * m, 5.2 * m); g.lineTo(19.5 * m, 4.1 * m); g.lineTo(21.5 * m, 2.9 * m); g.lineTo(23.3 * m, 3.9 * m); g.lineTo(26.5 * m, 4.6 * m); g.lineTo(30 * m, 4.9 * m); g.lineTo(30 * m, 6.6 * m); g.lineTo(16 * m, 6.6 * m); g.fill()
+      // 右：深紅底上的「大稻埕」
+      g.fillStyle = '#8a2f2a'; g.fillRect(32 * m, 0.9 * m, 14 * m, 5.6 * m)
+      g.fillStyle = '#f1e6d2'; g.font = `bold ${2.3 * m}px "Noto Serif TC", "Songti TC", serif`; g.textAlign = 'center'; g.textBaseline = 'middle'
+      g.fillText('大稻埕', 39 * m, 3.3 * m)
+      g.font = `600 ${0.55 * m}px Overpass, Helvetica, Arial, sans-serif`; g.fillText('D A D A O C H E N G', 39 * m, 5.35 * m)
+      // 風化：底部水漬
+      const grd = g.createLinearGradient(0, h * 0.8, 0, h); grd.addColorStop(0, 'rgba(60,56,48,0)'); grd.addColorStop(1, 'rgba(60,56,48,.45)'); g.fillStyle = grd; g.fillRect(0, h * 0.8, w, h * 0.2)
+    })
+    muralTex.wrapS = THREE.RepeatWrapping; muralTex.anisotropy = aniso
+    const wallLen = Z_AHEAD + Z_BEHIND
+    muralTex.repeat.set(wallLen / 48, 1)
+    wall = new THREE.Mesh(new THREE.PlaneGeometry(wallLen, 7.5), std('mural', { map: muralTex, roughness: 0.88 }))
+    wall.rotation.y = Math.PI / 2; wall.position.set(-20, 3.75, (Z_BEHIND - Z_AHEAD) / 2); wall.receiveShadow = true
+    wallTop = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.45, wallLen), MW.concrete); wallTop.position.set(-20.55, 7.7, (Z_BEHIND - Z_AHEAD) / 2); wallTop.castShadow = true
+    scene.add(wall, wallTop)
+    // 五號水門：鐵門＋藍底白字的牌子
+    gate = new THREE.Group()
+    const signTex = canvasTex(512, 160, (g, w, h) => {
+      g.fillStyle = '#1f4f8a'; g.fillRect(0, 0, w, h); g.strokeStyle = '#f1efe8'; g.lineWidth = 8; g.strokeRect(10, 10, w - 20, h - 20)
+      g.fillStyle = '#f1efe8'; g.textAlign = 'center'; g.textBaseline = 'middle'
+      g.font = 'bold 74px "Noto Sans TC", "PingFang TC", sans-serif'; g.fillText('五號水門', w / 2, 70)
+      g.font = '600 30px "Noto Sans TC", "PingFang TC", sans-serif'; g.fillText('大稻埕碼頭', w / 2, 126)
+    })
+    const door = new THREE.Mesh(new THREE.PlaneGeometry(8, 5.4), std('gatedoor', { color: lin('#3a4046'), metalness: 0.6, roughness: 0.5 }))
+    door.rotation.y = Math.PI / 2; door.position.set(0.03, 2.7, 0)
+    const sign = new THREE.Mesh(new THREE.PlaneGeometry(3.6, 1.12), std('gatesign', { map: signTex, roughness: 0.5 }))
+    sign.rotation.y = Math.PI / 2; sign.position.set(0.06, 6.3, 0)
+    const jamb = xf(new THREE.BoxGeometry(0.6, 6.2, 0.6), [0.3, 3.1, 4.3]), jamb2 = xf(new THREE.BoxGeometry(0.6, 6.2, 0.6), [0.3, 3.1, -4.3])
+    gate.add(door, sign, new THREE.Mesh(merge([jamb, jamb2]), MW.concrete))
+    gate.visible = false; scene.add(gate)
+    // 藍色公路的渡船
+    ferry = new THREE.Group()
+    const outline = new THREE.Shape()                                           // 俯視的船形：船頭朝 −z
+    outline.moveTo(-2.1, 8); outline.lineTo(2.1, 8); outline.lineTo(2.1, -4); outline.quadraticCurveTo(2.0, -8.5, 0, -10.5); outline.quadraticCurveTo(-2.0, -8.5, -2.1, -4); outline.lineTo(-2.1, 8)
+    const hull = new THREE.ExtrudeGeometry(outline, { depth: 1.7, bevelEnabled: false, curveSegments: 8 }); hull.rotateX(Math.PI / 2); hull.translate(0, 1.7, 0)
+    const band = new THREE.ExtrudeGeometry(outline, { depth: 0.32, bevelEnabled: false, curveSegments: 8 }); band.rotateX(Math.PI / 2); band.scale(1.01, 1, 1.004); band.translate(0, 1.45, 0)
+    const hullG = tint(hull, '#eef0ee'), bandG = tint(band, '#2f5f9a')
+    const cabinG = tint(xf(new THREE.BoxGeometry(3.4, 2.1, 9), [0, 2.75, 1.5]), '#f4f4f0')
+    const roofG = tint(xf(new THREE.BoxGeometry(3.7, 0.25, 9.6), [0, 3.9, 1.5]), '#2f5f9a')
+    ferry.add(new THREE.Mesh(merge([hullG, bandG, cabinG, roofG]), std('ferry', { vertexColors: true, roughness: 0.5 }, { rim: 0.3 })))
+    const winG = new THREE.Mesh(new THREE.PlaneGeometry(7.6, 0.8), new THREE.MeshBasicMaterial({ color: new THREE.Color(1, 0.85, 0.6) }))
+    winG.rotation.y = -Math.PI / 2; winG.position.set(-1.72, 2.8, 1.2); ferry.add(winG); ferry.userData.win = winG
+    ferry.visible = false; scene.add(ferry)
+    // 橋：面板、兩側護欄、橋墩（一個合併幾何），每 1300 m 一座
+    const bridgeGeo = (() => {
+      const parts = [xf(new THREE.BoxGeometry(560, 1.7, 18), [140, 10.6, 0]), xf(new THREE.BoxGeometry(560, 1.0, 0.35), [140, 11.95, 8.8]), xf(new THREE.BoxGeometry(560, 1.0, 0.35), [140, 11.95, -8.8])]
+      ;[-44, -12, 24, 68, 112, 156, 200, 244, 288, 332, 376].forEach(x => {
+        const y0 = x < 0 ? 0 : E.seaY - 1, hgt = 9.8 - y0
+        parts.push(xf(new THREE.BoxGeometry(3.2, hgt, 7), [x, y0 + hgt / 2, 0]), xf(new THREE.BoxGeometry(4.2, 1.0, 16), [x, 9.55, 0]))
+      })
+      return merge(parts)
+    })()
+    const bridgeMat = std('bridge', { color: lin('#9c978e'), roughness: 0.85 })
+    for (let i = 0; i < 3; i++) { const m = new THREE.Mesh(bridgeGeo, bridgeMat); m.castShadow = true; m.receiveShadow = true; m.visible = false; scene.add(m); bridges.push({ m, k: null }) }
+    // 往松山機場進場的飛機（由西往東，從河的上空低低飛過）
+    plane = new THREE.Group()
+    const fus = xf(new THREE.CylinderGeometry(1.9, 1.9, 34, 12), [0, 0, 0], [0, 0, Math.PI / 2])
+    const nose = xf(new THREE.SphereGeometry(1.9, 12, 8), [-17, 0, 0], [0, 0, 0], [1.6, 1, 1])
+    const wing = xf(new THREE.BoxGeometry(6, 0.35, 34), [1, -0.6, 0])
+    const tailW = xf(new THREE.BoxGeometry(3.4, 0.25, 12), [15.5, 0.6, 0])
+    const fin = xf(new THREE.BoxGeometry(4.4, 6, 0.3), [15.2, 3.4, 0], [0, 0, -0.35])
+    plane.add(new THREE.Mesh(merge([fus, nose, wing, tailW, fin]), std('plane', { color: lin('#e8eaec'), roughness: 0.35, metalness: 0.2 }, { rim: 0.8 })))
+    plane.visible = false; scene.add(plane)
+  }
+
   // 里程牌、路面「慢」字
   const kmSigns = []
   for (let i = 0; i < 2; i++) {
@@ -1489,10 +1796,10 @@ function mount(host, opts) {
   }
   function drawKm(tex, k) {
     const c = tex.image, g = c.getContext('2d')
-    g.fillStyle = '#1e6b45'; g.fillRect(0, 0, 256, 160)
+    g.fillStyle = RIVER ? '#2a5d8a' : '#1e6b45'; g.fillRect(0, 0, 256, 160)
     g.strokeStyle = '#f4f1e8'; g.lineWidth = 6; g.strokeRect(9, 9, 238, 142)
     g.fillStyle = '#f4f1e8'; g.textAlign = 'center'
-    g.font = 'bold 34px "Noto Sans TC", "PingFang TC", sans-serif'; g.fillText('台2線', 128, 60)
+    g.font = 'bold 34px "Noto Sans TC", "PingFang TC", sans-serif'; g.fillText(E.kmLabel, 128, 60)
     g.font = 'bold 58px Overpass, Helvetica, Arial, sans-serif'; g.fillText(`${k}K`, 128, 128)
     tex.needsUpdate = true
   }
@@ -1505,7 +1812,7 @@ function mount(host, opts) {
   })
   const slowMat = std('slow', { map: slowTex, transparent: true, roughness: 0.8, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 })
   const slowI = []
-  for (let i = 0; i < 4; i++) { const m = new THREE.Mesh(xf(new THREE.PlaneGeometry(2.3, 3.4), [0, 0, 0], [-Math.PI / 2, 0, 0]), slowMat); m.receiveShadow = true; m.visible = false; m.renderOrder = 1; scene.add(m); slowI.push(m) }
+  for (let i = 0; i < 4; i++) { const m = new THREE.Mesh(xf(new THREE.PlaneGeometry(2.3 * E.slowS, 3.4 * E.slowS), [0, 0, 0], [-Math.PI / 2, 0, 0]), slowMat); m.receiveShadow = true; m.visible = false; m.renderOrder = 1; scene.add(m); slowI.push(m) }
 
   const dummy = new THREE.Object3D()
   const cRockA = lin('#6e665c'), cRockB = lin('#4a4640'), cShrubA = lin('#5b7f36'), cShrubB = lin('#86a04a'), tmpC = new THREE.Color()
@@ -1515,24 +1822,15 @@ function mount(host, opts) {
   }
   let lampOn = 0
   const lampZ = []
-  function placeProps(dist, night, t) {
+  const warm = lin('#ffd08a'), bulbCol = lin('#ffc978'), red = lin('#ff2a1a'), white = lin('#fff4e2'), green = lin('#3aff7a')
+  function placeCoast(dist, night, t) {
     // 護欄立柱 4 m 一支、反光片 12 m
     let n = 0, nd = 0
     span(4, 60, -420, dist, (k, z) => {
-      dummy.position.set(RAIL_X + 0.1, 0, z); dummy.rotation.set(0, 0, 0); dummy.scale.set(1, 1, 1); dummy.updateMatrix(); postI.setMatrixAt(n++, dummy.matrix)
-      if (k % 3 === 0 && nd < 50) { dummy.position.set(RAIL_X - 0.09, 0, z); dummy.updateMatrix(); deliI.setMatrixAt(nd++, dummy.matrix) }
+      dummy.position.set(E.railX + 0.1, 0, z); dummy.rotation.set(0, 0, 0); dummy.scale.set(1, 1, 1); dummy.updateMatrix(); if (n < 140) postI.setMatrixAt(n++, dummy.matrix)
+      if (k % 3 === 0 && nd < 50) { dummy.position.set(E.railX - 0.09, 0, z); dummy.updateMatrix(); deliI.setMatrixAt(nd++, dummy.matrix) }
     })
     postI.count = n; postI.instanceMatrix.needsUpdate = true; deliI.count = nd; deliI.instanceMatrix.needsUpdate = true
-    // 路燈
-    n = 0; lampZ.length = 0
-    span(LAMP_SP, 140, -760, dist, (k, z) => {
-      dummy.position.set(LAMP_X, 0, z); dummy.rotation.set(0, 0, 0); dummy.scale.set(1, 1, 1); dummy.updateMatrix()
-      poleI.setMatrixAt(n, dummy.matrix); headI.setMatrixAt(n, dummy.matrix); lensI.setMatrixAt(n, dummy.matrix)
-      dummy.position.set(LAMP_X - LAMP_ARM - 0.12, 0.03, z); dummy.scale.set(11, 1, 11); dummy.updateMatrix(); poolI.setMatrixAt(n, dummy.matrix)
-      lampZ.push({ z, k }); n++
-    })
-    poleI.count = headI.count = lensI.count = poolI.count = n
-    ;[poleI, headI, lensI, poolI].forEach(m => { m.instanceMatrix.needsUpdate = true })
     // 岸邊：消波塊段落與礁岩段落
     let nt = 0; const nr = [0, 0]
     span(1.7, 70, -330, dist, (k, z) => {
@@ -1542,7 +1840,7 @@ function mount(host, opts) {
       if (tetraSec) {
         for (let row = 0; row < 2; row++) {
           const hsh = hash1(k * 7.3 + row * 1.7)
-          dummy.position.set(sx - 1.3 + row * 1.5 + (hsh - 0.5) * 0.5, SEA_Y + 0.35 + row * -0.25 + hsh * 0.3, z + (hash1(k + row) - 0.5) * 0.8)
+          dummy.position.set(sx - 1.3 + row * 1.5 + (hsh - 0.5) * 0.5, E.seaY + 0.35 + row * -0.25 + hsh * 0.3, z + (hash1(k + row) - 0.5) * 0.8)
           dummy.rotation.set(hsh * 6.28, hash1(k * 1.3 + row) * 6.28, hash1(k * 2.1 + row) * 6.28)
           const s = 0.95 + hsh * 0.25; dummy.scale.set(s, s, s); dummy.updateMatrix()
           if (nt < 260) tetraI.setMatrixAt(nt++, dummy.matrix)
@@ -1550,10 +1848,10 @@ function mount(host, opts) {
       } else if (k % 2 === 0) {
         for (let q = 0; q < 2; q++) {
           const hsh = hash1(k * 5.7 + q * 3.3), which = hsh < 0.5 ? 0 : 1
-          dummy.position.set(sx + (hsh - 0.55) * 4.2, SEA_Y + (hash1(k + q * 9) - 0.4) * 0.9, z + (hash1(k * 3 + q) - 0.5) * 1.6)
+          dummy.position.set(sx + (hsh - 0.55) * 4.2, E.seaY + (hash1(k + q * 9) - 0.4) * 0.9, z + (hash1(k * 3 + q) - 0.5) * 1.6)
           dummy.rotation.set(0, hsh * 6.28, (hsh - 0.5) * 0.5)
           const s = 0.45 + hash1(k * 2.9 + q) * 1.05; dummy.scale.set(s * (1 + hsh * 0.5), s, s); dummy.updateMatrix()
-          if (nr[which] < 110) { const i = nr[which]++; rockI[which].setMatrixAt(i, dummy.matrix); tmpC.copy(cRockA).lerp(cRockB, hash1(k * 11 + q)); rockI[which].setColorAt(i, tmpC) }
+          if (nr[which] < 140) { const i = nr[which]++; rockI[which].setMatrixAt(i, dummy.matrix); tmpC.copy(cRockA).lerp(cRockB, hash1(k * 11 + q)); rockI[which].setColorAt(i, tmpC) }
         }
       }
     })
@@ -1566,7 +1864,7 @@ function mount(host, opts) {
       const zw = z - dist, h = hash1(k * 1.37)
       if (vnoise1(zw * 0.05) < 0.35 && h < 0.6) return
       const side = h < 0.86 ? -1 : 1
-      const x = side < 0 ? ROAD_X0 - 1.6 - hash1(k * 2.3) * 14 : 2.1 + hash1(k * 4.1) * 1.1
+      const x = side < 0 ? E.x0 - 1.6 - hash1(k * 2.3) * 14 : 2.1 + hash1(k * 4.1) * 1.1
       const y = side < 0 ? landY(x, zw) : stripY(x, zw)
       dummy.position.set(x, y - 0.05, z); dummy.rotation.set(0, h * 6.28, 0)
       const s = (side < 0 ? 0.8 : 0.62) + hash1(k * 6.7) * 0.45; dummy.scale.set(s, s, s); dummy.updateMatrix()
@@ -1578,7 +1876,7 @@ function mount(host, opts) {
     span(3.1, 60, -420, dist, (k, z) => {
       const zw = z - dist, h = hash1(k * 9.1)
       if (h < 0.6) return
-      const x = ROAD_X0 - 2.2 - hash1(k * 3.7) * 16
+      const x = E.x0 - 2.2 - hash1(k * 3.7) * 16
       const s = 0.45 + hash1(k * 4.4) * 1.0
       dummy.position.set(x, landY(x, zw) - 0.15 * s, z); dummy.rotation.set(0, h * 6, 0)
       dummy.scale.set(s * 1.4, s * 0.95, s * 1.3); dummy.updateMatrix()
@@ -1589,7 +1887,7 @@ function mount(host, opts) {
     span(4.2, 80, -520, dist, (k, z) => {
       const zw = z - dist, h = hash1(k * 5.3)
       if (vnoise1(zw * 0.012 + 7) < 0.42 || h < 0.25) return
-      const x = ROAD_X0 - 5 - hash1(k * 8.1) * 22
+      const x = E.x0 - 5 - hash1(k * 8.1) * 22
       const s = 0.8 + hash1(k * 2.2) * 0.55
       dummy.position.set(x, landY(x, zw) - 0.2, z); dummy.rotation.set((h - 0.5) * 0.08, h * 6.3, (hash1(k) - 0.5) * 0.08)
       dummy.scale.set(s, s * (0.85 + h * 0.4), s); dummy.updateMatrix()
@@ -1608,6 +1906,122 @@ function mount(host, opts) {
       T.g.rotation.y = -0.35
       T.r.rotation.z = T.ph + t * 1.45
     })
+    const blink = Math.sin(t * Math.PI) > 0.2 ? 1 : 0
+    if (night > 0.05) turb.forEach(T => { if (T.k !== null) glow.add(T.g.position.x, T.g.position.y + 48.8, T.g.position.z, 9, red, blink * night * 3.0) })
+    const fishCol = lin('#fff1c8')
+    if (night > 0.2) FISH.forEach((f, i) => glow.add(f.x, f.y, f.z, 30 + (i % 3) * 8, fishCol, night * (2.2 + Math.sin(t * 0.7 + i) * 0.4)))
+    const lhFlash = Math.pow(Math.max(Math.sin(t * 0.63), 0), 12)
+    if (night > 0.1) glow.add(LH_TOP.x, LH_TOP.y + 1, LH_TOP.z, 24, lin('#fff4d6'), night * (0.8 + lhFlash * 6))
+  }
+  function placeRiver(dist, night, t) {
+    const dusk = Math.max(night, lampOn * 0.6)                                  // 燈串、窗口在黃昏就開始亮
+    // 河岸欄杆（2 m 一段；碼頭廣場那段退到 14.4 m）
+    let n = 0
+    span(2, 60, -420, dist, (k, z) => {
+      if (n >= 260) return
+      dummy.position.set(riverEdge(z - dist) + 0.05, 0, z); dummy.rotation.set(0, 0, 0); dummy.scale.set(1, 1, 1); dummy.updateMatrix(); railI.setMatrixAt(n++, dummy.matrix)
+    })
+    railI.count = n; railI.instanceMatrix.needsUpdate = true
+    // 護岸的拋石（碼頭廣場以外）
+    const nr = [0, 0]
+    span(1.3, 60, -300, dist, (k, z) => {
+      const zw = z - dist; if (riverZone(zw).wharf) return
+      const hsh = hash1(k * 5.1), which = hsh < 0.5 ? 0 : 1
+      dummy.position.set(riverEdge(zw) + 3.0 + (hsh - 0.5) * 1.3, E.seaY - 0.05 + hash1(k * 2.7) * 0.3, z); dummy.rotation.set(0, hsh * 6.28, (hsh - 0.5) * 0.4)
+      const s = 0.32 + hash1(k * 3.9) * 0.5; dummy.scale.set(s * 1.3, s * 0.8, s); dummy.updateMatrix()
+      if (nr[which] < 140) { const i = nr[which]++; rockI[which].setMatrixAt(i, dummy.matrix); tmpC.copy(cRockA).lerp(cRockB, hash1(k * 13)); rockI[which].setColorAt(i, tmpC) }
+    })
+    rockI.forEach((m, i) => { m.count = nr[i]; m.instanceMatrix.needsUpdate = true; if (m.instanceColor) m.instanceColor.needsUpdate = true })
+    // 草地上的榕樹
+    n = 0
+    span(8.5, 80, -520, dist, (k, z) => {
+      const h = hash1(k * 4.7); if (h < 0.18 || n >= 90) return
+      if (riverZone(z - dist).wharf) return
+      const x = -5.2 - hash1(k * 6.1) * 11
+      const s = 0.8 + hash1(k * 2.3) * 0.45
+      dummy.position.set(x, landY(x, z - dist) - 0.1, z + (hash1(k) - 0.5) * 3); dummy.rotation.set(0, h * 6.28, 0); dummy.scale.set(s, s * (0.9 + h * 0.3), s); dummy.updateMatrix()
+      banyanI.setMatrixAt(n++, dummy.matrix)
+    })
+    banyanI.count = n; banyanI.instanceMatrix.needsUpdate = true
+    // 堤防壁畫跟著世界捲
+    muralTex.offset.x = (dist / 48) % 1
+    // 碼頭廣場（每個週期一段）：貨櫃市集、燈串、五號水門、渡船
+    let nc = 0, np = 0
+    gate.visible = false; ferry.visible = false
+    for (let k = Math.floor((dist - 900) / R_PERIOD); k <= Math.floor((dist + 1600) / R_PERIOD); k++) {
+      const zA = -(k * R_PERIOD + WHARF_AT) + dist                               // 碼頭廣場的近端（騎士座標）
+      if (zA < -700 || zA - WHARF_LEN > 200) continue
+      const mid = zA - WHARF_LEN / 2
+      for (let i = 0; i < 12; i++) {
+        const z = zA - 38 - i * 7.3, hsh = hash1(k * 31 + i)
+        dummy.position.set(-7.6, 0, z); dummy.rotation.set(0, 0, 0); dummy.scale.set(1, 1, 1); dummy.updateMatrix()
+        if (nc < 24) { contI.setMatrixAt(nc, dummy.matrix); contI.setColorAt(nc, CONT_COLS[(i * 3 + (k % 8) + 8) % CONT_COLS.length]); dummy.rotation.set(0, 0, 0); dummy.updateMatrix(); hatchI.setMatrixAt(nc, dummy.matrix); nc++ }
+      }
+      // 燈串：兩排柱子、每 12 m 一根，中間垂下來的小燈泡
+      for (const lx of [-4.4, 9.8]) {
+        let prev = null
+        for (let zz = zA - 30; zz > zA - WHARF_LEN + 25; zz -= 12) {
+          if (np < 40) { dummy.position.set(lx, 0, zz); dummy.rotation.set(0, 0, 0); dummy.updateMatrix(); stringPoleI.setMatrixAt(np++, dummy.matrix) }
+          if (prev !== null && dusk > 0.02) for (let b = 1; b < 8; b++) { const u = b / 8; glow.add(lx, 4.2 - Math.sin(Math.PI * u) * 0.5, prev + (zz - prev) * u, 0.32, bulbCol, dusk * 1.6) }
+          prev = zz
+        }
+      }
+      gate.visible = true; gate.position.set(-19.95, 0, mid)
+      ferry.visible = true; ferry.position.set(17.2, E.seaY - 0.05 + Math.sin(t * 0.8) * 0.06, mid + 20); ferry.rotation.set(Math.sin(t * 0.6) * 0.01, 0, Math.sin(t * 0.7) * 0.012)
+      ferry.userData.win.material.color.setRGB(1, 0.85, 0.6).multiplyScalar(0.15 + dusk * 1.6)
+    }
+    contI.count = nc; contI.instanceMatrix.needsUpdate = true; if (contI.instanceColor) contI.instanceColor.needsUpdate = true
+    hatchI.count = nc; hatchI.instanceMatrix.needsUpdate = true; hatchI.material.color.setRGB(1, 0.62, 0.3).multiplyScalar(0.05 + dusk * 0.55)
+    stringPoleI.count = np; stringPoleI.instanceMatrix.needsUpdate = true
+    // 橋：面板上的路燈、車流（白色車頭燈往這邊、紅色車尾燈往那邊）
+    const wantB = []
+    for (let k = Math.floor((dist - 1600) / R_PERIOD); k <= Math.floor((dist + 3300) / R_PERIOD); k++) {
+      const z = -(k * R_PERIOD + BRIDGE_AT) + dist
+      if (z < 1500 && z > -3200) wantB.push([k, z])
+    }
+    bridges.forEach(B => { if (B.k !== null && !wantB.some(w => w[0] === B.k)) { B.k = null; B.m.visible = false } })
+    wantB.forEach(([k, z]) => {
+      let B = bridges.find(b => b.k === k)
+      if (!B) { B = bridges.find(b => b.k === null); if (!B) return; B.k = k; B.m.visible = true }
+      B.m.position.set(0, 0, z)
+      if (dusk > 0.02) {
+        for (let x = -130; x <= 410; x += 28) { glow.add(x, 13.2, z + 8.8, 1.1, warm, dusk * 1.4); glow.add(x + 14, 13.2, z - 8.8, 1.1, warm, dusk * 1.4) }
+        for (let v = 0; v < 10; v++) {
+          const dir = v % 2 ? 1 : -1, sp = 11 + (v % 3) * 1.6, ph = hash1(k * 7 + v) * 560
+          const x = -140 + ((ph + t * sp * dir) % 560 + 560) % 560
+          glow.add(x, 12.1, z + (dir > 0 ? 3.2 : -3.2), 0.9, dir > 0 ? red : white, dusk * (dir > 0 ? 1.8 : 2.6))
+        }
+      }
+    })
+    if (night > 0.1) glow.add(riverFar.userData.top101.x, riverFar.userData.top101.y, riverFar.userData.top101.z, 22, red, (Math.sin(t * 2.2) > 0 ? 1 : 0.2) * night * 2)
+    // 飛機：每 150 秒一班，從河的上空往東飛向松山機場
+    const pt = t % 150
+    if (pt < 70) {
+      const u = pt / 70
+      plane.visible = true
+      plane.position.set(lerp(3600, -3600, u), lerp(620, 300, u), lerp(-420, -900, u))
+      plane.rotation.set(0, 0.07, -0.04)
+      const blinkP = Math.sin(t * 7) > 0.85 ? 1 : 0
+      glow.add(plane.position.x - 28, plane.position.y - 1, plane.position.z, 7, white, 0.6 + dusk * 2.2)
+      glow.add(plane.position.x + 1, plane.position.y - 0.6, plane.position.z + 17.5, 3, red, 0.5 + dusk * 1.5)
+      glow.add(plane.position.x + 1, plane.position.y - 0.6, plane.position.z - 17.5, 3, green, 0.5 + dusk * 1.5)
+      glow.add(plane.position.x + 8, plane.position.y + 2.4, plane.position.z, 5, white, blinkP * 3)
+    } else plane.visible = false
+  }
+  function placeProps(dist, night, t) {
+    glow.reset()
+    // 路燈
+    let n = 0; lampZ.length = 0
+    span(LP.sp, 140, -760, dist, (k, z) => {
+      if (n >= 40) return
+      dummy.position.set(LP.x, 0, z); dummy.rotation.set(0, 0, 0); dummy.scale.set(1, 1, 1); dummy.updateMatrix()
+      poleI.setMatrixAt(n, dummy.matrix); headI.setMatrixAt(n, dummy.matrix); lensI.setMatrixAt(n, dummy.matrix)
+      dummy.position.set(LHX, 0.03, z); dummy.scale.set(LP.h * 1.5, 1, LP.h * 1.5); dummy.updateMatrix(); poolI.setMatrixAt(n, dummy.matrix)
+      lampZ.push({ z, k }); n++
+    })
+    poleI.count = headI.count = lensI.count = poolI.count = n
+    ;[poleI, headI, lensI, poolI].forEach(m => { m.instanceMatrix.needsUpdate = true })
+    if (COAST) placeCoast(dist, night, t); else placeRiver(dist, night, t)
     // 里程牌 1 km 一面
     const wantKm = []
     span(1000, 120, -800, dist, (k, z) => { if (k > 0) wantKm.push([k, z]) })
@@ -1615,27 +2029,18 @@ function mount(host, opts) {
     wantKm.forEach(([k, z]) => {
       let S = kmSigns.find(x => x.k === k)
       if (!S) { S = kmSigns.find(x => x.k === null); if (!S) return; S.k = k; drawKm(S.tex, k); S.g.visible = true }
-      S.g.position.set(ROAD_X0 - 0.55, landY(ROAD_X0 - 0.55, z - dist), z)
+      S.g.position.set(E.kmX, landY(E.kmX, z - dist), z)
     })
-    // 慢：每 260 m 一個（右車道）
+    // 慢：每 260 m 一個
     let si = 0
-    span(260, 60, -600, dist, (k, z) => { if (si < slowI.length) { const m = slowI[si++]; m.visible = true; m.position.set(-2.35, 0.012, z - 40) } })
+    span(260, 60, -600, dist, (k, z) => { if (si < slowI.length) { const m = slowI[si++]; m.visible = true; m.position.set(E.slowX, 0.012, z - 40) } })
     for (; si < slowI.length; si++) slowI[si].visible = false
-    // 發光點：路燈燈頭、風車警示燈、漁火、燈塔燈室
-    glow.reset()
-    const lampCol = lin('#ffd08a')
+    // 路燈燈頭
     lampZ.forEach(L => {
       const on = clamp(lampOn * 1.6 - hash1(L.k * 3.3) * 0.6, 0, 1)
       L.on = on
-      if (on > 0.01) glow.add(LAMP_X - LAMP_ARM - 0.12, LAMP_H + 0.3, L.z, 2.4, lampCol, on * (1.2 + 0.8 * night))
+      if (on > 0.01) glow.add(LHX, LP.h + 0.3, L.z, LP.h * 0.32, warm, on * (1.2 + 0.8 * night))
     })
-    const blink = Math.sin(t * Math.PI) > 0.2 ? 1 : 0
-    const red = lin('#ff2a1a')
-    if (night > 0.05) turb.forEach(T => { if (T.k !== null) glow.add(T.g.position.x, T.g.position.y + 48.8, T.g.position.z, 9, red, blink * night * 3.0) })
-    const fishCol = lin('#fff1c8')
-    if (night > 0.2) FISH.forEach((f, i) => glow.add(f.x, f.y, f.z, 30 + (i % 3) * 8, fishCol, night * (2.2 + Math.sin(t * 0.7 + i) * 0.4)))
-    const lhFlash = Math.pow(Math.max(Math.sin(t * 0.63), 0), 12)
-    if (night > 0.1) glow.add(LH_TOP.x, LH_TOP.y + 1, LH_TOP.z, 24, lin('#fff4d6'), night * (0.8 + lhFlash * 6))
     return lampZ
   }
 
@@ -1684,7 +2089,8 @@ function mount(host, opts) {
     const e = elevOf(S.tod), k = todSample(e)
     todState.e = e
     const ce = Math.cos(e * Math.PI / 180), se = Math.sin(e * Math.PI / 180)
-    U.uSunDir.value.set(Math.sin(SUN_AZ) * ce, se, -Math.cos(SUN_AZ) * ce).normalize()
+    const az = E.sunAz * Math.PI / 180
+    U.uSunDir.value.set(Math.sin(az) * ce, se, -Math.cos(az) * ce).normalize()
     U.uZenith.value.copy(k.zen); U.uHorizon.value.copy(k.hor); U.uHorizonSun.value.copy(k.hsun)
     U.uSunGlow.value.copy(k.glow).multiplyScalar(1.6 * smooth(-9, 1, e))
     U.uSunColor.value.copy(k.sun).multiplyScalar(22 * smooth(-1.6, 1.2, e))
@@ -1723,7 +2129,7 @@ function mount(host, opts) {
     S.rep = rep
     S.ri = rep && rep.start ? rep.start : 0
     S.riF = S.ri
-    if (rep) { const p0 = rep.pw[S.ri] || 150; S.v = terminalV(p0) }
+    if (rep) { let sum = 0, n = 0; for (let i = S.ri; i < Math.min(rep.n, S.ri + 20); i++) { sum += rep.pw[i]; n++ } S.v = terminalV(n ? sum / n : 150) }
   }
   function terminalV(P) {
     let v = 8
@@ -1835,13 +2241,13 @@ function mount(host, opts) {
   canvas.addEventListener('pointerdown', e => {
     S.drag = { x: e.clientX, y: e.clientY, az: S.orbitAz, moved: false }
   })
-  window.addEventListener('pointermove', e => {
+  const onMove = e => {
     if (!S.drag) return
     const dx = e.clientX - S.drag.x
     if (Math.abs(dx) > 4) S.drag.moved = true
     if (S.cam === 'orbit') { S.orbitAz = S.drag.az - dx * 0.008; S.orbitIdle = 0 }
-  })
-  window.addEventListener('pointerup', e => {
+  }
+  const onUp = e => {
     if (!S.drag) return
     const d = S.drag; S.drag = null
     if (d.moved) return
@@ -1850,7 +2256,9 @@ function mount(host, opts) {
     ray.setFromCamera(ndc, camera)
     const hit = ray.intersectObject(R1.pel, true)[0]
     if (hit) { R1.state.gulp = 1.6; audio.blup(); if (opts.onGulp) opts.onGulp() }
-  })
+  }
+  window.addEventListener('pointermove', onMove)
+  window.addEventListener('pointerup', onUp)
 
   /* 主迴圈 */
   const audio = makeAudio()
@@ -1868,6 +2276,7 @@ function mount(host, opts) {
     W5.forEach((w, i) => { seaU.uPh.value[i] = ((-w.k * w.dz * S.dist - w.w * S.t + w.ph0) % (Math.PI * 2)) })
     RIP.forEach((r, i) => { seaU.uRipPh.value[i] = ((-r.k * r.dz * S.dist - r.w * S.t + r.ph0) % (Math.PI * 2)) })
     seaU.uScrollMod.value = S.dist % 800
+    seaU.uScrollAbs.value = S.dist
     seaU.uShorePh.value.set((S.dist * SHORE_K[0]) % (Math.PI * 2), (S.dist * SHORE_K[1]) % (Math.PI * 2), (S.dist * SHORE_K[2]) % (Math.PI * 2))
     U.uWind.value = 0.25 + Math.min(S.v / 14, 1) * 0.35
     // 地形塊
@@ -1881,7 +2290,7 @@ function mount(host, opts) {
     const near = lamps.filter(L => L.on > 0.02).sort((a, b) => Math.abs(a.z + 2) - Math.abs(b.z + 2)).slice(0, lampLights.length)
     lampLights.forEach((l, i) => {
       const L = near[i]
-      if (L) { l.position.set(LAMP_X - LAMP_ARM - 0.12, LAMP_H + 0.1, L.z); l.intensity = 95 * L.on * smooth(60, 10, Math.abs(L.z)) } else l.intensity = 0
+      if (L) { l.position.set(LHX, LP.h + 0.1, L.z); l.intensity = (LP.h < 6 ? 45 : 95) * L.on * smooth(60, 10, Math.abs(L.z)) } else l.intensity = 0
     })
     poolMat.uniforms.uI.value = lampOn
     // 燈塔光束
@@ -1946,8 +2355,10 @@ function mount(host, opts) {
   function stop() { running = false; cancelAnimationFrame(raf) }
   const io = new IntersectionObserver(es => { visible = es[0].isIntersecting; if (visible && !document.hidden && !S.reduced) start(); else stop() }, { threshold: 0.02 })
   io.observe(host)
-  document.addEventListener('visibilitychange', () => { if (document.hidden) stop(); else if (visible && !S.reduced) start() })
-  canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); stop(); if (opts.onLost) opts.onLost() })
+  const onVis = () => { if (document.hidden) stop(); else if (visible && !S.reduced) start() }
+  document.addEventListener('visibilitychange', onVis)
+  const onLostEv = e => { e.preventDefault(); stop(); if (opts.onLost) opts.onLost() }
+  canvas.addEventListener('webglcontextlost', onLostEv)
 
   // 第一幀：先把相機擺好、畫一張（reduced-motion 就停在這張）
   applyTod(); cutTo(0)
@@ -1975,8 +2386,19 @@ function mount(host, opts) {
     renderOnce() { requestAnimationFrame(t => { frame(t); if (!running) cancelAnimationFrame(raf) }) },
     _dbg: () => ({ glow: glow.mesh, farGroup, sky, beam, scene }),
     _pr(p) { pr = clamp(p, minPR, maxPR); resize(); return pr },            // 只給驗證腳本用
+    _warp(m) { S.dist += m; return S.dist },                                  // 只給驗證腳本用：往前跳 m 公尺
     stats() { return { pr, maxPR, minPR, msaa: post ? post.msaa : null, bufW: renderer.domElement.width, cssW: W, frameMs: S.frameMs, quality, calls: renderer.info.render.calls, tris: renderer.info.render.triangles, dist: S.dist, v: S.v, tod: S.tod, cam: S.cam, shot: SHOTS[S.shot].name } },
-    dispose() { stop(); ro.disconnect(); io.disconnect(); renderer.dispose(); if (post) post.dispose() },
+    env: E.id,
+    // 換地點：整個場景拆掉重建（兩個地點的道具、遠景、水面設定都不一樣）
+    dispose() {
+      stop(); ro.disconnect(); io.disconnect(); audio.stop()
+      window.removeEventListener('pointermove', onMove); window.removeEventListener('pointerup', onUp); document.removeEventListener('visibilitychange', onVis)
+      canvas.removeEventListener('webglcontextlost', onLostEv)          // 自己拆的，不要被當成「顯卡掛了」
+      scene.traverse(o => { if (o.geometry) o.geometry.dispose(); const m = o.material; if (m) (Array.isArray(m) ? m : [m]).forEach(x => { if (x.map) x.map.dispose(); x.dispose() }) })
+      if (envRT) envRT.dispose(); pmrem.dispose(); if (post) post.dispose()
+      renderer.dispose(); renderer.forceContextLoss && renderer.forceContextLoss()
+      if (canvas.parentNode) canvas.parentNode.removeChild(canvas)
+    },
   }
 }
 

@@ -3,15 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>鵜鶘海岸 · Steve Chuang</title>
-<meta name="description" content="北海岸黃昏的 3D 鵜鶘騎今天那趟的功率；往下是全部的訓練數據：狀態、年度量、體能曲線、功率、計時段、軌跡地圖、課表與紀錄。">
+<title>鵜鶘騎單車 · Steve Chuang</title>
+<meta name="description" content="3D 鵜鶘在大稻埕（或北海岸）騎你真實那一趟的逐秒功率；往下是全部的訓練數據：狀態、年度量、體能曲線、功率、計時段、軌跡地圖、課表與紀錄。">
 <meta name="theme-color" content="#0d1322">
 <link rel="icon" href="logo.ico">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Overpass:wght@300;400;500;600;700;800&family=Overpass+Mono:wght@400;500;600&family=Noto+Serif+TC:wght@600;700;900&display=swap" rel="stylesheet">
 <style>
-/* 鵜鶘海岸（PELICAN COAST）—— 第七個視覺世界。設計系統寫在 DESIGN.pelican.md。
+/* 鵜鶘騎單車（PELICAN RIDE）—— 第七個視覺世界。設計系統寫在 DESIGN.pelican.md。
    黃昏的海在頁首，往下捲就是入夜：底色是夜海的墨藍，文字是鵜鶘羽毛的暖白。
    圖表三色（日落橘／暮紫／海青）在深底上用 dataviz 驗證器跑過 all-pairs（CVD ΔE ≥ 12）。 */
 :root {
@@ -83,6 +83,8 @@ b, strong { font-weight: 600 }
 .hud-title h1 { font-family: var(--font-serif); font-weight: 900; font-size: clamp(40px, 5.6vw, 72px); line-height: 1.02; letter-spacing: .06em }
 .hud-title p { margin-top: 10px; font-size: 14.5px; color: rgba(246, 239, 228, .86); max-width: 38ch }
 .hud-title p b { color: #fff; font-weight: 600 }
+.hud-title .hud-kicker { margin: 0 0 6px; font-family: var(--font-mono); font-size: 12px; letter-spacing: .18em; color: rgba(246, 239, 228, .78) }
+.hud-title .seg-env { display: inline-flex; margin-top: 14px; pointer-events: auto }
 .hud-cam { position: absolute; right: var(--gut); top: 84px; display: flex; flex-direction: column; align-items: flex-end; gap: 10px }
 .seg { display: flex; padding: 3px; gap: 2px; border-radius: 999px; background: rgba(10, 13, 24, .42); border: 1px solid rgba(246, 239, 228, .14); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px) }
 .seg button { padding: 5px 11px; border-radius: 999px; font-size: 12.5px; color: rgba(246, 239, 228, .8); white-space: nowrap; min-height: 30px }
@@ -337,7 +339,7 @@ footer .worlds a b { color: var(--text); font-weight: 600; margin-right: 6px }
 </head>
 <body>
 <header class="nav" id="nav">
-  <a class="brand" href="#top"><b>鵜鶘海岸</b><i>PELICAN COAST</i></a>
+  <a class="brand" href="#top"><b>鵜鶘騎單車</b><i>PELICAN RIDE</i></a>
   <nav class="nav-ch" id="navch" aria-label="章節">
     <a href="#today"><span>01</span>今天</a>
     <a href="#season"><span>02</span>這一季</a>
@@ -351,12 +353,17 @@ footer .worlds a b { color: var(--text); font-weight: 600; margin-right: 6px }
   <a class="nav-back" href="linkTreeIndex.html">← LinkTree</a>
 </header>
 
-<section class="hero" id="top" aria-label="北海岸 3D 場景">
+<section class="hero" id="top" aria-label="3D 騎乘場景">
   <div class="lbox t"></div><div class="lbox b"></div>
   <div class="hud" id="hud">
     <div class="hud-title">
-      <h1>鵜鶘海岸</h1>
-      <p id="hud-sub">北海岸台 2 線，往西騎進夕陽。</p>
+      <p class="hud-kicker" id="hud-kicker">小台北・淡水河右岸</p>
+      <h1 id="hud-h1">大稻埕</h1>
+      <p id="hud-sub">沿著淡水河右岸往南，經過大稻埕碼頭的五號水門。</p>
+      <div class="seg seg-env" role="group" aria-label="地點">
+        <button type="button" data-env="river" aria-pressed="true">大稻埕</button>
+        <button type="button" data-env="coast" aria-pressed="false">北海岸</button>
+      </div>
     </div>
     <div class="hud-cam">
       <div class="seg" role="group" aria-label="鏡頭">
@@ -538,35 +545,73 @@ function onFrame(s) {
   stripCursor(s.ri)
   hero.classList.toggle('is-cinema', s.cam === 'cinema')
 }
-function setCam(m) {
-  if (!scene) return
-  scene.setCamera(m)
-  $$('.seg [data-cam]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.cam === m)))
-}
 const CAMS = ['cinema', 'chase', 'side', 'pov', 'orbit']
-function bootScene() {
-  const no3d = () => { hero.classList.add('no-3d'); hero.classList.remove('is-live'); $('#hero-fail').hidden = false }
-  if (!window.PelicanCoast || !window.PelicanCoast.mount) { no3d(); return }
-  scene = window.PelicanCoast.mount(hero, { cam: 'cinema', tod: 0.18, onFrame, onLost: no3d })
+// 兩個地點：大稻埕（預設，小台北路線上）與北海岸。選擇記在這台瀏覽器
+const SCENES = {
+  river: { h1: '大稻埕', kicker: '小台北・淡水河右岸', lead: '沿著淡水河右岸往南，經過大稻埕碼頭的五號水門。' },
+  coast: { h1: '北海岸', kicker: '台 2 線・石門', lead: '北海岸台 2 線，往西騎進夕陽。' },
+}
+const RIVER_GROUPS = ['danshui-south', 'shezidao', 'guandu-meiti', 'keelung-east']
+let envNow = (() => { try { const v = localStorage.getItem('pelican-env'); return SCENES[v] ? v : 'river' } catch (e) { return 'river' } })()
+let camNow = 'cinema'
+const REPS = {}
+const no3d = () => { hero.classList.add('no-3d'); hero.classList.remove('is-live'); $('#hero-fail').hidden = false }
+function setCam(m) {
+  camNow = m
+  $$('.seg [data-cam]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.cam === m)))
+  if (scene) scene.setCamera(m)
+}
+function applyHeadings(env) {
+  const S = SCENES[env]
+  $('#hud-h1').textContent = S.h1; $('#hud-kicker').textContent = S.kicker
+  $$('.seg [data-env]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.env === env)))
+  const R = REPS[env]
+  $('#hud-sub').innerHTML = esc(S.lead) + (R ? R.info.sentence : '')
+}
+function mountScene(env, tod) {
+  scene = window.PelicanCoast.mount(hero, { env, cam: camNow, tod: tod != null ? tod : 0.18, onFrame, onLost: no3d })
   if (!scene) { no3d(); return }
   window.__pelican = scene                                  // 給 headless 驗證腳本用的把手
-  // canvas 要在 HUD 底下
-  const cv = $('.pc-canvas', hero); hero.insertBefore(cv, hero.firstChild)
+  hero.classList.remove('no-3d'); $('#hero-fail').hidden = true
+  const cv = $('.pc-canvas', hero); hero.insertBefore(cv, hero.firstChild)   // canvas 要在 HUD 底下
   requestAnimationFrame(() => hero.classList.add('is-live'))
+  if (DATA.drive) scene.setDrive({ rings: DATA.drive.chainrings, cogs: DATA.drive.cassette, circ: DATA.drive.wheel_circumference_m })
+  if (REPS[env]) scene.setReplay(REPS[env].rep)
+  if ($('#btn-sound').getAttribute('aria-pressed') === 'true') scene.sound(true)
+  const bp = $('#btn-pause')
+  if (scene.still) { bp.setAttribute('aria-pressed', 'true'); bp.title = '播放（P）'; bp.setAttribute('aria-label', '播放') }
+}
+function switchScene(env) {
+  if (env === envNow || !SCENES[env]) return
+  envNow = env
+  try { localStorage.setItem('pelican-env', env) } catch (e) {}
+  REP = null; repInfo = null; stripCache = null
+  $('#strip-l').textContent = '載入騎乘資料…'; $('#strip-r').textContent = ''
+  const g = stripC.getContext('2d'); g.clearRect(0, 0, stripC.width, stripC.height)
+  applyHeadings(env)
+  if (scene) { const tod = scene.tod; scene.dispose(); scene = null; hero.classList.remove('is-live'); mountScene(env, tod) }
+  loadReplay(env)
+}
+function bootScene() {
+  applyHeadings(envNow)
+  if (!window.PelicanCoast || !window.PelicanCoast.mount) { no3d(); return }
+  mountScene(envNow)
+  if (!scene) return
   $$('.seg [data-cam]').forEach(b => b.addEventListener('click', () => setCam(b.dataset.cam)))
-  $('#btn-camcycle').addEventListener('click', () => setCam(CAMS[(CAMS.indexOf(scene.camera) + 1) % CAMS.length]))
+  $$('.seg [data-env]').forEach(b => b.addEventListener('click', () => switchScene(b.dataset.env)))
+  $('#btn-camcycle').addEventListener('click', () => setCam(CAMS[(CAMS.indexOf(camNow) + 1) % CAMS.length]))
   const bp = $('#btn-pause')
   // 減少動態：場景停在一張靜止畫面，暫停鈕改當「播放」用
-  if (scene.still) { bp.setAttribute('aria-pressed', 'true'); bp.title = '播放（P）'; bp.setAttribute('aria-label', '播放') }
   bp.addEventListener('click', () => {
+    if (!scene) return
     if (scene.still) { scene.play(); bp.setAttribute('aria-pressed', 'false'); bp.title = '暫停重播（P）'; bp.setAttribute('aria-label', '暫停重播'); return }
     scene.setPaused(!scene.paused); bp.setAttribute('aria-pressed', String(scene.paused))
   })
-  const bs = $('#btn-sound'); bs.addEventListener('click', () => { const on = bs.getAttribute('aria-pressed') !== 'true'; scene.sound(on); bs.setAttribute('aria-pressed', String(on)) })
-  HUD.tod.addEventListener('input', () => scene.setTod(HUD.tod.value / 1000))
+  const bs = $('#btn-sound'); bs.addEventListener('click', () => { if (!scene) return; const on = bs.getAttribute('aria-pressed') !== 'true'; scene.sound(on); bs.setAttribute('aria-pressed', String(on)) })
+  HUD.tod.addEventListener('input', () => { if (scene) scene.setTod(HUD.tod.value / 1000) })
   const inView = () => hero.getBoundingClientRect().bottom > 80
   addEventListener('keydown', e => {
-    if (e.target.closest && e.target.closest('input,textarea,select') || e.metaKey || e.ctrlKey || e.altKey || !inView()) return
+    if (!scene || e.target.closest && e.target.closest('input,textarea,select') || e.metaKey || e.ctrlKey || e.altKey || !inView()) return
     const k = e.key.toLowerCase()
     if (k >= '1' && k <= '5') setCam(CAMS[+k - 1])
     else if (k === 'c') $('#btn-camcycle').click()
@@ -575,51 +620,81 @@ function bootScene() {
     else if (k === 'w') scene.setBoost(140)
     else if (k === 's') scene.setBrake(true)
   })
-  addEventListener('keyup', e => { const k = e.key.toLowerCase(); if (k === 'w') scene.setBoost(0); if (k === 's') scene.setBrake(false) })
-  if (REP) scene.setReplay(REP)
-  if (DATA.drive) scene.setDrive({ rings: DATA.drive.chainrings, cogs: DATA.drive.cassette, circ: DATA.drive.wheel_circumference_m })
+  addEventListener('keyup', e => { if (!scene) return; const k = e.key.toLowerCase(); if (k === 'w') scene.setBoost(0); if (k === 's') scene.setBrake(false) })
 }
-// 重播的是最近一趟戶外騎乘的 FIT，起點放在當天第一段計時段
-async function loadReplay(acts, reports, itt) {
-  const rides = Object.entries(acts || {}).filter(([, a]) => a && a.type === 'Ride' && a.icu_weighted_avg_watts && (a.distance || 0) > 5000)
-    .sort((a, b) => (b[1].start_date_local || '').localeCompare(a[1].start_date_local || ''))
-  if (!rides.length || !reports) return
-  for (const [id, a] of rides.slice(0, 4)) {
-    const file = Object.keys(reports).find(k => k.includes('_' + id + '_'))
+// 重播挑哪一趟：
+//   大稻埕 → 最近一趟有「淡水河右岸・大稻埕–馬場町」路段的騎乘，從大稻埕那一段開始（優先「大稻埕→馬場町」）
+//   北海岸 → 最近一趟戶外騎乘，從當天第一段計時段開始
+async function loadReplay(env) {
+  if (!(env in REPS)) REPS[env] = await findReplay(env)
+  if (env !== envNow) return
+  const R = REPS[env]
+  applyHeadings(env)
+  if (!R) { $('#strip-l').textContent = '找不到可以重播的騎乘'; return }
+  REP = R.rep; repInfo = R.info
+  $('#strip-l').innerHTML = `<b>${mdd(repInfo.date)}</b> · ${n1(repInfo.km)} km · 爬升 ${n0(repInfo.gain)} m · NP ${n0(repInfo.np)} W`
+  $('#strip-r').textContent = repInfo.marks.length ? repInfo.marks.map(m => m.label).join('　') : ''
+  drawStrip()
+  if (scene) scene.setReplay(REP)
+}
+async function findReplay(env) {
+  const reports = DATA.reports, itt = DATA.ittRaw || []
+  if (!DATA.actsList || !reports || !window.PelicanCoast) return null
+  const cands = []
+  if (env === 'river') {
+    const effs = []
+    itt.forEach(seg => {
+      const meta = ITT_META.get(seg.id); if (!meta || meta.group !== 'danshui-south') return
+      ;(seg.efforts || []).forEach(e => { if (e.start_time && e.source === 'fit') effs.push({ e, meta, pri: seg.id === 30593390 ? 1 : 0 }) })
+    })
+    effs.sort((x, y) => `${y.e.date}${y.pri}${y.e.start_time}`.localeCompare(`${x.e.date}${x.pri}${x.e.start_time}`))
+    const seen = new Set()
+    effs.forEach(f => {
+      if (seen.has(f.e.date) || cands.length >= 4) return
+      const ride = DATA.actsList.filter(a => a.type === 'Ride' && a.date === f.e.date && a.time <= f.e.start_time).sort((a, b) => b.time.localeCompare(a.time))[0]
+      if (ride) { seen.add(f.e.date); cands.push({ a: ride, at: f.e.start_time, eff: f.e, seg: (f.meta.label && f.meta.label !== '全段' ? f.meta.label : f.meta.nameZh).replace(/ 全段$/, '') }) }
+    })
+  } else {
+    DATA.actsList.filter(a => a.type === 'Ride' && a.icu_weighted_avg_watts && (a.distance || 0) > 5000).slice(0, 4).forEach(a => cands.push({ a, at: null }))
+  }
+  for (const c of cands) {
+    const a = c.a, file = Object.keys(reports).find(k => k.includes('_' + a.id + '_'))
     if (!file) continue
     const buf = await fetch('data/fit/' + encodeURIComponent(file)).then(r => (r.ok ? r.arrayBuffer() : null)).catch(() => null)
-    if (!buf || !window.PelicanCoast) continue
+    if (!buf) continue
     let fit
     try { fit = window.PelicanCoast.parseFit(buf) } catch (e) { continue }
-    const date = a.start_date_local.slice(0, 10)
-    const t0 = a.start_date_local.slice(11, 16)
-    const toSec = hhmm => { const [h, m] = hhmm.split(':').map(Number), [h0, m0] = t0.split(':').map(Number); return (h * 60 + m - h0 * 60 - m0) * 60 }
-    // 當天的計時段（每個母路線只取最長那段，避免四等分洗版）
-    const marks = []
+    const date = a.date, t0 = a.start_date_local.slice(11, 19).split(':').map(Number)
+    const toSec = hhmm => { const [h, m] = hhmm.split(':').map(Number); return h * 3600 + m * 60 - (t0[0] * 3600 + t0[1] * 60 + (t0[2] || 0)) }
+    // 當天的計時段（每個母路線只取最長那段，避免四等分洗版；大稻埕只列河濱的）
     const groups = new Map()
-    ;(itt || []).forEach(seg => (seg.efforts || []).forEach(e => {
+    itt.forEach(seg => (seg.efforts || []).forEach(e => {
       if (e.date !== date || !e.start_time) return
       const meta = ITT_META.get(seg.id) || {}
-      const g = meta.group || ('s' + seg.id)
-      const s0 = toSec(e.start_time)
-      const cur = groups.get(g)
-      if (!cur || e.elapsed_sec > cur.len) groups.set(g, { s0, len: e.elapsed_sec, label: `${(meta.gname || meta.nameZh || seg.name || '').replace(/・.*$/, '')} ${hms(e.elapsed_sec)}`, w: e.avg_watts })
+      if (env === 'river' && !RIVER_GROUPS.includes(meta.group)) return
+      const g = meta.group || ('s' + seg.id), s0 = toSec(e.start_time), cur = groups.get(g)
+      if (!cur || e.elapsed_sec > cur.len) groups.set(g, { s0, len: e.elapsed_sec, label: `${(meta.gname || meta.nameZh || seg.name || '').replace(/・.*$/, '')} ${hms(e.elapsed_sec)}` })
     }))
-    groups.forEach(v => marks.push(v))
-    marks.sort((x, y) => x.s0 - y.s0)
-    const start = marks.length ? Math.max(0, marks[0].s0 - 20) : 60
-    REP = window.PelicanCoast.toReplay(fit, { start })
-    if (!REP) continue
-    repInfo = { date, name: a.name, marks, np: a.icu_weighted_avg_watts, km: (a.distance || 0) / 1000, gain: a.total_elevation_gain }
+    const marks = [...groups.values()].sort((x, y) => x.s0 - y.s0)
+    let start = c.at ? Math.max(0, toSec(c.at)) : (marks.length ? Math.max(0, marks[0].s0 - 20) : 60)
+    const rep = window.PelicanCoast.toReplay(fit, { start })
+    if (!rep) continue
+    // start_time 只到分鐘：在 −20…+80 秒之間找「路段長度的平均功率」最接近路段成績的那個起點，對到秒
+    if (c.eff && c.eff.avg_watts && c.eff.elapsed_sec) {
+      const L = Math.round(c.eff.elapsed_sec), ps = new Float64Array(rep.n + 1)
+      for (let i = 0; i < rep.n; i++) ps[i + 1] = ps[i] + rep.pw[i]
+      let best = start, bestErr = 1e9
+      for (let s0 = Math.max(0, start - 20); s0 <= Math.min(rep.n - L - 1, start + 80); s0++) { const e = Math.abs((ps[s0 + L] - ps[s0]) / L - c.eff.avg_watts); if (e < bestErr) { bestErr = e; best = s0 } }
+      rep.start = best
+    }
     const sess = DATA.block && (DATA.block.sessions || []).find(x => x.date === date)
-    const what = sess && sess.actual && sess.actual.sub_name ? sess.actual.sub_name.replace(/（.*?）/g, '') : (marks[0] ? marks.map(m => m.label.split(' ')[0]).join('＋') : a.name)
-    $('#hud-sub').innerHTML = `北海岸台 2 線，往西騎進夕陽。油門是 <b>${mdd(date)} ${esc(what)}</b> 那趟逐秒的功率——那天的瓦數，搬到平路上會是這個速度。`
-    $('#strip-l').innerHTML = `<b>${mdd(date)}</b> · ${n1(repInfo.km)} km · 爬升 ${n0(repInfo.gain)} m · NP ${n0(repInfo.np)} W`
-    $('#strip-r').textContent = marks.length ? marks.map(m => m.label).join('　') : ''
-    drawStrip()
-    if (scene) scene.setReplay(REP)
-    return
+    const what = sess && sess.actual && sess.actual.sub_name ? sess.actual.sub_name.replace(/（.*?）/g, '').trim() : a.name
+    const sentence = env === 'river'
+      ? `油門是 <b>${mdd(date)} ${esc(what)}</b> 那趟逐秒的功率，從「${esc(c.seg)}」那一段開始。`
+      : `油門是 <b>${mdd(date)} ${esc(what)}</b> 那趟逐秒的功率——那天的瓦數，搬到平路上會是這個速度。`
+    return { rep, info: { date, name: a.name, marks, np: a.icu_weighted_avg_watts, km: (a.distance || 0) / 1000, gain: a.total_elevation_gain, sentence } }
   }
+  return null
 }
 const stripC = $('#strip-c')
 let stripCache = null
@@ -1392,8 +1467,9 @@ async function main() {
   ;(ittCfg && ittCfg.segments || []).forEach(s => { const g = (ittCfg.groups || []).find(x => x.id === s.group); ITT_META.set(s.id, { ...s, gname: g ? g.nameZh : s.nameZh }) })
   const lastRide = DATA.actsList.find(a => isRide(a))
   DATA.lastNote = lastRide ? await J(`rides/notes/${lastRide.date}.json`) : null
-  if (window.PelicanCoast) loadReplay(acts, reports, itt)
-  else addEventListener('load', () => loadReplay(acts, reports, itt))
+  DATA.ittRaw = itt
+  if (window.PelicanCoast) loadReplay(envNow)
+  else addEventListener('load', () => loadReplay(envNow))
   safe(renderToday, 'today'); safe(renderFitness, 'fitness'); safe(renderPlan, 'plan'); safe(renderLog, 'log')
   bootWhenReady()
   if (scene && drive) scene.setDrive({ rings: drive.chainrings, cogs: drive.cassette, circ: drive.wheel_circumference_m })

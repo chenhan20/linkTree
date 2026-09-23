@@ -1,12 +1,19 @@
-# DESIGN.pelican.md — 只管 `strava_pelican.html`（鵜鶘海岸）＋ `strava-pelican-scene.js`
+# DESIGN.pelican.md — 只管 `strava_pelican.html`（鵜鶘騎單車）＋ `strava-pelican-scene.js`
 
 第七個視覺世界。根目錄的 `DESIGN.md` 只管 `strava.html`，對這一頁不適用；
 impeccable hook 報的 `design-system-font` / `design-system-color` 在這裡是跨世界的預期 drift，不是缺陷。
 
 ## 概念
 
-北海岸台 2 線的黃昏。頁首是一個 3D 場景：戴安全帽的白鵜鶘騎公路車往西，海在右手邊，太陽落在前方偏右的海上。
-往下捲就是入夜——整頁的底色是夜海的墨藍，文字是鵜鶘羽毛的暖白。
+頁首是一個 3D 場景：戴安全帽的白鵜鶘騎公路車，油門是他真實某一趟 FIT 的逐秒功率。兩個地點，同一套引擎：
+
+- **大稻埕**（預設）：小台北・淡水河右岸往南（環小台北逆時針的方向），河在右手邊。
+  堤防壁畫、五號水門、貨櫃市集與燈串、藍色公路渡船、每 1300 m 一座橋、對岸三重的天際線（倒影是在水面 shader 裡解析算的）、
+  沿河往下游看得到觀音山、左前方 6 km 的 101、往松山機場進場的飛機。重播挑最近一趟有「大稻埕→馬場町」的騎乘，從那一段開始（對到秒）。
+- **北海岸**：台 2 線往西、海在右手邊。消波塊、芒草、木麻黃、石門風車、富貴角燈塔、漁火。重播最近一趟戶外騎乘。
+
+HUD 左上的切換鈕換地點（整個場景拆掉重建，選擇記在 localStorage `pelican-env`）。
+往下捲就是入夜——整頁的底色是夜的墨藍，文字是鵜鶘羽毛的暖白。
 數據章節是「一條線＋留白」的編輯式版面，**不做卡片**（卡片形狀只留給 tooltip 這種真的浮起來的東西）。
 
 ## 色彩
@@ -48,20 +55,21 @@ impeccable hook 報的 `design-system-font` / `design-system-color` 在這裡是
 
 ## 3D 場景（`strava-pelican-scene.js`）
 
-- 只依賴 `vendor-three-r128.js`；全部程序化，沒有外部圖檔。介面：`PelicanCoast.mount(host, opts)`、`parseFit(buf)`、`toReplay(fit, {start})`
-- 座標：車子永遠在原點朝 −Z；世界往 +Z 流（跑步機）。x>0 海側、x<0 山側。物件有固定的世界座標 Zw，畫面上 z = Zw + dist
-- **速度不是亂給的**：油門是最近一趟戶外騎乘 FIT 的逐秒功率／踏頻／心率，速度用
-  `scripts/estimate-indoor-distance.py` 同一組平路參數現算（CdA 0.36、Crr 0.005、rho 1.18、人車 88 kg）。
-  檔位從 `data/drivetrain.json` 的齒數挑最接近的組合。連續 ≥25 秒沒出力（下坡、停等）直接跳過
-- 高畫質（桌機 WebGL2）：HalfFloat 場景 → bloom → 自己做 ACES + sRGB + 暗角 + 顆粒；
-  低畫質（手機）：直接畫到螢幕、three 內建 ACES。動態解析度 0.6–1.5
-- 標準材質都經過 `patch()`：霧換成「依視線方向取天色」、可加輪廓光（羽毛逆光）、芒草隨風擺。
+- 只依賴 `vendor-three-r128.js`；全部程序化，沒有外部圖檔。介面：`PelicanCoast.mount(host, { env: 'river'|'coast', … })`、`parseFit(buf)`、`toReplay(fit, {start})`、`api.dispose()`
+- 兩個地點的差異都在 `ENVS`（水面高度、路寬、欄杆、路燈、太陽方位、浪的大小）；只在其中一個地點出現的道具用 `COAST`／`RIVER` 分支建
+- 座標：車子永遠在原點朝 −Z；世界往 +Z 流（跑步機）。x>0 水那一側、x<0 陸地。物件有固定的世界座標 Zw，畫面上 z = Zw + dist
+- **速度不是亂給的**：油門是那一趟的逐秒功率／踏頻／心率，速度用 `scripts/estimate-indoor-distance.py` 同一組平路參數現算
+  （CdA 0.36、Crr 0.005、rho 1.18、人車 88 kg）。檔位從 `data/drivetrain.json` 挑最接近的齒比。連續 ≥25 秒沒出力直接跳過
+- 解析度：起跳＝裝置像素密度（最多 2），最近 90 幀中位數 > 22 ms 才降 0.25、跑得順每 8 秒試著升回來，下限 1.0；密度 ≥ 1.5 不開 MSAA
+- 高畫質（桌機 WebGL2）：HalfFloat 場景 → bloom → 自己做 ACES + sRGB + 暗角 + 顆粒；低畫質（手機）：three 內建 ACES
+- 標準材質都經過 `patch()`：霧換成「依視線方向取天色」、可加輪廓光、芒草隨風擺。
   **每個變體都要自己的 `customProgramCacheKey`**，r128 用 `onBeforeCompile.toString()` 當快取鍵，同字串會撞
 - 捲出畫面就停（IntersectionObserver）；`prefers-reduced-motion` 停在一張靜止畫面，暫停鈕改當播放
-- 在地細節：消波塊、芒草、木麻黃防風林、石門風車（夜裡紅燈同步閃）、富貴角燈塔（旋轉光束）、漁火、路面「慢」字、台 2 線里程牌（數字是平路里程）
+- 踩過的坑：InstancedMesh 的 `setColorAt` 會用「當下的 count」開陣列（先把 count 設 0 就全黑）；
+  `dispose()` 裡強制丟 context 會觸發舊畫布的 contextlost，要先拆掉那個 listener；負數開非整數次方＝NaN（護岸斜坡）
 
 ## 驗證
 
 - 上班時間只用 headless（見 memory）。WebGL 要 `--use-angle=swiftshader --enable-unsafe-swiftshader`
 - 靜態伺服器要**多執行緒**（`python3 -m http.server` 同時十幾個 fetch 會 ERR_CONNECTION_RESET）
-- 除錯把手：`window.__pelican`（`stats()`、`shot(i, hold)`、`setCamera()`、`setTod()`、`_dbg()`）
+- 除錯把手：`window.__pelican`（`stats()`、`shot(i, hold)`、`setCamera()`、`setTod()`、`_warp(公尺)`、`_pr(密度)`、`_dbg()`）
