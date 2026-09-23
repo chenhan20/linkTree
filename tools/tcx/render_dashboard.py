@@ -1827,17 +1827,27 @@ if(REPS){
         sv.appendChild(txt(L2-7,Y3(c)+3.5,c,{anchor:'end',fs:9.5,fill:C('ink-3')}));
       });
       sv.appendChild(txt(L2,T3-7,'飛輪齒數（下面＝輕）',{fs:9.5,fill:C('ink-3')}));
+      // 只列飛輪分不出前盤：大盤改畫虛線，並在右上角寫圖例（跟攻略頁同一套：虛線＝大盤）
+      const FT = (G && G.front_teeth && G.front_teeth.length) ? G.front_teeth : G2.rings;
+      const smallRing = Math.min(...FT), bigRingAll = Math.max(...FT);
+      if (FT.length>1) {
+        const lx=960-R2; 
+        sv.appendChild(txt(lx,T3-7,'虛線＝大盤 '+bigRingAll+'T',{anchor:'end',fs:9.5,fill:C('ink-2')}));
+        sv.appendChild(el('line',{x1:lx-150,y1:T3-10.5,x2:lx-128,y2:T3-10.5,stroke:C('ink-2'),'stroke-width':2.4,'stroke-dasharray':'4 3'}));
+        sv.appendChild(txt(lx-160,T3-7,'實線＝小盤 '+smallRing+'T',{anchor:'end',fs:9.5,fill:C('ink-2')}));
+        sv.appendChild(el('line',{x1:lx-290,y1:T3-10.5,x2:lx-268,y2:T3-10.5,stroke:C('ink-2'),'stroke-width':2.4}));
+      }
 
       let prev=null;
       G2.runs.forEach(rn=>{
         const d0=rn[0], d1=rn[1], f2=rn[2], r2=rn[3];
-        const y=Y3(r2), big=(f2===bigRing && G2.rings.length>1), col=C(q(f2/r2));
+        const y=Y3(r2), big=(f2===Math.max(...((G&&G.front_teeth&&G.front_teeth.length)?G.front_teeth:G2.rings)) && f2!==Math.min(...((G&&G.front_teeth&&G.front_teeth.length)?G.front_teeth:G2.rings))), col=C(q(f2/r2));
         // 前一段的終點與這一段的起點相接才畫垂直換檔線；中間被篩掉的不要連起來騙人
         if(prev && Math.abs(prev.d1-d0)<0.02 && prev.y!==y)
           sv.appendChild(el('line',{x1:X2(d0),y1:prev.y,x2:X2(d0),y2:y,
             stroke:col,'stroke-width':1.4,opacity:big?.45:.9}));
         sv.appendChild(el('line',{x1:X2(d0),y1:y,x2:Math.max(X2(d1),X2(d0)+0.8),y2:y,
-          stroke:col,'stroke-width':3.2,'stroke-linecap':'round',opacity:big?.45:1}));
+          stroke:col,'stroke-width':3.2,'stroke-linecap':big?'butt':'round','stroke-dasharray':big?'5 3':'none',opacity:big?.75:1}));
         prev={d1:d1,y:y};
       });
 
