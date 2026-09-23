@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "month": "2026-09",
-  "revision": 10,
+  "revision": 11,
   "updated_at": "2026-09-21",
   "status": "scheduled",
   "baseline": {
@@ -652,80 +652,79 @@
       "date": "2026-09-22",
       "week": "W1",
       "block": "zhongshe-2026-09-return",
-      "label": "風櫃嘴全段控制騎（實際：改騎風櫃嘴）",
+      "label": "風櫃嘴全段（事後依實際路線改列）",
       "type": "ENDURANCE",
-      "intent": "2026-09-22對調：使用者當天改騎風櫃嘴，中社全力搬到9/23。實際 33:04／228W／心率164／踏頻71，2026最快、比8/04快1:39；超出處方（200–215W、心率≤160）但前後半心率都164沒漂、功率234→222只掉5%。",
+      "intent": "2026-09-23事後改列：當天沒照中社課表，改騎劍南→至善→風櫃嘴。處方改成『這條路線本來該怎麼騎』來對帳：進場≤160W、風櫃嘴全段220–235W。實際進場191/179W太用力，爬坡33:04／228W。",
       "score_policy": "prescription",
       "segments": [
         {
-          "name": "前往＋至善路進場",
+          "name": "前往＋劍南北安側",
           "role": "warmup",
-          "minutes": 35,
+          "minutes": 22,
           "target_w": {
             "lo": 110,
-            "hi": 170,
-            "about": 150
+            "hi": 160,
+            "about": 135
           },
           "target_cadence": null
         },
         {
-          "name": "風櫃嘴全段控制強度（38分是預算，以終點結束）",
+          "name": "下坡",
+          "role": "recovery",
+          "minutes": 8,
+          "target_w": {
+            "lo": null,
+            "hi": null,
+            "about": 80
+          },
+          "target_cadence": null
+        },
+        {
+          "name": "至善路進場",
+          "role": "warmup",
+          "minutes": 13,
+          "target_w": {
+            "lo": 120,
+            "hi": 150,
+            "about": 135
+          },
+          "target_cadence": null
+        },
+        {
+          "name": "風櫃嘴全段（以終點結束）",
           "role": "work",
+          "minutes": 33,
+          "target_w": {
+            "lo": 220,
+            "hi": 235,
+            "about": 228
+          },
+          "target_cadence": null
+        },
+        {
+          "name": "下山返程",
+          "role": "recovery",
           "minutes": 38,
           "target_w": {
-            "lo": 200,
-            "hi": 215,
-            "about": 207.5
-          },
-          "target_cadence": null,
-          "note": "心率≤160｜前10分破160→185–195W｜最後1.8K穩210→可到225"
-        },
-        {
-          "name": "原路下坡回至善路",
-          "role": "recovery",
-          "minutes": 20,
-          "target_w": {
             "lo": null,
             "hi": null,
-            "about": 100
-          },
-          "target_cadence": null
-        },
-        {
-          "name": "下坡返程",
-          "role": "recovery",
-          "minutes": 32,
-          "target_w": {
-            "lo": null,
-            "hi": null,
-            "about": 120
-          },
-          "target_cadence": null
-        },
-        {
-          "name": "收操進公司",
-          "role": "cooldown",
-          "minutes": 10,
-          "target_w": {
-            "lo": null,
-            "hi": null,
-            "about": 110
+            "about": 60
           },
           "target_cadence": null
         }
       ],
       "time_budget": {
         "window_min": 150,
-        "ride_min": 135
+        "ride_min": 114
       },
       "selected_variant": "outdoor",
       "export_mode": "free_ride",
-      "route": "6:00出發。劍南→至善路→風櫃嘴全段→原路下山→回公司。",
-      "rain_summary": "訓練台58分：38分200–215W；slope模式看手錶功率。",
+      "route": "實際路線：劍南北安側→至善路→風櫃嘴全段→原路下山",
+      "rain_summary": "訓練台：33分220–235W。",
       "variants": {
         "outdoor": {
           "venue": "outdoor",
-          "summary": "風櫃嘴全段 200–215W／心率≤160；實際 33:04／228W"
+          "summary": "實際路線：劍南北安側→至善路→風櫃嘴全段→原路下山"
         },
         "rain": {
           "venue": "indoor",
@@ -742,21 +741,20 @@
               "target_cadence": null
             },
             {
-              "name": "風櫃嘴全段控制強度（38分是預算，以終點結束）",
+              "name": "風櫃嘴全段（以終點結束）",
               "role": "work",
-              "minutes": 38,
+              "minutes": 33,
               "target_w": {
-                "lo": 200,
-                "hi": 215,
-                "about": 207.5
+                "lo": 220,
+                "hi": 235,
+                "about": 228
               },
-              "target_cadence": null,
-              "note": "心率≤160｜前10分破160→185–195W｜最後1.8K穩210→可到225"
+              "target_cadence": null
             },
             {
               "name": "收操",
               "role": "cooldown",
-              "minutes": 10,
+              "minutes": 5,
               "target_w": {
                 "lo": null,
                 "hi": null,
@@ -765,137 +763,92 @@
               "target_cadence": null
             }
           ],
-          "summary": "訓練台58分：38分200–215W；slope模式看手錶功率。"
+          "summary": "訓練台：33分220–235W。"
         }
       },
       "report": "rides/plan-2026-09-22.html",
       "execution": {
-        "start_local": "06:00",
-        "power_rules": [
-          "**風櫃嘴 200–215W、心率 ≤160**；前 10 分就破 160 → 降到 185–195W；最後 1.8K 還穩在 210W → 可到 225W",
-          "**中社 Z2 185–200W、踏頻 ≥80**；7:35 沒到中社橋 → 跳過",
-          "**加碼露營場 ≤185W**：7:20 前下完中社才加；7:50 一律掉頭"
-        ]
+        "start_local": "06:09",
+        "power_rules": []
       }
     },
     "2026-09-23": {
       "date": "2026-09-23",
       "week": "W1",
       "block": "zhongshe-2026-09-return",
-      "label": "劍中露：中社全力一趟（照配速腳本）＋中社SST＋露營場tempo",
+      "label": "露營場全段＋風櫃嘴後段（事後依實際路線改列）",
       "type": "QUALITY",
-      "intent": "2026-09-22對調：使用者9/22改騎了風櫃嘴（33:04／228W／心率164，2026最快），所以中社全力那堂搬到9/23。之後休到9/29，可以操。5:15出發多出的45分放在Z2進場，不加第二趟SST。煞車：出門前HRV<52 → ①改235–245W均速不全力；①前5分心率就到176（9/22整段才164）→ 第10分那關直接守240W騎完、②改Z2。 2026-09-21改排（三修）：本週可騎日改為9/22（二）、9/23（三）連兩天，9/24不騎；河濱與山路不順路，整堂留在山上。時間用8/11實測校正：5:54出發、6:24到中社橋，一趟中社＝上22＋下7≈29分，那天塞了四趟（204→210→210→236W）。這次三趟爬坡、強度倒過來排——最硬的放第一趟：①中社全段全力一趟（2026-09-21使用者要求），但照9/15檢討寫下的配速腳本踩，當成10/13的彩排：第1分鐘不超過270W，第2–5分255–262W、265W硬上限；第10分鐘看單圈平均，≥250W照原速，<245W就守240W到第15分；最後3分鐘才放開。踏頻≥75，掉到72就下一檔（9/15是68，PR是81，中社齒比還有餘裕）。9/15的18:24／247W是286→217W崩出來的，同樣的腿均速踩預估17:50–18:05；成功標準是後半功率≥前半，不是秒數。第2分半心率就到176＝又開太快，立刻降10W。②中社全段SST 205–220W，全力之後腿的狀況不一定，前3分撐不住205W就整趟改Z2，不算失敗。③露營場全段195–210W，控制強度的有氧段（9/15只爬了約11分）；7:35還沒到露營場入口就跳過直接回公司。晚上籃球建議休息或只投籃（隔天4:30起床）。",
+      "intent": "2026-09-23事後改列：原排中社全力，實際騎露營場接風櫃嘴、RPE 8。處方改成這條路線的合理強度：露營場210–225W、風櫃嘴後段190–205W。當天HRV 45、TSB −15.5。",
       "score_policy": "prescription",
       "segments": [
         {
-          "name": "前往＋Z2進場（多出的45分放這裡）",
+          "name": "前往",
           "role": "warmup",
-          "minutes": 60,
+          "minutes": 11,
           "target_w": {
-            "lo": 110,
-            "hi": 180,
-            "about": 145
-          },
-          "target_cadence": null,
-          "note": "不偷打"
-        },
-        {
-          "name": "中社全段全力一趟（照配速腳本；20分是預算，以終點結束）",
-          "role": "allout",
-          "minutes": 20,
-          "target_w": {
-            "allout": true
-          },
-          "target_cadence": {
-            "lo": 75,
-            "hi": 90
-          },
-          "note": "第1分≤270｜2–5分255–262、硬上限265｜第10分當圈≥250照跑、<245守240｜最後3分放開"
-        },
-        {
-          "name": "安全下坡回中社橋",
-          "role": "recovery",
-          "minutes": 7,
-          "target_w": {
-            "lo": null,
-            "hi": null,
-            "about": 100
+            "lo": 100,
+            "hi": 150,
+            "about": 125
           },
           "target_cadence": null
         },
         {
-          "name": "中社全段SST（可降階；21分是預算）",
+          "name": "露營場全段（以終點結束）",
           "role": "work",
-          "minutes": 21,
+          "minutes": 26,
           "target_w": {
-            "lo": 205,
-            "hi": 220,
-            "about": 212.5
+            "lo": 210,
+            "hi": 225,
+            "about": 217.5
           },
-          "target_cadence": {
-            "lo": 75,
-            "hi": 90
-          },
-          "note": "前3分撐不住205→改Z2"
+          "target_cadence": null
         },
         {
-          "name": "下坡轉露營場",
+          "name": "下坡轉風櫃嘴",
           "role": "recovery",
           "minutes": 8,
           "target_w": {
             "lo": null,
             "hi": null,
-            "about": 100
+            "about": 90
           },
           "target_cadence": null
         },
         {
-          "name": "露營場全段tempo（可棄；25分是預算）",
+          "name": "風櫃嘴後段（以終點結束）",
           "role": "work",
-          "minutes": 25,
+          "minutes": 35,
           "target_w": {
-            "lo": 195,
-            "hi": 210,
-            "about": 202.5
-          },
-          "target_cadence": null,
-          "note": "7:35沒到入口→跳過"
-        },
-        {
-          "name": "下坡返程",
-          "role": "recovery",
-          "minutes": 20,
-          "target_w": {
-            "lo": null,
-            "hi": null,
-            "about": 120
+            "lo": 190,
+            "hi": 205,
+            "about": 197.5
           },
           "target_cadence": null
         },
         {
-          "name": "收操進公司",
-          "role": "cooldown",
-          "minutes": 5,
+          "name": "下山返程",
+          "role": "recovery",
+          "minutes": 27,
           "target_w": {
             "lo": null,
             "hi": null,
-            "about": 110
+            "about": 50
           },
           "target_cadence": null
         }
       ],
       "time_budget": {
         "window_min": 195,
-        "ride_min": 165
+        "ride_min": 107
       },
       "selected_variant": "outdoor",
       "export_mode": "free_ride",
-      "route": "5:15出發、8:30到公司。Z2進場→劍南北安側→中社全段×2（全力一趟、SST一趟）→露營場→回公司；165分行程＋30分緩衝。",
-      "rain_summary": "訓練台102分：全力20分（配速腳本）＋21分205–220W＋25分195–210W；slope模式看手錶功率，絕對不用ERG。",
+      "route": "實際路線：露營場全段→下坡→風櫃嘴後段（萬溪陡段起）→下山",
+      "rain_summary": "訓練台：26分210–225W＋35分190–205W。",
       "variants": {
         "outdoor": {
           "venue": "outdoor",
-          "summary": "①中社全力 255–262W（第1分≤270、硬上限265）→ ②中社SST 205–220W → ③露營場 195–210W（可棄）｜踏頻≥75"
+          "summary": "實際路線：露營場全段→下坡→風櫃嘴後段（萬溪陡段起）→下山"
         },
         "rain": {
           "venue": "indoor",
@@ -903,50 +856,24 @@
             {
               "name": "熱身",
               "role": "warmup",
-              "minutes": 15,
+              "minutes": 10,
               "target_w": {
                 "lo": 110,
-                "hi": 160,
-                "about": 135.0
+                "hi": 145,
+                "about": 127.5
               },
               "target_cadence": null
             },
             {
-              "name": "中社全段全力一趟（照配速腳本；20分是預算，以終點結束）",
-              "role": "allout",
-              "minutes": 20,
-              "target_w": {
-                "allout": true
-              },
-              "target_cadence": {
-                "lo": 75,
-                "hi": 90
-              }
-            },
-            {
-              "name": "組間恢復",
-              "role": "recovery",
-              "minutes": 6,
-              "target_w": {
-                "lo": null,
-                "hi": null,
-                "about": 115
-              },
-              "target_cadence": null
-            },
-            {
-              "name": "中社全段SST（可降階；21分是預算）",
+              "name": "露營場全段（以終點結束）",
               "role": "work",
-              "minutes": 21,
+              "minutes": 26,
               "target_w": {
-                "lo": 205,
-                "hi": 220,
-                "about": 212.5
+                "lo": 210,
+                "hi": 225,
+                "about": 217.5
               },
-              "target_cadence": {
-                "lo": 75,
-                "hi": 90
-              }
+              "target_cadence": null
             },
             {
               "name": "組間恢復",
@@ -960,20 +887,20 @@
               "target_cadence": null
             },
             {
-              "name": "露營場全段tempo（可棄；25分是預算）",
+              "name": "風櫃嘴後段（以終點結束）",
               "role": "work",
-              "minutes": 25,
+              "minutes": 35,
               "target_w": {
-                "lo": 195,
-                "hi": 210,
-                "about": 202.5
+                "lo": 190,
+                "hi": 205,
+                "about": 197.5
               },
               "target_cadence": null
             },
             {
               "name": "收操",
               "role": "cooldown",
-              "minutes": 10,
+              "minutes": 5,
               "target_w": {
                 "lo": null,
                 "hi": null,
@@ -982,20 +909,13 @@
               "target_cadence": null
             }
           ],
-          "summary": "訓練台102分：全力20分（配速腳本）＋21分205–220W＋25分195–210W；slope模式看手錶功率，絕對不用ERG。"
+          "summary": "訓練台：26分210–225W＋35分190–205W。"
         }
       },
       "report": "rides/plan-2026-09-22.html",
       "execution": {
-        "start_local": "05:15",
-        "power_rules": [
-          "**煞車**：出門前 HRV <52 → ①改 235–245W 均速；①前 5 分心率到 176 → 第 10 分守 240W、②改 Z2",
-          "**① 中社全力**：第 1 分 ≤270W；第 2–5 分 **255–262W**、硬上限 265W；第 10 分當圈 ≥250W 照跑、<245W 守 240W；最後 3 分放開",
-          "**② 中社 SST 205–220W**：前 3 分撐不住 205W → 整趟改 Z2",
-          "**③ 露營場 195–210W**：7:35 沒到入口 → 跳過",
-          "**踏頻 ≥75**，掉到 72 就下一檔",
-          "①中段心率到 175–176 → 守住功率不再加"
-        ]
+        "start_local": "06:24",
+        "power_rules": []
       },
       "wednesday_ride_ok": true
     },
