@@ -948,7 +948,7 @@ function makePost(renderer, w, h, msaa) {
   const quad = new THREE.Mesh(tri); quad.frustumCulled = false
   const sc = new THREE.Scene(); sc.add(quad)
   const vs = 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }'
-  const bright = new THREE.ShaderMaterial({ uniforms: { tSrc: { value: null }, uThr: { value: 1.0 } }, vertexShader: vs, depthTest: false, depthWrite: false, toneMapped: false,
+  const bright = new THREE.ShaderMaterial({ uniforms: { tSrc: { value: null }, uThr: { value: 1.25 } }, vertexShader: vs, depthTest: false, depthWrite: false, toneMapped: false,
     fragmentShader: `uniform sampler2D tSrc; uniform float uThr; varying vec2 vUv;
       void main(){ vec3 c = texture2D(tSrc, vUv).rgb; float l = max(max(c.r, c.g), c.b); float k = smoothstep(uThr, uThr * 2.2, l); gl_FragColor = vec4(min(c * k, vec3(40.0)), 1.0); }` })
   const blur = new THREE.ShaderMaterial({ uniforms: { tSrc: { value: null }, uDir: { value: new THREE.Vector2() } }, vertexShader: vs, depthTest: false, depthWrite: false, toneMapped: false,
@@ -978,12 +978,12 @@ function makePost(renderer, w, h, msaa) {
         c = aces(c);
         vec2 q = vUv - 0.5; c *= 1.0 - dot(q, q) * 0.55;
         c = srgb(c);
-        c += (h12(vUv * uRes + fract(uTime * 7.13) * 100.0) - 0.5) * 0.018;
+        c += (h12(vUv * uRes + fract(uTime * 7.13) * 100.0) - 0.5) * 0.012;
         gl_FragColor = vec4(c * uFade, 1.0);
       }` })
   function pass(mat, target) { quad.material = mat; renderer.setRenderTarget(target); renderer.render(sc, cam) }
   return {
-    rtScene,
+    rtScene, msaa: !!msaa,
     setSize(W, H) {
       rtScene.setSize(W, H)
       for (let i = 0; i < 3; i++) { rtA[i].setSize(Math.max(1, W >> (i + 1)), Math.max(1, H >> (i + 1))); rtB[i].setSize(Math.max(1, W >> (i + 1)), Math.max(1, H >> (i + 1))) }
@@ -1091,8 +1091,15 @@ function mount(host, opts) {
   renderer.shadowMap.type = THREE.PCFSoftShadowMap
   if (HIGH) { renderer.toneMapping = THREE.NoToneMapping; renderer.outputEncoding = THREE.LinearEncoding }
   else { renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.outputEncoding = THREE.sRGBEncoding }
-  const maxPR = HIGH ? Math.min(window.devicePixelRatio || 1, 1.5) : Math.min(window.devicePixelRatio || 1, 1.35)
+  // 解析度：一開始就用螢幕的像素密度（Retina 是 2），只有「持續」掉到 45 fps 以下才往下降，而且之後會試著升回來。
+  // 2026-09-23 第一版從 1.5 起跳、只有 rAF 間隔 < 13 ms 才升——60 Hz 螢幕永遠是 16.7 ms，
+  // 開場編譯 shader 那幾幀一拉長就一路降到 0.6 再也回不來，畫面整個糊掉（他的截圖：「好模糊」）。
+  const DPR = window.devicePixelRatio || 1
+  const maxPR = Math.min(DPR, 2)
+  const minPR = Math.min(maxPR, HIGH ? 1 : 0.9)
   let pr = maxPR
+  const RES = { dts: [], settleUntil: 0, probeAt: 0, blockProbeUntil: 0, lastProbeUp: 0 }
+  const settleRes = (now, ms) => { RES.settleUntil = Math.max(RES.settleUntil, now + ms); RES.dts.length = 0 }
   const aniso = renderer.capabilities.getMaxAnisotropy()
 
   const scene = new THREE.Scene()
@@ -1659,7 +1666,12 @@ function mount(host, opts) {
     renderer.setSize(W, H, false)
     camera.aspect = W / H; camera.updateProjectionMatrix()
     const bw = Math.round(W * pr), bh = Math.round(H * pr)
-    if (HIGH) { if (!post) post = makePost(renderer, bw, bh, true); else post.setSize(bw, bh) }
+    if (HIGH) {
+      // 密度 ≥ 1.5 時像素本身就夠細，不開 MSAA（4×MSAA 的 HalfFloat 在 Retina 大畫布要吃掉幾百 MB）
+      const ms = pr < 1.5
+      if (!post || post.msaa !== ms) { if (post) post.dispose(); post = makePost(renderer, bw, bh, ms) } else post.setSize(bw, bh)
+    }
+    settleRes(performance.now(), 1500)
     // 暫停中被改尺寸（例如手機網址列收合）：畫布會被清空，補畫一張，不然滑回來先看到一片黑
     if (!running && S.t > 0) requestAnimationFrame(t => { if (!running) { frame(t); cancelAnimationFrame(raf) } })
   }
@@ -1699,6 +1711,7 @@ function mount(host, opts) {
       if (envRT) envRT.dispose()
       const keepT = renderer.toneMapping
       envRT = pmrem.fromScene(envScene, 0.02, 0.1, 100)
+      settleRes(performance.now(), 800)
       renderer.toneMapping = keepT
       scene.environment = envRT.texture
       envStamp = S.tod
@@ -1895,17 +1908,26 @@ function mount(host, opts) {
     const k = todSample(todState.e)
     if (HIGH) {
       renderer.setRenderTarget(post.rtScene); renderer.render(scene, camera)
-      post.render(k.ex, 0.55 + todState.night * 0.35, S.t, fade)
+      post.render(k.ex, 0.36 + todState.night * 0.34, S.t, fade)
     } else {
       renderer.toneMappingExposure = k.ex * fade
       renderer.setRenderTarget(null); renderer.render(scene, camera)
     }
     // 動態解析度
-    S.prT += dtRaw
-    if (S.prT > 2) {
-      S.prT = 0
-      if (S.frameMs > 24 && pr > 0.6) { pr = Math.max(0.6, pr - 0.15); resize() }
-      else if (S.frameMs < 13 && pr < maxPR) { pr = Math.min(maxPR, pr + 0.1); resize() }
+    // 動態解析度：看最近 90 幀 rAF 間隔的中位數，不看平均（開場編譯、重烘環境光的單幀尖峰不算數）
+    const nowMs = performance.now()
+    RES.dts.push(dtRaw * 1000); if (RES.dts.length > 90) RES.dts.shift()
+    if (nowMs > RES.settleUntil && RES.dts.length >= 60) {
+      const so = RES.dts.slice().sort((a, b) => a - b)
+      const refresh = Math.max(6.5, so[3]), med = so[so.length >> 1]
+      if (med > 22 && pr > minPR) {                                            // 持續低於 ~45 fps
+        const failedProbe = nowMs - RES.lastProbeUp < 6000
+        pr = Math.max(minPR, +(pr - 0.25).toFixed(2)); resize(); settleRes(nowMs, 2500)
+        if (failedProbe) RES.blockProbeUntil = nowMs + 180000                  // 剛升上去就撐不住：三分鐘內別再試
+      } else if (pr < maxPR && med < refresh * 1.12 && nowMs > RES.blockProbeUntil && nowMs > RES.probeAt) {
+        pr = Math.min(maxPR, +(pr + 0.25).toFixed(2)); resize(); settleRes(nowMs, 2500)
+        RES.lastProbeUp = nowMs; RES.probeAt = nowMs + 8000
+      }
     }
     audio.update({ v: S.v, cad: S.cad, coast: S.coast, night: todState.night })
     if (opts.onFrame && now - S.lastHud > 90) {
@@ -1920,7 +1942,7 @@ function mount(host, opts) {
       opts.onFrame(hudOut)
     }
   }
-  function start() { if (running) return; running = true; last = 0; raf = requestAnimationFrame(frame) }
+  function start() { if (running) return; running = true; last = 0; settleRes(performance.now(), 3000); raf = requestAnimationFrame(frame) }
   function stop() { running = false; cancelAnimationFrame(raf) }
   const io = new IntersectionObserver(es => { visible = es[0].isIntersecting; if (visible && !document.hidden && !S.reduced) start(); else stop() }, { threshold: 0.02 })
   io.observe(host)
@@ -1952,7 +1974,8 @@ function mount(host, opts) {
     play() { S.reduced = false; start() },
     renderOnce() { requestAnimationFrame(t => { frame(t); if (!running) cancelAnimationFrame(raf) }) },
     _dbg: () => ({ glow: glow.mesh, farGroup, sky, beam, scene }),
-    stats() { return { pr, frameMs: S.frameMs, quality, calls: renderer.info.render.calls, tris: renderer.info.render.triangles, dist: S.dist, v: S.v, tod: S.tod, cam: S.cam, shot: SHOTS[S.shot].name } },
+    _pr(p) { pr = clamp(p, minPR, maxPR); resize(); return pr },            // 只給驗證腳本用
+    stats() { return { pr, maxPR, minPR, msaa: post ? post.msaa : null, bufW: renderer.domElement.width, cssW: W, frameMs: S.frameMs, quality, calls: renderer.info.render.calls, tris: renderer.info.render.triangles, dist: S.dist, v: S.v, tod: S.tod, cam: S.cam, shot: SHOTS[S.shot].name } },
     dispose() { stop(); ro.disconnect(); io.disconnect(); renderer.dispose(); if (post) post.dispose() },
   }
 }
