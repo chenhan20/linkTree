@@ -32,6 +32,9 @@
   --lamp: #f3c969;       /* 紀錄／PR 的標記 */
   --warn: #e8736a;       /* 狀態：要注意 */
   --good: #5cc29a;       /* 狀態：正常 */
+  --hud-accent: #ff9a5a; /* HUD 的日落橘：速度弧、走勢條、PR 影子 */
+  --hud-up: #8fe0bf;     /* HUD 上的「領先」：--good 的亮版，壓在 3D 畫面上才讀得到 */
+  --hud-dn: #ffa39b;     /* HUD 上的「落後」：--warn 的亮版 */
   --font-sans: "Overpass", "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
   --font-mono: "Overpass Mono", ui-monospace, "SF Mono", Menlo, monospace;
   --font-serif: "Noto Serif TC", "Songti TC", "PMingLiU", serif;
@@ -149,7 +152,7 @@ b, strong { font-weight: 600 }
 .race-pick svg { width: 14px; height: 14px; flex: none; stroke: currentColor; fill: none; stroke-width: 1.8 }
 .race-map { display: block; width: 100%; height: 118px; margin: 10px 0 8px }
 .race-bar { position: relative; height: 3px; border-radius: 2px; background: rgba(246, 239, 228, .14); overflow: hidden }
-.race-bar i { position: absolute; inset: 0; background: #ff9a5a; transform-origin: left; transform: scaleX(0) }
+.race-bar i { position: absolute; inset: 0; background: var(--hud-accent); transform-origin: left; transform: scaleX(0) }
 .race-st { margin-top: 8px; color: rgba(246, 239, 228, .78); font-variant-numeric: tabular-nums; min-height: 1.6em }
 .race-st b { color: #fff; font-weight: 600; font-size: 15px }
 .race-fx { height: 0; overflow: visible; font-size: 12.5px; color: #ffd7b8; opacity: 0; transition: opacity .3s; transform: translateY(-1.55em); text-align: right }
@@ -160,7 +163,7 @@ b, strong { font-weight: 600 }
 .race-rows li span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
 .race-rows li span small { color: rgba(246, 239, 228, .55); font-size: 11.5px; margin-left: 5px }
 .race-rows li b { font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap }
-.race-rows li b.up { color: #8fe0bf } .race-rows li b.dn { color: #ffa39b }
+.race-rows li b.up { color: var(--hud-up) } .race-rows li b.dn { color: var(--hud-dn) }
 .race-again { margin-top: 8px; font-size: 12.5px; color: #ffd0ad; min-height: 28px }
 .race-pop { position: absolute; right: var(--gut); top: 222px; z-index: 4; width: 312px; max-height: min(460px, calc(100% - 240px)); overflow: auto; padding: 14px; border-radius: 12px;
   background: rgba(12, 16, 29, .96); border: 1px solid rgba(246, 239, 228, .16); box-shadow: 0 16px 40px rgba(0, 0, 0, .4); text-shadow: none; overscroll-behavior: contain }
@@ -174,7 +177,7 @@ b, strong { font-weight: 600 }
 .rp-efs { display: grid }
 .rp-efs button { display: grid; grid-template-columns: 94px 46px minmax(0, 1fr) auto; gap: 8px; align-items: baseline; padding: 8px 6px; text-align: left; border-top: 1px solid rgba(246, 239, 228, .08); font-size: 13px; font-variant-numeric: tabular-nums; min-height: 36px }
 .rp-efs button:hover { background: rgba(246, 239, 228, .05) }
-.rp-efs button[aria-current="true"] { background: rgba(255, 154, 90, .12) }
+.rp-efs button[aria-current="true"] { background: color-mix(in srgb, var(--hud-accent) 12%, transparent) }
 .rp-efs button small { color: rgba(246, 239, 228, .55); font-size: 11.5px }
 .rp-efs button em { font-style: normal; font-size: 11px; color: rgba(246, 239, 228, .6); white-space: nowrap }
 .rp-efs button em.pr { color: var(--lamp) }
@@ -296,8 +299,8 @@ table.t td.r, table.t th.r { text-align: right }
 .src { font-family: var(--font-mono); font-size: 10.5px; color: var(--text-3) }
 .src.w { color: var(--warn) }
 .crown { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--lamp); margin-right: 6px; vertical-align: 1px }
-.race-go { display: inline-flex; align-items: center; gap: 8px; margin-top: 14px; padding: 7px 14px; border-radius: 999px; border: 1px solid rgba(255, 176, 122, .45); color: var(--sun-ink); font-size: 13px; min-height: 34px }
-.race-go:hover { background: rgba(255, 176, 122, .08) }
+.race-go { display: inline-flex; align-items: center; gap: 8px; margin-top: 14px; padding: 7px 14px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--sun-ink) 45%, transparent); color: var(--sun-ink); font-size: 13px; min-height: 34px }
+.race-go:hover { background: color-mix(in srgb, var(--sun-ink) 8%, transparent) }
 .gl-off .race-go, .gl-off table.t .go { display: none }
 table.t td .go { color: var(--sun-ink); font-size: 12px; min-height: 26px; padding: 0 2px; white-space: nowrap }
 table.t td .go:hover { text-decoration: underline; text-underline-offset: 3px }
@@ -733,7 +736,7 @@ function bootScene() {
    大稻埕 → 預設「大稻埕→馬場町」最近一次；北海岸 → 最近一趟戶外騎乘、當天最早的那段計時段。
    計時賽的影子：PR（自己最快那次）＋「上一次」；路段有同事成績（data/rivals.json）就換成同事，照平均速度騎 */
 const RIVER_RACES = [30593390, 7032136, 37816958]
-const GHOST_PR = '#ff9a5a'
+const GHOST_PR = CS.getPropertyValue('--hud-accent').trim() || '#ff9a5a'
 const FIT_EPOCH = 631065600                               // FIT 時間從 1989-12-31 UTC 起算
 const RIDES = new Map()                                   // FIT 檔名 → Promise<rep>（同一個檔的陣列大家共用）
 function loadRide(file) {
