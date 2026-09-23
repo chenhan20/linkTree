@@ -891,13 +891,13 @@ function buildRider(Q) {
 
   function update(dt, s) {
     // s: { v, cad, pw, coast, t, standWant }
-    const st = state
-    if (!s.coast) st.theta += (s.cad / 60) * Math.PI * 2 * dt
+    const st = state, dr = s.dtRide != null ? s.dtRide : dt          // dtRide：快轉時踏頻與輪子跟著快，彈簧類的動態照真實時間
+    if (!s.coast) st.theta += (s.cad / 60) * Math.PI * 2 * dr
     else {                                                   // 滑行時曲柄慢慢停到水平
       const target = Math.round((st.theta - Math.PI / 2) / Math.PI) * Math.PI + Math.PI / 2
       st.theta = damp(st.theta, target, 3, dt)
     }
-    st.wheel += s.v / 0.336 * dt
+    st.wheel += s.v / 0.336 * dr
     st.stand = damp(st.stand, s.standWant ? 1 : 0, 4, dt)
     wheelF.rotation.x = -st.wheel; wheelR.rotation.x = -st.wheel
     crank.rotation.x = -st.theta
@@ -962,6 +962,7 @@ function buildRider(Q) {
     if (st.glanceT < 0) { st.glance = st.glance ? 0 : 1; st.glanceT = st.glance ? 2.4 + Math.random() * 1.5 : 9 + Math.random() * 9 }
     head.rotation.y = damp(head.rotation.y, st.glance ? -0.55 : 0, 3.5, dt)
     head.rotation.x = damp(head.rotation.x, st.stand * 0.12 - 0.05, 4, dt)
+    if (s.lite) return                                       // 影子：眼皮、喉囊、冠羽、碼表都已經併進靜態網格，不用算
     // 眨眼
     st.blink -= dt
     const lidOpen = st.blink < 0 && st.blink > -0.13 ? 1 : 0.05
@@ -981,7 +982,9 @@ function buildRider(Q) {
     screenTimer -= dt
     if (screenTimer < 0) { drawScreen(s.v * 3.6, s.pw, st.gear); screenTimer = 0.5 }
   }
-  return { rider, bike, pel, head, skull, helmet, eyes, neck, state, update, M, wheelF, wheelR, body: bodyMesh }
+  // rigid：各自整塊一起動的零件群（[根, 不要併進來的子群]），影子用它把網格併起來
+  const rigid = [[bike, [wheelF, wheelR, crank]], [wheelF], [wheelR], [crank, [pedalR, pedalL]], [pedalR], [pedalL], [body], [head], [wings[0].hand], [wings[1].hand]]
+  return { rider, bike, pel, head, skull, helmet, eyes, neck, state, update, M, wheelF, wheelR, body: bodyMesh, rigid }
 }
 
 /* ══ 相機 ════════════════════════════════════════════════════════════ */
@@ -2049,6 +2052,52 @@ function mount(host, opts) {
   scene.add(R1.rider)
   R1.rider.traverse(o => { if (o.isMesh) o.userData.pelican = true })
 
+  /* 影子對手：同一副鵜鶘骨架換成全息材質（菲涅耳邊緣光、加法混色、不投影、不寫深度）。
+     一起動的零件先併成一個網格：一隻影子從 ~130 個 draw call 降到 24 個 */
+  const GHOST_VS = `varying vec3 vN; varying vec3 vP; varying float vY;
+    void main(){ vec4 w = modelMatrix * vec4(position, 1.0); vY = w.y; vec4 mv = viewMatrix * w; vP = mv.xyz; vN = normalize(normalMatrix * normal); gl_Position = projectionMatrix * mv; }`
+  const GHOST_FS = `uniform vec3 uCol; uniform float uA; uniform float uTime; varying vec3 vN; varying vec3 vP; varying float vY;
+    void main(){
+      float d = length(vP);
+      float f = 1.0 - abs(dot(normalize(vN), -vP / d));
+      float scan = 0.8 + 0.2 * sin(vY * 64.0 - uTime * 4.0);
+      float a = (0.07 + 0.93 * pow(f, 2.2)) * scan * uA * smoothstep(1.0, 3.4, d) * (1.0 - smoothstep(280.0, 470.0, d));
+      gl_FragColor = vec4(uCol * a, 1.0);
+      #include <tonemapping_fragment>
+      #include <encodings_fragment>
+    }`
+  function flatten(root, stops) {
+    root.updateMatrixWorld(true)
+    const inv = new THREE.Matrix4().copy(root.matrixWorld).invert(), geos = []
+    const walk = o => o.children.slice().forEach(c => {
+      if (stops && stops.includes(c)) return
+      walk(c)
+      if (c.isMesh) { geos.push(c.geometry.clone().applyMatrix4(new THREE.Matrix4().multiplyMatrices(inv, c.matrixWorld))); c.parent.remove(c) }
+    })
+    walk(root)
+    if (geos.length) { root.add(new THREE.Mesh(merge(geos))); geos.forEach(g => g.dispose()) }
+  }
+  const GHOST_LANES = [-0.95, 0.8, -1.75, -0.95], GHOST_FORM = [0, 0, 0, 2.8]     // 第四隻跟第一隻同車道：起跑前先在後面 2.8 m（往前會撞進正面鏡頭）
+  const ghosts = []
+  function makeGhost() {
+    const G = buildRider()
+    for (const [root, stops] of G.rigid) flatten(root, stops)
+    const mat = new THREE.ShaderMaterial({ uniforms: { uCol: { value: new THREE.Color() }, uA: { value: 0 }, uTime: U.uTime }, vertexShader: GHOST_VS, fragmentShader: GHOST_FS,
+      transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })
+    G.rider.traverse(o => {
+      if (!o.isMesh) return
+      const m = o.material
+      if (m && m !== mat) { if (m.map) m.map.dispose(); m.dispose() }
+      o.material = mat; o.castShadow = false; o.receiveShadow = false; o.renderOrder = 4
+    })
+    G.rider.visible = false
+    scene.add(G.rider)
+    const tag = document.createElement('div'); tag.className = 'pc-tag'; tag.style.display = 'none'
+    tag.appendChild(document.createElement('i')); tag.appendChild(document.createElement('b'))
+    host.appendChild(tag)
+    return { G, mat, tag, z: 0, zPrev: null, v: 8, a: 0, d: null }
+  }
+
   /* 狀態 */
   const S = {
     t: 0, dist: 0, v: 8.2, tod: opts.tod != null ? opts.tod : 0.2, todAuto: true, todRate: 0.0026, paused: false,
@@ -2172,12 +2221,125 @@ function mount(host, opts) {
     S.coast = pw < 3 && cad < 5
     S.stand = pw > 290 && cad < 90
     const cda = S.stand ? PHYS.cdaStand : PHYS.cda
-    const drive = pw * PHYS.eta / Math.max(S.v, 1.5)
-    const res = PHYS.m * PHYS.g * PHYS.crr + 0.5 * PHYS.rho * cda * S.v * S.v + S.brake * 180
-    S.v = Math.max(0.6, S.v + (drive - res) / PHYS.m * dt)
-    S.dist += S.v * dt
+    // 快轉時整個世界一起快（踏頻、輪子、路），物理照樣逐步積分，步長不超過 0.05 秒
+    const h = dt * S.rate, nSub = Math.max(1, Math.ceil(h / 0.05))
+    for (let k = 0; k < nSub; k++) {
+      const drive = pw * PHYS.eta / Math.max(S.v, 1.5)
+      const res = PHYS.m * PHYS.g * PHYS.crr + 0.5 * PHYS.rho * cda * S.v * S.v + S.brake * 180
+      S.v = Math.max(0.6, S.v + (drive - res) / PHYS.m * h / nSub)
+      S.dist += S.v * h / nSub
+    }
     S.pw = pw; S.cad = S.coast ? 0 : cad; S.hr = hr
     if (!S.coast) R1.state.gear = pickGear(S.v, cad)
+  }
+
+  /* 計時賽：影子的位置不是模擬出來的，是「同一個經過秒數」下各自 FIT 的真實距離差。
+     進度一律縮放到官方路段長（每個人剛好在自己的完賽秒數到 L），終點的時間差才會等於成績差。
+     真實公尺 → 場景公尺再乘一個 k：場景的速度是「那天的瓦數搬到平路」，爬坡段會比真的快好幾倍 */
+  const RACE = { r: null, lastTau: null }
+  function distAt(rep, x) {
+    if (x <= 0) return rep.dist[0]
+    if (x >= rep.n - 1) return rep.dist[rep.n - 1]
+    const i = Math.floor(x); return lerp(rep.dist[i], rep.dist[i + 1], x - i)
+  }
+  function series(rep, s0, T, L) {
+    const d0 = rep.dist[s0], span = distAt(rep, s0 + T) - d0
+    return { rep, s0, T, k: span > L * 0.5 ? L / span : 1, d0 }
+  }
+  const progOf = (sr, tau) => (distAt(sr.rep, sr.s0 + tau) - sr.d0) * sr.k
+  function timeAt(sr, x) {                                        // 這個人第幾秒騎到進度 x（二分搜尋＋線性內插）
+    let lo = 0, hi = Math.min(sr.rep.n - 1 - sr.s0, Math.ceil(sr.T * 3))
+    if (progOf(sr, hi) < x) return hi + 1
+    while (hi - lo > 1) { const m = (lo + hi) >> 1; if (progOf(sr, m) >= x) hi = m; else lo = m }
+    const a = progOf(sr, lo), b = progOf(sr, hi)
+    return lo + (b > a ? clamp((x - a) / (b - a), 0, 1) : 0)
+  }
+  function sceneMeters(rep, s0, T) {                              // 用跟 stepRide 一樣的平路物理，把這段功率騎一遍
+    let sum = 0, n = 0
+    for (let i = s0; i < Math.min(rep.n, s0 + 20); i++) { sum += rep.pw[i]; n++ }
+    let v = terminalV(n ? sum / n : 150), d = 0
+    for (let i = s0; i < Math.min(rep.n - 1, s0 + T); i++) {
+      const pw = rep.pw[i], cda = pw > 290 && rep.cad[i] < 90 ? PHYS.cdaStand : PHYS.cda
+      for (let k = 0; k < 4; k++) {
+        v = Math.max(0.6, v + (pw * PHYS.eta / Math.max(v, 1.5) - PHYS.m * PHYS.g * PHYS.crr - 0.5 * PHYS.rho * cda * v * v) / PHYS.m * 0.25)
+        d += v * 0.25
+      }
+    }
+    return d
+  }
+  function setRace(r) {
+    RACE.r = r || null
+    ghosts.forEach(g => { g.d = null; g.G.rider.visible = false; g.tag.style.display = 'none' })
+    if (!r) return
+    r.me = series(r.rep, r.s0, r.T, r.L)
+    r.k = clamp(sceneMeters(r.rep, r.s0, r.T) / r.L, 0.6, 5)
+    r.ghosts.forEach((d, i) => {
+      if (!ghosts[i]) ghosts.push(makeGhost())
+      const g = ghosts[i]
+      g.d = d; g.sr = d.rep ? series(d.rep, d.s0, d.T, r.L) : null
+      // 亮度拉齊：骨白、金黃跟暮紫疊加起來亮度差兩三倍，一律換算到同一個亮度（Y ≈ 0.45）
+      const cl = g.mat.uniforms.uCol.value.set(d.color).convertSRGBToLinear()
+      cl.multiplyScalar(clamp(0.45 / Math.max(0.05, 0.2126 * cl.r + 0.7152 * cl.g + 0.0722 * cl.b), 0.5, 1.6)); g.col = cl
+      g.lane = GHOST_LANES[i % GHOST_LANES.length]; g.form = GHOST_FORM[i % GHOST_FORM.length]; g.zPrev = null; g.a = 0
+      g.tag.style.setProperty('--c', d.color); g.tag.lastChild.textContent = d.label
+    })
+    RACE.lastTau = null
+    if (!running) requestAnimationFrame(t => { if (!running) { frame(t); cancelAnimationFrame(raf) } })   // 減少動態時停著的那張也要看得到影子
+  }
+  const gProg = (g, r, tau) => (tau <= 0 ? 0 : g.sr ? progOf(g.sr, tau) : r.L * tau / g.d.T)
+  const gTime = (g, r, x) => (x <= 0 ? 0 : g.sr ? timeAt(g.sr, x) : x * g.d.T / r.L)
+  function updateRace(dt) {
+    const r = RACE.r
+    if (!r || !S.rep) return
+    const tau = S.riF - r.s0, mp = progOf(r.me, tau), sim = dt * S.rate
+    const jumped = RACE.lastTau != null && Math.abs(tau - RACE.lastTau) > 3 + sim * 2   // 點走勢條、再騎一次：速度別被當成瞬間衝刺
+    RACE.lastTau = tau
+    const live = tau > -60 && tau < r.T + 16
+    ghosts.forEach(g => {
+      if (!g.d) return
+      const d = g.d
+      if (!live) { g.G.rider.visible = false; g.a = 0; g.zPrev = null; return }
+      let z = tau <= 0 ? 0 : -(gProg(g, r, tau) - mp) * r.k
+      z += g.form * (1 - smooth(0, 25, tau))                        // 起跑前的隊形慢慢收掉
+      const vInst = g.zPrev == null || jumped || sim <= 0 ? S.v : S.v - (z - g.zPrev) / sim
+      g.v = damp(g.v, clamp(vInst, 0, 30), 4, dt); g.zPrev = z; g.z = z
+      const gi = Math.round(g.sr ? clamp(g.sr.s0 + Math.max(tau, -30), 0, g.sr.rep.n - 1) : 0)
+      const cad = g.sr ? g.sr.rep.cad[gi] : (d.cad || 85), pw = g.sr ? g.sr.rep.pw[gi] : (d.avgW || 200)
+      const want = (1 - smooth(r.T + 6, r.T + 15, tau)) * (1 - smooth(300, 460, Math.abs(z)))
+      g.a = running ? damp(g.a, want, 3, dt) : want                // 停著的單張（減少動態）直接到位，不淡入
+      g.mat.uniforms.uA.value = g.a * (0.95 + 0.6 * todState.night)
+      g.G.rider.visible = g.a > 0.01
+      g.G.rider.position.set(g.lane, 0, z)
+      // 離很遠的時候身體只剩幾個像素：身上加一顆跟他同色的光點（像賽車遊戲的標記），近了就收掉
+      if (g.G.rider.visible && Math.abs(z) > 25) glow.add(g.lane, 1.05, z, 0.3 + Math.abs(z) * 0.009, g.col, g.a * smooth(25, 90, Math.abs(z)) * (1.1 + todState.night))
+      if (g.G.rider.visible) g.G.update(dt, { dtRide: sim, v: g.v, cad: cad < 5 && pw < 3 ? 0 : Math.max(cad, pw > 5 ? 60 : 0), pw, coast: cad < 5 && pw < 3, t: S.t, standWant: pw > 290 && cad < 90, lite: true })
+    })
+  }
+  // 影子頭上的名牌：每一幀投影到畫面座標（DOM，字比較清楚）
+  function placeTags() {
+    ghosts.forEach(g => {
+      if (!g.d || !g.G.rider.visible || g.a < 0.08) { g.tag.style.display = 'none'; return }
+      _v.set(g.lane, 1.7, g.z - 0.38)                             // 安全帽頂再上去一點
+      const dCam = _v.distanceTo(camera.position)
+      _v.project(camera)
+      if (_v.z > 1 || Math.abs(_v.x) > 1.05 || Math.abs(_v.y) > 1.05 || dCam < 2.2 || dCam > 330) { g.tag.style.display = 'none'; return }
+      g.tag.style.display = ''
+      g.tag.style.opacity = Math.min(1, g.a * 1.3 * (1 - smooth(240, 330, dCam))).toFixed(2)
+      g.tag.style.transform = `translate(${((_v.x + 1) / 2 * W).toFixed(1)}px, ${((1 - _v.y) / 2 * H).toFixed(1)}px) translate(-50%, -100%)`
+    })
+  }
+  function raceOut() {
+    const r = RACE.r
+    if (!r || !S.rep) return null
+    const tau = S.riF - r.s0, mp = clamp(progOf(r.me, tau), -1e6, r.L)
+    const rows = []
+    ghosts.forEach(g => {
+      if (!g.d) return
+      // 時間差：他騎到「我現在的位置」是第幾秒；正＝我落後。終點之後直接用成績相減
+      const dtS = tau >= r.T ? r.T - g.d.T : tau <= 0 ? 0 : tau - gTime(g, r, mp)
+      rows.push({ key: g.d.key, label: g.d.label, sub: g.d.sub || '', color: g.d.color, T: g.d.T, dt: dtS, p: gProg(g, r, tau) })
+    })
+    return { name: r.name, L: r.L, T: r.T, tau, mp, phase: tau < 0 ? 'pre' : tau <= r.T ? 'race' : 'done', rows }
   }
 
   /* 相機 */
@@ -2262,6 +2424,16 @@ function mount(host, opts) {
 
   /* 主迴圈 */
   const audio = makeAudio()
+  function renderNow(fade) {
+    const k = todSample(todState.e)
+    if (HIGH) {
+      renderer.setRenderTarget(post.rtScene); renderer.render(scene, camera)
+      post.render(k.ex, 0.36 + todState.night * 0.34, S.t, fade)
+    } else {
+      renderer.toneMappingExposure = k.ex * fade
+      renderer.setRenderTarget(null); renderer.render(scene, camera)
+    }
+  }
   const hudOut = { kmh: 0, cad: 0, pw: 0, hr: 0, gear: '', km: 0, clock: '', ri: 0, n: 0, cam: '', night: 0, stand: false, coast: false, tod: 0 }
   function frame(now) {
     raf = requestAnimationFrame(frame)
@@ -2296,13 +2468,15 @@ function mount(host, opts) {
     // 燈塔光束
     beam.rotation.y = S.t * 0.63
     // 騎士
-    R1.update(dt, { v: S.v, cad: S.cad, pw: S.pw, coast: S.coast, t: S.t, standWant: S.stand })
+    R1.update(dt, { dtRide: dt * S.rate, v: S.v, cad: S.cad, pw: S.pw, coast: S.coast, t: S.t, standWant: S.stand })
+    updateRace(dt)
     // 陰影跟著騎士
     const ld = sun.userData.dir || U.uSunDir.value
     sun.target.position.set(0, 0.6, -2.5)
     sun.position.copy(sun.target.position).addScaledVector(ld, 45)
     // 相機與天空
     updateCamera(dt)
+    placeTags()
     sky.position.copy(camera.position)
     farGroup.position.set(camera.position.x * 0, 0, 0)
     U.uCamRot.value.setFromMatrix4(camera.matrixWorld)
@@ -2312,16 +2486,7 @@ function mount(host, opts) {
     glow.commit()
     // 剪接淡入
     S.cutFade = Math.max(0, S.cutFade - dt * 5)
-    const fade = S.fade * (1 - S.cutFade * 0.55)
-    // 算圖
-    const k = todSample(todState.e)
-    if (HIGH) {
-      renderer.setRenderTarget(post.rtScene); renderer.render(scene, camera)
-      post.render(k.ex, 0.36 + todState.night * 0.34, S.t, fade)
-    } else {
-      renderer.toneMappingExposure = k.ex * fade
-      renderer.setRenderTarget(null); renderer.render(scene, camera)
-    }
+    renderNow(S.fade * (1 - S.cutFade * 0.55))
     // 動態解析度
     // 動態解析度：看最近 90 幀 rAF 間隔的中位數，不看平均（開場編譯、重烘環境光的單幀尖峰不算數）
     const nowMs = performance.now()
@@ -2346,7 +2511,8 @@ function mount(host, opts) {
         kmh: S.v * 3.6, cad: S.cad, pw: S.pw, hr: S.hr, gear: R1.state.gear[0] + '×' + R1.state.gear[1], km: S.dist / 1000,
         clock: String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(Math.floor(m % 60)).padStart(2, '0'),
         ri: S.ri, n: S.rep ? S.rep.n : 0, cam: S.cam, shot: S.cam === 'cinema' ? SHOTS[S.shot].name : '', night: todState.night,
-        stand: S.stand, coast: S.coast, tod: S.tod, skip: S.skipNote && S.t - S.skipNote.at < 3 ? S.skipNote.sec : 0, paused: S.paused,
+        stand: S.stand, coast: S.coast, tod: S.tod, skip: S.skipNote && S.t - S.skipNote.at < 3 ? S.skipNote.sec : 0, paused: S.paused, rate: S.rate,
+        race: raceOut(),
       })
       opts.onFrame(hudOut)
     }
@@ -2377,7 +2543,17 @@ function mount(host, opts) {
     setPaused(b) { S.paused = !!b },
     get paused() { return S.paused },
     get still() { return !running && S.reduced },
-    setReplay, seek(i) { if (S.rep) { S.riF = clamp(i, 0, S.rep.n - 2) } },
+    setReplay, seek(i) { if (S.rep && isFinite(i)) S.riF = clamp(i, 0, S.rep.n - 2) },
+    setRace, get race() { return raceOut() },
+    setRate(r) { S.rate = clamp(+r || 1, 0.25, 8) }, get rate() { return S.rate },
+    // 拍照：同一個 task 裡先畫一張再拷走（不用開 preserveDrawingBuffer，平常每幀不用多付代價）
+    snapshot(maxW) {
+      applyTod(); renderNow(1)
+      const src = renderer.domElement, sc = Math.min(1, (maxW || 4096) / src.width)
+      const c = document.createElement('canvas'); c.width = Math.round(src.width * sc); c.height = Math.round(src.height * sc)
+      c.getContext('2d').drawImage(src, 0, 0, c.width, c.height)
+      return c
+    },
     setBoost(w) { S.boost = w }, setBrake(b) { S.brake = b ? 1 : 0 },
     setDrive(d) { if (d.rings) DRIVE.rings = d.rings.slice().sort((a, b) => a - b); if (d.cogs) DRIVE.cogs = d.cogs.slice().sort((a, b) => a - b); if (d.circ) DRIVE.circ = d.circ },
     sound(on) { if (on) return audio.start(); audio.stop(); return false },
@@ -2387,7 +2563,7 @@ function mount(host, opts) {
     _dbg: () => ({ glow: glow.mesh, farGroup, sky, beam, scene }),
     _pr(p) { pr = clamp(p, minPR, maxPR); resize(); return pr },            // 只給驗證腳本用
     _warp(m) { S.dist += m; return S.dist },                                  // 只給驗證腳本用：往前跳 m 公尺
-    stats() { return { pr, maxPR, minPR, msaa: post ? post.msaa : null, bufW: renderer.domElement.width, cssW: W, frameMs: S.frameMs, quality, calls: renderer.info.render.calls, tris: renderer.info.render.triangles, dist: S.dist, v: S.v, tod: S.tod, cam: S.cam, shot: SHOTS[S.shot].name } },
+    stats() { return { pr, maxPR, minPR, msaa: post ? post.msaa : null, bufW: renderer.domElement.width, cssW: W, frameMs: S.frameMs, quality, calls: renderer.info.render.calls, tris: renderer.info.render.triangles, dist: S.dist, v: S.v, tod: S.tod, cam: S.cam, shot: SHOTS[S.shot].name, riF: S.riF, rate: S.rate, ghosts: ghosts.filter(g => g.d).map(g => ({ z: +g.z.toFixed(2), a: +g.a.toFixed(2), vis: g.G.rider.visible })) } },
     env: E.id,
     // 換地點：整個場景拆掉重建（兩個地點的道具、遠景、水面設定都不一樣）
     dispose() {
@@ -2395,6 +2571,7 @@ function mount(host, opts) {
       window.removeEventListener('pointermove', onMove); window.removeEventListener('pointerup', onUp); document.removeEventListener('visibilitychange', onVis)
       canvas.removeEventListener('webglcontextlost', onLostEv)          // 自己拆的，不要被當成「顯卡掛了」
       scene.traverse(o => { if (o.geometry) o.geometry.dispose(); const m = o.material; if (m) (Array.isArray(m) ? m : [m]).forEach(x => { if (x.map) x.map.dispose(); x.dispose() }) })
+      ghosts.forEach(g => g.tag.remove())
       if (envRT) envRT.dispose(); pmrem.dispose(); if (post) post.dispose()
       renderer.dispose(); renderer.forceContextLoss && renderer.forceContextLoss()
       if (canvas.parentNode) canvas.parentNode.removeChild(canvas)
@@ -2403,7 +2580,8 @@ function mount(host, opts) {
 }
 
 /* ══ FIT 解析（只取重播要的欄位）════════════════════════════════════
-   record(20)：timestamp 253、power 7、cadence 4、heart_rate 3、distance 5、altitude 2 / enhanced_altitude 78
+   record(20)：timestamp 253、power 7、cadence 4、heart_rate 3、distance 5、altitude 2 / enhanced_altitude 78、
+   position_lat 0 / position_long 1（sint32 semicircle，× 180 / 2^31 ＝ 度）
    event(21)：event 0 == 42/43（換檔）時，data 3 的四個位元組依序是 rear_num、rear_teeth、front_num、front_teeth
    （2026-09-23 那趟用 fitdecode 對過：570494728 = 34 × 15）。 */
 function parseFit(buf) {
@@ -2413,7 +2591,7 @@ function parseFit(buf) {
   const end = Math.min(hs + dataSize, buf.byteLength)
   const defs = [], recs = [], gears = []
   let p = hs, lastTs = 0
-  const INV = { 1: 0xFF, 2: 0xFFFF, 4: 0xFFFFFFFF }
+  const INV = { 1: 0xFF, 2: 0xFFFF, 4: 0xFFFFFFFF }, SEMI = 180 / 2147483648
   function val(off, size, type, le) {
     const bt = type & 0x1f
     if (size === 1) { const v = u8[off]; return v === 0xFF || (bt === 1 && v === 0x7F) ? null : (bt === 1 ? (v << 24 >> 24) : v) }
@@ -2433,7 +2611,8 @@ function parseFit(buf) {
     if (o[253] != null) lastTs = o[253]
     const t = ts != null ? ts : (o[253] != null ? o[253] : lastTs)
     if (def.g === 20) {
-      recs.push({ t, pw: o[7], cad: o[4], hr: o[3], dist: o[5] != null ? o[5] / 100 : null, alt: o[78] != null ? o[78] / 5 - 500 : (o[2] != null ? o[2] / 5 - 500 : null) })
+      recs.push({ t, pw: o[7], cad: o[4], hr: o[3], dist: o[5] != null ? o[5] / 100 : null, alt: o[78] != null ? o[78] / 5 - 500 : (o[2] != null ? o[2] / 5 - 500 : null),
+        lat: o[0] != null ? o[0] * SEMI : null, lon: o[1] != null ? o[1] * SEMI : null })
     } else if (def.g === 21 && (o[0] === 42 || o[0] === 43)) {
       const d = o[3]
       if (d != null) gears.push({ t, front: (d >>> 24) & 0xff, rear: (d >>> 8) & 0xff })
@@ -2477,7 +2656,9 @@ function toReplay(fit, opt) {
   if (R.length < 60) return null
   const t0 = R[0].t, n = Math.min(R[R.length - 1].t - t0 + 1, 6 * 3600)
   const pw = new Uint16Array(n), cad = new Uint8Array(n), hr = new Uint8Array(n), alt = new Float32Array(n), dist = new Float32Array(n)
-  let lastAlt = R[0].alt || 0, lastD = 0, lastHr = R[0].hr || 0
+  const lat = new Float64Array(n), lon = new Float64Array(n)
+  const g0 = R.find(r => r.lat != null && r.lon != null)
+  let lastAlt = R[0].alt || 0, lastD = 0, lastHr = R[0].hr || 0, lastLat = g0 ? g0.lat : NaN, lastLon = g0 ? g0.lon : NaN
   let ri = 0
   for (let i = 0; i < n; i++) {
     while (ri < R.length - 1 && R[ri].t - t0 < i) ri++
@@ -2485,15 +2666,16 @@ function toReplay(fit, opt) {
     if (r.t - t0 === i) {
       pw[i] = r.pw || 0; cad[i] = r.cad || 0; if (r.hr) lastHr = r.hr; hr[i] = lastHr
       if (r.alt != null) lastAlt = r.alt; if (r.dist != null) lastD = r.dist
+      if (r.lat != null && r.lon != null) { lastLat = r.lat; lastLon = r.lon }
     } else { hr[i] = lastHr }
-    alt[i] = lastAlt; dist[i] = lastD
+    alt[i] = lastAlt; dist[i] = lastD; lat[i] = lastLat; lon[i] = lastLon
   }
   // 連續 >= 25 秒沒出力就整段跳過
   const skip = new Int32Array(n)
   for (let i = 0; i < n;) {
     if (pw[i] === 0 && cad[i] === 0) { let j = i; while (j < n && pw[j] === 0 && cad[j] === 0) j++; if (j - i >= 25 && j < n) for (let k = i; k < j - 3; k++) skip[k] = j - 3; i = j } else i++
   }
-  return { n, t0, pw, cad, hr, alt, dist, skip, gears: fit.gears, start: opt.start || 0 }
+  return { n, t0, pw, cad, hr, alt, dist, lat: g0 ? lat : null, lon: g0 ? lon : null, skip, gears: fit.gears, start: opt.start || 0 }
 }
 
 window.PelicanCoast = { mount, parseFit, toReplay, PHYS, DRIVE }

@@ -46,6 +46,7 @@ a:hover { text-decoration: underline; text-underline-offset: 3px }
 button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer }
 :focus-visible { outline: 2px solid var(--sun-ink); outline-offset: 2px; border-radius: 4px }
 .num { font-variant-numeric: tabular-nums }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap }
 .mono { font-family: var(--font-mono) }
 .muted { color: var(--text-3) }
 b, strong { font-weight: 600 }
@@ -72,7 +73,7 @@ b, strong { font-weight: 600 }
 .hero .pc-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; opacity: 0; transition: opacity 1.4s ease; touch-action: pan-y; cursor: grab }
 .hero.is-live .pc-canvas { opacity: 1 }
 .hero::before, .hero::after { content: ""; position: absolute; left: 0; right: 0; pointer-events: none; z-index: 1 }
-.hero::before { top: 0; height: 170px; background: linear-gradient(180deg, rgba(9, 12, 24, .62), rgba(9, 12, 24, 0)) }
+.hero::before { top: 0; height: 300px; background: linear-gradient(180deg, rgba(9, 12, 24, .62), rgba(9, 12, 24, .34) 55%, rgba(9, 12, 24, 0)) }
 .hero::after { bottom: 0; height: 230px; background: linear-gradient(0deg, rgba(9, 12, 24, .78), rgba(9, 12, 24, 0)) }
 .lbox { position: absolute; left: 0; right: 0; height: 5.2vh; background: #06080f; z-index: 1; transform: scaleY(0); transition: transform .8s cubic-bezier(.2, .7, .2, 1); pointer-events: none }
 .lbox.t { top: 0; transform-origin: top } .lbox.b { bottom: 0; transform-origin: bottom }
@@ -123,6 +124,61 @@ b, strong { font-weight: 600 }
 .hero.no-3d .hud-dash { grid-template-columns: minmax(0, 1fr) }
 .keys { position: absolute; right: var(--gut); bottom: 18px; font-size: 11.5px; color: rgba(246, 239, 228, .62); font-family: var(--font-mono) }
 .keys kbd { font-family: inherit; padding: 0 5px; border: 1px solid rgba(246, 239, 228, .25); border-radius: 4px; margin: 0 2px }
+.ibtn-t { width: auto; min-width: 34px; padding: 0 9px; border-radius: 999px; font: 600 12px/1 var(--font-mono); letter-spacing: .02em }
+.hud-toast { position: absolute; left: 50%; top: 84px; transform: translate(-50%, -6px); z-index: 3; padding: 6px 14px; border-radius: 999px; font-size: 13px; color: #151a2a; background: rgba(246, 239, 228, .94);
+  text-shadow: none; opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s }
+.hud-toast.on { opacity: 1; transform: translate(-50%, 0) }
+.shutter { position: absolute; inset: 0; z-index: 3; background: #fff; opacity: 0; pointer-events: none; transition: opacity .7s ease-out }
+.shutter.on { opacity: .55; transition: none }
+
+/* 影子對手的名牌（場景每一幀擺位置；在 HUD 底下） */
+.pc-tag { position: absolute; left: 0; top: 0; z-index: 1; pointer-events: none; display: flex; align-items: center; gap: 5px; padding: 2px 9px 2px 7px; border-radius: 999px;
+  font: 600 11.5px/1.45 var(--font-sans); letter-spacing: .05em; color: #f6efe4; background: rgba(10, 13, 24, .52); border: 1px solid rgba(246, 239, 228, .2);
+  border-color: color-mix(in srgb, var(--c) 60%, transparent); white-space: nowrap; will-change: transform }
+.pc-tag i { width: 7px; height: 7px; border-radius: 50%; background: var(--c); flex: none }
+
+/* 計時賽面板：跟影子一起騎哪一段、現在差幾秒 */
+.race { position: absolute; right: var(--gut); top: 176px; width: 272px; padding: 12px 14px 12px; border-radius: 12px; background: rgba(10, 13, 24, .5); border: 1px solid rgba(246, 239, 228, .13);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); text-shadow: none; font-size: 12.5px }
+.race-h { display: flex; align-items: center; gap: 8px; min-width: 0 }
+.race-k { flex: none; font: 500 10.5px/1 var(--font-mono); letter-spacing: .18em; color: rgba(246, 239, 228, .6) }
+.race-pick { display: flex; align-items: center; gap: 4px; min-width: 0; min-height: 30px; margin-left: auto; padding: 3px 6px 3px 10px; border-radius: 999px; border: 1px solid rgba(246, 239, 228, .2); color: #f6efe4 }
+.race-pick:hover { border-color: rgba(246, 239, 228, .42) }
+.race-pick b { font-weight: 600; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.race-pick small { font-size: 11px; color: rgba(246, 239, 228, .6); white-space: nowrap }
+.race-pick svg { width: 14px; height: 14px; flex: none; stroke: currentColor; fill: none; stroke-width: 1.8 }
+.race-map { display: block; width: 100%; height: 118px; margin: 10px 0 8px }
+.race-bar { position: relative; height: 3px; border-radius: 2px; background: rgba(246, 239, 228, .14); overflow: hidden }
+.race-bar i { position: absolute; inset: 0; background: #ff9a5a; transform-origin: left; transform: scaleX(0) }
+.race-st { margin-top: 8px; color: rgba(246, 239, 228, .78); font-variant-numeric: tabular-nums; min-height: 1.6em }
+.race-st b { color: #fff; font-weight: 600; font-size: 15px }
+.race-fx { height: 0; overflow: visible; font-size: 12.5px; color: #ffd7b8; opacity: 0; transition: opacity .3s; transform: translateY(-1.55em); text-align: right }
+.race-fx.on { opacity: 1 }
+.race-rows { list-style: none; margin-top: 6px; display: grid; gap: 2px }
+.race-rows li { display: grid; grid-template-columns: 8px minmax(0, 1fr) auto; gap: 8px; align-items: baseline; padding: 3px 0; border-top: 1px solid rgba(246, 239, 228, .08) }
+.race-rows li > i { width: 8px; height: 8px; border-radius: 50%; transform: translateY(-1px) }
+.race-rows li span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.race-rows li span small { color: rgba(246, 239, 228, .55); font-size: 11.5px; margin-left: 5px }
+.race-rows li b { font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap }
+.race-rows li b.up { color: #8fe0bf } .race-rows li b.dn { color: #ffa39b }
+.race-again { margin-top: 8px; font-size: 12.5px; color: #ffd0ad; min-height: 28px }
+.race-pop { position: absolute; right: var(--gut); top: 222px; z-index: 4; width: 312px; max-height: min(460px, calc(100% - 240px)); overflow: auto; padding: 14px; border-radius: 12px;
+  background: rgba(12, 16, 29, .96); border: 1px solid rgba(246, 239, 228, .16); box-shadow: 0 16px 40px rgba(0, 0, 0, .4); text-shadow: none; overscroll-behavior: contain }
+.rp-k { font: 500 10.5px/1 var(--font-mono); letter-spacing: .16em; color: rgba(246, 239, 228, .6); margin: 2px 0 8px }
+.rp-k i { font: 400 11px var(--font-sans); letter-spacing: 0; font-style: normal; margin-left: 6px; color: rgba(246, 239, 228, .45) }
+.rp-segs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px }
+.rp-segs button { padding: 4px 10px; border-radius: 999px; border: 1px solid rgba(246, 239, 228, .2); font-size: 12.5px; color: rgba(246, 239, 228, .85); min-height: 30px }
+.rp-segs button small { color: rgba(246, 239, 228, .5); margin-left: 4px }
+.rp-segs button[aria-pressed="true"] { background: rgba(246, 239, 228, .92); color: #151a2a; border-color: transparent; font-weight: 600 }
+.rp-segs button[aria-pressed="true"] small { color: #4a5068 }
+.rp-efs { display: grid }
+.rp-efs button { display: grid; grid-template-columns: 94px 46px minmax(0, 1fr) auto; gap: 8px; align-items: baseline; padding: 8px 6px; text-align: left; border-top: 1px solid rgba(246, 239, 228, .08); font-size: 13px; font-variant-numeric: tabular-nums; min-height: 36px }
+.rp-efs button:hover { background: rgba(246, 239, 228, .05) }
+.rp-efs button[aria-current="true"] { background: rgba(255, 154, 90, .12) }
+.rp-efs button small { color: rgba(246, 239, 228, .55); font-size: 11.5px }
+.rp-efs button em { font-style: normal; font-size: 11px; color: rgba(246, 239, 228, .6); white-space: nowrap }
+.rp-efs button em.pr { color: var(--lamp) }
+.hero.no-3d .race, .hero.no-3d .race-pop { display: none }
 
 /* ── 章節 ── */
 main { position: relative; z-index: 3; background: linear-gradient(180deg, #111a2e 0, var(--ink-0) 420px) }
@@ -240,6 +296,11 @@ table.t td.r, table.t th.r { text-align: right }
 .src { font-family: var(--font-mono); font-size: 10.5px; color: var(--text-3) }
 .src.w { color: var(--warn) }
 .crown { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--lamp); margin-right: 6px; vertical-align: 1px }
+.race-go { display: inline-flex; align-items: center; gap: 8px; margin-top: 14px; padding: 7px 14px; border-radius: 999px; border: 1px solid rgba(255, 176, 122, .45); color: var(--sun-ink); font-size: 13px; min-height: 34px }
+.race-go:hover { background: rgba(255, 176, 122, .08) }
+.gl-off .race-go, .gl-off table.t .go { display: none }
+table.t td .go { color: var(--sun-ink); font-size: 12px; min-height: 26px; padding: 0 2px; white-space: nowrap }
+table.t td .go:hover { text-decoration: underline; text-underline-offset: 3px }
 
 /* 地圖 */
 .atlas { position: relative; border-radius: 10px; overflow: hidden; background: #0a0f1c; border: 1px solid var(--line) }
@@ -322,6 +383,14 @@ footer .worlds a b { color: var(--text); font-weight: 600; margin-right: 6px }
   .read .rx { display: none }
   .strip { display: none }
   .keys { display: none }
+  .race { top: auto; bottom: 166px; left: 12px; right: 12px; width: auto; padding: 6px 10px; border-radius: 10px; background: rgba(10, 13, 24, .3); -webkit-backdrop-filter: none; backdrop-filter: none; border-color: rgba(246, 239, 228, .1); text-shadow: 0 1px 8px rgba(6, 8, 16, .7) }
+  .race-map, .race-bar, .race-again { display: none }
+  .race-st { margin-top: 4px; min-height: 0 }
+  .race-rows { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0 12px; margin-top: 2px }
+  .race-rows li { border-top: 0; padding: 1px 0 }
+  .race-rows li span small { display: none }
+  .race-pop { left: 12px; right: 12px; top: auto; bottom: 12px; width: auto; max-height: calc(100% - 92px) }
+  .hud-toast { top: 64px }
   .to-top { display: none }
   .ch { padding-top: 64px }
   .stat dd { font-size: 25px }
@@ -375,11 +444,33 @@ footer .worlds a b { color: var(--text); font-weight: 600; margin-right: 6px }
       </div>
       <div class="hud-tools">
         <label class="hud-sun" title="太陽仰角"><span id="hud-clock">17:35</span><input id="hud-tod" type="range" min="0" max="1000" value="200" aria-label="時間"></label>
-        <button class="ibtn" type="button" id="btn-camcycle" aria-label="切換鏡頭" title="切換鏡頭（C）"><svg viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></button>
+        <button class="ibtn" type="button" id="btn-camcycle" aria-label="切換鏡頭" title="切換鏡頭（C）"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="12.5" height="10" rx="2"/><path d="M15.5 11l5.5-3v8l-5.5-3"/></svg></button>
+        <button class="ibtn" type="button" id="btn-photo" aria-label="拍一張存成圖" title="拍一張存成圖（K）"><svg viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></button>
+        <button class="ibtn ibtn-t" type="button" id="btn-rate" aria-label="重播速度：1 倍" title="重播速度（F）">1×</button>
         <button class="ibtn" type="button" id="btn-pause" aria-pressed="false" aria-label="暫停重播" title="暫停重播（P）"><svg viewBox="0 0 24 24"><path d="M9 6v12M15 6v12"/></svg></button>
         <button class="ibtn" type="button" id="btn-sound" aria-pressed="false" aria-label="聲音" title="聲音（M）"><svg viewBox="0 0 24 24"><path d="M5 10v4h3l4 4V6L8 10z"/><path d="M16 9.5c1 .8 1.5 1.6 1.5 2.5s-.5 1.7-1.5 2.5" id="snd-w"/></svg></button>
       </div>
     </div>
+    <section class="race" id="race" aria-label="計時賽" hidden>
+      <div class="race-h">
+        <span class="race-k">計時賽</span>
+        <button class="race-pick" type="button" id="race-pick" aria-haspopup="dialog" aria-expanded="false" aria-controls="race-pop" title="換一段、挑哪一次"><b id="race-name">–</b><small id="race-km"></small><svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5"/></svg></button>
+      </div>
+      <canvas class="race-map" id="race-map" aria-hidden="true"></canvas>
+      <div class="race-bar"><i id="race-fill"></i></div>
+      <p class="race-st" id="race-st"></p>
+      <p class="race-fx" id="race-fx" aria-live="polite"></p>
+      <ol class="race-rows" id="race-rows"></ol>
+      <button class="race-again" type="button" id="race-again" hidden>再騎一次這段 ↺</button>
+    </section>
+    <div class="race-pop" id="race-pop" role="dialog" aria-label="挑一段、挑哪一次" hidden>
+      <p class="rp-k">路段</p>
+      <div class="rp-segs" id="rp-segs"></div>
+      <p class="rp-k">重騎哪一次<i>有 FIT 的才能重播</i></p>
+      <div class="rp-efs" id="rp-efs"></div>
+    </div>
+    <p class="hud-toast" id="hud-toast" role="status"></p>
+    <div class="shutter" id="shutter" aria-hidden="true"></div>
     <div class="hud-dash">
       <div class="spd" aria-label="速度">
         <svg viewBox="0 0 132 132" aria-hidden="true"><path d="M26 108 A56 56 0 1 1 106 108" fill="none" stroke="rgba(246,239,228,.18)" stroke-width="3" stroke-linecap="round"/><path id="spd-arc" d="M26 108 A56 56 0 1 1 106 108" fill="none" stroke="#ff9a5a" stroke-width="3" stroke-linecap="round" pathLength="100" stroke-dasharray="0 100"/></svg>
@@ -400,7 +491,7 @@ footer .worlds a b { color: var(--text); font-weight: 600; margin-right: 6px }
       </div>
     </div>
     <a class="hud-next" href="#today" id="hud-next"><span>往下 8 章 · 從「今天」開始</span><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></a>
-    <div class="keys" id="keys"><kbd>1</kbd>–<kbd>5</kbd> 鏡頭 <kbd>W</kbd> 加力 <kbd>P</kbd> 暫停 <kbd>M</kbd> 聲音 · 點鵜鶘</div>
+    <div class="keys" id="keys"><kbd>1</kbd>–<kbd>5</kbd> 鏡頭 <kbd>W</kbd> 加力 <kbd>F</kbd> 快轉 <kbd>P</kbd> 暫停 <kbd>K</kbd> 拍照 · 點鵜鶘</div>
   </div>
   <p class="hero-fail" id="hero-fail" hidden>這台瀏覽器畫不了 3D（WebGL 沒開）。往下的數據都不受影響。</p>
 </section>
@@ -532,8 +623,9 @@ const hero = $('#top')
 let scene = null
 const HUD = { kmh: $('#h-kmh'), pw: $('#h-pw'), cad: $('#h-cad'), hr: $('#h-hr'), gear: $('#h-gear'), km: $('#h-km'), t: $('#h-t'), arc: $('#spd-arc'), clock: $('#hud-clock'), tod: $('#hud-tod'), note: $('#strip-note') }
 const setDD = (el, v, unit) => { el.firstChild.nodeValue = v; if (unit && el.lastChild && el.lastChild.nodeName === 'SMALL') el.lastChild.textContent = unit }
-let REP = null, repInfo = null
+let REP = null, repInfo = null, lastHud = null
 function onFrame(s) {
+  lastHud = s
   setDD(HUD.pw, n0(s.pw)); setDD(HUD.cad, s.coast ? '0' : n0(s.cad)); setDD(HUD.hr, n0(s.hr))
   HUD.gear.textContent = s.gear; setDD(HUD.km, n1(s.km))
   HUD.kmh.textContent = s.kmh.toFixed(1)
@@ -543,6 +635,7 @@ function onFrame(s) {
   if (document.activeElement !== HUD.tod) HUD.tod.value = Math.round(s.tod * 1000)
   if (s.skip) { HUD.note.textContent = `略過 ${hms(s.skip)} 沒出力的下坡／停等`; HUD.note.classList.add('on') } else HUD.note.classList.remove('on')
   stripCursor(s.ri)
+  onRace(s.race, s.ri)
   hero.classList.toggle('is-cinema', s.cam === 'cinema')
 }
 const CAMS = ['cinema', 'chase', 'side', 'pov', 'orbit']
@@ -553,20 +646,26 @@ const SCENES = {
 }
 const RIVER_GROUPS = ['danshui-south', 'shezidao', 'guandu-meiti', 'keelung-east']
 let envNow = (() => { try { const v = localStorage.getItem('pelican-env'); return SCENES[v] ? v : 'river' } catch (e) { return 'river' } })()
-let camNow = 'cinema'
-const REPS = {}
-const no3d = () => { hero.classList.add('no-3d'); hero.classList.remove('is-live'); $('#hero-fail').hidden = false }
+let camNow = 'cinema', rateNow = 1
+const REPS = {}                                   // 地點 → 目前這趟 { rep, info, race }，換地點回來不用重抓
+const no3d = () => { hero.classList.add('no-3d'); hero.classList.remove('is-live'); $('#hero-fail').hidden = false; document.documentElement.classList.add('gl-off') }
 function setCam(m) {
   camNow = m
   $$('.seg [data-cam]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.cam === m)))
   if (scene) scene.setCamera(m)
+}
+const RATES = [1, 2, 4]
+function setRate(r) {
+  rateNow = r
+  if (scene) scene.setRate(r)
+  const b = $('#btn-rate'); b.textContent = r + '×'; b.setAttribute('aria-label', `重播速度：${r} 倍`); b.setAttribute('aria-pressed', String(r > 1))
 }
 function applyHeadings(env) {
   const S = SCENES[env]
   $('#hud-h1').textContent = S.h1; $('#hud-kicker').textContent = S.kicker
   $$('.seg [data-env]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.env === env)))
   const R = REPS[env]
-  $('#hud-sub').innerHTML = esc(S.lead) + (R ? R.info.sentence : '')
+  $('#hud-sub').innerHTML = esc(S.lead) + (R ? R.info.sentence + (R.race ? R.race.who : '') : '')
 }
 function mountScene(env, tod) {
   scene = window.PelicanCoast.mount(hero, { env, cam: camNow, tod: tod != null ? tod : 0.18, onFrame, onLost: no3d })
@@ -576,7 +675,8 @@ function mountScene(env, tod) {
   const cv = $('.pc-canvas', hero); hero.insertBefore(cv, hero.firstChild)   // canvas 要在 HUD 底下
   requestAnimationFrame(() => hero.classList.add('is-live'))
   if (DATA.drive) scene.setDrive({ rings: DATA.drive.chainrings, cogs: DATA.drive.cassette, circ: DATA.drive.wheel_circumference_m })
-  if (REPS[env]) scene.setReplay(REPS[env].rep)
+  if (REPS[env]) { scene.setReplay(REPS[env].rep); scene.setRace(REPS[env].race) }
+  if (rateNow !== 1) scene.setRate(rateNow)
   if ($('#btn-sound').getAttribute('aria-pressed') === 'true') scene.sound(true)
   const bp = $('#btn-pause')
   if (scene.still) { bp.setAttribute('aria-pressed', 'true'); bp.title = '播放（P）'; bp.setAttribute('aria-label', '播放') }
@@ -586,11 +686,12 @@ function switchScene(env) {
   envNow = env
   try { localStorage.setItem('pelican-env', env) } catch (e) {}
   REP = null; repInfo = null; stripCache = null
+  closePop(); raceUI(null)
   $('#strip-l').textContent = '載入騎乘資料…'; $('#strip-r').textContent = ''
-  const g = stripC.getContext('2d'); g.clearRect(0, 0, stripC.width, stripC.height)
+  const g = stripC.getContext('2d', { willReadFrequently: true }); g.clearRect(0, 0, stripC.width, stripC.height)
   applyHeadings(env)
   if (scene) { const tod = scene.tod; scene.dispose(); scene = null; hero.classList.remove('is-live'); mountScene(env, tod) }
-  loadReplay(env)
+  if (REPS[env]) applyReplay(env); else loadReplay(env)
 }
 function bootScene() {
   applyHeadings(envNow)
@@ -600,6 +701,8 @@ function bootScene() {
   $$('.seg [data-cam]').forEach(b => b.addEventListener('click', () => setCam(b.dataset.cam)))
   $$('.seg [data-env]').forEach(b => b.addEventListener('click', () => switchScene(b.dataset.env)))
   $('#btn-camcycle').addEventListener('click', () => setCam(CAMS[(CAMS.indexOf(camNow) + 1) % CAMS.length]))
+  $('#btn-rate').addEventListener('click', () => setRate(RATES[(RATES.indexOf(rateNow) + 1) % RATES.length]))
+  $('#btn-photo').addEventListener('click', takePhoto)
   const bp = $('#btn-pause')
   // 減少動態：場景停在一張靜止畫面，暫停鈕改當「播放」用
   bp.addEventListener('click', () => {
@@ -611,90 +714,373 @@ function bootScene() {
   HUD.tod.addEventListener('input', () => { if (scene) scene.setTod(HUD.tod.value / 1000) })
   const inView = () => hero.getBoundingClientRect().bottom > 80
   addEventListener('keydown', e => {
+    if (e.key === 'Escape' && !$('#race-pop').hidden) { closePop(); $('#race-pick').focus(); return }
     if (!scene || e.target.closest && e.target.closest('input,textarea,select') || e.metaKey || e.ctrlKey || e.altKey || !inView()) return
     const k = e.key.toLowerCase()
     if (k >= '1' && k <= '5') setCam(CAMS[+k - 1])
     else if (k === 'c') $('#btn-camcycle').click()
     else if (k === 'p') bp.click()
     else if (k === 'm') bs.click()
+    else if (k === 'f') $('#btn-rate').click()
+    else if (k === 'k') takePhoto()
     else if (k === 'w') scene.setBoost(140)
     else if (k === 's') scene.setBrake(true)
   })
   addEventListener('keyup', e => { if (!scene) return; const k = e.key.toLowerCase(); if (k === 'w') scene.setBoost(0); if (k === 's') scene.setBrake(false) })
 }
-// 重播挑哪一趟：
-//   大稻埕 → 最近一趟有「淡水河右岸・大稻埕–馬場町」路段的騎乘，從大稻埕那一段開始（優先「大稻埕→馬場町」）
-//   北海岸 → 最近一趟戶外騎乘，從當天第一段計時段開始
-async function loadReplay(env) {
-  if (!(env in REPS)) REPS[env] = await findReplay(env)
-  if (env !== envNow) return
+
+/* ── 重播與計時賽 ──
+   大稻埕 → 預設「大稻埕→馬場町」最近一次；北海岸 → 最近一趟戶外騎乘、當天最早的那段計時段。
+   計時賽的影子：PR（自己最快那次）＋「上一次」；路段有同事成績（data/rivals.json）就換成同事，照平均速度騎 */
+const RIVER_RACES = [30593390, 7032136, 37816958]
+const GHOST_PR = '#ff9a5a'
+const FIT_EPOCH = 631065600                               // FIT 時間從 1989-12-31 UTC 起算
+const RIDES = new Map()                                   // FIT 檔名 → Promise<rep>（同一個檔的陣列大家共用）
+function loadRide(file) {
+  if (!RIDES.has(file)) {
+    RIDES.set(file, fetch('data/fit/' + encodeURIComponent(file)).then(r => (r.ok ? r.arrayBuffer() : null)).then(buf => {
+      if (!buf) return null
+      const rep = window.PelicanCoast.toReplay(window.PelicanCoast.parseFit(buf), {})
+      if (!rep) return null
+      const ps = new Float64Array(rep.n + 1); for (let i = 0; i < rep.n; i++) ps[i + 1] = ps[i] + rep.pw[i]
+      rep.ps = ps
+      return rep
+    }).catch(() => null))
+  }
+  return RIDES.get(file)
+}
+const localSec = rep => (((rep.t0 + FIT_EPOCH + 8 * 3600) % 86400) + 86400) % 86400
+function idxOfClock(rep, hhmm) { const [h, m] = hhmm.split(':').map(Number); let s = h * 3600 + m * 60 - localSec(rep); if (s < -43200) s += 86400; return s }
+// start_time 只到分鐘：在 −20…+80 秒裡找「路段長度的平均功率」最接近成績、距離最接近路段長的起點，對到秒
+function alignEffort(rep, e, L) {
+  const T = Math.round(e.elapsed_sec), guess = idxOfClock(rep, e.start_time), hi = rep.n - T - 2
+  let best = Math.max(0, Math.min(hi, guess + 30)), bestErr = 1e9
+  for (let s0 = Math.max(0, guess - 20); s0 <= Math.min(hi, guess + 80); s0++) {
+    let err = 0
+    if (e.avg_watts) err += Math.abs((rep.ps[s0 + T] - rep.ps[s0]) / T - e.avg_watts) / Math.max(e.avg_watts, 60)
+    if (L) err += 0.5 * Math.abs(rep.dist[s0 + T] - rep.dist[s0] - L) / L
+    if (err < bestErr) { bestErr = err; best = s0 }
+  }
+  return best
+}
+const segShort = (id, seg) => { const m = ITT_META.get(id) || {}; return ((m.label && m.label !== '全段' ? m.label : m.nameZh) || seg.name || '').replace(/\s*全段$/, '') }
+const effKey = e => e.date + ' ' + e.start_time
+function raceSegs(env) {
+  const itt = DATA.ittRaw || []
+  const pool = env === 'river'
+    ? RIVER_RACES.map(id => itt.find(s => s.id === id)).filter(Boolean)
+    : itt.filter(s => { const m = ITT_META.get(s.id); return m && m.label === '全段' && !RIVER_GROUPS.includes(m.group) })
+  const out = pool.map(s => ({ id: s.id, name: segShort(s.id, s), L: Math.round((s.distance_km || 0) * 1000),
+    efs: (s.efforts || []).filter(e => e.fit && e.start_time && e.elapsed_sec > 30).sort((a, b) => effKey(b).localeCompare(effKey(a))) }))
+    .filter(x => x.L > 300 && x.efs.length >= 2)
+  if (env !== 'river') out.sort((a, b) => effKey(b.efs[0]).localeCompare(effKey(a.efs[0])))
+  return out
+}
+function pickGhosts(sg, me) {
+  const others = sg.efs.filter(e => e !== me)
+  const fast = others.slice().sort((a, b) => a.elapsed_sec - b.elapsed_sec)[0]
+  const out = []
+  if (fast) out.push({ key: 'best', e: fast, label: fast.elapsed_sec < me.elapsed_sec ? 'PR' : '第二快', color: GHOST_PR })
+  const rv = ((DATA.rivals && DATA.rivals.riders) || []).filter(r => r.efforts && r.efforts[sg.id] && r.efforts[sg.id].elapsed_sec > 30)
+  if (rv.length) rv.slice(0, 3).forEach(r => { const x = r.efforts[sg.id]; out.push({ key: r.id, label: r.name, color: r.color, T: x.elapsed_sec, cad: x.avg_cadence_rpm, avgW: x.avg_watts, sub: '同事' }) })
+  else {
+    const prev = others.find(e => e !== fast && effKey(e) < effKey(me)) || others.find(e => e !== fast)
+    if (prev) out.push({ key: 'prev', e: prev, label: effKey(prev) < effKey(me) ? '上一次' : '最近一次', color: C.dusk })
+  }
+  return out
+}
+const actOfFile = file => { const id = file.split('_')[1]; return (DATA.actsList || []).find(a => a.id === id) || null }
+// 從「計時段」章節跳上來重騎：章節用的是合併過 Strava 的成績，要對回有 FIT 的那一筆
+function raceEnvOf(segId) { return raceSegs('river').some(x => x.id === segId) ? 'river' : raceSegs('coast').some(x => x.id === segId) ? 'coast' : null }
+function rawEff(segId, e) {
+  const env = raceEnvOf(segId), sg = env && raceSegs(env).find(x => x.id === segId)
+  return sg ? sg.efs.find(x => x.date === e.date && x.start_time === e.start_time) || null : null
+}
+function raceFromChapter(segId, e) {
+  const env = raceEnvOf(segId); if (!env || !scene) return
+  const sg = raceSegs(env).find(x => x.id === segId), eff = e ? rawEff(segId, e) : sg.efs[0]
+  if (!eff) return
+  scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })
+  if (env !== envNow) switchScene(env)
+  loadReplay(env, { seg: segId, eff })
+}
+
+const mdY = d => (d.slice(0, 4) === TODAY.slice(0, 4) ? mdd(d) : `${d.slice(2, 4)}/${mdd(d)}`)
+let loadTok = 0
+async function loadReplay(env, pick) {
+  const tok = ++loadTok
+  if (pick) { $('#strip-l').textContent = '載入那一趟…' }
+  const R = await findReplay(env, pick)
+  if (tok !== loadTok || env !== envNow) return
+  if (!R) { if (!REPS[env]) { applyHeadings(env); $('#strip-l').textContent = '找不到可以重播的騎乘' } else if (pick) toast('那一趟的 FIT 讀不到'); return }
+  REPS[env] = R
+  applyReplay(env)
+  if (!R.raceP) return
+  const race = await R.raceP
+  if (tok !== loadTok || env !== envNow || REPS[env] !== R) return
+  R.race = race
+  if (scene && race) scene.setRace(race)
+  raceUI(R); applyHeadings(env); drawStrip()
+  if (race && !pop.hidden) renderPop(race.id)
+}
+function applyReplay(env) {
   const R = REPS[env]
   applyHeadings(env)
-  if (!R) { $('#strip-l').textContent = '找不到可以重播的騎乘'; return }
   REP = R.rep; repInfo = R.info
   $('#strip-l').innerHTML = `<b>${mdd(repInfo.date)}</b> · ${n1(repInfo.km)} km · 爬升 ${n0(repInfo.gain)} m · NP ${n0(repInfo.np)} W`
   $('#strip-r').textContent = repInfo.marks.length ? repInfo.marks.map(m => m.label).join('　') : ''
   drawStrip()
-  if (scene) scene.setReplay(REP)
+  if (scene) { scene.setReplay(REP); scene.setRace(R.race || null) }
+  if (R.race || !R.raceP) raceUI(R); else racePending(R)
 }
-async function findReplay(env) {
-  const reports = DATA.reports, itt = DATA.ittRaw || []
-  if (!DATA.actsList || !reports || !window.PelicanCoast) return null
+// 影子的 FIT 還在路上：面板先換成新路段的名字，選單不要關
+function racePending(R) {
+  RUI.r = null
+  $('#race').hidden = false
+  $('#race-name').textContent = R.info.segName; $('#race-km').textContent = n1(R.info.segL / 1000) + ' km'
+  $('#race-rows').textContent = ''; $('#race-st').textContent = '影子載入中…'; $('#race-again').hidden = true
+  $('#race-fill').style.transform = 'scaleX(0)'
+  const c = $('#race-map'); c.getContext('2d', { willReadFrequently: true }).clearRect(0, 0, c.width, c.height)
+}
+async function findReplay(env, pick) {
+  if (!DATA.actsList || !DATA.reports || !window.PelicanCoast) return null
+  const segs = raceSegs(env)
+  // 候選：[{ file, sg, eff }]，第一個讀得到 FIT 的就用
   const cands = []
-  if (env === 'river') {
-    const effs = []
-    itt.forEach(seg => {
-      const meta = ITT_META.get(seg.id); if (!meta || meta.group !== 'danshui-south') return
-      ;(seg.efforts || []).forEach(e => { if (e.start_time && e.source === 'fit') effs.push({ e, meta, pri: seg.id === 30593390 ? 1 : 0 }) })
+  if (pick) { const sg = segs.find(x => x.id === pick.seg); const eff = pick.eff || (sg && sg.efs[0]); if (sg && eff) cands.push({ file: eff.fit, sg, eff }) }
+  else if (env === 'river') { segs.slice(0, 1).forEach(sg => sg.efs.slice(0, 4).forEach(eff => cands.push({ file: eff.fit, sg, eff }))) }
+  else {
+    DATA.actsList.filter(a => a.type === 'Ride' && a.icu_weighted_avg_watts && (a.distance || 0) > 5000).slice(0, 4).forEach(a => {
+      const file = Object.keys(DATA.reports).find(k => k.includes('_' + a.id + '_'))
+      if (!file) return
+      let hit = null
+      segs.forEach(sg => sg.efs.forEach(e => { if (e.fit === file && (!hit || e.start_time < hit.eff.start_time)) hit = { sg, eff: e } }))
+      cands.push({ file, sg: hit ? hit.sg : null, eff: hit ? hit.eff : null, a })
     })
-    effs.sort((x, y) => `${y.e.date}${y.pri}${y.e.start_time}`.localeCompare(`${x.e.date}${x.pri}${x.e.start_time}`))
-    const seen = new Set()
-    effs.forEach(f => {
-      if (seen.has(f.e.date) || cands.length >= 4) return
-      const ride = DATA.actsList.filter(a => a.type === 'Ride' && a.date === f.e.date && a.time <= f.e.start_time).sort((a, b) => b.time.localeCompare(a.time))[0]
-      if (ride) { seen.add(f.e.date); cands.push({ a: ride, at: f.e.start_time, eff: f.e, seg: (f.meta.label && f.meta.label !== '全段' ? f.meta.label : f.meta.nameZh).replace(/ 全段$/, '') }) }
-    })
-  } else {
-    DATA.actsList.filter(a => a.type === 'Ride' && a.icu_weighted_avg_watts && (a.distance || 0) > 5000).slice(0, 4).forEach(a => cands.push({ a, at: null }))
   }
   for (const c of cands) {
-    const a = c.a, file = Object.keys(reports).find(k => k.includes('_' + a.id + '_'))
-    if (!file) continue
-    const buf = await fetch('data/fit/' + encodeURIComponent(file)).then(r => (r.ok ? r.arrayBuffer() : null)).catch(() => null)
-    if (!buf) continue
-    let fit
-    try { fit = window.PelicanCoast.parseFit(buf) } catch (e) { continue }
-    const date = a.date, t0 = a.start_date_local.slice(11, 19).split(':').map(Number)
-    const toSec = hhmm => { const [h, m] = hhmm.split(':').map(Number); return h * 3600 + m * 60 - (t0[0] * 3600 + t0[1] * 60 + (t0[2] || 0)) }
+    const rep0 = await loadRide(c.file)
+    if (!rep0) continue
+    const a = c.a || actOfFile(c.file), date = c.file.slice(0, 10)
+    const itt = DATA.ittRaw || []
     // 當天的計時段（每個母路線只取最長那段，避免四等分洗版；大稻埕只列河濱的）
     const groups = new Map()
     itt.forEach(seg => (seg.efforts || []).forEach(e => {
-      if (e.date !== date || !e.start_time) return
+      if (e.date !== date || !e.start_time || (e.fit && e.fit !== c.file)) return
       const meta = ITT_META.get(seg.id) || {}
       if (env === 'river' && !RIVER_GROUPS.includes(meta.group)) return
-      const g = meta.group || ('s' + seg.id), s0 = toSec(e.start_time), cur = groups.get(g)
+      const g = meta.group || ('s' + seg.id), s0 = idxOfClock(rep0, e.start_time) + 30, cur = groups.get(g)
       if (!cur || e.elapsed_sec > cur.len) groups.set(g, { s0, len: e.elapsed_sec, label: `${(meta.gname || meta.nameZh || seg.name || '').replace(/・.*$/, '')} ${hms(e.elapsed_sec)}` })
     }))
     const marks = [...groups.values()].sort((x, y) => x.s0 - y.s0)
-    let start = c.at ? Math.max(0, toSec(c.at)) : (marks.length ? Math.max(0, marks[0].s0 - 20) : 60)
-    const rep = window.PelicanCoast.toReplay(fit, { start })
-    if (!rep) continue
-    // start_time 只到分鐘：在 −20…+80 秒之間找「路段長度的平均功率」最接近路段成績的那個起點，對到秒
-    if (c.eff && c.eff.avg_watts && c.eff.elapsed_sec) {
-      const L = Math.round(c.eff.elapsed_sec), ps = new Float64Array(rep.n + 1)
-      for (let i = 0; i < rep.n; i++) ps[i + 1] = ps[i] + rep.pw[i]
-      let best = start, bestErr = 1e9
-      for (let s0 = Math.max(0, start - 20); s0 <= Math.min(rep.n - L - 1, start + 80); s0++) { const e = Math.abs((ps[s0 + L] - ps[s0]) / L - c.eff.avg_watts); if (e < bestErr) { bestErr = e; best = s0 } }
-      rep.start = best
-    }
+    let s0 = null, start
+    if (c.eff) { s0 = alignEffort(rep0, c.eff, c.sg.L); start = Math.max(0, s0 - 10) }         // 起點前 10 秒開始：影子先並排騎
+    else start = marks.length ? Math.max(0, marks[0].s0 - 50) : 60
+    const rep = Object.assign({}, rep0, { start })
     const sess = DATA.block && (DATA.block.sessions || []).find(x => x.date === date)
-    const what = sess && sess.actual && sess.actual.sub_name ? sess.actual.sub_name.replace(/（.*?）/g, '').trim() : a.name
-    const sentence = env === 'river'
-      ? `油門是 <b>${mdd(date)} ${esc(what)}</b> 那趟逐秒的功率，從「${esc(c.seg)}」那一段開始。`
+    const what = sess && sess.actual && sess.actual.sub_name ? sess.actual.sub_name.replace(/（.*?）/g, '').trim() : (a ? a.name : '')
+    const sentence = c.sg
+      ? `油門是 <b>${mdd(date)} ${esc(what)}</b> 那趟逐秒的功率，騎「${esc(c.sg.name)}」。`
       : `油門是 <b>${mdd(date)} ${esc(what)}</b> 那趟逐秒的功率——那天的瓦數，搬到平路上會是這個速度。`
-    return { rep, info: { date, name: a.name, marks, np: a.icu_weighted_avg_watts, km: (a.distance || 0) / 1000, gain: a.total_elevation_gain, sentence } }
+    const info = { date, name: a ? a.name : '', what, marks, np: a ? a.icu_weighted_avg_watts : null, km: a ? (a.distance || 0) / 1000 : rep0.dist[rep0.n - 1] / 1000, gain: a ? a.total_elevation_gain : null, sentence,
+      seg: c.sg ? { s0, T: c.eff.elapsed_sec } : null, segName: c.sg ? c.sg.name : '', segL: c.sg ? c.sg.L : 0 }
+    const R = { rep, info, race: null, raceP: null }
+    if (c.sg) R.raceP = buildRace(c.sg, c.eff, rep, s0)
+    return R
   }
   return null
+}
+async function buildRace(sg, me, rep, s0) {
+  const defs = pickGhosts(sg, me)
+  const ghosts = (await Promise.all(defs.map(async d => {
+    if (!d.e) return d                                                    // 同事：只有成績，照平均速度
+    const r = await loadRide(d.e.fit)
+    if (!r) return null
+    return { key: d.key, label: d.label, color: d.color, T: d.e.elapsed_sec, rep: r, s0: alignEffort(r, d.e, sg.L), sub: mdY(d.e.date) }
+  }))).filter(Boolean)
+  if (scene && scene.quality === 'low') ghosts.length = Math.min(ghosts.length, 3)          // 手機最多三隻（一隻影子 23 個 draw call）
+  const names = ghosts.map(g => (g.key === 'prev' ? g.label + '的自己' : g.key === 'best' ? g.label + (g.label === 'PR' ? '' : '的自己') : g.label))
+  return { id: sg.id, name: sg.name, L: sg.L, T: me.elapsed_sec, s0, rep, ghosts, eff: me, date: me.date,
+    rank: 1 + sg.efs.filter(e => e.elapsed_sec < me.elapsed_sec).length, of: sg.efs.length,
+    who: ghosts.length ? `半透明的是${/^[A-Za-z]/.test(names[0]) ? ' ' : ''}${names.join('、')}。` : '' }
+}
+
+/* 計時賽面板 */
+const RUI = { r: null, rep: null, prev: {}, lastTau: null, fxT: 0, map: null, meK: 1 }
+function raceUI(R) {
+  const box = $('#race'), r = R && R.race
+  RUI.r = r || null; RUI.rep = R ? R.rep : null; RUI.prev = {}; RUI.lastTau = null
+  if (!r) { box.hidden = true; closePop(); return }
+  box.hidden = false
+  $('#race-name').textContent = r.name; $('#race-km').textContent = n1(r.L / 1000) + ' km'
+  const ol = $('#race-rows'); ol.textContent = ''
+  r.ghosts.forEach(g => {
+    const li = document.createElement('li')
+    const i = document.createElement('i'); i.style.background = g.color; li.appendChild(i)
+    const sp = document.createElement('span'); sp.textContent = g.label
+    const sm = document.createElement('small'); sm.textContent = g.sub || ''; sp.appendChild(sm); li.appendChild(sp)
+    li.appendChild(document.createElement('b'))
+    ol.appendChild(li)
+  })
+  const rep = R.rep, d0 = rep.dist[r.s0], span = rep.dist[Math.min(rep.n - 1, r.s0 + Math.round(r.T))] - d0
+  RUI.meK = span > r.L * 0.5 ? r.L / span : 1
+  drawRaceMap()
+}
+const gapTxt = s => { const a = Math.abs(s); return a < 59.5 ? `${Math.round(a)} 秒` : hms(a) }
+function onRace(o, ri) {
+  const r = RUI.r
+  if (!r || !o) return
+  if (RUI.lastTau != null && o.tau < RUI.lastTau - 5) RUI.prev = {}            // 往回跳（再騎一次、點走勢條）：超車紀錄重來
+  if (RUI.lastTau != null && RUI.lastTau < 0 && o.tau >= 0 && o.tau < 3) raceFx('起跑')
+  RUI.lastTau = o.tau
+  $('#race-fill').style.transform = `scaleX(${Math.max(0, Math.min(1, o.mp / o.L)).toFixed(4)})`
+  const st = $('#race-st'), again = $('#race-again')
+  if (o.phase === 'pre') st.innerHTML = -o.tau <= 60 ? `<b>${Math.ceil(-o.tau)}</b> 秒後起跑 · 你這次 ${hms(r.T)}` : `起點在 <b>${hms(-o.tau)}</b> 後`
+  else if (o.phase === 'race') st.innerHTML = `<b>${hms(o.tau)}</b> · ${n1(Math.max(0, o.mp) / 1000)} / ${n1(o.L / 1000)} km`
+  else st.innerHTML = `完賽 <b>${hms(r.T)}</b> · ${r.of} 次裡第 ${r.rank} 快`
+  const showAgain = o.phase === 'done' || -o.tau > 60
+  again.hidden = !showAgain
+  if (showAgain) again.textContent = o.phase === 'done' ? '再騎一次這段 ↺' : '跳到起點 →'
+  const lis = $('#race-rows').children
+  o.rows.forEach((row, i) => {
+    const b = lis[i] && lis[i].lastChild
+    if (!b) return
+    if (o.phase === 'pre') { b.textContent = hms(row.T); b.className = '' }
+    else if (Math.abs(row.dt) < 0.5) { b.textContent = '並排'; b.className = '' }
+    else { b.textContent = (row.dt > 0 ? '落後 ' : '領先 ') + gapTxt(row.dt); b.className = row.dt > 0 ? 'dn' : 'up' }
+    // 超車：時間差換號（±1 秒的遲滯），起跑 10 秒後才算
+    const sg = row.dt > 1 ? 1 : row.dt < -1 ? -1 : (RUI.prev[row.key] || 0)
+    if (o.phase === 'race' && o.tau > 10 && RUI.prev[row.key] && sg && sg !== RUI.prev[row.key]) raceFx(sg < 0 ? `超過 ${row.label}` : `被 ${row.label} 超過`)
+    if (sg) RUI.prev[row.key] = sg
+  })
+  drawRaceDots(o, ri)
+}
+function raceFx(msg) {
+  const el = $('#race-fx'); el.textContent = msg; el.classList.add('on')
+  clearTimeout(RUI.fxT); RUI.fxT = setTimeout(() => el.classList.remove('on'), 2600)
+}
+$('#race-again').addEventListener('click', () => { const r = RUI.r; if (r && scene) { scene.seek(Math.max(0, r.s0 - 10)); if (scene.paused) $('#btn-pause').click() } })
+// 小地圖：整趟淡淡一條、這一段亮起來；點＝你、影子（影子的位置是把他的進度對到你的路線上）
+function drawRaceMap() {
+  const c = $('#race-map'), r = RUI.r, rep = RUI.rep
+  RUI.map = null
+  if (!r || !rep || !rep.lat || !c.clientWidth) return
+  const dpr = Math.min(devicePixelRatio || 1, 2), w = c.clientWidth, h = c.clientHeight
+  c.width = Math.round(w * dpr); c.height = Math.round(h * dpr)
+  const g = c.getContext('2d', { willReadFrequently: true }); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h)
+  const a = r.s0, b = Math.min(rep.n - 1, r.s0 + Math.round(r.T))
+  let la0 = 90, la1 = -90, lo0 = 180, lo1 = -180
+  for (let i = a; i <= b; i++) { const la = rep.lat[i], lo = rep.lon[i]; if (!isFinite(la)) continue; if (la < la0) la0 = la; if (la > la1) la1 = la; if (lo < lo0) lo0 = lo; if (lo > lo1) lo1 = lo }
+  if (la1 < la0) return
+  const kx = Math.cos((la0 + la1) / 2 * Math.PI / 180), pad = 10
+  const sw = Math.max((lo1 - lo0) * kx, 1e-5), sh = Math.max(la1 - la0, 1e-5)
+  const sc = Math.min((w - pad * 2) / sw, (h - pad * 2) / sh)
+  const ox = (w - sw * sc) / 2, oy = (h - sh * sc) / 2
+  const P = i => [ox + (rep.lon[i] - lo0) * kx * sc, h - oy - (rep.lat[i] - la0) * sc]
+  const line = (i0, i1, step) => { g.beginPath(); let pen = false; for (let i = i0; i <= i1; i += step) { if (!isFinite(rep.lat[i])) { pen = false; continue } const p = P(i); pen ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1]); pen = true } g.stroke() }
+  g.lineJoin = 'round'; g.lineCap = 'round'
+  g.strokeStyle = 'rgba(246,239,228,.16)'; g.lineWidth = 1.2; line(0, rep.n - 1, 2)
+  g.strokeStyle = 'rgba(255,154,90,.9)'; g.lineWidth = 2; line(a, b, 1)
+  for (const [i, col] of [[a, 'rgba(246,239,228,.85)'], [b, 'rgba(246,239,228,.85)']]) { const p = P(i); g.fillStyle = col; g.fillRect(p[0] - 1, p[1] - 4, 2, 8) }
+  RUI.map = { P, img: g.getImageData(0, 0, c.width, c.height), g, w, h }
+}
+function idxAtProg(p) {
+  const r = RUI.r, rep = RUI.rep, d0 = rep.dist[r.s0], want = d0 + Math.max(0, p) / RUI.meK
+  let lo = r.s0, hi = Math.min(rep.n - 1, r.s0 + Math.round(r.T * 3))
+  if (rep.dist[hi] < want) return hi
+  while (hi - lo > 1) { const m = (lo + hi) >> 1; if (rep.dist[m] >= want) hi = m; else lo = m }
+  return hi
+}
+function drawRaceDots(o, ri) {
+  const M = RUI.map
+  if (!M) return
+  const g = M.g
+  g.putImageData(M.img, 0, 0)
+  const dpr = M.img.width / M.w; g.setTransform(dpr, 0, 0, dpr, 0, 0)
+  const dot = (p, col, rad) => { g.beginPath(); g.arc(p[0], p[1], rad, 0, Math.PI * 2); g.fillStyle = col; g.fill(); g.lineWidth = 1.5; g.strokeStyle = 'rgba(10,13,24,.85)'; g.stroke() }
+  o.rows.slice().reverse().forEach(row => { const i = idxAtProg(row.p); if (isFinite(RUI.rep.lat[i])) dot(M.P(i), row.color, 3.6) })
+  if (isFinite(RUI.rep.lat[ri])) dot(M.P(ri), '#fff', 4.4)
+}
+new ResizeObserver(() => { if (RUI.r) drawRaceMap() }).observe($('#race-map'))
+
+/* 挑一段、挑一次 */
+const pop = $('#race-pop'), pickBtn = $('#race-pick')
+function closePop() { if (pop.hidden) return; pop.hidden = true; pickBtn.setAttribute('aria-expanded', 'false') }
+function renderPop(segId) {
+  const segs = raceSegs(envNow), cur = REPS[envNow] && REPS[envNow].race
+  const sg = segs.find(x => x.id === segId) || segs[0]
+  if (!sg) return
+  const best = Math.min(...sg.efs.map(e => e.elapsed_sec))
+  const sb = $('#rp-segs'); sb.textContent = ''
+  segs.forEach(x => {
+    const b = document.createElement('button'); b.type = 'button'; b.dataset.seg = x.id; b.setAttribute('aria-pressed', String(x.id === sg.id))
+    b.textContent = x.name; const sm = document.createElement('small'); sm.textContent = n1(x.L / 1000) + ' km'; b.appendChild(sm)
+    b.addEventListener('click', () => { if (x.id === sg.id) return; renderPop(x.id); loadReplay(envNow, { seg: x.id, eff: x.efs[0] }) })
+    sb.appendChild(b)
+  })
+  const eb = $('#rp-efs'); eb.textContent = ''
+  sg.efs.forEach(e => {
+    const b = document.createElement('button'); b.type = 'button'
+    const isCur = cur && cur.id === sg.id && cur.eff === e
+    if (isCur) b.setAttribute('aria-current', 'true')
+    const cells = [[mdY(e.date), `週${wdOf(e.date)}`], [hms(e.elapsed_sec), ''], [e.avg_watts ? `${e.avg_watts} W` : '–', e.start_time]]
+    cells.forEach(([t, s]) => { const sp = document.createElement('span'); sp.textContent = t; if (s) { const sm = document.createElement('small'); sm.textContent = ' ' + s; sp.appendChild(sm) } b.appendChild(sp) })
+    const em = document.createElement('em'); em.textContent = e.elapsed_sec === best ? 'PR' : isCur ? '現在' : ''; if (e.elapsed_sec === best) em.className = 'pr'; b.appendChild(em)
+    b.addEventListener('click', () => { closePop(); pickBtn.focus(); if (!isCur) loadReplay(envNow, { seg: sg.id, eff: e }) })
+    eb.appendChild(b)
+  })
+}
+pickBtn.addEventListener('click', e => {
+  e.stopPropagation()
+  if (!pop.hidden) { closePop(); return }
+  const cur = REPS[envNow] && REPS[envNow].race
+  if (!cur) return
+  renderPop(cur.id); pop.hidden = false; pickBtn.setAttribute('aria-expanded', 'true')
+  const f = pop.querySelector('[aria-current="true"]') || pop.querySelector('.rp-efs button'); if (f) f.focus({ preventScroll: true })
+})
+document.addEventListener('pointerdown', e => { if (!pop.hidden && !pop.contains(e.target) && !pickBtn.contains(e.target)) closePop() })
+
+/* 拍照：場景那一格＋底下一條圖說，存成 PNG（手機上走系統分享） */
+let toastT = 0
+function toast(msg) { const el = $('#hud-toast'); el.textContent = msg; el.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('on'), 2400) }
+async function takePhoto() {
+  if (!scene || !scene.snapshot) return
+  const sh = $('#shutter')
+  if (!matchMedia('(prefers-reduced-motion: reduce)').matches) { sh.classList.add('on'); requestAnimationFrame(() => requestAnimationFrame(() => sh.classList.remove('on'))) }
+  const shot = scene.snapshot(2400)
+  try { await Promise.all([document.fonts.load('700 40px "Noto Serif TC"', '鵜鶘騎單車'), document.fonts.load('600 30px Overpass'), document.fonts.load('400 16px "Overpass Mono"')]) } catch (e) {}
+  const W = shot.width, band = Math.max(96, Math.round(W * 0.07)), u = band / 100
+  const c = document.createElement('canvas'); c.width = W; c.height = shot.height + band
+  const g = c.getContext('2d')
+  g.drawImage(shot, 0, 0)
+  g.fillStyle = '#0d1322'; g.fillRect(0, shot.height, W, band)
+  g.fillStyle = 'rgba(233,224,208,.14)'; g.fillRect(0, shot.height, W, Math.max(1, Math.round(u)))
+  const y1 = shot.height + band * 0.47, y2 = shot.height + band * 0.8, x0 = band * 0.36
+  const R = REPS[envNow], info = R && R.info, race = R && R.race, s = lastHud
+  g.textBaseline = 'alphabetic'
+  g.fillStyle = '#efe8dc'; g.font = `700 ${Math.round(34 * u)}px "Noto Serif TC", serif`; g.fillText('鵜鶘騎單車', x0, y1)
+  const tw = g.measureText('鵜鶘騎單車').width
+  g.fillStyle = '#b4b7c3'; g.font = `500 ${Math.round(20 * u)}px Overpass, "PingFang TC", sans-serif`; g.fillText(`  ·  ${SCENES[envNow].h1}`, x0 + tw, y1)
+  const bits = []
+  if (info) bits.push(`${info.date.replace(/-/g, '/')}${info.what ? ' ' + info.what : ''}`)
+  if (race) bits.push(`${race.name} ${hms(race.T)}`)
+  g.fillStyle = '#7e8599'; g.font = `400 ${Math.round(17 * u)}px Overpass, "PingFang TC", sans-serif`; g.fillText(bits.join('  ·  '), x0, y2)
+  g.textAlign = 'right'
+  if (s) { g.fillStyle = '#ff9a5a'; g.font = `600 ${Math.round(28 * u)}px Overpass, sans-serif`; g.fillText(`${s.kmh.toFixed(1)} km/h  ·  ${Math.round(s.pw)} W  ·  ${s.coast ? 0 : Math.round(s.cad)} rpm`, W - x0, y1) }
+  g.fillStyle = '#7e8599'; g.font = `400 ${Math.round(15 * u)}px "Overpass Mono", monospace`; g.fillText('chenhan20.github.io/linkTree', W - x0, y2)
+  const name = `pelican-ride-${info ? info.date : TODAY}-${envNow}.png`
+  c.toBlob(blob => {
+    if (!blob) { toast('這台瀏覽器存不了圖'); return }
+    const file = typeof File === 'function' ? new File([blob], name, { type: 'image/png' }) : null
+    if (file && matchMedia('(pointer: coarse)').matches && navigator.canShare && navigator.canShare({ files: [file] })) {
+      navigator.share({ files: [file], title: '鵜鶘騎單車' }).catch(() => {})
+      return
+    }
+    const url = URL.createObjectURL(blob), a = document.createElement('a')
+    a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove()
+    setTimeout(() => URL.revokeObjectURL(url), 5000)
+    toast(`存好了：${name}`)
+  }, 'image/png')
 }
 const stripC = $('#strip-c')
 let stripCache = null
@@ -711,6 +1097,7 @@ function drawStrip() {
   for (let i = 0; i < bins; i++) { let s = 0, c = 0; for (let k = Math.floor(i * per); k < Math.floor((i + 1) * per); k++) { s += REP.pw[k]; c++ } const v = c ? s / c : 0; vals.push(v); max = Math.max(max, v) }
   max = Math.max(max, 300)
   ;(repInfo.marks || []).forEach(m => { const x0 = m.s0 / n * w, x1 = (m.s0 + m.len) / n * w; g.fillStyle = 'rgba(255,176,122,.16)'; g.fillRect(x0, 0, Math.max(2, x1 - x0), h) })
+  if (repInfo.seg) { const x0 = repInfo.seg.s0 / n * w, x1 = (repInfo.seg.s0 + repInfo.seg.T) / n * w; g.fillStyle = 'rgba(255,176,122,.2)'; g.fillRect(x0, 0, Math.max(2, x1 - x0), h); g.fillStyle = 'rgba(255,214,184,.9)'; g.fillRect(x0, 0, 1.5, h); g.fillRect(x1 - 1.5, 0, 1.5, h) }
   g.beginPath(); g.moveTo(0, h)
   vals.forEach((v, i) => g.lineTo(i / (bins - 1) * w, h - 3 - v / max * (h - 8)))
   g.lineTo(w, h); g.closePath()
@@ -1246,17 +1633,20 @@ function renderIttDetail(rows) {
   const seg = mem.seg, ef = (seg.efforts || []).slice().sort((a, b) => `${b.date} ${b.start_time || ''}`.localeCompare(`${a.date} ${a.start_time || ''}`))
   const best = ef.reduce((x, e) => (!x || e.elapsed_sec < x.elapsed_sec ? e : x), null)
   const gr = DATA.grades && DATA.grades[seg.id]
+  const raceEnv = raceEnvOf(seg.id)
   const box = $('#itt-d')
   box.innerHTML = `<h3>${esc(mem.cfg.nameZh || seg.name)}</h3>
     <p class="dmeta">${n1(seg.distance_km)} km${mem.cfg.avgGrade ? ` · 均坡 ${mem.cfg.avgGrade}%` : ''}${gr ? ` · FIT 實測最陡 ${gr.max}%` : ''}${seg.kom_time_str ? ` · KOM ${esc(seg.kom_time_str)}` : ''}</p>
+    ${raceEnv ? `<button class="race-go" type="button" data-go="latest">在頁首跟影子重騎這段<span aria-hidden="true">↑</span></button>` : ''}
     ${r.members.length > 1 ? `<div class="subs" role="group" aria-label="分段">${r.members.map(m => `<button type="button" data-id="${m.cfg.id}" aria-pressed="${m === mem}">${esc(m.cfg.label || m.cfg.nameZh)} ${m.seg.efforts && m.seg.efforts.length ? hms(Math.min(...m.seg.efforts.map(e => e.elapsed_sec))) : ''}</button>`).join('')}</div>` : ''}
     ${gr ? `<div class="blk" style="margin-top:22px"><p class="sub">坡度剖面 <i>每 25 m 一格，從 FIT 算的</i></p><div class="chart" id="grade-c"></div></div>` : ''}
     <div class="blk" style="margin-top:22px"><p class="sub">歷次成績 <i>${ef.length} 次 · <span class="crown"></span>最快</i></p>
-    <div class="tscroll"><table class="t"><thead><tr><th>日期</th><th class="r">時間</th><th class="r">W</th><th class="r">心率</th><th class="r">踏頻</th><th>來源</th></tr></thead>
-    <tbody>${ef.slice(0, 14).map(e => `<tr><td>${e === best ? '<span class="crown"></span>' : ''}${e.date.slice(2).replace(/-/g, '/')}${e.start_time ? ` <span class="muted">${esc(e.start_time)}</span>` : ''}</td><td class="r"><b>${hms(e.elapsed_sec)}</b></td><td class="r">${n0(e.avg_watts)}</td><td class="r">${n0(e.avg_heartrate)}</td><td class="r">${n0(e.avg_cadence)}</td><td><span class="src${e.fit_check ? ' w' : ''}" title="${e.fit_check ? '自建與 Strava 差太多，顯示 Strava' : ''}">${e.source === 'fit' ? 'FIT' : e.fit_check ? '⚠︎ STRAVA' : 'STRAVA'}</span></td></tr>`).join('')}</tbody></table></div>
+    <div class="tscroll"><table class="t"><thead><tr><th>日期</th><th class="r">時間</th><th class="r">W</th><th class="r">心率</th><th class="r">踏頻</th><th>來源</th>${raceEnv ? '<th><span class="sr">3D</span></th>' : ''}</tr></thead>
+    <tbody>${ef.slice(0, 14).map(e => `<tr><td>${e === best ? '<span class="crown"></span>' : ''}${e.date.slice(2).replace(/-/g, '/')}${e.start_time ? ` <span class="muted">${esc(e.start_time)}</span>` : ''}</td><td class="r"><b>${hms(e.elapsed_sec)}</b></td><td class="r">${n0(e.avg_watts)}</td><td class="r">${n0(e.avg_heartrate)}</td><td class="r">${n0(e.avg_cadence)}</td><td><span class="src${e.fit_check ? ' w' : ''}" title="${e.fit_check ? '自建與 Strava 差太多，顯示 Strava' : ''}">${e.source === 'fit' ? 'FIT' : e.fit_check ? '⚠︎ STRAVA' : 'STRAVA'}</span></td>${raceEnv ? `<td>${rawEff(seg.id, e) ? `<button class="go" type="button" data-d="${esc(e.date)}" data-t="${esc(e.start_time || '')}" aria-label="在頁首 3D 重騎 ${esc(e.date)} 這一次">重騎 ↑</button>` : ''}</td>` : ''}</tr>`).join('')}</tbody></table></div>
     ${ef.length > 14 ? `<p class="note">只列最近 14 次。</p>` : ''}</div>
     ${r.note ? `<p class="note">${esc(r.note)}</p>` : ''}`
   $$('.subs button', box).forEach(b => b.addEventListener('click', () => { ittSub = +b.dataset.id; renderIttDetail(rows) }))
+  $$('[data-go], .go', box).forEach(b => b.addEventListener('click', () => raceFromChapter(seg.id, b.dataset.d ? { date: b.dataset.d, start_time: b.dataset.t } : null)))
   if (gr) chart($('#grade-c'), wd => {
     const h = 150, pt = 10, pb = 22, pL = 30, g = gr.grade, step = gr.step || 25
     const lenKm = g.length * step / 1000, hi = Math.max(12, Math.ceil(Math.max(...g) + 1)), lo = Math.min(0, Math.floor(Math.min(...g)))
@@ -1457,9 +1847,9 @@ addEventListener('load', () => setTimeout(bootOnce, 2500), { once: true })
 async function main() {
   // strava.json（2.6 MB）等三個檔先發出去，跟核心資料、場景編譯並行
   const late = Promise.all([J('data/strava.json'), J('data/segment-grades.json'), J('data/power-curve-windows.json')])
-  const core = Promise.all([J('data/fit/_activities.json'), J('data/fit/_wellness.json'), J('data/training-block.json'), J('data/tasks.json'), J('data/fit/_reports.json'), J('data/itt-config.json'), J('data/itt-segments.json'), J('data/drivetrain.json'), J('data/fit/_est_distance.json'), J('data/monthly-hours.json'), J('data/plans/' + TODAY.slice(0, 7) + '.json')])
-  const [acts, well, block, tasks, reports, ittCfg, itt, drive, estKm, mh, plan] = await core
-  Object.assign(DATA, { acts, well, block, tasks, reports, ittCfg, itt, drive, estKm, mh, plan })
+  const core = Promise.all([J('data/fit/_activities.json'), J('data/fit/_wellness.json'), J('data/training-block.json'), J('data/tasks.json'), J('data/fit/_reports.json'), J('data/itt-config.json'), J('data/itt-segments.json'), J('data/drivetrain.json'), J('data/fit/_est_distance.json'), J('data/monthly-hours.json'), J('data/plans/' + TODAY.slice(0, 7) + '.json'), J('data/rivals.json')])
+  const [acts, well, block, tasks, reports, ittCfg, itt, drive, estKm, mh, plan, rivals] = await core
+  Object.assign(DATA, { acts, well, block, tasks, reports, ittCfg, itt, drive, estKm, mh, plan, rivals })
   DATA.actsList = actsList(acts)
   DATA.ftp = (plan && plan.baseline && plan.baseline.ftp_w) || (block && block.ftp) || null
   DATA.weight = (plan && plan.baseline && plan.baseline.weight_kg) || 80

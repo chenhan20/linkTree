@@ -16,6 +16,26 @@ HUD 左上的切換鈕換地點（整個場景拆掉重建，選擇記在 localS
 往下捲就是入夜——整頁的底色是夜的墨藍，文字是鵜鶘羽毛的暖白。
 數據章節是「一條線＋留白」的編輯式版面，**不做卡片**（卡片形狀只留給 tooltip 這種真的浮起來的東西）。
 
+### 計時賽（影子對手）
+
+重播一定落在某一段計時段上，旁邊有半透明的「影子」一起騎：
+
+- **影子是誰**：自己這段最快那次（標 `PR`；重播的就是 PR 時改成「第二快」）＋「上一次」。
+  路段在 `data/rivals.json` 有同事成績（例如社子島砍鴨頭的 TONY／JERRY／MARTIN）就換成同事，他們沒有 FIT，照平均速度騎
+- **位置是真的**：同一個經過秒數下，各自 FIT 的距離差。進度縮放到官方路段長，所以終點時間差＝成績差
+  （9/17 大稻埕→馬場町：落後 PR 59 秒、領先 9/8 45 秒，跟 11:49 / 10:50 / 12:34 對得上）。
+  真實公尺再乘場景比例 `k`（這段功率用平路物理騎一遍的距離 ÷ 路段長），爬坡段才不會黏在一起
+- **起點**：重播從起點前 10 秒開始，影子先並排騎；`start_time` 只到分鐘，用「路段長度的平均功率」對到秒
+- **路段清單**：大稻埕＝大稻埕→馬場町、社子島砍鴨頭、社子島→馬場町；北海岸＝其他母路線的「全段」。HUD 右側面板的路段鈕打開選單換段、挑哪一次
+- 第 05 章每一筆有 FIT 的成績有「重騎 ↑」，按了捲回頁首重播那一次
+- 影子顏色：PR `#ff9a5a`（他自己的橘）、上一次 `--dusk`、同事用 rivals.json 的顏色；疊加亮度一律拉到同一個 Y≈0.45
+- 名牌是 DOM（`.pc-tag`，場景每一幀擺位置）；離很遠時身上多一顆同色光點，330 m 內都看得到名牌
+
+### 其他 HUD
+
+- 快轉 1× / 2× / 4×（`F`）：整個世界一起快（踏頻、輪子、路），物理照樣逐步積分
+- 拍照（`K`）：場景那一格＋底下一條圖說（日期、那趟、路段成績、當下速度功率踏頻），存成 PNG；手機走系統分享
+
 ## 色彩
 
 | token | 值 | 用途 |
@@ -55,7 +75,9 @@ HUD 左上的切換鈕換地點（整個場景拆掉重建，選擇記在 localS
 
 ## 3D 場景（`strava-pelican-scene.js`）
 
-- 只依賴 `vendor-three-r128.js`；全部程序化，沒有外部圖檔。介面：`PelicanCoast.mount(host, { env: 'river'|'coast', … })`、`parseFit(buf)`、`toReplay(fit, {start})`、`api.dispose()`
+- 只依賴 `vendor-three-r128.js`；全部程序化，沒有外部圖檔。介面：`PelicanCoast.mount(host, { env: 'river'|'coast', … })`、`parseFit(buf)`（含 GPS）、`toReplay(fit, {start})`、
+  `api.setRace({ s0, T, L, rep, ghosts })`、`api.setRate(r)`、`api.snapshot(maxW)`、`api.dispose()`
+- 影子＝同一副骨架 `buildRider()` 換全息材質（菲涅耳邊緣光＋加法混色＋掃描線），`rigid` 零件群先併成一個網格：一隻 23 個 draw call（本尊 123）。手機最多三隻
 - 兩個地點的差異都在 `ENVS`（水面高度、路寬、欄杆、路燈、太陽方位、浪的大小）；只在其中一個地點出現的道具用 `COAST`／`RIVER` 分支建
 - 座標：車子永遠在原點朝 −Z；世界往 +Z 流（跑步機）。x>0 水那一側、x<0 陸地。物件有固定的世界座標 Zw，畫面上 z = Zw + dist
 - **速度不是亂給的**：油門是那一趟的逐秒功率／踏頻／心率，速度用 `scripts/estimate-indoor-distance.py` 同一組平路參數現算
@@ -72,4 +94,6 @@ HUD 左上的切換鈕換地點（整個場景拆掉重建，選擇記在 localS
 
 - 上班時間只用 headless（見 memory）。WebGL 要 `--use-angle=swiftshader --enable-unsafe-swiftshader`
 - 靜態伺服器要**多執行緒**（`python3 -m http.server` 同時十幾個 fetch 會 ERR_CONNECTION_RESET）
-- 除錯把手：`window.__pelican`（`stats()`、`shot(i, hold)`、`setCamera()`、`setTod()`、`_warp(公尺)`、`_pr(密度)`、`_dbg()`）
+- 除錯把手：`window.__pelican`（`stats()`（含 `riF`、每隻影子的 `z`／透明度）、`race`（階段、每隻影子的時間差）、`seek(秒)`、`shot(i, hold)`、`setCamera()`、`setTod()`、`_warp(公尺)`、`_pr(密度)`、`_dbg()`）
+- headless 的軟體 GPU 大概 1 fps，場景時間幾乎不走：測計時賽要等 `__pelican.race` 出現後用 `seek(起點 + 秒數)` 跳過去，
+  起點＝`stats().riF − race.tau`。`seek` 會擋 NaN（race 還沒載到就 seek 曾經讓整個場景變 NaN）
