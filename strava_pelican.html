@@ -1373,7 +1373,15 @@ function renderLog() {
 
 /* ═══ 開跑 ═══════════════════════════════════════════════════════════ */
 function safe(fn, id) { try { fn() } catch (e) { console.error(e); const el = $('#lede-' + id); if (el) el.textContent = '這一章畫壞了，資料還在，稍後重整看看。' } }
+// 3D 場景第一次算圖要編譯幾十支 shader，這一步是同步的、會卡住主執行緒；
+// 所以先把數據章節畫完、大檔也先發出去，再開場景（最多等到 load 後 2.5 秒）
+let booted = false
+function bootOnce() { if (booted) return; booted = true; requestAnimationFrame(() => setTimeout(bootScene, 0)) }
+function bootWhenReady() { if (document.readyState === 'complete') bootOnce(); else addEventListener('load', bootOnce, { once: true }) }
+addEventListener('load', () => setTimeout(bootOnce, 2500), { once: true })
 async function main() {
+  // strava.json（2.6 MB）等三個檔先發出去，跟核心資料、場景編譯並行
+  const late = Promise.all([J('data/strava.json'), J('data/segment-grades.json'), J('data/power-curve-windows.json')])
   const core = Promise.all([J('data/fit/_activities.json'), J('data/fit/_wellness.json'), J('data/training-block.json'), J('data/tasks.json'), J('data/fit/_reports.json'), J('data/itt-config.json'), J('data/itt-segments.json'), J('data/drivetrain.json'), J('data/fit/_est_distance.json'), J('data/monthly-hours.json'), J('data/plans/' + TODAY.slice(0, 7) + '.json')])
   const [acts, well, block, tasks, reports, ittCfg, itt, drive, estKm, mh, plan] = await core
   Object.assign(DATA, { acts, well, block, tasks, reports, ittCfg, itt, drive, estKm, mh, plan })
@@ -1387,9 +1395,10 @@ async function main() {
   if (window.PelicanCoast) loadReplay(acts, reports, itt)
   else addEventListener('load', () => loadReplay(acts, reports, itt))
   safe(renderToday, 'today'); safe(renderFitness, 'fitness'); safe(renderPlan, 'plan'); safe(renderLog, 'log')
+  bootWhenReady()
   if (scene && drive) scene.setDrive({ rings: drive.chainrings, cogs: drive.cassette, circ: drive.wheel_circumference_m })
   // strava.json 2.6 MB：年度統計、功率紀錄、路段補缺都住在這裡，晚一步到
-  const [strava, grades, pcw] = await Promise.all([J('data/strava.json'), J('data/segment-grades.json'), J('data/power-curve-windows.json')])
+  const [strava, grades, pcw] = await late
   Object.assign(DATA, { strava, grades, pcw })
   const merged = { segments: ((strava && strava.segments) || []).map(s => ({ ...s, efforts: (s.efforts || []).slice() })) }
   mergeIttSegments(merged, itt)
@@ -1401,7 +1410,6 @@ async function main() {
 }
 lazyAtlas()
 main()
-if (document.readyState === 'complete') bootScene(); else addEventListener('load', bootScene)
 })()
 </script>
 </body>
