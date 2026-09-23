@@ -1745,15 +1745,21 @@ if(REPS){
     const G2 = CH.gear;
     if (G2 && G2.runs && G2.runs.length) {
       const sv = document.getElementById('c-gear');
-      const cogs = G2.cogs.slice().sort((a,b)=>a-b);      // 小齒（重）在上、大齒（輕）在下
-      const rowH = 15, L2 = 34, R2 = 14, T3 = 20;
+      // Y 軸是「完整檔位」（前盤×飛輪），照展開排序：重在上、輕在下。
+      // 只列飛輪齒數的話 34×15 跟 50×15 會擠在同一列，分不出大盤小盤。
+      const key = (f,r) => f+'×'+r;
+      const combos = []; const seen = {};
+      G2.runs.forEach(x=>{ const k=key(x[2],x[3]); if(!seen[k]){ seen[k]=1; combos.push([x[2],x[3]]); } });
+      combos.sort((p,q2)=>q2[0]/q2[1]-p[0]/p[1]);
+      const cogs = combos.map(c=>key(c[0],c[1]));
+      const rowH = 15, L2 = 50, R2 = 14, T3 = 20;
       const H2 = T3 + cogs.length*rowH + 40;
       sv.setAttribute('viewBox', '0 0 960 ' + H2);
       const iw2 = 960 - L2 - R2;
       const maxX2 = CH.profile[CH.profile.length-1][0];
       const X2 = v => L2 + iw2*v/maxX2;
       const Y3 = c => T3 + cogs.indexOf(c)*rowH + rowH/2;
-      const bigRing = Math.max(...G2.rings), maxCog = cogs[cogs.length-1];
+      const bigRing = Math.max(...G2.rings), maxCog = cogs[cogs.length-1];   // 最輕的完整檔位
       const base = T3 + cogs.length*rowH;
 
       // 海拔當底圖：知道那一檔是踩在哪一段坡上，這張圖才有判讀價值
@@ -1774,43 +1780,33 @@ if(REPS){
         if(c===maxCog) sv.appendChild(el('rect',{x:L2,y:Y3(c)-rowH/2,width:iw2,height:rowH,
           fill:C('s2'),opacity:.09}));
         sv.appendChild(el('line',{x1:L2,y1:Y3(c),x2:960-R2,y2:Y3(c),stroke:C('grid')}));
-        sv.appendChild(txt(L2-7,Y3(c)+3.5,c,{anchor:'end',fs:9.5,fill:C('ink-3')}));
+        sv.appendChild(txt(L2-7,Y3(c)+3.5,c,{anchor:'end',fs:9.5,fill:C(c.startsWith(bigRing+'×')&&G2.rings.length>1?'ink-1':'ink-3')}));
       });
-      sv.appendChild(txt(L2,T3-7,'飛輪齒數（下面＝輕）',{fs:9.5,fill:C('ink-3')}));
-      // 只列飛輪分不出前盤：大盤改畫虛線，並在右上角寫圖例（跟攻略頁同一套：虛線＝大盤）
-      const FT = (G && G.front_teeth && G.front_teeth.length) ? G.front_teeth : G2.rings;
-      const smallRing = Math.min(...FT), bigRingAll = Math.max(...FT);
-      if (FT.length>1) {
-        const lx=960-R2; 
-        sv.appendChild(txt(lx,T3-7,'虛線＝大盤 '+bigRingAll+'T',{anchor:'end',fs:9.5,fill:C('ink-2')}));
-        sv.appendChild(el('line',{x1:lx-150,y1:T3-10.5,x2:lx-128,y2:T3-10.5,stroke:C('ink-2'),'stroke-width':2.4,'stroke-dasharray':'4 3'}));
-        sv.appendChild(txt(lx-160,T3-7,'實線＝小盤 '+smallRing+'T',{anchor:'end',fs:9.5,fill:C('ink-2')}));
-        sv.appendChild(el('line',{x1:lx-290,y1:T3-10.5,x2:lx-268,y2:T3-10.5,stroke:C('ink-2'),'stroke-width':2.4}));
-      }
+      sv.appendChild(txt(L2,T3-7,'檔位 前盤×飛輪（上＝重、下＝輕）',{fs:9.5,fill:C('ink-3')}));
 
       let prev=null;
       G2.runs.forEach(rn=>{
         const d0=rn[0], d1=rn[1], f2=rn[2], r2=rn[3];
-        const y=Y3(r2), big=(f2===Math.max(...((G&&G.front_teeth&&G.front_teeth.length)?G.front_teeth:G2.rings)) && f2!==Math.min(...((G&&G.front_teeth&&G.front_teeth.length)?G.front_teeth:G2.rings))), col=C(q(f2/r2));
+        const y=Y3(key(f2,r2)), big=false, col=C(q(f2/r2));
         // 前一段的終點與這一段的起點相接才畫垂直換檔線；中間被篩掉的不要連起來騙人
         if(prev && Math.abs(prev.d1-d0)<0.02 && prev.y!==y)
           sv.appendChild(el('line',{x1:X2(d0),y1:prev.y,x2:X2(d0),y2:y,
             stroke:col,'stroke-width':1.4,opacity:big?.45:.9}));
         sv.appendChild(el('line',{x1:X2(d0),y1:y,x2:Math.max(X2(d1),X2(d0)+0.8),y2:y,
-          stroke:col,'stroke-width':3.2,'stroke-linecap':big?'butt':'round','stroke-dasharray':big?'5 3':'none',opacity:big?.75:1}));
+          stroke:col,'stroke-width':3.2,'stroke-linecap':'round'}));
         prev={d1:d1,y:y};
       });
 
       const runKm = G2.runs.reduce((a2,x)=>a2+(x[1]-x[0]),0);
-      const botKm = G2.runs.filter(x=>x[3]===maxCog).reduce((a2,x)=>a2+(x[1]-x[0]),0);
+      const botKm = G2.runs.filter(x=>key(x[2],x[3])===maxCog).reduce((a2,x)=>a2+(x[1]-x[0]),0);
       const lg = G2.runs.reduce((a2,x)=>(x[1]-x[0])>(a2[1]-a2[0])?x:a2);
       document.getElementById('c-gear-cap').innerHTML =
         '只畫<b>功率 &ge; '+Math.round(G2.min_w)+' W</b> 的區段（佔移動時間 '+G2.load_pct+'%）—— '+
         '滑行、紅燈、下坡不算，不然看起來像一直在換檔，其實是在放空。'+
         '出力路程 '+runKm.toFixed(1)+' km，其中 <b>'+(botKm/runKm*100).toFixed(0)+'%</b> '+
-        '掛在最輕的 '+maxCog+' 齒；待最久的一段是 '+lg[2]+'&times;'+lg[3]+
+        '掛在最輕的 '+maxCog+'；待最久的一段是 '+lg[2]+'&times;'+lg[3]+
         ' 連續 <b>'+(lg[1]-lg[0]).toFixed(2)+' km</b>。'+
-        (G2.rings.length>1?'　淡色＝掛在大盤 '+bigRing+'T。':'')+'　底下的灰是海拔。';
+        (G2.rings.length>1?'　大盤 '+bigRing+'T 的檔位標籤是亮字；大盤多半用在平路和下坡，功率低於門檻不畫，所以圖上很少。':'')+'　底下的灰是海拔。';
     }
   })();
 
