@@ -1,0 +1,1408 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>鵜鶘海岸 · Steve Chuang</title>
+<meta name="description" content="北海岸黃昏的 3D 鵜鶘騎今天那趟的功率；往下是全部的訓練數據：狀態、年度量、體能曲線、功率、計時段、軌跡地圖、課表與紀錄。">
+<meta name="theme-color" content="#0d1322">
+<link rel="icon" href="logo.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Overpass:wght@300;400;500;600;700;800&family=Overpass+Mono:wght@400;500;600&family=Noto+Serif+TC:wght@600;700;900&display=swap" rel="stylesheet">
+<style>
+/* 鵜鶘海岸（PELICAN COAST）—— 第七個視覺世界。設計系統寫在 DESIGN.pelican.md。
+   黃昏的海在頁首，往下捲就是入夜：底色是夜海的墨藍，文字是鵜鶘羽毛的暖白。
+   圖表三色（日落橘／暮紫／海青）在深底上用 dataviz 驗證器跑過 all-pairs（CVD ΔE ≥ 12）。 */
+:root {
+  color-scheme: dark;
+  --ink-0: #0d1322;
+  --ink-1: #121a2d;
+  --ink-2: #1a2338;
+  --ink-3: #242e47;
+  --line: rgba(233, 224, 208, .11);
+  --line-2: rgba(233, 224, 208, .2);
+  --text: #efe8dc;
+  --text-2: #b4b7c3;
+  --text-3: #7e8599;
+  --sun: #dc7336;        /* 圖表 slot 1：他自己、主序列 */
+  --dusk: #8878e4;       /* 圖表 slot 2 */
+  --sea: #1f9f95;        /* 圖表 slot 3 */
+  --sun-ink: #ffb07a;    /* 文字用的日落橘（對比 ≥ 7:1） */
+  --lamp: #f3c969;       /* 紀錄／PR 的標記 */
+  --warn: #e8736a;       /* 狀態：要注意 */
+  --good: #5cc29a;       /* 狀態：正常 */
+  --font-sans: "Overpass", "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+  --font-mono: "Overpass Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --font-serif: "Noto Serif TC", "Songti TC", "PMingLiU", serif;
+  --gut: max(16px, calc((100vw - 1200px) / 2));
+}
+* { box-sizing: border-box; margin: 0; padding: 0 }
+[hidden] { display: none !important }
+html { background: var(--ink-0); scroll-padding-top: 68px; -webkit-text-size-adjust: 100% }
+body { background: var(--ink-0); color: var(--text); font-family: var(--font-sans); font-size: 15px; line-height: 1.6; overflow-x: hidden; -webkit-font-smoothing: antialiased }
+a { color: var(--sun-ink); text-decoration: none }
+a:hover { text-decoration: underline; text-underline-offset: 3px }
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer }
+:focus-visible { outline: 2px solid var(--sun-ink); outline-offset: 2px; border-radius: 4px }
+.num { font-variant-numeric: tabular-nums }
+.mono { font-family: var(--font-mono) }
+.muted { color: var(--text-3) }
+b, strong { font-weight: 600 }
+
+/* ── 常駐導覽 ── */
+.nav { position: fixed; inset: 0 0 auto 0; z-index: 50; height: 56px; display: flex; align-items: center; gap: 18px; padding: 0 var(--gut);
+  border-bottom: 1px solid transparent; transition: background .35s, border-color .35s }
+.nav.is-solid { background: rgba(13, 19, 34, .88); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border-bottom-color: var(--line) }
+.brand { display: flex; align-items: baseline; gap: 9px; color: var(--text); white-space: nowrap; text-decoration: none !important }
+.brand b { font-family: var(--font-serif); font-size: 18px; letter-spacing: .08em }
+.brand i { font-style: normal; font-family: var(--font-mono); font-size: 10px; letter-spacing: .24em; color: var(--text-3) }
+.nav-ch { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; flex: 1; min-width: 0; mask-image: linear-gradient(90deg, #000 92%, transparent) }
+.nav-ch::-webkit-scrollbar { display: none }
+.nav-ch a { flex: none; padding: 5px 10px; border-radius: 999px; color: var(--text-2); font-size: 13.5px; white-space: nowrap; text-decoration: none }
+.nav-ch a span { font-family: var(--font-mono); font-size: 10px; color: var(--text-3); margin-right: 5px }
+.nav-ch a:hover { color: var(--text) }
+.nav-ch a.on { color: var(--text); background: rgba(239, 232, 220, .09) }
+.nav-back { flex: none; font-size: 12.5px; color: var(--text-2); white-space: nowrap }
+.nav:not(.is-solid) .nav-ch a, .nav:not(.is-solid) .nav-back, .nav:not(.is-solid) .brand { text-shadow: 0 1px 8px rgba(8, 10, 20, .55) }
+
+/* ── Hero：3D 場景＋HUD ── */
+.hero { position: relative; height: calc(100svh - 88px); min-height: 540px; overflow: hidden; isolation: isolate;
+  background: linear-gradient(180deg, #243d7c 0%, #6c5a8a 38%, #c07484 60%, #f08a4a 72%, #2a2536 73%, #141b2c 100%) }
+.hero .pc-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; opacity: 0; transition: opacity 1.4s ease; touch-action: pan-y; cursor: grab }
+.hero.is-live .pc-canvas { opacity: 1 }
+.hero::before, .hero::after { content: ""; position: absolute; left: 0; right: 0; pointer-events: none; z-index: 1 }
+.hero::before { top: 0; height: 170px; background: linear-gradient(180deg, rgba(9, 12, 24, .62), rgba(9, 12, 24, 0)) }
+.hero::after { bottom: 0; height: 230px; background: linear-gradient(0deg, rgba(9, 12, 24, .78), rgba(9, 12, 24, 0)) }
+.lbox { position: absolute; left: 0; right: 0; height: 5.2vh; background: #06080f; z-index: 1; transform: scaleY(0); transition: transform .8s cubic-bezier(.2, .7, .2, 1); pointer-events: none }
+.lbox.t { top: 0; transform-origin: top } .lbox.b { bottom: 0; transform-origin: bottom }
+.hero.is-cinema .lbox { transform: scaleY(1) }
+.hud { position: absolute; inset: 0; z-index: 2; pointer-events: none; color: #f6efe4; text-shadow: 0 1px 10px rgba(6, 8, 16, .5) }
+.hud > * { pointer-events: auto }
+.hud-title { position: absolute; left: var(--gut); top: 84px; max-width: 520px; pointer-events: none }
+.hud-title h1 { font-family: var(--font-serif); font-weight: 900; font-size: clamp(40px, 5.6vw, 72px); line-height: 1.02; letter-spacing: .06em }
+.hud-title p { margin-top: 10px; font-size: 14.5px; color: rgba(246, 239, 228, .86); max-width: 38ch }
+.hud-title p b { color: #fff; font-weight: 600 }
+.hud-cam { position: absolute; right: var(--gut); top: 84px; display: flex; flex-direction: column; align-items: flex-end; gap: 10px }
+.seg { display: flex; padding: 3px; gap: 2px; border-radius: 999px; background: rgba(10, 13, 24, .42); border: 1px solid rgba(246, 239, 228, .14); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px) }
+.seg button { padding: 5px 11px; border-radius: 999px; font-size: 12.5px; color: rgba(246, 239, 228, .8); white-space: nowrap; min-height: 30px }
+.seg button:hover { color: #fff }
+.seg button[aria-pressed="true"] { background: rgba(246, 239, 228, .92); color: #151a2a; text-shadow: none; font-weight: 600 }
+.hud-tools { display: flex; gap: 6px }
+.ibtn { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: rgba(10, 13, 24, .42); border: 1px solid rgba(246, 239, 228, .14); color: rgba(246, 239, 228, .88) }
+.ibtn:hover { color: #fff; border-color: rgba(246, 239, 228, .3) }
+.ibtn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round }
+.ibtn[aria-pressed="true"] { background: rgba(246, 239, 228, .9); color: #151a2a }
+.hud-sun { display: flex; align-items: center; gap: 10px; font-family: var(--font-mono); font-size: 12px; color: rgba(246, 239, 228, .86) }
+.hud-sun input { width: 128px; accent-color: #ff9a5a }
+.hud-dash { position: absolute; left: var(--gut); right: var(--gut); bottom: 58px; display: grid; grid-template-columns: auto auto minmax(0, 1fr); align-items: end; gap: 28px }
+.spd { position: relative; width: 132px; height: 132px; flex: none }
+.spd svg { position: absolute; inset: 0 }
+.spd-n { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; line-height: 1 }
+.spd-n b { font-size: 44px; font-weight: 600; letter-spacing: -.02em }
+.spd-n i { font-style: normal; font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .2em; color: rgba(246, 239, 228, .72); margin-top: 6px }
+.read { display: grid; grid-template-columns: repeat(3, auto); gap: 6px 26px; padding-bottom: 8px }
+.read div { line-height: 1.15 }
+.read dt { font-size: 11.5px; color: rgba(246, 239, 228, .68) }
+.read dd { font-size: 21px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap }
+.read dd small { font-size: 11.5px; font-weight: 400; color: rgba(246, 239, 228, .7); margin-left: 3px }
+.strip { position: relative; padding-bottom: 6px; min-width: 0 }
+.strip-h { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; color: rgba(246, 239, 228, .78); margin-bottom: 6px; white-space: nowrap; overflow: hidden }
+.strip-h b { color: #fff; font-weight: 600 }
+.strip canvas { display: block; width: 100%; height: 46px; cursor: pointer; border-radius: 3px }
+.strip-note { position: absolute; right: 0; top: -22px; font-size: 12px; color: #ffd7b8; opacity: 0; transition: opacity .4s }
+.strip-note.on { opacity: 1 }
+.hud-next { position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); display: flex; align-items: center; gap: 8px; padding: 7px 14px; border-radius: 999px;
+  font-size: 13px; color: #f6efe4; background: rgba(10, 13, 24, .38); border: 1px solid rgba(246, 239, 228, .16); white-space: nowrap }
+.hud-next svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 1.8; animation: nudge 2.4s ease-in-out infinite }
+@keyframes nudge { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(3px) } }
+.hero-fail { position: absolute; left: var(--gut); bottom: 150px; z-index: 2; font-size: 13.5px; color: rgba(246, 239, 228, .88); max-width: 40ch }
+.hero.no-3d .hud-cam, .hero.no-3d .keys, .hero.no-3d .spd, .hero.no-3d .read { display: none }
+.hero.no-3d .hud-dash { grid-template-columns: minmax(0, 1fr) }
+.keys { position: absolute; right: var(--gut); bottom: 18px; font-size: 11.5px; color: rgba(246, 239, 228, .62); font-family: var(--font-mono) }
+.keys kbd { font-family: inherit; padding: 0 5px; border: 1px solid rgba(246, 239, 228, .25); border-radius: 4px; margin: 0 2px }
+
+/* ── 章節 ── */
+main { position: relative; z-index: 3; background: linear-gradient(180deg, #111a2e 0, var(--ink-0) 420px) }
+.ch { padding: 84px var(--gut) 24px }
+.ch:first-of-type { padding-top: 26px }
+.ch-h { display: grid; gap: 8px; margin-bottom: 30px }
+.ch-k { font-family: var(--font-mono); font-size: 11.5px; letter-spacing: .2em; color: var(--text-3); display: flex; gap: 14px; align-items: center }
+.ch-k b { color: var(--sun-ink); font-weight: 500 }
+.ch-k::after { content: ""; flex: 1; height: 1px; background: var(--line) }
+.ch-h h2 { font-family: var(--font-serif); font-weight: 700; font-size: clamp(32px, 4.2vw, 50px); line-height: 1.12; letter-spacing: .03em }
+.ch-lede { max-width: 66ch; color: var(--text-2); font-size: 15.5px }
+.ch-lede b { color: var(--text) }
+.sub { font-size: 13px; font-weight: 600; color: var(--text); margin: 0 0 12px; display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap }
+.sub i { font-style: normal; font-weight: 400; color: var(--text-3); font-size: 12px }
+.blk { margin-top: 44px }
+.cols { display: grid; gap: 36px 48px }
+@media (min-width: 900px) { .cols.c2 { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) } .cols.c3 { grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr) minmax(0, 1.2fr) } .cols.c73 { grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr) } }
+.note { font-size: 12.5px; color: var(--text-3); margin-top: 10px; max-width: 70ch }
+.note b { color: var(--text-2) }
+.empty { color: var(--text-3); font-size: 13.5px; padding: 18px 0 }
+
+/* 數字讀數：一條線＋留白，不做卡片 */
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); border-top: 1px solid var(--line) }
+.stat { padding: 14px 18px 16px 0; border-bottom: 1px solid var(--line) }
+.stat dt { font-size: 12.5px; color: var(--text-3) }
+.stat dd { font-size: 30px; font-weight: 600; letter-spacing: -.01em; line-height: 1.25 }
+.stat dd small { font-size: 13px; color: var(--text-2); font-weight: 400; margin-left: 4px; letter-spacing: 0 }
+.stat p { font-size: 12.5px; color: var(--text-2); margin-top: 2px }
+.hero-fig { font-size: clamp(56px, 7vw, 84px); font-weight: 600; line-height: 1; letter-spacing: -.03em }
+.zone { display: inline-flex; align-items: center; gap: 7px; font-size: 13.5px; color: var(--text); margin-top: 8px }
+.zone i { width: 8px; height: 8px; border-radius: 50% }
+.kv { display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; font-size: 13.5px; margin-top: 14px }
+.kv dt { color: var(--text-3) }
+.kv dd { color: var(--text); font-variant-numeric: tabular-nums }
+.range { position: relative; height: 6px; border-radius: 3px; background: var(--ink-3); margin: 10px 0 4px; max-width: 260px }
+.range span { position: absolute; top: 0; bottom: 0; background: rgba(31, 159, 149, .45); border-radius: 3px }
+.range i { position: absolute; top: -4px; width: 3px; height: 14px; border-radius: 2px; background: var(--text); transform: translateX(-1px) }
+.row-l { border-top: 1px solid var(--line); padding: 14px 0 }
+.row-l:last-child { border-bottom: 1px solid var(--line) }
+.tag { display: inline-block; font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .08em; padding: 1px 7px; border-radius: 4px; border: 1px solid var(--line-2); color: var(--text-2); vertical-align: 2px }
+.coach { font-size: 13.5px; color: var(--text-2); margin-top: 8px; display: grid; gap: 6px }
+.coach b { color: var(--text) }
+.more { font-size: 13px; color: var(--sun-ink); margin-top: 10px; display: inline-block }
+
+/* 圖表 */
+.chart { position: relative; width: 100%; min-height: 60px }
+.chart svg { display: block; width: 100%; overflow: visible }
+.chart .ax { font: 11px var(--font-mono); fill: var(--text-3) }
+.chart .ax-l { font: 11.5px var(--font-sans); fill: var(--text-2) }
+.chart .grid { stroke: rgba(233, 224, 208, .09); stroke-width: 1 }
+.chart .base { stroke: rgba(233, 224, 208, .22); stroke-width: 1 }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 12.5px; color: var(--text-2); margin: 0 0 12px }
+.legend span { display: inline-flex; align-items: center; gap: 7px }
+.legend i { width: 16px; height: 2px; border-radius: 1px }
+.legend i.box { width: 10px; height: 10px; border-radius: 2px }
+.filters { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 18px }
+.chip { padding: 5px 12px; border-radius: 999px; border: 1px solid var(--line-2); font-size: 12.5px; color: var(--text-2); min-height: 32px }
+.chip:hover { color: var(--text); border-color: rgba(233, 224, 208, .35) }
+.chip[aria-pressed="true"] { background: var(--text); color: var(--ink-0); border-color: var(--text); font-weight: 600 }
+.tip { position: fixed; z-index: 90; pointer-events: none; background: rgba(9, 13, 25, .96); border: 1px solid var(--line-2); border-radius: 8px; padding: 9px 11px; font-size: 12.5px; color: var(--text-2);
+  min-width: 140px; max-width: 280px; box-shadow: 0 10px 30px rgba(0, 0, 0, .35); opacity: 0; transition: opacity .12s }
+.tip.on { opacity: 1 }
+.tip h5 { font-size: 11.5px; font-weight: 500; color: var(--text-3); margin-bottom: 5px; font-family: var(--font-mono) }
+.tip .r { display: flex; align-items: center; gap: 8px; line-height: 1.55 }
+.tip .r b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums }
+.tip .r i { width: 12px; height: 2px; border-radius: 1px; flex: none }
+.tip .r em { font-style: normal; margin-left: auto; padding-left: 10px }
+details.tbl { margin-top: 14px; font-size: 12.5px }
+details.tbl summary { color: var(--text-3); cursor: pointer; width: max-content }
+details.tbl summary:hover { color: var(--text-2) }
+table.t { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px }
+table.t th { text-align: left; font-weight: 500; font-size: 11.5px; color: var(--text-3); padding: 6px 12px 6px 0; border-bottom: 1px solid var(--line-2); white-space: nowrap }
+table.t td { padding: 7px 12px 7px 0; border-bottom: 1px solid var(--line); vertical-align: top; font-variant-numeric: tabular-nums }
+table.t td.r, table.t th.r { text-align: right }
+.tscroll { overflow-x: auto; -webkit-overflow-scrolling: touch }
+
+/* 今天 */
+.today-ses h4 { font-size: 17px; font-weight: 600; line-height: 1.4 }
+.today-ses .plan { font-size: 13.5px; color: var(--text-2); margin-top: 6px }
+.task { display: flex; gap: 10px; align-items: baseline; padding: 12px 0; border-top: 1px solid var(--line); font-size: 14px }
+.task i { width: 7px; height: 7px; border-radius: 50%; background: var(--lamp); flex: none; transform: translateY(-1px) }
+.task span { color: var(--text-3); font-size: 12.5px }
+
+/* 季 */
+.heat { display: grid; grid-auto-flow: column; grid-template-rows: repeat(7, var(--c)); gap: 3px; width: max-content }
+.heat-wrap { --c: 11px }
+.heat i { width: var(--c); height: var(--c); border-radius: 2px; background: var(--ink-2) }
+.heat-wrap { overflow-x: auto; padding-bottom: 4px }
+.heat-leg { display: flex; align-items: center; gap: 4px; font-size: 11.5px; color: var(--text-3); margin-top: 10px }
+.heat-leg i { width: 11px; height: 11px; border-radius: 2px }
+.heat-m { display: grid; grid-auto-flow: column; font-size: 10.5px; color: var(--text-3); font-family: var(--font-mono); margin-bottom: 4px; width: max-content; white-space: nowrap }
+.heat-m span { overflow: visible }
+
+/* ITT */
+.itt { display: grid; gap: 28px }
+@media (min-width: 1000px) { .itt { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); align-items: start } .itt-d { position: sticky; top: 76px } }
+.itt-list { border-top: 1px solid var(--line) }
+.itt-r { display: grid; grid-template-columns: minmax(0, 1.6fr) 72px 88px 96px; gap: 12px; align-items: center; width: 100%; text-align: left; padding: 12px 8px 12px 10px; border-bottom: 1px solid var(--line); border-left: 2px solid transparent; min-height: 58px }
+.itt-r:hover { background: rgba(239, 232, 220, .035) }
+.itt-r[aria-selected="true"] { background: rgba(239, 232, 220, .06); border-left-color: var(--sun) }
+.itt-r .nm { font-size: 14.5px; font-weight: 600; line-height: 1.3 }
+.itt-r .nm small { display: block; font-weight: 400; font-size: 12px; color: var(--text-3) }
+.itt-r .pr { font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; text-align: right }
+.itt-r .pr small { display: block; font-size: 11px; color: var(--text-3); font-weight: 400 }
+.itt-r .lt { font-size: 12.5px; color: var(--text-2); text-align: right; font-variant-numeric: tabular-nums }
+.itt-r .lt small { display: block; font-size: 11px; color: var(--text-3) }
+.itt-r svg { width: 96px; height: 30px }
+.itt-h { display: grid; grid-template-columns: minmax(0, 1.6fr) 72px 88px 96px; gap: 12px; padding: 0 8px 8px 12px; font-size: 11.5px; color: var(--text-3) }
+.itt-h span:not(:first-child) { text-align: right }
+.itt-d h3 { font-family: var(--font-serif); font-size: 26px; font-weight: 700; line-height: 1.25 }
+.itt-d .dmeta { font-size: 13px; color: var(--text-2); margin-top: 4px }
+.subs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px }
+.subs button { font-size: 12.5px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line-2); color: var(--text-2); min-height: 30px }
+.subs button[aria-pressed="true"] { background: var(--text); color: var(--ink-0); border-color: var(--text) }
+.src { font-family: var(--font-mono); font-size: 10.5px; color: var(--text-3) }
+.src.w { color: var(--warn) }
+.crown { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--lamp); margin-right: 6px; vertical-align: 1px }
+
+/* 地圖 */
+.atlas { position: relative; border-radius: 10px; overflow: hidden; background: #0a0f1c; border: 1px solid var(--line) }
+.atlas canvas { display: block; width: 100%; height: clamp(360px, 62vh, 620px); touch-action: none; cursor: grab }
+.atlas-ui { position: absolute; left: 14px; top: 12px; display: flex; gap: 6px; flex-wrap: wrap }
+.at-chip[aria-pressed="false"] { background: rgba(10, 15, 28, .72) }
+.atlas-leg { position: absolute; left: 14px; bottom: 12px; font-size: 11.5px; color: var(--text-2); display: flex; gap: 10px; align-items: center; flex-wrap: wrap; text-shadow: 0 1px 4px #000 }
+.atlas-leg i { display: inline-block; width: 18px; height: 3px; border-radius: 2px; margin-right: 5px; vertical-align: 2px }
+.atlas-load { position: absolute; inset: 0; display: grid; place-items: center; color: var(--text-3); font-size: 13px }
+.towns { display: grid; gap: 0 }
+.town { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 13.5px }
+.town em { font-style: normal; color: var(--text-3); font-size: 12px }
+.town .bar { grid-column: 1 / -1; height: 4px; border-radius: 2px; background: var(--ink-2) }
+.town .bar i { display: block; height: 100%; border-radius: 2px; background: var(--sun) }
+
+/* 課表 */
+.blk-track { position: relative; height: 64px; margin: 26px 0 8px }
+.blk-track .ln { position: absolute; left: 0; right: 0; top: 30px; height: 2px; background: var(--ink-3); border-radius: 1px }
+.blk-track .gone { position: absolute; left: 0; top: 30px; height: 2px; background: var(--text-3); border-radius: 1px }
+.blk-track .wk { position: absolute; top: 0; font-family: var(--font-mono); font-size: 10.5px; color: var(--text-3); transform: translateX(-50%); white-space: nowrap }
+.blk-track .dot { position: absolute; top: 31px; width: 12px; height: 12px; border-radius: 50%; transform: translate(-50%, -50%); border: 2px solid var(--text-3); background: var(--ink-0) }
+.blk-track .dot.sm { width: 8px; height: 8px; border-width: 1.5px }
+.blk-track .dot.done { background: var(--sun); border-color: var(--sun) }
+.blk-track .dot.miss { border-color: var(--warn); border-style: dashed }
+.blk-track .dot.next { border-color: var(--text); box-shadow: 0 0 0 4px rgba(239, 232, 220, .12) }
+.blk-track .dot.test { border-color: var(--lamp); background: var(--ink-0); width: 16px; height: 16px }
+.blk-track .today { position: absolute; top: 14px; bottom: 6px; width: 1px; background: var(--sun-ink) }
+.blk-track .today span { position: absolute; bottom: -18px; left: 50%; transform: translateX(-50%); font-size: 11px; color: var(--sun-ink); white-space: nowrap }
+.blk-track .dl { position: absolute; top: 44px; font-size: 10.5px; color: var(--text-3); transform: translateX(-50%); font-family: var(--font-mono); white-space: nowrap }
+.ses { border-top: 1px solid var(--line) }
+.ses:last-child { border-bottom: 1px solid var(--line) }
+.ses summary { list-style: none; display: grid; grid-template-columns: 76px 94px minmax(0, 1fr) auto; gap: 14px; align-items: baseline; padding: 12px 4px; cursor: pointer }
+.ses summary::-webkit-details-marker { display: none }
+.ses summary:hover { background: rgba(239, 232, 220, .03) }
+.ses .d { font-variant-numeric: tabular-nums; font-size: 13.5px }
+.ses .d small { color: var(--text-3); margin-left: 4px }
+.ses .n { font-size: 14px; font-weight: 500 }
+.ses .n small { display: block; color: var(--text-3); font-size: 12px; font-weight: 400 }
+.ses .st { font-size: 12.5px; color: var(--text-2); text-align: right; white-space: nowrap }
+.ses.is-support .n { color: var(--text-2); font-weight: 400 }
+.ses.is-next summary { background: rgba(220, 115, 54, .08) }
+.ses .body { padding: 2px 4px 16px 184px; font-size: 13.5px; color: var(--text-2); display: grid; gap: 8px }
+.ses .body b { color: var(--text) }
+
+/* 紀錄 */
+.log-r { display: grid; grid-template-columns: 86px 64px minmax(0, 1fr) 70px 80px 70px 104px; gap: 12px; align-items: baseline; padding: 11px 4px; border-bottom: 1px solid var(--line); font-size: 13.5px }
+.log-r:first-child { border-top: 1px solid var(--line) }
+.log-r .d { font-variant-numeric: tabular-nums }
+.log-r .d small { color: var(--text-3); margin-left: 3px }
+.log-r .ty { font-size: 12px; color: var(--text-3) }
+.log-r .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.log-r .v { text-align: right; font-variant-numeric: tabular-nums; color: var(--text-2) }
+.log-r .v b { color: var(--text); font-weight: 600 }
+.log-r .lk { display: flex; gap: 10px; justify-content: flex-end; font-size: 12.5px; white-space: nowrap }
+
+footer { padding: 60px var(--gut) 90px; border-top: 1px solid var(--line); margin-top: 60px; font-size: 13px; color: var(--text-3) }
+footer .worlds { display: flex; flex-wrap: wrap; gap: 8px 18px; margin: 12px 0 18px }
+footer .worlds a { color: var(--text-2) }
+footer .worlds a b { color: var(--text); font-weight: 600; margin-right: 6px }
+.to-top { position: fixed; right: 16px; bottom: 16px; z-index: 40; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: rgba(18, 26, 45, .9); border: 1px solid var(--line-2); color: var(--text-2); opacity: 0; pointer-events: none; transition: opacity .3s }
+.to-top.on { opacity: 1; pointer-events: auto }
+.to-top svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.8 }
+
+/* ── 手機 ── */
+@media (max-width: 760px) {
+  body { font-size: 14.5px }
+  .nav { gap: 10px; height: 52px }
+  .brand i, .nav-back { display: none }
+  .hero { height: calc(100svh - 72px); min-height: 480px }
+  .hud-title { top: 66px }
+  .hud-title p { font-size: 13px }
+  .hud-cam { top: auto; bottom: 64px; right: 12px; gap: 8px }
+  .hud-cam .seg { display: none }
+  .hud-sun { display: none }
+  .hud-dash { left: 12px; right: 12px; bottom: 60px; grid-template-columns: auto minmax(0, 1fr); gap: 14px }
+  .spd { width: 96px; height: 96px }
+  .spd-n b { font-size: 32px }
+  .read { grid-template-columns: repeat(2, auto); gap: 2px 16px; padding-bottom: 2px }
+  .read dd { font-size: 16px }
+  .read .rx { display: none }
+  .strip { display: none }
+  .keys { display: none }
+  .to-top { display: none }
+  .ch { padding-top: 64px }
+  .stat dd { font-size: 25px }
+  .itt-r, .itt-h { grid-template-columns: minmax(0, 1fr) 70px 84px }
+  .itt-r svg, .itt-h span:last-child { display: none }
+  .ses summary { grid-template-columns: 58px minmax(0, 1fr) auto; gap: 10px }
+  .ses summary .cd { display: none }
+  .ses .body { padding-left: 4px }
+  .log-r { grid-template-columns: 72px minmax(0, 1fr) auto; gap: 4px 10px }
+  .log-r .ty, .log-r .v.x { display: none }
+  .log-r .lk { grid-column: 2 / -1; justify-content: flex-start }
+}
+@media (prefers-reduced-motion: reduce) { .hud-next svg { animation: none } .hero .pc-canvas, .lbox { transition: none } }
+</style>
+</head>
+<body>
+<header class="nav" id="nav">
+  <a class="brand" href="#top"><b>鵜鶘海岸</b><i>PELICAN COAST</i></a>
+  <nav class="nav-ch" id="navch" aria-label="章節">
+    <a href="#today"><span>01</span>今天</a>
+    <a href="#season"><span>02</span>這一季</a>
+    <a href="#fitness"><span>03</span>體能</a>
+    <a href="#power"><span>04</span>功率</a>
+    <a href="#itt"><span>05</span>計時段</a>
+    <a href="#atlas"><span>06</span>地圖</a>
+    <a href="#plan"><span>07</span>課表</a>
+    <a href="#log"><span>08</span>紀錄</a>
+  </nav>
+  <a class="nav-back" href="linkTreeIndex.html">← LinkTree</a>
+</header>
+
+<section class="hero" id="top" aria-label="北海岸 3D 場景">
+  <div class="lbox t"></div><div class="lbox b"></div>
+  <div class="hud" id="hud">
+    <div class="hud-title">
+      <h1>鵜鶘海岸</h1>
+      <p id="hud-sub">北海岸台 2 線，往西騎進夕陽。</p>
+    </div>
+    <div class="hud-cam">
+      <div class="seg" role="group" aria-label="鏡頭">
+        <button type="button" data-cam="cinema" aria-pressed="true">電影</button>
+        <button type="button" data-cam="chase" aria-pressed="false">追焦</button>
+        <button type="button" data-cam="side" aria-pressed="false">側拍</button>
+        <button type="button" data-cam="pov" aria-pressed="false">鵜鶘視角</button>
+        <button type="button" data-cam="orbit" aria-pressed="false">環繞</button>
+      </div>
+      <div class="hud-tools">
+        <label class="hud-sun" title="太陽仰角"><span id="hud-clock">17:35</span><input id="hud-tod" type="range" min="0" max="1000" value="200" aria-label="時間"></label>
+        <button class="ibtn" type="button" id="btn-camcycle" aria-label="切換鏡頭" title="切換鏡頭（C）"><svg viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></button>
+        <button class="ibtn" type="button" id="btn-pause" aria-pressed="false" aria-label="暫停重播" title="暫停重播（P）"><svg viewBox="0 0 24 24"><path d="M9 6v12M15 6v12"/></svg></button>
+        <button class="ibtn" type="button" id="btn-sound" aria-pressed="false" aria-label="聲音" title="聲音（M）"><svg viewBox="0 0 24 24"><path d="M5 10v4h3l4 4V6L8 10z"/><path d="M16 9.5c1 .8 1.5 1.6 1.5 2.5s-.5 1.7-1.5 2.5" id="snd-w"/></svg></button>
+      </div>
+    </div>
+    <div class="hud-dash">
+      <div class="spd" aria-label="速度">
+        <svg viewBox="0 0 132 132" aria-hidden="true"><path d="M26 108 A56 56 0 1 1 106 108" fill="none" stroke="rgba(246,239,228,.18)" stroke-width="3" stroke-linecap="round"/><path id="spd-arc" d="M26 108 A56 56 0 1 1 106 108" fill="none" stroke="#ff9a5a" stroke-width="3" stroke-linecap="round" pathLength="100" stroke-dasharray="0 100"/></svg>
+        <div class="spd-n"><b id="h-kmh">–</b><i>KM/H</i></div>
+      </div>
+      <dl class="read">
+        <div><dt>功率</dt><dd id="h-pw">–<small>W</small></dd></div>
+        <div><dt>踏頻</dt><dd id="h-cad">–<small>rpm</small></dd></div>
+        <div class="rx"><dt>心率</dt><dd id="h-hr">–<small>bpm</small></dd></div>
+        <div><dt>檔位</dt><dd id="h-gear">–</dd></div>
+        <div class="rx"><dt>平路里程</dt><dd id="h-km">–<small>km</small></dd></div>
+        <div class="rx"><dt>重播</dt><dd id="h-t">–</dd></div>
+      </dl>
+      <div class="strip" id="strip">
+        <div class="strip-h"><span id="strip-l">載入騎乘資料…</span><span id="strip-r"></span></div>
+        <canvas id="strip-c" aria-label="那一趟的功率走勢，點一下跳到那個時間"></canvas>
+        <div class="strip-note" id="strip-note"></div>
+      </div>
+    </div>
+    <a class="hud-next" href="#today" id="hud-next"><span>往下 8 章 · 從「今天」開始</span><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></a>
+    <div class="keys" id="keys"><kbd>1</kbd>–<kbd>5</kbd> 鏡頭 <kbd>W</kbd> 加力 <kbd>P</kbd> 暫停 <kbd>M</kbd> 聲音 · 點鵜鶘</div>
+  </div>
+  <p class="hero-fail" id="hero-fail" hidden>這台瀏覽器畫不了 3D（WebGL 沒開）。往下的數據都不受影響。</p>
+</section>
+
+<main>
+  <section class="ch" id="today" aria-labelledby="h-today">
+    <header class="ch-h"><p class="ch-k"><span><b>01</b> / 08</span><span>TODAY</span></p><h2 id="h-today">今天</h2><p class="ch-lede" id="lede-today">讀取中…</p></header>
+    <div class="cols c3" id="today-body"></div>
+  </section>
+  <section class="ch" id="season" aria-labelledby="h-season">
+    <header class="ch-h"><p class="ch-k"><span><b>02</b> / 08</span><span>SEASON</span></p><h2 id="h-season">這一季</h2><p class="ch-lede" id="lede-season">讀取中…</p></header>
+    <div id="season-body"></div>
+  </section>
+  <section class="ch" id="fitness" aria-labelledby="h-fitness">
+    <header class="ch-h"><p class="ch-k"><span><b>03</b> / 08</span><span>FITNESS &amp; FATIGUE</span></p><h2 id="h-fitness">體能</h2><p class="ch-lede" id="lede-fitness">讀取中…</p></header>
+    <div id="fitness-body"></div>
+  </section>
+  <section class="ch" id="power" aria-labelledby="h-power">
+    <header class="ch-h"><p class="ch-k"><span><b>04</b> / 08</span><span>POWER</span></p><h2 id="h-power">功率</h2><p class="ch-lede" id="lede-power">讀取中…</p></header>
+    <div id="power-body"></div>
+  </section>
+  <section class="ch" id="itt" aria-labelledby="h-itt">
+    <header class="ch-h"><p class="ch-k"><span><b>05</b> / 08</span><span>SEGMENTS</span></p><h2 id="h-itt">計時段</h2><p class="ch-lede" id="lede-itt">讀取中…</p></header>
+    <div id="itt-body"></div>
+  </section>
+  <section class="ch" id="atlas" aria-labelledby="h-atlas">
+    <header class="ch-h"><p class="ch-k"><span><b>06</b> / 08</span><span>ATLAS</span></p><h2 id="h-atlas">地圖</h2><p class="ch-lede" id="lede-atlas">每一條線都是真的 GPS 軌跡，亮度是那一段路被幾趟不同的騎乘經過。</p></header>
+    <div class="cols c73">
+      <div class="atlas" id="atlas-box"><canvas id="atlas-c" aria-label="騎乘軌跡熱度地圖"></canvas><div class="atlas-ui" id="atlas-ui"></div><div class="atlas-leg" id="atlas-leg"></div><div class="atlas-load" id="atlas-load">地圖捲到附近才載入（1.3 MB）</div></div>
+      <div><p class="sub">騎最多的行政區 <i id="atlas-sum"></i></p><div class="towns" id="towns"></div></div>
+    </div>
+  </section>
+  <section class="ch" id="plan" aria-labelledby="h-plan">
+    <header class="ch-h"><p class="ch-k"><span><b>07</b> / 08</span><span>TRAINING BLOCK</span></p><h2 id="h-plan">課表</h2><p class="ch-lede" id="lede-plan">讀取中…</p></header>
+    <div id="plan-body"></div>
+  </section>
+  <section class="ch" id="log" aria-labelledby="h-log">
+    <header class="ch-h"><p class="ch-k"><span><b>08</b> / 08</span><span>LOG</span></p><h2 id="h-log">紀錄</h2><p class="ch-lede" id="lede-log">讀取中…</p></header>
+    <div id="log-body"></div>
+  </section>
+</main>
+
+<footer>
+  <p>同一份資料的其他看法：</p>
+  <div class="worlds">
+    <a href="strava_cinema.html"><b>RIDE CINEMA</b>現行主版本</a>
+    <a href="strava.html"><b>深空觀測站</b>CLASSIC</a>
+    <a href="strava_pitwall.html"><b>維修站牆</b>PIT WALL</a>
+    <a href="strava_opus5_max.html"><b>遙測 MAX</b>OPUS MAX</a>
+    <a href="strava_helicorder.html"><b>記震紙</b>HELICORDER</a>
+    <a href="rides/"><b>訓練報告</b>每趟分析</a>
+    <a href="linkTreeIndex.html"><b>LinkTree</b>回首頁</a>
+  </div>
+  <p id="foot-stamp">資料來源：intervals.icu（FIT、wellness）、Strava（年度統計、路段）。</p>
+  <p class="note">3D 場景全部是程式現算的，沒有外部貼圖。鵜鶘的速度不是亂給的：用那一趟逐秒的功率，套他自己的平路參數（CdA 0.36、Crr 0.005、人車 88 kg）算出來。</p>
+</footer>
+<button class="to-top" id="to-top" type="button" aria-label="回到頂端"><svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg></button>
+<div class="tip" id="tip" role="tooltip"></div>
+
+<script src="vendor-three-r128.js" defer></script>
+<script src="strava-pelican-scene.js" defer></script>
+<script>
+(() => {
+'use strict'
+/* ═══ 共用 ═══════════════════════════════════════════════════════════ */
+const $ = (s, r) => (r || document).querySelector(s)
+const $$ = (s, r) => Array.from((r || document).querySelectorAll(s))
+const TODAY = new Date(Date.now() + 8 * 3600e3).toISOString().slice(0, 10)
+const WD = '日一二三四五六'
+const DAY = 86400e3
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
+const md = s => esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
+const n0 = v => (v == null || !isFinite(v) ? '–' : Math.round(v).toLocaleString('en-US'))
+const n1 = v => (v == null || !isFinite(v) ? '–' : (Math.round(v * 10) / 10).toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 }))
+const sgn = (v, d) => (v > 0 ? '+' : v < 0 ? '−' : '±') + (d ? Math.abs(v).toFixed(d) : Math.abs(Math.round(v)))
+const mdd = d => d ? `${+d.slice(5, 7)}/${+d.slice(8, 10)}` : ''
+const wdOf = d => WD[new Date(d + 'T12:00:00+08:00').getUTCDay()]
+const daysBetween = (a, b) => Math.round((Date.parse(b + 'T00:00:00Z') - Date.parse(a + 'T00:00:00Z')) / DAY)
+const addDays = (d, k) => new Date(Date.parse(d + 'T00:00:00Z') + k * DAY).toISOString().slice(0, 10)
+function hms(sec) { sec = Math.round(sec || 0); const h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), s = sec % 60; return h ? `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}` : `${m}:${String(s).padStart(2, '0')}` }
+function hm(sec) { const h = Math.floor(sec / 3600), m = Math.round(sec % 3600 / 60); return `${h}:${String(m).padStart(2, '0')}` }
+const J = u => fetch(u, { cache: 'no-cache' }).then(r => (r.ok ? r.json() : null)).catch(() => null)
+const CS = getComputedStyle(document.documentElement)
+const C = { sun: CS.getPropertyValue('--sun').trim(), dusk: CS.getPropertyValue('--dusk').trim(), sea: CS.getPropertyValue('--sea').trim(), lamp: CS.getPropertyValue('--lamp').trim(), warn: CS.getPropertyValue('--warn').trim(), good: CS.getPropertyValue('--good').trim(), text: CS.getPropertyValue('--text').trim(), t3: CS.getPropertyValue('--text-3').trim() }
+// 日落橘的序列色階（深 → 亮；深底上越亮越多）
+const RAMP = ['#2b2230', '#4c2f2e', '#7a3f2b', '#a9552e', '#d16e35', '#f29458', '#ffc28f']
+
+/* tooltip：值在前、標籤在後；所有字串走 textContent */
+const tip = $('#tip')
+function showTip(e, title, rows) {
+  tip.textContent = ''
+  if (title) { const h = document.createElement('h5'); h.textContent = title; tip.appendChild(h) }
+  rows.forEach(r => {
+    const d = document.createElement('div'); d.className = 'r'
+    if (r.c) { const i = document.createElement('i'); i.style.background = r.c; d.appendChild(i) }
+    const b = document.createElement('b'); b.textContent = r.v; d.appendChild(b)
+    const s = document.createElement('span'); s.textContent = r.l || ''; d.appendChild(s)
+    if (r.x) { const em = document.createElement('em'); em.textContent = r.x; d.appendChild(em) }
+    tip.appendChild(d)
+  })
+  tip.classList.add('on')
+  const w = tip.offsetWidth, h = tip.offsetHeight
+  let x = e.clientX + 16, y = e.clientY + 14
+  if (x + w > innerWidth - 8) x = e.clientX - w - 16
+  if (y + h > innerHeight - 8) y = e.clientY - h - 14
+  tip.style.left = Math.max(8, x) + 'px'; tip.style.top = Math.max(8, y) + 'px'
+}
+const hideTip = () => tip.classList.remove('on')
+
+/* 圖表容器：寬度改變就重畫（SVG 用真實像素寬，字不會被拉扁） */
+function chart(el, draw) {
+  let lastW = 0
+  const run = () => { const w = el.clientWidth; if (w && Math.abs(w - lastW) > 2) { lastW = w; draw(w) } }
+  new ResizeObserver(run).observe(el); run()
+  return { redraw() { lastW = 0; run() } }
+}
+function ticks(min, max, n) {
+  const span = max - min || 1, step0 = span / (n || 5), mag = Math.pow(10, Math.floor(Math.log10(step0)))
+  const step = [1, 2, 2.5, 5, 10].map(k => k * mag).find(s => s >= step0) || mag * 10
+  const out = []; for (let v = Math.ceil(min / step) * step; v <= max + 1e-9; v += step) out.push(+v.toFixed(6))
+  return out
+}
+const path = pts => pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join('')
+// 斷在 null 的折線
+const pathGaps = pts => { let s = '', pen = false; pts.forEach(p => { if (!p) { pen = false; return } s += (pen ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1); pen = true }); return s }
+
+/* ═══ Hero：3D 場景、HUD、重播 ═══════════════════════════════════════ */
+const hero = $('#top')
+let scene = null
+const HUD = { kmh: $('#h-kmh'), pw: $('#h-pw'), cad: $('#h-cad'), hr: $('#h-hr'), gear: $('#h-gear'), km: $('#h-km'), t: $('#h-t'), arc: $('#spd-arc'), clock: $('#hud-clock'), tod: $('#hud-tod'), note: $('#strip-note') }
+const setDD = (el, v, unit) => { el.firstChild.nodeValue = v; if (unit && el.lastChild && el.lastChild.nodeName === 'SMALL') el.lastChild.textContent = unit }
+let REP = null, repInfo = null
+function onFrame(s) {
+  setDD(HUD.pw, n0(s.pw)); setDD(HUD.cad, s.coast ? '0' : n0(s.cad)); setDD(HUD.hr, n0(s.hr))
+  HUD.gear.textContent = s.gear; setDD(HUD.km, n1(s.km))
+  HUD.kmh.textContent = s.kmh.toFixed(1)
+  HUD.arc.setAttribute('stroke-dasharray', `${Math.min(100, s.kmh / 55 * 100).toFixed(1)} 100`)
+  if (REP) HUD.t.textContent = hms(s.ri) + ' / ' + hms(REP.n)
+  HUD.clock.textContent = s.clock
+  if (document.activeElement !== HUD.tod) HUD.tod.value = Math.round(s.tod * 1000)
+  if (s.skip) { HUD.note.textContent = `略過 ${hms(s.skip)} 沒出力的下坡／停等`; HUD.note.classList.add('on') } else HUD.note.classList.remove('on')
+  stripCursor(s.ri)
+  hero.classList.toggle('is-cinema', s.cam === 'cinema')
+}
+function setCam(m) {
+  if (!scene) return
+  scene.setCamera(m)
+  $$('.seg [data-cam]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.cam === m)))
+}
+const CAMS = ['cinema', 'chase', 'side', 'pov', 'orbit']
+function bootScene() {
+  const no3d = () => { hero.classList.add('no-3d'); hero.classList.remove('is-live'); $('#hero-fail').hidden = false }
+  if (!window.PelicanCoast || !window.PelicanCoast.mount) { no3d(); return }
+  scene = window.PelicanCoast.mount(hero, { cam: 'cinema', tod: 0.18, onFrame, onLost: no3d })
+  if (!scene) { no3d(); return }
+  window.__pelican = scene                                  // 給 headless 驗證腳本用的把手
+  // canvas 要在 HUD 底下
+  const cv = $('.pc-canvas', hero); hero.insertBefore(cv, hero.firstChild)
+  requestAnimationFrame(() => hero.classList.add('is-live'))
+  $$('.seg [data-cam]').forEach(b => b.addEventListener('click', () => setCam(b.dataset.cam)))
+  $('#btn-camcycle').addEventListener('click', () => setCam(CAMS[(CAMS.indexOf(scene.camera) + 1) % CAMS.length]))
+  const bp = $('#btn-pause')
+  // 減少動態：場景停在一張靜止畫面，暫停鈕改當「播放」用
+  if (scene.still) { bp.setAttribute('aria-pressed', 'true'); bp.title = '播放（P）'; bp.setAttribute('aria-label', '播放') }
+  bp.addEventListener('click', () => {
+    if (scene.still) { scene.play(); bp.setAttribute('aria-pressed', 'false'); bp.title = '暫停重播（P）'; bp.setAttribute('aria-label', '暫停重播'); return }
+    scene.setPaused(!scene.paused); bp.setAttribute('aria-pressed', String(scene.paused))
+  })
+  const bs = $('#btn-sound'); bs.addEventListener('click', () => { const on = bs.getAttribute('aria-pressed') !== 'true'; scene.sound(on); bs.setAttribute('aria-pressed', String(on)) })
+  HUD.tod.addEventListener('input', () => scene.setTod(HUD.tod.value / 1000))
+  const inView = () => hero.getBoundingClientRect().bottom > 80
+  addEventListener('keydown', e => {
+    if (e.target.closest && e.target.closest('input,textarea,select') || e.metaKey || e.ctrlKey || e.altKey || !inView()) return
+    const k = e.key.toLowerCase()
+    if (k >= '1' && k <= '5') setCam(CAMS[+k - 1])
+    else if (k === 'c') $('#btn-camcycle').click()
+    else if (k === 'p') bp.click()
+    else if (k === 'm') bs.click()
+    else if (k === 'w') scene.setBoost(140)
+    else if (k === 's') scene.setBrake(true)
+  })
+  addEventListener('keyup', e => { const k = e.key.toLowerCase(); if (k === 'w') scene.setBoost(0); if (k === 's') scene.setBrake(false) })
+  if (REP) scene.setReplay(REP)
+  if (DATA.drive) scene.setDrive({ rings: DATA.drive.chainrings, cogs: DATA.drive.cassette, circ: DATA.drive.wheel_circumference_m })
+}
+// 重播的是最近一趟戶外騎乘的 FIT，起點放在當天第一段計時段
+async function loadReplay(acts, reports, itt) {
+  const rides = Object.entries(acts || {}).filter(([, a]) => a && a.type === 'Ride' && a.icu_weighted_avg_watts && (a.distance || 0) > 5000)
+    .sort((a, b) => (b[1].start_date_local || '').localeCompare(a[1].start_date_local || ''))
+  if (!rides.length || !reports) return
+  for (const [id, a] of rides.slice(0, 4)) {
+    const file = Object.keys(reports).find(k => k.includes('_' + id + '_'))
+    if (!file) continue
+    const buf = await fetch('data/fit/' + encodeURIComponent(file)).then(r => (r.ok ? r.arrayBuffer() : null)).catch(() => null)
+    if (!buf || !window.PelicanCoast) continue
+    let fit
+    try { fit = window.PelicanCoast.parseFit(buf) } catch (e) { continue }
+    const date = a.start_date_local.slice(0, 10)
+    const t0 = a.start_date_local.slice(11, 16)
+    const toSec = hhmm => { const [h, m] = hhmm.split(':').map(Number), [h0, m0] = t0.split(':').map(Number); return (h * 60 + m - h0 * 60 - m0) * 60 }
+    // 當天的計時段（每個母路線只取最長那段，避免四等分洗版）
+    const marks = []
+    const groups = new Map()
+    ;(itt || []).forEach(seg => (seg.efforts || []).forEach(e => {
+      if (e.date !== date || !e.start_time) return
+      const meta = ITT_META.get(seg.id) || {}
+      const g = meta.group || ('s' + seg.id)
+      const s0 = toSec(e.start_time)
+      const cur = groups.get(g)
+      if (!cur || e.elapsed_sec > cur.len) groups.set(g, { s0, len: e.elapsed_sec, label: `${(meta.gname || meta.nameZh || seg.name || '').replace(/・.*$/, '')} ${hms(e.elapsed_sec)}`, w: e.avg_watts })
+    }))
+    groups.forEach(v => marks.push(v))
+    marks.sort((x, y) => x.s0 - y.s0)
+    const start = marks.length ? Math.max(0, marks[0].s0 - 20) : 60
+    REP = window.PelicanCoast.toReplay(fit, { start })
+    if (!REP) continue
+    repInfo = { date, name: a.name, marks, np: a.icu_weighted_avg_watts, km: (a.distance || 0) / 1000, gain: a.total_elevation_gain }
+    const sess = DATA.block && (DATA.block.sessions || []).find(x => x.date === date)
+    const what = sess && sess.actual && sess.actual.sub_name ? sess.actual.sub_name.replace(/（.*?）/g, '') : (marks[0] ? marks.map(m => m.label.split(' ')[0]).join('＋') : a.name)
+    $('#hud-sub').innerHTML = `北海岸台 2 線，往西騎進夕陽。油門是 <b>${mdd(date)} ${esc(what)}</b> 那趟逐秒的功率——那天的瓦數，搬到平路上會是這個速度。`
+    $('#strip-l').innerHTML = `<b>${mdd(date)}</b> · ${n1(repInfo.km)} km · 爬升 ${n0(repInfo.gain)} m · NP ${n0(repInfo.np)} W`
+    $('#strip-r').textContent = marks.length ? marks.map(m => m.label).join('　') : ''
+    drawStrip()
+    if (scene) scene.setReplay(REP)
+    return
+  }
+}
+const stripC = $('#strip-c')
+let stripCache = null
+function drawStrip() {
+  if (!REP) return
+  const dpr = Math.min(devicePixelRatio || 1, 2), w = stripC.clientWidth, h = stripC.clientHeight
+  if (!w) return
+  stripC.width = w * dpr; stripC.height = h * dpr
+  const g = stripC.getContext('2d', { willReadFrequently: true }); g.setTransform(dpr, 0, 0, dpr, 0, 0)
+  g.clearRect(0, 0, w, h)
+  g.fillStyle = 'rgba(8,11,22,.34)'; g.fillRect(0, 0, w, h)
+  const n = REP.n, bins = Math.max(40, Math.floor(w / 2)), per = n / bins
+  let max = 0; const vals = []
+  for (let i = 0; i < bins; i++) { let s = 0, c = 0; for (let k = Math.floor(i * per); k < Math.floor((i + 1) * per); k++) { s += REP.pw[k]; c++ } const v = c ? s / c : 0; vals.push(v); max = Math.max(max, v) }
+  max = Math.max(max, 300)
+  ;(repInfo.marks || []).forEach(m => { const x0 = m.s0 / n * w, x1 = (m.s0 + m.len) / n * w; g.fillStyle = 'rgba(255,176,122,.16)'; g.fillRect(x0, 0, Math.max(2, x1 - x0), h) })
+  g.beginPath(); g.moveTo(0, h)
+  vals.forEach((v, i) => g.lineTo(i / (bins - 1) * w, h - 3 - v / max * (h - 8)))
+  g.lineTo(w, h); g.closePath()
+  g.fillStyle = 'rgba(255,154,90,.28)'; g.fill()
+  g.beginPath(); vals.forEach((v, i) => { const x = i / (bins - 1) * w, y = h - 3 - v / max * (h - 8); i ? g.lineTo(x, y) : g.moveTo(x, y) })
+  g.strokeStyle = 'rgba(255,190,140,.9)'; g.lineWidth = 1.3; g.stroke()
+  stripCache = g.getImageData(0, 0, stripC.width, stripC.height)
+}
+function stripCursor(ri) {
+  if (!REP || !stripCache) return
+  const g = stripC.getContext('2d', { willReadFrequently: true })
+  g.putImageData(stripCache, 0, 0)
+  const x = ri / REP.n * stripC.clientWidth
+  g.fillStyle = '#fff'; g.fillRect(x - 0.75, 0, 1.5, stripC.clientHeight)
+  g.beginPath(); g.arc(x, 4, 3, 0, Math.PI * 2); g.fill()
+}
+stripC.addEventListener('click', e => { if (!REP || !scene) return; const r = stripC.getBoundingClientRect(); scene.seek((e.clientX - r.left) / r.width * REP.n) })
+new ResizeObserver(() => drawStrip()).observe(stripC)
+
+/* ═══ 導覽：捲動定位、常駐列變色、回頂端 ═══════════════════════════ */
+const nav = $('#nav'), toTop = $('#to-top')
+const chs = $$('main .ch')
+function onScroll() {
+  const y = scrollY
+  nav.classList.toggle('is-solid', y > 40)
+  toTop.classList.toggle('on', y > innerHeight * 1.5)
+}
+addEventListener('scroll', onScroll, { passive: true }); onScroll()
+toTop.addEventListener('click', () => scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }))
+const navLinks = $$('#navch a')
+const spy = new IntersectionObserver(es => {
+  es.forEach(e => {
+    if (!e.isIntersecting) return
+    navLinks.forEach(a => a.classList.toggle('on', a.getAttribute('href') === '#' + e.target.id))
+    const on = navLinks.find(a => a.classList.contains('on'))
+    if (on) { const box = $('#navch'); box.scrollTo({ left: on.offsetLeft - box.clientWidth / 2 + on.clientWidth / 2, behavior: 'smooth' }) }
+  })
+}, { rootMargin: '-45% 0px -50% 0px' })
+chs.forEach(c => spy.observe(c))
+
+/* ═══ 資料 ═══════════════════════════════════════════════════════════ */
+const DATA = {}
+const ITT_META = new Map()
+const setLede = (id, html) => { $('#lede-' + id).innerHTML = html }
+function wellnessDays(w) { return Object.keys(w || {}).filter(d => d <= TODAY && /^\d{4}-\d\d-\d\d$/.test(d)).sort() }
+function actsList(acts) {
+  return Object.entries(acts || {}).filter(([, a]) => a && a.start_date_local).map(([id, a]) => ({ id, ...a, date: a.start_date_local.slice(0, 10), time: a.start_date_local.slice(11, 16) }))
+    .sort((a, b) => b.start_date_local.localeCompare(a.start_date_local))
+}
+const isRide = a => a.type === 'Ride' || a.type === 'VirtualRide'
+const typeZh = a => ({ Ride: '騎車', VirtualRide: '室內', WeightTraining: '重訓', Run: '跑步', VirtualRun: '跑步機', Swim: '游泳', OpenWaterSwim: '開放水域', Hike: '健行', Workout: '訓練' }[a.type] || a.type)
+
+/* ── 01 今天 ── */
+function tsbZone(t) {
+  if (t > 15) return { w: '太鬆（開始掉）', c: C.dusk }
+  if (t > 5) return { w: '新鮮', c: C.good }
+  if (t >= -10) return { w: '平衡', c: C.sea }
+  if (t >= -30) return { w: '累積中', c: C.sun }
+  return { w: '過量', c: C.warn }
+}
+function renderToday() {
+  const w = DATA.well, days = wellnessDays(w)
+  const box = $('#today-body')
+  if (!days.length) { box.innerHTML = '<p class="empty">wellness 資料沒有載到。</p>'; return }
+  const d = days[days.length - 1], W0 = w[d]
+  const ctl = W0.ctl, atl = W0.atl, tsb = ctl - atl, z = tsbZone(tsb)
+  // HRV 60 天常態範圍（平均 ± 1 SD），今天之前的
+  const hist = days.slice(-61, -1).map(k => w[k].hrv).filter(v => v > 0)
+  const mean = hist.reduce((s, v) => s + v, 0) / (hist.length || 1)
+  const sd = Math.sqrt(hist.reduce((s, v) => s + (v - mean) ** 2, 0) / Math.max(1, hist.length - 1))
+  const lastHrvDay = days.slice().reverse().find(k => w[k].hrv > 0)
+  const hrv = lastHrvDay ? w[lastHrvDay].hrv : null
+  const rhrHist = days.slice(-61, -1).map(k => w[k].restingHR).filter(v => v > 0)
+  const rhrMean = rhrHist.reduce((s, v) => s + v, 0) / (rhrHist.length || 1)
+  const lastRhrDay = days.slice().reverse().find(k => w[k].restingHR > 0)
+  const sleepDay = days.slice().reverse().find(k => w[k].sleepSecs > 0)
+  const sl = sleepDay ? w[sleepDay] : null
+  const lo = Math.min(mean - 2.2 * sd, hrv || mean), hi = Math.max(mean + 2.2 * sd, hrv || mean)
+  const pct = v => ((v - lo) / (hi - lo) * 100).toFixed(1)
+  const hrvWord = hrv == null ? '' : hrv < mean - sd ? '在常態下緣之外' : hrv > mean + sd ? '高於常態' : '在常態範圍內'
+  const tsb42 = days.slice(-42).map(k => w[k].ctl - w[k].atl)
+  // 今天／下一堂
+  const S = (DATA.block && DATA.block.sessions) || []
+  const todayS = S.find(x => x.date === TODAY && !x.support)
+  const nextS = S.find(x => x.date > TODAY && !x.support) || null
+  const acts = DATA.actsList || []
+  const lastRide = acts.find(a => isRide(a))
+  const note = DATA.lastNote
+  const tasks = (DATA.tasks && DATA.tasks.tasks) || []
+  const ses = (s, lab) => s ? `<div class="today-ses row-l"><p class="sub">${lab} <i>${mdd(s.date)} 週${wdOf(s.date)} · ${s.minutes} 分 · ${esc(s.wk)}</i></p>
+      <h4>${esc(s.name)}</h4><p class="plan">${esc(s.plan)}</p>
+      ${s.actual ? `<p class="plan">${esc(s.actual.note || '')}</p>` : ''}</div>` : ''
+  box.innerHTML = `
+    <div>
+      <p class="sub">狀態 <i>TSB＝體能 − 疲勞 · ${mdd(d)}</i></p>
+      <div class="hero-fig num" id="tsb-fig">${sgn(tsb, 1)}</div>
+      <div class="zone"><i style="background:${z.c}"></i>${z.w}</div>
+      <dl class="kv"><dt>體能 CTL</dt><dd>${n1(ctl)}</dd><dt>疲勞 ATL</dt><dd>${n1(atl)}</dd>
+        <dt>近 7 天負荷</dt><dd>${n0(acts.filter(a => a.date > addDays(TODAY, -7)).reduce((s, a) => s + (a.icu_training_load || 0), 0))}</dd></dl>
+      <div class="chart" id="tsb-spark" style="margin-top:16px;max-width:320px"></div>
+    </div>
+    <div>
+      <p class="sub">身體 <i>跟自己 60 天的常態比</i></p>
+      <div class="row-l" style="border-top:0;padding-top:0">
+        <p style="font-size:13px;color:var(--text-3)">HRV（${lastHrvDay ? mdd(lastHrvDay) : '–'}）</p>
+        <p style="font-size:28px;font-weight:600">${hrv == null ? '–' : n0(hrv)}<small style="font-size:13px;color:var(--text-2);font-weight:400"> ms · ${hrvWord}</small></p>
+        <div class="range" aria-hidden="true"><span style="left:${pct(mean - sd)}%;right:${(100 - pct(mean + sd)).toFixed(1)}%"></span>${hrv != null ? `<i style="left:${pct(hrv)}%"></i>` : ''}</div>
+        <p class="muted" style="font-size:12px">常態 ${n0(mean - sd)}–${n0(mean + sd)} ms（平均 ${n0(mean)}）</p>
+      </div>
+      <div class="row-l">
+        <dl class="kv" style="margin:0"><dt>靜止心率</dt><dd>${lastRhrDay ? n0(w[lastRhrDay].restingHR) + ' bpm' : '–'} <span class="muted">· 常態 ${n0(rhrMean)}</span></dd>
+          <dt>睡眠</dt><dd>${sl ? hm(sl.sleepSecs) : '–'}${sl && sl.sleepScore ? ` <span class="muted">· 分數 ${n0(sl.sleepScore)}</span>` : ''}</dd>
+          <dt>eFTP</dt><dd>${DATA.eftpNow ? n0(DATA.eftpNow) + ' W' : '–'} <span class="muted">· 課表用 ${n0(DATA.ftp)} W</span></dd></dl>
+      </div>
+      <p class="note">單一天的 HRV、睡眠不拿來下診斷；他的資料上，睡眠跟表現沒有顯著相關。</p>
+    </div>
+    <div>
+      ${todayS ? ses(todayS, '今天的課') : ''}
+      ${ses(nextS, todayS ? '下一堂' : '下一堂課')}
+      ${lastRide ? `<div class="row-l"><p class="sub">最近一趟 <i>${mdd(lastRide.date)} 週${wdOf(lastRide.date)} ${lastRide.time}</i></p>
+        <h4 style="font-size:15.5px;font-weight:600">${esc(note && note.summary ? note.summary : lastRide.name)}</h4>
+        ${note && note.coach ? `<div class="coach">${note.coach.slice(0, 2).map(c => `<p>${md(c)}</p>`).join('')}</div>` : ''}
+        ${DATA.reportDates && DATA.reportDates.has(lastRide.date) ? `<a class="more" href="rides/${lastRide.date}.html">看那一趟的完整報告 →</a>` : ''}</div>` : ''}
+      ${tasks.length ? `<div style="margin-top:18px"><p class="sub">代辦 <i>${tasks.length} 筆</i></p>${tasks.map(t => `<div class="task"><i aria-hidden="true"></i><div>${t.link ? `<a href="${esc(t.link)}">${esc(t.title)}</a>` : esc(t.title)}<br><span>${esc(t.detail || '')}</span></div></div>`).join('')}</div>` : ''}
+    </div>`
+  // TSB 42 天小圖（帶區間）
+  chart($('#tsb-spark'), wd => {
+    const h = 64, lo = Math.min(-35, ...tsb42) - 2, hi = Math.max(10, ...tsb42) + 2
+    const y = v => (hi - v) / (hi - lo) * h, x = i => i / (tsb42.length - 1) * wd
+    const pts = tsb42.map((v, i) => [x(i), y(v)])
+    $('#tsb-spark').innerHTML = `<svg viewBox="0 0 ${wd} ${h + 16}" height="${h + 16}" role="img" aria-label="近 42 天 TSB">
+      <rect x="0" y="${y(-10)}" width="${wd}" height="${y(-30) - y(-10)}" fill="rgba(220,115,54,.08)"/>
+      <line class="base" x1="0" x2="${wd}" y1="${y(0)}" y2="${y(0)}"/>
+      <path d="${path(pts)}" fill="none" stroke="${C.sea}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+      <circle cx="${pts[pts.length - 1][0]}" cy="${pts[pts.length - 1][1]}" r="4" fill="${C.sea}" stroke="#0d1322" stroke-width="2"/>
+      <text class="ax" x="0" y="${h + 13}">42 天前</text><text class="ax" x="${wd}" y="${h + 13}" text-anchor="end">今天</text>
+      <text class="ax" x="${wd - 2}" y="${y(-20) + 4}" text-anchor="end">累積區 −10～−30</text></svg>`
+  })
+  const trend = tsb42.length > 7 ? tsb - tsb42[tsb42.length - 8] : 0
+  setLede('today', `TSB <b>${sgn(tsb, 1)}</b>（${z.w}），比一週前 ${sgn(trend, 1)}。` +
+    (hrv != null ? `HRV ${n0(hrv)} ms，${hrvWord}。` : '') +
+    (nextS ? `下一堂是 <b>${mdd(nextS.date)} 週${wdOf(nextS.date)} ${esc(nextS.name)}</b>。` : ''))
+}
+
+/* ── 02 這一季 ── */
+const BREAKEVEN = 15.3            // h／月；scripts/coach-brief.py 同一個常數（2026-08-20 重跑落在 16.4–17.4，畫成一條帶）
+function monthlyHours() {
+  const mh = DATA.mh, out = {}
+  if (mh && mh.months) Object.entries(mh.months).forEach(([k, v]) => { out[k] = { h: v.hours, km: v.km, n: v.rides, src: 'frozen' } })
+  const frozen = (mh && mh.frozen_through) || '0000-00'
+  // 凍結月份之後由 _activities.json 現算：室內同一天手錶堆與 Rouvy 堆取長的（scripts/ride_hours.py 同一條規則）
+  const byDay = {}
+  ;(DATA.actsList || []).filter(isRide).forEach(a => {
+    const m = a.date.slice(0, 7); if (m <= frozen) return
+    const o = byDay[a.date] || (byDay[a.date] = { watch: 0, rouvy: 0, out: 0, km: 0, n: 0 })
+    const h = (a.moving_time || 0) / 3600
+    const indoor = a.type === 'VirtualRide' || /^rouvy/i.test(a.name || '')
+    if (!indoor) { o.out += h; o.km += (a.distance || 0) / 1000; o.n++ } else if (/^rouvy/i.test(a.name || '')) o.rouvy += h
+    else { o.watch += h; o.km += (DATA.estKm && DATA.estKm[a.id] ? DATA.estKm[a.id].km : 0); o.n++ }
+  })
+  Object.entries(byDay).forEach(([d, o]) => {
+    const m = d.slice(0, 7), t = out[m] || (out[m] = { h: 0, km: 0, n: 0, src: 'fit' })
+    t.h += Math.max(o.watch, o.rouvy) + o.out; t.km += o.km; t.n += o.n
+  })
+  const keys = Object.keys(out).sort()
+  if (!keys.length) return []
+  const res = []
+  for (let k = keys[0]; k <= TODAY.slice(0, 7); k = nextMonth(k)) res.push({ m: k, ...(out[k] || { h: 0, km: 0, n: 0 }) })
+  return res
+}
+function nextMonth(m) { const y = +m.slice(0, 4), n = +m.slice(5, 7); return n === 12 ? `${y + 1}-01` : `${y}-${String(n + 1).padStart(2, '0')}` }
+function renderSeason() {
+  const box = $('#season-body')
+  const sm = (DATA.strava && DATA.strava.summary) || {}
+  const year = TODAY.slice(0, 4)
+  const months = monthlyHours()
+  const over = months.filter(m => m.h >= BREAKEVEN && m.m < TODAY.slice(0, 7))
+  const done = months.filter(m => m.m < TODAY.slice(0, 7))
+  const avg = done.length ? done.reduce((s, m) => s + m.h, 0) / done.length : 0
+  const cur = months[months.length - 1]
+  const dim = new Date(Date.UTC(+TODAY.slice(0, 4), +TODAY.slice(5, 7), 0)).getUTCDate(), dnow = +TODAY.slice(8, 10)
+  box.innerHTML = `
+    <dl class="stats">
+      <div class="stat"><dt>${year} 騎乘距離</dt><dd class="num">${n0(sm.ytd_distance_km)}<small>km</small></dd><p>生涯 ${n0(sm.all_time_distance_km)} km</p></div>
+      <div class="stat"><dt>${year} 騎乘時間</dt><dd class="num">${n1(sm.ytd_moving_time_hr)}<small>h</small></dd><p>${n0(sm.ytd_rides)} 趟</p></div>
+      <div class="stat"><dt>${year} 爬升</dt><dd class="num">${n0(sm.ytd_elevation_m)}<small>m</small></dd><p>生涯 ${n0(sm.all_time_elevation_m)} m</p></div>
+      <div class="stat"><dt>${year} 跑步／游泳</dt><dd class="num">${n0(sm.ytd_run_distance_km)}<small>km</small></dd><p>游泳 ${n1(sm.ytd_swim_distance_km)} km · ${n0(sm.ytd_swims)} 次</p></div>
+      <div class="stat"><dt>本月騎乘</dt><dd class="num">${cur ? n1(cur.h) : '–'}<small>h</small></dd><p>第 ${dnow}/${dim} 天 · 照這個速度月底 ${cur ? n1(cur.h / dnow * dim) : '–'} h</p></div>
+    </dl>
+    <div class="blk">
+      <p class="sub">每月騎乘時數 <i>橫帶是 eFTP 的損益線：低於它，下個月的 eFTP 就在掉</i></p>
+      <div class="chart" id="mh-chart"></div>
+      <p class="note">損益線用 <b>15.3 h</b>（scripts/coach-brief.py 的常數）；2026-08-20 換兩種 eFTP 來源重跑，真值落在 <b>16.4–17.4 h</b>，所以畫成一條帶。17 個月的月均 ${n1(avg)} h。</p>
+      <details class="tbl"><summary>看表格</summary><div class="tscroll"><table class="t"><thead><tr><th>月份</th><th class="r">時數</th><th class="r">距離 km</th><th class="r">次數</th></tr></thead>
+        <tbody>${months.slice().reverse().map(m => `<tr><td>${m.m}</td><td class="r">${n1(m.h)}</td><td class="r">${n0(m.km)}</td><td class="r">${m.n}</td></tr>`).join('')}</tbody></table></div></details>
+    </div>
+    <div class="blk">
+      <p class="sub">一年的訓練負荷 <i>每一格是一天，所有運動的 TL 加總</i></p>
+      <div class="heat-wrap" id="heat"></div>
+    </div>`
+  // 月時數柱狀圖
+  const PR_MARKS = []
+  ;(DATA.itt || []).forEach(seg => {
+    const meta = ITT_META.get(seg.id); if (!meta || meta.label !== '全段') return
+    const best = (seg.efforts || []).reduce((m, e) => (!m || e.elapsed_sec < m.elapsed_sec ? e : m), null)
+    if (best && ['zhongshe', 'fongguizui'].includes(meta.group)) PR_MARKS.push({ m: best.date.slice(0, 7), label: `${meta.gname} PR ${hms(best.elapsed_sec)}`, date: best.date })
+  })
+  chart($('#mh-chart'), wd => {
+    const h = 270, pl = 34, pb = 26, pt = 40, n = months.length
+    const max = Math.max(30, ...months.map(m => m.h)) * 1.08
+    const bw = Math.min(24, (wd - pl) / n * 0.62), step = (wd - pl) / n
+    const y = v => pt + (1 - v / max) * (h - pt - pb)
+    let s = `<svg viewBox="0 0 ${wd} ${h}" height="${h}" role="img" aria-label="每月騎乘時數">`
+    ticks(0, max, 5).forEach(t => { s += `<line class="grid" x1="${pl}" x2="${wd}" y1="${y(t)}" y2="${y(t)}"/><text class="ax" x="${pl - 8}" y="${y(t) + 4}" text-anchor="end">${t}</text>` })
+    s += `<rect x="${pl}" y="${y(17.4)}" width="${wd - pl}" height="${y(15.3) - y(17.4)}" fill="rgba(31,159,149,.14)"/>`
+    s += `<line x1="${pl}" x2="${wd}" y1="${y(BREAKEVEN)}" y2="${y(BREAKEVEN)}" stroke="${C.sea}" stroke-width="1.5"/>`
+    s += `<text class="ax-l" x="${wd}" y="${y(17.4) - 6}" text-anchor="end">損益線 15.3–17.4 h</text>`
+    months.forEach((m, i) => {
+      const x = pl + i * step + (step - bw) / 2, yy = y(m.h), partial = m.m === TODAY.slice(0, 7)
+      const hh = Math.max(0, y(0) - yy)
+      const r = Math.min(4, hh)
+      s += `<path d="M${x} ${y(0)}V${yy + r}Q${x} ${yy} ${x + r} ${yy}H${x + bw - r}Q${x + bw} ${yy} ${x + bw} ${yy + r}V${y(0)}Z" fill="${C.sun}" opacity="${partial ? 0.45 : 1}"/>`
+      s += `<rect class="hit" data-i="${i}" x="${pl + i * step}" y="${pt}" width="${step}" height="${h - pt - pb}" fill="transparent"/>`
+      if (i % Math.ceil(n / 9) === 0 || i === n - 1) s += `<text class="ax" x="${x + bw / 2}" y="${h - 8}" text-anchor="middle">${m.m.slice(2).replace('-', '/')}</text>`
+    })
+    PR_MARKS.sort((a, b) => a.m.localeCompare(b.m)).forEach((p, k) => {
+      const i = months.findIndex(m => m.m === p.m); if (i < 0) return
+      const x = pl + i * step + step / 2, yy = y(months[i].h) - 8, ly = pt - 8 + k * 16
+      s += `<line x1="${x}" x2="${x}" y1="${ly + 4}" y2="${yy}" stroke="${C.lamp}" stroke-width="1" opacity=".55"/><circle cx="${x}" cy="${yy}" r="4" fill="${C.lamp}" stroke="#0d1322" stroke-width="2"/><text class="ax-l" x="${x + 7}" y="${ly + 4}">${esc(p.label)}</text>`
+    })
+    s += `<line class="base" x1="${pl}" x2="${wd}" y1="${y(0)}" y2="${y(0)}"/></svg>`
+    const el = $('#mh-chart'); el.innerHTML = s
+    $$('.hit', el).forEach(r => {
+      r.addEventListener('pointermove', e => { const m = months[+r.dataset.i]; showTip(e, m.m + (m.m === TODAY.slice(0, 7) ? '（至今）' : ''), [{ v: n1(m.h) + ' h', l: '騎乘時數', c: C.sun }, { v: n0(m.km) + ' km', l: '距離' }, { v: m.n + ' 趟', l: '' }]) })
+      r.addEventListener('pointerleave', hideTip)
+    })
+  })
+  // 年度熱力圖
+  const tl = {}
+  ;(DATA.actsList || []).forEach(a => { tl[a.date] = (tl[a.date] || 0) + (a.icu_training_load || 0) })
+  const end = TODAY, endDow = new Date(end + 'T12:00:00+08:00').getUTCDay(), start = addDays(end, -(52 * 7 + ((endDow + 6) % 7)))
+  const cells = [], monthsLab = []
+  const bins = [0, 1, 40, 80, 120, 160]
+  const bin = v => (v <= 0 ? 0 : v < 40 ? 1 : v < 80 ? 2 : v < 120 ? 3 : v < 160 ? 4 : 5)
+  const heatCols = ['#1a2338', RAMP[1], RAMP[2], RAMP[3], RAMP[4], RAMP[6]]
+  let col = 0, lastM = ''
+  for (let d = start; d <= end; d = addDays(d, 1)) {
+    const dow = (new Date(d + 'T12:00:00+08:00').getUTCDay() + 6) % 7
+    if (dow === 0) { col++; if (d.slice(5, 7) !== lastM) { monthsLab.push([col, +d.slice(5, 7)]); lastM = d.slice(5, 7) } }
+    const v = tl[d] || 0
+    cells.push(`<i data-d="${d}" style="grid-row:${dow + 1};grid-column:${col || 1};background:${heatCols[bin(v)]}"></i>`)
+  }
+  const heat = $('#heat')
+  const cell = Math.max(9, Math.min(17, Math.floor((heat.clientWidth - (col - 1) * 3) / col)))
+  heat.style.setProperty('--c', cell + 'px')
+  heat.innerHTML = `<div class="heat-m" style="grid-template-columns:repeat(${col},${cell + 3}px)">${monthsLab.map(([c, m]) => `<span style="grid-column:${c}">${m}月</span>`).join('')}</div><div class="heat">${cells.join('')}</div>
+    <div class="heat-leg">少${heatCols.map(c => `<i style="background:${c}"></i>`).join('')}多 <span style="margin-left:8px">（TL 0／1–39／40–79／80–119／120–159／160+）</span></div>`
+  heat.addEventListener('pointermove', e => {
+    const c = e.target.closest('i[data-d]'); if (!c) return hideTip()
+    const d = c.dataset.d, list = (DATA.actsList || []).filter(a => a.date === d)
+    showTip(e, `${d} 週${wdOf(d)}`, [{ v: 'TL ' + n0(tl[d] || 0), l: list.length ? '' : '休息' }].concat(list.slice(0, 4).map(a => ({ v: typeZh(a), l: a.name, x: 'TL ' + n0(a.icu_training_load) }))))
+  })
+  heat.addEventListener('pointerleave', hideTip)
+  heat.scrollLeft = heat.scrollWidth
+  const ym = m => `${m.slice(2, 4)}/${+m.slice(5)}`
+  setLede('season', `今年騎了 <b>${n0(sm.ytd_distance_km)} km、${n1(sm.ytd_moving_time_hr)} 小時</b>。月騎乘低於 ${BREAKEVEN} 小時，下個月 eFTP 就在掉——過去 ${done.length} 個月只有 <b>${over.length} 個月</b>超線（${over.map(m => ym(m.m)).join('、')}）；風櫃嘴與中社的 PR 都落在 2025 年那幾個月之後 3–5 週。`)
+}
+
+/* ── 03 體能 ── */
+let fitRange = 180
+function renderFitness() {
+  const w = DATA.well, days = wellnessDays(w)
+  const box = $('#fitness-body')
+  if (!days.length) { box.innerHTML = '<p class="empty">沒有 wellness 資料。</p>'; return }
+  box.innerHTML = `
+    <div class="filters" role="group" aria-label="時間範圍">${[[90, '90 天'], [180, '180 天'], [0, '全部']].map(([v, l]) => `<button class="chip" type="button" data-r="${v}" aria-pressed="${v === fitRange}">${l}</button>`).join('')}</div>
+    <div class="legend"><span><i style="background:${C.sun}"></i>體能 CTL（42 天）</span><span><i style="background:${C.dusk}"></i>疲勞 ATL（7 天）</span><span><i style="background:${C.sea}"></i>狀態 TSB</span></div>
+    <div class="chart" id="pmc"></div>
+    <div class="chart" id="tsbc" style="margin-top:8px"></div>
+    <div class="cols c2 blk">
+      <div><p class="sub">eFTP <i>intervals.icu 從騎乘反推的估計值，不是量測</i></p><div class="chart" id="eftpc"></div></div>
+      <div><p class="sub">HRV <i>點＝每天、線＝7 天平均、帶＝60 天常態</i></p><div class="chart" id="hrvc"></div></div>
+    </div>
+    <details class="tbl"><summary>看表格（最近 30 天）</summary><div class="tscroll"><table class="t"><thead><tr><th>日期</th><th class="r">CTL</th><th class="r">ATL</th><th class="r">TSB</th><th class="r">HRV</th><th class="r">靜止心率</th><th class="r">睡眠</th></tr></thead>
+      <tbody>${days.slice(-30).reverse().map(d => { const x = w[d]; return `<tr><td>${d}</td><td class="r">${n1(x.ctl)}</td><td class="r">${n1(x.atl)}</td><td class="r">${n1(x.ctl - x.atl)}</td><td class="r">${x.hrv ? n0(x.hrv) : '–'}</td><td class="r">${x.restingHR || '–'}</td><td class="r">${x.sleepSecs ? hm(x.sleepSecs) : '–'}</td></tr>` }).join('')}</tbody></table></div></details>`
+  $$('#fitness-body .chip').forEach(b => b.addEventListener('click', () => { fitRange = +b.dataset.r; renderFitness() }))
+  const sel = fitRange ? days.slice(-fitRange) : days
+  const n = sel.length
+  const actsBy = {}
+  ;(DATA.actsList || []).forEach(a => { (actsBy[a.date] || (actsBy[a.date] = [])).push(a) })
+  const pl = 34
+  const xOf = (i, wd) => pl + i / Math.max(1, n - 1) * (wd - pl - 6)
+  function xAxis(wd, h) {
+    let s = ''; const every = n > 200 ? 60 : n > 100 ? 30 : 14
+    sel.forEach((d, i) => { if (d.slice(8) === '01' && (every >= 30 || true)) { if (every === 60 && +d.slice(5, 7) % 2) return; s += `<text class="ax" x="${xOf(i, wd)}" y="${h - 6}" text-anchor="middle">${+d.slice(5, 7)}月</text>` } })
+    return s
+  }
+  function hover(el, wd, rows) {
+    const svg = $('svg', el), line = $('.xh', el)
+    el.onpointermove = e => {
+      const r = svg.getBoundingClientRect(), x = e.clientX - r.left
+      const i = Math.max(0, Math.min(n - 1, Math.round((x - pl) / (wd - pl - 6) * (n - 1))))
+      line.setAttribute('x1', xOf(i, wd)); line.setAttribute('x2', xOf(i, wd)); line.style.opacity = 1
+      const d = sel[i]
+      showTip(e, `${d} 週${wdOf(d)}`, rows(d).concat((actsBy[d] || []).slice(0, 3).map(a => ({ v: typeZh(a), l: a.name, x: 'TL ' + n0(a.icu_training_load) }))))
+    }
+    el.onpointerleave = () => { line.style.opacity = 0; hideTip() }
+  }
+  chart($('#pmc'), wd => {
+    const h = 240, pt = 10, pb = 24
+    const max = Math.max(...sel.map(d => Math.max(w[d].ctl, w[d].atl))) * 1.08
+    const y = v => pt + (1 - v / max) * (h - pt - pb)
+    const ctl = sel.map((d, i) => [xOf(i, wd), y(w[d].ctl)]), atl = sel.map((d, i) => [xOf(i, wd), y(w[d].atl)])
+    let s = `<svg viewBox="0 0 ${wd} ${h}" height="${h}" role="img" aria-label="體能與疲勞曲線">`
+    ticks(0, max, 4).forEach(t => { s += `<line class="grid" x1="${pl}" x2="${wd}" y1="${y(t)}" y2="${y(t)}"/><text class="ax" x="${pl - 8}" y="${y(t) + 4}" text-anchor="end">${t}</text>` })
+    s += `<path d="${path(ctl)}L${ctl[n - 1][0]} ${y(0)}L${ctl[0][0]} ${y(0)}Z" fill="${C.sun}" opacity=".1"/>`
+    s += `<path d="${path(atl)}" fill="none" stroke="${C.dusk}" stroke-width="1.6" stroke-linejoin="round"/>`
+    s += `<path d="${path(ctl)}" fill="none" stroke="${C.sun}" stroke-width="2" stroke-linejoin="round"/>`
+    const L = sel[n - 1]
+    s += `<circle cx="${ctl[n - 1][0]}" cy="${ctl[n - 1][1]}" r="4" fill="${C.sun}" stroke="#0d1322" stroke-width="2"/><text class="ax-l" x="${ctl[n - 1][0] - 8}" y="${ctl[n - 1][1] - 10}" text-anchor="end">CTL ${n1(w[L].ctl)}</text>`
+    s += `<line class="xh" x1="0" x2="0" y1="${pt}" y2="${h - pb}" stroke="rgba(239,232,220,.4)" style="opacity:0"/>`
+    s += `<line class="base" x1="${pl}" x2="${wd}" y1="${y(0)}" y2="${y(0)}"/>${xAxis(wd, h)}</svg>`
+    const el = $('#pmc'); el.innerHTML = s
+    hover(el, wd, d => [{ v: n1(w[d].ctl), l: '體能 CTL', c: C.sun }, { v: n1(w[d].atl), l: '疲勞 ATL', c: C.dusk }, { v: n1(w[d].ctl - w[d].atl), l: '狀態 TSB', c: C.sea }])
+  })
+  chart($('#tsbc'), wd => {
+    const h = 130, pt = 8, pb = 22
+    const vals = sel.map(d => w[d].ctl - w[d].atl)
+    const lo = Math.min(-40, ...vals) - 2, hi = Math.max(20, ...vals) + 2
+    const y = v => pt + (hi - v) / (hi - lo) * (h - pt - pb)
+    let s = `<svg viewBox="0 0 ${wd} ${h}" height="${h}" role="img" aria-label="狀態 TSB">`
+    s += `<rect x="${pl}" y="${y(-10)}" width="${wd - pl}" height="${y(-30) - y(-10)}" fill="rgba(220,115,54,.08)"/><rect x="${pl}" y="${y(Math.min(hi, 25))}" width="${wd - pl}" height="${y(5) - y(Math.min(hi, 25))}" fill="rgba(92,194,154,.07)"/>`
+    ;[-30, -10, 0].forEach(t => { s += `<line class="${t === 0 ? 'base' : 'grid'}" x1="${pl}" x2="${wd}" y1="${y(t)}" y2="${y(t)}"/><text class="ax" x="${pl - 8}" y="${y(t) + 4}" text-anchor="end">${t}</text>` })
+    s += `<text class="ax" x="${wd - 4}" y="${y(-20) + 4}" text-anchor="end">累積區</text><text class="ax" x="${wd - 4}" y="${y(Math.min(hi - 4, 14)) + 4}" text-anchor="end">新鮮</text>`
+    s += `<path d="${path(vals.map((v, i) => [xOf(i, wd), y(v)]))}" fill="none" stroke="${C.sea}" stroke-width="2" stroke-linejoin="round"/>`
+    s += `<line class="xh" x1="0" x2="0" y1="${pt}" y2="${h - pb}" stroke="rgba(239,232,220,.4)" style="opacity:0"/>${xAxis(wd, h)}</svg>`
+    const el = $('#tsbc'); el.innerHTML = s
+    hover(el, wd, d => [{ v: n1(w[d].ctl - w[d].atl), l: '狀態 TSB', c: C.sea }])
+  })
+  // eFTP（丟掉帳號剛接上、還在收斂的第一個不完整月份——跟收成頁同一條規則）
+  let ef = days.map(d => { const si = w[d].sportInfo; const r = Array.isArray(si) ? si.find(x => x.type === 'Ride' && x.eftp) : null; return r ? { d, v: r.eftp } : null }).filter(Boolean)
+  if (ef.length && ef[0].d.slice(8) !== '01') { const drop = ef[0].d.slice(0, 7); ef = ef.filter(p => p.d.slice(0, 7) !== drop) }
+  DATA.eftpNow = ef.length ? ef[ef.length - 1].v : null
+  chart($('#eftpc'), wd => {
+    const h = 190, pt = 14, pb = 22, pL = 38
+    if (ef.length < 2) { $('#eftpc').innerHTML = '<p class="empty">沒有 eFTP 資料。</p>'; return }
+    const lo = Math.min(...ef.map(p => p.v), DATA.ftp || 999) - 8, hi = Math.max(...ef.map(p => p.v), DATA.ftp || 0) + 8
+    const t0 = Date.parse(ef[0].d), t1 = Date.parse(ef[ef.length - 1].d)
+    const x = d => pL + (Date.parse(d) - t0) / Math.max(1, t1 - t0) * (wd - pL - 6), y = v => pt + (hi - v) / (hi - lo) * (h - pt - pb)
+    let s = `<svg viewBox="0 0 ${wd} ${h}" height="${h}" role="img" aria-label="eFTP 走勢">`
+    ticks(lo, hi, 4).forEach(t => { s += `<line class="grid" x1="${pL}" x2="${wd}" y1="${y(t)}" y2="${y(t)}"/><text class="ax" x="${pL - 8}" y="${y(t) + 4}" text-anchor="end">${t}</text>` })
+    if (DATA.ftp) s += `<line x1="${pL}" x2="${wd}" y1="${y(DATA.ftp)}" y2="${y(DATA.ftp)}" stroke="${C.t3}" stroke-width="1"/><text class="ax" x="${pL + 4}" y="${y(DATA.ftp) - 5}">課表 FTP ${DATA.ftp}</text>`
+    s += `<path d="${path(ef.map(p => [x(p.d), y(p.v)]))}" fill="none" stroke="${C.sun}" stroke-width="2" stroke-linejoin="round"/>`
+    const L = ef[ef.length - 1], P = ef.reduce((m, p) => (p.v > m.v ? p : m), ef[0])
+    s += `<circle cx="${x(L.d)}" cy="${y(L.v)}" r="4" fill="${C.sun}" stroke="#0d1322" stroke-width="2"/><text class="ax-l" x="${x(L.d) - 8}" y="${y(L.v) + 18}" text-anchor="end">${n0(L.v)} W</text>`
+    s += `<text class="ax-l" x="${x(P.d)}" y="${y(P.v) - 8}" text-anchor="middle">最高 ${n0(P.v)}（${P.d.slice(2, 7).replace('-', '/')}）</text>`
+    let lastM = ''; ef.forEach(p => { const m = p.d.slice(0, 7); if (m !== lastM && p.d.slice(8) <= '07') { lastM = m; if (+m.slice(5) % 3 === 1) s += `<text class="ax" x="${x(p.d)}" y="${h - 6}" text-anchor="middle">${m.slice(2).replace('-', '/')}</text>` } })
+    s += `<line class="xh" x1="0" x2="0" y1="${pt}" y2="${h - pb}" stroke="rgba(239,232,220,.4)" style="opacity:0"/></svg>`
+    const el = $('#eftpc'); el.innerHTML = s
+    const svg = $('svg', el), line = $('.xh', el)
+    el.onpointermove = e => { const r = svg.getBoundingClientRect(), tx = t0 + (e.clientX - r.left - pL) / (wd - pL - 6) * (t1 - t0); const p = ef.reduce((m, q) => (Math.abs(Date.parse(q.d) - tx) < Math.abs(Date.parse(m.d) - tx) ? q : m), ef[0]); line.setAttribute('x1', x(p.d)); line.setAttribute('x2', x(p.d)); line.style.opacity = 1; showTip(e, p.d, [{ v: n0(p.v) + ' W', l: 'eFTP', c: C.sun }]) }
+    el.onpointerleave = () => { line.style.opacity = 0; hideTip() }
+  })
+  chart($('#hrvc'), wd => {
+    const h = 190, pt = 14, pb = 22, pL = 30
+    const dd = days.slice(-120)
+    const pts = dd.map(d => w[d].hrv > 0 ? w[d].hrv : null)
+    const vals = pts.filter(v => v != null)
+    if (vals.length < 10) { $('#hrvc').innerHTML = '<p class="empty">HRV 資料不足。</p>'; return }
+    const lo = Math.min(...vals) - 5, hi = Math.max(...vals) + 5
+    const x = i => pL + i / (dd.length - 1) * (wd - pL - 6), y = v => pt + (hi - v) / (hi - lo) * (h - pt - pb)
+    const roll = (k, fn) => dd.map((d, i) => { const win = pts.slice(Math.max(0, i - k + 1), i + 1).filter(v => v != null); return win.length >= Math.min(k, 3) ? fn(win) : null })
+    const m7 = roll(7, a => a.reduce((s, v) => s + v, 0) / a.length)
+    const m60 = roll(60, a => a.reduce((s, v) => s + v, 0) / a.length)
+    const s60 = roll(60, a => { const m = a.reduce((s, v) => s + v, 0) / a.length; return Math.sqrt(a.reduce((s, v) => s + (v - m) ** 2, 0) / Math.max(1, a.length - 1)) })
+    const up = [], dn = []
+    dd.forEach((d, i) => { if (m60[i] != null) { up.push([x(i), y(m60[i] + s60[i])]); dn.unshift([x(i), y(m60[i] - s60[i])]) } })
+    let s = `<svg viewBox="0 0 ${wd} ${h}" height="${h}" role="img" aria-label="HRV 走勢">`
+    ticks(lo, hi, 4).forEach(t => { s += `<line class="grid" x1="${pL}" x2="${wd}" y1="${y(t)}" y2="${y(t)}"/><text class="ax" x="${pL - 8}" y="${y(t) + 4}" text-anchor="end">${t}</text>` })
+    if (up.length) s += `<path d="${path(up.concat(dn))}Z" fill="rgba(31,159,149,.16)"/>`
+    pts.forEach((v, i) => { if (v != null) s += `<circle cx="${x(i)}" cy="${y(v)}" r="2.2" fill="${C.t3}"/>` })
+    s += `<path d="${pathGaps(m7.map((v, i) => (v == null ? null : [x(i), y(v)])))}" fill="none" stroke="${C.sea}" stroke-width="2" stroke-linejoin="round"/>`
+    let lastM = ''; dd.forEach((d, i) => { const m = d.slice(0, 7); if (m !== lastM && d.slice(8) === '01') { lastM = m; s += `<text class="ax" x="${x(i)}" y="${h - 6}" text-anchor="middle">${+d.slice(5, 7)}月</text>` } })
+    s += `<line class="xh" x1="0" x2="0" y1="${pt}" y2="${h - pb}" stroke="rgba(239,232,220,.4)" style="opacity:0"/></svg>`
+    const el = $('#hrvc'); el.innerHTML = s
+    const svg = $('svg', el), line = $('.xh', el)
+    el.onpointermove = e => { const r = svg.getBoundingClientRect(); const i = Math.max(0, Math.min(dd.length - 1, Math.round((e.clientX - r.left - pL) / (wd - pL - 6) * (dd.length - 1)))); line.setAttribute('x1', x(i)); line.setAttribute('x2', x(i)); line.style.opacity = 1; showTip(e, dd[i], [{ v: pts[i] != null ? n0(pts[i]) + ' ms' : '沒戴錶', l: '當天' }, { v: m7[i] != null ? n1(m7[i]) : '–', l: '7 天平均', c: C.sea }, { v: m60[i] != null ? `${n0(m60[i] - s60[i])}–${n0(m60[i] + s60[i])}` : '–', l: '60 天常態' }]) }
+    el.onpointerleave = () => { line.style.opacity = 0; hideTip() }
+  })
+  const L = sel[n - 1], ago = sel[Math.max(0, n - 91)]
+  setLede('fitness', `體能 CTL <b>${n1(w[L].ctl)}</b>，比 90 天前 ${sgn(w[L].ctl - w[ago].ctl, 1)}；疲勞 ATL ${n1(w[L].atl)}。` + (DATA.eftpNow ? `eFTP 現在 <b>${n0(DATA.eftpNow)} W</b>。` : ''))
+}
+
+/* ── 04 功率 ── */
+let pwUnit = 'w'
+function renderPower() {
+  const box = $('#power-body')
+  const prs = ((DATA.strava && DATA.strava.power_prs) || []).slice().sort((a, b) => a.duration_sec - b.duration_sec)
+  const win = (DATA.pcw && DATA.pcw.windows) || []
+  const kg = DATA.weight || 80
+  if (!prs.length) { box.innerHTML = '<p class="empty">沒有功率紀錄。</p>'; return }
+  const series = [{ k: 'all', label: '歷來最佳', c: C.sun, pts: prs.map(p => ({ s: p.duration_sec, w: p.watts, d: p.date, n: p.activity_name })) }]
+  const wNow = win.find(x => x.key === 'now'), wPrev = win.find(x => x.key === 'prev')
+  if (wNow) series.push({ k: 'now', label: `最近 182 天（${mdd(wNow.from)}–${mdd(wNow.to)}）`, c: C.dusk, pts: wNow.best.map(p => ({ s: p.secs, w: p.watts, d: p.date, n: p.name })) })
+  if (wPrev) series.push({ k: 'prev', label: `前 182 天（${mdd(wPrev.from)}–${mdd(wPrev.to)}）`, c: C.sea, pts: wPrev.best.map(p => ({ s: p.secs, w: p.watts, d: p.date, n: p.name })) })
+  const recent = addDays(TODAY, -45)
+  box.innerHTML = `
+    <div class="filters" role="group" aria-label="單位"><button class="chip" type="button" data-u="w" aria-pressed="${pwUnit === 'w'}">瓦數</button><button class="chip" type="button" data-u="kg" aria-pressed="${pwUnit === 'kg'}">W/kg（${kg} kg）</button></div>
+    <div class="cols c73">
+      <div><div class="legend">${series.map(s => `<span><i style="background:${s.c}"></i>${esc(s.label)}</span>`).join('')}</div><div class="chart" id="pdc"></div></div>
+      <div><p class="sub">各時長的紀錄 <i><span class="crown"></span>＝45 天內刷新</i></p>
+        <table class="t"><thead><tr><th>時長</th><th class="r">${pwUnit === 'w' ? '瓦數' : 'W/kg'}</th><th>日期</th><th class="r">第 2／3 名</th></tr></thead>
+        <tbody>${prs.map(p => `<tr><td>${esc(p.duration_label)}</td><td class="r"><b>${pwUnit === 'w' ? n0(p.watts) : (p.watts / kg).toFixed(2)}</b></td><td>${p.date >= recent ? '<span class="crown"></span>' : ''}${p.date.slice(2).replace(/-/g, '/')}</td><td class="r muted">${(p.top3 || []).slice(1).map(t => pwUnit === 'w' ? n0(t.watts) : (t.watts / kg).toFixed(2)).join('／')}</td></tr>`).join('')}</tbody></table>
+        <p class="note">歷來最佳取自 Strava 的逐秒功率；兩個 182 天窗是從 FIT 算的（${DATA.pcw ? DATA.pcw.generated : ''}）。</p>
+      </div>
+    </div>`
+  $$('#power-body .chip').forEach(b => b.addEventListener('click', () => { pwUnit = b.dataset.u; renderPower() }))
+  chart($('#pdc'), wd => {
+    const h = 300, pt = 16, pb = 26, pL = 42, pR = 18
+    const conv = v => (pwUnit === 'w' ? v : v / kg)
+    const all = series.flatMap(s => s.pts.map(p => conv(p.w)))
+    const hi = Math.max(...all) * 1.06, lo = 0
+    const xs = s => pL + (Math.log(s) - Math.log(5)) / (Math.log(3600) - Math.log(5)) * (wd - pL - pR)
+    const y = v => pt + (hi - v) / (hi - lo) * (h - pt - pb)
+    let s = `<svg viewBox="0 0 ${wd} ${h}" height="${h}" role="img" aria-label="功率時長曲線">`
+    ticks(lo, hi, 5).forEach(t => { s += `<line class="grid" x1="${pL}" x2="${wd - pR}" y1="${y(t)}" y2="${y(t)}"/><text class="ax" x="${pL - 8}" y="${y(t) + 4}" text-anchor="end">${pwUnit === 'w' ? t : t.toFixed(1)}</text>` })
+    ;[[5, '5s'], [30, '30s'], [60, '1m'], [300, '5m'], [1200, '20m'], [3600, '60m']].forEach(([v, l]) => { s += `<text class="ax" x="${xs(v)}" y="${h - 6}" text-anchor="middle">${l}</text>` })
+    if (DATA.ftp) s += `<line x1="${pL}" x2="${wd - pR}" y1="${y(conv(DATA.ftp))}" y2="${y(conv(DATA.ftp))}" stroke="${C.t3}"/><text class="ax" x="${wd - pR}" y="${y(conv(DATA.ftp)) - 5}" text-anchor="end">FTP ${pwUnit === 'w' ? DATA.ftp : (DATA.ftp / kg).toFixed(2)}</text>`
+    series.slice().reverse().forEach(se => {
+      const pts = se.pts.slice().sort((a, b) => a.s - b.s).map(p => [xs(p.s), y(conv(p.w))])
+      s += `<path d="${path(pts)}" fill="none" stroke="${se.c}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`
+      pts.forEach(p => { s += `<circle cx="${p[0]}" cy="${p[1]}" r="3.2" fill="${se.c}" stroke="#0d1322" stroke-width="1.5"/>` })
+    })
+    s += `<line class="base" x1="${pL}" x2="${wd - pR}" y1="${y(0)}" y2="${y(0)}"/><line class="xh" x1="0" x2="0" y1="${pt}" y2="${h - pb}" stroke="rgba(239,232,220,.4)" style="opacity:0"/></svg>`
+    const el = $('#pdc'); el.innerHTML = s
+    const svg = $('svg', el), line = $('.xh', el), durs = [...new Set(series.flatMap(x => x.pts.map(p => p.s)))].sort((a, b) => a - b)
+    el.onpointermove = e => {
+      const r = svg.getBoundingClientRect(), px = e.clientX - r.left
+      const du = durs.reduce((m, d) => (Math.abs(xs(d) - px) < Math.abs(xs(m) - px) ? d : m), durs[0])
+      line.setAttribute('x1', xs(du)); line.setAttribute('x2', xs(du)); line.style.opacity = 1
+      showTip(e, du >= 60 ? `${du / 60} 分鐘` : `${du} 秒`, series.map(se => { const p = se.pts.find(q => q.s === du); return { v: p ? (pwUnit === 'w' ? n0(p.w) + ' W' : (p.w / kg).toFixed(2) + ' W/kg') : '–', l: se.label.replace(/（.*）/, ''), c: se.c, x: p ? p.d.slice(2).replace(/-/g, '/') : '' } }))
+    }
+    el.onpointerleave = () => { line.style.opacity = 0; hideTip() }
+  })
+  const p5 = prs.find(p => p.duration_sec === 300), p20 = prs.find(p => p.duration_sec === 1200), p60 = prs.find(p => p.duration_sec === 3600)
+  setLede('power', (p5 ? `5 分鐘 <b>${p5.watts} W</b>（${(p5.watts / kg).toFixed(1)} W/kg）是強項；` : '') + (p20 ? `20 分鐘最佳 ${p20.watts} W 停在 ${p20.date.slice(0, 7).replace('-', '/')}。` : '') + (p60 && p60.date >= addDays(TODAY, -3) ? `60 分鐘 ${p60.watts} W 是這幾天剛刷新的。` : ''))
+}
+
+/* ── 05 計時段 ── */
+const ITT_SAME_START_TOL_SEC = 90
+function ittStartSec(e) { const st = e && e.start_time; if (!st || st.indexOf(':') < 0) return null; const p = st.split(':'); const h = +p[0], m = +p[1], s = p.length > 2 ? Math.trunc(+p[2]) : 0; return Number.isFinite(h) && Number.isFinite(m) ? h * 3600 + m * 60 + (s || 0) : null }
+function ittSameEffort(a, b) { if ((a.date || '') !== (b.date || '')) return false; const ka = ittStartSec(a), kb = ittStartSec(b); if (ka !== null && kb !== null) return Math.abs(ka - kb) <= ITT_SAME_START_TOL_SEC; return Math.abs((a.elapsed_sec || 0) - (b.elapsed_sec || 0)) <= 8 }
+// 跟 strava_cinema.html／strava.html 的 mergeIttSegments 同一條規則（改規則要五處一起動，見 memory itt-two-files-drift）
+function mergeIttSegments(data, ittSegments) {
+  const incoming = Array.isArray(ittSegments) ? ittSegments : (ittSegments && ittSegments.segments)
+  if (!incoming || !incoming.length) return
+  const main = data.segments || []
+  const byId = new Map(main.map(s => [s.id, s]))
+  incoming.forEach(src => {
+    const dst = byId.get(src.id)
+    if (!dst) { main.push(src); return }
+    const efforts = (src.efforts || []).slice()
+    ;(dst.efforts || []).forEach(e => { if (e.source !== 'fit' && !efforts.some(x => ittSameEffort(e, x))) efforts.push(e) })
+    Object.keys(src).forEach(k => { if (k !== 'efforts') dst[k] = src[k] })
+    dst.efforts = efforts
+  })
+  main.forEach(seg => {
+    const list = seg.efforts || []
+    if (!list.length) return
+    list.sort((a, b) => `${b.date || ''} ${b.start_time || '00:00'}`.localeCompare(`${a.date || ''} ${a.start_time || '00:00'}`))
+    const best = list.reduce((m, e) => (e.elapsed_sec < m.elapsed_sec ? e : m), list[0])
+    list.forEach(e => { e.is_pr = e === best })
+    seg.pr_time_str = hms(best.elapsed_sec)
+  })
+  data.segments = main
+}
+let ittSel = null, ittSub = null
+function ittRows() {
+  const cfg = DATA.ittCfg, segs = new Map((DATA.segs || []).map(s => [s.id, s]))
+  if (!cfg) return []
+  const rows = []
+  const gmap = new Map((cfg.groups || []).map(g => [g.id, g]))
+  const seen = new Set()
+  ;(cfg.segments || []).forEach(sc => {
+    const key = sc.group || ('s' + sc.id)
+    if (seen.has(key)) return
+    seen.add(key)
+    const members = (cfg.segments || []).filter(x => (x.group || ('s' + x.id)) === key).map(x => ({ cfg: x, seg: segs.get(x.id) })).filter(x => x.seg)
+    if (!members.length) return
+    const g = sc.group ? gmap.get(sc.group) : null
+    rows.push({ key, name: g ? g.nameZh : sc.nameZh, type: (g || sc).type, note: (g || sc).note, members })
+  })
+  rows.forEach(r => {
+    const m = r.members[0], ef = (m.seg.efforts || []).slice().sort((a, b) => `${a.date} ${a.start_time || ''}`.localeCompare(`${b.date} ${b.start_time || ''}`))
+    r.main = m; r.ef = ef
+    r.best = ef.reduce((x, e) => (!x || e.elapsed_sec < x.elapsed_sec ? e : x), null)
+    r.last = ef[ef.length - 1] || null
+    r.n = r.members.reduce((s, x) => s + (x.seg.efforts || []).length, 0)
+  })
+  return rows.filter(r => r.ef.length).sort((a, b) => (b.last ? b.last.date : '').localeCompare(a.last ? a.last.date : ''))
+}
+function spark(ef) {
+  if (ef.length < 2) return '<svg viewBox="0 0 96 30"></svg>'
+  const v = ef.map(e => e.elapsed_sec), lo = Math.min(...v), hi = Math.max(...v)
+  const pts = v.map((s, i) => [2 + i / (v.length - 1) * 92, 4 + (s - lo) / Math.max(1, hi - lo) * 22])
+  const bi = v.indexOf(lo), L = pts[pts.length - 1]
+  return `<svg viewBox="0 0 96 30" aria-hidden="true"><path d="${path(pts)}" fill="none" stroke="${C.sun}" stroke-width="1.5" stroke-linejoin="round" opacity=".85"/><circle cx="${pts[bi][0]}" cy="${pts[bi][1]}" r="3" fill="${C.lamp}"/><circle cx="${L[0]}" cy="${L[1]}" r="2.6" fill="${C.text}"/></svg>`
+}
+function renderItt() {
+  const box = $('#itt-body'), rows = ittRows()
+  if (!rows.length) { box.innerHTML = '<p class="empty">計時段資料沒有載到。</p>'; return }
+  if (!ittSel || !rows.find(r => r.key === ittSel)) ittSel = rows[0].key
+  const total = rows.reduce((s, r) => s + r.n, 0)
+  box.innerHTML = `<div class="itt">
+    <div><div class="itt-h" aria-hidden="true"><span>路段（依最近一次排序）</span><span>PR</span><span>最近一次</span><span>歷次（高＝快）</span></div>
+      <div class="itt-list" role="listbox" aria-label="計時段">${rows.map(r => {
+        const d = r.last ? r.last.elapsed_sec - r.best.elapsed_sec : 0
+        return `<button class="itt-r" type="button" role="option" data-k="${esc(r.key)}" aria-selected="${r.key === ittSel}">
+          <span class="nm">${esc(r.name)}<small>${r.type === 'CLIMB' ? '爬坡' : r.type === 'ENDURANCE' ? '耐力' : '衝刺'} · ${n1(r.main.seg.distance_km)} km${r.main.cfg.avgGrade ? ` · 均坡 ${r.main.cfg.avgGrade}%` : ''} · ${r.ef.length} 次</small></span>
+          <span class="pr">${hms(r.best.elapsed_sec)}<small>${r.best.date.slice(2).replace(/-/g, '/')}</small></span>
+          <span class="lt">${r.last ? hms(r.last.elapsed_sec) : '–'}<small>${r.last ? mdd(r.last.date) + (d > 0 ? ' · +' + hms(d) : ' · PR') : ''}</small></span>
+          ${spark(r.ef)}</button>`
+      }).join('')}</div></div>
+    <div class="itt-d" id="itt-d"></div></div>`
+  $$('.itt-r', box).forEach(b => b.addEventListener('click', () => { ittSel = b.dataset.k; ittSub = null; $$('.itt-r', box).forEach(x => x.setAttribute('aria-selected', String(x === b))); renderIttDetail(rows) }))
+  renderIttDetail(rows)
+  const last = rows[0]
+  setLede('itt', `${rows.length} 條母路線、${total} 次計時。最近一次是 <b>${esc(last.name)} ${hms(last.last.elapsed_sec)}</b>（${mdd(last.last.date)}，${n0(last.last.avg_watts)} W）。有 FIT 的成績是自己從檔案算的，Strava 只拿來對帳。`)
+}
+function renderIttDetail(rows) {
+  const r = rows.find(x => x.key === ittSel); if (!r) return
+  const mem = r.members.find(x => x.cfg.id === ittSub) || r.members[0]
+  const seg = mem.seg, ef = (seg.efforts || []).slice().sort((a, b) => `${b.date} ${b.start_time || ''}`.localeCompare(`${a.date} ${a.start_time || ''}`))
+  const best = ef.reduce((x, e) => (!x || e.elapsed_sec < x.elapsed_sec ? e : x), null)
+  const gr = DATA.grades && DATA.grades[seg.id]
+  const box = $('#itt-d')
+  box.innerHTML = `<h3>${esc(mem.cfg.nameZh || seg.name)}</h3>
+    <p class="dmeta">${n1(seg.distance_km)} km${mem.cfg.avgGrade ? ` · 均坡 ${mem.cfg.avgGrade}%` : ''}${gr ? ` · FIT 實測最陡 ${gr.max}%` : ''}${seg.kom_time_str ? ` · KOM ${esc(seg.kom_time_str)}` : ''}</p>
+    ${r.members.length > 1 ? `<div class="subs" role="group" aria-label="分段">${r.members.map(m => `<button type="button" data-id="${m.cfg.id}" aria-pressed="${m === mem}">${esc(m.cfg.label || m.cfg.nameZh)} ${m.seg.efforts && m.seg.efforts.length ? hms(Math.min(...m.seg.efforts.map(e => e.elapsed_sec))) : ''}</button>`).join('')}</div>` : ''}
+    ${gr ? `<div class="blk" style="margin-top:22px"><p class="sub">坡度剖面 <i>每 25 m 一格，從 FIT 算的</i></p><div class="chart" id="grade-c"></div></div>` : ''}
+    <div class="blk" style="margin-top:22px"><p class="sub">歷次成績 <i>${ef.length} 次 · <span class="crown"></span>最快</i></p>
+    <div class="tscroll"><table class="t"><thead><tr><th>日期</th><th class="r">時間</th><th class="r">W</th><th class="r">心率</th><th class="r">踏頻</th><th>來源</th></tr></thead>
+    <tbody>${ef.slice(0, 14).map(e => `<tr><td>${e === best ? '<span class="crown"></span>' : ''}${e.date.slice(2).replace(/-/g, '/')}${e.start_time ? ` <span class="muted">${esc(e.start_time)}</span>` : ''}</td><td class="r"><b>${hms(e.elapsed_sec)}</b></td><td class="r">${n0(e.avg_watts)}</td><td class="r">${n0(e.avg_heartrate)}</td><td class="r">${n0(e.avg_cadence)}</td><td><span class="src${e.fit_check ? ' w' : ''}" title="${e.fit_check ? '自建與 Strava 差太多，顯示 Strava' : ''}">${e.source === 'fit' ? 'FIT' : e.fit_check ? '⚠︎ STRAVA' : 'STRAVA'}</span></td></tr>`).join('')}</tbody></table></div>
+    ${ef.length > 14 ? `<p class="note">只列最近 14 次。</p>` : ''}</div>
+    ${r.note ? `<p class="note">${esc(r.note)}</p>` : ''}`
+  $$('.subs button', box).forEach(b => b.addEventListener('click', () => { ittSub = +b.dataset.id; renderIttDetail(rows) }))
+  if (gr) chart($('#grade-c'), wd => {
+    const h = 150, pt = 10, pb = 22, pL = 30, g = gr.grade, step = gr.step || 25
+    const lenKm = g.length * step / 1000, hi = Math.max(12, Math.ceil(Math.max(...g) + 1)), lo = Math.min(0, Math.floor(Math.min(...g)))
+    const x = i => pL + i / g.length * (wd - pL - 4), y = v => pt + (hi - v) / (hi - lo) * (h - pt - pb)
+    const colOf = v => (v < 4 ? RAMP[2] : v < 8 ? RAMP[3] : v < 12 ? RAMP[4] : RAMP[6])
+    let s = `<svg viewBox="0 0 ${wd} ${h}" height="${h}" role="img" aria-label="坡度剖面">`
+    ticks(lo, hi, 3).forEach(t => { s += `<line class="grid" x1="${pL}" x2="${wd}" y1="${y(t)}" y2="${y(t)}"/><text class="ax" x="${pL - 6}" y="${y(t) + 4}" text-anchor="end">${t}%</text>` })
+    g.forEach((v, i) => { const x0 = x(i), x1 = x(i + 1) - (g.length < 90 ? 1 : 0); s += `<rect x="${x0}" y="${Math.min(y(v), y(0))}" width="${Math.max(0.6, x1 - x0)}" height="${Math.abs(y(0) - y(v))}" fill="${colOf(v)}"/>` })
+    s += `<line class="base" x1="${pL}" x2="${wd}" y1="${y(0)}" y2="${y(0)}"/><text class="ax" x="${pL}" y="${h - 6}">0</text><text class="ax" x="${wd}" y="${h - 6}" text-anchor="end">${lenKm.toFixed(2)} km</text></svg>
+      <div class="heat-leg" style="margin-top:4px">坡度 ${[['<4%', RAMP[2]], ['4–8%', RAMP[3]], ['8–12%', RAMP[4]], ['12%+', RAMP[6]]].map(([l, c]) => `<i style="background:${c};margin-left:8px"></i>${l}`).join('')}</div>`
+    const el = $('#grade-c'); el.innerHTML = s
+    const svg = $('svg', el)
+    el.onpointermove = e => { const rr = svg.getBoundingClientRect(); const i = Math.floor((e.clientX - rr.left - pL) / (wd - pL - 4) * g.length); if (i < 0 || i >= g.length) return hideTip(); showTip(e, `${(i * step / 1000).toFixed(2)}–${((i + 1) * step / 1000).toFixed(2)} km`, [{ v: g[i].toFixed(1) + '%', l: '坡度', c: colOf(g[i]) }]) }
+    el.onpointerleave = hideTip
+  })
+}
+
+/* ── 06 地圖 ── */
+function atTm(lng, lat) {   // TWD97 / TM2（EPSG:3826），跟 build-ride-atlas.py、strava.html 同一組公式
+  const A = 6378137, F = 1 / 298.257222101, E2 = F * (2 - F), EP2 = E2 / (1 - E2)
+  const p = lat * Math.PI / 180, dl = (lng - 121) * Math.PI / 180, k0 = 0.9999
+  const s = Math.sin(p), c = Math.cos(p), t = Math.tan(p)
+  const N = A / Math.sqrt(1 - E2 * s * s), T = t * t, Cc = EP2 * c * c, a1 = dl * c
+  const M = A * ((1 - E2 / 4 - 3 * E2 ** 2 / 64 - 5 * E2 ** 3 / 256) * p - (3 * E2 / 8 + 3 * E2 ** 2 / 32 + 45 * E2 ** 3 / 1024) * Math.sin(2 * p) + (15 * E2 ** 2 / 256 + 45 * E2 ** 3 / 1024) * Math.sin(4 * p) - (35 * E2 ** 3 / 3072) * Math.sin(6 * p))
+  return [k0 * N * (a1 + (1 - T + Cc) * a1 ** 3 / 6 + (5 - 18 * T + T * T + 72 * Cc - 58 * EP2) * a1 ** 5 / 120) + 250000,
+    k0 * (M + N * t * (a1 * a1 / 2 + (5 - T + 9 * Cc + 4 * Cc * Cc) * a1 ** 4 / 24 + (61 - 58 * T + T * T + 600 * Cc - 330 * EP2) * a1 ** 6 / 720))]
+}
+const AT = { d: null, view: null, drag: null }
+const AT_PRESETS = { taipei: [291500, 2762500, 318500, 2783500], hills: [300500, 2771500, 316000, 2782000], all: null }
+function atlasInit(d) {
+  AT.d = d
+  $('#atlas-load').hidden = true
+  const coast = [], towns = []
+  d.coast.arcs.forEach((arc, i) => { if (d.coast.arcKind[i] === 0) coast.push(arc.filter(p => p && p[0] != null).map(p => atTm(p[0], p[1]))) })
+  d.towns.forEach(t => (t.rings || []).forEach(r => towns.push({ ring: r.map(p => atTm(p[0], p[1])), km: t.km })))
+  AT.coast = coast; AT.towns = towns
+  AT.places = (d.places || []).map(p => ({ ...p, xy: atTm(p.lng, p.lat) }))
+  const xs = [], ys = []
+  d.routes.forEach(b => b.forEach(pl => pl.forEach(p => { xs.push(p[0]); ys.push(p[1]) })))
+  AT_PRESETS.all = [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)]
+  atSetView('taipei')
+  const ui = $('#atlas-ui')
+  ui.innerHTML = [['taipei', '台北'], ['hills', '陽明山'], ['all', '全部']].map(([k, l]) => `<button class="chip at-chip" type="button" data-v="${k}" aria-pressed="${k === 'taipei'}">${l}</button>`).join('')
+  $$('button', ui).forEach(b => b.addEventListener('click', () => { $$('button', ui).forEach(x => x.setAttribute('aria-pressed', String(x === b))); atSetView(b.dataset.v) }))
+  const labs = ['1', '2–3', '4–7', '8–15', '16–31', '32+']
+  $('#atlas-leg').innerHTML = '同一段路騎過幾趟：' + labs.map((l, i) => `<span><i style="background:${RAMP[i + 1]}"></i>${l}</span>`).join('')
+  const m = d.meta || {}
+  $('#atlas-sum').textContent = `${m.activities || '–'} 趟 · ${n0(m.total_km)} km · ${m.towns_ridden || '–'} 個行政區`
+  const tw = (d.towns || []).slice().sort((a, b) => b.km - a.km).slice(0, 9), mx = tw.length ? tw[0].km : 1
+  $('#towns').innerHTML = tw.map(t => `<div class="town"><span>${esc(t.name)} <em>${esc(t.county)}</em></span><span class="num">${n0(t.km)} km <em>· ${t.rides} 趟</em></span><div class="bar"><i style="width:${(t.km / mx * 100).toFixed(1)}%"></i></div></div>`).join('')
+  setLede('atlas', `${m.activities || '–'} 趟、<b>${n0(m.total_km)} km</b> 的 GPS 軌跡疊在一起；亮度是同一段 25 m 的路被幾趟不同的騎乘經過。最亮的那幾條是中社路、劍南路與風櫃嘴。`)
+  const cv = $('#atlas-c')
+  new ResizeObserver(() => atDraw()).observe(cv)
+  cv.addEventListener('pointerdown', e => { AT.drag = { x: e.clientX, y: e.clientY, v: AT.view.slice() }; cv.setPointerCapture(e.pointerId) })
+  cv.addEventListener('pointermove', e => {
+    if (AT.drag) {
+      const r = cv.getBoundingClientRect(), v = AT.drag.v, sc = (v[2] - v[0]) / r.width
+      const dx = (e.clientX - AT.drag.x) * sc, dy = (e.clientY - AT.drag.y) * sc
+      AT.view = [v[0] - dx, v[1] + dy, v[2] - dx, v[3] + dy]; atDraw(); return
+    }
+    const hit = atHit(e); if (hit) showTip(e, hit.name, [{ v: hit.n + ' 次', l: '計時段挑戰' }]); else hideTip()
+  })
+  cv.addEventListener('pointerup', () => { AT.drag = null })
+  cv.addEventListener('pointerleave', hideTip)
+  cv.addEventListener('dblclick', e => { const r = cv.getBoundingClientRect(), v = AT.view, fx = (e.clientX - r.left) / r.width, fy = (e.clientY - r.top) / r.height; const cx = v[0] + (v[2] - v[0]) * fx, cy = v[3] - (v[3] - v[1]) * fy, hw = (v[2] - v[0]) / 4, hh = (v[3] - v[1]) / 4; AT.view = [cx - hw, cy - hh, cx + hw, cy + hh]; atDraw() })
+}
+function atSetView(k) { const b = AT_PRESETS[k]; const pad = k === 'all' ? 0.04 : 0; const w = b[2] - b[0], h = b[3] - b[1]; AT.view = [b[0] - w * pad, b[1] - h * pad, b[2] + w * pad, b[3] + h * pad]; atDraw() }
+function atXf(r) {   // 保持等比例：以寬高較緊的一邊為準
+  const v = AT.view, sx = r.width / (v[2] - v[0]), sy = r.height / (v[3] - v[1]), s = Math.min(sx, sy)
+  const ox = (r.width - (v[2] - v[0]) * s) / 2, oy = (r.height - (v[3] - v[1]) * s) / 2
+  return { s, f: (x, y) => [ox + (x - v[0]) * s, r.height - oy - (y - v[1]) * s] }
+}
+function atHit(e) {
+  if (!AT.places) return null
+  const cv = $('#atlas-c'), r = cv.getBoundingClientRect(), T = atXf(r), mx = e.clientX - r.left, my = e.clientY - r.top
+  return AT.places.find(p => { const q = T.f(p.xy[0], p.xy[1]); return Math.hypot(q[0] - mx, q[1] - my) < 12 }) || null
+}
+function atDraw() {
+  if (!AT.d) return
+  const cv = $('#atlas-c'), r = cv.getBoundingClientRect(); if (!r.width) return
+  const dpr = Math.min(devicePixelRatio || 1, 2)
+  cv.width = r.width * dpr; cv.height = r.height * dpr
+  const g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0)
+  const T = atXf(r)
+  g.fillStyle = '#0a0f1c'; g.fillRect(0, 0, r.width, r.height)
+  g.fillStyle = 'rgba(64, 76, 104, .16)'; g.strokeStyle = 'rgba(160, 170, 196, .1)'; g.lineWidth = 0.6
+  AT.towns.forEach(t => { g.beginPath(); t.ring.forEach((p, i) => { const q = T.f(p[0], p[1]); i ? g.lineTo(q[0], q[1]) : g.moveTo(q[0], q[1]) }); g.closePath(); g.fill(); g.stroke() })
+  g.strokeStyle = 'rgba(120, 190, 200, .38)'; g.lineWidth = 1
+  AT.coast.forEach(arc => { g.beginPath(); arc.forEach((p, i) => { const q = T.f(p[0], p[1]); i ? g.lineTo(q[0], q[1]) : g.moveTo(q[0], q[1]) }); g.stroke() })
+  const wz = Math.max(0.6, Math.min(2.4, T.s * 60))
+  g.lineCap = 'round'; g.lineJoin = 'round'
+  AT.d.routes.forEach((bin, bi) => {
+    g.strokeStyle = RAMP[bi + 1]; g.lineWidth = wz * (0.7 + bi * 0.28); g.globalAlpha = 0.55 + bi * 0.09
+    if (bi >= 4) { g.globalCompositeOperation = 'lighter' }
+    g.beginPath()
+    bin.forEach(pl => pl.forEach((p, i) => { const q = T.f(p[0], p[1]); i ? g.lineTo(q[0], q[1]) : g.moveTo(q[0], q[1]) }))
+    g.stroke()
+    g.globalCompositeOperation = 'source-over'
+  })
+  g.globalAlpha = 1
+  g.font = '12px ' + getComputedStyle(document.body).fontFamily
+  const boxes = []
+  AT.places.slice().sort((a, b) => b.n - a.n).forEach(p => {
+    const q = T.f(p.xy[0], p.xy[1]); if (q[0] < -20 || q[1] < -20 || q[0] > r.width + 20 || q[1] > r.height + 20) return
+    g.fillStyle = C.lamp; g.beginPath(); g.arc(q[0], q[1], 3.5, 0, Math.PI * 2); g.fill()
+    const tw = g.measureText(p.name).width
+    // 右邊放不下就放左邊，兩邊都撞到就只留點（滑過去還是有 tooltip）
+    const cand = [[q[0] + 7, q[1] - 8], [q[0] - 7 - tw, q[1] - 8], [q[0] + 7, q[1] + 6]]
+    const pos = cand.find(([bx, by]) => !boxes.some(b => bx < b[2] && bx + tw > b[0] && by < b[3] && by + 15 > b[1]))
+    if (!pos) return
+    boxes.push([pos[0] - 2, pos[1] - 1, pos[0] + tw + 2, pos[1] + 16])
+    g.lineWidth = 3; g.strokeStyle = 'rgba(8,11,20,.85)'; g.strokeText(p.name, pos[0], pos[1] + 12)
+    g.fillStyle = '#efe8dc'; g.fillText(p.name, pos[0], pos[1] + 12)
+  })
+}
+function lazyAtlas() {
+  const io = new IntersectionObserver(es => { if (es[0].isIntersecting) { io.disconnect(); $('#atlas-load').textContent = '載入地圖…'; J('data/ride-atlas.json').then(d => { if (d) atlasInit(d); else $('#atlas-load').textContent = '地圖資料沒有載到。' }) } }, { rootMargin: '600px 0px' })
+  io.observe($('#atlas'))
+}
+
+/* ── 07 課表 ── */
+function renderPlan() {
+  const b = DATA.block, box = $('#plan-body')
+  if (!b) { box.innerHTML = '<p class="empty">沒有週期資料。</p>'; return }
+  const S = b.sessions || []
+  const span = daysBetween(b.start, b.end)
+  const pos = d => (daysBetween(b.start, d) / span * 100).toFixed(2) + '%'
+  const next = S.find(x => !x.actual && !x.support && x.date >= TODAY)
+  const test = S.find(x => x.code === 'POST')
+  const scoreOf = s => { const m = s.actual && s.actual.note && s.actual.note.match(/([\d.]+) 分（([A-F][+-]?)）/); return m ? `${m[1]} 分 ${m[2]}` : '' }
+  const weeks = []; S.forEach(s => { if (!weeks.find(w => w.wk === s.wk)) weeks.push({ wk: s.wk, d: s.date }) })
+  const dots = S.map(s => {
+    const cls = s.code === 'POST' ? 'test' : s.actual ? 'done' : s.date < TODAY && !s.support ? 'miss' : s === next ? 'next' : ''
+    return `<i class="dot ${s.support ? 'sm' : ''} ${cls}" style="left:${pos(s.date)}" title="${esc(mdd(s.date) + ' ' + s.name)}"></i>`
+  }).join('')
+  const tl = TODAY >= b.start && TODAY <= b.end ? `<div class="today" style="left:${pos(TODAY)}"><span>今天</span></div>` : ''
+  box.innerHTML = `
+    <p class="sub" style="font-size:15px">${esc(b.title)} <i>${esc(b.title_en || '')} · ${mdd(b.start)}–${mdd(b.end)} · FTP ${b.ftp} W</i></p>
+    <p class="ch-lede" style="font-size:14px">${esc(b.goal || '')}</p>
+    <div class="blk-track" aria-hidden="true"><div class="ln"></div><div class="gone" style="width:${TODAY > b.end ? '100%' : TODAY < b.start ? '0' : pos(TODAY)}"></div>
+      ${weeks.map(w => `<span class="wk" style="left:${pos(w.d)}">${esc(w.wk)}</span>`).join('')}${dots}${tl}
+      <span class="dl" style="left:0;transform:none">${mdd(b.start)}</span><span class="dl" style="left:auto;right:0;transform:none">${mdd(b.end)}</span></div>
+    <div class="legend" style="margin-top:22px"><span><i class="box" style="background:${C.sun};border-radius:50%"></i>完成</span><span><i class="box" style="border:2px solid ${C.text};border-radius:50%;background:none"></i>下一堂</span><span><i class="box" style="border:2px dashed ${C.warn};border-radius:50%;background:none"></i>沒做</span><span><i class="box" style="border:2px solid ${C.lamp};border-radius:50%;background:none"></i>驗收</span><span class="muted">小點＝可選的輕鬆踩</span></div>
+    <div class="blk" style="margin-top:20px">${S.map(s => {
+      const st = s.actual ? `完成${scoreOf(s) ? ' · ' + scoreOf(s) : ''}` : s.date < TODAY ? (s.support ? '沒騎' : '沒做') : s === next ? `下一堂 · ${daysBetween(TODAY, s.date)} 天後` : `${s.minutes} 分`
+      return `<details class="ses${s.support ? ' is-support' : ''}${s === next ? ' is-next' : ''}"${s === next ? ' open' : ''}><summary>
+        <span class="d">${mdd(s.date)}<small>週${wdOf(s.date)}</small></span><span class="cd"><span class="tag">${esc(s.code)}</span></span>
+        <span class="n">${esc(s.name)}<small>${esc(s.wk)} · ${s.minutes} 分${s.actual && s.actual.substituted ? ' · 實際：' + esc(s.actual.sub_name || '') : ''}</small></span><span class="st">${st}</span></summary>
+        <div class="body"><p><b>處方</b>　${esc(s.plan)}</p>${s.why ? `<p><b>為什麼</b>　${esc(s.why)}</p>` : ''}${s.metrics ? `<p class="muted">${esc(s.metrics)}</p>` : ''}
+          ${s.actual ? `<p><b>實際</b>　${esc(s.actual.note || '')}${s.actual.sub_metrics ? `（${esc(s.actual.sub_metrics)}）` : ''}</p>${(s.actual.coach || []).length ? `<div class="coach">${s.actual.coach.map(c => `<p>${md(c)}</p>`).join('')}</div>` : ''}${DATA.reportDates && DATA.reportDates.has(s.date) ? `<a class="more" href="rides/${s.date}.html">那一趟的報告 →</a>` : ''}` : ''}</div></details>`
+    }).join('')}</div>
+    ${b.time_windows ? `<p class="note">時段：${Object.values(b.time_windows).map(esc).join('；')}</p>` : ''}`
+  const daysToTest = test ? daysBetween(TODAY, test.date) : null
+  const done = S.filter(s => s.actual && !s.support).length, planned = S.filter(s => !s.support && s.date <= TODAY).length
+  setLede('plan', `<b>${esc(b.title)}</b>：${test ? `${mdd(test.date)} ${esc(test.name.replace(/／.*/, ''))}，還有 <b>${daysToTest} 天</b>。` : ''}到今天該做的主課 ${planned} 堂、做了 ${done} 堂。`)
+}
+
+/* ── 08 紀錄 ── */
+let logFilter = 'all', logAll = false
+function renderLog() {
+  const box = $('#log-body'), acts = DATA.actsList || []
+  if (!acts.length) { box.innerHTML = '<p class="empty">沒有活動資料。</p>'; return }
+  const F = { all: () => true, ride: a => a.type === 'Ride', indoor: a => a.type === 'VirtualRide', gym: a => a.type === 'WeightTraining', other: a => !isRide(a) && a.type !== 'WeightTraining' }
+  const list = acts.filter(F[logFilter])
+  const shown = logAll ? list : list.slice(0, 30)
+  const sr = new Map()
+  ;['recent_rides', 'recent_runs', 'recent_swims', 'recent_weights'].forEach(k => ((DATA.strava && DATA.strava[k]) || []).forEach(x => sr.set(`${x.date} ${x.time}`, x.id)))
+  const mins = t => (t && t.length >= 5 ? +t.slice(0, 2) * 60 + +t.slice(3, 5) : -999)
+  const stravaId = a => { for (const [k, id] of sr) { if (k.slice(0, 10) === a.date && Math.abs(mins(k.slice(11)) - mins(a.time)) <= 3) return id } return null }
+  box.innerHTML = `
+    <div class="filters" role="group" aria-label="類型">${[['all', '全部'], ['ride', '戶外騎'], ['indoor', '室內'], ['gym', '重訓'], ['other', '跑步／游泳／其他']].map(([k, l]) => `<button class="chip" type="button" data-f="${k}" aria-pressed="${k === logFilter}">${l} <span class="muted">${acts.filter(F[k]).length}</span></button>`).join('')}</div>
+    <div role="list">${shown.map(a => {
+      const sid = stravaId(a), rep = isRide(a) && DATA.reportDates && DATA.reportDates.has(a.date)
+      const km = a.distance ? (a.distance / 1000) : (DATA.estKm && DATA.estKm[a.id] ? DATA.estKm[a.id].km : 0)
+      return `<div class="log-r" role="listitem"><span class="d">${mdd(a.date)}<small>週${wdOf(a.date)}</small></span><span class="ty">${typeZh(a)}</span>
+        <span class="nm" title="${esc(a.name)}">${esc(a.name)}</span>
+        <span class="v">${hm(a.moving_time || a.elapsed_time || 0)}</span>
+        <span class="v x">${km ? n1(km) + (a.distance ? ' km' : ' km*') : ''}</span>
+        <span class="v x">${a.icu_weighted_avg_watts ? `<b>${a.icu_weighted_avg_watts}</b> W` : a.icu_training_load ? 'TL ' + n0(a.icu_training_load) : ''}</span>
+        <span class="lk">${rep ? `<a href="rides/${a.date}.html">報告</a>` : ''}${sid ? `<a href="https://www.strava.com/activities/${sid}" target="_blank" rel="noopener">Strava</a>` : ''}</span></div>`
+    }).join('')}</div>
+    ${!logAll && list.length > 30 ? `<button class="more" type="button" id="log-more">再看 ${list.length - 30} 筆 ↓</button>` : ''}
+    <p class="note">W 是 NP（標準化功率）。室內沒有距離，* 是用逐秒功率估的等效平路里程（scripts/estimate-indoor-distance.py）。</p>`
+  $$('#log-body .chip').forEach(b => b.addEventListener('click', () => { logFilter = b.dataset.f; logAll = false; renderLog() }))
+  const mb = $('#log-more'); if (mb) mb.addEventListener('click', () => { logAll = true; renderLog() })
+  const d30 = acts.filter(a => a.date > addDays(TODAY, -30))
+  setLede('log', `最近 30 天 <b>${d30.length} 次</b>活動、${n1(d30.reduce((s, a) => s + (a.moving_time || 0), 0) / 3600)} 小時；其中騎車 ${d30.filter(isRide).length} 次、重訓 ${d30.filter(a => a.type === 'WeightTraining').length} 次。`)
+}
+
+/* ═══ 開跑 ═══════════════════════════════════════════════════════════ */
+function safe(fn, id) { try { fn() } catch (e) { console.error(e); const el = $('#lede-' + id); if (el) el.textContent = '這一章畫壞了，資料還在，稍後重整看看。' } }
+async function main() {
+  const core = Promise.all([J('data/fit/_activities.json'), J('data/fit/_wellness.json'), J('data/training-block.json'), J('data/tasks.json'), J('data/fit/_reports.json'), J('data/itt-config.json'), J('data/itt-segments.json'), J('data/drivetrain.json'), J('data/fit/_est_distance.json'), J('data/monthly-hours.json'), J('data/plans/' + TODAY.slice(0, 7) + '.json')])
+  const [acts, well, block, tasks, reports, ittCfg, itt, drive, estKm, mh, plan] = await core
+  Object.assign(DATA, { acts, well, block, tasks, reports, ittCfg, itt, drive, estKm, mh, plan })
+  DATA.actsList = actsList(acts)
+  DATA.ftp = (plan && plan.baseline && plan.baseline.ftp_w) || (block && block.ftp) || null
+  DATA.weight = (plan && plan.baseline && plan.baseline.weight_kg) || 80
+  DATA.reportDates = new Set(Object.values(reports || {}).filter(r => r && !r.skipped).map(r => r.date))
+  ;(ittCfg && ittCfg.segments || []).forEach(s => { const g = (ittCfg.groups || []).find(x => x.id === s.group); ITT_META.set(s.id, { ...s, gname: g ? g.nameZh : s.nameZh }) })
+  const lastRide = DATA.actsList.find(a => isRide(a))
+  DATA.lastNote = lastRide ? await J(`rides/notes/${lastRide.date}.json`) : null
+  if (window.PelicanCoast) loadReplay(acts, reports, itt)
+  else addEventListener('load', () => loadReplay(acts, reports, itt))
+  safe(renderToday, 'today'); safe(renderFitness, 'fitness'); safe(renderPlan, 'plan'); safe(renderLog, 'log')
+  if (scene && drive) scene.setDrive({ rings: drive.chainrings, cogs: drive.cassette, circ: drive.wheel_circumference_m })
+  // strava.json 2.6 MB：年度統計、功率紀錄、路段補缺都住在這裡，晚一步到
+  const [strava, grades, pcw] = await Promise.all([J('data/strava.json'), J('data/segment-grades.json'), J('data/power-curve-windows.json')])
+  Object.assign(DATA, { strava, grades, pcw })
+  const merged = { segments: ((strava && strava.segments) || []).map(s => ({ ...s, efforts: (s.efforts || []).slice() })) }
+  mergeIttSegments(merged, itt)
+  DATA.segs = merged.segments
+  DATA.itt = merged.segments
+  safe(renderSeason, 'season'); safe(renderPower, 'power'); safe(renderItt, 'itt'); safe(renderLog, 'log')   // 紀錄的 Strava 連結要等 strava.json
+  safe(renderToday, 'today')                               // eFTP 在體能章算完才有
+  if (strava) $('#foot-stamp').textContent = `資料來源：intervals.icu（FIT、wellness）、Strava（年度統計、路段）。strava.json 更新於 ${new Date(strava.updated_at).toLocaleString('zh-TW', { timeZone: 'Asia/Taipei', hour12: false })}。`
+}
+lazyAtlas()
+main()
+if (document.readyState === 'complete') bootScene(); else addEventListener('load', bootScene)
+})()
+</script>
+</body>
+</html>
