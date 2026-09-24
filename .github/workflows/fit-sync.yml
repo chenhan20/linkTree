@@ -128,6 +128,10 @@ jobs:
           # 而 strava-sync（已棄用、隨時可能停跑）是唯一會把它們對齊的東西。實測撞過。
           python scripts/tag-itt-sources.py || \
             echo "::warning::ITT 來源標記失敗，這班先跳過"
+          # 平路 ITT 條件校正：風、空氣密度、跟車 → 換算成「單騎、無風」的時間（strava_pelican 第 05 章）。
+          # 會打 Open-Meteo 抓那幾個整點的風（只抓還沒快取的；抓不到就下一班再抓，不擋這一班）。
+          python scripts/build-itt-conditions.py || \
+            echo "::warning::ITT 條件校正失敗，這班先跳過"
           # 室內騎乘的等效平路里程估算（訓練台沒有速度感測，distance 是 0）。
           # 純本機運算、只算還沒算過的趟，要排在教練脈絡之前 —— 月里程要用它。
           python scripts/estimate-indoor-distance.py || \
@@ -143,7 +147,8 @@ jobs:
           python scripts/build-tasks.py || \
             echo "::warning::代辦清單重建失敗，這班先跳過"
           git add data/itt-segments.json data/strava.json athlete/coach-context.md \
-                  data/fit/_est_distance.json data/tasks.json data/training-block.json
+                  data/fit/_est_distance.json data/tasks.json data/training-block.json \
+                  data/itt-conditions.json data/weather
           git diff --staged --quiet || \
             git commit -m "chore: 回補自建 ITT 成績 $(date -u '+%Y-%m-%d')"
           git push || (git pull --rebase --autostash && git push)

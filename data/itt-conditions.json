@@ -1,0 +1,2260 @@
+{
+ "_comment": "平路 ITT 條件校正。由 scripts/build-itt-conditions.py 產生，不要手改。t_equiv＝同樣的逐秒功率、單騎、無風、rho 1.18 的換算秒數；實際 ＝ t_equiv ＋ air_s ＋ wind_s ＋ draft_s。",
+ "generated": "2026-09-24",
+ "model": {
+  "mass": 88.0,
+  "cda": 0.36,
+  "crr": 0.005,
+  "eta": 0.97,
+  "rho_std": 1.18,
+  "bias": 0.018,
+  "sd": 0.034,
+  "k_wind": 0.2,
+  "draft_ride_pct": 15,
+  "weather": "Open-Meteo historical-forecast，ecmwf_ifs／jma_msm／gfs_seamless／icon_seamless／ecmwf_ifs025 的 10 m 風向量平均（CC BY 4.0）"
+ },
+ "segments": {
+  "4063039": {
+   "n": 2,
+   "best_actual": {
+    "at": "2025-10-29 20:03",
+    "elapsed": 1324.9,
+    "flag": "group"
+   },
+   "best_equiv": {
+    "at": "2026-07-22 19:39",
+    "t_equiv": 1320.3,
+    "elapsed": 1334.9
+   }
+  },
+  "7032136": {
+   "n": 12,
+   "best_actual": {
+    "at": "2026-01-14 06:09",
+    "elapsed": 1748.6,
+    "flag": "group"
+   },
+   "best_equiv": {
+    "at": "2026-05-11 18:48",
+    "t_equiv": 1852.2,
+    "elapsed": 1912.6
+   }
+  },
+  "7032407": {
+   "n": 6,
+   "best_actual": {
+    "at": "2026-09-08 07:24",
+    "elapsed": 1865.9,
+    "flag": null
+   },
+   "best_equiv": {
+    "at": "2026-09-08 07:24",
+    "t_equiv": 1929.0,
+    "elapsed": 1865.9
+   }
+  },
+  "11084096": {
+   "n": 7,
+   "best_actual": {
+    "at": "2026-09-08 07:24",
+    "elapsed": 479.2,
+    "flag": "fast"
+   },
+   "best_equiv": {
+    "at": "2026-09-08 07:24",
+    "t_equiv": 522.4,
+    "elapsed": 479.2
+   }
+  },
+  "11084166": {
+   "n": 13,
+   "best_actual": {
+    "at": "2026-09-17 06:00",
+    "elapsed": 474.7,
+    "flag": "group"
+   },
+   "best_equiv": {
+    "at": "2026-05-11 19:12",
+    "t_equiv": 485.9,
+    "elapsed": 510.6
+   }
+  },
+  "11829584": {
+   "n": 2,
+   "best_actual": {
+    "at": "2026-07-15 18:56",
+    "elapsed": 704.7,
+    "flag": null
+   },
+   "best_equiv": {
+    "at": "2026-07-15 18:56",
+    "t_equiv": 731.2,
+    "elapsed": 704.7
+   }
+  },
+  "12301294": {
+   "n": 4,
+   "best_actual": {
+    "at": "2026-04-22 18:51",
+    "elapsed": 904.7,
+    "flag": null
+   },
+   "best_equiv": {
+    "at": "2026-04-22 18:51",
+    "t_equiv": 962.8,
+    "elapsed": 904.7
+   }
+  },
+  "18767450": {
+   "n": 13,
+   "best_actual": {
+    "at": "2026-01-14 06:08",
+    "elapsed": 896.0,
+    "flag": "group"
+   },
+   "best_equiv": {
+    "at": "2026-05-11 18:47",
+    "t_equiv": 999.2,
+    "elapsed": 1039.6
+   }
+  },
+  "18767553": {
+   "n": 12,
+   "best_actual": {
+    "at": "2025-08-24 10:43",
+    "elapsed": 857.5,
+    "flag": "group"
+   },
+   "best_equiv": {
+    "at": "2026-01-14 06:23",
+    "t_equiv": 908.9,
+    "elapsed": 908.3
+   }
+  },
+  "19411662": {
+   "n": 2,
+   "best_actual": {
+    "at": "2026-09-08 07:09",
+    "elapsed": 1785.0,
+    "flag": null
+   },
+   "best_equiv": {
+    "at": "2026-09-08 07:09",
+    "t_equiv": 1859.2,
+    "elapsed": 1785.0
+   }
+  },
+  "30593390": {
+   "n": 9,
+   "best_actual": {
+    "at": "2025-12-10 06:07",
+    "elapsed": 650.0,
+    "flag": "group"
+   },
+   "best_equiv": {
+    "at": "2026-01-14 06:44",
+    "t_equiv": 739.7,
+    "elapsed": 663.1
+   }
+  },
+  "31161895": {
+   "n": 5,
+   "best_actual": {
+    "at": "2026-08-13 07:24",
+    "elapsed": 1506.9,
+    "flag": null
+   },
+   "best_equiv": {
+    "at": "2026-08-13 07:24",
+    "t_equiv": 1572.3,
+    "elapsed": 1506.9
+   }
+  },
+  "37816958": {
+   "n": 8,
+   "best_actual": {
+    "at": "2025-08-24 10:43",
+    "elapsed": 1821.8,
+    "flag": "group"
+   },
+   "best_equiv": {
+    "at": "2026-09-08 06:33",
+    "t_equiv": 1906.5,
+    "elapsed": 1878.0
+   }
+  },
+  "41498683": {
+   "n": 3,
+   "best_actual": {
+    "at": "2026-08-13 07:19",
+    "elapsed": 1788.6,
+    "flag": null
+   },
+   "best_equiv": {
+    "at": "2026-08-13 07:19",
+    "t_equiv": 1839.3,
+    "elapsed": 1788.6
+   }
+  }
+ },
+ "efforts": [
+  {
+   "seg": 4063039,
+   "date": "2025-10-29",
+   "start_time": "20:03",
+   "fit": "2025-10-29_i175153510_內湖區-公路車.fit",
+   "elapsed": 1324.9,
+   "avg_w": 120,
+   "t_equiv": 1435.6,
+   "ride_draft_pct": 18,
+   "wind": {
+    "ms": 5.0,
+    "from": 88,
+    "head": -2.3
+   },
+   "temp": 23.0,
+   "rho": 1.186,
+   "air_s": 1.9,
+   "wind_s": -59.8,
+   "draft_s": -52.8,
+   "flag": "group"
+  },
+  {
+   "seg": 4063039,
+   "date": "2026-07-22",
+   "start_time": "19:39",
+   "fit": "2026-07-22_i175154483_內湖區-公路車.fit",
+   "elapsed": 1334.9,
+   "avg_w": 142,
+   "t_equiv": 1320.3,
+   "ride_draft_pct": 0,
+   "wind": {
+    "ms": 1.7,
+    "from": 115,
+    "head": -0.8
+   },
+   "temp": 28.3,
+   "rho": 1.149,
+   "air_s": -8.3,
+   "wind_s": -13.5,
+   "draft_s": 36.4,
+   "flag": null
+  },
+  {
+   "seg": 7032136,
+   "date": "2025-08-24",
+   "start_time": "10:24",
+   "fit": "2025-08-24_i175154210_中山區-公路車.fit",
+   "elapsed": 1932.5,
+   "avg_w": 149,
+   "t_equiv": 2210.7,
+   "ride_draft_pct": 53,
+   "wind": {
+    "ms": 2.1,
+    "from": 94,
+    "head": -0.3
+   },
+   "temp": 34.5,
+   "rho": 1.132,
+   "air_s": -23.9,
+   "wind_s": -10.5,
+   "draft_s": -243.8,
+   "flag": "group"
+  },
+  {
+   "seg": 7032136,
+   "date": "2025-09-04",
+   "start_time": "18:43",
+   "fit": "2025-09-04_i175154038_內湖區-公路車.fit",
+   "elapsed": 2215.0,
+   "avg_w": 156,
+   "t_equiv": 2168.8,
+   "ride_draft_pct": 15,
+   "wind": {
+    "ms": 1.8,
+    "from": 88,
+    "head": -0.1
+   },
+   "temp": 28.6,
+   "rho": 1.15,
+   "air_s": -32.0,
+   "wind_s": 5.6,
+   "draft_s": 72.6,
+   "flag": null
+  },
+  {
+   "seg": 7032136,
+   "date": "2025-09-05",
+   "start_time": "18:54",
+   "fit": "2025-09-05_i175154027_內湖區-公路車.fit",
+   "elapsed": 2055.6,
+   "avg_w": 137,
+   "t_equiv": 2158.7,
+   "ride_draft_pct": 29,
+   "wind": {
+    "ms": 4.0,
+    "from": 93,
+    "head": -0.0
+   },
+   "temp": 28.9,
+   "rho": 1.149,
+   "air_s": -18.1,
+   "wind_s": -5.4,
+   "draft_s": -79.6,
+   "flag": "group"
+  },
+  {
+   "seg": 7032136,
+   "date": "2025-12-10",
+   "start_time": "05:31",
+   "fit": "2025-12-10_i175154970_內湖區-公路車.fit",
+   "elapsed": 1857.0,
+   "avg_w": 184,
+   "t_equiv": 1948.5,
+   "ride_draft_pct": 33,
+   "wind": {
+    "ms": 0.8,
+    "from": 107,
+    "head": -0.0
+   },
+   "temp": 18.0,
+   "rho": 1.209,
+   "air_s": 15.3,
+   "wind_s": -0.6,
+   "draft_s": -106.2,
+   "flag": "group"
+  },
+  {
+   "seg": 7032136,
+   "date": "2026-01-14",
+   "start_time": "06:09",
+   "fit": "2026-01-14_i175154837_內湖區-公路車.fit",
+   "elapsed": 1748.6,
+   "avg_w": 193,
+   "t_equiv": 1882.0,
+   "ride_draft_pct": 31,
+   "wind": {
+    "ms": 3.7,
+    "from": 86,
+    "head": -0.2
+   },
+   "temp": 14.5,
+   "rho": 1.229,
+   "air_s": 22.8,
+   "wind_s": -8.2,
+   "draft_s": -148.0,
+   "flag": "group"
+  },
+  {
+   "seg": 7032136,
+   "date": "2026-03-24",
+   "start_time": "19:09",
+   "fit": "2026-03-24_i175155961_內湖區-公路車.fit",
+   "elapsed": 2316.1,
+   "avg_w": 105,
+   "t_equiv": 2429.6,
+   "ride_draft_pct": 36,
+   "wind": {
+    "ms": 0.8,
+    "from": 286,
+    "head": 0.1
+   },
+   "temp": 20.5,
+   "rho": 1.191,
+   "air_s": 7.7,
+   "wind_s": 5.4,
+   "draft_s": -126.7,
+   "flag": "group"
+  },
+  {
+   "seg": 7032136,
+   "date": "2026-04-01",
+   "start_time": "19:02",
+   "fit": "2026-04-01_i175153479_內湖區-公路車.fit",
+   "elapsed": 2150.6,
+   "avg_w": 147,
+   "t_equiv": 2087.2,
+   "ride_draft_pct": 22,
+   "wind": {
+    "ms": 2.1,
+    "from": 84,
+    "head": -0.1
+   },
+   "temp": 18.2,
+   "rho": 1.207,
+   "air_s": 17.0,
+   "wind_s": -8.3,
+   "draft_s": 54.7,
+   "flag": null
+  },
+  {
+   "seg": 7032136,
+   "date": "2026-04-08",
+   "start_time": "18:41",
+   "fit": "2026-04-08_i175155792_中山區-公路車.fit",
+   "elapsed": 2200.9,
+   "avg_w": 141,
+   "t_equiv": 2125.3,
+   "ride_draft_pct": 0,
+   "wind": {
+    "ms": 1.3,
+    "from": 114,
+    "head": -0.0
+   },
+   "temp": 23.5,
+   "rho": 1.178,
+   "air_s": -1.6,
+   "wind_s": 0.0,
+   "draft_s": 77.2,
+   "flag": null
+  },
+  {
+   "seg": 7032136,
+   "date": "2026-05-11",
+   "start_time": "18:48",
+   "fit": "2026-05-11_i175154749_內湖區-公路車.fit",
+   "elapsed": 1912.6,
+   "avg_w": 200,
+   "t_equiv": 1852.2,
+   "ride_draft_pct": 4,
+   "wind": {
+    "ms": 0.4,
+    "from": 70,
+    "head": -0.1
+   },
+   "temp": 23.8,
+   "rho": 1.174,
+   "air_s": -3.8,
+   "wind_s": -1.9,
+   "draft_s": 66.1,
+   "flag": null
+  },
+  {
+   "seg": 7032136,
+   "date": "2026-06-18",
+   "start_time": "06:12",
+   "fit": "2026-06-18_i175155306_內湖區-公路車.fit",
+   "elapsed": 1756.2,
+   "avg_w": 162,
+   "t_equiv": 2010.5,
+   "ride_draft_pct": 47,
+   "wind": {
+    "ms": 0.9,
+    "from": 88,
+    "head": -0.1
+   },
+   "temp": 26.4,
+   "rho": 1.162,
+   "air_s": -9.0,
+   "wind_s": -2.3,
+   "draft_s": -243.0,
+   "flag": "group"
+  },
+  {
+   "seg": 7032136,
+   "date": "2026-09-08",
+   "start_time": "06:17",
+   "fit": "2026-09-08_i184397758_內湖區-公路車.fit",
+   "elapsed": 1914.8,
+   "avg_w": 181,
+   "t_equiv": 1950.4,
+   "ride_draft_pct": 2,
+   "wind": {
+    "ms": 0.4,
+    "from": 206,
+    "head": 0.1
+   },
+   "temp": 23.0,
+   "rho": 1.176,
+   "air_s": -2.3,
+   "wind_s": 1.5,
+   "draft_s": -34.8,
+   "flag": null
+  },
+  {
+   "seg": 7032136,
+   "date": "2026-09-17",
+   "start_time": "05:38",
+   "fit": "2026-09-17_i187472658_內湖區-公路車.fit",
+   "elapsed": 1804.5,
+   "avg_w": 171,
+   "t_equiv": 1991.5,
+   "ride_draft_pct": 26,
+   "wind": {
+    "ms": 1.2,
+    "from": 99,
+    "head": -0.1
+   },
+   "temp": 21.9,
+   "rho": 1.185,
+   "air_s": 2.0,
+   "wind_s": -1.8,
+   "draft_s": -187.2,
+   "flag": "group"
+  },
+  {
+   "seg": 7032407,
+   "date": "2025-09-04",
+   "start_time": "20:59",
+   "fit": "2025-09-04_i175156487_大同區-公路車.fit",
+   "elapsed": 2572.7,
+   "avg_w": 93,
+   "t_equiv": 2539.3,
+   "ride_draft_pct": null,
+   "wind": {
+    "ms": 1.8,
+    "from": 93,
+    "head": 0.1
+   },
+   "temp": 27.5,
+   "rho": 1.154,
+   "air_s": -15.0,
+   "wind_s": 7.9,
+   "draft_s": 40.5,
+   "flag": null
+  },
+  {
+   "seg": 7032407,
+   "date": "2025-10-30",
+   "start_time": "07:06",
+   "fit": "2025-10-30_i175156475_永和區-公路車.fit",
+   "elapsed": 2112.5,
+   "avg_w": 140,
+   "t_equiv": 2142.3,
+   "ride_draft_pct": 19,
+   "wind": {
+    "ms": 3.8,
+    "from": 86,
+    "head": 0.6
+   },
+   "temp": 24.3,
+   "rho": 1.178,
+   "air_s": -1.1,
+   "wind_s": 17.5,
+   "draft_s": -46.1,
+   "flag": null
+  },
+  {
+   "seg": 7032407,
+   "date": "2026-04-01",
+   "start_time": "19:51",
+   "fit": "2026-04-01_i175153479_內湖區-公路車.fit",
+   "elapsed": 2230.7,
+   "avg_w": 139,
+   "t_equiv": 2143.3,
+   "ride_draft_pct": 22,
+   "wind": {
+    "ms": 2.2,
+    "from": 90,
+    "head": 0.3
+   },
+   "temp": 18.1,
+   "rho": 1.208,
+   "air_s": 17.8,
+   "wind_s": 6.5,
+   "draft_s": 63.1,
+   "flag": null
+  },
+  {
+   "seg": 7032407,
+   "date": "2026-04-08",
+   "start_time": "19:38",
+   "fit": "2026-04-08_i175155792_中山區-公路車.fit",
+   "elapsed": 2227.6,
+   "avg_w": 150,
+   "t_equiv": 2096.1,
+   "ride_draft_pct": 0,
+   "wind": {
+    "ms": 1.2,
+    "from": 108,
+    "head": 0.0
+   },
+   "temp": 23.3,
+   "rho": 1.179,
+   "air_s": -0.7,
+   "wind_s": -1.9,
+   "draft_s": 134.0,
+   "flag": null
+  },
+  {
+   "seg": 7032407,
+   "date": "2026-05-11",
+   "start_time": "19:25",
+   "fit": "2026-05-11_i175154749_內湖區-公路車.fit",
+   "elapsed": 2057.0,
+   "avg_w": 168,
+   "t_equiv": 1985.9,
+   "ride_draft_pct": 4,
+   "wind": {
+    "ms": 0.7,
+    "from": 93,
+    "head": 0.1
+   },
+   "temp": 23.5,
+   "rho": 1.175,
+   "air_s": -2.8,
+   "wind_s": 1.4,
+   "draft_s": 72.5,
+   "flag": null
+  },
+  {
+   "seg": 7032407,
+   "date": "2026-09-08",
+   "start_time": "07:24",
+   "fit": "2026-09-08_i184397758_內湖區-公路車.fit",
+   "elapsed": 1865.9,
+   "avg_w": 182,
+   "t_equiv": 1929.0,
+   "ride_draft_pct": 2,
+   "wind": {
+    "ms": 0.6,
+    "from": 233,
+    "head": -0.1
+   },
+   "temp": 25.2,
+   "rho": 1.167,
+   "air_s": -6.3,
+   "wind_s": -2.4,
+   "draft_s": -54.3,
+   "flag": null
+  },
+  {
+   "seg": 11084096,
+   "date": "2025-09-04",
+   "start_time": "20:58",
+   "fit": "2025-09-04_i175156487_大同區-公路車.fit",
+   "elapsed": 694.2,
+   "avg_w": 95,
+   "t_equiv": 685.6,
+   "ride_draft_pct": null,
+   "wind": {
+    "ms": 1.9,
+    "from": 93,
+    "head": -0.5
+   },
+   "temp": 27.6,
+   "rho": 1.154,
+   "air_s": -3.9,
+   "wind_s": -5.2,
+   "draft_s": 17.6,
+   "flag": null
+  },
+  {
+   "seg": 11084096,
+   "date": "2025-10-30",
+   "start_time": "07:06",
+   "fit": "2025-10-30_i175156475_永和區-公路車.fit",
+   "elapsed": 541.9,
+   "avg_w": 145,
+   "t_equiv": 569.9,
+   "ride_draft_pct": 19,
+   "wind": {
+    "ms": 3.7,
+    "from": 85,
+    "head": -0.6
+   },
+   "temp": 24.1,
+   "rho": 1.179,
+   "air_s": -0.0,
+   "wind_s": -4.5,
+   "draft_s": -23.5,
+   "flag": "group"
+  },
+  {
+   "seg": 11084096,
+   "date": "2026-03-24",
+   "start_time": "21:08",
+   "fit": "2026-03-24_i175155961_內湖區-公路車.fit",
+   "elapsed": 865.5,
+   "avg_w": 109,
+   "t_equiv": 830.7,
+   "ride_draft_pct": 36,
+   "wind": {
+    "ms": 0.2,
+    "from": 297,
+    "head": 0.1
+   },
+   "temp": 20.3,
+   "rho": 1.193,
+   "air_s": 1.6,
+   "wind_s": 1.5,
+   "draft_s": 31.7,
+   "flag": null
+  },
+  {
+   "seg": 11084096,
+   "date": "2026-04-01",
+   "start_time": "19:50",
+   "fit": "2026-04-01_i175153479_內湖區-公路車.fit",
+   "elapsed": 568.7,
+   "avg_w": 141,
+   "t_equiv": 577.1,
+   "ride_draft_pct": 22,
+   "wind": {
+    "ms": 2.2,
+    "from": 88,
+    "head": -0.4
+   },
+   "temp": 18.1,
+   "rho": 1.208,
+   "air_s": 3.7,
+   "wind_s": -3.3,
+   "draft_s": -8.8,
+   "flag": null
+  },
+  {
+   "seg": 11084096,
+   "date": "2026-04-08",
+   "start_time": "19:37",
+   "fit": "2026-04-08_i175155792_中山區-公路車.fit",
+   "elapsed": 612.9,
+   "avg_w": 138,
+   "t_equiv": 581.1,
+   "ride_draft_pct": 0,
+   "wind": {
+    "ms": 1.2,
+    "from": 110,
+    "head": -0.6
+   },
+   "temp": 23.3,
+   "rho": 1.179,
+   "air_s": -0.2,
+   "wind_s": -5.1,
+   "draft_s": 37.1,
+   "flag": null
+  },
+  {
+   "seg": 11084096,
+   "date": "2026-05-11",
+   "start_time": "19:24",
+   "fit": "2026-05-11_i175154749_內湖區-公路車.fit",
+   "elapsed": 575.6,
+   "avg_w": 154,
+   "t_equiv": 569.3,
+   "ride_draft_pct": 4,
+   "wind": {
+    "ms": 0.4,
+    "from": 98,
+    "head": -0.1
+   },
+   "temp": 23.8,
+   "rho": 1.175,
+   "air_s": -0.9,
+   "wind_s": -0.7,
+   "draft_s": 7.9,
+   "flag": null
+  },
+  {
+   "seg": 11084096,
+   "date": "2026-09-08",
+   "start_time": "07:24",
+   "fit": "2026-09-08_i184397758_內湖區-公路車.fit",
+   "elapsed": 479.2,
+   "avg_w": 178,
+   "t_equiv": 522.4,
+   "ride_draft_pct": 2,
+   "wind": {
+    "ms": 0.6,
+    "from": 226,
+    "head": -0.3
+   },
+   "temp": 24.8,
+   "rho": 1.169,
+   "air_s": -1.5,
+   "wind_s": -2.0,
+   "draft_s": -39.7,
+   "flag": "fast"
+  },
+  {
+   "seg": 11084166,
+   "date": "2025-08-24",
+   "start_time": "10:49",
+   "fit": "2025-08-24_i175154210_中山區-公路車.fit",
+   "elapsed": 510.5,
+   "avg_w": 128,
+   "t_equiv": 626.4,
+   "ride_draft_pct": 53,
+   "wind": {
+    "ms": 2.4,
+    "from": 94,
+    "head": 0.6
+   },
+   "temp": 35.0,
+   "rho": 1.132,
+   "air_s": -9.9,
+   "wind_s": 9.0,
+   "draft_s": -115.1,
+   "flag": "group"
+  },
+  {
+   "seg": 11084166,
+   "date": "2025-09-04",
+   "start_time": "19:11",
+   "fit": "2025-09-04_i175154038_內湖區-公路車.fit",
+   "elapsed": 563.8,
+   "avg_w": 154,
+   "t_equiv": 562.4,
+   "ride_draft_pct": 15,
+   "wind": {
+    "ms": 1.8,
+    "from": 90,
+    "head": 0.4
+   },
+   "temp": 28.5,
+   "rho": 1.15,
+   "air_s": -7.9,
+   "wind_s": 7.5,
+   "draft_s": 1.8,
+   "flag": null
+  },
+  {
+   "seg": 11084166,
+   "date": "2025-09-05",
+   "start_time": "19:18",
+   "fit": "2025-09-05_i175154027_內湖區-公路車.fit",
+   "elapsed": 621.9,
+   "avg_w": 106,
+   "t_equiv": 642.2,
+   "ride_draft_pct": 29,
+   "wind": {
+    "ms": 4.0,
+    "from": 92,
+    "head": 1.0
+   },
+   "temp": 28.8,
+   "rho": 1.15,
+   "air_s": -4.7,
+   "wind_s": 10.5,
+   "draft_s": -26.1,
+   "flag": "group"
+  },
+  {
+   "seg": 11084166,
+   "date": "2025-12-10",
+   "start_time": "05:54",
+   "fit": "2025-12-10_i175154970_內湖區-公路車.fit",
+   "elapsed": 483.3,
+   "avg_w": 188,
+   "t_equiv": 508.0,
+   "ride_draft_pct": 33,
+   "wind": {
+    "ms": 0.8,
+    "from": 103,
+    "head": 0.3
+   },
+   "temp": 17.9,
+   "rho": 1.21,
+   "air_s": 4.0,
+   "wind_s": 2.6,
+   "draft_s": -31.3,
+   "flag": "group"
+  },
+  {
+   "seg": 11084166,
+   "date": "2026-01-14",
+   "start_time": "06:30",
+   "fit": "2026-01-14_i175154837_內湖區-公路車.fit",
+   "elapsed": 480.7,
+   "avg_w": 194,
+   "t_equiv": 504.6,
+   "ride_draft_pct": 31,
+   "wind": {
+    "ms": 3.7,
+    "from": 85,
+    "head": 0.6
+   },
+   "temp": 14.5,
+   "rho": 1.229,
+   "air_s": 6.4,
+   "wind_s": 4.7,
+   "draft_s": -35.0,
+   "flag": "group"
+  },
+  {
+   "seg": 11084166,
+   "date": "2026-02-26",
+   "start_time": "19:24",
+   "fit": "2026-02-26_i175156189_內湖區-公路車.fit",
+   "elapsed": 662.1,
+   "avg_w": 95,
+   "t_equiv": 673.2,
+   "ride_draft_pct": null,
+   "wind": {
+    "ms": 1.0,
+    "from": 228,
+    "head": 0.4
+   },
+   "temp": 21.4,
+   "rho": 1.184,
+   "air_s": 0.6,
+   "wind_s": 5.3,
+   "draft_s": -17.0,
+   "flag": null
+  },
+  {
+   "seg": 11084166,
+   "date": "2026-03-24",
+   "start_time": "19:38",
+   "fit": "2026-03-24_i175155961_內湖區-公路車.fit",
+   "elapsed": 629.6,
+   "avg_w": 84,
+   "t_equiv": 705.5,
+   "ride_draft_pct": 36,
+   "wind": {
+    "ms": 0.8,
+    "from": 291,
+    "head": -0.4
+   },
+   "temp": 20.5,
+   "rho": 1.191,
+   "air_s": 1.8,
+   "wind_s": -5.6,
+   "draft_s": -72.1,
+   "flag": "group"
+  },
+  {
+   "seg": 11084166,
+   "date": "2026-04-01",
+   "start_time": "19:28",
+   "fit": "2026-04-01_i175153479_內湖區-公路車.fit",
+   "elapsed": 601.0,
+   "avg_w": 139,
+   "t_equiv": 566.5,
+   "ride_draft_pct": 22,
+   "wind": {
+    "ms": 2.2,
+    "from": 86,
+    "head": 0.4
+   },
+   "temp": 18.2,
+   "rho": 1.208,
+   "air_s": 3.7,
+   "wind_s": 3.1,
+   "draft_s": 27.8,
+   "flag": null
+  },
+  {
+   "seg": 11084166,
+   "date": "2026-04-08",
+   "start_time": "19:07",
+   "fit": "2026-04-08_i175155792_中山區-公路車.fit",
+   "elapsed": 612.1,
+   "avg_w": 126,
+   "t_equiv": 598.6,
+   "ride_draft_pct": 0,
+   "wind": {
+    "ms": 1.2,
+    "from": 113,
+    "head": 0.7
+   },
+   "temp": 23.4,
+   "rho": 1.178,
+   "air_s": -0.4,
+   "wind_s": 7.4,
+   "draft_s": 6.5,
+   "flag": null
+  },
+  {
+   "seg": 11084166,
+   "date": "2026-05-11",
+   "start_time": "19:12",
+   "fit": "2026-05-11_i175154749_內湖區-公路車.fit",
+   "elapsed": 510.6,
+   "avg_w": 200,
+   "t_equiv": 485.9,
+   "ride_draft_pct": 4,
+   "wind": {
+    "ms": 0.5,
+    "from": 79,
+    "head": 0.0
+   },
+   "temp": 23.7,
+   "rho": 1.174,
+   "air_s": -0.9,
+   "wind_s": 0.4,
+   "draft_s": 25.2,
+   "flag": null
+  },
+  {
+   "seg": 11084166,
+   "date": "2026-06-18",
+   "start_time": "06:33",
+   "fit": "2026-06-18_i175155306_內湖區-公路車.fit",
+   "elapsed": 495.7,
+   "avg_w": 150,
+   "t_equiv": 553.9,
+   "ride_draft_pct": 47,
+   "wind": {
+    "ms": 0.9,
+    "from": 88,
+    "head": 0.2
+   },
+   "temp": 26.7,
+   "rho": 1.161,
+   "air_s": -2.8,
+   "wind_s": 1.4,
+   "draft_s": -56.8,
+   "flag": "group"
+  },
+  {
+   "seg": 11084166,
+   "date": "2026-09-08",
+   "start_time": "06:41",
+   "fit": "2026-09-08_i184397758_內湖區-公路車.fit",
+   "elapsed": 505.2,
+   "avg_w": 187,
+   "t_equiv": 505.5,
+   "ride_draft_pct": 2,
+   "wind": {
+    "ms": 0.5,
+    "from": 207,
+    "head": 0.3
+   },
+   "temp": 23.3,
+   "rho": 1.174,
+   "air_s": -0.5,
+   "wind_s": 2.3,
+   "draft_s": -2.1,
+   "flag": null
+  },
+  {
+   "seg": 11084166,
+   "date": "2026-09-17",
+   "start_time": "06:00",
+   "fit": "2026-09-17_i187472658_內湖區-公路車.fit",
+   "elapsed": 474.7,
+   "avg_w": 173,
+   "t_equiv": 522.3,
+   "ride_draft_pct": 26,
+   "wind": {
+    "ms": 1.2,
+    "from": 99,
+    "head": 0.4
+   },
+   "temp": 22.0,
+   "rho": 1.185,
+   "air_s": 0.7,
+   "wind_s": 3.1,
+   "draft_s": -51.4,
+   "flag": "group"
+  },
+  {
+   "seg": 11829584,
+   "date": "2026-05-06",
+   "start_time": "18:46",
+   "fit": "2026-05-06_i175154759_內湖區-公路車.fit",
+   "elapsed": 789.7,
+   "avg_w": 120,
+   "t_equiv": 825.0,
+   "ride_draft_pct": null,
+   "wind": {
+    "ms": 2.5,
+    "from": 75,
+    "head": -1.7
+   },
+   "temp": 23.0,
+   "rho": 1.179,
+   "air_s": -0.1,
+   "wind_s": -24.8,
+   "draft_s": -10.4,
+   "flag": null
+  },
+  {
+   "seg": 11829584,
+   "date": "2026-07-15",
+   "start_time": "18:56",
+   "fit": "2026-07-15_i175154500_內湖區-公路車.fit",
+   "elapsed": 704.7,
+   "avg_w": 162,
+   "t_equiv": 731.2,
+   "ride_draft_pct": 9,
+   "wind": {
+    "ms": 1.2,
+    "from": 61,
+    "head": -0.7
+   },
+   "temp": 28.5,
+   "rho": 1.149,
+   "air_s": -6.0,
+   "wind_s": -9.8,
+   "draft_s": -10.8,
+   "flag": null
+  },
+  {
+   "seg": 12301294,
+   "date": "2025-09-24",
+   "start_time": "19:03",
+   "fit": "2025-09-24_i175153782_內湖區-公路車.fit",
+   "elapsed": 929.9,
+   "avg_w": 159,
+   "t_equiv": 991.0,
+   "ride_draft_pct": 33,
+   "wind": {
+    "ms": 3.1,
+    "from": 107,
+    "head": -2.0
+   },
+   "temp": 27.5,
+   "rho": 1.152,
+   "air_s": -7.0,
+   "wind_s": -25.9,
+   "draft_s": -28.2,
+   "flag": null
+  },
+  {
+   "seg": 12301294,
+   "date": "2026-04-22",
+   "start_time": "18:51",
+   "fit": "2026-04-22_i175155681_內湖區-公路車.fit",
+   "elapsed": 904.7,
+   "avg_w": 151,
+   "t_equiv": 962.8,
+   "ride_draft_pct": 13,
+   "wind": {
+    "ms": 0.4,
+    "from": 82,
+    "head": -0.2
+   },
+   "temp": 26.2,
+   "rho": 1.156,
+   "air_s": -5.9,
+   "wind_s": -2.8,
+   "draft_s": -49.4,
+   "flag": null
+  },
+  {
+   "seg": 12301294,
+   "date": "2026-05-06",
+   "start_time": "18:51",
+   "fit": "2026-05-06_i175154759_內湖區-公路車.fit",
+   "elapsed": 1035.4,
+   "avg_w": 119,
+   "t_equiv": 1063.4,
+   "ride_draft_pct": null,
+   "wind": {
+    "ms": 2.5,
+    "from": 71,
+    "head": -1.1
+   },
+   "temp": 22.8,
+   "rho": 1.177,
+   "air_s": -0.9,
+   "wind_s": -21.1,
+   "draft_s": -6.1,
+   "flag": null
+  },
+  {
+   "seg": 12301294,
+   "date": "2026-07-15",
+   "start_time": "19:01",
+   "fit": "2026-07-15_i175154500_內湖區-公路車.fit",
+   "elapsed": 959.3,
+   "avg_w": 148,
+   "t_equiv": 971.6,
+   "ride_draft_pct": 9,
+   "wind": {
+    "ms": 1.1,
+    "from": 62,
+    "head": -0.4
+   },
+   "temp": 28.5,
+   "rho": 1.146,
+   "air_s": -9.9,
+   "wind_s": -7.4,
+   "draft_s": 5.0,
+   "flag": null
+  },
+  {
+   "seg": 18767450,
+   "date": "2025-08-24",
+   "start_time": "10:23",
+   "fit": "2025-08-24_i175154210_中山區-公路車.fit",
+   "elapsed": 1170.9,
+   "avg_w": 132,
+   "t_equiv": 1266.5,
+   "ride_draft_pct": 53,
+   "wind": {
+    "ms": 2.0,
+    "from": 95,
+    "head": -1.4
+   },
+   "temp": 34.3,
+   "rho": 1.133,
+   "air_s": -10.8,
+   "wind_s": -32.4,
+   "draft_s": -52.4,
+   "flag": "group"
+  },
+  {
+   "seg": 18767450,
+   "date": "2025-09-04",
+   "start_time": "18:42",
+   "fit": "2025-09-04_i175154038_內湖區-公路車.fit",
+   "elapsed": 1052.0,
+   "avg_w": 158,
+   "t_equiv": 1105.2,
+   "ride_draft_pct": 15,
+   "wind": {
+    "ms": 1.8,
+    "from": 89,
+    "head": -1.2
+   },
+   "temp": 28.7,
+   "rho": 1.149,
+   "air_s": -8.7,
+   "wind_s": -18.0,
+   "draft_s": -26.5,
+   "flag": null
+  },
+  {
+   "seg": 18767450,
+   "date": "2025-09-05",
+   "start_time": "18:53",
+   "fit": "2025-09-05_i175154027_內湖區-公路車.fit",
+   "elapsed": 987.2,
+   "avg_w": 152,
+   "t_equiv": 1107.0,
+   "ride_draft_pct": 29,
+   "wind": {
+    "ms": 4.1,
+    "from": 93,
+    "head": -2.8
+   },
+   "temp": 29.0,
+   "rho": 1.149,
+   "air_s": -8.8,
+   "wind_s": -44.2,
+   "draft_s": -66.8,
+   "flag": "group"
+  },
+  {
+   "seg": 18767450,
+   "date": "2025-12-10",
+   "start_time": "05:30",
+   "fit": "2025-12-10_i175154970_內湖區-公路車.fit",
+   "elapsed": 1017.7,
+   "avg_w": 196,
+   "t_equiv": 1033.7,
+   "ride_draft_pct": 33,
+   "wind": {
+    "ms": 0.8,
+    "from": 110,
+    "head": -0.6
+   },
+   "temp": 18.0,
+   "rho": 1.209,
+   "air_s": 7.3,
+   "wind_s": -8.5,
+   "draft_s": -14.8,
+   "flag": null
+  },
+  {
+   "seg": 18767450,
+   "date": "2026-01-14",
+   "start_time": "06:08",
+   "fit": "2026-01-14_i175154837_內湖區-公路車.fit",
+   "elapsed": 896.0,
+   "avg_w": 180,
+   "t_equiv": 1033.3,
+   "ride_draft_pct": 31,
+   "wind": {
+    "ms": 3.7,
+    "from": 86,
+    "head": -2.3
+   },
+   "temp": 14.5,
+   "rho": 1.229,
+   "air_s": 12.9,
+   "wind_s": -33.4,
+   "draft_s": -116.7,
+   "flag": "group"
+  },
+  {
+   "seg": 18767450,
+   "date": "2026-03-24",
+   "start_time": "19:08",
+   "fit": "2026-03-24_i175155961_內湖區-公路車.fit",
+   "elapsed": 1264.4,
+   "avg_w": 111,
+   "t_equiv": 1270.9,
+   "ride_draft_pct": 36,
+   "wind": {
+    "ms": 0.8,
+    "from": 281,
+    "head": 0.6
+   },
+   "temp": 20.5,
+   "rho": 1.19,
+   "air_s": 3.3,
+   "wind_s": 10.2,
+   "draft_s": -20.0,
+   "flag": null
+  },
+  {
+   "seg": 18767450,
+   "date": "2026-04-01",
+   "start_time": "19:01",
+   "fit": "2026-04-01_i175153479_內湖區-公路車.fit",
+   "elapsed": 1073.5,
+   "avg_w": 147,
+   "t_equiv": 1120.9,
+   "ride_draft_pct": 22,
+   "wind": {
+    "ms": 2.1,
+    "from": 83,
+    "head": -1.3
+   },
+   "temp": 18.2,
+   "rho": 1.207,
+   "air_s": 7.7,
+   "wind_s": -21.5,
+   "draft_s": -33.6,
+   "flag": null
+  },
+  {
+   "seg": 18767450,
+   "date": "2026-04-08",
+   "start_time": "18:39",
+   "fit": "2026-04-08_i175155792_中山區-公路車.fit",
+   "elapsed": 1158.8,
+   "avg_w": 146,
+   "t_equiv": 1130.2,
+   "ride_draft_pct": 0,
+   "wind": {
+    "ms": 1.3,
+    "from": 116,
+    "head": -1.0
+   },
+   "temp": 23.5,
+   "rho": 1.178,
+   "air_s": -0.7,
+   "wind_s": -18.0,
+   "draft_s": 47.4,
+   "flag": null
+  },
+  {
+   "seg": 18767450,
+   "date": "2026-05-11",
+   "start_time": "18:47",
+   "fit": "2026-05-11_i175154749_內湖區-公路車.fit",
+   "elapsed": 1039.6,
+   "avg_w": 200,
+   "t_equiv": 999.2,
+   "ride_draft_pct": 4,
+   "wind": {
+    "ms": 0.4,
+    "from": 62,
+    "head": -0.1
+   },
+   "temp": 23.9,
+   "rho": 1.173,
+   "air_s": -2.0,
+   "wind_s": -2.2,
+   "draft_s": 44.6,
+   "flag": null
+  },
+  {
+   "seg": 18767450,
+   "date": "2026-06-18",
+   "start_time": "06:11",
+   "fit": "2026-06-18_i175155306_內湖區-公路車.fit",
+   "elapsed": 929.7,
+   "avg_w": 168,
+   "t_equiv": 1061.8,
+   "ride_draft_pct": 47,
+   "wind": {
+    "ms": 0.9,
+    "from": 88,
+    "head": -0.6
+   },
+   "temp": 26.2,
+   "rho": 1.163,
+   "air_s": -4.7,
+   "wind_s": -8.6,
+   "draft_s": -118.8,
+   "flag": "group"
+  },
+  {
+   "seg": 18767450,
+   "date": "2026-08-05",
+   "start_time": "18:39",
+   "fit": "2026-08-05_i175154443_內湖區-公路車.fit",
+   "elapsed": 1039.0,
+   "avg_w": 162,
+   "t_equiv": 1116.4,
+   "ride_draft_pct": 18,
+   "wind": {
+    "ms": 2.6,
+    "from": 78,
+    "head": -1.3
+   },
+   "temp": 30.2,
+   "rho": 1.137,
+   "air_s": -13.6,
+   "wind_s": -23.8,
+   "draft_s": -40.1,
+   "flag": "group"
+  },
+  {
+   "seg": 18767450,
+   "date": "2026-09-08",
+   "start_time": "06:16",
+   "fit": "2026-09-08_i184397758_內湖區-公路車.fit",
+   "elapsed": 1061.8,
+   "avg_w": 174,
+   "t_equiv": 1067.2,
+   "ride_draft_pct": 2,
+   "wind": {
+    "ms": 0.4,
+    "from": 205,
+    "head": -0.1
+   },
+   "temp": 22.8,
+   "rho": 1.176,
+   "air_s": -0.7,
+   "wind_s": -0.7,
+   "draft_s": -4.0,
+   "flag": null
+  },
+  {
+   "seg": 18767450,
+   "date": "2026-09-17",
+   "start_time": "05:37",
+   "fit": "2026-09-17_i187472658_內湖區-公路車.fit",
+   "elapsed": 989.5,
+   "avg_w": 169,
+   "t_equiv": 1072.6,
+   "ride_draft_pct": 26,
+   "wind": {
+    "ms": 1.2,
+    "from": 99,
+    "head": -0.8
+   },
+   "temp": 21.9,
+   "rho": 1.185,
+   "air_s": 1.1,
+   "wind_s": -12.3,
+   "draft_s": -72.0,
+   "flag": "group"
+  },
+  {
+   "seg": 18767553,
+   "date": "2025-08-24",
+   "start_time": "10:43",
+   "fit": "2025-08-24_i175154210_中山區-公路車.fit",
+   "elapsed": 857.5,
+   "avg_w": 165,
+   "t_equiv": 1035.0,
+   "ride_draft_pct": 53,
+   "wind": {
+    "ms": 2.2,
+    "from": 94,
+    "head": 1.1
+   },
+   "temp": 34.7,
+   "rho": 1.132,
+   "air_s": -9.7,
+   "wind_s": 13.1,
+   "draft_s": -180.9,
+   "flag": "group"
+  },
+  {
+   "seg": 18767553,
+   "date": "2025-09-04",
+   "start_time": "19:03",
+   "fit": "2025-09-04_i175154038_內湖區-公路車.fit",
+   "elapsed": 1058.8,
+   "avg_w": 157,
+   "t_equiv": 1011.2,
+   "ride_draft_pct": 15,
+   "wind": {
+    "ms": 1.8,
+    "from": 89,
+    "head": 0.9
+   },
+   "temp": 28.5,
+   "rho": 1.15,
+   "air_s": -15.8,
+   "wind_s": 26.2,
+   "draft_s": 37.1,
+   "flag": null
+  },
+  {
+   "seg": 18767553,
+   "date": "2025-09-05",
+   "start_time": "19:10",
+   "fit": "2025-09-05_i175154027_內湖區-公路車.fit",
+   "elapsed": 1128.0,
+   "avg_w": 124,
+   "t_equiv": 1104.5,
+   "ride_draft_pct": 29,
+   "wind": {
+    "ms": 4.0,
+    "from": 92,
+    "head": 2.1
+   },
+   "temp": 28.8,
+   "rho": 1.149,
+   "air_s": -8.6,
+   "wind_s": 46.8,
+   "draft_s": -14.8,
+   "flag": null
+  },
+  {
+   "seg": 18767553,
+   "date": "2025-12-10",
+   "start_time": "05:47",
+   "fit": "2025-12-10_i175154970_內湖區-公路車.fit",
+   "elapsed": 893.6,
+   "avg_w": 168,
+   "t_equiv": 982.2,
+   "ride_draft_pct": 33,
+   "wind": {
+    "ms": 0.8,
+    "from": 104,
+    "head": 0.5
+   },
+   "temp": 17.9,
+   "rho": 1.21,
+   "air_s": 7.3,
+   "wind_s": 8.3,
+   "draft_s": -104.1,
+   "flag": "group"
+  },
+  {
+   "seg": 18767553,
+   "date": "2026-01-14",
+   "start_time": "06:23",
+   "fit": "2026-01-14_i175154837_內湖區-公路車.fit",
+   "elapsed": 908.3,
+   "avg_w": 204,
+   "t_equiv": 908.9,
+   "ride_draft_pct": 31,
+   "wind": {
+    "ms": 3.7,
+    "from": 86,
+    "head": 1.8
+   },
+   "temp": 14.5,
+   "rho": 1.229,
+   "air_s": 15.9,
+   "wind_s": 25.6,
+   "draft_s": -42.0,
+   "flag": "group"
+  },
+  {
+   "seg": 18767553,
+   "date": "2026-03-24",
+   "start_time": "19:30",
+   "fit": "2026-03-24_i175155961_內湖區-公路車.fit",
+   "elapsed": 1105.9,
+   "avg_w": 96,
+   "t_equiv": 1235.0,
+   "ride_draft_pct": 36,
+   "wind": {
+    "ms": 0.8,
+    "from": 290,
+    "head": -0.6
+   },
+   "temp": 20.5,
+   "rho": 1.191,
+   "air_s": 3.3,
+   "wind_s": -13.1,
+   "draft_s": -119.3,
+   "flag": "group"
+  },
+  {
+   "seg": 18767553,
+   "date": "2026-04-01",
+   "start_time": "19:19",
+   "fit": "2026-04-01_i175153479_內湖區-公路車.fit",
+   "elapsed": 1138.4,
+   "avg_w": 145,
+   "t_equiv": 1029.5,
+   "ride_draft_pct": 22,
+   "wind": {
+    "ms": 2.2,
+    "from": 85,
+    "head": 1.0
+   },
+   "temp": 18.2,
+   "rho": 1.207,
+   "air_s": 7.4,
+   "wind_s": 16.4,
+   "draft_s": 85.1,
+   "flag": null
+  },
+  {
+   "seg": 18767553,
+   "date": "2026-04-08",
+   "start_time": "18:59",
+   "fit": "2026-04-08_i175155792_中山區-公路車.fit",
+   "elapsed": 1111.4,
+   "avg_w": 134,
+   "t_equiv": 1068.2,
+   "ride_draft_pct": 0,
+   "wind": {
+    "ms": 1.2,
+    "from": 113,
+    "head": 0.9
+   },
+   "temp": 23.4,
+   "rho": 1.178,
+   "air_s": -0.6,
+   "wind_s": 17.8,
+   "draft_s": 26.0,
+   "flag": null
+  },
+  {
+   "seg": 18767553,
+   "date": "2026-05-11",
+   "start_time": "19:05",
+   "fit": "2026-05-11_i175154749_內湖區-公路車.fit",
+   "elapsed": 937.9,
+   "avg_w": 195,
+   "t_equiv": 912.7,
+   "ride_draft_pct": 4,
+   "wind": {
+    "ms": 0.5,
+    "from": 76,
+    "head": 0.2
+   },
+   "temp": 23.7,
+   "rho": 1.174,
+   "air_s": -1.7,
+   "wind_s": 2.7,
+   "draft_s": 24.1,
+   "flag": null
+  },
+  {
+   "seg": 18767553,
+   "date": "2026-06-18",
+   "start_time": "06:27",
+   "fit": "2026-06-18_i175155306_內湖區-公路車.fit",
+   "elapsed": 883.9,
+   "avg_w": 156,
+   "t_equiv": 1010.3,
+   "ride_draft_pct": 47,
+   "wind": {
+    "ms": 0.9,
+    "from": 88,
+    "head": 0.4
+   },
+   "temp": 26.6,
+   "rho": 1.161,
+   "air_s": -4.6,
+   "wind_s": 6.2,
+   "draft_s": -127.9,
+   "flag": "group"
+  },
+  {
+   "seg": 18767553,
+   "date": "2026-09-08",
+   "start_time": "06:34",
+   "fit": "2026-09-08_i184397758_內湖區-公路車.fit",
+   "elapsed": 918.8,
+   "avg_w": 186,
+   "t_equiv": 955.6,
+   "ride_draft_pct": 2,
+   "wind": {
+    "ms": 0.5,
+    "from": 207,
+    "head": 0.2
+   },
+   "temp": 23.2,
+   "rho": 1.175,
+   "air_s": -1.2,
+   "wind_s": 2.2,
+   "draft_s": -37.9,
+   "flag": null
+  },
+  {
+   "seg": 18767553,
+   "date": "2026-09-17",
+   "start_time": "05:54",
+   "fit": "2026-09-17_i187472658_內湖區-公路車.fit",
+   "elapsed": 872.9,
+   "avg_w": 172,
+   "t_equiv": 971.5,
+   "ride_draft_pct": 26,
+   "wind": {
+    "ms": 1.2,
+    "from": 99,
+    "head": 0.7
+   },
+   "temp": 21.9,
+   "rho": 1.185,
+   "air_s": 1.1,
+   "wind_s": 11.7,
+   "draft_s": -111.4,
+   "flag": "group"
+  },
+  {
+   "seg": 19411662,
+   "date": "2025-10-30",
+   "start_time": "06:50",
+   "fit": "2025-10-30_i175156475_永和區-公路車.fit",
+   "elapsed": 1900.2,
+   "avg_w": 155,
+   "t_equiv": 1983.7,
+   "ride_draft_pct": 19,
+   "wind": {
+    "ms": 3.3,
+    "from": 84,
+    "head": -0.4
+   },
+   "temp": 23.7,
+   "rho": 1.182,
+   "air_s": 1.4,
+   "wind_s": -14.6,
+   "draft_s": -70.4,
+   "flag": "group"
+  },
+  {
+   "seg": 19411662,
+   "date": "2026-09-08",
+   "start_time": "07:09",
+   "fit": "2026-09-08_i184397758_內湖區-公路車.fit",
+   "elapsed": 1785.0,
+   "avg_w": 185,
+   "t_equiv": 1859.2,
+   "ride_draft_pct": 2,
+   "wind": {
+    "ms": 0.6,
+    "from": 211,
+    "head": -0.3
+   },
+   "temp": 24.5,
+   "rho": 1.171,
+   "air_s": -3.7,
+   "wind_s": -7.1,
+   "draft_s": -63.4,
+   "flag": null
+  },
+  {
+   "seg": 30593390,
+   "date": "2025-08-24",
+   "start_time": "11:00",
+   "fit": "2025-08-24_i175154210_中山區-公路車.fit",
+   "elapsed": 692.9,
+   "avg_w": 187,
+   "t_equiv": 762.6,
+   "ride_draft_pct": 53,
+   "wind": {
+    "ms": 2.5,
+    "from": 95,
+    "head": -0.0
+   },
+   "temp": 35.2,
+   "rho": 1.131,
+   "air_s": -8.9,
+   "wind_s": -0.7,
+   "draft_s": -60.2,
+   "flag": "group"
+  },
+  {
+   "seg": 30593390,
+   "date": "2025-09-05",
+   "start_time": "19:34",
+   "fit": "2025-09-05_i175154027_內湖區-公路車.fit",
+   "elapsed": 808.7,
+   "avg_w": 147,
+   "t_equiv": 827.5,
+   "ride_draft_pct": 29,
+   "wind": {
+    "ms": 3.5,
+    "from": 89,
+    "head": -0.2
+   },
+   "temp": 28.3,
+   "rho": 1.152,
+   "air_s": -6.9,
+   "wind_s": -5.8,
+   "draft_s": -6.1,
+   "flag": null
+  },
+  {
+   "seg": 30593390,
+   "date": "2025-12-10",
+   "start_time": "06:07",
+   "fit": "2025-12-10_i175154970_內湖區-公路車.fit",
+   "elapsed": 650.0,
+   "avg_w": 198,
+   "t_equiv": 743.0,
+   "ride_draft_pct": 33,
+   "wind": {
+    "ms": 0.7,
+    "from": 119,
+    "head": 0.2
+   },
+   "temp": 17.6,
+   "rho": 1.213,
+   "air_s": 6.0,
+   "wind_s": 1.7,
+   "draft_s": -100.7,
+   "flag": "group"
+  },
+  {
+   "seg": 30593390,
+   "date": "2026-01-14",
+   "start_time": "06:44",
+   "fit": "2026-01-14_i175154837_內湖區-公路車.fit",
+   "elapsed": 663.1,
+   "avg_w": 203,
+   "t_equiv": 739.7,
+   "ride_draft_pct": 31,
+   "wind": {
+    "ms": 3.4,
+    "from": 84,
+    "head": -0.4
+   },
+   "temp": 14.0,
+   "rho": 1.232,
+   "air_s": 9.7,
+   "wind_s": -5.7,
+   "draft_s": -80.6,
+   "flag": "group"
+  },
+  {
+   "seg": 30593390,
+   "date": "2026-02-26",
+   "start_time": "19:37",
+   "fit": "2026-02-26_i175156189_內湖區-公路車.fit",
+   "elapsed": 1098.8,
+   "avg_w": 92,
+   "t_equiv": 1093.0,
+   "ride_draft_pct": null,
+   "wind": {
+    "ms": 1.1,
+    "from": 239,
+    "head": 0.4
+   },
+   "temp": 21.1,
+   "rho": 1.186,
+   "air_s": 1.8,
+   "wind_s": 7.7,
+   "draft_s": -3.7,
+   "flag": null
+  },
+  {
+   "seg": 30593390,
+   "date": "2026-03-24",
+   "start_time": "20:13",
+   "fit": "2026-03-24_i175155961_內湖區-公路車.fit",
+   "elapsed": 847.4,
+   "avg_w": 113,
+   "t_equiv": 940.4,
+   "ride_draft_pct": 36,
+   "wind": {
+    "ms": 0.7,
+    "from": 290,
+    "head": -0.1
+   },
+   "temp": 20.6,
+   "rho": 1.192,
+   "air_s": 2.9,
+   "wind_s": -2.1,
+   "draft_s": -93.8,
+   "flag": "group"
+  },
+  {
+   "seg": 30593390,
+   "date": "2026-06-18",
+   "start_time": "06:43",
+   "fit": "2026-06-18_i175155306_內湖區-公路車.fit",
+   "elapsed": 732.6,
+   "avg_w": 159,
+   "t_equiv": 807.2,
+   "ride_draft_pct": 47,
+   "wind": {
+    "ms": 0.9,
+    "from": 93,
+    "head": -0.1
+   },
+   "temp": 26.8,
+   "rho": 1.162,
+   "air_s": -3.8,
+   "wind_s": -0.5,
+   "draft_s": -70.3,
+   "flag": "group"
+  },
+  {
+   "seg": 30593390,
+   "date": "2026-09-08",
+   "start_time": "06:50",
+   "fit": "2026-09-08_i184397758_內湖區-公路車.fit",
+   "elapsed": 754.3,
+   "avg_w": 185,
+   "t_equiv": 757.9,
+   "ride_draft_pct": 2,
+   "wind": {
+    "ms": 0.7,
+    "from": 192,
+    "head": 0.4
+   },
+   "temp": 23.5,
+   "rho": 1.175,
+   "air_s": -1.3,
+   "wind_s": 5.2,
+   "draft_s": -7.4,
+   "flag": null
+  },
+  {
+   "seg": 30593390,
+   "date": "2026-09-17",
+   "start_time": "06:13",
+   "fit": "2026-09-17_i187472658_內湖區-公路車.fit",
+   "elapsed": 709.3,
+   "avg_w": 182,
+   "t_equiv": 766.0,
+   "ride_draft_pct": 26,
+   "wind": {
+    "ms": 1.3,
+    "from": 103,
+    "head": 0.1
+   },
+   "temp": 22.2,
+   "rho": 1.185,
+   "air_s": 1.2,
+   "wind_s": 0.4,
+   "draft_s": -58.2,
+   "flag": "group"
+  },
+  {
+   "seg": 31161895,
+   "date": "2025-09-10",
+   "start_time": "20:46",
+   "fit": "2025-09-10_i175153937_內湖區-公路車.fit",
+   "elapsed": 1769.3,
+   "avg_w": 161,
+   "t_equiv": 1765.0,
+   "ride_draft_pct": 5,
+   "wind": {
+    "ms": 1.1,
+    "from": 127,
+    "head": 0.8
+   },
+   "temp": 28.3,
+   "rho": 1.156,
+   "air_s": -7.2,
+   "wind_s": 13.5,
+   "draft_s": -2.0,
+   "flag": null
+  },
+  {
+   "seg": 31161895,
+   "date": "2025-09-21",
+   "start_time": "13:40",
+   "fit": "2025-09-21_i175153821_士林區-公路車.fit",
+   "elapsed": 2221.2,
+   "avg_w": 154,
+   "t_equiv": 2173.1,
+   "ride_draft_pct": 64,
+   "wind": {
+    "ms": 5.8,
+    "from": 81,
+    "head": 3.6
+   },
+   "temp": 31.9,
+   "rho": 1.137,
+   "air_s": -38.9,
+   "wind_s": 126.2,
+   "draft_s": -39.2,
+   "flag": null
+  },
+  {
+   "seg": 31161895,
+   "date": "2026-02-04",
+   "start_time": "07:34",
+   "fit": "2026-02-04_i175156330_內湖區-公路車.fit",
+   "elapsed": 1555.2,
+   "avg_w": 180,
+   "t_equiv": 1632.5,
+   "ride_draft_pct": 0,
+   "wind": {
+    "ms": 1.5,
+    "from": 99,
+    "head": 1.1
+   },
+   "temp": 16.2,
+   "rho": 1.222,
+   "air_s": 18.8,
+   "wind_s": 27.7,
+   "draft_s": -123.8,
+   "flag": "fast"
+  },
+  {
+   "seg": 31161895,
+   "date": "2026-02-08",
+   "start_time": "10:11",
+   "fit": "2026-02-08_i175156256_內湖區-公路車.fit",
+   "elapsed": 1836.3,
+   "avg_w": 126,
+   "t_equiv": 1916.8,
+   "ride_draft_pct": 22,
+   "wind": {
+    "ms": 5.3,
+    "from": 28,
+    "head": 0.3
+   },
+   "temp": 10.7,
+   "rho": 1.261,
+   "air_s": 41.5,
+   "wind_s": 16.0,
+   "draft_s": -138.0,
+   "flag": "group"
+  },
+  {
+   "seg": 31161895,
+   "date": "2026-08-13",
+   "start_time": "07:24",
+   "fit": "2026-08-13_i175313324_內湖區-公路車.fit",
+   "elapsed": 1506.9,
+   "avg_w": 197,
+   "t_equiv": 1572.3,
+   "ride_draft_pct": 3,
+   "wind": {
+    "ms": 0.6,
+    "from": 252,
+    "head": -0.3
+   },
+   "temp": 29.0,
+   "rho": 1.14,
+   "air_s": -17.1,
+   "wind_s": -6.0,
+   "draft_s": -42.3,
+   "flag": null
+  },
+  {
+   "seg": 37816958,
+   "date": "2025-08-24",
+   "start_time": "10:43",
+   "fit": "2025-08-24_i175154210_中山區-公路車.fit",
+   "elapsed": 1821.8,
+   "avg_w": 165,
+   "t_equiv": 2081.4,
+   "ride_draft_pct": 53,
+   "wind": {
+    "ms": 2.5,
+    "from": 95,
+    "head": 0.6
+   },
+   "temp": 35.1,
+   "rho": 1.131,
+   "air_s": -23.2,
+   "wind_s": 19.3,
+   "draft_s": -255.7,
+   "flag": "group"
+  },
+  {
+   "seg": 37816958,
+   "date": "2025-09-05",
+   "start_time": "19:10",
+   "fit": "2025-09-05_i175154027_內湖區-公路車.fit",
+   "elapsed": 2376.0,
+   "avg_w": 133,
+   "t_equiv": 2354.3,
+   "ride_draft_pct": 29,
+   "wind": {
+    "ms": 3.5,
+    "from": 90,
+    "head": 0.8
+   },
+   "temp": 28.4,
+   "rho": 1.152,
+   "air_s": -9.0,
+   "wind_s": 21.7,
+   "draft_s": 9.0,
+   "flag": null
+  },
+  {
+   "seg": 37816958,
+   "date": "2025-12-10",
+   "start_time": "05:47",
+   "fit": "2025-12-10_i175154970_內湖區-公路車.fit",
+   "elapsed": 1913.7,
+   "avg_w": 180,
+   "t_equiv": 2064.8,
+   "ride_draft_pct": 33,
+   "wind": {
+    "ms": 0.7,
+    "from": 124,
+    "head": 0.4
+   },
+   "temp": 17.6,
+   "rho": 1.213,
+   "air_s": 14.0,
+   "wind_s": 10.1,
+   "draft_s": -175.2,
+   "flag": "group"
+  },
+  {
+   "seg": 37816958,
+   "date": "2026-01-14",
+   "start_time": "06:23",
+   "fit": "2026-01-14_i175154837_內湖區-公路車.fit",
+   "elapsed": 2061.2,
+   "avg_w": 200,
+   "t_equiv": 2091.6,
+   "ride_draft_pct": 31,
+   "wind": {
+    "ms": 3.4,
+    "from": 84,
+    "head": 0.6
+   },
+   "temp": 14.0,
+   "rho": 1.232,
+   "air_s": 22.7,
+   "wind_s": 11.4,
+   "draft_s": -64.5,
+   "flag": null
+  },
+  {
+   "seg": 37816958,
+   "date": "2026-03-24",
+   "start_time": "19:29",
+   "fit": "2026-03-24_i175155961_內湖區-公路車.fit",
+   "elapsed": 3638.8,
+   "avg_w": 98,
+   "t_equiv": 3754.4,
+   "ride_draft_pct": 36,
+   "wind": {
+    "ms": 0.9,
+    "from": 289,
+    "head": -0.3
+   },
+   "temp": 20.7,
+   "rho": 1.191,
+   "air_s": 4.3,
+   "wind_s": -5.4,
+   "draft_s": -114.6,
+   "flag": null
+  },
+  {
+   "seg": 37816958,
+   "date": "2026-06-18",
+   "start_time": "06:26",
+   "fit": "2026-06-18_i175155306_內湖區-公路車.fit",
+   "elapsed": 1822.2,
+   "avg_w": 156,
+   "t_equiv": 2041.5,
+   "ride_draft_pct": 47,
+   "wind": {
+    "ms": 0.9,
+    "from": 94,
+    "head": 0.2
+   },
+   "temp": 26.6,
+   "rho": 1.163,
+   "air_s": -9.5,
+   "wind_s": 7.1,
+   "draft_s": -216.9,
+   "flag": "group"
+  },
+  {
+   "seg": 37816958,
+   "date": "2026-09-08",
+   "start_time": "06:33",
+   "fit": "2026-09-08_i184397758_內湖區-公路車.fit",
+   "elapsed": 1878.0,
+   "avg_w": 184,
+   "t_equiv": 1906.5,
+   "ride_draft_pct": 2,
+   "wind": {
+    "ms": 0.6,
+    "from": 190,
+    "head": 0.4
+   },
+   "temp": 23.3,
+   "rho": 1.176,
+   "air_s": -2.5,
+   "wind_s": 11.0,
+   "draft_s": -36.9,
+   "flag": null
+  },
+  {
+   "seg": 37816958,
+   "date": "2026-09-17",
+   "start_time": "05:53",
+   "fit": "2026-09-17_i187472658_內湖區-公路車.fit",
+   "elapsed": 2014.9,
+   "avg_w": 170,
+   "t_equiv": 2164.3,
+   "ride_draft_pct": 26,
+   "wind": {
+    "ms": 1.3,
+    "from": 104,
+    "head": 0.5
+   },
+   "temp": 22.0,
+   "rho": 1.186,
+   "air_s": 2.6,
+   "wind_s": 11.4,
+   "draft_s": -163.4,
+   "flag": "group"
+  },
+  {
+   "seg": 41498683,
+   "date": "2025-09-10",
+   "start_time": "20:40",
+   "fit": "2025-09-10_i175153937_內湖區-公路車.fit",
+   "elapsed": 2096.9,
+   "avg_w": 154,
+   "t_equiv": 2090.4,
+   "ride_draft_pct": 5,
+   "wind": {
+    "ms": 1.1,
+    "from": 127,
+    "head": 0.8
+   },
+   "temp": 28.4,
+   "rho": 1.156,
+   "air_s": -7.3,
+   "wind_s": 13.3,
+   "draft_s": 0.4,
+   "flag": null
+  },
+  {
+   "seg": 41498683,
+   "date": "2026-02-08",
+   "start_time": "10:06",
+   "fit": "2026-02-08_i175156256_內湖區-公路車.fit",
+   "elapsed": 2135.1,
+   "avg_w": 123,
+   "t_equiv": 2258.0,
+   "ride_draft_pct": 22,
+   "wind": {
+    "ms": 5.3,
+    "from": 28,
+    "head": -0.2
+   },
+   "temp": 10.7,
+   "rho": 1.261,
+   "air_s": 43.4,
+   "wind_s": -5.8,
+   "draft_s": -160.5,
+   "flag": "group"
+  },
+  {
+   "seg": 41498683,
+   "date": "2026-08-13",
+   "start_time": "07:19",
+   "fit": "2026-08-13_i175313324_內湖區-公路車.fit",
+   "elapsed": 1788.6,
+   "avg_w": 193,
+   "t_equiv": 1839.3,
+   "ride_draft_pct": 3,
+   "wind": {
+    "ms": 0.6,
+    "from": 252,
+    "head": -0.2
+   },
+   "temp": 28.9,
+   "rho": 1.141,
+   "air_s": -17.3,
+   "wind_s": -5.9,
+   "draft_s": -27.5,
+   "flag": null
+  }
+ ]
+}

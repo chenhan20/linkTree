@@ -165,6 +165,8 @@ b, strong { font-weight: 600 }
 .race-rows li b { font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap }
 .race-rows li b.up { color: var(--hud-up) } .race-rows li b.dn { color: var(--hud-dn) }
 .race-again { margin-top: 8px; font-size: 12.5px; color: #ffd0ad; min-height: 28px }
+.race-eq { margin-top: 8px; padding-top: 7px; border-top: 1px solid rgba(246, 239, 228, .08); font-size: 11.5px; line-height: 1.55; color: rgba(246, 239, 228, .62) }
+.race-eq b { color: rgba(246, 239, 228, .92); font-weight: 600; font-variant-numeric: tabular-nums }
 .race-pop { position: absolute; right: var(--gut); top: 222px; z-index: 4; width: 312px; max-height: min(460px, calc(100% - 240px)); overflow: auto; padding: 14px; border-radius: 12px;
   background: rgba(12, 16, 29, .96); border: 1px solid rgba(246, 239, 228, .16); box-shadow: 0 16px 40px rgba(0, 0, 0, .4); text-shadow: none; overscroll-behavior: contain }
 .rp-k { font: 500 10.5px/1 var(--font-mono); letter-spacing: .16em; color: rgba(246, 239, 228, .6); margin: 2px 0 8px }
@@ -299,6 +301,10 @@ table.t td.r, table.t th.r { text-align: right }
 .src { font-family: var(--font-mono); font-size: 10.5px; color: var(--text-3) }
 .src.w { color: var(--warn) }
 .crown { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--lamp); margin-right: 6px; vertical-align: 1px }
+.crown.eq { background: none; box-shadow: inset 0 0 0 1.5px var(--lamp) }
+.ctag { display: inline-block; margin-left: 6px; padding: 0 5px; border-radius: 4px; font-size: 10.5px; font-weight: 500; line-height: 1.6; color: var(--text-2); border: 1px solid var(--line-2); vertical-align: 1px }
+table.t td.eqc { color: var(--text-2) }
+table.t td.eqc b { color: var(--text); font-weight: 600 }
 .race-go { display: inline-flex; align-items: center; gap: 8px; margin-top: 14px; padding: 7px 14px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--sun-ink) 45%, transparent); color: var(--sun-ink); font-size: 13px; min-height: 34px }
 .race-go:hover { background: color-mix(in srgb, var(--sun-ink) 8%, transparent) }
 .gl-off .race-go, .gl-off table.t .go { display: none }
@@ -464,6 +470,7 @@ footer .worlds a b { color: var(--text); font-weight: 600; margin-right: 6px }
       <p class="race-st" id="race-st"></p>
       <p class="race-fx" id="race-fx" aria-live="polite"></p>
       <ol class="race-rows" id="race-rows"></ol>
+      <p class="race-eq" id="race-eq" hidden title="只看功率：同樣的逐秒功率、自己騎、無風、標準空氣（物理模型，單騎誤差約 ±3.4%）"></p>
       <button class="race-again" type="button" id="race-again" hidden>再騎一次這段 ↺</button>
     </section>
     <div class="race-pop" id="race-pop" role="dialog" aria-label="挑一段、挑哪一次" hidden>
@@ -548,7 +555,7 @@ footer .worlds a b { color: var(--text); font-weight: 600; margin-right: 6px }
     <a href="rides/"><b>訓練報告</b>每趟分析</a>
     <a href="linkTreeIndex.html"><b>LinkTree</b>回首頁</a>
   </div>
-  <p id="foot-stamp">資料來源：intervals.icu（FIT、wellness）、Strava（年度統計、路段）。</p>
+  <p id="foot-stamp">資料來源：intervals.icu（FIT、wellness）、Strava（年度統計、路段）、Open-Meteo（計時段當下的風與氣溫，CC BY 4.0）。</p>
   <p class="note">3D 場景全部是程式現算的，沒有外部貼圖。鵜鶘的速度不是亂給的：用那一趟逐秒的功率，套他自己的平路參數（CdA 0.36、Crr 0.005、人車 88 kg）算出來。</p>
 </footer>
 <button class="to-top" id="to-top" type="button" aria-label="回到頂端"><svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg></button>
@@ -899,7 +906,7 @@ async function buildRace(sg, me, rep, s0) {
     if (!d.e) return d                                                    // 同事：只有成績，照平均速度
     const r = await loadRide(d.e.fit)
     if (!r) return null
-    return { key: d.key, label: d.label, color: d.color, T: d.e.elapsed_sec, rep: r, s0: alignEffort(r, d.e, sg.L), sub: mdY(d.e.date) }
+    return { key: d.key, label: d.label, color: d.color, T: d.e.elapsed_sec, rep: r, s0: alignEffort(r, d.e, sg.L), sub: mdY(d.e.date), e: d.e }
   }))).filter(Boolean)
   if (scene && scene.quality === 'low') ghosts.length = Math.min(ghosts.length, 3)          // 手機最多三隻（一隻影子 23 個 draw call）
   const names = ghosts.map(g => (g.key === 'prev' ? g.label + '的自己' : g.key === 'best' ? g.label + (g.label === 'PR' ? '' : '的自己') : g.label))
@@ -928,6 +935,28 @@ function raceUI(R) {
   const rep = R.rep, d0 = rep.dist[r.s0], span = rep.dist[Math.min(rep.n - 1, r.s0 + Math.round(r.T))] - d0
   RUI.meK = span > r.L * 0.5 ? r.L / span : 1
   drawRaceMap()
+  raceEqLine()
+}
+// 條件校正（平路段才有）：換算成單騎、無風、標準空氣再比一次 —— 團騎騎出來的 PR 會現形
+const condKey = (seg, d, t) => `${seg}|${d}|${t}`
+const condOf = (seg, e) => (e && DATA.condMap ? DATA.condMap.get(condKey(seg, e.date, e.start_time)) : null)
+const FLAG_ZH = { group: '團騎', fast: '偏快' }
+const WIND16 = ['北', '北北東', '東北', '東北東', '東', '東南東', '東南', '南南東', '南', '南南西', '西南', '西南西', '西', '西北西', '西北', '北北西']
+const sgnS = v => `${v > 0 ? '+' : v < 0 ? '−' : '±'}${Math.abs(Math.round(v))} 秒`
+// 換算那一格的拆解（title，滑過看得到）：實際 ＝ 換算 ＋ 空氣 ＋ 風 ＋ 跟車／其他
+function condTitle(c) {
+  if (!c || c.air_s == null) return ''
+  const w = c.wind ? `${WIND16[Math.round(c.wind.from / 22.5) % 16]}風 ${n1(c.wind.ms)} m/s` : ''
+  const t = `實際 ${hms(c.elapsed)} ＝ 換算 ${hms(c.t_equiv)}　空氣 ${sgnS(c.air_s)}（${n1(c.temp)}°C）　風 ${sgnS(c.wind_s)}（${w}）　跟車／其他 ${sgnS(c.draft_s)}`
+  return ` title="${esc(t)}"`
+}
+function raceEqLine() {
+  const el = $('#race-eq'), r = RUI.r
+  const me = r && condOf(r.id, r.eff)
+  if (!me) { el.hidden = true; return }
+  const bits = [['你這次', me]].concat(r.ghosts.filter(g => g.e).map(g => [g.label, condOf(r.id, g.e)])).filter(x => x[1])
+  el.innerHTML = '換算成單騎、無風：' + bits.map(([l, c]) => `${esc(l)} <b>${hms(c.t_equiv)}</b>${c.flag ? `（${FLAG_ZH[c.flag]}）` : ''}`).join(' · ')
+  el.hidden = false
 }
 const gapTxt = s => { const a = Math.abs(s); return a < 59.5 ? `${Math.round(a)} 秒` : hms(a) }
 function onRace(o, ri) {
@@ -1628,7 +1657,10 @@ function renderItt() {
   $$('.itt-r', box).forEach(b => b.addEventListener('click', () => { ittSel = b.dataset.k; ittSub = null; $$('.itt-r', box).forEach(x => x.setAttribute('aria-selected', String(x === b))); renderIttDetail(rows) }))
   renderIttDetail(rows)
   const last = rows[0]
-  setLede('itt', `${rows.length} 條母路線、${total} 次計時。最近一次是 <b>${esc(last.name)} ${hms(last.last.elapsed_sec)}</b>（${mdd(last.last.date)}，${n0(last.last.avg_watts)} W）。有 FIT 的成績是自己從檔案算的，Strava 只拿來對帳。`)
+  const cs = Object.values((DATA.cond && DATA.cond.segments) || {})
+  const nGroup = cs.filter(x => x.best_actual && x.best_actual.flag === 'group').length
+  setLede('itt', `${rows.length} 條母路線、${total} 次計時。最近一次是 <b>${esc(last.name)} ${hms(last.last.elapsed_sec)}</b>（${mdd(last.last.date)}，${n0(last.last.avg_watts)} W）。有 FIT 的成績是自己從檔案算的，Strava 只拿來對帳。`
+    + (nGroup ? `河濱平路 ${cs.length} 段裡，<b>${nGroup} 段的最快紀錄是團騎騎出來的</b>；平路段多一欄「換算」，只看功率來比。` : ''))
 }
 function renderIttDetail(rows) {
   const r = rows.find(x => x.key === ittSel); if (!r) return
@@ -1637,16 +1669,21 @@ function renderIttDetail(rows) {
   const best = ef.reduce((x, e) => (!x || e.elapsed_sec < x.elapsed_sec ? e : x), null)
   const gr = DATA.grades && DATA.grades[seg.id]
   const raceEnv = raceEnvOf(seg.id)
+  const cseg = DATA.cond && DATA.cond.segments && DATA.cond.segments[seg.id]
+  const cOf = e => condOf(seg.id, e)
+  const bestEq = cseg && cseg.best_equiv
   const box = $('#itt-d')
   box.innerHTML = `<h3>${esc(mem.cfg.nameZh || seg.name)}</h3>
     <p class="dmeta">${n1(seg.distance_km)} km${mem.cfg.avgGrade ? ` · 均坡 ${mem.cfg.avgGrade}%` : ''}${gr ? ` · FIT 實測最陡 ${gr.max}%` : ''}${seg.kom_time_str ? ` · KOM ${esc(seg.kom_time_str)}` : ''}</p>
+    ${bestEq ? `<p class="dmeta">單騎、無風換算最快 <b>${hms(bestEq.t_equiv)}</b>（${bestEq.at.slice(2, 10).replace(/-/g, '/')}）${cseg.best_actual && cseg.best_actual.flag === 'group' ? ` · 實際最快 ${hms(cseg.best_actual.elapsed)} 是團騎騎出來的` : ''}</p>` : ''}
     ${raceEnv ? `<button class="race-go" type="button" data-go="latest">在頁首跟影子重騎這段<span aria-hidden="true">↑</span></button>` : ''}
     ${r.members.length > 1 ? `<div class="subs" role="group" aria-label="分段">${r.members.map(m => `<button type="button" data-id="${m.cfg.id}" aria-pressed="${m === mem}">${esc(m.cfg.label || m.cfg.nameZh)} ${m.seg.efforts && m.seg.efforts.length ? hms(Math.min(...m.seg.efforts.map(e => e.elapsed_sec))) : ''}</button>`).join('')}</div>` : ''}
     ${gr ? `<div class="blk" style="margin-top:22px"><p class="sub">坡度剖面 <i>每 25 m 一格，從 FIT 算的</i></p><div class="chart" id="grade-c"></div></div>` : ''}
-    <div class="blk" style="margin-top:22px"><p class="sub">歷次成績 <i>${ef.length} 次 · <span class="crown"></span>最快</i></p>
-    <div class="tscroll"><table class="t"><thead><tr><th>日期</th><th class="r">時間</th><th class="r">W</th><th class="r">心率</th><th class="r">踏頻</th><th>來源</th>${raceEnv ? '<th><span class="sr">3D</span></th>' : ''}</tr></thead>
-    <tbody>${ef.slice(0, 14).map(e => `<tr><td>${e === best ? '<span class="crown"></span>' : ''}${e.date.slice(2).replace(/-/g, '/')}${e.start_time ? ` <span class="muted">${esc(e.start_time)}</span>` : ''}</td><td class="r"><b>${hms(e.elapsed_sec)}</b></td><td class="r">${n0(e.avg_watts)}</td><td class="r">${n0(e.avg_heartrate)}</td><td class="r">${n0(e.avg_cadence)}</td><td><span class="src${e.fit_check ? ' w' : ''}" title="${e.fit_check ? '自建與 Strava 差太多，顯示 Strava' : ''}">${e.source === 'fit' ? 'FIT' : e.fit_check ? '⚠︎ STRAVA' : 'STRAVA'}</span></td>${raceEnv ? `<td>${rawEff(seg.id, e) ? `<button class="go" type="button" data-d="${esc(e.date)}" data-t="${esc(e.start_time || '')}" aria-label="在頁首 3D 重騎 ${esc(e.date)} 這一次">重騎 ↑</button>` : ''}</td>` : ''}</tr>`).join('')}</tbody></table></div>
-    ${ef.length > 14 ? `<p class="note">只列最近 14 次。</p>` : ''}</div>
+    <div class="blk" style="margin-top:22px"><p class="sub">歷次成績 <i>${ef.length} 次 · <span class="crown"></span>最快${bestEq ? ' · <span class="crown eq"></span>換算最快' : ''}</i></p>
+    <div class="tscroll"><table class="t"><thead><tr><th>日期</th><th class="r">時間</th><th class="r">W</th><th class="r">心率</th><th class="r">踏頻</th>${cseg ? '<th class="r" title="同樣的逐秒功率、自己騎、無風、標準空氣">換算</th>' : ''}<th>來源</th>${raceEnv ? '<th><span class="sr">3D</span></th>' : ''}</tr></thead>
+    <tbody>${ef.slice(0, 14).map(e => `<tr><td>${e === best ? '<span class="crown"></span>' : ''}${e.date.slice(2).replace(/-/g, '/')}${e.start_time ? ` <span class="muted">${esc(e.start_time)}</span>` : ''}</td><td class="r"><b>${hms(e.elapsed_sec)}</b>${(cOf(e) || {}).flag ? `<span class="ctag">${FLAG_ZH[cOf(e).flag]}</span>` : ''}</td><td class="r">${n0(e.avg_watts)}</td><td class="r">${n0(e.avg_heartrate)}</td><td class="r">${n0(e.avg_cadence)}</td>${cseg ? `<td class="r eqc"${condTitle(cOf(e))}>${cOf(e) ? `${bestEq && bestEq.at === `${e.date} ${e.start_time}` ? '<span class="crown eq"></span>' : ''}<b>${hms(cOf(e).t_equiv)}</b>` : '–'}</td>` : ''}<td><span class="src${e.fit_check ? ' w' : ''}" title="${e.fit_check ? '自建與 Strava 差太多，顯示 Strava' : ''}">${e.source === 'fit' ? 'FIT' : e.fit_check ? '⚠︎ STRAVA' : 'STRAVA'}</span></td>${raceEnv ? `<td>${rawEff(seg.id, e) ? `<button class="go" type="button" data-d="${esc(e.date)}" data-t="${esc(e.start_time || '')}" aria-label="在頁首 3D 重騎 ${esc(e.date)} 這一次">重騎 ↑</button>` : ''}</td>` : ''}</tr>`).join('')}</tbody></table></div>
+    ${ef.length > 14 ? `<p class="note">只列最近 14 次。</p>` : ''}
+    ${cseg ? `<p class="note"><b>換算</b>＝同樣的逐秒功率、自己騎、無風、標準空氣（物理模型，單騎誤差約 ±3.4%），只由功率決定。<b>團騎</b>＝這一段比單騎物理快 3% 以上、整趟也有明顯跟車；<b>偏快</b>＝快得不像單騎、但整趟沒有跟車訊號。滑過換算看風、空氣、跟車各差幾秒。</p>` : ''}</div>
     ${r.note ? `<p class="note">${esc(r.note)}</p>` : ''}`
   $$('.subs button', box).forEach(b => b.addEventListener('click', () => { ittSub = +b.dataset.id; renderIttDetail(rows) }))
   $$('[data-go], .go', box).forEach(b => b.addEventListener('click', () => raceFromChapter(seg.id, b.dataset.d ? { date: b.dataset.d, start_time: b.dataset.t } : null)))
@@ -1849,7 +1886,7 @@ function bootWhenReady() { if (document.readyState === 'complete') bootOnce(); e
 addEventListener('load', () => setTimeout(bootOnce, 2500), { once: true })
 async function main() {
   // strava.json（2.6 MB）等三個檔先發出去，跟核心資料、場景編譯並行
-  const late = Promise.all([J('data/strava.json'), J('data/segment-grades.json'), J('data/power-curve-windows.json')])
+  const late = Promise.all([J('data/strava.json'), J('data/segment-grades.json'), J('data/power-curve-windows.json'), J('data/itt-conditions.json')])
   const core = Promise.all([J('data/fit/_activities.json'), J('data/fit/_wellness.json'), J('data/training-block.json'), J('data/tasks.json'), J('data/fit/_reports.json'), J('data/itt-config.json'), J('data/itt-segments.json'), J('data/drivetrain.json'), J('data/fit/_est_distance.json'), J('data/monthly-hours.json'), J('data/plans/' + TODAY.slice(0, 7) + '.json'), J('data/rivals.json')])
   const [acts, well, block, tasks, reports, ittCfg, itt, drive, estKm, mh, plan, rivals] = await core
   Object.assign(DATA, { acts, well, block, tasks, reports, ittCfg, itt, drive, estKm, mh, plan, rivals })
@@ -1867,15 +1904,17 @@ async function main() {
   bootWhenReady()
   if (scene && drive) scene.setDrive({ rings: drive.chainrings, cogs: drive.cassette, circ: drive.wheel_circumference_m })
   // strava.json 2.6 MB：年度統計、功率紀錄、路段補缺都住在這裡，晚一步到
-  const [strava, grades, pcw] = await late
-  Object.assign(DATA, { strava, grades, pcw })
+  const [strava, grades, pcw, cond] = await late
+  Object.assign(DATA, { strava, grades, pcw, cond })
+  DATA.condMap = new Map(((cond && cond.efforts) || []).map(e => [condKey(e.seg, e.date, e.start_time), e]))
+  if (RUI.r) raceEqLine()                                  // 計時賽面板在條件校正到之前就畫好了
   const merged = { segments: ((strava && strava.segments) || []).map(s => ({ ...s, efforts: (s.efforts || []).slice() })) }
   mergeIttSegments(merged, itt)
   DATA.segs = merged.segments
   DATA.itt = merged.segments
   safe(renderSeason, 'season'); safe(renderPower, 'power'); safe(renderItt, 'itt'); safe(renderLog, 'log')   // 紀錄的 Strava 連結要等 strava.json
   safe(renderToday, 'today')                               // eFTP 在體能章算完才有
-  if (strava) $('#foot-stamp').textContent = `資料來源：intervals.icu（FIT、wellness）、Strava（年度統計、路段）。strava.json 更新於 ${new Date(strava.updated_at).toLocaleString('zh-TW', { timeZone: 'Asia/Taipei', hour12: false })}。`
+  if (strava) $('#foot-stamp').textContent = `資料來源：intervals.icu（FIT、wellness）、Strava（年度統計、路段）、Open-Meteo（計時段當下的風與氣溫，CC BY 4.0）。strava.json 更新於 ${new Date(strava.updated_at).toLocaleString('zh-TW', { timeZone: 'Asia/Taipei', hour12: false })}。`
 }
 lazyAtlas()
 main()

@@ -25,6 +25,7 @@ python3 scripts/build-route-signatures.py             # 路線簽章快取（報
 python3 scripts/build-ride-reports.py --min-tss 100   # 產單日報告與評分
 python3 scripts/backfill-itt-efforts.py --quiet       # 從 FIT 重建 ITT 成績
 python3 scripts/tag-itt-sources.py
+python3 scripts/build-itt-conditions.py               # 平路 ITT 換算成單騎無風（會打 Open-Meteo 抓風，有快取）
 python3 scripts/estimate-indoor-distance.py            # 室內沒有距離，估等效平路里程（漏跑月里程會少一整趟）
 python3 scripts/build-coach-context.py                # 貼給外部 AI 的脈絡檔，漏跑就停在上次那天
 node scripts/fetch-strava.js                          # 總覽的年度統計還住在 strava.json
