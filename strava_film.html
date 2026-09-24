@@ -25,9 +25,9 @@ body{font-family:var(--kai);-webkit-font-smoothing:antialiased}
 /* 紙紋與暗角：把 3D 壓成一張畫 */
 .grain{position:absolute;inset:0;pointer-events:none;mix-blend-mode:multiply;opacity:.55;background-size:320px 320px}
 .vignette{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 46%,rgba(0,0,0,0) 58%,rgba(60,45,30,.22) 100%)}
-.bars::before,.bars::after{content:'';position:absolute;left:0;right:0;height:0;background:#15130f;transition:height .9s ease;pointer-events:none;z-index:2}
-.bars::before{top:0}.bars::after{bottom:0}
-.bars.on::before,.bars.on::after{height:9vh}
+.bars::before,.bars::after{content:'';position:absolute;left:0;right:0;height:9vh;background:#15130f;transform:scaleY(0);transition:transform .9s ease;pointer-events:none;z-index:2}
+.bars::before{top:0;transform-origin:top}.bars::after{bottom:0;transform-origin:bottom}
+.bars.on::before,.bars.on::after{transform:scaleY(1)}
 .paper{position:absolute;inset:0;background:var(--paper);pointer-events:none;opacity:0;z-index:5}
 .flash{position:absolute;inset:0;background:#fffdf6;pointer-events:none;opacity:0;z-index:4}
 .cold{position:absolute;inset:0;background:#0e0d0b;color:#e9dfcd;display:flex;align-items:center;justify-content:center;font-size:clamp(20px,2.4vw,30px);letter-spacing:.3em;opacity:0;pointer-events:none;z-index:6}
@@ -47,7 +47,7 @@ body{font-family:var(--kai);-webkit-font-smoothing:antialiased}
 .caption p span{display:block}
 .caption.dark p{background:rgba(32,30,28,.78);color:#efe6d3;border-color:rgba(243,236,223,.18)}
 /* 資料標籤：左下，像展品說明 */
-.dlabel{position:absolute;left:clamp(14px,3vw,40px);bottom:96px;font-size:15px;letter-spacing:.12em;color:var(--ink);background:rgba(243,236,223,.8);border-left:3px solid var(--seal);padding:7px 12px;z-index:3;opacity:0;pointer-events:none;max-width:calc(100% - 40px)}
+.dlabel{position:absolute;left:clamp(14px,3vw,40px);bottom:96px;font-size:15px;letter-spacing:.12em;color:var(--ink);background:rgba(243,236,223,.86);border:1px solid var(--line);padding:7px 12px;z-index:3;opacity:0;pointer-events:none;max-width:calc(100% - 40px)}
 /* 碼錶：他那天的心跳、功率 */
 .hud{position:absolute;right:clamp(14px,3vw,40px);bottom:96px;display:flex;gap:18px;align-items:flex-end;background:rgba(243,236,223,.86);border:1px solid var(--line);padding:10px 16px 8px;z-index:3;opacity:0;pointer-events:none;backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
 .hud div{display:flex;flex-direction:column;align-items:flex-start;min-width:52px}
