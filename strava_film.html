@@ -1,0 +1,1344 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>十六分二十五秒 · 中社路長卷 · Steve Chuang</title>
+<meta name="description" content="一個人和一座山。中社路 3.94 公里，他從 38 分騎到 16 分 25 秒，然後花了一年追自己。真實地形、真實心跳與功率做成的水墨微電影。">
+<meta name="theme-color" content="#f3ecdf">
+<link rel="icon" href="logo.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* 設計系統：DESIGN.film.md（這一頁自己的世界；根目錄 DESIGN.md 只管 strava.html） */
+:root{
+  --paper:#f3ecdf; --paper-2:#e9dfcd; --ink:#2a2622; --ink-2:#5b554d; --ink-3:#8a8278;
+  --seal:#a8322b; --pine:#3f5748; --line:rgba(42,38,34,.2);
+  --kai:'LXGW WenKai TC','Kaiti TC','BiauKai','STKaiti','KaiTi',serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--paper);color:var(--ink)}
+body{font-family:var(--kai);-webkit-font-smoothing:antialiased}
+.film{position:relative;width:100%;height:100vh;height:100svh;overflow:hidden;background:var(--paper-2);user-select:none;-webkit-user-select:none}
+#gl{position:absolute;inset:0;width:100%;height:100%;display:block}
+/* 紙紋與暗角：把 3D 壓成一張畫 */
+.grain{position:absolute;inset:0;pointer-events:none;mix-blend-mode:multiply;opacity:.55;background-size:320px 320px}
+.vignette{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 46%,rgba(0,0,0,0) 58%,rgba(60,45,30,.22) 100%)}
+.bars::before,.bars::after{content:'';position:absolute;left:0;right:0;height:0;background:#15130f;transition:height .9s ease;pointer-events:none;z-index:2}
+.bars::before{top:0}.bars::after{bottom:0}
+.bars.on::before,.bars.on::after{height:9vh}
+.paper{position:absolute;inset:0;background:var(--paper);pointer-events:none;opacity:0;z-index:5}
+.flash{position:absolute;inset:0;background:#fffdf6;pointer-events:none;opacity:0;z-index:4}
+.cold{position:absolute;inset:0;background:#0e0d0b;color:#e9dfcd;display:flex;align-items:center;justify-content:center;font-size:clamp(20px,2.4vw,30px);letter-spacing:.3em;opacity:0;pointer-events:none;z-index:6}
+
+/* 題簽：右上角直書 */
+.plaque{position:absolute;top:22px;right:22px;display:flex;gap:10px;align-items:flex-start;z-index:3;transition:opacity .8s}
+.plaque .t{writing-mode:vertical-rl;font-weight:700;font-size:26px;letter-spacing:.18em;padding:14px 9px;background:rgba(243,236,223,.82);border:1px solid var(--line);color:var(--ink)}
+.plaque .s{writing-mode:vertical-rl;font-size:14px;letter-spacing:.2em;color:var(--ink-2);padding-top:6px}
+.plaque .seal{width:30px;height:30px;background:var(--seal);color:#f7efe2;font-size:12px;line-height:1.05;display:grid;place-items:center;text-align:center;border-radius:2px;margin-top:6px;writing-mode:horizontal-tb}
+/* 卷名：每一卷開頭在題簽下方出現 */
+.chap{position:absolute;right:148px;top:24px;writing-mode:vertical-rl;display:flex;gap:10px;align-items:flex-start;opacity:0;z-index:3;pointer-events:none}
+.chap b{font-size:clamp(46px,6vw,76px);font-weight:700;color:var(--ink);line-height:1;text-shadow:0 0 18px rgba(243,236,223,.9)}
+.chap i{font-style:normal;font-size:16px;letter-spacing:.3em;color:var(--seal)}
+/* 旁白：左側直書的紙卡 */
+.caption{position:absolute;left:clamp(14px,3vw,40px);top:50%;transform:translateY(-56%);max-height:72vh;z-index:3;pointer-events:none;opacity:0}
+.caption p{margin:0;writing-mode:vertical-rl;font-size:clamp(19px,2.1vw,28px);line-height:1.6;letter-spacing:.08em;color:var(--ink);background:rgba(243,236,223,.86);border:1px solid var(--line);padding:18px 12px;max-height:72vh;backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+.caption p span{display:block}
+.caption.dark p{background:rgba(32,30,28,.78);color:#efe6d3;border-color:rgba(243,236,223,.18)}
+/* 資料標籤：左下，像展品說明 */
+.dlabel{position:absolute;left:clamp(14px,3vw,40px);bottom:96px;font-size:15px;letter-spacing:.12em;color:var(--ink);background:rgba(243,236,223,.8);border-left:3px solid var(--seal);padding:7px 12px;z-index:3;opacity:0;pointer-events:none;max-width:calc(100% - 40px)}
+/* 碼錶：他那天的心跳、功率 */
+.hud{position:absolute;right:clamp(14px,3vw,40px);bottom:96px;display:flex;gap:18px;align-items:flex-end;background:rgba(243,236,223,.86);border:1px solid var(--line);padding:10px 16px 8px;z-index:3;opacity:0;pointer-events:none;backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+.hud div{display:flex;flex-direction:column;align-items:flex-start;min-width:52px}
+.hud i{font-style:normal;font-size:12px;letter-spacing:.2em;color:var(--ink-3)}
+.hud b{font-weight:700;font-size:26px;line-height:1.1;font-variant-numeric:tabular-nums;color:var(--ink)}
+.hud b small{font-size:13px;font-weight:400;color:var(--ink-2);margin-left:2px}
+.hud .hot b{color:var(--seal)}
+/* 大字：計時、差距 */
+.big{position:absolute;left:50%;top:12%;transform:translateX(-50%);font-weight:700;font-size:clamp(48px,7.4vw,112px);color:var(--seal);letter-spacing:.04em;font-variant-numeric:tabular-nums;opacity:0;z-index:3;pointer-events:none;text-shadow:0 0 30px rgba(243,236,223,.85);white-space:nowrap}
+.big small{display:block;text-align:center;font-size:.2em;letter-spacing:.3em;color:var(--ink);font-weight:400}
+/* 蓋章 */
+.stamp{position:absolute;left:50%;top:60%;width:clamp(116px,13vw,170px);aspect-ratio:1;transform:translate(-50%,-50%) rotate(-4deg) scale(1.6);background:var(--seal);color:#f7efe2;display:flex;flex-direction:row-reverse;align-items:center;justify-content:center;gap:4%;font-weight:700;font-size:clamp(24px,2.9vw,38px);line-height:1.02;padding:10px;opacity:0;z-index:4;pointer-events:none;border-radius:6px;box-shadow:inset 0 0 0 4px rgba(247,239,226,.35)}
+.stamp span{writing-mode:vertical-rl;letter-spacing:0}
+/* 紙卡：直島、題跋、片尾 */
+.card{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:var(--paper);opacity:0;z-index:5;pointer-events:none;overflow:auto}
+.card.show{pointer-events:auto}
+.card .in{display:flex;gap:40px;align-items:center;flex-direction:row-reverse;padding:40px}
+.card .v{writing-mode:vertical-rl;font-size:clamp(22px,2.6vw,32px);line-height:1.8;letter-spacing:.14em}
+.card .v small{font-size:.6em;color:var(--ink-2)}
+.card canvas{width:min(46vw,420px);height:auto}
+.endc{display:flex;flex-direction:row-reverse;gap:clamp(26px,5vw,70px);align-items:flex-start;padding:40px}
+.endc .cols{display:flex;flex-direction:row-reverse;gap:clamp(26px,5vw,70px)}
+.endc h2{writing-mode:vertical-rl;margin:0;font-size:clamp(44px,6vw,80px);letter-spacing:.2em;font-weight:700}
+.endc .col{writing-mode:vertical-rl;font-size:clamp(17px,1.8vw,22px);line-height:2.1;letter-spacing:.14em;color:var(--ink-2)}
+.endc .col b{color:var(--ink);font-weight:700}
+.endc .col em{font-style:normal;color:var(--seal)}
+.endc .acts{display:flex;flex-direction:column;gap:12px;align-self:flex-end}
+.inscr{position:absolute;left:clamp(16px,4vw,60px);top:50%;transform:translateY(-50%);writing-mode:vertical-rl;font-size:clamp(16px,1.7vw,21px);line-height:2;letter-spacing:.16em;color:var(--ink);background:rgba(243,236,223,.9);border:1px solid var(--line);padding:22px 14px;opacity:0;z-index:3;pointer-events:none;max-height:78vh}
+.inscr b{font-weight:700}
+.inscr .sl{display:inline-block;background:var(--seal);color:#f7efe2;padding:6px 4px;margin-top:10px;font-size:.85em}
+
+/* 按鈕 */
+.btn{font-family:var(--kai);font-size:18px;letter-spacing:.2em;border:0;cursor:pointer;border-radius:999px;padding:13px 26px 12px 30px;background:var(--pine);color:#f3ecdf;display:inline-flex;gap:10px;align-items:center;box-shadow:0 2px 0 rgba(0,0,0,.18)}
+.btn:hover{background:#344a3c}
+.btn:focus-visible{outline:2px solid var(--seal);outline-offset:3px}
+.btn.ghost{background:transparent;color:var(--ink);box-shadow:none;border:1px solid var(--line)}
+.btn.ghost:hover{border-color:var(--ink-2)}
+a.btn{text-decoration:none}
+
+/* 開場 */
+.start{position:absolute;inset:0;z-index:7;display:flex;align-items:center;justify-content:center;background:linear-gradient(90deg,rgba(243,236,223,.94) 0%,rgba(243,236,223,.72) 44%,rgba(243,236,223,0) 78%)}
+.start[hidden]{display:none}
+.start .wrap{display:flex;flex-direction:row-reverse;gap:clamp(24px,4vw,56px);align-items:flex-start;margin-right:auto;margin-left:clamp(20px,8vw,120px)}
+.start h1{writing-mode:vertical-rl;margin:0;font-size:clamp(44px,6.4vw,86px);letter-spacing:.16em;font-weight:700;line-height:1.05}
+.start .sub{writing-mode:vertical-rl;font-size:clamp(16px,1.6vw,20px);letter-spacing:.2em;line-height:1.9;color:var(--ink-2);max-height:60vh}
+.start .go{display:flex;flex-direction:column;gap:12px;align-self:flex-end;align-items:flex-start}
+.start .meta{font-size:14px;letter-spacing:.12em;color:var(--ink-3)}
+.ring{width:54px;height:54px;border-radius:50%;border:2px solid rgba(168,50,43,.18);border-top-color:var(--seal);animation:spin 1.2s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.ring{animation:none}}
+
+/* 播放器：底部一條宣紙 */
+.player{position:absolute;left:12px;right:12px;bottom:12px;z-index:6;display:flex;align-items:center;gap:14px;padding:10px 14px;background:rgba(243,236,223,.9);border:1px solid var(--line);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);transition:opacity .5s,transform .5s}
+.player.idle{opacity:0;transform:translateY(8px)}
+.player[hidden]{display:none}
+.player .now{min-width:128px;font-size:15px;letter-spacing:.08em;white-space:nowrap}
+.player .now b{color:var(--seal);font-weight:700;margin-right:6px}
+.player .clock{font-size:14px;color:var(--ink-2);font-variant-numeric:tabular-nums;white-space:nowrap}
+.pbtn{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--ink);display:grid;place-items:center;cursor:pointer;flex:none;padding:0}
+.pbtn svg{width:16px;height:16px;fill:currentColor}
+.pbtn.main{width:46px;height:46px;background:var(--pine);border-color:var(--pine);color:#f3ecdf}
+.pbtn:focus-visible,.seek:focus-visible,.tbtn:focus-visible{outline:2px solid var(--seal);outline-offset:2px}
+.tbtn{font-family:var(--kai);font-size:15px;letter-spacing:.14em;border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:999px;padding:8px 14px 7px;cursor:pointer;white-space:nowrap}
+.tbtn[aria-pressed="true"]{background:var(--pine);border-color:var(--pine);color:#f3ecdf}
+.seek{position:relative;flex:1;height:34px;cursor:pointer;touch-action:none;min-width:80px}
+.seek .track{position:absolute;left:0;right:0;top:16px;height:2px;background:rgba(42,38,34,.18)}
+.seek .fill{position:absolute;left:0;top:16px;height:2px;background:var(--seal);width:0}
+.seek .knob{position:absolute;top:10px;width:14px;height:14px;margin-left:-7px;border-radius:50%;background:var(--seal);left:0;box-shadow:0 0 0 3px rgba(243,236,223,.9)}
+.seek .tick{position:absolute;top:12px;width:1px;height:10px;background:rgba(42,38,34,.35)}
+.toc{position:absolute;right:12px;bottom:84px;z-index:7;background:rgba(243,236,223,.96);border:1px solid var(--line);padding:10px 6px;max-height:70vh;overflow:auto;width:min(360px,calc(100% - 24px))}
+.toc[hidden]{display:none}
+.toc button{display:grid;grid-template-columns:44px 1fr auto;gap:10px;align-items:baseline;width:100%;text-align:left;background:transparent;border:0;padding:9px 12px;font-family:var(--kai);font-size:17px;color:var(--ink);cursor:pointer;border-radius:4px}
+.toc button:hover,.toc button.on{background:rgba(63,87,72,.1)}
+.toc button b{color:var(--seal);font-weight:700}
+.toc button small{color:var(--ink-3);font-size:13px}
+
+/* 片子下方：說明與字幕稿 */
+.notes{max-width:760px;margin:0 auto;padding:64px 20px 96px;font-family:'PingFang TC','Noto Sans TC','Microsoft JhengHei',system-ui,sans-serif;font-size:15px;line-height:1.85;color:#3a352f}
+.notes h2{font-family:var(--kai);font-size:22px;letter-spacing:.14em;color:var(--ink);margin:44px 0 12px;font-weight:700}
+.notes h2:first-child{margin-top:0}
+.notes p{margin:0 0 12px}
+.notes a{color:var(--seal)}
+.notes code{font-size:13px}
+.notes ol{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.notes li{display:grid;grid-template-columns:70px 1fr;gap:16px;padding:12px 0;border-bottom:1px solid var(--line)}
+.notes li b{font-family:var(--kai);font-size:18px;color:var(--seal);font-weight:700}
+.notes li span{display:block;color:#6b645b;font-size:14px}
+.back{position:absolute;left:18px;top:16px;z-index:8;font-size:15px;letter-spacing:.14em;color:var(--ink);text-decoration:none;background:rgba(243,236,223,.8);padding:6px 12px;border:1px solid var(--line)}
+.back:hover{background:var(--paper)}
+
+@media (max-width:720px){
+  .plaque{top:14px;right:12px}.plaque .t{font-size:19px;padding:10px 7px}.plaque .s{font-size:12px}.plaque .seal{width:24px;height:24px;font-size:10px}
+  .chap{top:14px;right:100px}
+  .chap b{font-size:40px}
+  .caption p{font-size:18px;padding:12px 9px;max-height:52vh}
+  .caption{max-height:52vh}
+  .dlabel{bottom:auto;top:60px;left:12px;font-size:13px;max-width:62%}
+  .hud{left:12px;right:12px;bottom:84px;gap:12px;padding:8px 12px;justify-content:space-between}
+  .hud b{font-size:20px}
+  .hud div{min-width:0}
+  .player{gap:8px;padding:8px 10px;left:6px;right:6px;bottom:6px}
+  .player .now{min-width:0}.player .clock{display:none}
+  .tbtn{padding:7px 10px 6px;font-size:14px}
+  .hide-sm{display:none}
+  .start{background:linear-gradient(180deg,rgba(243,236,223,.94) 0%,rgba(243,236,223,.8) 60%,rgba(243,236,223,.3) 100%)}
+  .start .wrap{margin:0 auto;padding:0 18px}
+  .card .in{flex-direction:column;gap:20px}
+  .card canvas{width:70vw}
+  .back{top:10px;left:10px;font-size:13px}
+  .endc{flex-direction:column;align-items:center;gap:22px;padding:56px 16px 90px}
+  .endc h2{writing-mode:horizontal-tb;font-size:34px;letter-spacing:.12em}
+  .endc .cols{gap:16px}
+  .endc .col{font-size:14px;line-height:1.8}
+  .endc .acts{flex-direction:row;flex-wrap:wrap;justify-content:center;align-self:center}
+  .endc .btn{font-size:15px;padding:10px 18px 9px 20px}
+}
+</style>
+</head>
+<body>
+<div class="film" id="film">
+  <canvas id="gl" aria-label="水墨風的 3D 動畫：中社路與台北盆地"></canvas>
+  <div class="grain" id="grain"></div>
+  <div class="vignette"></div>
+  <div class="bars" id="bars"></div>
+  <div class="flash" id="flash"></div>
+  <a class="back" href="linkTreeIndex.html">← 首頁</a>
+  <div class="plaque" id="plaque" style="opacity:0"><div class="t">十六分二十五秒</div><div class="s">中社路長卷　Steve Chuang</div><div class="seal">騎<br>行</div></div>
+  <div class="chap" id="chap"><b id="chapName"></b><i id="chapNo"></i></div>
+  <div class="caption" id="caption" aria-live="polite"><p id="capText"></p></div>
+  <div class="dlabel" id="dlabel"></div>
+  <div class="hud" id="hud" aria-hidden="true">
+    <div><i>時間</i><b id="hT">0:00</b></div>
+    <div class="hot"><i>心率</i><b id="hHR">—</b></div>
+    <div><i>功率</i><b id="hPW">—</b></div>
+    <div class="hide-sm"><i>踏頻</i><b id="hCAD">—</b></div>
+    <div><i>坡度</i><b id="hGR">—</b></div>
+  </div>
+  <div class="big" id="big"></div>
+  <div class="stamp" id="stamp"><span>十六分</span><span>廿五秒</span></div>
+  <div class="inscr" id="inscr"></div>
+  <div class="card" id="card"></div>
+  <div class="cold" id="cold"></div>
+  <div class="paper" id="paper"></div>
+  <div class="start" id="start">
+    <div class="wrap">
+      <h1>十六分二十五秒</h1>
+      <div class="sub">一個人和一座山。<br>中社路三點九四公里，他從三十八分騎到十六分二十五秒，<br>然後花了一年，追那時候的自己。</div>
+      <div class="go">
+        <div class="ring" id="ring" aria-label="載入中"></div>
+        <button class="btn" id="bStart" type="button" hidden>展卷 <span aria-hidden="true">→</span></button>
+        <button class="btn ghost" id="bMute" type="button" hidden>靜音觀看</button>
+        <div class="meta" id="startMeta">載入地形與那一年的心跳⋯⋯</div>
+      </div>
+    </div>
+  </div>
+  <div class="player idle" id="player" hidden>
+    <div class="now" id="pNow"><b>序</b>山頂</div>
+    <button class="pbtn" id="pPrev" type="button" aria-label="上一卷"><svg viewBox="0 0 16 16"><path d="M3 2h2v12H3zM14 2v12L6 8z"/></svg></button>
+    <button class="pbtn main" id="pPlay" type="button" aria-label="暫停"><svg viewBox="0 0 16 16"><path id="iPlay" d="M3 2h3.5v12H3zm6.5 0H13v12H9.5z"/></svg></button>
+    <button class="pbtn" id="pNext" type="button" aria-label="下一卷"><svg viewBox="0 0 16 16"><path d="M11 2h2v12h-2zM2 2v12l8-6z"/></svg></button>
+    <div class="seek" id="seek" role="slider" tabindex="0" aria-label="播放進度" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0"><div class="track"></div><div class="fill" id="seekFill"></div><div class="knob" id="seekKnob"></div></div>
+    <div class="clock" id="pClock">0:00 / 0:00</div>
+    <button class="tbtn" id="pToc" type="button" aria-expanded="false">目錄</button>
+    <button class="tbtn" id="pSound" type="button" aria-pressed="true">聲音・開</button>
+  </div>
+  <div class="toc" id="toc" hidden></div>
+</div>
+
+<section class="notes" aria-labelledby="n1">
+  <h2 id="n1">這是什麼</h2>
+  <p>一支大約六分鐘的短片，講一個人和一座山。山是外雙溪的中社路，3.94 公里、平均坡度 6.3%。2025 年 6 月他第一次上去，用了 38 分鐘；那年 10 月 14 日清晨，他騎出 16 分 25 秒，到今天他自己還沒有再快過這一次。後來的冬天、一日北彰、台東三鐵、下雨回頭、一天爬四次，都是他追那個數字的路上。</p>
+  <p>畫面裡的山是真的：地形來自他各條路段的高程資料，拼起內湖山區與台北盆地北半，照水墨的方式畫——墨往溝谷裡積、稜線留白、樹是一團團米點。路上那一道毛筆字，是他某一趟真正騎過的軌跡，<b>筆畫的粗細就是他那一秒的功率</b>；爬坡時背景的鼓聲，<b>是他那天真實的心跳</b>。整個畫面裡只有他一個人是紅的。</p>
+  <h2>數字從哪裡來</h2>
+  <p>地形、路段、每一次中社路的逐秒心率與功率，都由 <code>scripts/build-film.py</code> 從手錶的 FIT 檔、Strava 封存與路段高程整理成 <code>data/film.json</code>；片尾的總里程讀 <code>data/chronicle.json</code>。音樂沒有音檔，是瀏覽器用 Karplus–Strong 撥弦當場合成的五聲音階。想看同一年的另一種講法，有一支<a href="strava_chronicle.html">像素版的運動編年史</a>。</p>
+  <h2>分卷與字幕稿</h2>
+  <ol id="script"></ol>
+</section>
+
+<script src="vendor-three-r128.js"></script>
+<script src="strava-film-scene.js"></script>
+<script>
+(() => {
+'use strict'
+// ════════════════════════════════════════════════════════════════════
+// 0. 小工具
+// ════════════════════════════════════════════════════════════════════
+const $ = id => document.getElementById(id)
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v
+const lerp = (a, b, t) => a + (b - a) * t
+const smooth = t => { t = clamp(t, 0, 1); return t * t * (3 - 2 * t) }
+const ease = t => { t = clamp(t, 0, 1); return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2 }
+const win = (t, a, b, f = 0.5) => smooth((t - a) / f) * (1 - smooth((t - (b - f)) / f))
+const mss = s => { s = Math.max(0, Math.round(s)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}` }
+const hm = s => { const m = Math.round(s / 60); return `${Math.floor(m / 60)} 小時 ${m % 60} 分` }
+const CN = '〇一二三四五六七八九'
+const cnNum = n => {                                      // 整數轉中文（到千）
+  n = Math.round(n); if (n < 10) return CN[n]
+  const s = String(n); let out = ''
+  const units = ['', '十', '百', '千']
+  for (let i = 0; i < s.length; i++) {
+    const d = +s[i], u = units[s.length - 1 - i]
+    if (d === 0) { if (!out.endsWith('零') && i < s.length - 1 && +s.slice(i + 1) > 0) out += '零'; continue }
+    out += (d === 1 && u === '十' && i === 0 ? '' : CN[d]) + u
+  }
+  return out.replace(/零+$/, '')
+}
+const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches
+const SMALL = () => innerWidth < 720
+
+// ════════════════════════════════════════════════════════════════════
+// 1. 紙紋（canvas 產生，當 CSS 背景貼在最上層）
+// ════════════════════════════════════════════════════════════════════
+;(function paperGrain() {
+  const c = document.createElement('canvas'); c.width = c.height = 320
+  const x = c.getContext('2d'), img = x.createImageData(320, 320)
+  let s = 12345
+  const r = () => { s = (s * 1103515245 + 12345) & 0x7fffffff; return s / 0x7fffffff }
+  for (let i = 0; i < img.data.length; i += 4) {
+    const v = 238 + r() * 17 - (r() < 0.012 ? 30 : 0)
+    img.data[i] = v; img.data[i + 1] = v - 4; img.data[i + 2] = v - 12; img.data[i + 3] = 255
+  }
+  x.putImageData(img, 0, 0)
+  x.globalAlpha = 0.05; x.strokeStyle = '#6d5a44'
+  for (let k = 0; k < 90; k++) { x.beginPath(); const y = r() * 320; x.moveTo(0, y); x.bezierCurveTo(100, y + r() * 8, 220, y - r() * 8, 320, y + r() * 4); x.stroke() }
+  $('grain').style.backgroundImage = `url(${c.toDataURL()})`
+})()
+
+// ════════════════════════════════════════════════════════════════════
+// 2. 資料與模型
+// ════════════════════════════════════════════════════════════════════
+let S = null, FD = null, CH = null
+const M = {}                                             // 片子要用的衍生資料
+
+function climbModel(c, L) {
+  const P = c.pts, dEnd = P[P.length - 1][1] || 1
+  // 功率平滑 30 秒（筆畫寬度用）
+  const smoothPw = P.map((p, i) => { let a = 0, n = 0; for (let j = i - 7; j <= i + 7; j++) { const q = P[j]; if (q && q[3] != null) { a += q[3]; n++ } } return n ? a / n : null })
+  const at = tau => {
+    tau = clamp(tau, 0, c.s)
+    let lo = 0, hi = P.length - 1
+    while (hi - lo > 1) { const m = (lo + hi) >> 1; if (P[m][0] <= tau) lo = m; else hi = m }
+    const a = P[lo], b = P[hi], f = b[0] > a[0] ? (tau - a[0]) / (b[0] - a[0]) : 0
+    const g = k => a[k] == null ? b[k] : b[k] == null ? a[k] : lerp(a[k], b[k], f)
+    const d = lerp(a[1], b[1], f)
+    return { d, s: d / dEnd * L, hr: g(2), pw: g(3), cad: g(4), spd: g(5) }
+  }
+  const widthAt = s => {                                 // 路段上第 s 公尺的筆畫寬度
+    const d = s / L * dEnd
+    let lo = 0, hi = P.length - 1
+    while (hi - lo > 1) { const m = (lo + hi) >> 1; if (P[m][1] <= d) lo = m; else hi = m }
+    const w = smoothPw[lo] == null ? null : smoothPw[lo]
+    return w == null ? 2.2 : 1 + w / 60
+  }
+  const hrs = P.map(p => p[2]).filter(Boolean), pws = P.map(p => p[3]).filter(v => v != null)
+  return { ...c, at, widthAt, dEnd, hrMin: Math.min(...hrs), hrMax: Math.max(...hrs), pwMax: pws.length ? Math.max(...pws) : null }
+}
+function strokeModel(st, L) {                            // 逐 8 秒 [距離, 功率]：沒有逐秒資料的那幾次
+  const P = st.p.map((q, i) => [i === st.p.length - 1 ? st.s : i * 8, q[0], q[1]])
+  const dEnd = P[P.length - 1][1] || 1
+  const sAt = tau => { tau = clamp(tau, 0, st.s); let i = 0; while (i < P.length - 2 && P[i + 1][0] <= tau) i++; const a = P[i], b = P[i + 1] || a, f = b[0] > a[0] ? (tau - a[0]) / (b[0] - a[0]) : 0; return lerp(a[1], b[1], f) / dEnd * L }
+  const widthAt = s => { const d = s / L * dEnd; let i = 0; while (i < P.length - 1 && P[i + 1][1] <= d) i++; const w = P[i][2]; return w == null ? 2.2 : 1 + w / 60 }
+  return { ...st, sAt, widthAt }
+}
+
+// ════════════════════════════════════════════════════════════════════
+// 3. 分卷（導演在這裡）
+// ════════════════════════════════════════════════════════════════════
+// 每一卷：dur 秒、旁白 lines [[秒, 句]]、update(lt) 決定鏡頭／騎士／筆畫／碼錶／天氣
+function buildChapters() {
+  const pr = M.pr, now = M.now, back = M.back, rain = M.rain
+  const gapBack = back.s - pr.s, gapNow = now.s - pr.s
+  const cnMS = s => `${cnNum(Math.floor(s / 60))}分${s % 60 ? (s % 60 < 10 ? '零' : '') + cnNum(s % 60) : ''}`
+  // lines：[秒, 句]（句為 null＝收起旁白）；labels：[秒, 左下角的資料標籤]
+  const chapters = [
+    { key: 'open', no: '序', name: '山頂', dur: 17, tod: 'dawn', season: 'autumn',
+      labels: [[11.5, '中社路　3.94 公里　平均坡度 6.3%']],
+      lines: [[4.2, '這裡是中社路的山頂。'], [9.2, '有一個數字，一直在這裡等他。']] },
+    { key: 'river', no: '壹', name: '河', dur: 21, tod: 'noon', season: 'spring',
+      labels: [[1.2, `${M.fr.d.replaceAll('-', '.')}　${M.fr.t}　淡水河畔　${M.fr.km} km　${hm(M.fr.sec)}`]],
+      lines: [[0.8, '故事要從一個春天的中午說起。'], [6.2, `二〇二五年四月，他第一次按下錄製，沿著淡水河騎了${cnNum(Math.round(M.fr.km))}公里。`], [13.4, '那時候他還沒有功率計——這一筆，只是一條細線。']] },
+    { key: 'first', no: '貳', name: '山', dur: 25, tod: 'noon', season: 'summer',
+      labels: [[1.2, `2025.06.07　中社路　第一次　${mss(M.fc.s)}`], [13.5, `2025.06.07　騎 ${mss(M.fc.moving)}　停 ${mss(M.fc.s - M.fc.moving)}`]],
+      lines: [[0.8, '一個多月後，他轉進了一條往上的路。'], [6.2, '中社路，三點九四公里，平均坡度百分之六點三。'], [13.5, `第一次上去，他用了${cnNum(Math.floor(M.fc.s / 60))}分鐘——其中七分半，是停在路邊的。`]] },
+    { key: 'summer', no: '參', name: '夏', dur: 27, tod: 'morning', season: 'summer',
+      labels: [[1.2, '2025 夏　每月騎乘 18.0 → 25.5 → 28.4 小時'], [7.5, '2025.08.12 新車　08.16 裝上功率計']],
+      lines: [[0.8, '那年夏天，他開始每個禮拜上山。'], [7.5, '八月，新車。四天後裝上功率計——從這天起，這一筆有了粗細。'], [17, '二十三分、二十二分、十九分、十七分⋯⋯']] },
+    { key: 'peak', no: '肆', name: '巔', dur: 45, tod: 'dawn', season: 'autumn',
+      labels: [[1.2, `2025.10.14　${pr.t}　中社路　均功 ${pr.w} W　均心率 ${pr.hr}`], [37.5, `2025.10.14　中社路　${mss(pr.s)}　個人最佳`]],
+      lines: [[0.8, '十月十四日，清晨七點二十二分。'], [15, `他的心跳，從${cnNum(pr.hrMin)}爬到${cnNum(pr.hrMax)}。`], [21, null], [38.5, '到今天，他還沒有再快過這一次。']] },
+    { key: 'winter', no: '伍', name: '冬', dur: 25, tod: 'winter', season: 'winter',
+      labels: [[1.2, '2025.11　騎車 1 次　跑步 3 次 33 km　游泳 3 次'], [5.6, '2025.11.25　中社路 17:24'], [11.4, '2025.12.22　eFTP 262 W（最高）　中社路 18:27']],
+      lines: [[0.8, '然後，冬天來了。'], [5.6, '十一月，他只騎了一次車——那一次，還是上了中社路。'], [11.4, '十二月，他的功率衝到這輩子最高。山頂上的數字，還是沒有動。'], [17.2, null]] },
+    { key: 'far', no: '陸', name: '遠', dur: 23, tod: 'map', season: 'winter', set: 'map',
+      labels: [[1.2, `2026.02.27　一日北彰　201.1 km　${M.far.start} 出發`]],
+      lines: [[0.8, '有一天，他想知道自己能騎多遠。'], [6.8, '從台北出發，往南，一直騎。'], [14, `二百零一公里。早上${M.farStartCn}出發，${M.farEndCn}，他才到彰化。`]] },
+    { key: 'sea', no: '柒', name: '海', dur: 21, tod: 'map', season: 'spring', set: 'map',
+      labels: [[1.2, '2026.03.28　普悠瑪三鐵　游 1.8・騎 89.5・跑 21.4 km']],
+      lines: [[0.8, '三月，台東。'], [5.2, '游一點八公里，騎八十九點五公里，再跑二十一公里。'], [14.2, '七個半小時，完賽。']] },
+    { key: 'back', no: '捌', name: '回', dur: 26, tod: 'morning', season: 'spring',
+      labels: [[1.2, `2026.04.14　中社路　距上次 113 天`], [16.5, `2026.04.14　中社路　${mss(back.s)}　比最佳慢 ${mss(gapBack)}`]],
+      lines: [[0.8, '春天，他回到那座山。'], [5.8, '距離上一次上來，將近四個月。'], [11.2, '山沒變。'], [16.5, `他慢了${cnNum(Math.floor(gapBack / 60))}分${cnNum(gapBack % 60)}秒。`]] },
+    { key: 'rain', no: '玖', name: '雨', dur: 25, tod: 'storm', season: 'summer',
+      labels: [[1.2, `2026.07.30　${rain.start.slice(0, 5)}　碧山路　下雨回頭`], [11, `最佳 5 秒 ${rain.best5} W　10 秒 918 W　30 秒 674 W`]],
+      lines: [[0.8, '七月三十日，碧山路，下起了雨。'], [5.4, '他決定掉頭。'], [11, '往回騎的路上，有五秒鐘，是他這輩子踩得最用力的五秒。'], [18.2, `${cnNum(rain.best5)}瓦。`]] },
+    { key: 'four', no: '拾', name: '四', dur: 22, tod: 'morning', season: 'summer',
+      labels: [[1.2, '2026.08.11　「劍 中中中中 劍」　一天爬升 1,252 m']],
+      lines: [[0.8, '八月十一日，他在一天之內爬了四次。'], [8.2, `${cnMS(M.four[0].s)}、${cnMS(M.four[1].s)}、${cnMS(M.four[2].s)}⋯⋯`], [15.4, `最後一次，${cnMS(M.four[3].s)}。`]] },
+    { key: 'now', no: '拾壹', name: '今', dur: 36, tod: 'dawn', season: 'autumn',
+      labels: [[1.2, `${now.d.replaceAll('-', '.')}　${now.t}　中社路　均功 ${now.w} W`], [25.2, `${now.d.replaceAll('-', '.')}　中社路　${mss(now.s)}　比最佳慢 ${mss(gapNow)}`], [30.4, '2026.09.23　60 分鐘 196 W　個人最佳']],
+      lines: [[0.8, '九月十五日，他又來了。'], [9.5, '這一次，影子沒有走遠。'], [25.2, `${cnNum(Math.floor(now.s / 60))}分${cnNum(now.s % 60)}秒。離十六分二十五，還差${cnNum(Math.floor(gapNow / 60))}分${cnNum(gapNow % 60)}秒。`], [30.4, '八天後，他騎出了這輩子最強的一個小時。']] },
+    { key: 'end', no: '終', name: '卷', dur: 28, tod: 'dusk', season: 'autumn',
+      labels: [[1.2, `2025.04.27 → ${M.today.replaceAll('-', '.')}`]],
+      lines: [[0.8, `一年半，${cnNum(M.tot.rides)}趟。`], [6.4, '這些，是他騎過的每一條路。越常騎，墨越濃。'], [12, `疊了${cnNum(M.effortsN)}次的那一筆，是中社路。`], [16.4, null]] },
+    { key: 'coda', no: '尾', name: '未完', dur: 14, tod: 'dusk', season: 'autumn', set: 'card', lines: [], labels: [] },
+  ]
+  let t = 0
+  for (const c of chapters) { c.t0 = t; t += c.dur; c.t1 = t }
+  M.total = t
+  return chapters
+}
+
+// ════════════════════════════════════════════════════════════════════
+// 4. 鏡頭與騎士
+// ════════════════════════════════════════════════════════════════════
+const V = (x, y, z) => ({ x, y, z })
+function setCam(p, t, fov) {
+  const cam = S.camera
+  const g = S.Y(p.x, p.z) + 3                            // 永遠不鑽進地裡
+  cam.position.set(p.x, Math.max(p.y, g), p.z)
+  cam.lookAt(t.x, t.y, t.z)
+  if (fov && Math.abs(cam.fov - fov) > 0.01) { cam.fov = fov; cam.updateProjectionMatrix() }
+}
+const mixCam = (a, b, k) => ({ p: V(lerp(a.p.x, b.p.x, k), lerp(a.p.y, b.p.y, k), lerp(a.p.z, b.p.z, k)), t: V(lerp(a.t.x, b.t.x, k), lerp(a.t.y, b.t.y, k), lerp(a.t.z, b.t.z, k)), f: lerp(a.f, b.f, k) })
+const fwd = h => [Math.sin(h), -Math.cos(h)]              // 航向（0＝北、順時針）→ 前方（x 東、z 南）
+const right = h => [Math.cos(h), Math.sin(h)]
+function chase(path, s, back, up, side = 0, ahead = 14, fov = 50) {
+  const p = path.at(s), [fx, fz] = fwd(p.hs), [rx, rz] = right(p.hs)
+  return { p: V(p.x - fx * back + rx * side, p.y + up, p.z - fz * back + rz * side), t: V(p.x + fx * ahead, p.y + 1.2 + up * 0.15, p.z + fz * ahead), f: fov }
+}
+function sideCam(path, s, dist, up, sign, fov = 32, lead = 0) {
+  const p = path.at(s), [rx, rz] = right(p.hs), [fx, fz] = fwd(p.hs)
+  return { p: V(p.x + rx * dist * sign + fx * lead, p.y + up, p.z + rz * dist * sign + fz * lead), t: V(p.x + fx * lead * 0.3, p.y + 1.2, p.z + fz * lead * 0.3), f: fov }
+}
+function frontCam(path, s, ahead, up, fov = 40) {
+  const p = path.at(s), q = path.at(s + ahead)
+  return { p: V(q.x, q.y + up, q.z), t: V(p.x, p.y + 1.1, p.z), f: fov }
+}
+const orbit = (c, r, h, ang, fov = 45, ty = 0) => ({ p: V(c.x + Math.sin(ang) * r, c.y + h, c.z + Math.cos(ang) * r), t: V(c.x, c.y + ty, c.z), f: fov })
+// 側拍選山坡低的那一邊才不會被山擋住；一整段只選一次，免得鏡頭在彎道間跳邊
+const signCache = {}
+function sideSign(path, a, b) {
+  const k = Math.round(path.L) + ':' + Math.round(a) + ':' + Math.round(b)
+  if (signCache[k] != null) return signCache[k]
+  let sum = 0
+  for (let i = 0; i <= 12; i++) {
+    const p = path.at(lerp(a, b, i / 12)), [rx, rz] = right(p.hs)
+    sum += S.Y(p.x + rx * 45, p.z + rz * 45) < S.Y(p.x - rx * 45, p.z - rz * 45) ? 1 : -1
+  }
+  return (signCache[k] = sum >= 0 ? 1 : -1)
+}
+function riderOn(path, s, crank, extra = {}) {
+  const p = path.at(s), g = p.g
+  const pose = extra.pose || (g > 0.075 ? 'stand' : g < -0.05 ? 'coast' : 'seat')
+  S.rider.set({ x: p.x, y: p.y + (extra.dy == null ? 0.3 : extra.dy), z: p.z, h: p.h, g: extra.flat ? 0 : g, crank, pose, wheel: s / 0.34, visible: true })
+  dotFor(S.riderDot, S.rider.obj, p, 1)
+  return p
+}
+function ghostOn(i, path, s, crank) {
+  const g = S.ghosts[i], p = path.at(s)
+  g.set({ x: p.x, y: p.y + 0.3, z: p.z, h: p.h, g: p.g, crank, pose: p.g > 0.075 ? 'stand' : 'seat', wheel: s / 0.34, visible: true })
+  dotFor(S.ghostDots[i], g.obj, p, 0.8)
+  return p
+}
+function dotFor(dot, obj, p, a) {                          // 遠景：人小到看不見時換成一顆點
+  const d = S.camera.position.distanceTo(obj.position)
+  dot.position.set(p.x, p.y + 2, p.z); dot.visible = d > 160; dot.material.opacity = a * smooth((d - 160) / 200)
+}
+
+// ════════════════════════════════════════════════════════════════════
+// 5. 每一卷的畫面
+// ════════════════════════════════════════════════════════════════════
+const UI = {}                                            // 每格由導演寫、render 最後統一套到 DOM
+function resetFrame() {
+  for (const k in UI) delete UI[k]
+  for (const s of M.allStrokes) s.set(-1, 0)
+  S.atlas.forEach(a => { a.visible = false })
+  for (const k in S.labels) S.labels[k].visible = false
+  S.rider.set({ visible: false }); S.riderDot.visible = false
+  S.ghosts.forEach(g => g.set({ visible: false })); S.ghostDots.forEach(d => { d.visible = false })
+}
+const hud = v => { UI.hud = v }
+const big = (text, sub, a) => { UI.big = text; UI.bigSub = sub; UI.bigA = a }
+function strokeShow(st, head, alpha = 1, tip = 0) { st.set(head, alpha); st.tip(tip) }
+// 三段式時間軸：[[片中秒, 真實秒], ...] 之間線性內插
+function keyed(K, lt) {
+  if (lt <= K[0][0]) return K[0][1]
+  for (let i = 0; i < K.length - 1; i++) if (lt < K[i + 1][0]) return lerp(K[i][1], K[i + 1][1], (lt - K[i][0]) / (K[i + 1][0] - K[i][0]))
+  return K[K.length - 1][1]
+}
+
+const SHOTS = {
+  open(lt) {
+    const Z = M.Z, top = Z.L
+    // 先是黑，只有心跳；再從紙色裡浮出山頂的清晨
+    UI.cold = lt < 3.2 ? 1 - smooth((lt - 2.4) / 0.8) : 0
+    UI.coldText = lt > 1.0 && lt < 3.0 ? `心跳　${cnNum(M.pr.hrMax)}` : ''
+    const s = lerp(top - 130, top - 0.5, smooth((lt - 2.4) / 7.5))
+    riderOn(Z, s, s * 0.9)
+    // 後跟 → 升過南邊的稜線，一邊轉向盆地與 101（航向與俯角分開內插，中段往下看山頂）
+    const tp = Z.at(top - 1), p101 = M.places['台北 101'], q = Z.at(s)
+    const A = chase(Z, s, 11, 4, 3, 24, 48)
+    const B = V(tp.x - 120, tp.y + 440, tp.z + 620), tgt = V(lerp(tp.x, p101[0], 0.85), 30, lerp(tp.z, p101[1], 0.85))
+    const k = ease((lt - 7.2) / 8.5)
+    const pos = V(lerp(A.p.x, B.x, k), lerp(A.p.y, B.y, k) + Math.sin(k * Math.PI) * 140, lerp(A.p.z, B.z, k))
+    const yawA = Math.atan2(A.t.x - A.p.x, -(A.t.z - A.p.z)), pitA = Math.atan2(A.t.y - A.p.y, Math.hypot(A.t.x - A.p.x, A.t.z - A.p.z))
+    const yawB = Math.atan2(tgt.x - B.x, -(tgt.z - B.z)), pitB = Math.atan2(tgt.y - B.y, Math.hypot(tgt.x - B.x, tgt.z - B.z))
+    const yaw = yawA + Math.atan2(Math.sin(yawB - yawA), Math.cos(yawB - yawA)) * k
+    const pit = lerp(pitA, pitB, k) - Math.sin(k * Math.PI) * 0.3
+    setCam(pos, V(pos.x + Math.sin(yaw) * Math.cos(pit) * 100, pos.y + Math.sin(pit) * 100, pos.z - Math.cos(yaw) * Math.cos(pit) * 100), lerp(48, 46, k))
+    if (lt > 11.6) big('16:25', '中社路　二〇二五年十月十四日', win(lt, 11.6, 17, 0.9))
+    return { petals: 0.25 }
+  },
+  river(lt, c) {
+    const P = M.firstPath, s = lerp(P.L * 0.2, P.L * 0.52, lt / c.dur)
+    riderOn(P, s, lt * 9, { flat: true, dy: 0.1 })
+    strokeShow(M.firstStroke, s, 1, 1)
+    const p = P.at(s), [fx, fz] = fwd(p.hs)
+    setCam(V(p.x - fx * 250, p.y + 90, p.z - fz * 250), V(p.x + fx * 640, 0, p.z + fz * 640), 48)
+    return { petals: 0.35 }
+  },
+  first(lt, c) {
+    // 三十八分鐘壓進二十一秒；中段停下七分半
+    const fc = M.fc, Z = M.Z, run = c.dur - 3.4, u = clamp((lt - 1.2) / run, 0, 1)
+    const stopAt = 0.52, stopLen = (fc.s - fc.moving) / fc.s
+    const tau = u * fc.s
+    const moveT = u < stopAt ? u / (1 - stopLen) : u < stopAt + stopLen ? stopAt / (1 - stopLen) : (u - stopLen) / (1 - stopLen)
+    const s = M.pr.at(clamp(moveT, 0, 1) * M.pr.s).s
+    const stopped = u >= stopAt && u < stopAt + stopLen
+    riderOn(Z, s, stopped ? 0.4 : lt * 4.2, stopped ? { pose: 'coast' } : {})
+    strokeShow(M.firstClimbStroke, s, 0.9)
+    const mid = Z.at(Z.L * 0.5)
+    const est = { p: V(mid.x - 1400, mid.y + 900, mid.z + 1600), t: V(mid.x, mid.y, mid.z), f: 40 }
+    const sc = sideCam(Z, s, 55, 16, sideSign(Z, 0, Z.L), 30, 6)
+    const cam = lt < 5.5 ? mixCam(est, sc, smooth((lt - 3.5) / 2)) : sc
+    setCam(cam.p, cam.t, cam.f)
+    big(mss(tau), stopped ? '停在路邊' : '第一次', win(lt, 1.2, c.dur, 0.5) * 0.9)
+    return {}
+  },
+  summer(lt, c) {
+    // 同一段路（約 350 m）被畫過一次又一次：每一次一道筆畫、一個灰色的影子、一個成績
+    const list = M.summer, Z = M.Z, a0 = Z.L * 0.46, a1 = Z.L * 0.55, gap = (c.dur - 3.2) / list.length
+    list.forEach((e, i) => {
+      const t0 = 1.2 + i * gap, dur = gap * 0.95, k = clamp((lt - t0) / dur, 0, 1)
+      if (lt < t0) return
+      const head = lerp(a0 - 40, a1 + 40, k)
+      strokeShow(e.stroke, head, 0.5 + 0.4 * (i / list.length), k < 1 ? 1 : 0)
+      if (k > 0 && k < 1) ghostOn(i % 4, Z, head, lt * 6)
+      const since = lt - t0 - dur * 0.5
+      if (since >= 0 && since < gap * 0.95) big(mss(e.s), e.d.slice(5).replace('-', '/') + (e.newBike ? '　新車' : e.power ? '　有功率了' : ''), win(since, 0, gap * 0.95, 0.22))
+    })
+    const mid = Z.at((a0 + a1) / 2), sg = sideSign(Z, a0, a1), [rx, rz] = right(mid.hs), [fx, fz] = fwd(mid.hs)
+    const drift = (lt - c.dur / 2) * 3
+    setCam(V(mid.x + rx * 300 * sg + fx * drift, mid.y + 165, mid.z + rz * 300 * sg + fz * drift), V(mid.x + fx * drift * 0.5, mid.y, mid.z + fz * drift * 0.5), 38)
+    return { petals: 0.15 }
+  },
+  peak(lt, c) {
+    const pr = M.pr, g = M.ghost1008, Z = M.Z, L = Z.L, t0 = 3.8, run = c.dur - t0 - 8.5, sp = pr.s / run
+    const tau = clamp((lt - t0) * sp, 0, pr.s), q = pr.at(tau), s = q.s, done = lt - t0 >= run
+    riderOn(Z, s, M.prCrank(lt))
+    strokeShow(M.prStroke, s, 1, done ? 0 : 1)
+    if (!done || lt - t0 - run < 3) ghostOn(0, Z, g.sAt(Math.min(tau, g.s)), M.prCrank(lt) + 1)   // 前一週的自己（10/8，16:48）
+    // 分鏡：定場 → 後跟 → 長焦側拍 → 迎面 → 後跟衝線 → 山頂升起
+    let cam
+    if (lt < t0) cam = orbit(Z.at(0), 160, 60, 2.4 + lt * 0.05, 40, 5)
+    else if (s < L * 0.22) cam = chase(Z, s, 16, 5, 2.5, 12, 48)
+    else if (s < L * 0.48) cam = sideCam(Z, s, 90, 22, sideSign(Z, L * 0.22, L * 0.48), 24, 10)
+    else if (s < L * 0.7) cam = frontCam(Z, s, 34, 3.5, 38)
+    else if (!done) cam = chase(Z, s, 11, 3.2, -2, 16, 52)
+    else cam = mixCam(chase(Z, L - 1, 11, 3.2, -2, 16, 52), orbit(Z.at(L - 1), 120, 70, 1.2, 46, 0), ease((lt - t0 - run) / 6))
+    setCam(cam.p, cam.t, cam.f)
+    UI.bars = lt > t0 && !done
+    if (lt > t0 - 0.5) big(mss(tau), done ? '中社路　個人最佳' : '', win(lt, t0 - 0.5, c.dur - 1, 0.5) * (done ? 1 : 0.85))
+    if (lt > t0 && !done) hud({ t: tau, hr: q.hr, pw: q.pw, cad: q.cad, gr: Z.at(s).g, hot: q.hr > 175 })
+    if (done) UI.stamp = win(lt - t0 - run, 0.35, 5.2, 0.35)
+    return { petals: 0.3 }
+  },
+  winter(lt, c) {
+    const Z = M.Z, L = Z.L
+    for (const e of M.summer) strokeShow(e.stroke, L, 0.16)
+    strokeShow(M.prStroke, L, 0.28)
+    // 冬天的三次：十一月一次、十二月兩次（灰色的影子）
+    M.winter.forEach((e, i) => {
+      const k = clamp((lt - e.at) / 4.2, 0, 1)
+      if (k <= 0) return
+      strokeShow(e.stroke, k * L, 0.75, k < 1 ? 1 : 0)
+      if (k < 1) ghostOn(i, Z, k * L, lt * 6)
+    })
+    let cam
+    if (lt < 5.2) { const s = lerp(L * 0.3, L * 0.4, lt / 5.2); cam = chase(Z, s, 26, 9, 5, 30, 46) }   // 空無一人的路
+    else { const mid = Z.at(L * 0.5); cam = orbit(V(mid.x, mid.y, mid.z), 1250, 560, -0.55 + (lt - 5.2) * 0.012, 42, 0) }
+    setCam(cam.p, cam.t, cam.f)
+    if (lt > 17.4) UI.card = { kind: 'nao', a: win(lt, 17.4, c.dur, 0.6) }
+    return { rain: 0.85 * (1 - smooth((lt - 17.2) / 0.6)) }
+  },
+  far(lt, c) {
+    const u = clamp((lt - 1) / (c.dur - 4), 0, 1), k = ease(u)
+    const tr = S.map.tracks.far, head = lerp(0, tr.path.L, k)
+    tr.set(head, 1); for (const key of ['swim', 'ride', 'run']) S.map.tracks[key] && S.map.tracks[key].set(-1, 0)
+    const p = tr.path.at(head)
+    S.map.dot.position.set(p.x, 0.3, p.z)
+    // 整條西部走廊放進畫面：台北在上、彰化在下，鏡頭只慢慢推近
+    const a = tr.path.at(0), b = tr.path.at(tr.path.L), cx = (a.x + b.x) / 2, cz = (a.z + b.z) / 2, push = ease(lt / c.dur)
+    setMapCam(cx + 6, 200 - push * 30, cz + 115 - push * 18, cx, cz)
+    big((M.far.km * k).toFixed(1), '公里', win(lt, 1, c.dur - 0.5, 0.6))
+    UI.mapTint = smooth((u - 0.62) / 0.3)                   // 太陽下山了，他還在騎
+    return {}
+  },
+  sea(lt, c) {
+    const seg = (c.dur - 4) / 3
+    S.map.tracks.far && S.map.tracks.far.set(1e9, 0.3)
+    let focus = null
+    ;['swim', 'ride', 'run'].forEach((key, i) => {
+      const tr = S.map.tracks[key]; if (!tr) return
+      const k = ease(clamp((lt - 2 - i * seg) / seg, 0, 1))
+      tr.set(k * tr.path.L, k > 0 ? 1 : 0)
+      if (k > 0) focus = tr.path.at(k * tr.path.L)
+    })
+    if (focus) S.map.dot.position.set(focus.x, 0.3, focus.z)
+    // 從整座島飛到台東
+    const ride = S.map.tracks.ride.path, m = ride.at(ride.L * 0.5), zoom = ease(lt / 3.2)
+    const cx = lerp(0, m.x, zoom), cz = lerp(0, m.z, zoom)
+    setMapCam(cx + 4, lerp(520, 115, zoom), cz + lerp(150, 70, zoom), cx, cz)
+    const leg = lt < 2 + seg ? ['游　1.8 km', '普悠瑪三鐵'] : lt < 2 + 2 * seg ? ['騎　89.5 km', '普悠瑪三鐵'] : lt < c.dur - 3.6 ? ['跑　21.4 km', '普悠瑪三鐵'] : ['完賽', '七小時二十九分']
+    big(leg[0], leg[1], win(lt, 1.6, c.dur - 0.3, 0.5) * 0.9)
+    UI.mapTint = 0
+    return {}
+  },
+  back(lt, c) {
+    const bk = M.back, pr = M.pr, Z = M.Z, L = Z.L, t0 = 2.2, run = c.dur - t0 - 3.3, sp = bk.s / run
+    const tau = clamp((lt - t0) * sp, 0, bk.s), q = bk.at(tau), s = q.s, done = lt - t0 >= run
+    riderOn(Z, s, lt * 4.6)
+    strokeShow(M.backStroke, s, 1, done ? 0 : 1)
+    strokeShow(M.prStroke, L, 0.18)
+    if (tau < pr.s + 25) ghostOn(0, Z, pr.at(Math.min(tau, pr.s)).s, lt * 5)
+    let cam
+    if (lt < t0) cam = orbit(Z.at(0), 140, 45, 1.1 + lt * 0.06, 42, 4)
+    else if (s < L * 0.5) cam = chase(Z, s, 14, 5, 2.4, 22, 50)
+    else if (!done) cam = sideCam(Z, s, 70, 18, sideSign(Z, L * 0.5, L), 26, 8)
+    else cam = mixCam(sideCam(Z, L - 1, 70, 18, sideSign(Z, L * 0.5, L), 26, 8), orbit(Z.at(L - 1), 160, 90, 2.2, 46, 0), ease((lt - t0 - run) / 3))
+    setCam(cam.p, cam.t, cam.f)
+    const behind = Math.max(0, tau - pr.s)
+    if (lt > t0) {
+      if (behind <= 0) big(mss(tau), '去年的自己，在前面', win(lt, t0, c.dur - 0.4, 0.5) * 0.85)
+      else big(`+${mss(behind)}`, done ? '比最佳慢' : '影子已經到山頂了', win(lt, t0, c.dur - 0.4, 0.5) * 0.9)
+    }
+    if (lt > t0 && !done) hud({ t: tau, hr: q.hr, pw: q.pw, cad: q.cad, gr: Z.at(s).g })
+    return { petals: 0.35 }
+  },
+  rain(lt, c) {
+    const R = M.rain, P = R.path
+    // 下坡＋掉頭（快轉）→ 往回騎（快轉）→ 衝刺那幾秒（接近真實時間）→ 停下來
+    const tau = keyed([[0, 1935], [7, 2003], [11, 2062], [18, 2078], [25, 2130]], lt)
+    const q = R.at(tau), p = P.at(q.s), b = R.burstAt(tau)
+    const pw = b ? b.pw : q.pw, hr = b ? b.hr : q.hr, sprint = pw > 450
+    S.rider.set({ x: p.x, y: p.y + 0.02, z: p.z, h: p.h, g: 0, crank: q.s * 0.9, pose: sprint ? 'stand' : q.spd > 25 && pw < 30 ? 'coast' : 'seat', wheel: q.s / 0.34, visible: true })
+    strokeShow(R.stroke, q.s, 1, 1)
+    const U = R.uturn
+    const tripod = { p: V(U.cx, U.cy, U.cz), t: V(p.x, p.y + 1, p.z), f: 36 }
+    const low = sideCam(P, q.s, 8, 1.8, R.sprintSign, 38, 1.5)
+    let cam
+    if (lt < 7.4) cam = tripod
+    else if (lt < 10.9) cam = chase(P, q.s, 16, 5, 3, 14, 50)
+    else if (lt < 18.3) cam = low
+    else cam = mixCam(low, { p: V(p.x + 40, p.y + 34, p.z + 50), t: V(p.x, p.y + 1, p.z), f: 40 }, ease((lt - 18.3) / 5))
+    setCam(cam.p, cam.t, cam.f)
+    hud({ t: tau, hr, pw, cad: b ? b.cad : null, gr: null, hot: pw > 700 })
+    const flashT = 11 + (R.spike - 2062) / 16 * 7
+    UI.flash = REDUCED ? 0 : Math.max(win(lt, 2.4, 2.8, 0.1) * 0.7, win(lt, flashT - 0.05, flashT + 0.35, 0.08))
+    UI.bars = true; UI.dark = true
+    if (lt > 10.6 && lt < 18) big(`${Math.round(pw || 0)} W`, sprint ? '站起來了' : '', win(lt, 10.6, 24, 0.4))
+    else if (lt >= 18) big(`${R.best5} W`, '最用力的五秒', win(lt, 10.6, 24.4, 0.4))
+    return { rain: 1 }
+  },
+  four(lt, c) {
+    const seg = (c.dur - 4) / 4, Z = M.Z
+    M.four.forEach((e, i) => {
+      const k = ease(clamp((lt - 1.2 - i * seg) / (seg * 0.9), 0, 1))
+      e.wide.set(k > 0 ? k * Z.L : -1, k > 0 ? 1 : 0); e.wide.tip(k < 1 ? 1 : 0)
+      const since = lt - 1.2 - (i + 0.9) * seg
+      if (since >= 0 && since < 2.2) big(mss(e.s), `第${'一二三四'[i]}次`, win(since, 0, 2.2, 0.3))
+    })
+    const mid = Z.at(Z.L * 0.52)
+    setCam(V(mid.x - 300, mid.y + 2400 - lt * 20, mid.z + 900), V(mid.x + 60, mid.y - 120, mid.z - 60), 34)
+    return {}
+  },
+  now(lt, c) {
+    const nw = M.now, pr = M.pr, Z = M.Z, L = Z.L, t0 = 3, run = c.dur - t0 - 11, sp = nw.s / run
+    const tau = clamp((lt - t0) * sp, 0, nw.s), q = nw.at(tau), gp = pr.at(Math.min(tau, pr.s)), s = q.s, done = lt - t0 >= run
+    riderOn(Z, s, M.nowCrank(lt))
+    strokeShow(M.nowStroke, s, 1, done ? 0 : 1)
+    strokeShow(M.prStroke, L, 0.22)
+    if (!done || lt - t0 - run < 4) ghostOn(0, Z, gp.s, M.nowCrank(lt) + 2)
+    let cam
+    if (lt < t0) cam = orbit(Z.at(0), 120, 38, 3.4 + lt * 0.07, 40, 4)
+    else if (s < L * 0.3) cam = chase(Z, s, 18, 6, 3, 24, 52)
+    else if (s < L * 0.55) cam = sideCam(Z, s, 80, 20, sideSign(Z, L * 0.3, L * 0.55), 26, 14)
+    else if (!done) cam = chase(Z, s, 13, 3.5, -2.5, 30, 54)
+    else { const top = Z.at(L - 1); cam = mixCam(chase(Z, L - 1, 13, 3.5, -2.5, 30, 54), { p: V(top.x - 90, top.y + 160, top.z + 220), t: V(top.x - 900, 120, top.z + 5200), f: 50 }, ease((lt - t0 - run) / 8)) }
+    setCam(cam.p, cam.t, cam.f)
+    UI.bars = lt > t0 && !done
+    if (lt > t0) {
+      const behind = Math.max(0, tau - pr.s), lead = Math.max(0, Math.round(gp.s - s))
+      if (done) big(`+${mss(nw.s - pr.s)}`, '比最佳慢', win(lt, t0, c.dur - 3.5, 0.5) * 0.9)
+      else if (behind > 0) big(`+${mss(behind)}`, '影子已經到了', 0.85)
+      else big(mss(tau), `影子在前面 ${lead} 公尺`, win(lt, t0, c.dur, 0.5) * 0.85)
+    }
+    if (lt > t0 && !done) hud({ t: tau, hr: q.hr, pw: q.pw, cad: q.cad, gr: Z.at(s).g, hot: q.hr > 174 })
+    return { petals: 0.2 }
+  },
+  end(lt) {
+    // 升到高處：他騎過的每一條路一層一層浮出來，最常騎的是朱紅
+    const top = M.Z.at(M.Z.L - 1), k = ease(lt / 12)
+    setCam(V(lerp(top.x - 400, -5400, k), lerp(top.y + 400, 13100, k), lerp(top.z + 900, 10900, k)), V(lerp(top.x, -5400, k), 0, lerp(top.z, 1700, k)), 46)
+    S.atlas.forEach((a, i) => { const r = smooth((lt - 3 - i * 1.3) / 1.2); a.visible = r > 0; a.material.uniforms.uAlpha.value = r * (i >= 4 ? 0.95 : 0.55 + i * 0.07) })
+    const fa = smooth((lt - 11) / 2) * 0.5
+    if (fa > 0) for (const st of M.allFit) strokeShow(st.stroke, M.Z.L, fa)
+    for (const n of ['中社路', '風櫃嘴', '碧山', '台北 101', '淡水河', '觀音山', '大稻埕', '七星山']) {
+      const l = S.labels[n]; if (!l) continue
+      const r = smooth((lt - 7 - n.length * 0.3) / 1); l.visible = r > 0; l.material.opacity = r
+    }
+    if (lt > 16.5) UI.inscr = win(lt, 16.5, 28, 0.8)
+    return {}
+  },
+  coda(lt) {
+    const e = CHS.find(x => x.key === 'end')
+    const fx = SHOTS.end(e.dur - 0.01)
+    UI.inscr = 0
+    UI.card = { kind: 'end', a: smooth(lt / 1.2) }
+    return fx
+  },
+}
+function setMapCam(px, py, pz, tx, tz) {
+  const cam = S.camera
+  cam.position.set(px, py, pz); cam.lookAt(tx, 0, tz)
+  if (cam.fov !== 42) { cam.fov = 42; cam.updateProjectionMatrix() }
+}
+
+// ════════════════════════════════════════════════════════════════════
+// 6. 每一格：時間 → 卷 → 畫面 → DOM
+// ════════════════════════════════════════════════════════════════════
+let CHS = []
+const chapterAt = T => { let c = CHS[0]; for (const x of CHS) if (T >= x.t0) c = x; return c }
+const NIGHT = { paper: null, bg: null }
+function render(T) {
+  if (!S) return
+  T = clamp(T, 0, M.total - 0.001)
+  const c = chapterAt(T), lt = T - c.t0
+  resetFrame()
+  const cam = S.camera
+  if (c.set === 'map') {
+    S.setMode('map')
+    if (cam.far !== 3000) { cam.near = 0.1; cam.far = 3000; cam.updateProjectionMatrix() }
+  } else {
+    S.setMode('world')
+    if (cam.far !== 90000) { cam.near = 0.5; cam.far = 90000; cam.updateProjectionMatrix() }
+    const extra = { open: { fogK: 0.5, mistK: 0.6 }, winter: { wet: 0.8, mistK: 0.75, fogK: 0.8 }, rain: { wet: 1 }, end: { fogK: 0.18, mistK: 0.4 }, coda: { fogK: 0.18, mistK: 0.4 }, four: { fogK: 0.6 }, summer: { fogK: 0.7 } }[c.key] || {}
+    S.applyTOD(S.TOD[c.tod], c.season, extra)
+  }
+  const fx = (SHOTS[c.key] || (() => ({})))(lt, c) || {}
+  if (c.set !== 'map') {                                  // 近裁切面跟著離地高度走：高空鏡頭才不會深度打架
+    const nr = clamp((cam.position.y - S.Y(cam.position.x, cam.position.z)) / 40, 0.5, 80)
+    if (Math.abs(nr - cam.near) > cam.near * 0.15) { cam.near = nr; cam.updateProjectionMatrix() }
+  }
+  if (c.set === 'map') {                                  // 地圖上的夜色：紙跟背景一起暗下來
+    const k = UI.mapTint || 0, TH = S.THREE
+    NIGHT.bg = NIGHT.bg || new TH.Color()
+    S.map.scene.background.set('#efe6d3').lerp(NIGHT.bg.set('#4d4b47'), k * 0.6)
+    S.map.scene.fog.color.copy(S.map.scene.background)
+    if (S.map.plane) S.map.plane.material.color.set('#ffffff').lerp(NIGHT.bg.set('#77726a'), k * 0.75)
+  }
+  S.frame(T, fx)
+  applyUI(T, c, lt)
+}
+
+const pick = (list, lt) => { let v = null; for (const x of list || []) if (lt >= x[0]) v = x; return v }
+// 直書旁白：在標點後面換行，一句一行；太短的尾巴（像「他。」）併回前一行
+function splitPhrases(text) {
+  const out = []; let cur = ''
+  for (let i = 0; i < text.length; i++) {
+    cur += text[i]
+    if ('，。、；：？！'.includes(text[i]) || (text[i] === '—' && text[i - 1] === '—')) { out.push(cur); cur = '' }
+  }
+  if (cur) out.push(cur)
+  const merged = []
+  for (const s of out) { if (merged.length && s.replace(/[，。、；：？！—⋯]/g, '').length <= 2) merged[merged.length - 1] += s; else merged.push(s) }
+  return merged
+}
+function setCaption(p, text) {
+  if (p.dataset.t !== text) {
+    p.dataset.t = text; p.textContent = ''
+    for (const s of splitPhrases(text)) { const sp = document.createElement('span'); sp.textContent = s; p.appendChild(sp) }
+  }
+  return Array.from(p.children)
+}
+function applyUI(T, c, lt) {
+  // 換卷：紙色淡出淡入
+  let paper = 0
+  for (const x of CHS) if (x.t0 > 0) paper = Math.max(paper, 1 - smooth(Math.abs(T - x.t0) / 0.75))
+  $('paper').style.opacity = paper.toFixed(3)
+  // 開場的黑
+  $('cold').style.opacity = (c.key === 'open' ? UI.cold : 0).toFixed(3)
+  const ct = c.key === 'open' ? UI.coldText : ''
+  if ($('cold').textContent !== ct) $('cold').textContent = ct
+  // 卷名
+  $('chap').style.opacity = (c.key === 'coda' ? 0 : win(lt, 0.6, 4.2, 0.6)).toFixed(3)
+  $('chapName').textContent = c.name; $('chapNo').textContent = c.key === 'open' ? '序' : c.no === '終' ? '終卷' : `第${c.no}卷`
+  // 旁白：最後一句 t ≤ lt 的那一句，像毛筆一樣由上往下寫出來
+  const line = pick(c.lines, lt)
+  const nextT = ((c.lines || []).find(([t]) => t > lt) || [c.dur])[0]
+  const cap = $('caption'), p = $('capText')
+  if (line && line[1]) {
+    const parts = setCaption(p, line[1])
+    cap.style.opacity = (smooth((lt - line[0]) / 0.4) * (1 - smooth((lt - (nextT - 0.35)) / 0.35))).toFixed(3)
+    // 一句一句由上往下寫出來（右邊那行先）
+    let t = line[0] + 0.1
+    parts.forEach((sp, i) => {
+      const d = Math.max(0.35, sp.textContent.length * 0.075), k = clamp((lt - t) / d, 0, 1)
+      sp.style.clipPath = k >= 1 ? '' : `inset(0 0 ${((1 - k) * 100).toFixed(1)}% 0)`
+      t += d
+    })
+  } else cap.style.opacity = 0
+  cap.classList.toggle('dark', !!UI.dark)
+  // 資料標籤
+  const lab = pick(c.labels, lt), dl = $('dlabel')
+  if (lab) {
+    if (dl.textContent !== lab[1]) dl.textContent = lab[1]
+    const nextL = ((c.labels || []).find(([t]) => t > lt) || [c.dur])[0]
+    dl.style.opacity = (smooth((lt - lab[0]) / 0.5) * (1 - smooth((lt - (nextL - 0.3)) / 0.3))).toFixed(3)
+  } else dl.style.opacity = 0
+  // 碼錶
+  const H = UI.hud, hudEl = $('hud')
+  hudEl.style.opacity = H ? '1' : '0'
+  if (H) {
+    $('hT').textContent = mss(H.t)
+    $('hHR').innerHTML = H.hr ? `${Math.round(H.hr)}<small>bpm</small>` : '—'
+    $('hPW').innerHTML = H.pw != null ? `${Math.round(H.pw)}<small>W</small>` : '—'
+    $('hCAD').innerHTML = H.cad != null ? `${Math.round(H.cad)}<small>rpm</small>` : '—'
+    $('hGR').innerHTML = H.gr != null ? `${(H.gr * 100).toFixed(1)}<small>%</small>` : '—'
+    $('hPW').style.color = H.hot ? 'var(--seal)' : ''
+  }
+  // 大字
+  const bg = $('big')
+  bg.style.opacity = (UI.big ? UI.bigA : 0).toFixed(3)
+  if (UI.big) { const html = `${UI.big}${UI.bigSub ? `<small>${UI.bigSub}</small>` : ''}`; if (bg.innerHTML !== html) bg.innerHTML = html }
+  // 蓋章
+  const st = $('stamp'), sa = UI.stamp || 0
+  st.style.opacity = sa.toFixed(3)
+  st.style.transform = `translate(-50%,-50%) rotate(-4deg) scale(${(1 + 0.6 * (1 - smooth(sa * 1.4))).toFixed(3)})`
+  // 題跋
+  $('inscr').style.opacity = (UI.inscr || 0).toFixed(3)
+  // 電影黑邊、閃電
+  $('bars').classList.toggle('on', !!UI.bars && !SMALL())
+  $('flash').style.opacity = (UI.flash || 0).toFixed(3)
+  // 紙卡
+  const card = $('card')
+  if (UI.card) {
+    if (card.dataset.kind !== UI.card.kind) { card.innerHTML = UI.card.kind === 'nao' ? M.naoHTML : M.endHTML; card.dataset.kind = UI.card.kind; if (UI.card.kind === 'nao') drawPumpkin(card.querySelector('canvas')); bindEnd(card) }
+    card.style.opacity = UI.card.a.toFixed(3)
+    card.classList.toggle('show', UI.card.a > 0.5)
+  } else { card.style.opacity = 0; card.classList.remove('show') }
+  $('plaque').style.opacity = c.key === 'coda' || (c.key === 'open' && lt < 12) ? 0 : 1
+}
+
+// 直島的南瓜（紙卡上的一張小畫）
+function drawPumpkin(cv) {
+  if (!cv || cv.dataset.done) return
+  cv.dataset.done = 1
+  const x = cv.getContext('2d'), W = cv.width, H = cv.height
+  x.fillStyle = '#f3ecdf'; x.fillRect(0, 0, W, H)
+  // 海：幾道淡墨
+  x.strokeStyle = 'rgba(70,90,100,.35)'; x.lineWidth = 2
+  for (let i = 0; i < 8; i++) { const y = H * 0.7 + i * 12; x.beginPath(); x.moveTo(10 + i * 9, y); x.bezierCurveTo(W * 0.35, y - 5, W * 0.65, y + 5, W - 10, y - 2); x.stroke() }
+  // 遠島
+  x.fillStyle = 'rgba(60,60,60,.22)'; x.beginPath(); x.moveTo(W * 0.5, H * 0.68); x.quadraticCurveTo(W * 0.74, H * 0.42, W * 0.98, H * 0.68); x.fill()
+  // 堤防
+  x.fillStyle = '#b9ad98'; x.fillRect(W * 0.04, H * 0.68, W * 0.6, 14)
+  // 南瓜：黃底黑點
+  const cx = W * 0.3, cy = H * 0.47, r = W * 0.2
+  x.fillStyle = '#e5b92e'; x.beginPath(); x.ellipse(cx, cy, r, r * 0.82, 0, 0, Math.PI * 2); x.fill()
+  x.strokeStyle = '#2a2622'; x.lineWidth = 2.5
+  for (let k = -2; k <= 2; k++) { x.beginPath(); x.ellipse(cx + k * r * 0.34, cy, r * 0.22, r * 0.8, 0, 0, Math.PI * 2); x.stroke() }
+  x.fillStyle = '#1e1c1a'
+  for (let k = 0; k < 60; k++) { const a = k * 2.39996, d = Math.sqrt(k / 60) * r * 0.88; x.beginPath(); x.arc(cx + Math.cos(a) * d, cy + Math.sin(a) * d * 0.8, 3 + (k % 3) * 1.4, 0, Math.PI * 2); x.fill() }
+  x.fillStyle = '#3d4a2e'; x.fillRect(cx - 5, cy - r * 0.98, 10, 16)
+  // 租來的腳踏車＋騎車的人（朱紅）
+  const bx = W * 0.74, by = H * 0.68, k = 1.45
+  x.strokeStyle = '#2a2622'; x.lineWidth = 3
+  const wheel = (wx) => { x.beginPath(); x.arc(bx + wx * k, by - 22 * k, 20 * k, 0, Math.PI * 2); x.stroke() }
+  wheel(-34); wheel(34)
+  x.beginPath(); x.moveTo(bx - 34 * k, by - 22 * k); x.lineTo(bx - 4 * k, by - 22 * k); x.lineTo(bx + 18 * k, by - 56 * k); x.moveTo(bx - 4 * k, by - 22 * k); x.lineTo(bx - 14 * k, by - 52 * k); x.moveTo(bx + 18 * k, by - 56 * k); x.lineTo(bx + 34 * k, by - 22 * k); x.stroke()
+  x.strokeRect(bx + 18 * k, by - 72 * k, 22 * k, 14 * k)
+  x.fillStyle = '#a8322b'; x.beginPath(); x.arc(bx - 8 * k, by - 88 * k, 8 * k, 0, Math.PI * 2); x.fill(); x.fillRect(bx - 14 * k, by - 80 * k, 12 * k, 24 * k)
+}
+function bindEnd(card) {
+  const r = card.querySelector('[data-act="replay"]')
+  if (r && !r.dataset.bound) { r.dataset.bound = 1; r.addEventListener('click', () => { seek(0); play() }) }
+}
+
+// ════════════════════════════════════════════════════════════════════
+// 7. 聲音：撥弦（Karplus–Strong）、簫、心跳、鼓、環境聲，全部現場合成
+// ════════════════════════════════════════════════════════════════════
+const AU = { ctx: null, ok: false, muted: false, ev: [], ptr: 0, base: 0, live: [] }
+const mtof = m => 440 * Math.pow(2, (m - 69) / 12)
+AU.init = function (given) {
+  if (this.ctx && !given) return true
+  const AC = window.AudioContext || window.webkitAudioContext
+  if (!AC && !given) return false
+  try {
+    const c = this.ctx = given || new AC({ latencyHint: 'playback' })
+    this.out = c.createGain(); this.out.gain.value = this.muted ? 0 : 0.9
+    this.comp = c.createDynamicsCompressor(); this.comp.threshold.value = -18; this.comp.ratio.value = 3; this.comp.attack.value = 0.01; this.comp.release.value = 0.25
+    this.mix = c.createGain(); this.mix.gain.value = 1
+    this.rev = c.createConvolver(); this.revIn = c.createGain(); this.revIn.gain.value = 1; this.revOut = c.createGain(); this.revOut.gain.value = 0.42
+    // 殘響：3 秒、越後面越暗的雜訊
+    const sr = c.sampleRate, len = Math.floor(sr * 3.2), ir = c.createBuffer(2, len, sr)
+    for (let ch = 0; ch < 2; ch++) { const d = ir.getChannelData(ch); let lp = 0; for (let i = 0; i < len; i++) { const t = i / len, k = 0.5 + 0.48 * (1 - t); lp = lp * k + (Math.random() * 2 - 1) * (1 - k); d[i] = lp * Math.pow(1 - t, 2.4) * (i < sr * 0.012 ? i / (sr * 0.012) : 1) } }
+    this.rev.buffer = ir
+    this.mix.connect(this.comp); this.revIn.connect(this.rev); this.rev.connect(this.revOut); this.revOut.connect(this.comp)
+    this.comp.connect(this.out); this.out.connect(c.destination)
+    const nb = c.createBuffer(1, sr * 2, sr), nd = nb.getChannelData(0)
+    for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1
+    this.noise = nb
+    this.plucks = {}
+    this.ok = true
+  } catch (e) { this.ok = false }
+  return this.ok
+}
+// 撥弦：五聲音階每個音先算好一段（古箏的亮、短、帶一點鼻音）
+AU.pluckBuf = function (midi) {
+  if (this.plucks[midi]) return this.plucks[midi]
+  const c = this.ctx, sr = c.sampleRate, f = mtof(midi), dur = midi < 55 ? 4.5 : 3.2
+  const N = Math.floor(sr * dur), b = c.createBuffer(1, N, sr), out = b.getChannelData(0)
+  const n = Math.max(2, Math.round(sr / f - 0.5)), ring = new Float32Array(n)
+  let prev = 0
+  const bright = midi > 76 ? 0.55 : 0.4
+  for (let i = 0; i < n; i++) { prev += bright * ((Math.random() * 2 - 1) - prev); ring[i] = prev }
+  // 撥弦位置：減掉一份延遲的自己，會有古箏那種空心的泛音
+  const pos = Math.floor(n * 0.13)
+  const ex = ring.slice()
+  for (let i = 0; i < n; i++) ring[i] = ex[i] - 0.6 * ex[(i + pos) % n]
+  const decay = Math.pow(0.5, 1 / (f * (midi < 55 ? 1.6 : 0.95)))
+  let idx = 0
+  for (let i = 0; i < N; i++) {
+    const a = ring[idx], nx = ring[(idx + 1) % n]
+    out[i] = a
+    ring[idx] = (a * 0.52 + nx * 0.48) * decay
+    idx = (idx + 1) % n
+  }
+  for (let i = 0; i < 160 && i < N; i++) out[N - 1 - i] *= i / 160
+  let mx = 0; for (let i = 0; i < Math.min(N, 2000); i++) mx = Math.max(mx, Math.abs(out[i]))
+  const k = mx > 0 ? 0.9 / mx : 1; for (let i = 0; i < N; i++) out[i] *= k
+  return (this.plucks[midi] = b)
+}
+AU.track = function (n, end) { this.live.push([n, end]); if (this.live.length > 500) { const t = this.ctx.currentTime; this.live = this.live.filter(x => x[1] > t) } }
+AU.stopAll = function () { for (const [n] of this.live) { try { n.stop(0) } catch (e) {} } this.live = [] }
+AU.voice = function (at, node, gain, pan, rev, end) {
+  const c = this.ctx, g = c.createGain(); g.gain.value = gain
+  const p = c.createStereoPanner ? c.createStereoPanner() : null
+  node.connect(g)
+  if (p) { p.pan.value = pan || 0; g.connect(p); p.connect(this.mix); if (rev) { const s = c.createGain(); s.gain.value = rev; p.connect(s); s.connect(this.revIn) } }
+  else { g.connect(this.mix); if (rev) { const s = c.createGain(); s.gain.value = rev; g.connect(s); s.connect(this.revIn) } }
+  return g
+}
+const I = {
+  pluck(at, midi, vel = 0.5, o = {}) {
+    const c = AU.ctx, src = c.createBufferSource()
+    src.buffer = AU.pluckBuf(midi)
+    if (o.bend) { src.playbackRate.setValueAtTime(1, at); src.playbackRate.linearRampToValueAtTime(Math.pow(2, o.bend / 12), at + (o.bendT || 0.18)) }
+    const g = AU.voice(at, src, vel * 0.5, o.pan == null ? (midi - 72) / 40 : o.pan, o.rev == null ? 0.35 : o.rev)
+    const dur = src.buffer.duration
+    if (o.damp) { g.gain.setValueAtTime(vel * 0.5, at + o.damp); g.gain.linearRampToValueAtTime(0.0001, at + o.damp + 0.12) }
+    src.start(at); src.stop(at + dur); AU.track(src, at + dur)
+  },
+  xiao(at, midi, dur, vel = 0.2) {
+    const c = AU.ctx, o = c.createOscillator(), o2 = c.createOscillator(), lp = c.createBiquadFilter()
+    o.type = 'sine'; o2.type = 'triangle'; o.frequency.value = mtof(midi); o2.frequency.value = mtof(midi) * 1.002
+    lp.type = 'lowpass'; lp.frequency.value = 2200
+    const vib = c.createOscillator(), vg = c.createGain(); vib.frequency.value = 5; vg.gain.setValueAtTime(0, at); vg.gain.linearRampToValueAtTime(mtof(midi) * 0.012, at + Math.min(0.6, dur * 0.5))
+    vib.connect(vg); vg.connect(o.frequency); vg.connect(o2.frequency)
+    const mixg = c.createGain(); o.connect(mixg); const g2 = c.createGain(); g2.gain.value = 0.35; o2.connect(g2); g2.connect(mixg); mixg.connect(lp)
+    const g = AU.voice(at, lp, 0, 0.1, 0.5)
+    g.gain.setValueAtTime(0.0001, at); g.gain.linearRampToValueAtTime(vel, at + 0.25); g.gain.setValueAtTime(vel, at + dur - 0.3); g.gain.linearRampToValueAtTime(0.0001, at + dur)
+    // 氣聲
+    const n = c.createBufferSource(), bp = c.createBiquadFilter(); n.buffer = AU.noise; bp.type = 'bandpass'; bp.frequency.value = mtof(midi) * 2; bp.Q.value = 2
+    n.connect(bp); const ng = AU.voice(at, bp, 0, 0.1, 0.3); ng.gain.setValueAtTime(0.0001, at); ng.gain.linearRampToValueAtTime(vel * 0.25, at + 0.08); ng.gain.exponentialRampToValueAtTime(0.0001, at + 0.5)
+    for (const x of [o, o2, vib]) { x.start(at); x.stop(at + dur + 0.05); AU.track(x, at + dur + 0.05) }
+    n.start(at, Math.random()); n.stop(at + 0.6); AU.track(n, at + 0.6)
+  },
+  pad(at, midis, dur, vel = 0.05) {
+    const c = AU.ctx
+    for (const m of midis) for (const det of [-4, 4]) {
+      const o = c.createOscillator(), lp = c.createBiquadFilter(); o.type = 'triangle'; o.frequency.value = mtof(m); o.detune.value = det
+      lp.type = 'lowpass'; lp.frequency.value = 900; o.connect(lp)
+      const g = AU.voice(at, lp, 0, det / 10, 0.6)
+      g.gain.setValueAtTime(0.0001, at); g.gain.linearRampToValueAtTime(vel, at + Math.min(2.5, dur * 0.4)); g.gain.setValueAtTime(vel, at + dur * 0.7); g.gain.linearRampToValueAtTime(0.0001, at + dur)
+      o.start(at); o.stop(at + dur + 0.05); AU.track(o, at + dur + 0.05)
+    }
+  },
+  heart(at, vel = 0.5) {
+    const c = AU.ctx
+    for (const [dt, k] of [[0, 1], [0.15, 0.6]]) {
+      const o = c.createOscillator(); o.type = 'sine'; o.frequency.setValueAtTime(62, at + dt); o.frequency.exponentialRampToValueAtTime(38, at + dt + 0.14)
+      const g = AU.voice(at, o, 0, 0, 0.1)
+      g.gain.setValueAtTime(0.0001, at + dt); g.gain.linearRampToValueAtTime(vel * k, at + dt + 0.012); g.gain.exponentialRampToValueAtTime(0.0001, at + dt + 0.2)
+      o.start(at + dt); o.stop(at + dt + 0.22); AU.track(o, at + dt + 0.22)
+    }
+  },
+  drum(at, vel = 0.8) {
+    const c = AU.ctx, o = c.createOscillator(); o.type = 'sine'; o.frequency.setValueAtTime(78, at); o.frequency.exponentialRampToValueAtTime(40, at + 0.5)
+    const g = AU.voice(at, o, 0, 0, 0.45); g.gain.setValueAtTime(vel, at); g.gain.exponentialRampToValueAtTime(0.0001, at + 1.4)
+    o.start(at); o.stop(at + 1.5); AU.track(o, at + 1.5)
+    const n = c.createBufferSource(), lp = c.createBiquadFilter(); n.buffer = AU.noise; lp.type = 'lowpass'; lp.frequency.value = 500
+    n.connect(lp); const ng = AU.voice(at, lp, 0, 0, 0.4); ng.gain.setValueAtTime(vel * 0.5, at); ng.gain.exponentialRampToValueAtTime(0.0001, at + 0.5)
+    n.start(at, Math.random()); n.stop(at + 0.6); AU.track(n, at + 0.6)
+  },
+  wood(at, vel = 0.3, f = 1100) {
+    const c = AU.ctx, o = c.createOscillator(); o.type = 'sine'; o.frequency.value = f
+    const g = AU.voice(at, o, 0, 0.2, 0.2); g.gain.setValueAtTime(vel, at); g.gain.exponentialRampToValueAtTime(0.0001, at + 0.09)
+    o.start(at); o.stop(at + 0.1); AU.track(o, at + 0.1)
+  },
+  noise(at, dur, kind, vel) {                              // 環境聲一段（風、雨、河、蟬、雷）
+    const c = AU.ctx, n = c.createBufferSource(), f = c.createBiquadFilter()
+    n.buffer = AU.noise; n.loop = true
+    const set = { wind: ['lowpass', 520, 0.7], rain: ['bandpass', 2800, 0.5], river: ['lowpass', 900, 0.4], cicada: ['bandpass', 4800, 7], thunder: ['lowpass', 180, 0.8], sea: ['lowpass', 620, 0.5] }[kind]
+    f.type = set[0]; f.frequency.value = set[1]; f.Q.value = set[2]
+    n.connect(f)
+    let node = f
+    if (kind === 'cicada' || kind === 'sea' || kind === 'wind') {       // 顫動／湧浪
+      const am = c.createGain(), lfo = c.createOscillator(), lg = c.createGain()
+      lfo.frequency.value = kind === 'cicada' ? 26 : kind === 'sea' ? 0.12 : 0.18; lg.gain.value = 0.45; am.gain.value = 0.55
+      lfo.connect(lg); lg.connect(am.gain); f.connect(am); node = am
+      lfo.start(at); lfo.stop(at + dur + 0.1); AU.track(lfo, at + dur + 0.1)
+    }
+    const g = AU.voice(at, node, 0, 0, kind === 'thunder' ? 0.6 : 0.15)
+    const fade = Math.min(1.2, dur * 0.3)
+    g.gain.setValueAtTime(0.0001, at); g.gain.linearRampToValueAtTime(vel, at + fade); g.gain.setValueAtTime(vel, at + dur - fade); g.gain.linearRampToValueAtTime(0.0001, at + dur)
+    n.start(at, Math.random() * 1.5); n.stop(at + dur + 0.05); AU.track(n, at + dur + 0.05)
+  },
+}
+// 五聲音階（D 宮）：D E F# A B
+const PENT = [2, 4, 6, 9, 11]
+const noteIn = (deg, oct) => 12 * (oct + 1) + PENT[((deg % 5) + 5) % 5] + 12 * Math.floor(deg / 5)
+// 主題：[音, 拍]（中間 null＝休止）
+const THEME_A = [[74, 1], [78, 0.5], [81, 0.5], [83, 1], [81, 1], [78, 1.5], [76, 0.5], [74, 2], [76, 1], [78, 0.5], [81, 0.5], [86, 1.5], [83, 0.5], [81, 3], [null, 1]]
+const THEME_B = [[83, 1], [86, 1], [88, 1], [86, 1], [83, 1.5], [81, 0.5], [78, 2], [76, 1], [74, 0.5], [76, 0.5], [78, 1], [81, 1], [74, 4]]
+const MINOR = [[71, 1], [74, 1], [76, 1], [78, 1], [76, 1.5], [74, 0.5], [71, 2], [69, 1], [71, 1], [74, 1], [76, 1], [71, 4]]
+function buildScore() {
+  const ev = [], at = (t, fn) => ev.push({ t, fn })
+  const phrase = (t0, bpm, notes, vel = 0.5, o = {}) => {
+    let t = t0; const b = 60 / bpm
+    for (const [m, beats, v] of notes) { if (m != null) { const tt = t, mm = m + (o.tr || 0), vv = (v || vel); if (o.xiao) at(tt, a => I.xiao(a, mm, beats * b * 0.95, vv * 0.4)); else at(tt, a => I.pluck(a, mm, vv, { bend: o.bend && beats >= 1.5 && Math.random() < 0.35 ? 2 : 0 })) } t += beats * b }
+    return t
+  }
+  const flow = (t0, t1, bpm, chord, vel = 0.22) => {            // 流水：八分音符分解和弦
+    const b = 60 / bpm / 2
+    for (let t = t0, i = 0; t < t1; t += b, i++) { const m = chord[[0, 1, 2, 3, 2, 1][i % 6]]; at(t, a => I.pluck(a, m, vel * (i % 3 === 0 ? 1.1 : 0.8), { pan: -0.3 })) }
+  }
+  const bass = (t0, t1, bpm, roots, vel = 0.42) => { const b = 60 / bpm * 4; let i = 0; for (let t = t0; t < t1; t += b, i++) { const m = roots[i % roots.length]; at(t, a => I.pluck(a, m, vel, { pan: 0, rev: 0.5 })) } }
+  const amb = (t0, t1, kind, vel) => { for (let t = t0; t < t1; t += 3) { const d = Math.min(3.8, t1 - t + 0.6); at(t, a => I.noise(a, d, kind, vel)) } }
+  const heart = (t0, t1, hrAt) => { let t = t0; while (t < t1) { const bpm = clamp(hrAt(t) || 120, 60, 200); const tt = t; at(tt, a => I.heart(a, 0.55)); t += 60 / bpm } }
+  const C = Object.fromEntries(CHS.map(c => [c.key, c]))
+  const D_CHORD = [62, 69, 74, 76], D_LOW = [50, 45], B_CHORD = [59, 66, 71, 74], B_LOW = [47, 54]
+
+  // 序：心跳 → 寂靜 → 一聲撥弦 → 主題前半，慢
+  { const c = C.open; heart(c.t0 + 0.4, c.t0 + 4.2, () => M.pr.hrMax); at(c.t0 + 4.6, a => I.pluck(a, 50, 0.6, { rev: 0.7 })); amb(c.t0 + 3.5, c.t1, 'wind', 0.05)
+    phrase(c.t0 + 5.2, 54, THEME_A.slice(0, 8), 0.45, { bend: true }); at(c.t0 + 11.2, a => I.drum(a, 0.5)); at(c.t0 + 11.2, a => I.pad(a, [50, 57, 62], 6, 0.035)) }
+  // 壹 河：流水、河聲
+  { const c = C.river; amb(c.t0, c.t1, 'river', 0.07); bass(c.t0 + 0.5, c.t1 - 1, 72, D_LOW); flow(c.t0 + 0.5, c.t1 - 1.5, 72, D_CHORD); phrase(c.t0 + 3.8, 72, THEME_A, 0.42, { bend: true }) }
+  // 貳 山：往上走的低音，中段停下只剩風
+  { const c = C.first; amb(c.t0, c.t1, 'wind', 0.06); const b = 60 / 60
+    for (let i = 0; i < 9; i++) at(c.t0 + 1.4 + i * b, a => I.pluck(a, noteIn(i, 3), 0.4))
+    at(c.t0 + 11, a => I.pad(a, [50, 57], 5, 0.03)); for (let i = 0; i < 6; i++) at(c.t0 + 17.5 + i * 0.95, a => I.pluck(a, noteIn(5 + i, 4), 0.38)) }
+  // 參 夏：輕快、木魚、蟬
+  { const c = C.summer; amb(c.t0, c.t1, 'cicada', 0.035); const bpm = 88; bass(c.t0 + 0.4, c.t1 - 1, bpm, D_LOW); flow(c.t0 + 0.4, c.t1 - 1, bpm, [66, 69, 74, 78], 0.2)
+    for (let t = c.t0 + 0.4, i = 0; t < c.t1 - 1; t += 60 / bpm, i++) if (i % 2) at(t, a => I.wood(a, 0.12, 900 + (i % 4) * 120))
+    const e = phrase(c.t0 + 2.2, bpm, THEME_A, 0.46, { bend: true }); phrase(e, bpm, THEME_B, 0.46) }
+  // 肆 巔：真實心跳＋越來越密的流水＋持續低音；衝線後靜一拍，再一聲高音與主題收尾
+  { const c = C.peak, t0 = c.t0 + 3.8, run = c.dur - 3.8 - 8.5, sp = M.pr.s / run
+    heart(c.t0 + 3.2, t0 + run, t => M.pr.at((t - t0) * sp).hr)
+    amb(c.t0, c.t1, 'wind', 0.05)
+    for (let t = t0, i = 0; t < t0 + run - 0.2; i++) { const k = (t - t0) / run, bpm = 70 + 44 * k; const m = D_CHORD[i % 4] + (k > 0.55 ? 12 : 0); const tt = t; at(tt, a => I.pluck(a, m, 0.16 + 0.18 * k, { pan: -0.25 })); t += 60 / bpm / 2 }
+    bass(t0, t0 + run, 70, [50, 50, 45, 47], 0.4)
+    phrase(t0 + run * 0.35, 76, THEME_B, 0.4, { xiao: true })
+    at(t0 + run + 0.9, a => I.pluck(a, 86, 0.6, { rev: 0.8 })); at(t0 + run + 0.9, a => I.drum(a, 0.45)); at(t0 + run + 1.2, a => I.pad(a, [50, 57, 62, 66], 6.5, 0.04))
+    phrase(t0 + run + 2.4, 58, THEME_A.slice(8), 0.4) }
+  // 伍 冬：雨、羽調、稀疏
+  { const c = C.winter; amb(c.t0, c.t0 + 17.8, 'rain', 0.11); at(c.t0 + 0.5, a => I.pad(a, [47, 54, 59], 16, 0.03))
+    phrase(c.t0 + 2, 48, MINOR, 0.34, { bend: true })
+    phrase(c.t0 + 17.8, 84, [[81, 0.5], [83, 0.5], [86, 1], [83, 0.5], [81, 0.5], [78, 2]], 0.38) }
+  // 陸 遠：路上的節奏
+  { const c = C.far; const bpm = 80; bass(c.t0 + 0.5, c.t1 - 1, bpm, [50, 45, 47, 45]); for (let t = c.t0 + 0.5, i = 0; t < c.t1 - 1; t += 60 / bpm / 2, i++) at(t, a => I.pluck(a, [62, 69, 74, 69][i % 4], 0.15, { pan: 0.3, rev: 0.25 }))
+    phrase(c.t0 + 3, bpm, THEME_A, 0.42); at(c.t0 + 14, a => I.pad(a, [47, 54, 62], 8, 0.03)) }
+  // 柒 海：浪、木魚
+  { const c = C.sea; amb(c.t0, c.t1, 'sea', 0.1); const bpm = 90; flow(c.t0 + 0.5, c.t1 - 1, bpm, [66, 69, 74, 76], 0.18); for (let t = c.t0 + 0.5, i = 0; t < c.t1 - 1; t += 60 / bpm, i++) at(t, a => I.wood(a, 0.1, 800))
+    phrase(c.t0 + 2, bpm, THEME_B, 0.44); at(c.t0 + c.dur - 5.5, a => I.drum(a, 0.4)) }
+  // 捌 回：羽調、簫
+  { const c = C.back; amb(c.t0, c.t1, 'wind', 0.05); bass(c.t0 + 0.6, c.t1 - 1, 60, B_LOW, 0.35); phrase(c.t0 + 1.4, 56, MINOR, 0.4, { xiao: true }); phrase(c.t0 + 13, 60, MINOR.slice(0, 7), 0.35) }
+  // 玖 雨：雨、雷、搖指越來越急；掉頭那一下一聲大鼓，然後只剩雨
+  { const c = C.rain; amb(c.t0, c.t1, 'rain', 0.16); at(c.t0 + 2.4, a => I.noise(a, 3, 'thunder', 0.5))
+    const spikeT = c.t0 + 11 + (M.rain.spike - 2062) / 16 * 7                 // 跟畫面的閃電同一格
+    for (let t = c.t0 + 4, i = 0; t < spikeT - 0.1; i++) { const k = (t - c.t0 - 4) / (spikeT - c.t0 - 4); const tt = t; at(tt, a => I.pluck(a, 71, 0.12 + 0.3 * k, { damp: 0.1, rev: 0.2 })); t += lerp(0.24, 0.07, k) }
+    at(spikeT, a => I.drum(a, 1)); at(spikeT, a => I.noise(a, 3.5, 'thunder', 0.7)); at(spikeT + 0.8, a => I.pad(a, [47, 54], 8, 0.03)) }
+  // 拾 四：同一句重複四次，一次比一次快
+  { const c = C.four, seg = (c.dur - 4) / 4; at(c.t0 + 0.4, a => I.pad(a, [50, 57, 62], c.dur - 1, 0.03)); bass(c.t0 + 1.2, c.t1 - 1, 70, [50, 45, 47, 45], 0.3); for (let i = 0; i < 4; i++) { const bpm = 70 + i * 9; phrase(c.t0 + 1.2 + i * seg, bpm, THEME_A.slice(0, 6), 0.36 + i * 0.04); at(c.t0 + 1.2 + (i + 0.9) * seg, a => I.wood(a, 0.3, 1300)) } }
+  // 拾壹 今：真實心跳、流水、簫；最後停在沒解決的屬音
+  { const c = C.now, t0 = c.t0 + 3, run = c.dur - 3 - 11, sp = M.now.s / run
+    heart(c.t0 + 2.4, t0 + run, t => M.now.at((t - t0) * sp).hr)
+    for (let t = t0, i = 0; t < t0 + run - 0.2; i++) { const k = (t - t0) / run, bpm = 72 + 36 * k; const tt = t; at(tt, a => I.pluck(a, [62, 66, 69, 74][i % 4] + (k > 0.6 ? 12 : 0), 0.15 + 0.15 * k, { pan: -0.25 })); t += 60 / bpm / 2 }
+    bass(t0, t0 + run, 72, [50, 45, 47, 45], 0.38)
+    phrase(t0 + run * 0.25, 72, THEME_A, 0.36, { xiao: true })
+    at(t0 + run + 0.6, a => I.pad(a, [45, 52, 57, 61], 9, 0.04)); phrase(t0 + run + 1.4, 60, [[81, 1], [83, 1], [86, 2], [81, 4]], 0.42) }
+  // 終：主題完整一遍，和聲、低音，回到 D
+  { const c = C.end, bpm = 66; at(c.t0 + 0.4, a => I.pad(a, [50, 57, 62], 12, 0.04)); bass(c.t0 + 0.4, c.t1 - 1, bpm, [50, 47, 45, 50])
+    const e = phrase(c.t0 + 1.2, bpm, THEME_A, 0.44, { bend: true }); phrase(e, bpm, THEME_B, 0.44); at(c.t0 + 13, a => I.pad(a, [47, 54, 62], 10, 0.035)) }
+  // 尾：一聲低、一聲高
+  { const c = C.coda; at(c.t0 + 0.6, a => I.pluck(a, 38, 0.55, { rev: 0.8 })); at(c.t0 + 1.2, a => I.pluck(a, 86, 0.4, { rev: 0.9 })) }
+  ev.sort((a, b) => a.t - b.t)
+  return ev
+}
+AU.startAt = function (T, base) {
+  this.base = base
+  let lo = 0, hi = this.ev.length
+  while (lo < hi) { const m = (lo + hi) >> 1; if (this.ev[m].t < T - 0.01) lo = m + 1; else hi = m }
+  this.ptr = lo
+}
+AU.pump = function (T) {
+  const horizon = T + 0.35
+  while (this.ptr < this.ev.length && this.ev[this.ptr].t < horizon) {
+    const e = this.ev[this.ptr++]
+    if (e.t < T - 0.08) continue
+    try { e.fn(Math.max(this.ctx.currentTime, this.base + e.t)) } catch (err) {}
+  }
+}
+AU.setMuted = function (m) { this.muted = m; if (this.ctx) this.out.gain.setTargetAtTime(m ? 0 : 0.9, this.ctx.currentTime, 0.05) }
+
+// ════════════════════════════════════════════════════════════════════
+// 8. 播放器
+// ════════════════════════════════════════════════════════════════════
+const PL = { T: 0, playing: false, clock0: 0, useAudio: false, started: false, idleT: 0 }
+const nowS = () => PL.useAudio ? AU.ctx.currentTime : performance.now() / 1000
+function play() {
+  if (!S) return
+  if (PL.T >= M.total - 0.1) PL.T = 0
+  PL.useAudio = !!(AU.ok && AU.ctx && AU.ctx.state === 'running')
+  PL.clock0 = nowS() - PL.T
+  if (PL.useAudio) AU.startAt(PL.T, PL.clock0)
+  PL.playing = true; PL.started = true
+  $('start').hidden = true; $('player').hidden = false
+  ui()
+}
+function pause() { if (!PL.playing) return; PL.T = clamp(nowS() - PL.clock0, 0, M.total); PL.playing = false; if (AU.ok) AU.stopAll(); render(PL.T); ui() }
+function seek(t) {
+  PL.T = clamp(t, 0, M.total - 0.01)
+  if (PL.playing) { if (AU.ok) AU.stopAll(); PL.clock0 = nowS() - PL.T; if (PL.useAudio) AU.startAt(PL.T, PL.clock0) }
+  render(PL.T); ui()
+}
+async function begin(muted) {
+  AU.muted = muted
+  if (AU.init()) { try { await AU.ctx.resume() } catch (e) {} AU.setMuted(muted); for (const m of [38, 45, 47, 50, 54, 57, 59, 62, 64, 66, 69, 71, 74, 76, 78, 81, 83, 86, 88, 90]) AU.pluckBuf(m) }
+  PL.T = 0; play()
+  $('pPlay').focus({ preventScroll: true })
+}
+function toggle() { if (!PL.started) { begin(false); return } if (PL.playing) pause(); else if (AU.ctx && AU.ctx.state !== 'running') AU.ctx.resume().then(play); else play() }
+function ui() {
+  const t = PL.T, f = t / M.total, c = chapterAt(t)
+  $('pClock').textContent = `${mss(t)} / ${mss(M.total)}`
+  $('seekFill').style.width = (f * 100) + '%'; $('seekKnob').style.left = (f * 100) + '%'
+  $('seek').setAttribute('aria-valuenow', Math.round(t)); $('seek').setAttribute('aria-valuetext', `${c.no} ${c.name}　${mss(t)}`)
+  $('pNow').innerHTML = `<b>${c.no}</b>${c.name}`
+  $('iPlay').setAttribute('d', PL.playing ? 'M3 2h3.5v12H3zm6.5 0H13v12H9.5z' : 'M3.5 1.5l11 6.5-11 6.5z')
+  $('pPlay').setAttribute('aria-label', PL.playing ? '暫停' : '播放')
+  $('pSound').textContent = AU.muted ? '聲音・關' : '聲音・開'; $('pSound').setAttribute('aria-pressed', String(!AU.muted))
+  for (const b of $('toc').querySelectorAll('button')) b.classList.toggle('on', b.dataset.key === c.key)
+}
+function frame() {
+  requestAnimationFrame(frame)
+  if (!S) return
+  if (PL.playing) {
+    PL.T = nowS() - PL.clock0
+    if (PL.useAudio) AU.pump(PL.T)
+    if (PL.T >= M.total) { PL.T = M.total - 0.01; PL.playing = false; if (AU.ok) AU.stopAll() }
+    render(PL.T); ui()
+    // 播放時控制列三秒沒動就收起來（電影感）
+    $('player').classList.toggle('idle', performance.now() - PL.idleT > 3000 && !$('player').matches(':hover') && $('toc').hidden)
+  } else if (!PL.started) {
+    idleShot(performance.now() / 1000)
+  }
+}
+// 開場畫面後面：清晨的山頂慢慢轉
+function idleShot(t) {
+  resetFrame()
+  S.setMode('world'); S.applyTOD(S.TOD.dawn, 'autumn', {})
+  const top = M.Z.at(M.Z.L - 1)
+  const cam = orbit(V(top.x - 200, top.y - 80, top.z + 300), 1300, 520, 3.2 + t * 0.015, 44, 0)
+  setCam(cam.p, cam.t, cam.f)
+  S.frame(t, { petals: 0.2 })
+}
+
+$('bStart').addEventListener('click', () => begin(false))
+$('bMute').addEventListener('click', () => begin(true))
+$('pPlay').addEventListener('click', toggle)
+$('pPrev').addEventListener('click', () => { const c = chapterAt(PL.T), i = CHS.indexOf(c); seek(PL.T - c.t0 > 2 || i === 0 ? c.t0 : CHS[i - 1].t0) })
+$('pNext').addEventListener('click', () => { const i = CHS.indexOf(chapterAt(PL.T)); if (i < CHS.length - 1) seek(CHS[i + 1].t0) })
+$('pSound').addEventListener('click', () => { if (!AU.ctx) AU.init(); AU.setMuted(!AU.muted); ui() })
+$('pToc').addEventListener('click', () => { const t = $('toc'); t.hidden = !t.hidden; $('pToc').setAttribute('aria-expanded', String(!t.hidden)) })
+const seekEl = $('seek')
+let drag = false, was = false
+const seekTo = e => { const r = seekEl.getBoundingClientRect(); seek(clamp((e.clientX - r.left) / r.width, 0, 1) * M.total) }
+seekEl.addEventListener('pointerdown', e => { drag = true; was = PL.playing; if (PL.playing) pause(); seekEl.setPointerCapture(e.pointerId); seekTo(e) })
+seekEl.addEventListener('pointermove', e => { if (drag) seekTo(e) })
+seekEl.addEventListener('pointerup', () => { if (!drag) return; drag = false; if (was) play() })
+seekEl.addEventListener('keydown', e => { if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { seek(PL.T + (e.key === 'ArrowLeft' ? -5 : 5)); e.preventDefault(); e.stopPropagation() } })
+for (const ev of ['pointermove', 'pointerdown', 'keydown']) window.addEventListener(ev, () => { PL.idleT = performance.now(); $('player').classList.remove('idle') })
+document.addEventListener('keydown', e => {
+  if (!S || !PL.started || e.metaKey || e.ctrlKey || e.altKey) return
+  const tag = (e.target && e.target.tagName) || ''
+  if (e.key === ' ' || e.key === 'k') { if (tag === 'BUTTON' && e.key === ' ') return; toggle(); e.preventDefault() }
+  else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { if (e.target === seekEl) return; seek(PL.T + (e.key === 'ArrowLeft' ? -5 : 5)); e.preventDefault() }
+  else if (e.key === 'm' || e.key === 'M') $('pSound').click()
+  else if (e.key === 't' || e.key === 'T') $('pToc').click()
+  else if (e.key === 'Escape') { $('toc').hidden = true }
+})
+$('gl').addEventListener('click', () => { if (PL.started) toggle() })
+document.addEventListener('visibilitychange', () => { if (document.hidden && PL.playing) pause() })
+function fit() { if (!S) return; const r = $('film').getBoundingClientRect(); S.resize(Math.max(1, r.width), Math.max(1, r.height)) }
+window.addEventListener('resize', () => { fit(); if (!PL.playing && PL.started) render(PL.T) })
+
+// ════════════════════════════════════════════════════════════════════
+// 9. 啟動
+// ════════════════════════════════════════════════════════════════════
+async function boot() {
+  const fonts = document.fonts ? Promise.race([Promise.all([document.fonts.load("700 26px 'LXGW WenKai TC'", '十六分二十五秒中社路'), document.fonts.load("400 20px 'LXGW WenKai TC'", '這裡是山頂')]), new Promise(r => setTimeout(r, 4000))]) : null
+  let film, chron
+  try {
+    ;[film, chron] = await Promise.all([fetch('data/film.json').then(r => { if (!r.ok) throw new Error(r.status); return r.json() }), fetch('data/chronicle.json').then(r => r.ok ? r.json() : null).catch(() => null)])
+  } catch (e) { $('startMeta').textContent = '資料載入失敗，重新整理再試一次。'; $('ring').hidden = true; return }
+  if (fonts) await fonts
+  FD = film; CH = chron
+  try {
+    S = FilmScene.create($('gl'), film, { low: SMALL() || (navigator.hardwareConcurrency || 8) <= 4 })
+  } catch (e) { $('startMeta').textContent = '這台裝置的瀏覽器畫不出 3D（WebGL）。下面的字幕稿可以直接讀。'; $('ring').hidden = true; return }
+  prepare(film, chron)
+  fit()
+  CHS = buildChapters()
+  AU.ev = []
+  buildToc(); buildScript()
+  $('seek').setAttribute('aria-valuemax', Math.round(M.total))
+  for (const c of CHS) { if (c.t0 <= 0) continue; const d = document.createElement('div'); d.className = 'tick'; d.style.left = (c.t0 / M.total * 100) + '%'; $('seek').appendChild(d) }
+  $('ring').hidden = true; $('bStart').hidden = false; $('bMute').hidden = false
+  $('startMeta').textContent = `約 ${Math.floor(M.total / 60)} 分 ${Math.round(M.total % 60)} 秒・有聲音・十三卷`
+  AU.ev = buildScoreSafe()
+  const q = new URLSearchParams(location.search)
+  if (q.has('t')) { PL.started = true; $('start').hidden = true; $('player').hidden = false; seek(+q.get('t') || 0) }
+  requestAnimationFrame(frame)
+}
+function buildScoreSafe() { try { return buildScore() } catch (e) { console.error(e); return [] } }
+
+function prepare(film, chron) {
+  M.today = (chron && chron.today) || '2026-09-24'
+  M.tot = (chron && chron.totals) || { rides: 151, ride_km: 4562, elev: 45316 }
+  M.places = Object.fromEntries((film.places || []).map(p => [p[0], [p[1], p[2]]]))
+  M.effortsN = (film.efforts || []).length
+  M.Z = S.paths['中社路']
+  const L = M.Z.L
+  const climbs = film.climbs.map(c => climbModel(c, L))
+  const find = d => climbs.find(c => c.d === d)
+  M.pr = find('2025-10-14'); M.back = find('2026-04-14')
+  M.now = find('2026-09-15') || climbs.slice().sort((a, b) => a.d < b.d ? 1 : -1)[0]   // 「今」那卷的旁白是照這一天寫的
+  // 視覺踏頻：照真實踏頻積分，但不跟著快轉（片子裡的腳要看得清楚）
+  const crankOf = (cm, chKey, t0, tailS) => lt => {
+    const c = CHS.find(x => x.key === chKey); if (!c) return lt * 4
+    const run = c.dur - t0 - tailS, sp = cm.s / run, tt = clamp(lt - t0, 0, run)
+    let a = 0; for (let k = 0; k <= tt; k += 0.25) a += (cm.at(k * sp).cad || 0) / 60 * Math.PI * 2 * 0.25 * 0.6
+    return a
+  }
+  M.prCrank = crankOf(M.pr, 'peak', 3.8, 8.5)
+  M.nowCrank = crankOf(M.now, 'now', 3, 11)
+  // 筆畫
+  M.allStrokes = []
+  const mk = (path, widthAt, o) => { const st = S.makeStroke(path, widthAt, o); M.allStrokes.push(st); return st }
+  M.prStroke = mk(M.Z, M.pr.widthAt, { order: 3 })
+  M.backStroke = mk(M.Z, M.back.widthAt, { order: 2 })
+  M.nowStroke = mk(M.Z, M.now.widthAt, { order: 4 })
+  const strokes = (film.strokes || []).map(st => strokeModel(st, L))
+  M.allFit = strokes.map((st, i) => ({ ...st, stroke: mk(M.Z, st.widthAt, { offset: ((i % 7) - 3) * 0.9, order: 1 }) }))
+  M.ghost1008 = strokes.find(s => s.d === '2025-10-08') || strokes[0]
+  // 夏天：06-26 → 10-08（還沒有 FIT 的那幾次，畫成等寬的細線）
+  const eff = film.efforts || []
+  const firstPower = (eff.find(e => e[3] != null) || [])[0]
+  M.summer = eff.filter(e => e[0] >= '2025-06-26' && e[0] <= '2025-10-08').map((e, i) => {
+    const fit = M.allFit.find(s => s.d === e[0] && s.t === e[1])
+    return { d: e[0], s: e[2], newBike: e[0] === '2025-08-12', power: e[0] === firstPower,
+      stroke: fit ? fit.stroke : mk(M.Z, () => 2.2, { offset: ((i % 5) - 2) * 1.1, order: 1 }) }
+  })
+  // 冬天那三次（十一月一次、十二月兩次）
+  M.winter = [['2025-11-25', 5.8], ['2025-12-16', 11.6], ['2025-12-22', 12.6]]
+    .map(([d, at]) => { const f = M.allFit.find(s => s.d === d); return f && { ...f, at } }).filter(Boolean)
+  // 第一次（2025-06-07）
+  M.fc = film.rides.firstClimb
+  M.firstClimbStroke = mk(M.Z, () => 2.4, { order: 1 })
+  // 第一趟：淡水河
+  M.fr = film.rides.first
+  M.firstPath = S.pathFromPoints(M.fr.route, { step: 12, lift: 2.5, smoothM: 400 })
+  M.firstStroke = mk(M.firstPath, () => 3, { step: 8 })
+  // 一天四次：並排四道，貼著山坡
+  M.four = strokes.filter(s => s.d === '2026-08-11').slice(0, 4).map((s, i) => ({ ...s, wide: mk(M.Z, w => s.widthAt(w) * 1.6, { offset: (i - 1.5) * 20, order: 5, terrain: true }) }))
+  while (M.four.length < 4) M.four.push({ s: 0, wide: { set() {}, tip() {} } })
+  // 下雨回頭：逐 3 秒的軌跡＋衝刺前後逐秒
+  const R = film.rides.rain, pts = R.pts, burst = R.burst || []
+  const cum = [0]; for (let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + Math.hypot(pts[i][1] - pts[i - 1][1], pts[i][2] - pts[i - 1][2]))
+  const rp = S.pathFromPoints(pts.map(p => [p[1], p[2]]), { step: 4, lift: 0.6, smoothM: 20 })
+  const idxAt = tau => { let lo = 0, hi = pts.length - 1; while (hi - lo > 1) { const m = (lo + hi) >> 1; if (pts[m][0] <= tau) lo = m; else hi = m } return lo }
+  M.rain = {
+    ...R, path: rp, best5: R.best5 || 934,
+    at(tau) {
+      const i = idxAt(tau), a = pts[i], b = pts[i + 1] || a, f = b[0] > a[0] ? clamp((tau - a[0]) / (b[0] - a[0]), 0, 1) : 0
+      return { s: lerp(cum[i], cum[i + 1] == null ? cum[i] : cum[i + 1], f) / cum[cum.length - 1] * rp.L, hr: lerp(a[4] || 0, b[4] || 0, f), pw: lerp(a[5] || 0, b[5] || 0, f), spd: lerp(a[6] || 0, b[6] || 0, f) }
+    },
+    burstAt(tau) {
+      if (!burst.length || tau < burst[0][0] || tau > burst[burst.length - 1][0]) return null
+      let i = 0; while (i < burst.length - 2 && burst[i + 1][0] <= tau) i++
+      const a = burst[i], b = burst[i + 1] || a, f = b[0] > a[0] ? clamp((tau - a[0]) / (b[0] - a[0]), 0, 1) : 0
+      return { hr: lerp(a[1], b[1], f), pw: lerp(a[2], b[2], f), cad: lerp(a[3], b[3], f) }
+    },
+  }
+  const rainW = s => { const i = Math.min(pts.length - 1, Math.floor(s / rp.L * (pts.length - 1))); let a = 0, n = 0; for (let j = i - 3; j <= i + 3; j++) if (pts[j] && pts[j][5] != null) { a += pts[j][5]; n++ } return 1 + (n ? a / n : 0) / 85 }
+  M.rain.stroke = mk(rp, rainW, { step: 3, order: 3, lift: 0.05 })
+  {
+    // 掉頭點：1960 秒那一點之後、離它最遠的地方；腳架放在它前方 45 m、側邊 25 m、高 20 m
+    const r0 = pts[idxAt(1960)]
+    let ui = idxAt(1990), far2 = -1
+    for (let i = idxAt(1960); i <= idxAt(2012); i++) { const d = Math.hypot(pts[i][1] - r0[1], pts[i][2] - r0[2]); if (d > far2) { far2 = d; ui = i } }
+    const u = pts[ui], a = pts[Math.max(0, ui - 6)]
+    let dx = u[1] - a[1], dz = u[2] - a[2]; const n = Math.hypot(dx, dz) || 1; dx /= n; dz /= n
+    const cx = u[1] + dx * 45 - dz * 25, cz = u[2] + dz * 45 + dx * 25
+    M.rain.uturn = { cx, cz, cy: S.Y(cx, cz) + 20 }
+    // 衝刺段的側拍一律拍同一側（地勢低的那側）
+    M.rain.sprintSign = sideSign(rp, M.rain.at(2060).s, M.rain.at(2085).s)
+  }
+  // 一日北彰：出發與抵達時間
+  const far = film.rides.far, fe = far.sec || far.pts[far.pts.length - 1][0]
+  const [hh, mm] = far.start.split(':').map(Number), endMin = hh * 60 + mm + Math.round(fe / 60)
+  const eh = Math.floor(endMin / 60) % 24, em = endMin % 60
+  M.far = { ...far, km: 201.1 }
+  M.farStartCn = `${cnNum(hh)}點${mm ? cnNum(mm) + '分' : ''}`
+  M.farEndCn = `${eh >= 18 ? '晚上' : '下午'}${cnNum(eh > 12 ? eh - 12 : eh)}點${em ? cnNum(em) + '分' : ''}`
+  // 紙卡
+  M.naoHTML = `<div class="in"><div class="v">一月，他跑去日本直島，<br>租了一台腳踏車，去看一顆南瓜。<br><small>隔天還車，他在紀錄上寫：「還車ㄎㄎ」</small></div><canvas width="560" height="400"></canvas></div>`
+  const T = M.tot, yushan = (T.elev / 3952).toFixed(1)
+  M.endHTML = `<div class="endc"><h2>十六分二十五秒</h2>
+    <div class="cols"><div class="col"><b>未完待續</b><br>下一卷　${nextMonth(M.today)}<br><em>那個數字還在山頂等他。</em></div>
+    <div class="col">二〇二五年四月至今<br>騎乘 <b>${T.rides}</b> 趟　<b>${Number(T.ride_km).toLocaleString()}</b> 公里<br>爬升 <b>${Number(T.elev).toLocaleString()}</b> 米，約 ${yushan} 座玉山<br>中社路 <b>${M.effortsN}</b> 次，最快 <b>16:25</b></div>
+    <div class="col">資料　Strava・intervals.icu・Garmin FIT<br>地形　Terrarium 高程<br>音樂　Web Audio 即時合成<br>導演　Claude</div></div>
+    <div class="acts"><button class="btn" data-act="replay" type="button">重新展卷</button><a class="btn ghost" href="strava_chronicle.html">看像素版</a><a class="btn ghost" href="linkTreeIndex.html">回首頁</a></div></div>`
+  $('inscr').innerHTML = `一年半的筆跡<br>騎乘 <b>${T.rides}</b> 趟<br><b>${Number(T.ride_km).toLocaleString()}</b> 公里<br>爬升 <b>${Number(T.elev).toLocaleString()}</b> 米<br>約 ${yushan} 座玉山<br><span class="sl">中社路</span>`
+}
+function nextMonth(d) { const y = +d.slice(0, 4), m = +d.slice(5, 7); const ny = m === 12 ? y + 1 : y, nm = m === 12 ? 1 : m + 1; return `${cnYear(ny)}年${cnNum(nm)}月` }
+function cnYear(y) { return String(y).split('').map(d => CN[+d]).join('') }
+function buildToc() {
+  const t = $('toc'); t.innerHTML = ''
+  for (const c of CHS) {
+    const b = document.createElement('button'); b.type = 'button'; b.dataset.key = c.key
+    b.innerHTML = `<b>${c.no}</b><span>${c.name}</span><small>${mss(c.t0)}</small>`
+    b.addEventListener('click', () => { seek(c.t0 + 0.01); t.hidden = true; if (!PL.playing) play() })
+    t.appendChild(b)
+  }
+}
+function buildScript() {
+  const ol = $('script'); ol.innerHTML = ''
+  for (const c of CHS) {
+    if (!c.lines.length) continue
+    const li = document.createElement('li'), b = document.createElement('b'), d = document.createElement('div')
+    b.textContent = `${c.no}　${c.name}`
+    d.innerHTML = c.lines.filter(l => l[1]).map(l => l[1]).join('') + (c.labels || []).map(l => `<span>${l[1]}</span>`).join('')
+    li.append(b, d); ol.appendChild(li)
+  }
+}
+
+window.__film = { get S() { return S }, get M() { return M }, get CHS() { return CHS }, seek, play, pause, render: t => { PL.T = t; render(t); ui() }, get T() { return PL.T }, AU }
+boot()
+})()
+</script>
+</body>
+</html>
