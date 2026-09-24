@@ -1217,6 +1217,7 @@ function renderToday() {
   const nextS = S.find(x => x.date > TODAY && !x.support) || null
   const acts = DATA.actsList || []
   const lastRide = acts.find(a => isRide(a))
+  const lastBB = Object.values((DATA.extras && DATA.extras.rides) || {}).filter(x => x.bb).sort((a, b) => (a.date + a.start).localeCompare(b.date + b.start)).pop() || null
   const note = DATA.lastNote
   const tasks = (DATA.tasks && DATA.tasks.tasks) || []
   const ses = (s, lab) => s ? `<div class="today-ses row-l"><p class="sub">${lab} <i>${mdd(s.date)} 週${wdOf(s.date)} · ${s.minutes} 分 · ${esc(s.wk)}</i></p>
@@ -1242,9 +1243,10 @@ function renderToday() {
       <div class="row-l">
         <dl class="kv" style="margin:0"><dt>靜止心率</dt><dd>${lastRhrDay ? n0(w[lastRhrDay].restingHR) + ' bpm' : '–'} <span class="muted">· 常態 ${n0(rhrMean)}</span></dd>
           <dt>睡眠</dt><dd>${sl ? hm(sl.sleepSecs) : '–'}${sl && sl.sleepScore ? ` <span class="muted">· 分數 ${n0(sl.sleepScore)}</span>` : ''}</dd>
-          <dt>eFTP</dt><dd>${DATA.eftpNow ? n0(DATA.eftpNow) + ' W' : '–'} <span class="muted">· 課表用 ${n0(DATA.ftp)} W</span></dd></dl>
+          <dt>eFTP</dt><dd>${DATA.eftpNow ? n0(DATA.eftpNow) + ' W' : '–'} <span class="muted">· 課表用 ${n0(DATA.ftp)} W</span></dd>
+          ${lastBB ? `<dt>Body Battery</dt><dd>${lastBB.bb[0]} <span class="muted">· ${mdd(lastBB.date)} 出門時，騎完 ${lastBB.bb[1]}</span></dd>` : ''}</dl>
       </div>
-      <p class="note">單一天的 HRV、睡眠不拿來下診斷；他的資料上，睡眠跟表現沒有顯著相關。</p>
+      <p class="note">${readyNote()}</p>
     </div>
     <div>
       ${todayS ? ses(todayS, '今天的課') : ''}
@@ -1400,6 +1402,59 @@ function renderSeason() {
 
 /* ── 03 體能 ── */
 let fitRange = 180
+// 早上的恢復狀態 × 當天爬坡最大努力（scripts/build-fit-extras.py 的 analysis；一天一點）
+const READY = () => (DATA.extras && DATA.extras.analysis && DATA.extras.analysis.points ? DATA.extras.analysis : null)
+function readyNote() {
+  const an = READY(), base = '單一天的數字不拿來下診斷；睡眠時數跟表現在他的資料上沒有相關。'
+  if (!an) return base
+  const lo = (an.by_bb || [])[0], hi = (an.by_bb || [])[2], hz = (an.by_hrv || [])[0]
+  if (!lo || !hi || !lo.median || !hi.median) return base
+  return `睡眠時數跟表現沒有相關，<b>早上的 HRV 跟出門時的 Body Battery 有</b>：HRV 低於常態下緣${hz && hz.median ? `（中位 ${hz.median.toFixed(2)}×）` : ''}或 Body Battery 不到 35（${lo.median.toFixed(2)}×）的那天，爬坡最大努力比平常（${hi.median.toFixed(2)}× eFTP）少一成左右。詳見第 03 章。`
+}
+function readyBlock() {
+  const an = READY()
+  if (!an || an.points.filter(p => p.bb != null).length < 12) return ''
+  const sig = an.tests.filter(t => t.p < 0.05), non = an.tests.filter(t => t.p >= 0.05)
+  const g = an.by_bb, med = x => (x && x.median ? x.median.toFixed(2) + '×' : '–')
+  return `<div class="blk">
+      <p class="sub">早上的恢復狀態 × 當天爬坡最大努力 <i>一天一點：那天爬坡計時段最高的平均功率 ÷ 當時 eFTP · ${an.days} 天</i></p>
+      <p class="ch-lede" style="font-size:14.5px;margin:-2px 0 14px">出門時 Body Battery 不到 35 的那 ${g[0].n} 天，爬坡最大努力中位 <b>${med(g[0])}</b> eFTP；35–54 是 ${med(g[1])}、55 以上 <b>${med(g[2])}</b>。</p>
+      <div class="legend"><span><i class="box" style="background:${C.sun};border-radius:50%"></i>一天的最大爬坡努力</span><span><i style="background:${C.text}"></i>該區間的中位數</span></div>
+      <div class="chart" id="readyc"></div>
+      <p class="note">有關係的：${sig.map(t => `${esc(t.x)} r ${t.r > 0 ? '+' : '−'}${Math.abs(t.r).toFixed(2)}`).join('、') || '沒有'}${sig.length ? `（p ${Math.min(...sig.map(t => t.p)).toFixed(2)}–${Math.max(...sig.map(t => t.p)).toFixed(2)}）` : ''}。
+        沒關係的：${non.map(t => `${esc(t.x)} r ${t.r > 0 ? '+' : '−'}${Math.abs(t.r).toFixed(2)}`).join('、')}。
+        三個自律神經的指標方向一致；但分不開「那天給不出來」和「那天不想用力」，所以是相關、不是因果。Body Battery 是從 FIT 裡 Garmin 沒公開的欄位讀出來的。</p>
+      <details class="tbl"><summary>看表格（${an.points.length} 天）</summary><div class="tscroll"><table class="t"><thead><tr><th>日期</th><th class="r">出門 Body Battery</th><th class="r">早上 HRV（相對常態）</th><th class="r">最大爬坡努力</th></tr></thead>
+        <tbody>${an.points.slice().reverse().map(p => `<tr><td>${p.d}</td><td class="r">${p.bb == null ? '–' : p.bb}</td><td class="r">${p.z == null ? '–' : sgn(p.z, 1) + ' SD'}</td><td class="r">${p.y.toFixed(2)}×</td></tr>`).join('')}</tbody></table></div></details>
+    </div>`
+}
+function drawReady() {
+  const an = READY(), el = $('#readyc')
+  if (!an || !el) return
+  const P = an.points.filter(p => p.bb != null)
+  chart(el, wd => {
+    const h = 230, pt = 12, pb = 34, pL = 42
+    const ys = P.map(p => p.y), lo = Math.min(0.7, Math.min(...ys) - 0.04), hi = Math.max(1.2, Math.max(...ys) + 0.04)
+    const x = v => pL + v / 100 * (wd - pL - 8), y = v => pt + (hi - v) / (hi - lo) * (h - pt - pb)
+    let s = `<svg viewBox="0 0 ${wd} ${h}" height="${h}" role="img" aria-label="出門時 Body Battery 與當天爬坡最大努力">`
+    ticks(lo, hi, 4).forEach(t => { s += `<line class="grid" x1="${pL}" x2="${wd - 8}" y1="${y(t)}" y2="${y(t)}"/><text class="ax" x="${pL - 8}" y="${y(t) + 4}" text-anchor="end">${t.toFixed(1)}×</text>` })
+    ;[0, 35, 55, 100].forEach(v => { s += `<text class="ax" x="${x(v)}" y="${h - 16}" text-anchor="middle">${v}</text>` })
+    s += `<text class="ax-l" x="${(pL + wd) / 2}" y="${h - 2}" text-anchor="middle">出門時 Body Battery</text>`
+    s += `<line class="base" x1="${pL}" x2="${wd - 8}" y1="${y(1)}" y2="${y(1)}"/><text class="ax" x="${wd - 10}" y="${y(1) - 5}" text-anchor="end">＝ eFTP</text>`
+    ;[[0, 35], [35, 55], [55, 100]].forEach((r, i) => { const m = an.by_bb[i] && an.by_bb[i].median; if (m) s += `<line x1="${x(r[0]) + 3}" x2="${x(r[1]) - 3}" y1="${y(m)}" y2="${y(m)}" stroke="${C.text}" stroke-width="2" stroke-linecap="round"/>` })
+    P.forEach(p => { s += `<circle cx="${x(p.bb).toFixed(1)}" cy="${y(p.y).toFixed(1)}" r="4" fill="${C.sun}" fill-opacity=".8" stroke="#0d1322" stroke-width="1"/>` })
+    s += `</svg>`
+    el.innerHTML = s
+    const svg = $('svg', el)
+    el.onpointermove = e => {
+      const r = svg.getBoundingClientRect(), mx = e.clientX - r.left, my = e.clientY - r.top
+      const p = P.reduce((m, q) => (Math.hypot(x(q.bb) - mx, y(q.y) - my) < Math.hypot(x(m.bb) - mx, y(m.y) - my) ? q : m), P[0])
+      if (Math.hypot(x(p.bb) - mx, y(p.y) - my) > 24) return hideTip()
+      showTip(e, `${p.d} 週${wdOf(p.d)}`, [{ v: p.y.toFixed(2) + '×', l: '最大爬坡努力 ÷ eFTP', c: C.sun }, { v: String(p.bb), l: '出門時 Body Battery' }].concat(p.z != null ? [{ v: sgn(p.z, 1) + ' SD', l: '早上 HRV 相對常態' }] : []))
+    }
+    el.onpointerleave = hideTip
+  })
+}
 function renderFitness() {
   const w = DATA.well, days = wellnessDays(w)
   const box = $('#fitness-body')
@@ -1413,9 +1468,11 @@ function renderFitness() {
       <div><p class="sub">eFTP <i>intervals.icu 從騎乘反推的估計值，不是量測</i></p><div class="chart" id="eftpc"></div></div>
       <div><p class="sub">HRV <i>點＝每天、線＝7 天平均、帶＝60 天常態</i></p><div class="chart" id="hrvc"></div></div>
     </div>
+    ${readyBlock()}
     <details class="tbl"><summary>看表格（最近 30 天）</summary><div class="tscroll"><table class="t"><thead><tr><th>日期</th><th class="r">CTL</th><th class="r">ATL</th><th class="r">TSB</th><th class="r">HRV</th><th class="r">靜止心率</th><th class="r">睡眠</th></tr></thead>
       <tbody>${days.slice(-30).reverse().map(d => { const x = w[d]; return `<tr><td>${d}</td><td class="r">${n1(x.ctl)}</td><td class="r">${n1(x.atl)}</td><td class="r">${n1(x.ctl - x.atl)}</td><td class="r">${x.hrv ? n0(x.hrv) : '–'}</td><td class="r">${x.restingHR || '–'}</td><td class="r">${x.sleepSecs ? hm(x.sleepSecs) : '–'}</td></tr>` }).join('')}</tbody></table></div></details>`
   $$('#fitness-body .chip').forEach(b => b.addEventListener('click', () => { fitRange = +b.dataset.r; renderFitness() }))
+  drawReady()
   const sel = fitRange ? days.slice(-fitRange) : days
   const n = sel.length
   const actsBy = {}
@@ -1887,9 +1944,9 @@ addEventListener('load', () => setTimeout(bootOnce, 2500), { once: true })
 async function main() {
   // strava.json（2.6 MB）等三個檔先發出去，跟核心資料、場景編譯並行
   const late = Promise.all([J('data/strava.json'), J('data/segment-grades.json'), J('data/power-curve-windows.json'), J('data/itt-conditions.json')])
-  const core = Promise.all([J('data/fit/_activities.json'), J('data/fit/_wellness.json'), J('data/training-block.json'), J('data/tasks.json'), J('data/fit/_reports.json'), J('data/itt-config.json'), J('data/itt-segments.json'), J('data/drivetrain.json'), J('data/fit/_est_distance.json'), J('data/monthly-hours.json'), J('data/plans/' + TODAY.slice(0, 7) + '.json'), J('data/rivals.json')])
-  const [acts, well, block, tasks, reports, ittCfg, itt, drive, estKm, mh, plan, rivals] = await core
-  Object.assign(DATA, { acts, well, block, tasks, reports, ittCfg, itt, drive, estKm, mh, plan, rivals })
+  const core = Promise.all([J('data/fit/_activities.json'), J('data/fit/_wellness.json'), J('data/training-block.json'), J('data/tasks.json'), J('data/fit/_reports.json'), J('data/itt-config.json'), J('data/itt-segments.json'), J('data/drivetrain.json'), J('data/fit/_est_distance.json'), J('data/monthly-hours.json'), J('data/plans/' + TODAY.slice(0, 7) + '.json'), J('data/rivals.json'), J('data/fit-extras.json')])
+  const [acts, well, block, tasks, reports, ittCfg, itt, drive, estKm, mh, plan, rivals, extras] = await core
+  Object.assign(DATA, { acts, well, block, tasks, reports, ittCfg, itt, drive, estKm, mh, plan, rivals, extras })
   DATA.actsList = actsList(acts)
   DATA.ftp = (plan && plan.baseline && plan.baseline.ftp_w) || (block && block.ftp) || null
   DATA.weight = (plan && plan.baseline && plan.baseline.weight_kg) || 80

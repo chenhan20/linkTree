@@ -132,6 +132,10 @@ jobs:
           # 會打 Open-Meteo 抓那幾個整點的風（只抓還沒快取的；抓不到就下一班再抓，不擋這一班）。
           python scripts/build-itt-conditions.py || \
             echo "::warning::ITT 條件校正失敗，這班先跳過"
+          # FIT 裡平常沒讀到的東西：器材電量、左右平衡、功率掉線、Body Battery／Stamina。
+          # 純本機、只解新的 FIT；一定要排在 build-tasks 之前（gear 規則讀它）。
+          python scripts/build-fit-extras.py -q || \
+            echo "::warning::FIT 額外欄位整理失敗，這班先跳過"
           # 室內騎乘的等效平路里程估算（訓練台沒有速度感測，distance 是 0）。
           # 純本機運算、只算還沒算過的趟，要排在教練脈絡之前 —— 月里程要用它。
           python scripts/estimate-indoor-distance.py || \
@@ -148,7 +152,7 @@ jobs:
             echo "::warning::代辦清單重建失敗，這班先跳過"
           git add data/itt-segments.json data/strava.json athlete/coach-context.md \
                   data/fit/_est_distance.json data/tasks.json data/training-block.json \
-                  data/itt-conditions.json data/weather
+                  data/itt-conditions.json data/weather data/fit-extras.json
           git diff --staged --quiet || \
             git commit -m "chore: 回補自建 ITT 成績 $(date -u '+%Y-%m-%d')"
           git push || (git pull --rebase --autostash && git push)
