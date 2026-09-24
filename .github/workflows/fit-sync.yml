@@ -136,6 +136,10 @@ jobs:
           # 純本機、只解新的 FIT；一定要排在 build-tasks 之前（gear 規則讀它）。
           python scripts/build-fit-extras.py -q || \
             echo "::warning::FIT 額外欄位整理失敗，這班先跳過"
+          # 計時段最佳配速與「照目前體能全力」的預估（90 天功率曲線 → CP／W′）。排在條件校正之後：
+          # 平路段的校準要排除團騎（讀 itt-conditions.json）。純本機，約 40 秒。
+          python scripts/build-pacing.py || \
+            echo "::warning::配速預估失敗，這班先跳過"
           # 室內騎乘的等效平路里程估算（訓練台沒有速度感測，distance 是 0）。
           # 純本機運算、只算還沒算過的趟，要排在教練脈絡之前 —— 月里程要用它。
           python scripts/estimate-indoor-distance.py || \
@@ -152,7 +156,7 @@ jobs:
             echo "::warning::代辦清單重建失敗，這班先跳過"
           git add data/itt-segments.json data/strava.json athlete/coach-context.md \
                   data/fit/_est_distance.json data/tasks.json data/training-block.json \
-                  data/itt-conditions.json data/weather data/fit-extras.json
+                  data/itt-conditions.json data/weather data/fit-extras.json data/pacing.json
           git diff --staged --quiet || \
             git commit -m "chore: 回補自建 ITT 成績 $(date -u '+%Y-%m-%d')"
           git push || (git pull --rebase --autostash && git push)

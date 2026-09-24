@@ -2277,6 +2277,7 @@ function mount(host, opts) {
       if (!ghosts[i]) ghosts.push(makeGhost())
       const g = ghosts[i]
       g.d = d; g.sr = d.rep ? series(d.rep, d.s0, d.T, r.L) : null
+      g.pf = !g.sr && d.prof && d.prof.t && d.prof.t.length > 1 ? d.prof : null     // 預估影子：照配速計畫的 時間→距離 表
       // 亮度拉齊：骨白、金黃跟暮紫疊加起來亮度差兩三倍，一律換算到同一個亮度（Y ≈ 0.45）
       const cl = g.mat.uniforms.uCol.value.set(d.color).convertSRGBToLinear()
       cl.multiplyScalar(clamp(0.45 / Math.max(0.05, 0.2126 * cl.r + 0.7152 * cl.g + 0.0722 * cl.b), 0.5, 1.6)); g.col = cl
@@ -2286,8 +2287,23 @@ function mount(host, opts) {
     RACE.lastTau = null
     if (!running) requestAnimationFrame(t => { if (!running) { frame(t); cancelAnimationFrame(raf) } })   // 減少動態時停著的那張也要看得到影子
   }
-  const gProg = (g, r, tau) => (tau <= 0 ? 0 : g.sr ? progOf(g.sr, tau) : r.L * tau / g.d.T)
-  const gTime = (g, r, x) => (x <= 0 ? 0 : g.sr ? timeAt(g.sr, x) : x * g.d.T / r.L)
+  // 配速計畫的影子：prof = { t: [0, …], x: [0, …] }（秒、公尺），縮放到官方路段長；過了終點照最後一格的速度往前
+  function pfAt(pf, L, tau) {
+    const t = pf.t, x = pf.x, n = t.length, k = L / x[n - 1]
+    if (tau >= t[n - 1]) return (x[n - 1] + (tau - t[n - 1]) * (x[n - 1] - x[n - 2]) / Math.max(0.1, t[n - 1] - t[n - 2])) * k
+    let lo = 0, hi = n - 1
+    while (hi - lo > 1) { const m = (lo + hi) >> 1; if (t[m] <= tau) lo = m; else hi = m }
+    return lerp(x[lo], x[hi], (tau - t[lo]) / Math.max(1e-6, t[hi] - t[lo])) * k
+  }
+  function pfTime(pf, L, want) {
+    const t = pf.t, x = pf.x, n = t.length, xx = want * x[n - 1] / L
+    if (xx >= x[n - 1]) return t[n - 1] + (xx - x[n - 1]) * Math.max(0.1, t[n - 1] - t[n - 2]) / Math.max(0.1, x[n - 1] - x[n - 2])
+    let lo = 0, hi = n - 1
+    while (hi - lo > 1) { const m = (lo + hi) >> 1; if (x[m] <= xx) lo = m; else hi = m }
+    return lerp(t[lo], t[hi], (xx - x[lo]) / Math.max(1e-6, x[hi] - x[lo]))
+  }
+  const gProg = (g, r, tau) => (tau <= 0 ? 0 : g.sr ? progOf(g.sr, tau) : g.pf ? pfAt(g.pf, r.L, tau) : r.L * tau / g.d.T)
+  const gTime = (g, r, x) => (x <= 0 ? 0 : g.sr ? timeAt(g.sr, x) : g.pf ? pfTime(g.pf, r.L, x) : x * g.d.T / r.L)
   function updateRace(dt) {
     const r = RACE.r
     if (!r || !S.rep) return

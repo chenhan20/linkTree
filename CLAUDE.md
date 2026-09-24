@@ -27,6 +27,7 @@ python3 scripts/backfill-itt-efforts.py --quiet       # 從 FIT 重建 ITT 成�
 python3 scripts/tag-itt-sources.py
 python3 scripts/build-itt-conditions.py               # 平路 ITT 換算成單騎無風（會打 Open-Meteo 抓風，有快取）
 python3 scripts/build-fit-extras.py -q                # 器材電量／左右平衡／Body Battery（build-tasks 的 gear 規則讀它）
+python3 scripts/build-pacing.py                       # 計時段最佳配速＋照目前體能的全力預估（排在條件校正之後）
 python3 scripts/estimate-indoor-distance.py            # 室內沒有距離，估等效平路里程（漏跑月里程會少一整趟）
 python3 scripts/build-coach-context.py                # 貼給外部 AI 的脈絡檔，漏跑就停在上次那天
 node scripts/fetch-strava.js                          # 總覽的年度統計還住在 strava.json

@@ -393,7 +393,7 @@ footer .worlds a b { color: var(--text); font-weight: 600; margin-right: 6px }
   .strip { display: none }
   .keys { display: none }
   .race { top: auto; bottom: 166px; left: 12px; right: 12px; width: auto; padding: 6px 10px; border-radius: 10px; background: rgba(10, 13, 24, .3); -webkit-backdrop-filter: none; backdrop-filter: none; border-color: rgba(246, 239, 228, .1); text-shadow: 0 1px 8px rgba(6, 8, 16, .7) }
-  .race-map, .race-bar, .race-again { display: none }
+  .race-map, .race-bar, .race-again, .race-eq { display: none !important }
   .race-st { margin-top: 4px; min-height: 0 }
   .race-rows { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0 12px; margin-top: 2px }
   .race-rows li { border-top: 0; padding: 1px 0 }
@@ -908,6 +908,12 @@ async function buildRace(sg, me, rep, s0) {
     if (!r) return null
     return { key: d.key, label: d.label, color: d.color, T: d.e.elapsed_sec, rep: r, s0: alignEffort(r, d.e, sg.L), sub: mdY(d.e.date), e: d.e }
   }))).filter(Boolean)
+  // 全力預估：照目前體能（CP／W′）全力、最佳配速的那一隻（scripts/build-pacing.py）。有同事的路段車道已經滿了，不加
+  const pc = DATA.pacing && DATA.pacing.segments && DATA.pacing.segments[sg.id]
+  if (pc && pc.opt && pc.opt.t100 && !ghosts.some(g => g.key !== 'best' && g.key !== 'prev')) {
+    const xs = pc.opt.t100.map((_, i) => Math.min((i + 1) * 100, pc.L))
+    ghosts.push({ key: 'pred', label: '全力預估', color: C.sea, T: pc.opt.t, prof: { t: [0].concat(pc.opt.t100), x: [0].concat(xs) }, cad: 90, avgW: pc.opt.avg, sub: `${pc.opt.avg} W` })
+  }
   if (scene && scene.quality === 'low') ghosts.length = Math.min(ghosts.length, 3)          // 手機最多三隻（一隻影子 23 個 draw call）
   const names = ghosts.map(g => (g.key === 'prev' ? g.label + '的自己' : g.key === 'best' ? g.label + (g.label === 'PR' ? '' : '的自己') : g.label))
   return { id: sg.id, name: sg.name, L: sg.L, T: me.elapsed_sec, s0, rep, ghosts, eff: me, date: me.date,
@@ -1719,6 +1725,53 @@ function renderItt() {
   setLede('itt', `${rows.length} 條母路線、${total} 次計時。最近一次是 <b>${esc(last.name)} ${hms(last.last.elapsed_sec)}</b>（${mdd(last.last.date)}，${n0(last.last.avg_watts)} W）。有 FIT 的成績是自己從檔案算的，Strava 只拿來對帳。`
     + (nGroup ? `河濱平路 ${cs.length} 段裡，<b>${nGroup} 段的最快紀錄是團騎騎出來的</b>；平路段多一欄「換算」，只看功率來比。` : ''))
 }
+// 配速（scripts/build-pacing.py）：照目前體能全力、最佳配速的預估，跟最近一次、PR 的逐 100 m 功率放在一起
+const PACE_COL = () => ({ opt: C.sea, last: C.dusk, best: C.sun })
+function paceSeries(p) {
+  const out = [{ k: 'opt', label: '全力預估的配速', w: p.opt.w100 }]
+  if (p.last) out.push({ k: 'last', label: `最近一次 ${mdY(p.last.date)}${p.best && p.best.date === p.last.date && p.best.start_time === p.last.start_time ? '（也是最快）' : ''}`, w: p.last.w100 })
+  if (p.best && !(p.last && p.best.date === p.last.date && p.best.start_time === p.last.start_time)) out.push({ k: 'best', label: `最快 ${mdY(p.best.date)}${p.best.flag === 'group' ? '（團騎）' : ''}`, w: p.best.w100 })
+  return out
+}
+function pacingBlock(p) {
+  const A = DATA.pacing.athlete, last = p.last, gain = Math.round(p.even.t - p.opt.t)
+  const surge = last && last.start_w > p.even.w * 1.1 && last.end_w < p.even.w * 0.95
+  const q = [0, 1, 2, 3].map(i => { const a = Math.floor(p.g100.length * i / 4), b = Math.floor(p.g100.length * (i + 1) / 4); return [a, Math.max(a + 1, b)] })
+  const avg = (arr, a, b) => (arr ? Math.round(arr.slice(a, b).reduce((x, y) => x + y, 0) / Math.max(1, b - a)) : null)
+  const ser = paceSeries(p), col = PACE_COL()
+  return `<div class="blk" style="margin-top:22px"><p class="sub">配速 <i>照目前體能全力騎的預估 · CP ${n0(A.cp)} W、W′ ${n1(A.wp / 1000)} kJ（最近 ${A.days} 天的功率曲線）</i></p>
+    <p class="dmeta" style="margin:-4px 0 12px">全力：<b>${n0(p.even.w)} W</b> 騎到底，預估 <b>${hms(p.opt.t)}</b>${gain >= 3 ? `；坡陡的地方多一點、緩的少一點，再快 ${gain} 秒` : ''}。${last ? `最近一次 ${mdY(last.date)} ${hms(last.elapsed)}：開頭 20% 平均 ${last.start_w} W、最後 30% ${last.end_w} W${surge ? ' —— <b>前面衝太快、後面掉下來</b>' : ''}。` : ''}</p>
+    <div class="legend">${ser.map(x => `<span><i style="background:${col[x.k]}"></i>${esc(x.label)}</span>`).join('')}</div>
+    <div class="chart" id="pace-c"></div>
+    <details class="tbl"><summary>看表格（分四段）</summary><div class="tscroll"><table class="t"><thead><tr><th>段</th><th class="r">平均坡度</th>${ser.map(x => `<th class="r">${esc(x.label.replace(/（.*?）/, ''))}</th>`).join('')}</tr></thead>
+      <tbody>${q.map(([a, b], i) => `<tr><td>${n1(a / 10)}–${n1(Math.min(b * 100, p.L) / 1000)} km</td><td class="r">${n1(p.g100.slice(a, b).reduce((x, y) => x + y, 0) / Math.max(1, b - a))}%</td>${ser.map(x => `<td class="r">${avg(x.w, a, b) == null ? '–' : avg(x.w, a, b) + ' W'}</td>`).join('')}</tr>`).join('')}</tbody></table></div></details>
+    <p class="note">預估是物理模型（人車 88 kg、Crr 0.005）加上這條路過去的實際成績校準（×${p.cal.ratio}，${p.cal.n >= 4 ? p.cal.n + ' 次' : '次數太少，用整體的'}）。最佳配速＝功率隨坡度線性變化、W′ 剛好在終點用完裡最快的那組。</p></div>`
+}
+function drawPacing(p) {
+  const el = $('#pace-c'); if (!el) return
+  const ser = paceSeries(p), col = PACE_COL(), nb = p.g100.length
+  chart(el, wd => {
+    const h = 190, pt = 10, pb = 22, pL = 30
+    // 上緣用第 98 百分位：終點衝刺那一格 490 W 會把整張圖壓扁，衝出去的點貼著上緣畫
+    const all = ser.flatMap(x => x.w).filter(v => v != null).sort((a, b) => a - b)
+    const p98 = all[Math.min(all.length - 1, Math.floor(all.length * 0.98))]
+    const lo = Math.max(0, Math.floor((Math.min(all[0], p.even.w) - 20) / 50) * 50), hi = Math.ceil((Math.max(p98, p.even.w) + 20) / 50) * 50
+    const x = i => pL + (Math.min((i + 0.5) * 100, p.L)) / p.L * (wd - pL - 4), y = v => pt + (hi - Math.min(hi, Math.max(lo, v))) / (hi - lo) * (h - pt - pb)
+    let s = `<svg viewBox="0 0 ${wd} ${h}" height="${h}" role="img" aria-label="逐 100 公尺功率：全力預估、最近一次、最快">`
+    ticks(lo, hi, 4).forEach(t => { s += `<line class="grid" x1="${pL}" x2="${wd}" y1="${y(t)}" y2="${y(t)}"/><text class="ax" x="${pL - 6}" y="${y(t) + 4}" text-anchor="end">${t}</text>` })
+    s += `<text class="ax" x="${pL}" y="${h - 6}">0</text><text class="ax" x="${wd}" y="${h - 6}" text-anchor="end">${(p.L / 1000).toFixed(2)} km</text>`
+    ser.slice().reverse().forEach(x2 => { s += `<path d="${path(x2.w.map((v, i) => [x(i), y(v)]))}" fill="none" stroke="${col[x2.k]}" stroke-width="${x2.k === 'opt' ? 2.2 : 1.5}" stroke-linejoin="round"${x2.k === 'opt' ? '' : ' opacity=".9"'}/>` })
+    s += `<line class="xh" x1="0" x2="0" y1="${pt}" y2="${h - pb}" stroke="rgba(239,232,220,.4)" style="opacity:0"/></svg>`
+    el.innerHTML = s
+    const svg = $('svg', el), line = $('.xh', el)
+    el.onpointermove = e => {
+      const r = svg.getBoundingClientRect(), i = Math.max(0, Math.min(nb - 1, Math.floor((e.clientX - r.left - pL) / (wd - pL - 4) * p.L / 100)))
+      line.setAttribute('x1', x(i)); line.setAttribute('x2', x(i)); line.style.opacity = 1
+      showTip(e, `${(i / 10).toFixed(1)}–${(Math.min((i + 1) * 100, p.L) / 1000).toFixed(1)} km · 坡度 ${n1(p.g100[i])}%`, ser.map(x2 => ({ v: x2.w[i] == null ? '–' : n0(x2.w[i]) + ' W', l: x2.label, c: col[x2.k] })))
+    }
+    el.onpointerleave = () => { line.style.opacity = 0; hideTip() }
+  })
+}
 function renderIttDetail(rows) {
   const r = rows.find(x => x.key === ittSel); if (!r) return
   const mem = r.members.find(x => x.cfg.id === ittSub) || r.members[0]
@@ -1727,6 +1780,7 @@ function renderIttDetail(rows) {
   const gr = DATA.grades && DATA.grades[seg.id]
   const raceEnv = raceEnvOf(seg.id)
   const cseg = DATA.cond && DATA.cond.segments && DATA.cond.segments[seg.id]
+  const pcs = DATA.pacing && DATA.pacing.segments && DATA.pacing.segments[seg.id]
   const cOf = e => condOf(seg.id, e)
   const bestEq = cseg && cseg.best_equiv
   const box = $('#itt-d')
@@ -1736,6 +1790,7 @@ function renderIttDetail(rows) {
     ${raceEnv ? `<button class="race-go" type="button" data-go="latest">在頁首跟影子重騎這段<span aria-hidden="true">↑</span></button>` : ''}
     ${r.members.length > 1 ? `<div class="subs" role="group" aria-label="分段">${r.members.map(m => `<button type="button" data-id="${m.cfg.id}" aria-pressed="${m === mem}">${esc(m.cfg.label || m.cfg.nameZh)} ${m.seg.efforts && m.seg.efforts.length ? hms(Math.min(...m.seg.efforts.map(e => e.elapsed_sec))) : ''}</button>`).join('')}</div>` : ''}
     ${gr ? `<div class="blk" style="margin-top:22px"><p class="sub">坡度剖面 <i>每 25 m 一格，從 FIT 算的</i></p><div class="chart" id="grade-c"></div></div>` : ''}
+    ${pcs ? pacingBlock(pcs) : ''}
     <div class="blk" style="margin-top:22px"><p class="sub">歷次成績 <i>${ef.length} 次 · <span class="crown"></span>最快${bestEq ? ' · <span class="crown eq"></span>換算最快' : ''}</i></p>
     <div class="tscroll"><table class="t"><thead><tr><th>日期</th><th class="r">時間</th><th class="r">W</th><th class="r">心率</th><th class="r">踏頻</th>${cseg ? '<th class="r" title="同樣的逐秒功率、自己騎、無風、標準空氣">換算</th>' : ''}<th>來源</th>${raceEnv ? '<th><span class="sr">3D</span></th>' : ''}</tr></thead>
     <tbody>${ef.slice(0, 14).map(e => `<tr><td>${e === best ? '<span class="crown"></span>' : ''}${e.date.slice(2).replace(/-/g, '/')}${e.start_time ? ` <span class="muted">${esc(e.start_time)}</span>` : ''}</td><td class="r"><b>${hms(e.elapsed_sec)}</b>${(cOf(e) || {}).flag ? `<span class="ctag">${FLAG_ZH[cOf(e).flag]}</span>` : ''}</td><td class="r">${n0(e.avg_watts)}</td><td class="r">${n0(e.avg_heartrate)}</td><td class="r">${n0(e.avg_cadence)}</td>${cseg ? `<td class="r eqc"${condTitle(cOf(e))}>${cOf(e) ? `${bestEq && bestEq.at === `${e.date} ${e.start_time}` ? '<span class="crown eq"></span>' : ''}<b>${hms(cOf(e).t_equiv)}</b>` : '–'}</td>` : ''}<td><span class="src${e.fit_check ? ' w' : ''}" title="${e.fit_check ? '自建與 Strava 差太多，顯示 Strava' : ''}">${e.source === 'fit' ? 'FIT' : e.fit_check ? '⚠︎ STRAVA' : 'STRAVA'}</span></td>${raceEnv ? `<td>${rawEff(seg.id, e) ? `<button class="go" type="button" data-d="${esc(e.date)}" data-t="${esc(e.start_time || '')}" aria-label="在頁首 3D 重騎 ${esc(e.date)} 這一次">重騎 ↑</button>` : ''}</td>` : ''}</tr>`).join('')}</tbody></table></div>
@@ -1743,6 +1798,7 @@ function renderIttDetail(rows) {
     ${cseg ? `<p class="note"><b>換算</b>＝同樣的逐秒功率、自己騎、無風、標準空氣（物理模型，單騎誤差約 ±3.4%），只由功率決定。<b>團騎</b>＝這一段比單騎物理快 3% 以上、整趟也有明顯跟車；<b>偏快</b>＝快得不像單騎、但整趟沒有跟車訊號。滑過換算看風、空氣、跟車各差幾秒。</p>` : ''}</div>
     ${r.note ? `<p class="note">${esc(r.note)}</p>` : ''}`
   $$('.subs button', box).forEach(b => b.addEventListener('click', () => { ittSub = +b.dataset.id; renderIttDetail(rows) }))
+  if (pcs) drawPacing(pcs)
   $$('[data-go], .go', box).forEach(b => b.addEventListener('click', () => raceFromChapter(seg.id, b.dataset.d ? { date: b.dataset.d, start_time: b.dataset.t } : null)))
   if (gr) chart($('#grade-c'), wd => {
     const h = 150, pt = 10, pb = 22, pL = 30, g = gr.grade, step = gr.step || 25
@@ -1944,9 +2000,9 @@ addEventListener('load', () => setTimeout(bootOnce, 2500), { once: true })
 async function main() {
   // strava.json（2.6 MB）等三個檔先發出去，跟核心資料、場景編譯並行
   const late = Promise.all([J('data/strava.json'), J('data/segment-grades.json'), J('data/power-curve-windows.json'), J('data/itt-conditions.json')])
-  const core = Promise.all([J('data/fit/_activities.json'), J('data/fit/_wellness.json'), J('data/training-block.json'), J('data/tasks.json'), J('data/fit/_reports.json'), J('data/itt-config.json'), J('data/itt-segments.json'), J('data/drivetrain.json'), J('data/fit/_est_distance.json'), J('data/monthly-hours.json'), J('data/plans/' + TODAY.slice(0, 7) + '.json'), J('data/rivals.json'), J('data/fit-extras.json')])
-  const [acts, well, block, tasks, reports, ittCfg, itt, drive, estKm, mh, plan, rivals, extras] = await core
-  Object.assign(DATA, { acts, well, block, tasks, reports, ittCfg, itt, drive, estKm, mh, plan, rivals, extras })
+  const core = Promise.all([J('data/fit/_activities.json'), J('data/fit/_wellness.json'), J('data/training-block.json'), J('data/tasks.json'), J('data/fit/_reports.json'), J('data/itt-config.json'), J('data/itt-segments.json'), J('data/drivetrain.json'), J('data/fit/_est_distance.json'), J('data/monthly-hours.json'), J('data/plans/' + TODAY.slice(0, 7) + '.json'), J('data/rivals.json'), J('data/fit-extras.json'), J('data/pacing.json')])
+  const [acts, well, block, tasks, reports, ittCfg, itt, drive, estKm, mh, plan, rivals, extras, pacing] = await core
+  Object.assign(DATA, { acts, well, block, tasks, reports, ittCfg, itt, drive, estKm, mh, plan, rivals, extras, pacing })
   DATA.actsList = actsList(acts)
   DATA.ftp = (plan && plan.baseline && plan.baseline.ftp_w) || (block && block.ftp) || null
   DATA.weight = (plan && plan.baseline && plan.baseline.weight_kg) || 80
