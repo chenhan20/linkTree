@@ -150,13 +150,18 @@ jobs:
           # 沒有這步的話它會停在最後一次手動重跑那天 —— 貼給 GPT 的就是過期的身體狀態。
           python scripts/build-coach-context.py || \
             echo "::warning::教練脈絡重建失敗，這班先跳過"
+          # 運動編年史動畫（strava_chronicle.html）的資料。純本機彙整、不打 API。
+          # 要排在 ITT 回補之後：最後一段「中社路歷來每一次同場」讀的是剛回補完的 itt-segments.json。
+          python scripts/build-chronicle.py || \
+            echo "::warning::編年史資料重建失敗，這班先跳過"
           # 代辦清單（現況頁那張卡，AI 開場也讀同一份）。純本機推導、不打 API。
           # 一定要排在最後：它要看這一班剛產出的報告、評分與 itt-segments.json 才算得準。
           python scripts/build-tasks.py || \
             echo "::warning::代辦清單重建失敗，這班先跳過"
           git add data/itt-segments.json data/strava.json athlete/coach-context.md \
                   data/fit/_est_distance.json data/tasks.json data/training-block.json \
-                  data/itt-conditions.json data/weather data/fit-extras.json data/pacing.json
+                  data/itt-conditions.json data/weather data/fit-extras.json data/pacing.json \
+                  data/chronicle.json
           git diff --staged --quiet || \
             git commit -m "chore: 回補自建 ITT 成績 $(date -u '+%Y-%m-%d')"
           git push || (git pull --rebase --autostash && git push)

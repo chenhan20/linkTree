@@ -1,0 +1,1974 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>運動編年史 · Steve Chuang</title>
+<meta name="description" content="從 2025 年 4 月第一趟到今天，每一趟騎乘、跑步、游泳，做成一支約 100 秒的像素動畫。音樂是程式即時合成的。">
+<meta name="theme-color" content="#0b0d14">
+<link rel="icon" href="logo.ico">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="preload" href="https://cdn.jsdelivr.net/gh/ACh-K/Cubic-11@1.500/fonts/web/Cubic_11.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+/* 設計系統：DESIGN.chronicle.md。根目錄的 DESIGN.md 不管這一頁。 */
+@font-face{font-family:'Cubic11';src:url('https://cdn.jsdelivr.net/gh/ACh-K/Cubic-11@1.500/fonts/web/Cubic_11.woff2') format('woff2');font-display:block}
+:root{
+  --bg:#0b0d14; --line:#252a39; --ink:#ecead8; --dim:#9397ab; --faint:#62677c;
+  --accent:#ff9a5a; --gold:#f3c969;
+  --pixel:'Cubic11','PingFang TC','Noto Sans TC','Microsoft JhengHei',sans-serif;
+  --sans:'PingFang TC','Noto Sans TC','Microsoft JhengHei',system-ui,-apple-system,sans-serif;
+}
+*{box-sizing:border-box}
+html{background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased}
+.top{display:flex;align-items:center;justify-content:space-between;gap:16px;max-width:1320px;margin:0 auto;padding:10px 16px;font-family:var(--pixel);font-size:12px;line-height:1;color:var(--dim)}
+.top a{color:var(--dim);text-decoration:none;padding:8px 0}
+.top a:hover,.top a:focus-visible{color:var(--ink)}
+.top b{font-weight:400;color:var(--ink);letter-spacing:.1em}
+.player{display:flex;flex-direction:column;align-items:center;padding:0 16px}
+.stage{position:relative;background:#000;width:320px;height:180px;line-height:0;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+.stage:fullscreen{width:100vw!important;height:100vh!important;display:grid;place-items:center;background:#000}
+#screen{display:block;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges}
+.stage:fullscreen #screen{width:var(--fw);height:var(--fh)}
+.start{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:10px;padding-bottom:7%;line-height:1.2;background:linear-gradient(to top,rgba(6,8,14,.78),rgba(6,8,14,0) 58%)}
+.start[hidden]{display:none}
+.start p{margin:0;font-family:var(--pixel);font-size:12px;color:#dcd9c8;text-shadow:0 1px 0 #000}
+.btn{display:inline-flex;align-items:center;gap:10px;font-family:var(--pixel);font-size:24px;line-height:1;color:#12141c;background:var(--gold);border:0;border-radius:0;padding:12px 22px 11px;cursor:pointer;box-shadow:0 4px 0 #9a7a2e}
+.btn svg{width:16px;height:16px;fill:currentColor}
+.btn:hover{background:#ffd98a}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 #9a7a2e}
+.btn:focus-visible{outline:2px solid var(--ink);outline-offset:4px}
+.btn.ghost{font-size:12px;background:transparent;color:#dcd9c8;box-shadow:none;padding:8px 10px;text-decoration:underline;text-underline-offset:3px}
+.btn.ghost:hover{color:#fff}
+.bar{display:flex;align-items:center;gap:12px;width:100%;padding-top:10px;font-family:var(--pixel);font-size:12px;line-height:1;color:var(--dim)}
+.bar button{flex:none;width:40px;height:40px;display:grid;place-items:center;background:transparent;border:1px solid var(--line);color:var(--ink);cursor:pointer;padding:0;border-radius:0}
+.bar button:hover{border-color:var(--faint)}
+.bar button:focus-visible,.seek:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.bar svg{width:16px;height:16px;fill:currentColor}
+.time{flex:none;min-width:96px;text-align:center;font-variant-numeric:tabular-nums;white-space:nowrap}
+.seek{position:relative;flex:1;height:44px;cursor:pointer;touch-action:none}
+.seek .track{position:absolute;left:0;right:0;top:14px;height:2px;background:var(--line)}
+.seek .fill{position:absolute;left:0;top:14px;height:2px;width:0;background:var(--gold)}
+.seek .knob{position:absolute;top:9px;left:0;width:4px;height:12px;margin-left:-2px;background:var(--ink)}
+.seek .tick{position:absolute;top:26px;transform:translateX(-50%);white-space:nowrap;color:var(--faint);pointer-events:none}
+.seek .tick::before{content:'';position:absolute;left:50%;top:-9px;width:1px;height:5px;background:var(--faint)}
+.hint{margin:10px 0 0;font-family:var(--pixel);font-size:12px;line-height:1.4;color:var(--faint);text-align:center}
+.notes{max-width:760px;margin:48px auto 80px;padding:0 16px}
+.notes h2{font-family:var(--pixel);font-weight:400;font-size:12px;line-height:1;letter-spacing:.14em;color:var(--dim);margin:44px 0 14px}
+.notes p{margin:0 0 12px;color:#cfccbd}
+.notes code{font-size:13px;color:var(--ink)}
+.notes ol{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.notes li{display:grid;grid-template-columns:76px 1fr;gap:16px;padding:11px 0;border-bottom:1px solid var(--line)}
+.notes li time{font-family:var(--pixel);font-size:12px;line-height:1;color:var(--dim);padding-top:6px}
+.notes li b{font-weight:600;color:var(--ink)}
+.notes li span{display:block;color:var(--dim);font-size:14px}
+.stage.compact .start{gap:6px;padding-bottom:5%}
+.stage.compact .btn{font-size:12px;padding:10px 16px 9px;box-shadow:0 3px 0 #9a7a2e}
+.stage.compact .btn.ghost{box-shadow:none;padding:6px 8px}
+.stage.compact .start p{display:none}
+.seek.narrow .tick.minor{display:none}
+@media (pointer:coarse){.hint{display:none}}
+@media (max-width:560px){
+  .hint{display:none}
+  .bar{gap:8px}
+  .time{min-width:0}
+  .seek .tick{display:none}
+  .notes li{grid-template-columns:64px 1fr;gap:12px}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <a href="linkTreeIndex.html">← 首頁</a>
+  <b>運動編年史</b>
+  <span id="asof">&nbsp;</span>
+</header>
+
+<main class="player">
+  <div class="stage" id="stage">
+    <canvas id="screen" width="320" height="180" role="img" aria-label="運動編年史動畫：從 2025 年 4 月的第一趟騎乘到今天，一個月一關"></canvas>
+    <div class="start" id="start">
+      <button class="btn" id="bStart" type="button" disabled><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 1.5l11 6.5-11 6.5z"/></svg><span id="bStartLabel">載入中</span></button>
+      <p id="startInfo">&nbsp;</p>
+      <button class="btn ghost" id="bMuted" type="button" disabled>靜音播放</button>
+    </div>
+  </div>
+  <div class="bar" id="bar">
+    <button id="bPlay" type="button" aria-label="播放"><svg viewBox="0 0 16 16" aria-hidden="true"><path id="iPlay" d="M3 1.5l11 6.5-11 6.5z"/></svg></button>
+    <span class="time" id="tTime">0:00 / 0:00</span>
+    <div class="seek" id="seek" role="slider" tabindex="0" aria-label="播放進度" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0" aria-valuetext="0:00">
+      <div class="track"></div><div class="fill" id="seekFill"></div><div class="knob" id="seekKnob"></div>
+    </div>
+    <button id="bMute" type="button" aria-label="關掉聲音" aria-pressed="false"><svg viewBox="0 0 16 16" aria-hidden="true"><path id="iMute" d="M1 5.5h3l4-3.5v12l-4-3.5H1zM10.5 4.5a5 5 0 0 1 0 7l-1-1a3.6 3.6 0 0 0 0-5zM12.6 2.4a8 8 0 0 1 0 11.2l-1-1a6.6 6.6 0 0 0 0-9.2z"/></svg></button>
+    <button id="bFull" type="button" aria-label="全螢幕"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1 1h5v2H3v3H1zm9 0h5v5h-2V3h-3zM1 10h2v3h3v2H1zm12 0h2v5h-5v-2h3z"/></svg></button>
+  </div>
+  <p class="hint" id="hint">空白鍵 播放／暫停　← → 快轉 5 秒　M 聲音　F 全螢幕</p>
+</main>
+
+<section class="notes" aria-labelledby="h-about">
+  <h2 id="h-about">這是什麼</h2>
+  <p>一個月一關的橫向捲軸。路的高低是那個月騎了幾小時：月與月之間的坡道，上坡代表比上個月更拚，下坡是在偷懶（下坡不用踩，所以他腳會翹起來）。路上的小山是那天真的爬了多少，中社路那種日子就要站起來抽。金幣是 Strava 算給他的路段 PR，一趟拿越多撒越多。畫面最下面那排長條是每個月的騎乘時數，虛線是 15.3 小時的損益線：月騎超過它的時候，接下來的 eFTP 通常會往上長，低於它就在掉。</p>
+  <p>季節跟著日期走：二月的櫻花、四五月的油桐花、夏天的大太陽、秋天陽明山的芒草、冬天的雨。有下雨的日子是從活動名稱讀出來的，例如「咖啡騎 變落湯雞」那天真的在下雨。最後一段是中社路從第一次到現在的每一次成績，同時出發比一場。</p>
+  <h2>數字從哪裡來</h2>
+  <p>全部來自 <code>data/chronicle.json</code>，由 <code>scripts/build-chronicle.py</code> 從 Strava 封存、intervals.icu 與手錶的 FIT 彙整，每天跟著同步排程更新。月時數與損益線跟其他頁同一個口徑，室內騎乘的重複紀錄已經去掉；爬升只算戶外。音樂沒有音檔，是瀏覽器用 Web Audio 當場合成的方波與三角波。</p>
+  <h2>字幕稿</h2>
+  <ol id="script"></ol>
+</section>
+
+<script>
+(() => {
+'use strict'
+
+// ════════════════════════════════════════════════════════════════════════
+// 0. 常數與小工具
+// ════════════════════════════════════════════════════════════════════════
+const W = 320, H = 180
+const BPM = 150, BEAT = 60 / BPM, BAR = BEAT * 4, STEP = BEAT / 4
+const HUD_H = 15, STRIP_Y = 151
+const RIDER_SX = 100                     // 車手後輪著地點在畫面上的 x
+const BAR_W = 180                        // 一小節在世界裡的寬度：整支片等速捲動，事件多的日子是「日曆變慢」，不是鏡頭變慢
+const ROAD_LO = 146, ROAD_RISE = 34      // 0 小時的路在 146，時數最多的月份抬高 34（上面還要留給爬坡日的小山）
+const EXTRA_BARS = { '2025-08': 2, '2026-01': 1, '2026-02': 2, '2026-03': 2, '2026-07': 2 }   // 事件多、或月底有特殊場景的月份多給幾小節
+const INTRO_BARS = 4, RACE_BARS = 8, RESULT_BARS = 6, TAIL = 1.8
+const FONT = 'Cubic11'
+const INK = '#ecead8', DIM = '#a3a7b8', GOLD = '#f3c969', ORANGE = '#ff9a5a', MINT = '#8fe0bf', ROSE = '#ffa39b'
+
+const cv = document.getElementById('screen')
+const ctx = cv.getContext('2d', { alpha: false })
+ctx.imageSmoothingEnabled = false
+
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v
+const lerp = (a, b, t) => a + (b - a) * t
+const smooth = t => { t = clamp(t, 0, 1); return t * t * (3 - 2 * t) }
+const fract = x => x - Math.floor(x)
+const hash = n => { let x = Math.imul((n | 0) ^ 0x9e3779b9, 0x85ebca6b); x ^= x >>> 13; x = Math.imul(x, 0xc2b2ae35); x ^= x >>> 16; return (x >>> 0) / 4294967296 }
+const noise = (x, s = 0) => { const i = Math.floor(x), f = x - i, u = f * f * (3 - 2 * f); return lerp(hash(i * 7919 + s * 104729), hash((i + 1) * 7919 + s * 104729), u) }
+const hexRgb = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)]
+const mixRgb = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t]
+const rgb = c => `rgb(${c[0] | 0},${c[1] | 0},${c[2] | 0})`
+const rgba = (c, a) => `rgba(${c[0] | 0},${c[1] | 0},${c[2] | 0},${a})`
+const toHex = c => '#' + c.map(v => clamp(Math.round(v), 0, 255).toString(16).padStart(2, '0')).join('')
+const fmtInt = n => Math.round(n).toLocaleString('en-US')
+const fmtMSS = s => { s = Math.max(0, Math.round(s)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}` }
+const dayNum = s => Date.UTC(+s.slice(0, 4), +s.slice(5, 7) - 1, +s.slice(8, 10)) / 864e5
+const ymd = dn => { const d = new Date(Math.floor(dn) * 864e5); return [d.getUTCFullYear(), d.getUTCMonth() + 1, d.getUTCDate()] }
+const doyOf = dn => dn - Date.UTC(ymd(dn)[0], 0, 1) / 864e5
+const timeFrac = t => t ? (+t.slice(0, 2) + +t.slice(3, 5) / 60) / 24 : 0.5
+const dstr = dn => { const [y, m, d] = ymd(dn); return `${y}.${String(m).padStart(2, '0')}.${String(d).padStart(2, '0')}` }
+const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches
+
+// ════════════════════════════════════════════════════════════════════════
+// 1. 色盤：六個季節關鍵格，照日期連續內插（台北的季節，不是溫帶的）
+// ════════════════════════════════════════════════════════════════════════
+const PAL_FIELDS = ['skyTop', 'skyBot', 'sun', 'cloud', 'cloudShade', 'far', 'farRim', 'city', 'cityWin', 'mid', 'midRim', 'tree', 'tree2', 'trunk', 'grass', 'grassDark', 'road', 'roadEdge', 'roadLine', 'soil', 'accent', 'petal']
+const toPal = o => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, hexRgb(v)]))
+const SEASONS = [
+  // 1 月：冬雨、灰
+  [15, { skyTop: '#5d6c7e', skyBot: '#adb6c0', sun: '#eef0f2', cloud: '#c6ccd4', cloudShade: '#9aa3ae', far: '#6c7a88', farRim: '#83909d', city: '#5a6571', cityWin: '#e8dca2', mid: '#4f6759', midRim: '#627d6c', tree: '#3f5d4b', tree2: '#577664', trunk: '#4a3b33', grass: '#5a7658', grassDark: '#425b45', road: '#4b4e57', roadEdge: '#6f737e', roadLine: '#cfccbd', soil: '#5b4a3e', accent: '#d0626c', petal: '#f2b8c6' }],
+  // 2 月底：陽明山櫻花
+  [52, { skyTop: '#6e8aa6', skyBot: '#c8d0d8', sun: '#f6f3e6', cloud: '#dfe4ea', cloudShade: '#b3bcc7', far: '#768899', farRim: '#8c9cab', city: '#5f6d7b', cityWin: '#f0e2a8', mid: '#56705e', midRim: '#6c8872', tree: '#4a6a55', tree2: '#e79bb6', trunk: '#57443a', grass: '#638060', grassDark: '#48634a', road: '#4f525b', roadEdge: '#737784', roadLine: '#d9d6c6', soil: '#5f4d40', accent: '#f19ab8', petal: '#f7b7cd' }],
+  // 4 月：晴、油桐花
+  [105, { skyTop: '#5aa2e0', skyBot: '#cfe7f4', sun: '#fff6d2', cloud: '#ffffff', cloudShade: '#d8e6f1', far: '#86adb5', farRim: '#9fc3c7', city: '#6d8a9c', cityWin: '#fff2b0', mid: '#5d9a5c', midRim: '#79b56f', tree: '#4f9a4f', tree2: '#8dc76b', trunk: '#6a4c38', grass: '#63ad55', grassDark: '#478a41', road: '#56585f', roadEdge: '#7c7f89', roadLine: '#ebe8d8', soil: '#7a5c43', accent: '#f5f1e1', petal: '#fbfaf2' }],
+  // 7 月：大太陽
+  [200, { skyTop: '#1f73d6', skyBot: '#88cdff', sun: '#fffbe6', cloud: '#ffffff', cloudShade: '#cfe2f4', far: '#4d8aa0', farRim: '#63a3b5', city: '#5a7d95', cityWin: '#fff7c2', mid: '#3d9147', midRim: '#56ac58', tree: '#2e8a40', tree2: '#4fae4a', trunk: '#5d4230', grass: '#48a33c', grassDark: '#2f7f2e', road: '#54565e', roadEdge: '#7a7d87', roadLine: '#f0ecd8', soil: '#7a5638', accent: '#ffd54a', petal: '#ffffff' }],
+  // 10 月：金色、芒草
+  [282, { skyTop: '#3f6fb3', skyBot: '#f1ca8f', sun: '#ffe4a2', cloud: '#fff2de', cloudShade: '#e9caa9', far: '#86799c', farRim: '#a08fae', city: '#6f6480', cityWin: '#ffe2a0', mid: '#8f9150', midRim: '#aaa35e', tree: '#c9782d', tree2: '#a8a040', trunk: '#5b4030', grass: '#a79d4b', grassDark: '#817736', road: '#57555c', roadEdge: '#807b80', roadLine: '#f0e3c8', soil: '#7a5a3c', accent: '#efe4c8', petal: '#e0883a' }],
+  // 11 月底：楓香轉紅
+  [330, { skyTop: '#51729d', skyBot: '#d9c8ab', sun: '#fbe8c4', cloud: '#f2e9dc', cloudShade: '#cfc2b0', far: '#7b7890', farRim: '#918ca3', city: '#645f74', cityWin: '#f3dca6', mid: '#7f8456', midRim: '#979a64', tree: '#b5552d', tree2: '#8d8a48', trunk: '#553c2e', grass: '#8f8a4e', grassDark: '#6f6b3a', road: '#525259', roadEdge: '#77767e', roadLine: '#e8dcc4', soil: '#6e5237', accent: '#ebe2ce', petal: '#c9562e' }],
+].map(([d, p]) => [d, toPal(p)])
+const MOD_NIGHT = toPal({ skyTop: '#0a1030', skyBot: '#28315c', sun: '#f4f0d8', cloud: '#39436a', cloudShade: '#29325a', far: '#1c2340', farRim: '#2b3459', city: '#141a30', cityWin: '#ffd67a', mid: '#15251f', midRim: '#1f3329', tree: '#12211a', tree2: '#1b2d22', trunk: '#161310', grass: '#1d2d22', grassDark: '#131f18', road: '#2a2c33', roadEdge: '#3d4049', roadLine: '#8d8b7c', soil: '#1c1712' })
+const MOD_RAIN = toPal({ skyTop: '#4d5662', skyBot: '#88919b', sun: '#c4c8cc', cloud: '#8a939d', cloudShade: '#6c7580', far: '#5b6570', farRim: '#6a747f', mid: '#4c5f55', midRim: '#58695f', road: '#3f424a', roadEdge: '#5f636d' })
+const MOD_SUNSET = toPal({ skyTop: '#3a4a8c', skyBot: '#ff9e62', sun: '#ffd27a', cloud: '#ffb48c', cloudShade: '#d98a78', far: '#6a4f7a', farRim: '#8c6182', city: '#4c3a58', mid: '#5f5a44' })
+const SEASON_CHIP = m => m >= 3 && m <= 5 ? ['春', '#8dc76b'] : m >= 6 && m <= 8 ? ['夏', '#4fb3ff'] : m >= 9 && m <= 11 ? ['秋', '#e8a04a'] : ['冬', '#a9bccf']
+
+function paletteAt(doy) {
+  let i = SEASONS.length - 1
+  for (let k = 0; k < SEASONS.length; k++) if (SEASONS[k][0] <= doy) i = k
+  const [d0, p0] = SEASONS[i], [d1r, p1] = SEASONS[(i + 1) % SEASONS.length]
+  const d1 = d1r <= d0 ? d1r + 365 : d1r, dd = doy < d0 ? doy + 365 : doy
+  const t = smooth((dd - d0) / (d1 - d0)), out = {}
+  for (const k of PAL_FIELDS) out[k] = mixRgb(p0[k], p1[k], t)
+  return out
+}
+const applyMod = (pal, mod, amt) => { if (amt > 0.001) for (const k in mod) pal[k] = mixRgb(pal[k], mod[k], amt) }
+
+// ════════════════════════════════════════════════════════════════════════
+// 2. 像素筆：矩形、Bresenham 線、中點圓、點陣字（俐方體 11 號，12px 才是原生格）
+// ════════════════════════════════════════════════════════════════════════
+const fill = c => { ctx.fillStyle = typeof c === 'string' ? c : rgb(c) }
+const R = (x, y, w, h) => ctx.fillRect(Math.round(x), Math.round(y), w, h)
+function L(x0, y0, x1, y1, t = 1) {
+  x0 = Math.round(x0); y0 = Math.round(y0); x1 = Math.round(x1); y1 = Math.round(y1)
+  const dx = Math.abs(x1 - x0), dy = -Math.abs(y1 - y0), sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1
+  let e = dx + dy, n = 0
+  for (;;) {
+    ctx.fillRect(x0, y0, t, t)
+    if ((x0 === x1 && y0 === y1) || ++n > 400) break
+    const e2 = 2 * e
+    if (e2 >= dy) { e += dy; x0 += sx }
+    if (e2 <= dx) { e += dx; y0 += sy }
+  }
+}
+const RING = {}
+function ringPts(r) {
+  if (RING[r]) return RING[r]
+  const s = new Set(); let x = r, y = 0, e = 1 - r
+  while (x >= y) {
+    for (const [a, b] of [[x, y], [y, x], [-y, x], [-x, y], [-x, -y], [-y, -x], [y, -x], [x, -y]]) s.add(a + ',' + b)
+    y++
+    if (e < 0) e += 2 * y + 1; else { x--; e += 2 * (y - x) + 1 }
+  }
+  return (RING[r] = [...s].map(v => v.split(',').map(Number)))
+}
+function ring(cx, cy, r) { cx = Math.round(cx); cy = Math.round(cy); for (const [a, b] of ringPts(r)) ctx.fillRect(cx + a, cy + b, 1, 1) }
+function disc(cx, cy, r) {
+  cx = Math.round(cx); cy = Math.round(cy)
+  for (let y = -r; y <= r; y++) { const w = Math.floor(Math.sqrt(r * r - y * y + r * 0.6)); ctx.fillRect(cx - w, cy + y, w * 2 + 1, 1) }
+}
+function sprite(rows, x, y, colors) {
+  x = Math.round(x); y = Math.round(y)
+  for (let j = 0; j < rows.length; j++) {
+    const row = rows[j]
+    for (let i = 0; i < row.length; i++) { const c = colors[row[i]]; if (c) { ctx.fillStyle = c; ctx.fillRect(x + i, y + j, 1, 1) } }
+  }
+}
+
+// 字：整串快取。畫到離屏畫布、再把 alpha 二值化，確保一顆字就是一格格的像素
+const TXT = new Map()
+function glyphs(str, color, big) {
+  const key = (big ? 'B' : 'S') + color + str
+  let g = TXT.get(key)
+  if (g) return g
+  const size = big ? 24 : 12, c = document.createElement('canvas'), x = c.getContext('2d')
+  x.font = `${size}px ${FONT}`
+  const w = Math.max(1, Math.ceil(x.measureText(str).width) + 1)
+  c.width = w; c.height = size + 2
+  x.font = `${size}px ${FONT}`; x.textBaseline = 'top'; x.fillStyle = '#fff'; x.fillText(str, 0, 0)
+  const img = x.getImageData(0, 0, w, size + 2), d = img.data, rgbC = hexRgb(color)
+  for (let i = 0; i < d.length; i += 4) {
+    if (d[i + 3] > 118) { d[i] = rgbC[0]; d[i + 1] = rgbC[1]; d[i + 2] = rgbC[2]; d[i + 3] = 255 } else d[i + 3] = 0
+  }
+  x.putImageData(img, 0, 0)
+  g = { c, w: w - 1 }
+  if (TXT.size > 1400) TXT.clear()
+  TXT.set(key, g)
+  return g
+}
+const OUT8 = [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [1, -1], [-1, 1], [1, 1]]
+function text(str, x, y, color = INK, o = {}) {
+  if (!str) return 0
+  const big = !!o.big, g = glyphs(str, color, big)
+  let dx = o.align === 'center' ? x - (g.w >> 1) : o.align === 'right' ? x - g.w : x
+  dx = Math.round(dx); y = Math.round(y)
+  if (o.outline) { const b = glyphs(str, o.outline, big); for (const [ox, oy] of OUT8) ctx.drawImage(b.c, dx + ox, y + oy) }
+  else if (o.shadow !== null) { const b = glyphs(str, o.shadow || '#000000', big); ctx.drawImage(b.c, dx + 1, y + 1) }
+  ctx.drawImage(g.c, dx, y)
+  return g.w
+}
+const textW = (str, big) => str ? glyphs(str, '#ffffff', !!big).w : 0
+
+// 3×5 的迷你數字：底下那排長條圖的刻度用
+const MICRO = { 0: '111101101101111', 1: '010110010010111', 2: '111001111100111', 3: '111001111001111', 4: '101101111001001', 5: '111100111001111', 6: '111100111101111', 7: '111001001010010', 8: '111101111101111', 9: '111101111001111', h: '100100111101101', k: '100101110101101', m: '000111111101101', W: '101101101111101', '.': '000000000000100', ':': '000100000100000', '-': '000000111000000', '+': '000010111010000', ' ': '000000000000000' }
+function micro(str, x, y, color) {
+  fill(color); let cx = Math.round(x); y = Math.round(y)
+  for (const ch of String(str)) {
+    const g = MICRO[ch]
+    if (g) for (let i = 0; i < 15; i++) if (g[i] === '1') ctx.fillRect(cx + i % 3, y + (i / 3 | 0), 1, 1)
+    cx += ch === '.' || ch === ':' ? 2 : 4
+  }
+  return cx - x
+}
+const microW = str => [...String(str)].reduce((w, ch) => w + (ch === '.' || ch === ':' ? 2 : 4), 0)
+
+// 小圖示（HUD 與字幕框）
+const ICON = {
+  coin: [['.aaa.', 'aabba', 'aabaa', 'aabaa', '.aaa.'], { a: '#f3c969', b: '#fff4c8' }],
+  mount: [['...a...', '..aaa..', '.aabaa.', 'aaaaaaa'], { a: '#c9d2dd', b: '#ffffff' }],
+  bolt: [['..aa', '.aa.', 'aaaa', '.aa.', 'aa..', 'a...'], { a: '#f3c969' }],
+  wheel: [['.aaa.', 'a.b.a', 'abbba', 'a.b.a', '.aaa.'], { a: '#c9d2dd', b: '#8a93a3' }],
+  shoe: [['..aa...', '..aaa..', 'aaaaaa.', 'bbbbbbb'], { a: '#ecead8', b: '#8a93a3' }],
+  wave: [['.aa..aa.', 'a..aa..a'], { a: '#7fc4ff' }],
+  bell: [['a......a', 'aa....aa', 'aaaaaaaa', 'aa....aa', 'a......a'], { a: '#c9d2dd' }],
+  up: [['.a.', 'aaa'], { a: MINT }],
+  dn: [['aaa', '.a.'], { a: ROSE }],
+}
+const icon = (k, x, y) => sprite(ICON[k][0], x, y, ICON[k][1])
+
+// ════════════════════════════════════════════════════════════════════════
+// 3. 故事：每個月一句標題＋一句引言。引號裡是他自己取的活動名稱
+// ════════════════════════════════════════════════════════════════════════
+const STORY = {
+  '2025-04': C => ({ h: `新手村：第一趟 ${C.firstRide.km} km`, q: '裝備：一支手機' }),
+  '2025-05': () => ({ h: '騎車上班，順手拿了 12 個 PR', q: '第一次 FTP 測試（在室內）' }),
+  '2025-06': C => ({ h: `第一次上中社路：${fmtMSS(C.climbFirst.s)}`, q: '「下課騎回家買早餐好爽」' }),
+  '2025-07': C => ({ h: `月騎 ${C.m.h.toFixed(1)} 小時，第一次過線`, q: '「早上遛抽筋的狗狗」' }),
+  '2025-08': C => ({ h: '新車首航，功率計上線', q: `這個月撿了 ${C.m.pr} 個 PR` }),
+  '2025-09': C => ({ h: `巔峰：${C.m.h.toFixed(1)} 小時・${fmtInt(C.m.km)} km`, q: '「咖啡騎 變落湯雞」' }),
+  '2025-10': C => ({ h: `中社路 ${fmtMSS(C.climbBest.s)}`, q: '到今天還沒被打破，包括他自己' }),
+  '2025-11': C => ({ h: `腳踏車整個月只出門 ${C.m.rides} 次`, q: `他跑步去了：${C.m.runs} 趟 ${Math.round(C.m.run_km)} km` }),
+  '2025-12': C => ({ h: `eFTP ${C.peak ? C.peak.w : '—'} W，生涯最高`, q: '「2025最後一騎」爬了 1,143 m' }),
+  '2026-01': () => ({ h: '寒流。跑去直島騎車看南瓜', q: '「還車ㄎㄎ」' }),
+  '2026-02': C => ({ h: `一日北彰：${C.longest.km} km`, q: '「閃狗雷殘 在地車手」' }),
+  '2026-03': C => ({ h: '普悠瑪三鐵：游、騎、跑', q: `${C.triLine}，完賽` }),
+  '2026-04': C => ({ h: `回到中社路：${fmtMSS(C.climbAfterWinter.s)}`, q: `比 PR 慢 ${fmtMSS(C.climbAfterWinter.s - C.climbBest.s)}，冬天欠的慢慢還` }),
+  '2026-05': () => ({ h: '每週二，中社課表', q: '劍南路 8:09，離 PR 差 3 秒' }),
+  '2026-06': C => ({ h: `這個月只騎了 ${C.m.rides} 趟`, q: '5K 倒是盡力跑了兩次' }),
+  '2026-07': () => ({ h: '「下雨回頭」', q: '回頭那一下：5 秒 934 W' }),
+  '2026-08': () => ({ h: '中社路，一天爬四次', q: '「劍 中中中中 劍」' }),
+  '2026-09': C => ({ h: '60 分鐘功率新紀錄：196 W', q: `中社路 ${fmtMSS(C.climbLatest.s)}，離 PR 剩 ${fmtMSS(C.climbLatest.s - C.climbBest.s)}` }),
+}
+const STORY_DEFAULT = C => ({ h: `騎了 ${C.m.h.toFixed(1)} 小時・${fmtInt(C.m.km)} km`, q: C.m.pr ? `路段 PR ×${C.m.pr}` : '' })
+
+// 日期上的小插曲：彈出字、停留權重（鏡頭在這一天多待一下）、特殊場景
+const CURATED = [
+  ['2025-05-21', { pop: '第一次 FTP 測試', dwell: 1.5, sfx: 'ding' }],
+  ['2025-09-21', { pop: '落湯雞', dwell: 2 }],
+  ['2025-12-30', { pop: '台中北田 99 坡', dwell: 1.5 }],
+  ['2025-12-31', { pop: '2025 最後一騎', dwell: 1.5 }],
+  ['2026-01-29', { set: 'naoshima', pop: '直島・看南瓜', dwell: 9, sigma: 0.45, sfx: 'ding' }],
+  ['2026-04-29', { pop: '結果下雨', dwell: 1 }],
+  ['2026-07-30', { set: 'storm', dwell: 5 }],
+  ['2026-08-11', { set: 'four', pop: '中社路 ×4', dwell: 5, sfx: 'ding' }],
+  ['2026-08-19', { pop: '室內課表開始', dwell: 1 }],
+]
+
+// ════════════════════════════════════════════════════════════════════════
+// 4. 資料 → 片子的時間軸
+// ════════════════════════════════════════════════════════════════════════
+let F = null
+
+function buildFilm(D) {
+  const F = { D, beats: [], items: [], pops: [], rainSpans: [] }
+  const acts = D.acts.map(a => ({ d: a[0], t: a[1], sp: a[2], km: a[3], h: a[4], el: a[5], pr: a[6], ku: a[7], name: a[8] || '', dn: dayNum(a[0]) + timeFrac(a[1]) }))
+  F.acts = acts
+  const today = dayNum(D.today)
+  F.today = today
+  F.spanMonths = Math.max(1, Math.round((today - dayNum(acts[0].d)) / 30.44))
+  F.HMAX = Math.max(20, ...D.months.map(m => m.h))
+  const firstDn = Math.floor(acts.find(a => a.sp === 'ride' || a.sp === 'vride').dn)
+
+  // ── 月份與小節 ──
+  let bar = INTRO_BARS
+  F.months = D.months.map((m, i) => {
+    const y = +m.m.slice(0, 4), mo = +m.m.slice(5, 7)
+    const a0 = Date.UTC(y, mo - 1, 1) / 864e5, n = new Date(Date.UTC(y, mo, 0)).getUTCDate()
+    const o = { ...m, i, y, mo, dnA: a0, dnB: a0 + n }
+    if (i === 0) o.dnA = Math.max(o.dnA, firstDn)
+    if (i === D.months.length - 1) o.dnB = Math.min(o.dnB, today + 0.75)
+    o.bars = 2 + (EXTRA_BARS[m.m] || 0) + (i === D.months.length - 1 ? 1 : 0)   // 最後一個月要停在「今天」
+    o.b0 = bar; bar += o.bars; o.b1 = bar
+    o.t0 = o.b0 * BAR; o.t1 = o.b1 * BAR
+    o.x0 = (o.b0 - INTRO_BARS) * BAR_W; o.w = o.bars * BAR_W
+    return o
+  })
+  F.introT1 = INTRO_BARS * BAR
+  F.monthsT0 = F.introT1; F.monthsT1 = bar * BAR
+  F.raceB0 = bar; F.raceT0 = bar * BAR; bar += RACE_BARS; F.raceT1 = bar * BAR
+  F.resB0 = bar; F.resT0 = F.raceT1; bar += RESULT_BARS; F.resT1 = bar * BAR
+  F.totalBars = bar
+  F.end = F.resT1 + TAIL
+  F.worldW = F.months.reduce((s, m) => s + m.w, 0)
+  const monthOfDn = dn => { let r = F.months[0]; for (const m of F.months) if (dn >= m.dnA) r = m; return r }
+  F.monthOfDn = monthOfDn
+  F.xOfDn = dn => { const m = monthOfDn(dn); return m.x0 + phiAtDay(m, dn) * m.w }   // 要等停留地圖建好才能用
+
+  // ── 故事脈絡（給 STORY 用的數字）──
+  const ev = D.events || []
+  const itt = seg => ev.filter(e => e.k === 'itt' && e.seg === seg)
+  const climbEff = (D.climb && D.climb.efforts || []).map(([d, t, s, w]) => ({ d, t, s, w, dn: dayNum(d) }))
+  const best = climbEff.reduce((b, e) => !b || e.s < b.s ? e : b, null)
+  const tri = ev.find(e => e.k === 'tri')
+  F.ctx = {
+    firstRide: ev.find(e => e.k === 'first' && e.sp === 'ride') || { km: acts[0].km },
+    climbFirst: climbEff[0] || { s: 0 }, climbBest: best || { s: 0 }, climbLatest: climbEff[climbEff.length - 1] || { s: 0 },
+    climbAfterWinter: climbEff.find(e => e.d >= '2026-01-01') || climbEff[climbEff.length - 1] || { s: 0 },
+    peak: ev.find(e => e.k === 'eftp_peak'),
+    longest: (D.totals && D.totals.longest) || { km: 0 },
+    triLine: tri ? tri.legs.map(l => `${{ swim: '游', ride: '騎', run: '跑' }[l[0]]} ${l[1]}`).join('・') : '',
+  }
+  F.climbEff = climbEff
+
+  // ── 事件 → 節拍（beat）──
+  const B = (dn, o) => F.beats.push({ dn, ...o })
+  const powerByDay = {}
+  for (const e of ev) {
+    const dn = dayNum(e.d) + 0.55
+    if (e.k === 'first' && e.sp !== 'ride') B(dn, { pop: { run: '第一次跑步', swim: '第一次游泳', gym: '第一次重訓' }[e.sp], dwell: 1.5, sfx: 'ding' })
+    else if (e.k === 'gear') {
+      const label = { watch: 'Garmin 手錶', bike: '新車', power: '功率計' }[e.what]
+      B(dn - 0.3, { item: { type: 'chest', label, what: e.what }, pop: `獲得：${label}`, popColor: GOLD, dwell: 4.5, sfx: 'item' })
+    } else if (e.k === 'itt') {
+      const main = e.seg !== '劍南路'
+      const flag = { type: 'flag', seg: e.seg, first: e.first, small: !main }
+      const segBest = Math.min(...itt(e.seg).map(x => x.s))
+      if (e.first && main) B(dn, { item: flag, pop: `${e.seg} 初見 ${fmtMSS(e.s)}`, dwell: 3, sfx: 'ding' })
+      else if (!e.first && (main || e.s === segBest)) B(dn, { item: flag, pop: `${e.seg} ${fmtMSS(e.s)}`, sub: `快 ${fmtMSS(e.prev - e.s)}`, popColor: GOLD, dwell: 2.4, sfx: 'pr', minor: e.s !== segBest && e.prev - e.s < 30 })
+      else B(dn, { item: flag })
+    } else if (e.k === 'power') (powerByDay[e.d] = powerByDay[e.d] || []).push(e)
+    else if (e.k === 'far' && e.km >= 150) {
+      // 超長的那一天：整趟騎乘給一段停留區間，里程表跟著跑，抵達那一刻才跳紀錄
+      const a = acts.filter(x => x.sp === 'ride' && x.d === e.d).reduce((m, x) => x.km > m.km ? x : m, { km: 0, dn: dn, h: 7 })
+      const d1 = a.dn + a.h / 24
+      B(d1, { item: { type: 'sign', text: `${e.km}km` }, pop: `抵達：${e.km} km`, popColor: GOLD, dwell: 60, span: [a.dn, d1], sfx: 'item', far: true, ride: a })
+    }
+    else if (e.k === 'far') B(dn, { item: { type: 'sign', text: `${e.km}km` }, pop: `最遠 ${e.km} km`, dwell: 2.5, sfx: 'ding' })
+    else if (e.k === 'climb') B(dn + 0.02, { pop: `單趟爬升 ${fmtInt(e.el)} m`, dwell: 1.5, sfx: 'ding', minor: true })
+    else if (e.k === 'early') B(dayNum(e.d) + timeFrac(e.t), { pop: `${e.t} 出門`, dwell: 3, night: true, sfx: 'ding' })
+    else if (e.k === 'eftp_peak') B(dn + 0.05, { pop: `eFTP ${e.w} W`, popColor: GOLD, dwell: 2, sfx: 'pr' })
+    else if (e.k === 'tri') B(dn, { set: 'tri', legs: e.legs, dwell: 34, span: [dn - 0.3, dn + 0.35] })
+  }
+  for (const [d, list] of Object.entries(powerByDay)) {
+    list.sort((a, b) => a.sec - b.sec)
+    const t = list.length === 1 ? `${list[0].label} ${list[0].w} W`
+      : list.length === 2 ? `${list[0].label} ${list[0].w} W・${list[1].label} ${list[1].w} W`
+        : `${list[0].label} ${list[0].w} W 等 ${list.length} 項`
+    B(dayNum(d) + 0.6, { item: { type: 'bolt' }, pop: t, popColor: GOLD, dwell: 3, sfx: 'zap', power: true })
+  }
+  for (const [d, o] of CURATED) if (dayNum(d) >= firstDn && dayNum(d) <= today) B(dayNum(d) + 0.5, { ...o })
+  const triE = ev.find(e => e.k === 'tri')
+  if (triE) {
+    const t0 = dayNum(triE.d) + 0.25, n = triE.legs.length
+    triE.legs.forEach(([sp, km], i) => B(t0 + 0.65 * i / n + 0.01, { pop: `${{ swim: '游', ride: '騎', run: '跑' }[sp]} ${km} km`, sfx: 'ding' }))
+    B(t0 + 0.655, { pop: '完賽', popColor: GOLD, sfx: 'item' })
+  }
+  // 月騎超過損益線的那一刻：跟著那個月的累積時數走
+  for (const m of F.months) {
+    if (m.h < D.breakeven_h) continue
+    const rides = acts.filter(a => (a.sp === 'ride' || a.sp === 'vride') && a.d.slice(0, 7) === m.m)
+    const tot = rides.reduce((s, a) => s + a.h, 0) || 1
+    let acc = 0
+    for (const a of rides) { acc += a.h * m.h / tot; if (acc >= D.breakeven_h) { B(a.dn + 0.03, { pop: `過線！月騎 ${D.breakeven_h} h`, popColor: ORANGE, big: 'LEVEL UP', dwell: 2, sfx: 'levelup' }); break } }
+  }
+  // 下雨的日子：活動名稱讀得出來的才算
+  for (const a of acts) if (/雨|落湯雞/.test(a.name)) F.rainSpans.push([Math.floor(a.dn), Math.floor(a.dn) + 1, /回頭/.test(a.name) ? 1.2 : 1])
+  B(firstDn + 0.02, { item: { type: 'banner', text: 'START' }, dwell: 1 })
+  B(today + 0.55, { item: { type: 'banner', text: '今天', now: true }, pop: '未完待續', popColor: GOLD, dwell: 14, sfx: 'ding' })
+  // 十一月：腳踏車停在路邊
+  const nov = F.months.find(m => m.mo === 11 && m.h < 3)
+  if (nov) { F.novRun = [nov.dnA, nov.dnB]; B(nov.dnA + 0.35, { item: { type: 'parked' }, dwell: 2.5 }) }
+  F.novRide = nov ? acts.filter(a => a.sp === 'ride' && a.d.slice(0, 7) === nov.m).map(a => Math.floor(a.dn)) : []
+  for (const d of F.novRide) B(d + 0.5, { pop: '唯一的一趟', dwell: 2 })
+  F.beats.sort((a, b) => a.dn - b.dn)
+
+  // ── 每個月的停留地圖：時間 ↔ 日期（有事件的日子鏡頭慢下來）──
+  for (const m of F.months) {
+    const RES = 0.02, n = Math.max(2, Math.ceil((m.dnB - m.dnA) / RES)), cum = new Float64Array(n + 1)
+    const near = F.beats.filter(b => b.dwell && b.dn > m.dnA - 1.5 && b.dn < m.dnB + 1.5)
+    const baseDays = m.dnB - m.dnA
+    let extra = near.reduce((s, b) => s + b.dwell * (b.span ? b.span[1] - b.span[0] : (b.sigma || 0.32) * 1.77), 0)
+    const k = extra > baseDays * 1.6 ? baseDays * 1.6 / extra : 1   // 事件再多，平常騎車也要留四成時間
+    for (let i = 1; i <= n; i++) {
+      const d = m.dnA + (i - 0.5) * (m.dnB - m.dnA) / n
+      let w = 1
+      for (const b of near) {
+        if (b.span) w += k * b.dwell * smooth((d - b.span[0]) / 0.04 + 1) * smooth((b.span[1] - d) / 0.04 + 1)
+        else { const s = b.sigma || 0.32, z = (d - b.dn) / s; w += k * b.dwell * Math.exp(-z * z) }
+      }
+      cum[i] = cum[i - 1] + w
+    }
+    const tot = cum[n]
+    for (let i = 0; i <= n; i++) cum[i] /= tot
+    m.cum = cum; m.n = n
+  }
+
+  // ── 世界裡的物件 ──
+  const I = F.items
+  for (const b of F.beats) if (b.item) I.push({ ...b.item, x: F.xOfDn(b.dn), dn: b.dn })
+  for (const a of acts) {
+    if (a.dn < firstDn || a.dn > today + 1) continue
+    const x = F.xOfDn(a.dn)
+    if (a.pr > 0) {
+      const n = Math.min(8, Math.ceil(Math.sqrt(a.pr)))
+      for (let k = 0; k < n; k++) I.push({ type: 'coin', x: x + 8 + (k - (n - 1) / 2) * 6, arc: Math.sin(Math.PI * (k + 0.5) / n) * 7, pr: a.pr, k })
+    }
+    if (a.sp === 'run' || a.sp === 'swim' || a.sp === 'gym') I.push({ type: 'icon', sp: a.sp, x: x + 3, seed: hash(Math.round(a.dn * 97)) })
+  }
+  const four = F.beats.find(b => b.set === 'four')
+  if (four) for (let k = 0; k < 4; k++) I.push({ type: 'flag', seg: '中社路', four: k + 1, x: F.xOfDn(four.dn) - 30 + k * 20 })
+  const nao = F.beats.find(b => b.set === 'naoshima')
+  if (nao) I.push({ type: 'pumpkin', x: F.xOfDn(nao.dn) + 34 })
+  I.sort((a, b) => a.x - b.x)
+  for (const it of I) it.t = timeAtX(F, it.x + (it.type === 'coin' ? -10 : 0))
+
+  // ── 彈出字：排槽位，同時間的往上疊 ──
+  // 彈出字一定要準時：最多四格；滿了的時候次要的直接不出，重要的把最快結束那格提早收掉
+  const P = F.pops, slots = [null, null, null, null]
+  for (const b of F.beats) {
+    if (!b.pop) continue
+    let t = timeAtX(F, F.xOfDn(b.dn))
+    const prev = P[P.length - 1]
+    if (prev && t < prev.t + 0.22) t = prev.t + 0.22
+    const dur = 1.35 + Math.min(0.7, [...b.pop].length * 0.035)
+    let slot = slots.findIndex(q => !q || q.t + q.dur <= t)
+    if (slot < 0) {
+      if (b.minor) continue
+      slot = 0
+      for (let i = 1; i < slots.length; i++) if (slots[i].t + slots[i].dur < slots[slot].t + slots[slot].dur) slot = i
+      slots[slot].dur = Math.max(0.5, t - slots[slot].t)
+    }
+    const q = { t, dur, text: b.pop, sub: b.sub, color: b.popColor || INK, big: b.big, slot, sfx: b.sfx }
+    slots[slot] = q
+    P.push(q)
+  }
+
+  // ── 雨／夜／夕陽等天氣窗（全部是日期的函數）──
+  F.nights = F.beats.filter(b => b.night).map(b => b.dn)
+  const storm = F.beats.find(b => b.set === 'storm')
+  F.storm = storm ? storm.dn : null
+  if (storm) { const pw = F.beats.find(b => b.power && Math.abs(b.dn - storm.dn) < 1); F.stormT = timeAtX(F, F.xOfDn(pw ? pw.dn : storm.dn)) }
+  const farB = F.beats.find(b => b.far)
+  F.farDay = farB ? farB.dn : null
+  F.farRide = farB && farB.ride.km ? { dn0: farB.span[0], dn1: farB.span[1], km: farB.ride.km, name: farB.ride.name } : null
+  const triB = F.beats.find(b => b.set === 'tri')
+  F.tri = triB ? { dn: triB.dn, legs: triB.legs } : null
+  F.nao = nao ? nao.dn : null
+
+  // ── 車手踏頻：一個月一個踏頻，累積成曲柄角度 ──
+  let ang = 0
+  for (const m of F.months) { m.cad = 1.05 + 1.15 * clamp(m.h / 24, 0, 1); m.ang0 = ang; ang += m.cad * (m.t1 - m.t0) * Math.PI * 2 }
+
+  // ── HUD 累積值 ──
+  const cumAct = []
+  let km = 0, el = 0, pr = 0
+  for (const a of acts) { el += a.el; pr += a.pr; cumAct.push([a.dn, el, pr]) }
+  F.cumAct = cumAct
+  F.monthKmBefore = []; km = 0
+  for (const m of F.months) { F.monthKmBefore.push(km); km += m.km }
+  for (const m of F.months) {
+    const rides = acts.filter(a => (a.sp === 'ride' || a.sp === 'vride') && a.d.slice(0, 7) === m.m)
+    const tot = rides.reduce((s, a) => s + a.h, 0)
+    let acc = 0
+    m.hCurve = rides.map(a => { acc += a.h; return [a.dn, tot ? acc / tot : 1] })
+  }
+  F.eftp = (D.eftp || []).map(([d, w]) => [dayNum(d) + 0.5, w])
+
+  buildRoad(F)
+  buildRace(F)
+  return F
+}
+
+function dayAtPhi(m, phi) {
+  const c = m.cum
+  let lo = 0, hi = m.n
+  while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (c[mid] <= phi) lo = mid; else hi = mid }
+  const f = c[hi] > c[lo] ? (phi - c[lo]) / (c[hi] - c[lo]) : 0
+  return m.dnA + (lo + clamp(f, 0, 1)) / m.n * (m.dnB - m.dnA)
+}
+function phiAtDay(m, d) {
+  const u = clamp((d - m.dnA) / (m.dnB - m.dnA), 0, 1) * m.n, i = Math.floor(u)
+  if (i >= m.n) return 1
+  return lerp(m.cum[i], m.cum[i + 1], u - i)
+}
+function timeAtX(F, x) {
+  if (x <= 0) return F.monthsT0
+  let m = F.months[0]
+  for (const o of F.months) if (x >= o.x0) m = o
+  return m.t0 + clamp((x - m.x0) / m.w, 0, 1) * (m.t1 - m.t0)
+}
+function worldAt(T) {
+  const ms = F.months
+  if (T < F.monthsT0) {
+    // 從靜止加速進場：270 px 在 3 小節裡用二次曲線走完，最後的速度剛好接上每小節 180 px
+    const u = clamp((T - BAR) / (F.monthsT0 - BAR), 0, 1)
+    return { X: -270 * (1 - u * u), dn: ms[0].dnA, m: ms[0], intro: true }
+  }
+  if (T >= F.monthsT1) { const m = ms[ms.length - 1]; return { X: F.worldW, dn: m.dnB, m } }
+  let m = ms[0]
+  for (const o of ms) if (T >= o.t0) m = o
+  const phi = (T - m.t0) / (m.t1 - m.t0)
+  return { X: m.x0 + phi * m.w, dn: dayAtPhi(m, phi), m }
+}
+
+// 路面兩層：
+//   平台＝那個月騎了幾小時（月與月之間一段坡道：比上個月拚就是上坡，偷懶就是下坡）
+//   小山＝那天真的爬了多少（爬升 300 m 以上的騎乘在它的日期隆起一座山，中社路那種日子就要站起來抽）
+function buildRoad(F) {
+  const x0 = -800, x1 = F.worldW + 800, road = new Float32Array(x1 - x0 + 1)
+  const ms = F.months, n = ms.length, RAMP = 70
+  const plateau = x => {
+    if (x <= 0) return ms[0].h
+    if (x >= F.worldW) return ms[n - 1].h
+    let i = 0
+    while (i < n - 1 && x >= ms[i + 1].x0) i++
+    const m = ms[i], ds = x - m.x0, de = m.x0 + m.w - x
+    if (i > 0 && ds < RAMP) return lerp(ms[i - 1].h, m.h, smooth((ds + RAMP) / (2 * RAMP)))
+    if (i < n - 1 && de < RAMP) return lerp(m.h, ms[i + 1].h, smooth((RAMP - de) / (2 * RAMP)))
+    return m.h
+  }
+  const hills = F.acts.filter(a => a.sp === 'ride' && a.el >= 300 && a.dn >= ms[0].dnA && a.dn <= ms[n - 1].dnB)
+    .map(a => ({ x: F.xOfDn(a.dn) + 24, A: clamp(a.el / 85, 3, 14), s: 16 + clamp(a.el / 45, 0, 20) }))
+  for (let x = x0; x <= x1; x++) {
+    let hill = 0
+    for (const h of hills) { const z = (x - h.x) / h.s; if (z > -3 && z < 3) hill += h.A * Math.exp(-z * z) }
+    hill = 16 * Math.tanh(hill / 16)
+    const bump = 1.2 * Math.sin(x / 43) + 1.4 * (noise(x / 21, 11) - 0.5)
+    road[x - x0] = ROAD_LO - plateau(x) / F.HMAX * ROAD_RISE - hill + bump
+  }
+  F.road = road; F.roadX0 = x0
+}
+const roadAt = x => { const i = clamp(Math.round(x) - F.roadX0, 0, F.road.length - 1); return F.road[i] }
+const roadAtF = x => { const i = clamp(x - F.roadX0, 0, F.road.length - 2), k = Math.floor(i); return lerp(F.road[k], F.road[k + 1], i - k) }
+
+// ════════════════════════════════════════════════════════════════════════
+// 5. 中社路：歷來每一次同場比賽
+// ════════════════════════════════════════════════════════════════════════
+function buildRace(F) {
+  const c = F.D.climb
+  if (!c || !c.efforts || !c.efforts.length) { F.race = null; return }
+  const g = c.grade && c.grade.length ? c.grade : new Array(80).fill(6)
+  const step = c.step_m || 25
+  const elev = [0]
+  let e = 0
+  for (const gr of g) { e += gr / 100 * step; elev.push(e) }
+  const ct = [0]
+  let s = 0
+  for (const gr of g) { s += Math.max(0.5, gr) + 2.2; ct.push(s) }   // 坡越陡越慢：同一條配速曲線給每一個影子
+  for (let i = 0; i < ct.length; i++) ct[i] /= s
+  const eff = F.climbEff.map((x, i) => ({ ...x, i }))
+  const best = eff.reduce((b, x) => x.s < b.s ? x : b, eff[0])
+  const latest = eff[eff.length - 1], first = eff[0]
+  const sorted = [...eff].sort((a, b) => a.s - b.s)
+  sorted.forEach((x, i) => { x.rank = i + 1 })
+  const gunBar = 1.75
+  const R = {
+    elev, eMax: e, ct, n: g.length, km: c.km || g.length * step / 1000,
+    eff, best, latest, first, sorted,
+    gunT: F.raceT0 + gunBar * BAR,
+  }
+  R.speed = best.s / ((4 - gunBar) * BAR)       // PR 剛好在第 4 小節的強拍抵達
+  R.finishT = x => R.gunT + x.s / R.speed
+  F.race = R
+}
+function raceFrac(R, x, tau) {
+  const ft = clamp(tau / x.s, 0, 1), ct = R.ct
+  let lo = 0, hi = R.n
+  while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (ct[mid] <= ft) lo = mid; else hi = mid }
+  const f = ct[hi] > ct[lo] ? (ft - ct[lo]) / (ct[hi] - ct[lo]) : 0
+  return (lo + f) / R.n
+}
+const raceX = f => 26 + f * 250
+const GHOST = ['...oo....', '..oaao...', '..oaaoo..', '.oooaaao.', 'oaao.oaao', 'oaao.oaao', '.oo...oo.']
+const raceY = (R, f) => { const u = f * R.n, i = Math.min(R.n - 1, Math.floor(u)); return 150 - lerp(R.elev[i], R.elev[i + 1], u - i) / R.eMax * 90 }
+
+// ════════════════════════════════════════════════════════════════════════
+// 6. 車手（程式畫的，不是貼圖）：騎車、站起來抽車、下坡翹腳、跑步、游泳、菜籃車
+// ════════════════════════════════════════════════════════════════════════
+const RC = {
+  helmet: '#f4f1ea', stripe: '#ff9a5a', skin: '#e8b088', skinS: '#c98c62', jersey: '#ff9a5a', jerseyS: '#cf6a33',
+  shorts: '#22242c', shortsS: '#15161b', shoe: '#f4f1ea', tire: '#15161b', rim: '#9aa1ad', spoke: '#727885', hub: '#d7dbe2',
+}
+const BIKE = {
+  old: { frame: '#6f8fb8', frameS: '#4d6d96', accent: '#cfd8e6', deep: false },
+  new: { frame: '#26272f', frameS: '#17181d', accent: '#ff9a5a', deep: true },
+  mama: { frame: '#9fd8c8', frameS: '#6fb3a2', accent: '#f4f1ea', deep: false },
+}
+function tintSet(hex) {
+  const c = hexRgb(hex), d1 = toHex(mixRgb(c, [0, 0, 0], 0.28)), d2 = toHex(mixRgb(c, [0, 0, 0], 0.55)), l1 = toHex(mixRgb(c, [255, 255, 255], 0.35))
+  return { rc: { helmet: l1, stripe: hex, skin: l1, skinS: hex, jersey: hex, jerseyS: d1, shorts: d2, shortsS: d2, shoe: l1, tire: d2, rim: d1, spoke: d1, hub: l1 }, bike: { frame: d1, frameS: d2, accent: l1, deep: false } }
+}
+
+function legIK(hip, tgt, L1, L2) {
+  const dx = tgt[0] - hip[0], dy = tgt[1] - hip[1], d0 = Math.hypot(dx, dy) || 0.001
+  const d = clamp(d0, Math.abs(L1 - L2) + 0.01, L1 + L2 - 0.01)
+  const ux = dx / d0, uy = dy / d0, a = (L1 * L1 - L2 * L2 + d * d) / (2 * d), h = Math.sqrt(Math.max(0, L1 * L1 - a * a))
+  let px = -uy, py = ux
+  if (px < 0) { px = -px; py = -py }
+  return [[hip[0] + ux * a + px * h, hip[1] + uy * a + py * h], [hip[0] + ux * d, hip[1] + uy * d]]
+}
+
+function drawRider(cx, cy, o) {
+  if (o.riderless) return drawParked(cx, cy)
+  const a = o.ang || 0, ca = Math.cos(a), sa = Math.sin(a), fl = o.flip ? -1 : 1
+  const tp = (x, y) => [cx + fl * (x * ca - y * sa), cy + (x * sa + y * ca)]
+  const tset = o.tint ? tintSet(o.tint) : null
+  const rc = tset ? tset.rc : RC
+  const bk = tset ? tset.bike : BIKE[o.bike || 'new']
+  const seg = (p, q, col, t = 1) => { const A = tp(p[0], p[1]), B2 = tp(q[0], q[1]); fill(col); L(A[0], A[1], B2[0], B2[1], t) }
+  const dot = (p, col) => { const A = tp(p[0], p[1]); fill(col); R(A[0], A[1], 1, 1) }
+  const th = o.crank || 0, mode = o.mode || 'bike'
+
+  if (mode === 'run') {
+    const hip = [10, -15 - Math.abs(Math.sin(th)) * 1.5], sh = [12, -24 + hip[1] + 15], head = [13, -27 + hip[1] + 15]
+    const leg = (ph, col, colS) => {
+      const ta = 0.62 * Math.sin(ph), knee = [hip[0] + 7 * Math.sin(ta), hip[1] + 7 * Math.cos(ta)]
+      const sb = ta - (0.2 + 1.0 * Math.max(0, -Math.cos(ph))), foot = [knee[0] + 7 * Math.sin(sb), knee[1] + 7 * Math.cos(sb)]
+      seg(hip, knee, col, 2); seg(knee, foot, colS, 2); seg(foot, [foot[0] + 2, foot[1]], rc.shoe, 1)
+    }
+    const arm = (ph, col) => { const aa = -0.7 * Math.sin(ph), el = [sh[0] + 4 * Math.sin(aa), sh[1] + 4 * Math.cos(aa)], hd = [el[0] + 4, el[1] - 1]; seg(sh, el, col, 1); seg(el, hd, rc.skin, 1) }
+    leg(th + Math.PI, rc.shortsS, rc.skinS); arm(th, rc.jerseyS)
+    seg(hip, sh, rc.jersey, 2); seg([hip[0] - 1, hip[1]], [sh[0] - 1, sh[1] + 1], rc.jerseyS, 1)
+    leg(th, rc.shorts, rc.skin); arm(th + Math.PI, rc.jersey)
+    const H2 = tp(head[0], head[1]); fill(rc.skin); disc(H2[0], H2[1], 2)
+    fill(rc.shorts); R(H2[0] - 2, H2[1] - 3, 5, 2)          // 帽子
+    return
+  }
+  if (mode === 'swim') {
+    const wob = Math.sin(th * 2) * 1
+    seg([3, -2 + wob], [16, -3], rc.jerseyS, 2)
+    seg([0, -2 - wob], [4, -2], rc.skinS, 1)
+    const H2 = tp(18, -4); fill(rc.skin); disc(H2[0], H2[1], 2); fill(rc.helmet); R(H2[0] - 2, H2[1] - 3, 5, 2)
+    const ah = [14 + 6 * Math.cos(th), -3 + 6 * Math.sin(th)]
+    seg([14, -3], ah, rc.skin, 1)
+    return
+  }
+
+  const R0 = [0, -7], F0 = [19, -7], BBp = [7, -5]
+  const wheel = (c) => {
+    const C = tp(c[0], c[1])
+    fill(rc.tire); ring(C[0], C[1], 6)
+    fill(bk.deep ? bk.frameS : rc.rim); ring(C[0], C[1], 5)
+    if (bk.deep) { fill(bk.frame); ring(C[0], C[1], 4) }
+    fill(rc.spoke)
+    const w = o.wheel || 0
+    for (let k = 0; k < 3; k++) { const aa = w + k * 2.094; for (let r = 1; r <= (bk.deep ? 3 : 4); r++) R(C[0] + Math.cos(aa) * r, C[1] + Math.sin(aa) * r, 1, 1) }
+    fill(rc.hub); R(C[0], C[1], 1, 1)
+  }
+  let hip, sh, head, hand, elbow, L1 = 8, L2 = 8.6
+  const pose = o.pose || 'seat'
+  if (mode === 'mama') { hip = [5, -17]; sh = [7, -26]; head = [8, -29]; hand = [16, -20]; elbow = [12, -22] }
+  else if (pose === 'stand') { const bob = Math.sin(th * 2) * 0.6; hip = [8, -20 + bob]; sh = [15, -25 + bob]; head = [18, -28 + bob]; hand = [20, -16]; elbow = [18, -21 + bob]; L1 = 9; L2 = 9.2 }
+  else { hip = [5, -18]; sh = [13, -24]; head = [16, -27]; hand = [19, -16]; elbow = [16, -20] }
+  const cr = 3, pn = [BBp[0] + cr * Math.cos(th), BBp[1] + cr * Math.sin(th)], pf = [BBp[0] - cr * Math.cos(th), BBp[1] - cr * Math.sin(th)]
+
+  // 遠側的腿（在車架後面）
+  if (pose === 'coast' && mode !== 'mama') {
+    seg([hip[0], hip[1] + 1], [11, -16], rc.shortsS, 2); seg([11, -16], [17, -19], rc.skinS, 2); seg([17, -19], [18, -21], rc.shoe, 1)
+  } else {
+    const [kf, ff] = legIK(hip, pf, L1, L2)
+    seg(hip, kf, rc.shortsS, 2); seg(kf, ff, rc.skinS, 2); seg(ff, [ff[0] + 2, ff[1]], rc.shoe, 1)
+  }
+  wheel(R0); wheel(F0)
+  // 車架
+  if (mode === 'mama') {
+    seg(R0, BBp, bk.frameS); seg(BBp, [15, -13], bk.frame, 2); seg([6, -6], [5, -15], bk.frame); seg([15, -13], [17, -8], bk.frameS); seg([17, -8], F0, bk.frameS)
+    seg([15, -13], [15, -19], bk.frameS); seg([13, -20], [17, -19], rc.shorts)
+    fill('#b8874f'); { const A = tp(17, -18); R(A[0], A[1], 6, 5) } fill('#8a6337'); { const A = tp(17, -16); R(A[0], A[1], 6, 1) }
+    seg([3, -16], [7, -16], rc.shorts)
+    fill(bk.frame); ring(tp(R0[0], R0[1])[0], tp(R0[0], R0[1])[1] - 1, 7)
+  } else {
+    seg(R0, BBp, bk.frameS); seg(R0, [5, -13], bk.frameS); seg(BBp, [5, -15], bk.frame, 1)
+    seg([5, -14], [16, -15], bk.frame, 1); seg(BBp, [17, -11], bk.frame, 2); seg([16, -15], [17, -11], bk.frame)
+    seg([17, -11], F0, bk.frameS)
+    dot([10, -8], bk.accent); dot([11, -9], bk.accent)
+    seg([3, -16], [7, -16], rc.shorts)
+    seg([16, -16], [19, -16], rc.shorts); seg([19, -16], [20, -14], rc.shorts); dot([19, -13], rc.shorts)
+  }
+  // 曲柄
+  seg(pf, pn, '#3a3d46')
+  // 近側的腿＋身體＋手
+  if (pose === 'coast' && mode !== 'mama') {
+    seg(hip, [12, -17], rc.shorts, 2); seg([12, -17], [18, -20], rc.skin, 2); seg([18, -20], [19, -22], rc.shoe, 1)
+  } else {
+    const [kn, fn] = legIK(hip, pn, L1, L2)
+    seg(hip, kn, rc.shorts, 2); seg(kn, fn, rc.skin, 2); seg(fn, [fn[0] + 2, fn[1]], rc.shoe, 1)
+  }
+  seg(hip, sh, rc.jersey, 3); seg([hip[0], hip[1] + 1], [sh[0] - 1, sh[1] + 2], rc.jerseyS, 1)
+  seg(sh, elbow, rc.jersey, 2); seg(elbow, hand, rc.skin, 1)
+  const HH = tp(head[0], head[1])
+  fill(rc.skin); disc(HH[0], HH[1], 2)
+  fill(rc.helmet); R(HH[0] - 2 * fl - (fl < 0 ? 2 : 0), HH[1] - 3, 5, 2); R(HH[0] - 3 * fl - (fl < 0 ? 0 : 0), HH[1] - 2, 1, 1)
+  fill(rc.stripe); R(HH[0] - (fl < 0 ? 1 : 0), HH[1] - 3, 2, 1)
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// 7. 場景各層
+// ════════════════════════════════════════════════════════════════════════
+function weatherAt(dn) {
+  const [, mo] = ymd(dn)
+  const base = [0.45, 0.35, 0.3, 0.3, 0.45, 0.35, 0.15, 0.2, 0.25, 0.1, 0.25, 0.4][mo - 1]
+  let rain = clamp((noise(dn / 2.2, 7) - (1 - base)) * 2.6, 0, 0.8)
+  for (const [a, b, amt] of F.rainSpans) if (dn > a - 0.3 && dn < b + 0.3) rain = Math.max(rain, amt * smooth(Math.min(dn - (a - 0.3), b + 0.3 - dn) / 0.3))
+  let night = 0
+  for (const n of F.nights) night = Math.max(night, 1 - smooth(Math.abs(dn - n) / 0.28))
+  const petal = mo === 2 || mo === 3 ? 0.55 : mo === 4 || mo === 5 ? 0.4 : 0
+  const leaf = mo >= 10 && mo <= 12 ? (mo === 10 ? 0.25 : 0.5) : 0
+  const grass = mo >= 9 && mo <= 12 ? [0.5, 1, 0.9, 0.35][mo - 9] : 0
+  let sunset = 0
+  const fr = F.farRide
+  if (fr) {
+    const win = 1 - smooth((Math.max(fr.dn0 - dn, dn - fr.dn1) + 0.05) / 0.15)
+    rain *= 1 - win
+    sunset = smooth((dn - (fr.dn1 - 0.13)) / 0.13) * (1 - smooth((dn - fr.dn1 - 0.04) / 0.12))
+  }
+  const storm = F.storm && Math.abs(dn - F.storm) < 0.9 ? 1 - smooth((Math.abs(dn - F.storm) - 0.5) / 0.4) : 0
+  if (storm) rain = Math.max(rain, 1.1 * storm)
+  const nao = F.nao ? 1 - smooth((Math.abs(dn - (F.nao + 0.5)) - 0.55) / 0.2) : 0
+  if (nao > 0) rain *= 1 - nao
+  return { rain, night, petal, leaf, grass, sunset, storm, nao, mo }
+}
+
+function drawSky(pal, wx, T, horizon = STRIP_Y) {
+  const bands = 18, top = 0
+  for (let i = 0; i < bands; i++) {
+    const y0 = top + Math.floor((horizon - top) * i / bands), y1 = top + Math.floor((horizon - top) * (i + 1) / bands)
+    fill(mixRgb(pal.skyTop, pal.skyBot, Math.pow(i / (bands - 1), 1.3))); ctx.fillRect(0, y0, W, y1 - y0)
+  }
+  fill(pal.skyBot); R(0, horizon, W, H - horizon)
+}
+function drawStars(amt, T) {
+  if (amt <= 0.05) return
+  for (let i = 0; i < 46; i++) {
+    const x = Math.floor(hash(i * 3 + 1) * W), y = HUD_H + 2 + Math.floor(hash(i * 3 + 2) * 70)
+    const tw = 0.5 + 0.5 * Math.sin(T * (1.5 + hash(i) * 3) + i)
+    if (tw * amt > 0.45) { fill(tw > 0.85 ? '#ffffff' : '#c9d3ff'); R(x, y, 1, 1) }
+  }
+}
+function drawSun(pal, doy, wz) {
+  const vis = clamp(1 - wz.rain * 1.4, 0, 1) * (1 - wz.night)
+  if (vis > 0.05) {
+    const y = 44 - 14 * Math.cos(2 * Math.PI * (doy - 172) / 365) + wz.sunset * 40, x = 250 - wz.sunset * 20
+    fill(rgba(pal.sun, 0.22 * vis)); disc(x, y, 11)
+    fill(rgba(pal.sun, 0.4 * vis)); disc(x, y, 9)
+    fill(rgba(pal.sun, vis)); disc(x, y, 7)
+  }
+  if (wz.night > 0.2) {
+    const x = 240, y = 34
+    fill(rgba([244, 240, 216], wz.night)); disc(x, y, 5)
+    fill(rgba(mixRgb(pal.skyTop, pal.skyBot, 0.2), wz.night)); disc(x + 3, y - 2, 4)
+  }
+}
+function drawClouds(pal, X, T, wz) {
+  const n = 5 + Math.round(wz.rain * 5)
+  for (let k = 0; k < n; k++) {
+    const span = W + 110
+    const cx = ((k * 97 + hash(k) * 60 - X * 0.05 - T * (2 + hash(k + 3) * 2)) % span + span) % span - 55
+    const cy = 24 + hash(k + 5) * (26 + wz.rain * 10), s = 5 + Math.floor(hash(k + 8) * 4)
+    fill(pal.cloudShade); disc(cx, cy + 2, s); disc(cx + s + 2, cy + 3, s - 1); disc(cx - s, cy + 3, s - 2)
+    fill(pal.cloud); disc(cx, cy, s); disc(cx + s + 2, cy + 1, s - 1); disc(cx - s, cy + 1, s - 2)
+  }
+}
+const farYAt = lx => 98 - 36 * (0.6 * noise(lx / 96, 1) + 0.3 * noise(lx / 37, 2) + 0.1 * noise(lx / 11, 5))
+function drawFar(pal, X) {
+  const off = X * 0.1
+  fill(pal.far)
+  for (let sx = 0; sx < W; sx++) { const y = Math.round(farYAt(sx + off)); ctx.fillRect(sx, y, 1, H - y) }
+  fill(pal.farRim)
+  for (let sx = 0; sx < W; sx++) { const y = Math.round(farYAt(sx + off)); ctx.fillRect(sx, y, 1, 1) }
+}
+function draw101(x, base, pal, lit) {
+  fill(pal.city)
+  R(x - 4, base - 10, 9, 10)
+  for (let k = 0; k < 8; k++) { const y = base - 14 - k * 5; R(x - 2, y + 2, 5, 3); R(x - 3, y, 7, 2) }
+  R(x - 1, base - 58, 3, 4); R(x, base - 65, 1, 7)
+  if (lit) { fill(pal.cityWin); for (let k = 0; k < 8; k++) R(x - 2, base - 13 - k * 5, 5, 1) }
+}
+function drawCity(pal, X, lit = 0) {
+  const off = X * 0.24, TILE = 1300
+  const t0 = Math.floor((off - 60) / TILE)
+  for (let t = t0; t <= t0 + 1; t++) {
+    const tx = t * TILE - off
+    for (let k = 0; k < 26; k++) {
+      const bx = tx + 560 + k * 12 + Math.floor(hash(t * 131 + k) * 6), bh = 8 + Math.floor(hash(t * 17 + k * 7) * 16), bw = 6 + Math.floor(hash(k * 5 + t) * 5)
+      if (bx < -12 || bx > W + 12) continue
+      fill(pal.city); R(bx, 118 - bh, bw, bh + 10)
+      if (lit > 0.3) { fill(pal.cityWin); for (let j = 0; j < bh - 3; j += 3) if (hash(k * 31 + j + t) < 0.5 * lit) R(bx + 2, 118 - bh + 2 + j, 1, 1) }
+    }
+    const x101 = tx + 700
+    if (x101 > -10 && x101 < W + 10) draw101(x101, 118, pal, lit > 0.3)
+  }
+}
+const midYAt = lx => 126 - 14 * noise(lx / 70, 3) - 7 * noise(lx / 23, 4)
+function drawMid(pal, X, T, wz) {
+  const off = X * 0.42
+  fill(pal.mid)
+  for (let sx = 0; sx < W; sx++) { const y = Math.round(midYAt(sx + off)); ctx.fillRect(sx, y, 1, H - y) }
+  fill(pal.midRim)
+  for (let sx = 0; sx < W; sx++) { const y = Math.round(midYAt(sx + off)); ctx.fillRect(sx, y, 1, 1) }
+  // 樹：冠的顏色跟季節走（二月是櫻花、秋天轉橘）
+  const k0 = Math.floor((off - 10) / 15)
+  for (let k = k0; k < k0 + W / 15 + 3; k++) {
+    if (hash(k * 13) < 0.35) continue
+    const lx = k * 15 + hash(k) * 9, sx = Math.round(lx - off), y = Math.round(midYAt(lx)), r = 2 + Math.floor(hash(k * 7) * 3)
+    fill(pal.trunk); R(sx, y - 3, 1, 4)
+    const c = hash(k * 3) < 0.5 ? pal.tree : pal.tree2
+    fill(c); disc(sx, y - 3 - r, r)
+    fill(mixRgb(c, [255, 255, 255], 0.25)); R(sx - 1, y - 4 - 2 * r + 1, 2, 1)
+  }
+}
+function drawSea(pal, X, T, amt) {
+  if (amt <= 0.02) return
+  const top = Math.round(lerp(STRIP_Y, 112, amt))
+  const sea = mixRgb([47, 128, 180], pal.skyBot, 0.2)
+  fill(sea); R(0, top, W, STRIP_Y - top)
+  fill(mixRgb(sea, [255, 255, 255], 0.35))
+  for (let i = 0; i < 40; i++) { const x = Math.floor(fract(hash(i) - X * 0.002 - T * 0.03) * W), y = top + 2 + Math.floor(hash(i + 9) * (STRIP_Y - top - 4)); if (Math.sin(T * 3 + i) > 0.2) R(x, y, 2, 1) }
+  fill(mixRgb(pal.far, sea, 0.3)); R(40, top - 3, 26, 3); R(46, top - 5, 12, 2); R(214, top - 2, 34, 2)
+}
+function drawRoad(pal, X, T, wz) {
+  const x0 = X - RIDER_SX
+  for (let sx = 0; sx < W; sx++) {
+    const wx = x0 + sx, y = Math.round(roadAt(wx))
+    fill(pal.road); ctx.fillRect(sx, y, 1, 5)
+    fill(pal.roadEdge); ctx.fillRect(sx, y, 1, 1)
+    fill(pal.grass); ctx.fillRect(sx, y + 5, 1, 2)
+    fill(pal.grassDark); ctx.fillRect(sx, y + 7, 1, Math.max(0, H - y - 7))
+    if (((Math.round(wx) % 14) + 14) % 14 < 6) { fill(pal.roadLine); ctx.fillRect(sx, y + 2, 1, 1) }
+  }
+  // 護欄
+  fill(mixRgb(pal.roadEdge, [255, 255, 255], 0.25))
+  const g0 = Math.floor(x0 / 16)
+  for (let k = g0; k < g0 + 22; k++) { const wx = k * 16, sx = Math.round(wx - x0), y = Math.round(roadAt(wx)); R(sx, y - 4, 1, 4) }
+  for (let sx = 0; sx < W; sx += 1) { const y = Math.round(roadAt(x0 + sx)); if (sx % 2 === 0) R(sx, y - 4, 1, 1) }
+  // 路肩的草、花、芒草
+  const t0 = Math.floor(x0 / 7)
+  for (let k = t0; k < t0 + W / 7 + 2; k++) {
+    const wx = k * 7 + hash(k * 5) * 5, sx = Math.round(wx - x0), y = Math.round(roadAt(wx)) + 7
+    const h = hash(k * 11)
+    if (wz.grass > 0 && h < wz.grass * 0.6) {
+      const sway = Math.round(Math.sin(T * 2.2 + k) * 1.2)
+      fill(pal.grassDark); R(sx, y - 1, 1, 3)
+      fill(pal.accent); R(sx + sway, y - 3, 1, 2); R(sx + sway - 1, y - 2, 1, 1)
+    } else if (h < 0.28) { fill(pal.grass); R(sx, y - 1, 1, 2); R(sx + 1, y - 2, 1, 1) }
+    else if (h > 0.9 && (wz.mo >= 3 && wz.mo <= 6)) { fill(pal.accent); R(sx, y - 1, 1, 1) }
+  }
+  // 雨天的路面反光
+  if (wz.rain > 0.25) {
+    fill(rgba([220, 230, 240], 0.35 * wz.rain))
+    for (let i = 0; i < 14; i++) { const sx = Math.floor(fract(hash(i * 7) - X / 900) * W), y = Math.round(roadAt(x0 + sx)) + 3; R(sx, y, 3, 1) }
+  }
+}
+function drawFore(pal, X) {
+  const off = X * 1.35, k0 = Math.floor((off - 30) / 53)
+  fill(mixRgb(pal.grassDark, [0, 0, 0], 0.35))
+  for (let k = k0; k < k0 + 9; k++) {
+    if (hash(k * 19) < 0.45) continue
+    const sx = Math.round(k * 53 + hash(k) * 30 - off), h = 3 + Math.floor(hash(k * 3) * 4)
+    for (let i = 0; i < 7; i++) R(sx + i, STRIP_Y - h + Math.abs(3 - i), 1, h)
+  }
+}
+function drawWeather(wz, T, X, pal) {
+  if (wz.rain > 0.16) {
+    const n = Math.floor(110 * Math.min(1.2, wz.rain))
+    fill(rgba([200, 215, 235], 0.55 + 0.3 * Math.min(1, wz.rain)))
+    for (let i = 0; i < n; i++) {
+      const x = Math.floor(fract(hash(i) - T * (0.5 + hash(i + 1) * 0.3)) * (W + 40)) - 20
+      const y = HUD_H + Math.floor(fract(hash(i + 50) + T * (1.9 + hash(i + 2))) * (STRIP_Y - HUD_H))
+      R(x, y, 1, 2); R(x - 1, y + 2, 1, 2)
+    }
+  }
+  if (wz.petal > 0) {
+    const n = Math.floor(28 * wz.petal)
+    fill(pal.petal)
+    for (let i = 0; i < n; i++) {
+      const x = Math.floor(fract(hash(i + 300) - T * 0.07 - X * 0.0012) * W)
+      const y = HUD_H + Math.floor(fract(hash(i + 400) + T * (0.09 + hash(i) * 0.05)) * 130 + Math.sin(T * 2 + i) * 3)
+      R(x, y, 2, 1)
+    }
+  }
+  if (wz.leaf > 0) {
+    const n = Math.floor(24 * wz.leaf)
+    for (let i = 0; i < n; i++) {
+      const x = Math.floor(fract(hash(i + 700) - T * 0.08 - X * 0.0013) * W)
+      const y = HUD_H + Math.floor(fract(hash(i + 800) + T * (0.1 + hash(i) * 0.06)) * 130)
+      fill(i % 3 ? pal.petal : pal.tree)
+      if (Math.sin(T * 5 + i) > 0) R(x, y, 2, 1); else R(x, y, 1, 2)
+    }
+  }
+}
+
+// 路上的東西
+function drawItems(X, T) {
+  const I = F.items, x0 = X - RIDER_SX - 40, x1 = X - RIDER_SX + W + 40
+  let lo = 0, hi = I.length
+  while (lo < hi) { const mid = (lo + hi) >> 1; if (I[mid].x < x0) lo = mid + 1; else hi = mid }
+  for (let i = lo; i < I.length && I[i].x < x1; i++) {
+    const it = I[i], sx = Math.round(it.x - X + RIDER_SX), ry = Math.round(roadAt(it.x)), passed = T >= it.t, age = T - it.t
+    switch (it.type) {
+      case 'coin': {
+        if (passed) {
+          if (age < 0.28) { fill(age < 0.14 ? '#ffffff' : GOLD); const r = 2 + Math.floor(age * 18); R(sx - r, ry - 14 - it.arc, 1, 1); R(sx + r, ry - 14 - it.arc, 1, 1); R(sx, ry - 14 - it.arc - r, 1, 1); R(sx, ry - 14 - it.arc + r, 1, 1) }
+          break
+        }
+        const ph = Math.floor((T * 6 + it.k * 0.7) % 4), w = [5, 3, 1, 3][ph], y = ry - 16 - Math.round(it.arc)
+        fill('#b8862a'); R(sx - (w >> 1), y, w, 5)
+        fill(GOLD); R(sx - (w >> 1), y, Math.max(1, w - 1), 4)
+        if (w >= 3) { fill('#fff4c8'); R(sx - (w >> 1) + 1, y + 1, 1, 1) }
+        break
+      }
+      case 'icon': {
+        if (passed && age > 0.3) break
+        const y = ry - 11 - Math.round(Math.sin(T * 3 + it.seed * 6) * 1.5)
+        if (passed) { fill('#ffffff'); R(sx + 1, y - age * 20, 1, 1); break }
+        icon(it.sp === 'run' ? 'shoe' : it.sp === 'swim' ? 'wave' : 'bell', sx - 3, y)
+        break
+      }
+      case 'flag': {
+        const h = it.small ? 10 : 15
+        fill('#b9bcc6'); R(sx, ry - h, 1, h)
+        const col = it.four ? ORANGE : it.first ? '#f4f1ea' : GOLD
+        fill(col)
+        for (let j = 0; j < (it.small ? 3 : 4); j++) R(sx + 1, ry - h + j, (it.small ? 4 : 6) - j * (it.small ? 1 : 1.5), 1)
+        if (it.four) micro(String(it.four), sx + 2, ry - h - 7, '#ffffff')
+        break
+      }
+      case 'chest': {
+        const y = ry - 8
+        fill('#5a3a20'); R(sx - 5, y, 11, 8)
+        fill('#8a5a2e'); R(sx - 4, y + 1, 9, 6)
+        fill(GOLD); R(sx - 5, y + 3, 11, 1); R(sx, y + 3, 1, 3)
+        if (!passed) { fill('#6b4424'); R(sx - 5, y - 3, 11, 3); fill(GOLD); R(sx - 5, y - 3, 11, 1) }
+        else {
+          fill('#6b4424'); R(sx - 5, y - 6, 2, 6)
+          if (age < 1.2) {
+            const iy = y - 8 - Math.min(10, age * 22)
+            fill(age % 0.16 < 0.08 ? '#ffffff' : GOLD); R(sx - 1, iy, 3, 3)
+            fill('#ffffff'); R(sx - 3, iy + 1, 1, 1); R(sx + 3, iy + 1, 1, 1); R(sx + 1, iy - 2, 1, 1)
+          }
+        }
+        break
+      }
+      case 'bolt': {
+        if (passed && age > 0.6) break
+        const y = ry - 26 + Math.round(Math.sin(T * 4) * 1.5)
+        if (passed) { fill(age % 0.12 < 0.06 ? '#ffffff' : GOLD); R(sx - 3, y - age * 30, 7, 1); break }
+        sprite(['..aa', '.aa.', 'aaaa', '.aa.', 'aa..', 'a...'], sx - 2, y, { a: GOLD })
+        break
+      }
+      case 'sign': {
+        const w = microW(it.text) + 5
+        fill('#6b5a48'); R(sx, ry - 14, 1, 14)
+        fill('#2f7d4f'); R(sx - (w >> 1), ry - 21, w, 8)
+        fill('#e9f1e6'); R(sx - (w >> 1), ry - 21, w, 1)
+        micro(it.text, sx - (w >> 1) + 3, ry - 19, '#ffffff')
+        break
+      }
+      case 'banner': {
+        const ry2 = Math.round(roadAt(it.x + 34)), top = Math.min(ry, ry2) - 30
+        fill('#d9dbe2'); R(sx - 2, top, 2, ry - top); R(sx + 34, top, 2, ry2 - top)
+        fill(it.now ? GOLD : '#e0523f'); R(sx - 2, top, 38, 13)
+        fill('#000000'); R(sx - 2, top + 13, 38, 1)
+        text(it.text, sx + 16, top + 1, it.now ? '#15161b' : '#ffffff', { align: 'center', shadow: null })
+        break
+      }
+      case 'parked': {
+        drawParked(sx, ry - 1)
+        drawBox(sx + 12, ry - 42, 30, 17)                    // 腳踏車的內心話
+        fill('#d9d6c4'); R(sx + 15, ry - 26, 2, 3); R(sx + 14, ry - 24, 1, 2)
+        text('……', sx + 27, ry - 39, INK, { align: 'center', shadow: null })
+        break
+      }
+      case 'pumpkin': {
+        const y = ry - 14
+        fill('#e8b820'); disc(sx, y + 7, 6); R(sx - 7, y + 5, 15, 5)
+        fill('#1b1b1b'); for (const [a, b] of [[-4, 4], [0, 3], [4, 4], [-5, 8], [-1, 7], [3, 8], [6, 7], [-2, 10], [2, 11]]) R(sx + a, y + b, 2, 2)
+        fill('#2d6b2d'); R(sx, y - 1, 1, 2)
+        break
+      }
+    }
+  }
+}
+
+// 十一月停在路邊、結了蜘蛛網的那台
+function drawParked(cx, cy) {
+  const bk = BIKE.new, rc = RC
+  for (const C of [[cx, cy - 7], [cx + 19, cy - 7]]) { fill(rc.tire); ring(C[0], C[1], 6); fill(bk.frameS); ring(C[0], C[1], 5); fill(bk.frame); ring(C[0], C[1], 4) }
+  fill(bk.frame); L(cx, cy - 7, cx + 7, cy - 5); L(cx + 7, cy - 5, cx + 5, cy - 15); L(cx + 5, cy - 14, cx + 16, cy - 15); L(cx + 7, cy - 5, cx + 17, cy - 11, 2); L(cx + 17, cy - 11, cx + 19, cy - 7)
+  fill(rc.shorts); L(cx + 3, cy - 16, cx + 7, cy - 16); L(cx + 16, cy - 16, cx + 19, cy - 16)
+  fill('rgba(235,235,235,.75)'); L(cx + 5, cy - 15, cx + 12, cy - 22); L(cx + 16, cy - 15, cx + 12, cy - 22); L(cx + 8, cy - 18, cx + 15, cy - 18)
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// 8. HUD、底下的月時數長條、字幕框、彈出字
+// ════════════════════════════════════════════════════════════════════════
+function progressInMonth(m, dn) {
+  const c = m.hCurve
+  if (!c || !c.length) return clamp((dn - m.dnA) / (m.dnB - m.dnA), 0, 1)
+  let p = 0
+  for (const [d, f] of c) if (d <= dn) p = f
+  return p
+}
+function cumAt(dn) {
+  const a = F.cumAct
+  let lo = -1, hi = a.length
+  while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (a[mid][0] <= dn) lo = mid; else hi = mid }
+  return lo < 0 ? [dn, 0, 0] : a[lo]
+}
+function eftpAt(dn) {
+  const e = F.eftp
+  if (!e.length || dn < e[0][0] - 3) return null
+  if (dn >= e[e.length - 1][0]) return e[e.length - 1][1]
+  for (let i = 1; i < e.length; i++) if (e[i][0] >= dn) return lerp(e[i - 1][1], e[i][1], (dn - e[i - 1][0]) / (e[i][0] - e[i - 1][0]))
+  return e[0][1]
+}
+function drawHUD(st) {
+  const m = st.m, dn = st.dn
+  fill('rgba(8,10,18,0.82)'); R(0, 0, W, HUD_H)
+  fill('#000000'); R(0, HUD_H, W, 1)
+  const [y, mo] = ymd(Math.min(dn, m.dnB - 0.01))
+  const dw = text(`${y}·${String(mo).padStart(2, '0')}`, 4, 2, INK)
+  const [ch, cc] = SEASON_CHIP(mo)
+  text(ch, dw + 9, 2, cc)
+  const km = F.monthKmBefore[m.i] + m.km * progressInMonth(m, dn)
+  const [, el, pr] = cumAt(dn)
+  const ef = eftpAt(dn)
+  let x = W - 3
+  // eFTP：跟三週前比，漲了綠三角、掉了紅三角
+  const efS = ef == null ? '???' : String(Math.round(ef))
+  x -= textW(efS); text(efS, x, 2, ef == null ? '#6b7086' : INK)
+  if (ef != null) { const prev = eftpAt(dn - 21); if (prev != null && Math.abs(ef - prev) >= 1.5) icon(ef > prev ? 'up' : 'dn', x - 4, 7) }
+  x -= 10; icon('bolt', x, 4)
+  x -= 6
+  const prS = fmtInt(pr); x -= textW(prS); text(prS, x, 2, INK); x -= 7; icon('coin', x, 5)
+  x -= 6
+  const elS = fmtInt(el) + 'm'; x -= textW(elS); text(elS, x, 2, INK); x -= 9; icon('mount', x, 6)
+  x -= 6
+  const kmS = fmtInt(km) + 'km'; x -= textW(kmS); text(kmS, x, 2, INK); x -= 7; icon('wheel', x, 5)
+}
+function drawStrip(st, T) {
+  fill('#0c0e16'); R(0, STRIP_Y, W, H - STRIP_Y)
+  fill('#232838'); R(0, STRIP_Y, W, 1)
+  const base = 176, hmax = F.HMAX, BE = F.D.breakeven_h, yBE = base - Math.round(BE / hmax * 20)
+  const cur = st.m.i
+  let yr = null
+  for (const m of F.months) {
+    const x = 10 + m.i * 16
+    if (m.y !== yr) { yr = m.y; micro(String(yr), x, STRIP_Y + 3, '#5f6479') }
+    if (m.i > cur) continue
+    const f = m.i < cur ? 1 : progressInMonth(m, st.dn), h = m.h * f, bh = Math.max(1, Math.round(h / hmax * 20))
+    const above = h >= BE
+    fill(above ? ORANGE : '#6f7c9a'); R(x, base - bh, 10, bh)
+    fill(above ? '#ffc9a3' : '#98a4bf'); R(x, base - bh, 10, 1)
+    if (m.i === cur && T % 0.5 < 0.35) { fill('#ffffff'); R(x - 1, base + 1, 12, 1) }
+    if (m.i === cur) micro(h.toFixed(1) + 'h', x - 2, base - bh - 7, '#ffffff')
+  }
+  fill('rgba(243,201,105,0.75)')
+  for (let x = 8; x < 298; x += 3) R(x, yBE, 2, 1)
+  micro(BE + 'h', 300, yBE - 2, GOLD)
+}
+function drawBox(x, y, w, h, alpha = 0.88) {
+  fill(`rgba(9,11,18,${alpha})`); R(x + 1, y + 1, w - 2, h - 2)
+  fill('#000000'); R(x + 1, y, w - 2, 1); R(x + 1, y + h - 1, w - 2, 1); R(x, y + 1, 1, h - 2); R(x + w - 1, y + 1, 1, h - 2)
+  fill('#d9d6c4'); R(x + 2, y + 1, w - 4, 1); R(x + 2, y + h - 2, w - 4, 1); R(x + 1, y + 2, 1, h - 4); R(x + w - 2, y + 2, 1, h - 4)
+}
+function typed(str, t0, T, cps = 30) {
+  if (T < t0) return ''
+  const n = Math.floor((T - t0) * cps), a = [...str]
+  return n >= a.length ? str : a.slice(0, n).join('')
+}
+function drawDialog(st, T) {
+  const m = st.m, S = m.story
+  if (!S) return
+  const t0 = m.t0 + 0.12, t1 = m.t1 - 0.04
+  if (T < t0 || T > t1) return
+  const hT = typed(S.h, t0, T), qT0 = t0 + [...S.h].length / 30 + 0.2, qT = typed(S.q, qT0, T)
+  const w = clamp(Math.max(textW(S.h), textW(S.q), 150) + 12, 120, 228)
+  drawBox(5, 17, w, 46)
+  text(hT, 11, 21, INK)
+  if (qT) text(qT, 11, 34, GOLD)
+  if (T > qT0 + [...S.q].length / 30) {
+    let x = 11
+    const yy = 47
+    icon('wheel', x, yy + 3); x += 8
+    x += text(`${m.h.toFixed(1)}h ${fmtInt(m.km)}km`, x, yy, DIM) + 6
+    if (m.runs) { icon('shoe', x, yy + 4); x += 9; x += text(String(m.runs), x, yy, DIM) + 5 }
+    if (m.swims) { icon('wave', x, yy + 5); x += 10; x += text(String(m.swims), x, yy, DIM) + 5 }
+    if (m.gym) { icon('bell', x, yy + 4); x += 10; x += text(String(m.gym), x, yy, DIM) }
+  }
+}
+function drawPops(T, riderTop) {
+  for (const p of F.pops) {
+    const age = T - p.t
+    if (age < 0 || age > p.dur) continue
+    if (age > p.dur - 0.3 && (age * 12 | 0) % 2) continue
+    if (p.big && age < 1.3) {
+      const yb = 26 - Math.round((1 - smooth(age / 0.2)) * 8)       // 右上角的天空：左邊是字幕框、下面是彈出字
+      text(p.big, W - 8, yb, age % 0.2 < 0.1 ? '#ffffff' : ORANGE, { big: true, align: 'right', outline: '#15161b' })
+    }
+    // 位置：車手右前方、字幕框下緣以下，三格往下疊
+    const w = textW(p.text) + (p.sub ? textW(p.sub) + 5 : 0)
+    const base = clamp(riderTop + 2, 70, 96)
+    const x = Math.min(RIDER_SX + 30 - Math.round((1 - smooth(age / 0.18)) * 8), W - 4 - w)
+    const y = base + p.slot * 14
+    const wx = text(p.text, x, y, p.color, { outline: '#101218' })
+    if (p.sub) text(p.sub, x + wx + 5, y, MINT, { outline: '#101218' })
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// 9. 三段：開場、編年（主體）、中社路、結算
+// ════════════════════════════════════════════════════════════════════════
+function riderMode(dn) {
+  if (F.tri && dn > F.tri.dn - 0.3 && dn < F.tri.dn + 0.35) {
+    const legs = F.tri.legs, u = (dn - (F.tri.dn - 0.3)) / 0.65, l = legs[Math.min(legs.length - 1, Math.floor(u * legs.length))]
+    return l[0] === 'ride' ? 'bike' : l[0]
+  }
+  if (F.nao && dn > F.nao - 0.05 && dn < F.nao + 1.1) return 'mama'
+  if (F.novRun && dn >= F.novRun[0] + 0.45 && dn < F.novRun[1]) {
+    if (F.novRide.some(d => dn > d + 0.2 && dn < d + 0.85)) return 'bike'
+    return 'run'
+  }
+  return 'bike'
+}
+function crankAt(T, st) {
+  if (st.intro) return T * 1.3 * Math.PI * 2
+  const m = st.m
+  return m.ang0 + m.cad * (T - m.t0) * Math.PI * 2
+}
+function drawWorld(T, st, opt = {}) {
+  const doy = doyOf(st.dn)
+  const wz = weatherAt(st.dn)
+  const pal = paletteAt(doy)
+  applyMod(pal, MOD_SUNSET, wz.sunset * 0.85)
+  applyMod(pal, MOD_RAIN, Math.min(1, wz.rain) * 0.8)
+  applyMod(pal, MOD_NIGHT, wz.night)
+  const X = st.X
+  drawSky(pal, X, T)
+  drawStars(wz.night, T)
+  drawSun(pal, doy, wz)
+  drawClouds(pal, X, T, wz)
+  drawFar(pal, X)
+  if (wz.nao < 0.9) drawCity(pal, X, wz.night)
+  drawMid(pal, X, T, wz)
+  drawSea(pal, X, T, wz.nao)
+  drawRoad(pal, X, T, wz)
+  // 三鐵：游泳那一段路面是水
+  if (F.tri) drawTriWater(X, T)
+  drawItems(X, T)
+
+  // 車手
+  const rsx = opt.riderSX == null ? RIDER_SX : opt.riderSX
+  const rwx = X + (rsx - RIDER_SX)
+  const mode = st.intro ? 'bike' : riderMode(st.dn)
+  let flip = false
+  if (F.stormT && Math.abs(T - F.stormT - 0.35) < 0.55) flip = true
+  const y0 = roadAtF(rwx), y1 = roadAtF(rwx + (flip ? -19 : 19))
+  const ang = Math.atan2(y1 - y0, 19)
+  const slope = (roadAtF(rwx + 30) - roadAtF(rwx - 10)) / 40
+  const pose = slope < -0.09 ? 'stand' : slope > 0.11 ? 'coast' : 'seat'
+  const crank = pose === 'coast' ? 0.6 : crankAt(T, st)
+  const bike = st.dn < dayNum('2025-08-12') + 0.25 ? 'old' : 'new'
+  if (mode === 'swim') drawRider(rsx, Math.round(y0) - 1, { mode, crank: T * 6 })
+  else drawRider(rsx, Math.round(y0) - 1, { mode, pose, crank, wheel: rwx / 6, ang, bike: mode === 'mama' ? 'mama' : bike, flip })
+  if (pose === 'coast' && mode === 'bike') { fill(rgba(pal.roadLine, 0.7)); for (let i = 0; i < 3; i++) R(rsx - 8 - i * 3 - (T * 40 % 6), Math.round(y0) - 12 - i * 4, 4, 1) }
+  drawFore(pal, X)
+  drawWeather(wz, T, X, pal)
+  // 閃電
+  if (F.stormT && T > F.stormT - 0.05 && T < F.stormT + 0.5) {
+    const a = T - F.stormT
+    if (a < 0.12 || (a > 0.2 && a < 0.26)) {
+      if (!REDUCED) { fill('rgba(255,255,255,0.4)'); R(0, HUD_H, W, STRIP_Y - HUD_H) }
+      fill('#fffbe0'); let x = 214, y = HUD_H + 2
+      for (let k = 0; k < 7; k++) { const nx = x + (hash(k + 3) - 0.5) * 16, ny = y + 11; L(x, y, nx, ny, 2); x = nx; y = ny }
+    }
+  }
+  return { pal, wz, riderTop: Math.round(y0) - 32 }
+}
+function drawTriWater(X, T) {
+  const tri = F.tri, legs = tri.legs
+  const a = tri.dn - 0.3, b = a + 0.65 / legs.length
+  const xa = F.xOfDn(a) - 24, xb = F.xOfDn(b) + 5
+  for (let wx = Math.floor(xa); wx <= xb; wx++) {
+    const sx = Math.round(wx - X + RIDER_SX)
+    if (sx < 0 || sx >= W) continue
+    const y = Math.round(roadAt(wx))
+    fill('#2f7fb8'); R(sx, y - 3, 1, 9)
+    fill('#7fc4ff'); if (Math.sin(wx * 0.6 + T * 6) > 0.3) R(sx, y - 3, 1, 1)
+  }
+  // 終點拱門
+  const label = '普悠瑪三鐵', gw = textW(label) + 10, fx = F.xOfDn(tri.dn + 0.35)
+  const sx = Math.round(fx - X + RIDER_SX)
+  if (sx > -gw - 4 && sx < W + 4) {
+    const ry = Math.round(roadAt(fx)), ry2 = Math.round(roadAt(fx + gw))
+    fill('#d9dbe2'); R(sx, ry - 30, 2, 30); R(sx + gw - 2, ry2 - 30, 2, 30 + ry2 - ry)
+    fill('#e0523f'); R(sx, Math.min(ry, ry2) - 32, gw, 14)
+    text(label, sx + gw / 2, Math.min(ry, ry2) - 31, '#ffffff', { align: 'center' })
+  }
+}
+
+function drawIntro(T) {
+  const st = worldAt(T)
+  if (T < BAR) {
+    fill('#000000'); R(0, 0, W, H)
+    const s = typed(dstr(F.months[0].dnA) + '  ' + (F.acts[0].t || ''), 0.25, T, 22)
+    text(s, W / 2 - textW(dstr(F.months[0].dnA) + '  ' + (F.acts[0].t || '')) / 2, 74, INK, { shadow: null })
+    if (T > 0.9 && (T * 3 | 0) % 2 === 0) { fill('#e0523f'); disc(W / 2 - 16, 97, 3); text('REC', W / 2 - 10, 91, '#e0523f', { shadow: null }) }
+    return
+  }
+  // 起跑前：世界慢慢捲進來
+  const riderIn = smooth((T - BAR * 1.3) / (BAR * 1.1))
+  const rsx = lerp(-40, RIDER_SX, riderIn)
+  const w = drawWorld(T, st, { riderSX: rsx })
+  const fadeIn = smooth((T - BAR) / 0.5)
+  if (fadeIn < 1) dissolve(1 - fadeIn)
+  // 標題
+  const tt = T - BAR
+  if (tt < BAR * 2.05) {
+    const a = smooth(tt / 0.3), out = smooth((tt - BAR * 2.05 + 0.3) / 0.3), y = Math.round(34 - (1 - a) * 8 - out * 60)
+    text('運動編年史', W / 2, y, '#ffffff', { big: true, align: 'center', outline: '#15161b' })
+    const shine = ((tt * 90) % 260) - 40
+    if (tt > 0.3) { fill('rgba(255,255,255,0.8)'); for (let k = 0; k < 24; k++) { const xx = W / 2 - 60 + shine + k * 0.3; if (xx > W / 2 - 62 && xx < W / 2 + 62) R(xx - k * 0.5, y + k, 1, 1) } }
+    if (tt > 0.5) text(`${dstr(F.months[0].dnA)} → ${dstr(F.today)}`, W / 2, y + 30, INK, { align: 'center', outline: '#15161b' })
+    if (tt > 0.9) text(`${F.spanMonths} 個月・${F.D.totals.rides} 趟騎乘・一首晶片音樂`, W / 2, y + 44, GOLD, { align: 'center', outline: '#15161b' })
+  }
+  if (T > BAR * 3.1) {
+    const k = T - BAR * 3.1
+    text(k < 0.55 ? 'READY' : 'GO!', W / 2, 60, k < 0.55 ? '#ffffff' : GOLD, { big: true, align: 'center', outline: '#15161b' })
+    text('PLAYER 1　STEVE', W / 2, 90, INK, { align: 'center', outline: '#15161b' })
+  }
+  if (T > BAR * 3) drawHUD({ ...st, dn: st.m.dnA })
+}
+
+function drawMonths(T) {
+  const st = worldAt(T)
+  const w = drawWorld(T, st)
+  drawHUD(st)
+  drawStrip(st, T)
+  drawDialog(st, T)
+  drawPops(T, w.riderTop)
+  // 一日北彰：里程表跟著那天的時間跑
+  const fr = F.farRide
+  if (fr && st.dn > fr.dn0 - 0.02 && st.dn < fr.dn1 + 0.12) {
+    const km = fr.km * clamp((st.dn - fr.dn0) / (fr.dn1 - fr.dn0), 0, 1)
+    drawBox(W - 104, 17, 99, 34)
+    text(fr.name || '最遠的一天', W - 98, 21, DIM)
+    text(km.toFixed(1), W - 26, 29, km >= fr.km ? GOLD : '#ffffff', { big: true, align: 'right', shadow: null })
+    micro('km', W - 22, 42, DIM)
+  }
+  // 月份切換：畫面上方閃一下新月份
+  const m = st.m, age = T - m.t0
+  if (age >= 0 && age < 0.5 && m.i > 0) {
+    const [y, mo] = [m.y, m.mo]
+    if (age < 0.08) { fill('rgba(255,255,255,0.35)'); R(0, HUD_H + 1, W, 2) }
+    text(`${y}·${String(mo).padStart(2, '0')}`, W - 6, 20, '#ffffff', { big: true, align: 'right', outline: '#15161b' })
+  }
+}
+
+function drawRace(T) {
+  const R0 = F.race
+  if (!R0) { fill('#000'); R(0, 0, W, H); return }
+  const pal = paletteAt(262)
+  applyMod(pal, MOD_SUNSET, 0.35)
+  drawSky(pal, 0, T, STRIP_Y)
+  drawSun(pal, 262, { rain: 0, night: 0, sunset: 0.35 })
+  drawClouds(pal, 0, T, { rain: 0 })
+  drawFar(pal, 900 + (T - F.raceT0) * 6)
+  drawCity(pal, 2667, 0)
+  // 坡：FIT 算出來的剖面（垂直誇張）
+  for (let sx = 0; sx < W; sx++) {
+    const f = clamp((sx - 26) / 250, 0, 1), y = Math.round(sx < 26 ? 150 : sx > 276 ? raceY(R0, 1) : raceY(R0, f))
+    fill(pal.road); R(sx, y, 1, 4)
+    fill(pal.roadEdge); R(sx, y, 1, 1)
+    fill(pal.grassDark); R(sx, y + 4, 1, H - y - 4)
+  }
+  fill(pal.grass); for (let sx = 0; sx < W; sx += 3) { const f = clamp((sx - 26) / 250, 0, 1); R(sx, Math.round(raceY(R0, f)) + 4, 2, 1) }
+  for (let k = 1; k < Math.floor(R0.km); k++) { const f = k / R0.km, x = raceX(f), y = raceY(R0, f); fill('#d9dbe2'); R(x, y - 8, 1, 8); micro(k + 'k', x + 2, y - 8, '#ffffff') }
+  // 終點拱門
+  { const x = raceX(1), y = raceY(R0, 1); fill('#d9dbe2'); R(x - 1, y - 27, 2, 27); R(x + 30, y - 27, 2, 27); fill('#e0523f'); R(x - 1, y - 29, 33, 14); fill('#9e2f22'); R(x - 1, y - 16, 33, 1); text('終點', x + 15, y - 28, '#ffffff', { align: 'center' }) }
+  { const x = raceX(0), y = raceY(R0, 0); fill('#e0523f'); R(x - 6, y - 16, 2, 16) }
+
+  const tau = Math.max(0, (T - R0.gunT) * R0.speed)
+  const lateT = T - F.raceT0
+  // 影子們：2025 冷色、2026 暖色；PR 金、最近一次是本尊、第一次白色
+  const special = new Set([R0.best, R0.latest, R0.first])
+  const pos = x => { const f = raceFrac(R0, x, tau); return [raceX(f), raceY(R0, f), f] }
+  const gone = x => T - R0.finishT(x)
+  const mini = (x, col) => {
+    const g = gone(x)
+    if (g > 0.45) return null
+    const [sx, sy] = pos(x), X0 = Math.round(sx + Math.max(0, g) * 34), Y0 = Math.round(sy)
+    sprite(GHOST, X0 - 4, Y0 - 7, { o: '#15161b', a: col })
+    return [X0, Y0]
+  }
+  const big = (x, tint) => {
+    const [sx, sy, f] = pos(x), f2 = Math.min(1, f + 19 / 250), g = gone(x)
+    const ang = f >= 1 ? 0 : Math.atan2(raceY(R0, f2) - sy, raceX(f2) - sx)
+    const ox = g > 0 ? g * 48 : 0                       // 過線之後繼續往右騎出畫面
+    if (sx + ox < W + 4) drawRider(Math.round(sx + ox), Math.round(sy) - 1, { ang, crank: T * 14, wheel: T * 12, pose: f >= 1 ? 'seat' : 'stand', bike: 'new', tint })
+    return [sx, sy]
+  }
+  for (const x of R0.eff) if (!special.has(x)) mini(x, x.d < '2026-01-01' ? '#a9c1e0' : '#e2bf9f')
+  const pF = mini(R0.first, '#ffffff')
+  const pB = big(R0.best, GOLD)
+  const pL = R0.latest === R0.best ? pB : big(R0.latest, null)
+  if (tau > 0) {
+    const bRun = gone(R0.best) < 0, lRun = gone(R0.latest) < 0
+    const close = Math.abs(pB[0] - pL[0]) < 40
+    if (bRun) text('PR', Math.round(pB[0]) + 8, Math.round(pB[1]) - 44, GOLD, { align: 'center', outline: '#101218' })
+    if (lRun && R0.latest !== R0.best) text('最近一次', Math.round(pL[0]) + 8, Math.round(pL[1]) - (close && bRun ? 58 : 44), ORANGE, { align: 'center', outline: '#101218' })
+    if (pF && gone(R0.first) < 0) text('第一次', pF[0], pF[1] - 22, '#ffffff', { align: 'center', outline: '#101218' })
+  }
+
+  // 計時
+  const done = R0.sorted.filter(x => R0.finishT(x) <= T)
+  const clock = Math.min(tau, R0.first.s)
+  const prFlash = T > R0.finishT(R0.best) && T < R0.finishT(R0.best) + 0.6
+  if (T > R0.gunT - 0.01) text(fmtMSS(clock), W / 2, 18, prFlash && (T * 10 | 0) % 2 ? GOLD : '#ffffff', { big: true, align: 'center', outline: '#15161b' })
+  // 看板
+  if (T > R0.gunT) {
+    drawBox(5, 18, 96, 14 + Math.min(6, done.length + 1) * 12)
+    text('完賽', 11, 22, DIM)
+    text(`${done.length}/${R0.eff.length}`, 95, 22, DIM, { align: 'right' })
+    const rows = done.slice(0, 5)
+    if (done.includes(R0.latest) && !rows.includes(R0.latest)) rows.push(R0.latest)
+    rows.forEach((x, i) => {
+      const col = x === R0.best ? GOLD : x === R0.latest ? ORANGE : INK
+      text(String(x.rank), 11, 35 + i * 12, col)
+      text(fmtMSS(x.s), 27, 35 + i * 12, col)
+      text(x.d.slice(2, 7).replace('-', '.'), 95, 35 + i * 12, col === INK ? DIM : col, { align: 'right' })
+    })
+  }
+  // 標題卡
+  if (lateT < 1.75 * BAR + 0.3) {
+    const a = smooth(lateT / 0.3)
+    drawBox(60, 52, 200, 58)
+    text('BONUS STAGE', W / 2, 57, GOLD, { align: 'center' })
+    text(F.D.climb.name || '', W / 2, 70, '#ffffff', { big: true, align: 'center' })
+    text(`${R0.km} km・爬升 ${Math.round(R0.eMax)} m・${R0.eff.length} 次同場`, W / 2, 95, INK, { align: 'center' })
+    if (a < 1) dissolve(1 - a)
+  }
+  if (T > R0.gunT - BEAT * 3 && T < R0.gunT + 0.5) {
+    const k = Math.ceil((R0.gunT - T) / BEAT)
+    text(k > 0 ? String(k) : 'GO!', W / 2, 118, k > 0 ? '#ffffff' : GOLD, { big: true, align: 'center', outline: '#15161b' })
+  }
+  // 終點的彈出字
+  const fin = (x, s, col, dur = 1.6, row = 0) => {
+    const a = T - R0.finishT(x)
+    if (a < 0 || a > dur) return
+    text(s, 204, 51 + row * 14 - Math.round(Math.min(4, a * 20)), col, { align: 'center', outline: '#101218' })
+  }
+  fin(R0.best, `PR ${fmtMSS(R0.best.s)}（${R0.best.d.slice(0, 7).replace('-', '.')}）`, GOLD, 1.5)
+  if (R0.latest !== R0.best) fin(R0.latest, `最近一次 ${fmtMSS(R0.latest.s)}，第 ${R0.latest.rank} 快`, ORANGE, 1.9, 1)
+  fin(R0.first, `${fmtMSS(R0.first.s)}　${R0.first.d.replace(/-/g, '.')} 的自己終於到了`, '#f4f1ea', 2.2)
+  // 總結
+  const sumT = R0.finishT(R0.first) + 0.9
+  if (T > sumT) {
+    drawBox(38, 116, 244, 32)
+    text(`第一次 ${fmtMSS(R0.first.s)} → PR ${fmtMSS(R0.best.s)}：快了 ${fmtMSS(R0.first.s - R0.best.s)}`, W / 2, 120, INK, { align: 'center' })
+    text(`最近一次 ${fmtMSS(R0.latest.s)}，在 ${R0.eff.length} 次裡排第 ${R0.latest.rank}`, W / 2, 133, ORANGE, { align: 'center' })
+  }
+}
+
+function drawResults(T) {
+  const k = T - F.resT0
+  const pal = paletteAt(262)
+  applyMod(pal, MOD_NIGHT, 0.92)
+  drawSky(pal, 0, T, H)
+  drawStars(1, T)
+  drawSun(pal, 262, { rain: 0, night: 1, sunset: 0 })
+  drawFar(pal, 400)
+  drawCity(pal, 2667, 1)
+  fill(pal.mid); for (let sx = 0; sx < W; sx++) { const y = Math.round(140 + 10 * Math.cos(sx / 60)); R(sx, y, 1, H - y) }
+  fill(pal.grassDark); for (let sx = 0; sx < 120; sx++) { const y = Math.round(128 + ((sx - 50) * (sx - 50)) / 180); R(sx, y, 1, H - y) }
+  drawRider(40, 142, { crank: 0.9, wheel: 0, bike: 'new', ang: 0 })
+  const T0 = F.D.totals, lines = [
+    [0.3, `${dstr(F.months[0].dnA)} → ${dstr(F.today)}`, DIM, null],
+    [0.9, `騎乘 ${fmtInt(T0.rides)} 趟　${fmtInt(T0.ride_km)} km`, INK, [T0.rides, T0.ride_km]],
+    [1.7, `爬升 ${fmtInt(T0.elev)} m＝${(T0.elev / 3952).toFixed(1)} 座玉山`, INK, [T0.elev]],
+    [2.5, `跑步 ${T0.runs}・游泳 ${T0.swims}・重訓 ${T0.gym}`, INK, null],
+    [3.3, `路段 PR ×${fmtInt(T0.pr)}・讚 ×${fmtInt(T0.kudos)}`, GOLD, [T0.pr, T0.kudos]],
+    [4.1, `最遠 ${T0.longest.km} km・最早 ${T0.earliest.t} 出門`, INK, null],
+  ]
+  // 進步與退步：eFTP 從起點、最高、之後的谷底到現在
+  const ef = F.eftp
+  if (ef.length > 3) {
+    let pk = 0
+    ef.forEach((e, i) => { if (e[1] > ef[pk][1]) pk = i })
+    let lo = pk
+    for (let i = pk; i < ef.length; i++) if (ef[i][1] < ef[lo][1]) lo = i
+    const arc = [ef[0][1], ef[pk][1]]
+    if (lo !== pk) arc.push(ef[lo][1])
+    if (ef[ef.length - 1][1] !== arc[arc.length - 1]) arc.push(ef[ef.length - 1][1])
+    lines.push([4.9, `eFTP ${arc.join(' → ')} W`, INK, null])
+  }
+  const outro = k > 6.2
+  if (!outro) {
+    drawBox(96, 20, 218, 22 + lines.length * 12, 0.8)
+    text('RESULT', 104, 25, GOLD)
+    lines.forEach(([t, s, col, nums], i) => {
+      if (k < t) return
+      let str = s
+      if (nums && k < t + 0.6) { const f = (k - t) / 0.6; nums.forEach(n => { str = str.replace(fmtInt(n), fmtInt(n * f)) }) }
+      text(str, 104, 39 + i * 12, col)
+    })
+  } else {
+    const a = k - 6.2
+    text('TO BE CONTINUED', W / 2, 36, '#ffffff', { big: true, align: 'center', outline: '#15161b' })
+    const [y, mo] = ymd(F.today)
+    const nm = mo === 12 ? `${y + 1}·01` : `${y}·${String(mo + 1).padStart(2, '0')}`
+    if (a > 0.4) text(`下一章：${nm}`, W / 2, 66, GOLD, { align: 'center', outline: '#15161b' })
+    if (a > 0.9 && (a * 2.5 | 0) % 2 === 0) text('CONTINUE?　▶ YES', W / 2, 86, INK, { align: 'center', outline: '#15161b' })
+  }
+  text('資料 Strava・intervals.icu・Garmin｜音樂 程式合成', W / 2, 165, '#7d8298', { align: 'center', shadow: null })
+  if (k < 0.35) dissolve(1 - k / 0.35)
+  if (T > F.resT1) dissolve(smooth((T - F.resT1) / TAIL) * 0.9)
+}
+
+const BAYER = [0, 32, 8, 40, 2, 34, 10, 42, 48, 16, 56, 24, 50, 18, 58, 26, 12, 44, 4, 36, 14, 46, 6, 38, 60, 28, 52, 20, 62, 30, 54, 22, 3, 35, 11, 43, 1, 33, 9, 41, 51, 19, 59, 27, 49, 17, 57, 25, 15, 47, 7, 39, 13, 45, 5, 37, 63, 31, 55, 23, 61, 29, 53, 21]
+function dissolve(p, color = '#000000') {
+  if (p <= 0.005) return
+  fill(color)
+  if (p >= 0.995) { R(0, 0, W, H); return }
+  const th = p * 64
+  for (let by = 0; by < 45; by++) for (let bx = 0; bx < 80; bx++) if (BAYER[(by & 7) * 8 + (bx & 7)] < th) ctx.fillRect(bx * 4, by * 4, 4, 4)
+}
+
+function render(T) {
+  if (!F) return
+  if (T < F.introT1) drawIntro(T)
+  else if (T < F.monthsT1) drawMonths(T)
+  else if (T < F.raceT1) drawRace(T)
+  else drawResults(T)
+  // 段落之間：像素溶解
+  const edge = (t0, d = 0.32) => { const a = Math.abs(T - t0); if (a < d) dissolve(1 - a / d) }
+  edge(F.monthsT1); edge(F.raceT1)
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// 10. 音樂：Web Audio 現場合成（兩個方波、一個三角波、雜訊鼓，跟紅白機同一套樂器）
+// ════════════════════════════════════════════════════════════════════════
+// 旋律用 [步, MIDI, 長度]，一小節 16 步
+const STY = {
+  intro: { ch: [null, [48, 52, 55], [41, 45, 48], [43, 47, 50]], wave: 'p25', vol: 0.08, cut: 10000, bass: 'intro', drums: 'intro',
+    lead: [[[8, 67, 2], [10, 72, 2], [12, 76, 2], [14, 79, 2]], [[0, 84, 6], [6, 79, 2], [8, 76, 4], [12, 72, 4]], [[0, 77, 2], [2, 81, 2], [4, 84, 4], [8, 81, 2], [10, 84, 2], [12, 89, 4]], [[0, 86, 4], [4, 83, 4], [8, 79, 6]]] },
+  spring: { ch: [[48, 52, 55], [45, 48, 52], [41, 45, 48], [43, 47, 50]], wave: 'p25', vol: 0.078, cut: 9000, bass: 'bounce', drums: 'pop', arp: true,
+    lead: [[[0, 76, 2], [2, 79, 2], [4, 84, 4], [8, 83, 2], [10, 79, 2], [12, 76, 4]], [[0, 81, 2], [2, 84, 2], [4, 88, 4], [8, 86, 2], [10, 84, 2], [12, 81, 4]], [[0, 77, 2], [2, 81, 2], [4, 84, 4], [8, 86, 2], [10, 84, 2], [12, 81, 2], [14, 77, 2]], [[0, 79, 4], [4, 83, 2], [6, 86, 2], [8, 91, 6]]],
+    alt: { 3: [[0, 86, 2], [2, 84, 2], [4, 83, 2], [6, 79, 2], [8, 84, 8]] } },
+  summer: { ch: [[50, 54, 57], [45, 49, 52], [47, 50, 54], [43, 47, 50]], wave: 'p12', vol: 0.072, cut: 12000, bass: 'drive', drums: 'drive', arp: true,
+    lead: [[[0, 78, 3], [3, 81, 3], [6, 86, 2], [10, 81, 2], [12, 78, 2], [14, 81, 2]], [[0, 76, 3], [3, 81, 3], [6, 85, 2], [10, 88, 2], [12, 85, 2], [14, 81, 2]], [[0, 86, 3], [3, 85, 3], [6, 83, 2], [10, 78, 2], [12, 81, 2], [14, 83, 2]], [[0, 79, 3], [3, 83, 3], [6, 86, 4], [10, 88, 2], [12, 86, 2], [14, 85, 2]]],
+    alt: { 3: [[0, 79, 3], [3, 83, 3], [6, 86, 2], [8, 88, 2], [10, 90, 6]] } },
+  autumn: { ch: [[41, 45, 48], [43, 47, 50], [40, 43, 47], [45, 48, 52]], wave: 'p25', vol: 0.08, cut: 8500, bass: 'walk', drums: 'rock', arp: true, pad: true,
+    lead: [[[0, 81, 4], [4, 84, 4], [8, 89, 6], [14, 88, 2]], [[0, 86, 4], [4, 83, 4], [8, 79, 4], [12, 81, 2], [14, 83, 2]], [[0, 83, 4], [4, 79, 4], [8, 76, 4], [12, 79, 4]], [[0, 81, 6], [6, 83, 2], [8, 84, 4], [12, 88, 4]]],
+    alt: { 3: [[0, 81, 4], [4, 84, 4], [8, 88, 4], [12, 93, 4]] } },
+  winter: { ch: [[45, 48, 52], [41, 45, 48], [48, 52, 55], [43, 47, 50]], wave: 'p50', vol: 0.062, cut: 3200, bass: 'long', drums: 'half', echo: true, pad: true,
+    lead: [[[0, 76, 6], [6, 74, 2], [8, 72, 4], [12, 69, 4]], [[0, 72, 6], [6, 71, 2], [8, 69, 4], [12, 65, 4]], [[0, 67, 6], [6, 69, 2], [8, 72, 4], [12, 76, 4]], [[0, 74, 8], [8, 71, 4], [12, 67, 4]]] },
+  bleak: { ch: [[45, 48, 52], [40, 44, 47]], wave: 'p50', vol: 0.058, cut: 2300, bass: 'long', drums: 'none', echo: true,
+    lead: [[[0, 76, 6], [6, 74, 2], [8, 72, 4], [12, 71, 4]], [[0, 71, 6], [6, 68, 2], [8, 64, 8]]] },
+  race: { ch: [[40, 43, 47], [48, 52, 55], [50, 54, 57], [47, 51, 54]], wave: 'p25', vol: 0.074, cut: 12000, bass: 'pump', drums: 'four', arp: true,
+    lead: [[[0, 76, 1], [2, 76, 1], [3, 79, 1], [4, 83, 2], [6, 76, 2], [8, 86, 2], [10, 83, 2], [12, 79, 2], [14, 81, 2]], [[0, 76, 1], [2, 76, 1], [3, 79, 1], [4, 84, 2], [6, 76, 2], [8, 88, 2], [10, 84, 2], [12, 79, 2], [14, 81, 2]], [[0, 78, 1], [2, 78, 1], [3, 81, 1], [4, 86, 2], [6, 78, 2], [8, 90, 2], [10, 86, 2], [12, 81, 2], [14, 83, 2]], [[0, 75, 2], [2, 78, 2], [4, 83, 4], [8, 81, 2], [10, 79, 2], [12, 78, 4]]] },
+  victory: { ch: [[48, 52, 55], [41, 45, 48], [43, 47, 50], [48, 52, 55], [41, 45, 48], [43, 47, 53]], wave: 'p25', vol: 0.08, cut: 12000, bass: 'bounce', drums: 'pop', arp: true, pad: true, echo: true,
+    lead: [[[0, 72, 2], [2, 76, 2], [4, 79, 2], [6, 84, 6], [13, 79, 1], [14, 84, 2]], [[0, 81, 2], [2, 84, 2], [4, 89, 4], [8, 88, 2], [10, 86, 2], [12, 84, 4]], [[0, 83, 2], [2, 86, 2], [4, 91, 4], [8, 89, 2], [10, 88, 2], [12, 86, 4]], [[0, 88, 4], [4, 91, 4], [8, 96, 8]], [[0, 81, 4], [4, 84, 4], [8, 89, 8]], [[0, 79, 2], [2, 83, 2], [4, 86, 2], [6, 89, 10]]] },
+}
+const BASS = {
+  bounce: [[0, 0, 2], [2, 12, 2], [4, 0, 2], [6, 12, 2], [8, 0, 2], [10, 12, 2], [12, 7, 2], [14, 12, 2]],
+  drive: [[0, 0, 3], [3, 0, 1], [4, 12, 2], [6, 0, 2], [8, 0, 3], [11, 0, 1], [12, 12, 2], [14, 7, 2]],
+  walk: [[0, 0, 6], [6, 0, 2], [8, 7, 6], [14, 12, 2]],
+  long: [[0, 0, 16]],
+  pump: [[0, 0, 2], [2, 0, 2], [4, 0, 2], [6, 12, 2], [8, 0, 2], [10, 0, 2], [12, 0, 2], [14, 12, 2]],
+  intro: [[0, 0, 8], [8, 7, 8]],
+}
+function styleOfMonth(m) {
+  if (m.mo === 11 && m.h < 3) return 'bleak'
+  if (m.mo >= 3 && m.mo <= 5) return 'spring'
+  if (m.mo >= 6 && m.mo <= 8) return 'summer'
+  if (m.mo >= 9 && m.mo <= 11) return 'autumn'
+  return 'winter'
+}
+
+const AU = { ctx: null, ok: false, muted: false, ev: [], ptr: 0, base: 0, live: [] }
+AU.init = function (given) {
+  if (this.ctx && !given) return true
+  const AC = window.AudioContext || window.webkitAudioContext
+  if (!AC && !given) return false
+  try {
+    const c = this.ctx = given || new AC({ latencyHint: 'interactive' })
+    this.mix = c.createGain()
+    this.lp = c.createBiquadFilter(); this.lp.type = 'lowpass'; this.lp.frequency.value = 9000; this.lp.Q.value = 0.4
+    this.comp = c.createDynamicsCompressor(); this.comp.threshold.value = -16; this.comp.ratio.value = 3.5; this.comp.attack.value = 0.004; this.comp.release.value = 0.18
+    this.out = c.createGain(); this.out.gain.value = this.muted ? 0 : 0.72
+    this.mix.connect(this.lp); this.lp.connect(this.comp); this.comp.connect(this.out); this.out.connect(c.destination)
+    this.sfx = c.createGain(); this.sfx.gain.value = 1; this.sfx.connect(this.comp)   // 音效不過季節濾波
+    this.send = c.createGain(); this.delay = c.createDelay(1); this.delay.delayTime.value = BEAT * 0.75
+    this.fb = c.createGain(); this.fb.gain.value = 0.3; this.wet = c.createGain(); this.wet.gain.value = 0.25
+    this.send.connect(this.delay); this.delay.connect(this.fb); this.fb.connect(this.delay); this.delay.connect(this.wet); this.wet.connect(this.lp)
+    this.waves = {}
+    for (const [k, duty] of [['p12', 0.125], ['p25', 0.25], ['p50', 0.5]]) {
+      const n = 40, re = new Float32Array(n), im = new Float32Array(n)
+      for (let i = 1; i < n; i++) re[i] = 2 / (i * Math.PI) * Math.sin(i * Math.PI * duty)
+      this.waves[k] = c.createPeriodicWave(re, im)
+    }
+    const nb = c.createBuffer(1, c.sampleRate * 2, c.sampleRate), d = nb.getChannelData(0)
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1
+    this.noise = nb
+    this.ok = true
+  } catch (e) { this.ok = false }
+  return this.ok
+}
+AU.track = function (n, end) { this.live.push([n, end]); if (this.live.length > 600) { const t = this.ctx.currentTime; this.live = this.live.filter(x => x[1] > t) } }
+AU.stopAll = function () { for (const [n] of this.live) { try { n.stop(0) } catch (e) {} } this.live = [] }
+const mtof = m => 440 * Math.pow(2, (m - 69) / 12)
+AU.tone = function (at, midi, dur, o = {}) {
+  const c = this.ctx, osc = c.createOscillator(), g = c.createGain()
+  if (o.wave === 'tri') osc.type = 'triangle'; else if (o.wave === 'sine') osc.type = 'sine'; else osc.setPeriodicWave(this.waves[o.wave || 'p25'])
+  osc.frequency.setValueAtTime(mtof(midi), at)
+  if (o.slide != null) osc.frequency.linearRampToValueAtTime(mtof(o.slide), at + dur)
+  if (o.vib && dur > 0.3) {
+    const l = c.createOscillator(), lg = c.createGain()
+    l.frequency.value = 5.5; lg.gain.setValueAtTime(0, at); lg.gain.linearRampToValueAtTime(mtof(midi) * 0.014, at + Math.min(0.4, dur * 0.6))
+    l.connect(lg); lg.connect(osc.frequency); l.start(at); l.stop(at + dur + 0.05); this.track(l, at + dur + 0.05)
+  }
+  const v = o.vol == null ? 0.08 : o.vol, a = Math.min(o.atk || 0.004, dur * 0.3), dcy = Math.min(0.07, dur * 0.3), r = Math.min(o.rel || 0.04, dur * 0.4), sus = o.sus == null ? 0.72 : o.sus
+  g.gain.setValueAtTime(0.0001, at)
+  g.gain.linearRampToValueAtTime(v, at + a)
+  g.gain.linearRampToValueAtTime(v * sus, at + a + dcy)
+  g.gain.setValueAtTime(v * sus, at + dur - r)
+  g.gain.linearRampToValueAtTime(0.0001, at + dur)
+  osc.connect(g); g.connect(o.bus || this.mix); if (o.echo) g.connect(this.send)
+  osc.start(at); osc.stop(at + dur + 0.03); this.track(osc, at + dur + 0.03)
+}
+AU.noiseHit = function (at, dur, vol, o = {}) {
+  const c = this.ctx, src = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain()
+  src.buffer = this.noise
+  f.type = o.type || 'highpass'; f.frequency.setValueAtTime(o.f || 7000, at); if (o.f1) f.frequency.exponentialRampToValueAtTime(o.f1, at + dur); f.Q.value = o.q || 0.7
+  g.gain.setValueAtTime(vol, at); g.gain.exponentialRampToValueAtTime(0.0008, at + dur)
+  src.connect(f); f.connect(g); g.connect(o.bus || this.mix)
+  src.start(at, Math.random() * 1.2); src.stop(at + dur + 0.02); this.track(src, at + dur + 0.02)
+}
+AU.kick = function (at, vol = 0.5) {
+  const c = this.ctx, o = c.createOscillator(), g = c.createGain()
+  o.type = 'sine'; o.frequency.setValueAtTime(155, at); o.frequency.exponentialRampToValueAtTime(42, at + 0.12)
+  g.gain.setValueAtTime(vol, at); g.gain.exponentialRampToValueAtTime(0.001, at + 0.24)
+  o.connect(g); g.connect(this.mix); o.start(at); o.stop(at + 0.26); this.track(o, at + 0.26)
+}
+AU.snare = function (at, vol = 0.16) { this.noiseHit(at, 0.15, vol, { type: 'bandpass', f: 1900, q: 0.8 }); this.tone(at, 54, 0.06, { wave: 'tri', vol: vol * 0.8 }) }
+AU.hat = function (at, vol = 0.035, open = false) { this.noiseHit(at, open ? 0.2 : 0.035, vol, { f: 7600 }) }
+// 音效
+AU.fx = {
+  coin(at) { AU.tone(at, 83, 0.05, { wave: 'p50', vol: 0.06, bus: AU.sfx }); AU.tone(at + 0.05, 88, 0.2, { wave: 'p50', vol: 0.06, bus: AU.sfx, sus: 0.4 }) },
+  pick(at) { AU.tone(at, 91, 0.04, { wave: 'p12', vol: 0.035, bus: AU.sfx }) },
+  ding(at) { AU.tone(at, 88, 0.08, { wave: 'p25', vol: 0.05, bus: AU.sfx }); AU.tone(at + 0.08, 96, 0.22, { wave: 'p25', vol: 0.045, bus: AU.sfx, sus: 0.4 }) },
+  item(at) { [72, 76, 79, 84, 88, 91].forEach((m, i) => AU.tone(at + i * 0.055, m, 0.06, { wave: 'p25', vol: 0.06, bus: AU.sfx })); [84, 88, 91].forEach(m => AU.tone(at + 0.33, m, 0.42, { wave: 'p12', vol: 0.04, bus: AU.sfx, sus: 0.6 })) },
+  pr(at) { [79, 84, 88].forEach((m, i) => AU.tone(at + i * 0.06, m, 0.06, { wave: 'p25', vol: 0.06, bus: AU.sfx })); AU.tone(at + 0.18, 91, 0.32, { wave: 'p25', vol: 0.06, bus: AU.sfx, vib: true, sus: 0.6 }) },
+  bigpr(at) { [72, 76, 79, 84].forEach((m, i) => AU.tone(at + i * 0.07, m, 0.07, { wave: 'p25', vol: 0.07, bus: AU.sfx })); [88, 91, 96].forEach(m => AU.tone(at + 0.28, m, 0.7, { wave: 'p25', vol: 0.045, bus: AU.sfx, vib: true, sus: 0.7 })) },
+  levelup(at) { for (let i = 0; i < 12; i++) AU.tone(at + i * 0.035, [72, 74, 76, 77, 79, 81, 83, 84, 86, 88, 89, 91][i], 0.04, { wave: 'p12', vol: 0.05, bus: AU.sfx }); AU.tone(at + 0.43, 96, 0.35, { wave: 'p25', vol: 0.05, bus: AU.sfx, sus: 0.5 }) },
+  zap(at) { AU.tone(at, 60, 0.16, { wave: 'p12', vol: 0.06, slide: 98, bus: AU.sfx }); AU.noiseHit(at + 0.1, 0.18, 0.05, { f: 3000, bus: AU.sfx }) },
+  sad(at) { [[70, 0.3], [69, 0.3], [68, 0.3]].forEach(([m, d], i) => AU.tone(at + i * 0.32, m, d, { wave: 'p50', vol: 0.06, bus: AU.sfx })); AU.tone(at + 0.96, 67, 0.9, { wave: 'p50', vol: 0.06, vib: true, slide: 65, bus: AU.sfx }) },
+  thunder(at) { AU.noiseHit(at, 1.6, 0.34, { type: 'lowpass', f: 900, f1: 90, bus: AU.sfx }); AU.tone(at, 31, 1.2, { wave: 'sine', vol: 0.2, sus: 0.5, bus: AU.sfx }) },
+  whoosh(at) { AU.noiseHit(at, 0.45, 0.09, { type: 'bandpass', f: 500, f1: 4000, q: 1.2, bus: AU.sfx }) },
+  blip(at, i) { AU.tone(at, 84 + (i % 3) * 2, 0.018, { wave: 'p12', vol: 0.022, bus: AU.sfx }) },
+  boot(at) { AU.tone(at, 76, 0.1, { wave: 'sine', vol: 0.12, bus: AU.sfx }); AU.tone(at + 0.1, 88, 0.6, { wave: 'sine', vol: 0.1, sus: 0.5, bus: AU.sfx }) },
+  beep(at, hi) { AU.tone(at, hi ? 84 : 72, hi ? 0.3 : 0.12, { wave: 'p50', vol: 0.06, bus: AU.sfx }) },
+  tick(at) { AU.tone(at, 96, 0.02, { wave: 'p12', vol: 0.02, bus: AU.sfx }) },
+  tada(at) { [72, 79].forEach((m, i) => AU.tone(at + i * 0.12, m, 0.12, { wave: 'p25', vol: 0.06, bus: AU.sfx })); AU.tone(at + 0.24, 84, 0.5, { wave: 'p25', vol: 0.06, vib: true, bus: AU.sfx }) },
+}
+
+function buildScore(F) {
+  const ev = []
+  const at = (t, fn) => ev.push({ t, fn })
+  // 每一小節的曲風：跟著月份（季節）走；鼓的密度跟著那個月騎了幾小時走
+  const bars = []
+  for (let b = 0; b < INTRO_BARS; b++) bars.push({ b, sty: 'intro', li: b, inten: 0.6 })
+  let prevSty = null, run = 0
+  for (const m of F.months) {
+    const sty = styleOfMonth(m)
+    if (sty !== prevSty) { run = 0; prevSty = sty }
+    const inten = clamp(0.22 + m.h / 20, 0.22, 1)
+    for (let k = 0; k < m.bars; k++) bars.push({ b: m.b0 + k, sty, li: run++, inten, first: k === 0 && run === 1, month: m })
+  }
+  for (let k = 0; k < RACE_BARS; k++) bars.push({ b: F.raceB0 + k, sty: 'race', li: k, inten: k < 2 ? 0.5 : 1, first: k === 0 })
+  for (let k = 0; k < RESULT_BARS; k++) bars.push({ b: F.resB0 + k, sty: 'victory', li: k, inten: 0.9, first: k === 0 })
+  bars.forEach((B, i) => { const nx = bars[i + 1]; B.last = !nx || nx.sty !== B.sty })
+
+  let cut = null
+  for (const B of bars) {
+    const S = STY[B.sty], t0 = B.b * BAR, nb = S.lead.length
+    const ci = S === STY.victory || S === STY.intro ? Math.min(B.li, S.ch.length - 1) : B.li % S.ch.length
+    const chord = S.ch[ci]
+    if (S.cut !== cut) { cut = S.cut; const c2 = cut; at(t0, a => AU.lp.frequency.setTargetAtTime(c2, a, 0.25)) }
+    // 主旋律
+    const li = S === STY.victory || S === STY.intro ? Math.min(B.li, nb - 1) : B.li % nb
+    const loop = Math.floor(B.li / nb)
+    let lead = S.lead[li]
+    if (S.alt && S.alt[li] && loop % 2 === 1) lead = S.alt[li]
+    const oct = B.sty === 'winter' && B.inten > 0.8 ? 12 : 0
+    if (!(B.sty === 'race' && B.li < 2)) for (const [s, m, len] of lead) at(t0 + s * STEP, a => AU.tone(a, m + oct, len * STEP * 0.92, { wave: S.wave, vol: S.vol, echo: S.echo, vib: len >= 6 }))
+    // 貝斯
+    if (chord) for (const [s, off, len] of BASS[S.bass]) { if (S.bass === 'intro' && B.li === 0) break; at(t0 + s * STEP, a => AU.tone(a, chord[0] - 12 + off, len * STEP * 0.9, { wave: 'tri', vol: 0.2, sus: 0.85 })) }
+    // 琶音
+    if (chord && S.arp && B.inten >= 0.5) for (let s = 0; s < 16; s++) { const n = chord[[0, 1, 2, 1][s % 4]] + 24; at(t0 + s * STEP, a => AU.tone(a, n, STEP * 0.8, { wave: 'p12', vol: 0.024, sus: 0.5 })) }
+    // 和弦墊
+    if (chord && S.pad) for (const n of chord) at(t0, a => AU.tone(a, n + 12, BAR * 0.98, { wave: 'p50', vol: 0.014, atk: 0.12, rel: 0.3, sus: 0.9 }))
+    // 鼓
+    const d = S.drums, inten = B.inten
+    const K = [], Sn = [], Hh = []
+    if (d === 'pop') { K.push(0, 8); Sn.push(4, 12); for (let s = 0; s < 16; s += 2) Hh.push(s) }
+    if (d === 'drive') { K.push(0, 6, 8); Sn.push(4, 12); for (let s = 0; s < 16; s++) Hh.push(s) }
+    if (d === 'rock') { K.push(0, 8, 10); Sn.push(4, 12); for (let s = 0; s < 16; s += 2) Hh.push(s) }
+    if (d === 'half') { K.push(0); Sn.push(8); Hh.push(4, 12); if (inten > 0.7) { K.push(10); for (let s = 0; s < 16; s += 2) Hh.push(s) } }
+    if (d === 'four') { if (B.li >= 2) { K.push(0, 4, 8, 12); Sn.push(4, 12); for (let s = 0; s < 16; s++) Hh.push(s) } else { K.push(0, 8); Hh.push(4, 12) } }
+    if (d === 'intro' && B.li >= 1) { K.push(0, 8); Hh.push(4, 12); if (B.li === 3) Sn.push(8, 10, 12, 13, 14, 15) }
+    if (inten < 0.42 && d !== 'four' && d !== 'intro') { Sn.splice(0, Sn.length, ...(Sn.includes(12) ? [12] : Sn)); for (let i = Hh.length - 1; i >= 0; i--) if (Hh[i] % 4) Hh.splice(i, 1) }
+    if (B.last && d !== 'none' && d !== 'intro') Sn.push(13, 14, 15)
+    for (const s of K) at(t0 + s * STEP, a => AU.kick(a, 0.42))
+    for (const s of Sn) { const v = s > 12 ? 0.1 + (s - 12) * 0.02 : 0.14; at(t0 + s * STEP, a => AU.snare(a, v)) }
+    for (const s of Hh) at(t0 + s * STEP, a => AU.hat(a, s % 4 === 0 ? 0.035 : 0.022))
+    if (B.first && d !== 'none') at(t0, a => AU.hat(a, 0.06, true))
+  }
+  // 開機聲
+  at(0.02, a => AU.fx.boot(a))
+  // 字幕打字聲
+  for (const m of F.months) {
+    const S = m.story
+    if (!S) continue
+    const t0 = m.t0 + 0.12, n1 = [...S.h].length, q0 = t0 + n1 / 30 + 0.2, n2 = [...S.q].length
+    for (let i = 0; i < n1; i += 3) at(t0 + i / 30, a => AU.fx.blip(a, i))
+    for (let i = 0; i < n2; i += 4) at(q0 + i / 30, a => AU.fx.blip(a, i + 1))
+  }
+  // 彈出字的音效
+  for (const p of F.pops) if (p.sfx && AU.fx[p.sfx]) { const k = p.sfx; at(p.t, a => AU.fx[k](a)) }
+  const nov = F.months.find(m => styleOfMonth(m) === 'bleak')
+  if (nov) at(nov.t0 + 1.0, a => AU.fx.sad(a))
+  const apr = F.months.find(m => m.m === '2026-04')
+  if (apr) at(apr.t0 + 1.2, a => AU.fx.sad(a))
+  // 金幣：一趟一聲，太密就略過
+  let lastCoin = -1
+  for (const it of F.items) {
+    if (it.type === 'coin' && it.k === 0 && it.t - lastCoin > 0.09) { lastCoin = it.t; const n = it.pr >= 25 ? 3 : 1; for (let j = 0; j < n; j++) at(it.t + j * 0.07, a => AU.fx.coin(a)) }
+    if (it.type === 'icon') at(it.t, a => AU.fx.pick(a))
+  }
+  // 雨聲與蟬聲：每小節一段
+  for (let b = INTRO_BARS; b < F.raceB0; b++) {
+    const t = b * BAR, st = worldAt(t + BAR / 2), wz = weatherAt(st.dn)
+    if (wz.rain > 0.08) { const v = 0.028 * Math.min(1.2, wz.rain); at(t, a => AU.noiseHit(a, BAR * 1.02, v, { type: 'bandpass', f: 2600, q: 0.5, bus: AU.sfx })) }
+    if ((wz.mo === 7 || wz.mo === 8) && wz.rain < 0.2) at(t, a => AU.noiseHit(a, BAR, 0.012, { type: 'bandpass', f: 5200, q: 9, bus: AU.sfx }))
+  }
+  if (F.stormT) at(F.stormT, a => AU.fx.thunder(a))
+  at(F.monthsT1 - 0.35, a => AU.fx.whoosh(a))
+  at(F.raceT1 - 0.35, a => AU.fx.whoosh(a))
+  // 中社路
+  const R0 = F.race
+  if (R0) {
+    for (let k = 3; k >= 1; k--) at(R0.gunT - k * BEAT, a => AU.fx.beep(a, false))
+    at(R0.gunT, a => { AU.fx.beep(a, true); AU.noiseHit(a, 0.2, 0.12, { f: 1200 }) })
+    let last = -1
+    for (const x of R0.sorted) {
+      const t = R0.finishT(x)
+      if (x === R0.best) at(t, a => AU.fx.bigpr(a))
+      else if (x === R0.latest) at(t, a => AU.fx.pr(a))
+      else if (x === R0.first) at(t, a => AU.fx.tada(a))
+      else if (t - last > 0.06) { last = t; const r = x.rank; at(t, a => AU.tone(a, 96 - Math.min(24, r), 0.05, { wave: 'p12', vol: 0.03, bus: AU.sfx })) }
+    }
+  }
+  // 結算的計數聲
+  for (const t of [0.9, 1.7, 3.3]) for (let i = 0; i < 8; i++) at(F.resT0 + t + i * 0.075, a => AU.fx.tick(a))
+  ev.sort((a, b) => a.t - b.t)
+  return ev
+}
+AU.startAt = function (T, clock0) {
+  this.base = clock0
+  const ev = this.ev
+  let lo = 0, hi = ev.length
+  while (lo < hi) { const mid = (lo + hi) >> 1; if (ev[mid].t < T - 0.01) lo = mid + 1; else hi = mid }
+  this.ptr = lo
+  // 季節濾波要立刻到位
+  let cut = 9000
+  for (const m of F.months) if (T >= m.t0) cut = STY[styleOfMonth(m)].cut
+  if (T >= F.raceT0) cut = 12000
+  this.lp.frequency.cancelScheduledValues(this.ctx.currentTime)
+  this.lp.frequency.setValueAtTime(cut, this.ctx.currentTime)
+}
+AU.pump = function (T) {
+  const ev = this.ev, horizon = T + 0.3
+  while (this.ptr < ev.length && ev[this.ptr].t < horizon) {
+    const e = ev[this.ptr++]
+    if (e.t < T - 0.06) continue
+    try { e.fn(Math.max(this.ctx.currentTime, this.base + e.t)) } catch (err) {}
+  }
+}
+AU.setMuted = function (m) {
+  this.muted = m
+  if (this.ctx) this.out.gain.setTargetAtTime(m ? 0 : 0.72, this.ctx.currentTime, 0.03)
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// 11. 播放器：時鐘、按鈕、拖曳、鍵盤、縮放
+// ════════════════════════════════════════════════════════════════════════
+const $ = id => document.getElementById(id)
+const stage = $('stage'), startEl = $('start')
+const PL = { T: 0, playing: false, clock0: 0, useAudio: false, started: false }
+const now = () => PL.useAudio ? AU.ctx.currentTime : performance.now() / 1000
+
+function play() {
+  if (!F) return
+  if (PL.T >= F.end - 0.05) PL.T = 0
+  PL.useAudio = !!(AU.ok && AU.ctx && AU.ctx.state === 'running')
+  PL.clock0 = now() - PL.T
+  if (PL.useAudio) AU.startAt(PL.T, PL.clock0)
+  PL.playing = true; PL.started = true
+  startEl.hidden = true
+  ui()
+}
+function pause() {
+  if (!PL.playing) return
+  PL.T = clamp(now() - PL.clock0, 0, F.end)
+  PL.playing = false
+  if (AU.ok) AU.stopAll()
+  render(PL.T); ui()
+}
+function seek(t) {
+  if (!F) return
+  PL.T = clamp(t, 0, F.end)
+  if (PL.playing) { if (AU.ok) AU.stopAll(); PL.clock0 = now() - PL.T; if (PL.useAudio) AU.startAt(PL.T, PL.clock0) }
+  render(PL.T); ui()
+}
+async function begin(muted) {
+  AU.muted = muted
+  if (AU.init()) { try { await AU.ctx.resume() } catch (e) {} AU.setMuted(muted) }
+  PL.T = 0
+  play()
+  $('bPlay').focus({ preventScroll: true })
+}
+function frame() {
+  requestAnimationFrame(frame)
+  if (!PL.playing) return
+  PL.T = now() - PL.clock0
+  if (PL.useAudio) AU.pump(PL.T)
+  if (PL.T >= F.end) {
+    PL.T = F.end; PL.playing = false
+    if (AU.ok) AU.stopAll()
+    $('bStartLabel').textContent = '再看一次'; $('startInfo').textContent = '看完了。資料每天會更新，下個月再來看新的一關。'
+    startEl.hidden = false
+  }
+  render(PL.T); ui()
+}
+function ui() {
+  if (!F) return
+  const t = PL.T, f = t / F.end
+  $('tTime').textContent = `${fmtMSS(t)} / ${fmtMSS(F.end)}`
+  $('seekFill').style.width = f * 100 + '%'
+  $('seekKnob').style.left = f * 100 + '%'
+  const sk = $('seek'); sk.setAttribute('aria-valuenow', Math.round(t)); sk.setAttribute('aria-valuetext', fmtMSS(t))
+  $('iPlay').setAttribute('d', PL.playing ? 'M3 2h3.5v12H3zm6.5 0H13v12H9.5z' : 'M3 1.5l11 6.5-11 6.5z')
+  $('bPlay').setAttribute('aria-label', PL.playing ? '暫停' : '播放')
+  $('iMute').setAttribute('d', AU.muted ? 'M1 5.5h3l4-3.5v12l-4-3.5H1zM10 5.4l1-1 2 2 2-2 1 1-2 2 2 2-1 1-2-2-2 2-1-1 2-2z' : 'M1 5.5h3l4-3.5v12l-4-3.5H1zM10.5 4.5a5 5 0 0 1 0 7l-1-1a3.6 3.6 0 0 0 0-5zM12.6 2.4a8 8 0 0 1 0 11.2l-1-1a6.6 6.6 0 0 0 0-9.2z')
+  $('bMute').setAttribute('aria-label', AU.muted ? '打開聲音' : '關掉聲音')
+  $('bMute').setAttribute('aria-pressed', String(AU.muted))
+}
+function toggle() { if (!F) return; if (!PL.started) { begin(false); return } if (PL.playing) pause(); else { if (AU.ctx && AU.ctx.state !== 'running') AU.ctx.resume().then(play); else play() } }
+
+$('bStart').addEventListener('click', () => { if (PL.started && PL.T >= F.end - 0.05) { seek(0); play() } else begin(false) })
+$('bMuted').addEventListener('click', () => begin(true))
+$('bPlay').addEventListener('click', toggle)
+$('bMute').addEventListener('click', () => { if (!AU.ctx) AU.init(); AU.setMuted(!AU.muted); ui() })
+$('bFull').addEventListener('click', () => {
+  if (document.fullscreenElement) document.exitFullscreen()
+  else if (stage.requestFullscreen) stage.requestFullscreen().catch(() => {})
+})
+document.addEventListener('fullscreenchange', fit)
+cv.addEventListener('click', () => { if (PL.started) toggle() })
+const seekEl = $('seek')
+let dragging = false, wasPlaying = false
+const seekTo = e => { const r = seekEl.getBoundingClientRect(); seek(clamp((e.clientX - r.left) / r.width, 0, 1) * F.end) }
+seekEl.addEventListener('pointerdown', e => { if (!F) return; dragging = true; wasPlaying = PL.playing; if (PL.playing) pause(); seekEl.setPointerCapture(e.pointerId); seekTo(e) })
+seekEl.addEventListener('pointermove', e => { if (dragging) seekTo(e) })
+seekEl.addEventListener('pointerup', () => { if (!dragging) return; dragging = false; if (wasPlaying) play() })
+seekEl.addEventListener('keydown', e => {
+  if (!F) return
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { seek(PL.T + (e.key === 'ArrowLeft' ? -5 : 5)); e.preventDefault(); e.stopPropagation() }
+  if (e.key === 'Home') { seek(0); e.preventDefault() }
+  if (e.key === 'End') { seek(F.end - 0.1); e.preventDefault() }
+})
+document.addEventListener('keydown', e => {
+  if (!F || e.metaKey || e.ctrlKey || e.altKey) return
+  const tag = (e.target && e.target.tagName) || ''
+  if (e.key === ' ' || e.key === 'k') { if (tag === 'BUTTON' && e.key === ' ') return; toggle(); e.preventDefault() }
+  else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { if (e.target === seekEl) return; seek(PL.T + (e.key === 'ArrowLeft' ? -5 : 5)); e.preventDefault() }
+  else if (e.key === 'm' || e.key === 'M') { if (!AU.ctx) AU.init(); AU.setMuted(!AU.muted); ui() }
+  else if (e.key === 'f' || e.key === 'F') $('bFull').click()
+  else if (e.key === 'r' || e.key === 'R') { seek(0); if (!PL.playing) play() }
+})
+document.addEventListener('visibilitychange', () => { if (document.hidden && PL.playing) pause() })
+
+function fit() {
+  const dpr = window.devicePixelRatio || 1
+  const fs = document.fullscreenElement === stage
+  const short = window.innerHeight < 520                  // 橫放的手機：畫面優先，控制列捲一下就到
+  const availW = fs ? window.innerWidth : Math.min(document.documentElement.clientWidth - 32, 1600)
+  const availH = fs ? window.innerHeight : Math.max(180, window.innerHeight - (short ? 64 : 150))
+  let s = Math.max(0.5, Math.min(availW / W, availH / H))
+  const sd = Math.floor(s * dpr)
+  if (sd >= 1 && sd / dpr >= s * 0.93) s = sd / dpr        // 對齊整數裝置像素，像素才不會一格大一格小（差太多就寧可用小數倍）
+  if (fs) { stage.style.setProperty('--fw', W * s + 'px'); stage.style.setProperty('--fh', H * s + 'px') }
+  else { stage.style.width = W * s + 'px'; stage.style.height = H * s + 'px' }
+  const bar = $('bar'); if (bar) bar.style.maxWidth = W * s + 'px'
+  stage.classList.toggle('compact', W * s < 560)
+  const sk = $('seek'); if (sk) sk.classList.toggle('narrow', sk.getBoundingClientRect().width < 520)
+}
+window.addEventListener('resize', fit)
+fit()
+
+// ════════════════════════════════════════════════════════════════════════
+// 12. 啟動：字型、資料、時間軸、字幕稿
+// ════════════════════════════════════════════════════════════════════════
+function storyFor(m) {
+  const C = { ...F.ctx, m }
+  try { return (STORY[m.m] || STORY_DEFAULT)(C) } catch (e) { return STORY_DEFAULT(C) }
+}
+function buildTicks() {
+  const sk = $('seek'), mk = (t, s, minor) => { const d = document.createElement('span'); d.className = 'tick' + (minor ? ' minor' : ''); d.style.left = t / F.end * 100 + '%'; d.textContent = s; sk.appendChild(d) }
+  const y0 = F.months[0], jan = F.months.find(m => m.mo === 1 && m.i > 0)
+  mk(y0.t0, String(y0.y))
+  if (jan) mk(jan.t0, String(jan.y))
+  if (F.race) mk(F.raceT0, '中社路', true)
+  mk(F.resT0, '結算', true)
+  sk.setAttribute('aria-valuemax', String(Math.round(F.end)))
+}
+function buildScript() {
+  const ol = $('script')
+  ol.textContent = ''
+  for (const m of F.months) {
+    const li = document.createElement('li'), t = document.createElement('time'), div = document.createElement('div'), b = document.createElement('b'), sp = document.createElement('span')
+    t.textContent = `${m.y}.${String(m.mo).padStart(2, '0')}`; t.dateTime = m.m
+    b.textContent = m.story.h
+    sp.textContent = `${m.story.q}　·　騎 ${m.h.toFixed(1)} 小時、${fmtInt(m.km)} km${m.runs ? `、跑 ${m.runs} 趟` : ''}${m.swims ? `、游 ${m.swims} 趟` : ''}${m.gym ? `、重訓 ${m.gym} 次` : ''}`
+    div.append(b, sp); li.append(t, div); ol.appendChild(li)
+  }
+  if (F.race) {
+    const R0 = F.race, li = document.createElement('li'), t = document.createElement('time'), div = document.createElement('div'), b = document.createElement('b'), sp = document.createElement('span')
+    t.textContent = '中社路'
+    b.textContent = `${R0.eff.length} 次同場：第一次 ${fmtMSS(R0.first.s)}，PR ${fmtMSS(R0.best.s)}`
+    sp.textContent = `最近一次 ${fmtMSS(R0.latest.s)}（${R0.latest.d}），在 ${R0.eff.length} 次裡排第 ${R0.latest.rank}`
+    div.append(b, sp); li.append(t, div); ol.appendChild(li)
+  }
+}
+async function boot() {
+  const fontReady = document.fonts ? Promise.race([document.fonts.load(`12px ${FONT}`), new Promise(r => setTimeout(r, 5000))]) : Promise.resolve()
+  let data
+  try {
+    const res = await fetch('data/chronicle.json', { cache: 'no-cache' })
+    if (!res.ok) throw new Error(res.status)
+    data = await res.json()
+  } catch (e) {
+    $('bStartLabel').textContent = '資料載入失敗'
+    $('startInfo').textContent = '重新整理再試一次'
+    return
+  }
+  await fontReady
+  TXT.clear()
+  F = buildFilm(data)
+  for (const m of F.months) m.story = storyFor(m)
+  AU.ev = buildScore(F)
+  buildTicks(); buildScript(); fit()
+  $('asof').textContent = `資料到 ${dstr(F.today)}`
+  $('startInfo').textContent = `約 ${Math.floor(F.end / 60)} 分 ${Math.round(F.end % 60)} 秒・有音樂`
+  $('bStartLabel').textContent = '開始'
+  $('bStart').disabled = false; $('bMuted').disabled = false
+  PL.T = 0
+  render(BAR * 2.45)   // 海報：標題＋車手都在的那一格
+  ui()
+  const q = new URLSearchParams(location.search)
+  if (q.has('t')) { PL.T = +q.get('t') || 0; render(PL.T); ui() }
+  requestAnimationFrame(frame)
+}
+
+window.__chronicle = {
+  get F() { return F }, get T() { return PL.T }, render: t => { PL.T = t; render(t); ui() }, seek, play, pause,
+  get audioEvents() { return AU.ev.length },
+  // 除錯：把某一段配樂離線算出來，回傳每 0.5 秒的峰值與 RMS（測混音用，不會出聲）
+  async probeAudio(t0, dur) {
+    const keep = { ...AU }, sr = 22050
+    const oc = new OfflineAudioContext(1, Math.ceil(sr * dur), sr)
+    AU.ctx = null; AU.live = []; AU.init(oc); AU.setMuted(false)
+    AU.base = -t0; AU.startAt(t0, -t0)
+    const ev = AU.ev
+    for (let i = AU.ptr; i < ev.length && ev[i].t < t0 + dur; i++) { try { ev[i].fn(Math.max(0, ev[i].t - t0)) } catch (e) {} }
+    const buf = await oc.startRendering(), d = buf.getChannelData(0), win = sr / 2, out = []
+    for (let i = 0; i < d.length; i += win) { let pk = 0, ss = 0; for (let j = i; j < Math.min(d.length, i + win); j++) { const v = Math.abs(d[j]); if (v > pk) pk = v; ss += v * v } out.push([+(t0 + i / sr).toFixed(1), +pk.toFixed(3), +Math.sqrt(ss / win).toFixed(3)]) }
+    Object.assign(AU, keep)
+    return out
+  },
+}
+boot()
+})()
+</script>
+</body>
+</html>

@@ -30,6 +30,7 @@ python3 scripts/build-fit-extras.py -q                # 器材電量／左右平
 python3 scripts/build-pacing.py                       # 計時段最佳配速＋照目前體能的全力預估（排在條件校正之後）
 python3 scripts/estimate-indoor-distance.py            # 室內沒有距離，估等效平路里程（漏跑月里程會少一整趟）
 python3 scripts/build-coach-context.py                # 貼給外部 AI 的脈絡檔，漏跑就停在上次那天
+python3 scripts/build-chronicle.py                    # 運動編年史動畫的資料（strava_chronicle.html）
 node scripts/fetch-strava.js                          # 總覽的年度統計還住在 strava.json
 python3 scripts/build-tasks.py                        # 最後：把上面產生的新代辦收進清單
 ```
