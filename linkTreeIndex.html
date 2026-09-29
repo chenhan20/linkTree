@@ -88,7 +88,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 .sp-btn:hover .btn-icon,.sp-btn:active .btn-icon{transform:scale(1.18) rotate(6deg);background:rgba(var(--br,127,119,221),.16)}
 .btn-icon svg{width:14px;height:14px}
 .btn-icon.av{border-radius:50%;background:none!important;border-color:transparent!important;overflow:visible}
-.btn-avatar{display:block;width:34px;height:34px;flex:none;filter:drop-shadow(0 0 8px rgba(255,150,70,.35))}
+.btn-avatar{display:block;width:34px;height:34px;flex:none;filter:drop-shadow(0 0 8px rgba(255,190,40,.35))}
 .btn-label{flex:1}
 .btn-arrow{font-size:12px;color:var(--bc,#7F77DD);opacity:0;transform:translateX(-5px);transition:opacity .18s,transform .18s}
 .sp-btn:hover .btn-arrow,.sp-btn:active .btn-arrow{opacity:1;transform:none}
@@ -572,8 +572,8 @@ createApp({
         icon:'M23.495 6.205a3.007 3.007 0 0 0-2.088-2.088c-1.87-.501-9.396-.501-9.396-.501s-7.507-.01-9.396.501A3.007 3.007 0 0 0 .527 6.205a31.247 31.247 0 0 0-.522 5.805 31.247 31.247 0 0 0 .522 5.783 3.007 3.007 0 0 0 2.088 2.088c1.868.502 9.396.502 9.396.502s7.506 0 9.396-.502a3.007 3.007 0 0 0 2.088-2.088 31.247 31.247 0 0 0 .5-5.783 31.247 31.247 0 0 0-.5-5.805zM9.609 15.601V8.408l6.264 3.602z' },
       { label:'Strava', url:'https://www.strava.com/athletes/161539959', rgb:'252,76,2',
         icon:'M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169' },
-      // 天還沒亮：用我自己的騎乘紀錄說的一個故事（幻燈片；每個數字現算自 data/chronicle.json）。圖示是我的臉，描成向量再截成小圖。
-      { label:'天還沒亮 · 跟太陽比誰先出門', url:'dawn.html', rgb:'255,138,69', badge:'NEW', img:'assets/dawn/sun-128.png' },
+      // 天還沒亮：用我自己的騎乘紀錄說的一個故事（幻燈片；每個數字現算自 data/chronicle.json）。圖示是我騎車的樣子（照片描成向量，站在橘色太陽上）。
+      { label:'天還沒亮 · 跟太陽比誰先出門', url:'dawn.html', rgb:'247,209,16', badge:'NEW', img:'assets/dawn/rider-icon-128.png' },
       // 現行主版本是 Taiwan Ride Cinema：一張帶車手電影 icon 與背景預覽的卡（這一列約七成的視覺重量）。
       // 四個歷代實驗版本收在 ARCHIVE 裡，預設收合、展開後是細小的灰色清單，不逐項寫「舊版」。
       { label:'STEVE · RIDE CINEMA', sub:'個人騎行資料與訓練控制台', rgb:'255,179,71',

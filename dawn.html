@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>天還沒亮 · Steve Chuang</title>
 <meta name="description" content="107 趟戶外騎乘，跟太陽比誰先出門。每個數字都是從我的騎乘紀錄現算的。">
-<meta name="theme-color" content="#02040a">
+<meta name="theme-color" content="#07160e">
 <link rel="icon" href="logo.ico">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -19,12 +19,11 @@
   --gut:clamp(20px,5vw,84px);
   --top:68px;
   --bot:92px;
-  --orange:#ff8a45;          /* 他自己的橘：車衣、毛衣、每一趟 */
   --settle:cubic-bezier(.2,.7,.2,1);
   /* 舞台（由 JS 每一格更新） */
-  --sky-a:#02040a;--sky-b:#060b1e;--sky-c:#10183a;
-  --far:#0d1330;--mid:#090e26;--near:#04060e;
-  --stars:1;--lights:.9;--glow:#4a5cb0;--ga:.22;
+  --sky-a:#07160e;--sky-b:#0c2517;--sky-c:#17472b;
+  --far:#0f2d1c;--mid:#0a2016;--near:#06140d;
+  --lights:.9;--glow:#d9902a;--ga:.16;--d1:#ff8a2e;--d2:#d4501a;--tick:#e9cf6a;--shade:.5;
 }
 html,body{height:100%;background:var(--sky-a);overflow:hidden;overscroll-behavior:none}
 body{font-family:var(--sans);color:var(--fg);-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
@@ -33,27 +32,25 @@ a{color:inherit}
 :focus-visible{outline:2px solid currentColor;outline-offset:3px}
 
 /* 兩種字色：整張投影片一個色調，天空慢慢換，字不跟著漸變（換張時內容早就淡出了） */
-:root[data-tone=light],.slide[data-tone=light]{--fg:#f1f4ff;--fg2:#b6c0e0;--fg3:#7f8bb4;--line:rgba(241,244,255,.18);--chip:rgba(4,8,24,.42)}
-:root[data-tone=dark],.slide[data-tone=dark]{--fg:#0d1a38;--fg2:#2f3f66;--fg3:#55648c;--line:rgba(13,26,56,.22);--chip:rgba(255,255,255,.4)}
+:root[data-tone=light],.slide[data-tone=light]{--fg:#f6f2dc;--fg2:#cbd8c0;--fg3:#92ad8e;--line:rgba(246,242,220,.2);--chip:rgba(4,20,12,.42);--me:#ffd91a}
+:root[data-tone=dark],.slide[data-tone=dark]{--fg:#12281b;--fg2:#33513a;--fg3:#5c7a5f;--line:rgba(18,40,27,.24);--chip:rgba(255,255,255,.5);--me:#e2470f}
 
 /* ── 舞台：天空、星、城、稜線、太陽 ─────────────────────── */
 .stage{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
 .sky{position:absolute;inset:0;background:linear-gradient(to bottom,var(--sky-a) 0%,var(--sky-b) 58%,var(--sky-c) 100%)}
-.stars{position:absolute;inset:0;width:100%;height:100%;opacity:var(--stars)}
-.stars circle{fill:#fff}
-.stars .tw{animation:tw 4s ease-in-out infinite}
-@keyframes tw{50%{opacity:.25}}
 .ridge{position:absolute;left:0;right:0;bottom:0;width:100%;height:min(30vh,300px);z-index:2}
 .ridge .far{fill:var(--far)}.ridge .mid{fill:var(--mid)}.ridge .near{fill:var(--near)}
-.ridge .lights circle{fill:#ffd08a}
+.ridge .lights circle{fill:#ffe27a}
 .ridge .lights{opacity:var(--lights)}
 .sun{position:absolute;left:0;top:0;z-index:1;transform-origin:0 0;will-change:transform;transition:transform 1.5s cubic-bezier(.65,0,.25,1)}
 .sun-box{position:relative;width:100%;height:100%}
 .sun::before{content:'';position:absolute;left:50%;top:58%;width:170%;aspect-ratio:1;translate:-50% -50%;border-radius:50%;
   background:radial-gradient(closest-side,var(--glow),transparent 72%);opacity:var(--ga)}
 .sun svg{position:relative;display:block;width:100%;height:100%;overflow:visible}
-.sun .tick{stroke:var(--tick,#ffd9a0);stroke-linecap:round}
+.sun .tick{stroke:var(--tick,#e9cf6a);stroke-linecap:round}
 .sun.no-tr{transition:none}
+.rider-flip{transform-box:view-box;transform-origin:50% 50%}
+.sun.flip .rider-flip{transform:scaleX(-1)}
 
 /* ── 投影片容器 ───────────────────────────────────── */
 .deck{position:fixed;inset:0;z-index:3;touch-action:pan-y}
@@ -76,12 +73,13 @@ svg .n{font-family:var(--num);font-weight:600}
 
 /* 封面 */
 .s-cover{grid-template-rows:1fr auto;align-items:end;justify-items:center;text-align:center}
-.cover-copy{align-self:start;padding-top:clamp(8px,4vh,48px)}
+.cover-copy{align-self:start;padding-top:clamp(4px,2.4vh,30px)}
 .s-cover h1{font:900 clamp(72px,14vw,220px)/1 var(--serif);letter-spacing:.08em;padding-left:.08em}
 .s-cover .sub{margin-top:clamp(10px,2vh,22px);font-size:clamp(15px,1.5vw,21px);letter-spacing:.06em;color:var(--fg2)}
-.cover-sun{position:absolute;left:50%;bottom:0;width:min(46vmin,420px);aspect-ratio:1;translate:-50% 0}
+.cover-sun{position:absolute;left:50%;bottom:0;width:min(66vmin,620px);aspect-ratio:1;translate:-50% 0}
 .hint{margin-top:clamp(14px,2.6vh,26px);font-size:13px;letter-spacing:.08em;color:var(--fg3)}
 .sun-slot.fin{--slot:min(46vh,34vw,420px);margin:0}
+@media (min-width:701px) and (min-aspect-ratio:1/1){.s-cover .hint{position:fixed;left:var(--gut);bottom:calc(var(--bot) + 4px);margin:0}}
 .hint-kbd{display:none}
 @media (hover:hover) and (pointer:fine){.hint-kbd{display:inline}.hint-touch{display:none}}
 
@@ -92,7 +90,7 @@ svg .n{font-family:var(--num);font-weight:600}
 .chart .ax{stroke:var(--line);stroke-width:1}
 .chart .lb{fill:var(--fg3);font-size:12px}
 .chart .lb2{fill:var(--fg2);font-size:13px}
-.hl{fill:var(--orange)}
+.hl{fill:var(--me)}
 
 /* 二：24 小時環 */
 .ring-wrap{position:relative;width:min(68vh,46vw,640px);aspect-ratio:1}
@@ -108,7 +106,7 @@ svg .n{font-family:var(--num);font-weight:600}
 @keyframes rowin{from{opacity:0}to{opacity:1}}
 .score{display:flex;align-items:flex-end;gap:clamp(18px,3vw,44px);margin-top:clamp(16px,3vh,30px)}
 .score b{display:block;font:600 clamp(52px,6.4vw,96px)/1 var(--num);letter-spacing:.01em}
-.score .me b{color:var(--orange)}
+.score .me b{color:var(--me)}
 .score small{display:block;margin-top:8px;font-size:13px;color:var(--fg3);letter-spacing:.14em}
 .score .vs{align-self:center;font-size:15px;color:var(--fg3);padding-bottom:26px}
 
@@ -116,7 +114,7 @@ svg .n{font-family:var(--num);font-weight:600}
 .gap{display:flex;align-items:baseline;flex-wrap:wrap;gap:6px 16px;margin-top:clamp(16px,3vh,30px);font-family:var(--num)}
 .gap .a{font-size:clamp(40px,4.6vw,72px);font-weight:600;line-height:1;color:var(--fg2)}
 .gap .arr{font-size:clamp(26px,3vw,44px);color:var(--fg3)}
-.gap .b{font-size:clamp(56px,7vw,112px);font-weight:700;line-height:1;color:var(--orange)}
+.gap .b{font-size:clamp(56px,7vw,112px);font-weight:700;line-height:1;color:var(--me)}
 .gap .u{font:400 13.5px/1.6 var(--sans);color:var(--fg3);letter-spacing:.04em;flex-basis:100%;text-wrap:balance}
 .dot{opacity:0}
 .slide.is-on .dot{animation:rowin .4s ease both;animation-delay:calc(var(--k)*16ms + .7s)}
@@ -133,7 +131,7 @@ svg .n{font-family:var(--num);font-weight:600}
 .wins .mid{min-width:0}
 .wins .mid svg{display:block;width:100%;height:14px;border-radius:2px;overflow:hidden}
 .wins .mid p{margin-top:6px;font-size:13px;color:var(--fg2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.wins .ahead{font:700 clamp(24px,2.4vw,34px)/1 var(--num);color:var(--orange);text-align:right}
+.wins .ahead{font:700 clamp(24px,2.4vw,34px)/1 var(--num);color:var(--me);text-align:right}
 .wins .ahead small{display:block;margin-top:3px;font:400 12px var(--sans);color:var(--fg3)}
 
 /* 六：三個圈 */
@@ -141,7 +139,7 @@ svg .n{font-family:var(--num);font-weight:600}
 .gauge{text-align:center}
 .gauge svg{width:100%;max-width:230px;height:auto;display:block;margin:0 auto}
 .gauge .trk{fill:none;stroke:var(--line);stroke-width:12}
-.gauge .prg{fill:none;stroke:var(--orange);stroke-width:12;stroke-linecap:round;stroke-dasharray:0 1000;transform:rotate(-90deg);transform-origin:50% 50%}
+.gauge .prg{fill:none;stroke:var(--me);stroke-width:12;stroke-linecap:round;stroke-dasharray:0 1000;transform:rotate(-90deg);transform-origin:50% 50%}
 .slide.is-on .gauge .prg{animation:gfill 1.3s var(--settle) both;animation-delay:calc(var(--k)*180ms + .7s)}
 @keyframes gfill{to{stroke-dasharray:var(--len) 1000}}
 .gauge .big{font:700 clamp(38px,4.4vw,64px)/1 var(--num);fill:var(--fg)}
@@ -155,13 +153,13 @@ svg .n{font-family:var(--num);font-weight:600}
 
 /* 八：結尾 */
 .s-end{grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:clamp(24px,5vw,90px);align-items:center}
-.sr{font:700 clamp(64px,9vw,150px)/1 var(--num);color:var(--orange);letter-spacing:.01em;margin-top:clamp(10px,2vh,22px)}
+.sr{font:700 clamp(64px,9vw,150px)/1 var(--num);color:var(--me);letter-spacing:.01em;margin-top:clamp(10px,2vh,22px)}
 .race{margin-top:clamp(20px,4vh,40px);max-width:560px}
 .race svg{width:100%;height:auto;display:block;overflow:visible}
 .acts{display:flex;flex-wrap:wrap;gap:12px;margin-top:clamp(20px,4vh,36px)}
 .btn{display:inline-flex;align-items:center;gap:10px;padding:12px 22px;border-radius:999px;border:1px solid var(--line);background:var(--chip);color:var(--fg);font-size:15px;letter-spacing:.1em;text-decoration:none;cursor:pointer;transition:border-color .2s,transform .15s}
 .btn:hover{border-color:var(--fg2)}
-.btn.pri{background:var(--orange);border-color:var(--orange);color:#1e0d04;font-weight:700}
+.btn.pri{background:var(--me);border-color:var(--me);color:#12281b;font-weight:700}
 .btn svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 details.how{margin-top:clamp(20px,4vh,36px);max-width:34em;color:var(--fg2);font-size:13.5px;line-height:1.8}
 details.how summary{cursor:pointer;color:var(--fg3);letter-spacing:.08em;padding:6px 0;width:max-content}
@@ -190,8 +188,7 @@ details.how li{margin-top:4px}
 .pg button{width:26px;height:26px;padding:0;border:0;background:none;cursor:pointer;color:inherit;display:grid;place-items:center}
 .pg button i{display:block;width:8px;height:8px;border-radius:50%;background:currentColor;opacity:.4;transition:opacity .3s,transform .35s var(--settle),box-shadow .3s}
 .pg button:hover i{opacity:.8}
-.pg button[aria-current=true] i{opacity:1;transform:scale(1.5);box-shadow:0 0 0 3px var(--sky-a),0 0 0 4.5px currentColor}
-:root[data-tone=dark] .pg button[aria-current=true] i{box-shadow:0 0 0 3px #d9e8f8,0 0 0 4.5px currentColor}
+.pg button[aria-current=true] i{opacity:1;transform:scale(1.5);box-shadow:0 0 0 4px color-mix(in srgb,currentColor 28%,transparent)}
 .pg .pr{display:none}
 .live{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 :root.auto .pg button[aria-current=true]::after{content:'';position:absolute}
@@ -212,7 +209,7 @@ details.how li{margin-top:4px}
   .s-end .art{order:-1;justify-content:center}
   .sun-slot.fin{--slot:min(50vw,25dvh)}
   .s-cover h1{font-size:clamp(56px,17vw,110px)}
-  .cover-sun{width:min(74vw,340px)}
+  .cover-sun{width:min(96vw,440px)}
   .ring-wrap{width:min(88vw,52dvh)}
   .ring-slot{width:38%}
   .score{margin-top:12px}.score b{font-size:46px}
@@ -255,7 +252,6 @@ details.how li{margin-top:4px}
 }
 @media (prefers-reduced-motion:reduce){
   .sun{transition:none}
-  .stars .tw{animation:none}
   .slide.is-on .bar,.slide.is-on .strips .row,.slide.is-on .dot,.slide.is-on .wins li,.slide.is-on .gauge .prg,.slide.is-on .wd .b,.slide.is-on .mline{animation:none}
   .bar,.strips .row,.dot,.wins li,.wd .b{opacity:1;transform:none}
   .mline{stroke-dashoffset:0}
@@ -267,7 +263,6 @@ details.how li{margin-top:4px}
 
 <div class="stage" aria-hidden="true">
   <div class="sky"></div>
-  <svg class="stars" id="stars" preserveAspectRatio="none"></svg>
   <div class="sun" id="sun"><div class="sun-box" id="sunBox"></div></div>
   <svg class="ridge" id="ridge" viewBox="0 0 1600 300" preserveAspectRatio="xMidYMax slice"></svg>
 </div>
@@ -313,7 +308,7 @@ details.how li{margin-top:4px}
       <h2 id="raceH"></h2>
       <p class="lede" id="raceLede"></p>
       <div class="score" id="score"></div>
-      <div class="sun-slot" data-sun data-pose="corner"></div>
+      <div class="sun-slot" data-sun data-pose="corner" data-flip="1"></div>
     </div>
     <div class="art"><svg class="chart strips" id="strips" viewBox="0 0 720 560" role="img"></svg></div>
   </section>
@@ -324,7 +319,7 @@ details.how li{margin-top:4px}
       <h2>但差距在縮。</h2>
       <p class="lede" id="gapLede"></p>
       <div class="gap" id="gapNums"></div>
-      <div class="sun-slot" data-sun data-pose="corner"></div>
+      <div class="sun-slot" data-sun data-pose="corner" data-flip="1"></div>
     </div>
     <div class="art"><svg class="chart" id="trend" viewBox="0 0 760 460" role="img"></svg></div>
   </section>
@@ -334,17 +329,17 @@ details.how li{margin-top:4px}
     <div class="copy">
       <h2 id="winsH"></h2>
       <p class="lede" id="winsLede"></p>
-      <div class="sun-slot" data-sun data-pose="corner"></div>
+      <div class="sun-slot" data-sun data-pose="corner" data-flip="1"></div>
     </div>
     <div class="art"><ol class="wins" id="wins"></ol></div>
   </section>
 
   <!-- 6 主場 -->
-  <section class="slide two" data-tone="light" data-key="share" data-title="早上是主場">
+  <section class="slide two" data-tone="dark" data-key="share" data-title="早上是主場">
     <div class="copy">
       <h2><span class="ph">早上是</span><span class="ph">我的主場。</span></h2>
       <p class="lede" id="shareLede"></p>
-      <div class="sun-slot" data-sun data-pose="corner"></div>
+      <div class="sun-slot" data-sun data-pose="corner" data-flip="1"></div>
     </div>
     <div class="art"><div class="gauges" id="gauges"></div></div>
   </section>
@@ -354,7 +349,7 @@ details.how li{margin-top:4px}
     <div class="copy">
       <h2 id="weekH"></h2>
       <p class="lede" id="weekLede"></p>
-      <div class="sun-slot" data-sun data-pose="corner"></div>
+      <div class="sun-slot" data-sun data-pose="corner" data-flip="1"></div>
     </div>
     <div class="art"><svg class="chart wd" id="week" viewBox="0 0 700 300" role="img"></svg></div>
   </section>
@@ -386,14 +381,14 @@ details.how li{margin-top:4px}
   <button class="arw" id="next" type="button" aria-label="下一張" title="下一張（→）"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 5.5L16 12l-6.5 6.5"/></svg></button>
 </nav>
 <div class="live" id="live" role="status" aria-live="polite"></div>
-<noscript><p style="position:fixed;inset:auto 20px 20px;color:#f1f4ff;font:15px/1.8 sans-serif;z-index:99">這頁需要 JavaScript。回<a href="linkTreeIndex.html">首頁</a>。</p></noscript>
+<noscript><p style="position:fixed;inset:auto 20px 20px;color:#f6f2dc;font:15px/1.8 sans-serif;z-index:99">這頁需要 JavaScript。回<a href="linkTreeIndex.html">首頁</a>。</p></noscript>
 
 <script>
 (() => {
 'use strict'
 const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)]
 const NS = 'http://www.w3.org/2000/svg'
-const S = (tag, attrs = {}, ...kids) => { const e = document.createElementNS(NS, tag); for (const k in attrs) if (attrs[k] != null) e.setAttribute(k, attrs[k]); kids.forEach(c => c != null && e.append(c)); return e }
+const S = (tag, attrs = {}, ...kids) => { const e = document.createElementNS(NS, tag); for (const k in attrs) { const v = attrs[k]; if (v == null) continue; if ((k === 'fill' || k === 'stroke') && typeof v === 'string' && v.startsWith('var(')) e.style[k] = v; else if (k === 'style') e.style.cssText += ';' + v; else e.setAttribute(k, v) } kids.forEach(c => c != null && e.append(c)); return e }
 const root = document.documentElement
 const reduce = matchMedia('(prefers-reduced-motion: reduce)')
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v))
@@ -458,39 +453,29 @@ function compute(d) {
 const hex = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16))
 const mixC = (a, b, t) => '#' + hex(a).map((v, i) => Math.round(v + (hex(b)[i] - v) * t).toString(16).padStart(2, '0')).join('')
 const lerp = (a, b, t) => a + (b - a) * t
-//        天頂      中段      地平線     遠山      中山      近山      星  燈   光暈色     光暈 太陽色階 眼瞼
+//     天頂      中段      地平線     遠山      中山      近山      燈  光暈色     光暈 太陽上  太陽下  騎士暗  刻度色
+//  色票全部來自那張騎車照：森林的綠、車衣的黃、三角錐的橘。由深森林（天還沒亮）走到車衣黃（天亮了）。
 const ST = [
-  ['#02040a', '#060b1e', '#10183a', '#0d1330', '#090e26', '#04060e', 1, .95, '#4a5cb0', .22, 0, 1],
-  ['#040817', '#0a1230', '#1b2552', '#101838', '#0b1129', '#05070f', .9, .9, '#5163b6', .25, .06, 1],
-  ['#071029', '#131d47', '#2f3a72', '#162044', '#0e1533', '#060810', .7, .8, '#6470c0', .3, .14, .85],
-  ['#0d1a44', '#232b5f', '#5d4f86', '#1d2650', '#121a3c', '#070a17', .45, .6, '#8a72b8', .4, .28, .6],
-  ['#14275c', '#3b3777', '#b8628a', '#2a2f63', '#1a2049', '#0a0e21', .2, .45, '#f0907a', .5, .42, .35],
-  ['#1f3f82', '#5e5a97', '#f0925c', '#4a4d86', '#33396e', '#141a3a', .05, .25, '#ffb070', .55, .6, .15],
-  ['#6ea2dc', '#a4c0e4', '#f7c283', '#8a9fca', '#6f88b8', '#4d6796', 0, .1, '#ffd08a', .55, .8, 0],
-  ['#79aee6', '#b8d6f0', '#fde9c6', '#a8c3e2', '#8fb0d6', '#6c93c0', 0, 0, '#ffe2a0', .6, 1, 0]
+  ['#07160e', '#0c2517', '#17472b', '#0f2d1c', '#0a2016', '#06140d', .9, '#d9902a', .16, '#ff8a2e', '#d4501a', .52, '#e9cf6a'],
+  ['#0a1d12', '#12331f', '#245c37', '#143a24', '#0d2a1a', '#07170e', .85, '#dfa030', .2, '#ff922e', '#d85a1c', .4, '#f0d56a'],
+  ['#0e2616', '#1a4a2a', '#3f7d3a', '#1c4d2f', '#123720', '#08190f', .7, '#e8b038', .26, '#ff9a34', '#e0661e', .28, '#f5da6a'],
+  ['#12301c', '#235a34', '#4c8a3a', '#2b6a3a', '#1a4c2a', '#0a1f12', .45, '#f0c040', .34, '#ffa63a', '#e87420', .16, '#f8de62'],
+  ['#19402a', '#2f7a3f', '#4a9a3e', '#3a7c44', '#286636', '#0d2a18', .2, '#ffd24a', .42, '#ffb040', '#f08424', .06, '#ffe25a'],
+  ['#f0d52a', '#f6e26a', '#fff0a8', '#a0cc68', '#7cb552', '#5aa044', 0, '#ffb02e', .5, '#ffc247', '#ff7a26', 0, '#ff9a2e'],
+  ['#f7dc3e', '#fbeb8a', '#fff6c2', '#a0cc68', '#7cb552', '#5aa044', 0, '#ffb02e', .5, '#ffc247', '#ff7a26', 0, '#ff9a2e'],
+  ['#fbe55a', '#fff2a8', '#fffbe0', '#a0cc68', '#7cb552', '#5aa044', 0, '#ffb02e', .55, '#ffc247', '#ff7a26', 0, '#ff9a2e']
 ]
-// 太陽（肖像）的三組色票：夜（月）→ 破曉 → 白天
-const PAL = {
-  night: { sk0: '#aab3cc', sk1: '#909bb8', sk2: '#7883a3', sk3: '#616c8d', sw0: '#8a4c40', sw1: '#74403a', sw2: '#5c322d', sw3: '#9c5c4c', ink0: '#0a0b12', ink1: '#262a3a', ink2: '#222634', hi: '#cfd5e2', disc: '#38446e', tick: '#8f9bd0' },
-  dawn: { sk0: '#e9c6b3', sk1: '#dea98f', sk2: '#c98f78', sk3: '#b17561', sw0: '#c95a3d', sw1: '#b04a30', sw2: '#8f3a24', sw3: '#dc7048', ink0: '#17110f', ink1: '#4a342c', ink2: '#3c332e', hi: '#f6e9de', disc: '#f0b07a', tick: '#ffd2a0' },
-  day: { sk0: '#f4d6bf', sk1: '#ebbea0', sk2: '#d9a584', sk3: '#c48a69', sw0: '#cc5b3a', sw1: '#b44b2c', sw2: '#923a21', sw3: '#e07248', ink0: '#17110f', ink1: '#4a342b', ink2: '#3c332e', hi: '#fbf0e4', disc: '#ffe19a', tick: '#fff0c4' }
-}
-const palAt = u => { const [a, b, t] = u < .5 ? [PAL.night, PAL.dawn, u * 2] : [PAL.dawn, PAL.day, (u - .5) * 2]; const o = {}; for (const k in a) o[k] = mixC(a[k], b[k], t); return o }
 
 const stage = {
   x: 0, tween: null,
   apply(x) {
     const i = clamp(Math.floor(x), 0, ST.length - 2), t = clamp(x - i, 0, 1), A = ST[i], B = ST[i + 1]
-    const v = (k, n) => n <= 5 ? mixC(A[n], B[n], t) : lerp(A[n], B[n], t)
-    const st = root.style
-    st.setProperty('--sky-a', v(0, 0)); st.setProperty('--sky-b', v(0, 1)); st.setProperty('--sky-c', v(0, 2))
-    st.setProperty('--far', v(0, 3)); st.setProperty('--mid', v(0, 4)); st.setProperty('--near', v(0, 5))
-    st.setProperty('--stars', v(0, 6).toFixed(3)); st.setProperty('--lights', v(0, 7).toFixed(3))
-    st.setProperty('--glow', mixC(A[8], B[8], t)); st.setProperty('--ga', v(0, 9).toFixed(3))
-    const sunEl = $('#sun'), pal = palAt(v(0, 10))
-    for (const k in pal) sunEl.style.setProperty(k === 'tick' ? '--tick' : '--' + k, pal[k])
-    sunEl.style.setProperty('--lid', v(0, 11).toFixed(3))
-    $('meta[name=theme-color]').content = v(0, 0)
+    const c = n => mixC(A[n], B[n], t), f = n => lerp(A[n], B[n], t).toFixed(3), st = root.style
+    st.setProperty('--sky-a', c(0)); st.setProperty('--sky-b', c(1)); st.setProperty('--sky-c', c(2))
+    st.setProperty('--far', c(3)); st.setProperty('--mid', c(4)); st.setProperty('--near', c(5))
+    st.setProperty('--lights', f(6)); st.setProperty('--glow', c(7)); st.setProperty('--ga', f(8))
+    st.setProperty('--d1', c(9)); st.setProperty('--d2', c(10)); st.setProperty('--shade', f(11)); st.setProperty('--tick', c(12))
+    $('meta[name=theme-color]').content = c(0)
   },
   to(x, ms = 1500) {
     cancelAnimationFrame(this.raf)
@@ -532,40 +517,39 @@ function buildRidge() {
   for (let i = 0; i < 90; i++) { const x = rnd() * 1600, yy = 236 + rnd() * 54; lights.append(S('circle', { cx: x.toFixed(0), cy: yy.toFixed(0), r: (.6 + rnd() * 1.1).toFixed(1), opacity: (.35 + rnd() * .55).toFixed(2) })) }
   svg.append(far, S('path', { class: 'far', d: seg.join('') }), mid, lights, near)
 }
-function buildStars() {
-  const svg = $('#stars'); svg.textContent = ''; svg.setAttribute('viewBox', '0 0 1000 600')
-  let seed = 11; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647
-  for (let i = 0; i < 110; i++) { const c = S('circle', { cx: (rnd() * 1000).toFixed(0), cy: (rnd() * 420).toFixed(0), r: (.5 + rnd() * 1.1).toFixed(1), opacity: (.25 + rnd() * .7).toFixed(2) }); if (i % 9 === 0) { c.setAttribute('class', 'tw'); c.style.animationDelay = (rnd() * 4).toFixed(1) + 's' } svg.append(c) }
-}
-
-/* 肖像：把 assets/dawn/portrait.svg 的圖層放進圓盤，圓盤上緣以上不裁（頭髮探出去） */
-let sunSVG = null
-function buildSun(inner) {
+/* 騎士：assets/dawn/rider.svg（從騎車照描出來的向量）放在橘色太陽圓盤上，圓盤下半裁掉、頭盔探出上緣。
+   天還沒亮的時候騎士被一層深綠蓋暗（--shade），亮起來之後慢慢褪掉。 */
+const SUN_UNITS = { w: 900, cx: 450, cy: 560, d: 660 }
+function buildSun(riderInner) {
+  const { cx, cy } = SUN_UNITS, R = SUN_UNITS.d / 2, k = 1.05, rw = 530, rh = 770
+  const rx = cx - rw * k / 2, ry = 930 - rh * k
   const ticks = S('g', { class: 'ticks' })
-  for (let i = 0; i < 24; i++) { const a = i / 24 * Math.PI * 2, r0 = 398, r1 = i % 6 === 0 ? 426 : 412; ticks.append(S('line', { class: 'tick', x1: (450 + Math.sin(a) * r0).toFixed(1), y1: (522 - Math.cos(a) * r0).toFixed(1), x2: (450 + Math.sin(a) * r1).toFixed(1), y2: (522 - Math.cos(a) * r1).toFixed(1), 'stroke-width': i % 6 === 0 ? 5 : 3, opacity: i % 6 === 0 ? .9 : .5 })) }
+  for (let i = 0; i < 24; i++) { const a = i / 24 * Math.PI * 2, r0 = R + 22, r1 = R + (i % 6 === 0 ? 58 : 40); ticks.append(S('line', { class: 'tick', x1: (cx + Math.sin(a) * r0).toFixed(1), y1: (cy - Math.cos(a) * r0).toFixed(1), x2: (cx + Math.sin(a) * r1).toFixed(1), y2: (cy - Math.cos(a) * r1).toFixed(1), 'stroke-width': i % 6 === 0 ? 6 : 3.5, opacity: i % 6 === 0 ? .95 : .55 })) }
   const svg = S('svg', { viewBox: '0 0 900 900' })
-  svg.innerHTML = `<defs><clipPath id="sunClip"><rect x="-200" y="-200" width="1300" height="722"/><circle cx="450" cy="522" r="378"/></clipPath></defs>`
+  svg.innerHTML = `<defs><radialGradient id="sunG" cx=".5" cy=".4" r=".7"><stop offset="0" style="stop-color:var(--d1)"/><stop offset="1" style="stop-color:var(--d2)"/></radialGradient>
+    <clipPath id="sunClip"><rect x="-200" y="-200" width="1300" height="${cy + 200}"/><circle cx="${cx}" cy="${cy}" r="${R}"/></clipPath>
+    <mask id="riderMask"><use href="#rsil" fill="#fff"/></mask></defs>`
   svg.append(ticks)
-  svg.insertAdjacentHTML('beforeend', `<circle cx="450" cy="522" r="378" fill="var(--disc,#ffe19a)"/><g clip-path="url(#sunClip)">${inner}</g>`)
-  $('#sunBox').replaceChildren(svg); sunSVG = svg
+  svg.insertAdjacentHTML('beforeend', `<circle cx="${cx}" cy="${cy}" r="${R}" fill="url(#sunG)"/><g clip-path="url(#sunClip)"><g class="rider-flip"><g transform="translate(${rx.toFixed(1)} ${ry.toFixed(1)}) scale(${k})">${riderInner.replace('<path ', '<path id="rsil" ')}<rect width="${rw}" height="${rh}" fill="#04100a" style="opacity:var(--shade)" mask="url(#riderMask)"/></g></g></g>`)
+  $('#sunBox').replaceChildren(svg)
 }
-// 太陽的位置：圓盤圓心對到該張投影片的錨點（[data-sun]）
-const SUN_UNITS = { w: 900, cx: 450, cy: 522, d: 756 }
+// 太陽的位置：圓盤圓心對到該張投影片的錨點（[data-sun]）；data-flip＝騎士鏡射，朝向內容
 function placeSun(slide, instant) {
   const el = $('#sun'), a = $('[data-sun]', slide); if (!a) return
   const r = a.getBoundingClientRect(); if (!r.width) return
   const pose = a.dataset.pose
   let d = Math.min(r.width, r.height), cx = r.left + r.width / 2, cy = r.top + r.height / 2
-  if (pose === 'cover') { d = r.width * .95; cy = r.bottom - d * .3; cx = r.left + r.width / 2 }   // 封面：剛從稜線後面升起，眼睛以上露出來（還睜不開）
+  if (pose === 'cover') { d = r.width * .92; cy = r.bottom - d * .3; cx = r.left + r.width / 2 }   // 封面：太陽在稜線後面剛升起，騎士從稜線上探出來
   const k = d / SUN_UNITS.d, boxW = SUN_UNITS.w * k
   el.style.width = el.style.height = boxW + 'px'
+  el.classList.toggle('flip', a.dataset.flip === '1')
   if (instant) el.classList.add('no-tr')
   el.style.transform = `translate(${(cx - SUN_UNITS.cx * k).toFixed(1)}px,${(cy - SUN_UNITS.cy * k).toFixed(1)}px)`
   if (instant) requestAnimationFrame(() => requestAnimationFrame(() => el.classList.remove('no-tr')))
 }
 
 /* ═══ 圖表 ═══ */
-const ORANGE = '#ff8a45'
+const ME = 'var(--me)'
 function renderRing(D) {
   const svg = $('#ring'), C = 350, r0 = 190, per = 2.3
   svg.textContent = ''
@@ -574,40 +558,40 @@ function renderRing(D) {
     return `M${x0.toFixed(1)} ${y0.toFixed(1)}A${rb} ${rb} 0 ${big} 1 ${x1.toFixed(1)} ${y1.toFixed(1)}L${x2.toFixed(1)} ${y2.toFixed(1)}A${ra} ${ra} 0 ${big} 0 ${x3.toFixed(1)} ${y3.toFixed(1)}Z` }
   // 白天／夜晚外環：用這一年日出日落的平均
   const rise = (D.sunRange[0] + D.sunRange[1]) / 2 / 60, set = (D.setRange[0] + D.setRange[1]) / 2 / 60
-  svg.append(S('path', { d: arc(324, 332, rise, set), fill: '#f6c56f', opacity: .85 }))
-  svg.append(S('path', { d: arc(324, 332, set, rise + 24), fill: '#33407a', opacity: .9 }))
+  svg.append(S('path', { d: arc(324, 332, rise, set), fill: '#ffc233', opacity: .95 }))
+  svg.append(S('path', { d: arc(324, 332, set, rise + 24), fill: '#2a6a3f', opacity: .95 }))
   // 日出日落的範圍（這一年裡最早到最晚）
-  svg.append(S('path', { d: arc(r0 - 22, r0 - 14, D.sunRange[0] / 60, D.sunRange[1] / 60), fill: '#ffd47a' }))
-  svg.append(S('path', { d: arc(r0 - 22, r0 - 14, D.setRange[0] / 60, D.setRange[1] / 60), fill: '#ffd47a', opacity: .5 }))
+  svg.append(S('path', { d: arc(r0 - 22, r0 - 14, D.sunRange[0] / 60, D.sunRange[1] / 60), fill: '#ff9a3d' }))
+  svg.append(S('path', { d: arc(r0 - 22, r0 - 14, D.setRange[0] / 60, D.setRange[1] / 60), fill: '#ff9a3d', opacity: .5 }))
   for (const h of [0, 6, 12, 18]) { const [x, y] = pt(352, h); svg.append(S('text', { class: 'lb2 n', x: x.toFixed(1), y: (y + 5).toFixed(1), 'text-anchor': 'middle', 'font-size': 15 }, String(h === 0 ? 24 : h))) }
   const max = Math.max(...D.hist)
   let k = 0
   D.hist.forEach((n, h) => {
     if (!n) return
     const morning = h >= 4 && h < 9, len = Math.max(4, n * per)
-    const g = S('path', { class: 'bar', d: arc(r0, r0 + len, h + .07, h + .93), fill: morning ? ORANGE : '#8b9ad6', opacity: morning ? 1 : .8, style: `--k:${k++}` })
+    const g = S('path', { class: 'bar', d: arc(r0, r0 + len, h + .07, h + .93), fill: morning ? ME : '#8fc088', opacity: morning ? 1 : .85, style: `--k:${k++}` })
     g.append(S('title', {}, `${String(h).padStart(2, '0')}:00–${String(h).padStart(2, '0')}:59　${n} 趟`))
     svg.append(g)
-    if (n >= 8) { const [x, y] = pt(r0 + len + 15, h + .5); svg.append(S('text', { class: 'n', x: x.toFixed(1), y: (y + 7).toFixed(1), 'text-anchor': 'middle', 'font-size': 20, fill: morning ? ORANGE : '#c4ccf0' }, String(n))) }
+    if (n >= 8) { const [x, y] = pt(r0 + len + 15, h + .5); svg.append(S('text', { class: 'n', x: x.toFixed(1), y: (y + 7).toFixed(1), 'text-anchor': 'middle', 'font-size': 20, fill: morning ? ME : '#cfe6c4' }, String(n))) }
   })
   const n6 = D.hist[6], n18 = D.hist[18]
   svg.setAttribute('aria-label', `一天二十四小時，每小時的出發趟數。6 點 ${n6} 趟最多，18 點 ${n18} 趟居次。`)
-  $('#hourLede').innerHTML = `${D.rides.length} 趟戶外騎乘，<b>${n6} 趟從 6 點開始</b>，傍晚 6 點是第二名（${n18} 趟）。外圈金色是白天；內圈的金色短弧，是這些騎乘當天的日出時間（最早 ${hm(D.sunRange[0])}，最晚 ${hm(D.sunRange[1])}）——6 點的橘色，就緊貼在它後面。`
+  $('#hourLede').innerHTML = `${D.rides.length} 趟戶外騎乘，<b>${n6} 趟從 6 點開始</b>，傍晚 6 點是第二名（${n18} 趟）。外圈金色是白天；內圈的橘色短弧，是這些騎乘當天的日出時間（最早 ${hm(D.sunRange[0])}，最晚 ${hm(D.sunRange[1])}）——6 點那根黃色長條，就緊貼在它後面。`
 }
 
 function skyRow(y, r, X, h, gid) {
   // 一列天空：夜（黑）→ 曙光 → 天亮；再疊上我騎的那一段
   const x = m => X(clamp(m, X.min, X.max)), g = S('g', { class: 'row' })
-  g.append(S('rect', { x: X(X.min), y, width: X(X.max) - X(X.min), height: h, fill: '#0c1232' }))
+  g.append(S('rect', { x: X(X.min), y, width: X(X.max) - X(X.min), height: h, fill: '#0a1e13' }))
   g.append(S('rect', { x: x(r.civil), y, width: Math.max(0, x(r.rise) - x(r.civil)), height: h, fill: `url(#${gid})` }))
   g.append(S('rect', { x: x(r.rise), y, width: Math.max(0, X(X.max) - x(r.rise)), height: h, fill: `url(#${gid}d)` }))
   const bx = x(r.st), bw = Math.max(1.5, x(r.end) - bx)
-  g.append(S('rect', { x: bx, y: y + h * .18, width: bw, height: h * .64, rx: 1, fill: r.off < 0 ? '#ff5a1f' : '#e8702c', stroke: '#0a0f28', 'stroke-width': .8 }))
+  g.append(S('rect', { x: bx, y: y + h * .18, width: bw, height: h * .64, rx: 1, fill: r.off < 0 ? '#fff36b' : '#ffd91a', stroke: '#0a1e13', 'stroke-width': .8 }))
   if (r.off < 0) g.append(S('circle', { cx: bx, cy: y + h / 2, r: h * .62, fill: '#fff', opacity: .95 }))
   return g
 }
-const gradDefs = id => S('defs', {}, S('linearGradient', { id, x1: 0, x2: 1, y1: 0, y2: 0 }, S('stop', { offset: 0, 'stop-color': '#2a2f6e' }), S('stop', { offset: .55, 'stop-color': '#d8735a' }), S('stop', { offset: 1, 'stop-color': '#f7c98a' })),
-  S('linearGradient', { id: id + 'd', x1: 0, x2: 1, y1: 0, y2: 0 }, S('stop', { offset: 0, 'stop-color': '#f7c98a' }), S('stop', { offset: .1, 'stop-color': '#c7b0bd' }), S('stop', { offset: .28, 'stop-color': '#8ea2dc' }), S('stop', { offset: 1, 'stop-color': '#7488d0' })))
+const gradDefs = id => S('defs', {}, S('linearGradient', { id, x1: 0, x2: 1, y1: 0, y2: 0 }, S('stop', { offset: 0, 'stop-color': '#12402a' }), S('stop', { offset: .55, 'stop-color': '#e79a2e' }), S('stop', { offset: 1, 'stop-color': '#ffe27a' })),
+  S('linearGradient', { id: id + 'd', x1: 0, x2: 1, y1: 0, y2: 0 }, S('stop', { offset: 0, 'stop-color': '#ffe27a' }), S('stop', { offset: .1, 'stop-color': '#d3dc72' }), S('stop', { offset: .28, 'stop-color': '#7db64e' }), S('stop', { offset: 1, 'stop-color': '#4c9a48' })))
 
 function renderStrips(D) {
   const nw = NARROW.matches, svg = $('#strips'), am = D.am, W = nw ? 380 : 720, L = nw ? 52 : 74, R = 10, T = nw ? 24 : 30, ph = nw ? 6.2 : 8, h = nw ? 4.8 : 6.2
@@ -627,10 +611,10 @@ function renderStrips(D) {
     if (mo !== lastMonth && (+mo.slice(5) % 3 === 1 || i === 0)) svg.append(S('text', { class: 'lb n', x: L - 8, y: y + h - .5, 'text-anchor': 'end', 'font-size': nw ? 11 : 13 }, mo.replace('-', '.')))
     lastMonth = mo
   })
-  svg.setAttribute('aria-label', `${am.length} 個九點前出發的早晨，每一列是一天：底色是那天的天空（深藍是天黑，金色是天亮），橘條是我騎的時段。其中 ${D.wins.length} 天橘條在天亮之前開始。`)
+  svg.setAttribute('aria-label', `${am.length} 個九點前出發的早晨，每一列是一天：底色是那天的天空（深綠黑是天黑，金黃是天亮），黃條是我騎的時段。其中 ${D.wins.length} 天黃條在天亮之前開始。`)
   const lose = am.length - D.wins.length
   $('#raceH').innerHTML = `<span class="ph">九點前出門的</span> <span class="ph">${am.length} 個早晨，</span><span class="ph">太陽先到了</span> <span class="ph">${lose} 次。</span>`
-  $('#raceLede').innerHTML = `每一列是一個早晨。底色是那天的天空，橘條是我騎的那一段——橘條起點落在金色之前、還在黑的裡面，就是我先到。`
+  $('#raceLede').innerHTML = `每一列是一個早晨。底色是那天的天空，黃條是我騎的那一段——黃條的起點落在天亮之前、還在黑的裡面，就是我先到。`
   $('#score').innerHTML = `<div class="sn"><b>${lose}</b><small>太陽先到</small></div><span class="vs">比</span><div class="me"><b>${D.wins.length}</b><small>我先到</small></div>`
 }
 
@@ -639,10 +623,10 @@ function renderTrend(D) {
   svg.textContent = ''
   const dmin = am[0].d, dmax = D.today, X = d => L + dayDiff(dmin, d) / dayDiff(dmin, dmax) * (W - L - R)
   const y0 = -100, y1 = 260, Y = m => T + (m - y0) / (y1 - y0) * (H - T - B)
-  svg.append(S('rect', { x: L, y: T, width: W - L - R, height: Y(0) - T, fill: '#ffd47a', opacity: .1 }))
+  svg.append(S('rect', { x: L, y: T, width: W - L - R, height: Y(0) - T, fill: '#ffb347', opacity: .13 }))
   for (const m of [60, 120, 180, 240]) { svg.append(S('line', { class: 'ax', x1: L, x2: W - R, y1: Y(m), y2: Y(m), 'stroke-dasharray': '2 5' })); svg.append(S('text', { class: 'lb n', x: L - 8, y: Y(m) + 5, 'text-anchor': 'end', 'font-size': fs }, '+' + m)) }
-  svg.append(S('line', { x1: L, x2: W - R, y1: Y(0), y2: Y(0), stroke: '#ffd47a', 'stroke-width': 2 }))
-  svg.append(S('text', { class: 'lb2', x: L + 6, y: Y(0) - 9, fill: '#ffd47a', 'font-size': nw ? 12 : 13 }, '日出'))
+  svg.append(S('line', { x1: L, x2: W - R, y1: Y(0), y2: Y(0), stroke: '#ffb347', 'stroke-width': 2 }))
+  svg.append(S('text', { class: 'lb2', x: L + 6, y: Y(0) - 9, fill: '#ffb347', 'font-size': nw ? 12 : 13 }, '日出'))
   svg.append(S('text', { class: 'lb', x: L + 6, y: Y(-100) + 18, 'font-size': nw ? 12 : 13 }, '日出前'))
   svg.append(S('text', { class: 'lb', x: L - 4, y: Y(240) + 26, 'text-anchor': 'end', 'font-size': nw ? 11 : 12 }, '晚（分）'))
   // 月份刻度
@@ -653,10 +637,10 @@ function renderTrend(D) {
   let d = `M${med[0][0]} ${med[0][1]}`; for (let i = 1; i < med.length; i++) { const [x, y] = med[i], [px, py] = med[i - 1]; d += `Q${px} ${py} ${((x + px) / 2).toFixed(1)} ${((y + py) / 2).toFixed(1)}` }
   am.forEach((r, i) => {
     const win = r.off < 0
-    const c = S('circle', { class: 'dot', cx: X(r.d).toFixed(1), cy: Y(r.off).toFixed(1), r: win ? (nw ? 5 : 6.5) : (nw ? 3.4 : 4.6), fill: win ? '#fff' : '#9fb0e6', opacity: win ? 1 : .75, stroke: win ? ORANGE : 'none', 'stroke-width': nw ? 2.4 : 3, style: `--k:${i}` })
+    const c = S('circle', { class: 'dot', cx: X(r.d).toFixed(1), cy: Y(r.off).toFixed(1), r: win ? (nw ? 5 : 6.5) : (nw ? 3.4 : 4.6), fill: win ? '#fff' : '#9ccf94', opacity: win ? 1 : .75, stroke: win ? ME : 'none', 'stroke-width': nw ? 2.4 : 3, style: `--k:${i}` })
     c.append(S('title', {}, `${r.d}　${hm(r.st)} 出發，${r.off < 0 ? '比日出早' : '比日出晚'} ${Math.abs(Math.round(r.off))} 分`)); svg.append(c)
   })
-  svg.append(S('path', { class: 'mline', d, pathLength: 1, fill: 'none', stroke: ORANGE, 'stroke-width': nw ? 3 : 4, 'stroke-linecap': 'round', opacity: .95 }))
+  svg.append(S('path', { class: 'mline', d, pathLength: 1, fill: 'none', stroke: ME, 'stroke-width': nw ? 3 : 4, 'stroke-linecap': 'round', opacity: .95 }))
   svg.setAttribute('viewBox', `0 0 ${W} ${H}`)
   svg.setAttribute('aria-label', `每個早晨出門時間比日出晚幾分鐘。最早的 ${D.n10} 個早晨中位數晚 ${Math.round(D.first)} 分，最近 ${D.n10} 個晚 ${Math.round(D.last)} 分。`)
   $('#gapLede').innerHTML = `每個點是一個早晨，金色橫線是日出。點愈靠近橫線，代表我出門的時間愈貼近太陽。中間也有往回退的時候，但整體是往線靠。`
@@ -703,8 +687,8 @@ function renderWeek(D) {
   D.wd.forEach((n, i) => {
     const x = sp / 2 + i * sp, r = Math.max(n ? (nw ? 4 : 6) : 2.5, Math.sqrt(n) * k)
     const g = S('g', { class: 'b', style: `--k:${i}` })
-    g.append(S('circle', { cx: x, cy, r, fill: top.has(i) ? ORANGE : 'none', stroke: top.has(i) ? 'none' : 'currentColor', 'stroke-opacity': .55, 'stroke-width': 2 }))
-    if (n >= 5) g.append(S('text', { class: 'n', x, y: cy + (top.has(i) ? (nw ? 8 : 10) : (nw ? 6 : 8)), 'text-anchor': 'middle', 'font-size': top.has(i) ? (nw ? 22 : 30) : (nw ? 15 : 22), fill: top.has(i) ? '#1e0d04' : 'currentColor' }, String(n)))
+    g.append(S('circle', { cx: x, cy, r, fill: top.has(i) ? ME : 'none', stroke: top.has(i) ? 'none' : 'currentColor', 'stroke-opacity': .55, 'stroke-width': 2 }))
+    if (n >= 5) g.append(S('text', { class: 'n', x, y: cy + (top.has(i) ? (nw ? 8 : 10) : (nw ? 6 : 8)), 'text-anchor': 'middle', 'font-size': top.has(i) ? (nw ? 22 : 30) : (nw ? 15 : 22), fill: top.has(i) ? '#12281b' : 'currentColor' }, String(n)))
     svg.append(g)
     svg.append(S('text', { x, y: nw ? 160 : 240, 'text-anchor': 'middle', 'font-size': nw ? 13 : 16, fill: 'currentColor', opacity: top.has(i) ? 1 : .75, 'font-weight': top.has(i) ? 700 : 400 }, '週' + WD[i]))
     if (n < 5) svg.append(S('text', { class: 'n', x, y: nw ? 182 : 264, 'text-anchor': 'middle', 'font-size': nw ? 14 : 17, fill: 'currentColor', opacity: .7 }, String(n)))
@@ -724,14 +708,14 @@ function renderEnd(D) {
   const t0 = D.tmrRise - 40, t1 = est + 30, W = 560, X = m => 20 + (m - t0) / (t1 - t0) * (W - 40)
   svg.setAttribute('viewBox', '0 0 560 92'); svg.setAttribute('aria-label', `明天日出 ${hm(D.tmrRise)}，照習慣我約 ${hm(est)} 出門，晚 ${gap} 分鐘。`)
   svg.append(gradDefs('tw9'))
-  svg.append(S('rect', { x: 20, y: 34, width: X(D.tmrRise - 24) - 20, height: 14, fill: '#0c1232', opacity: .9 }))
+  svg.append(S('rect', { x: 20, y: 34, width: X(D.tmrRise - 24) - 20, height: 14, fill: '#0a1e13', opacity: .9 }))
   svg.append(S('rect', { x: X(D.tmrRise - 24), y: 34, width: X(D.tmrRise) - X(D.tmrRise - 24), height: 14, fill: 'url(#tw9)' }))
   svg.append(S('rect', { x: X(D.tmrRise), y: 34, width: W - 20 - X(D.tmrRise), height: 14, fill: 'url(#tw9d)' }))
   svg.append(S('line', { x1: X(D.tmrRise), x2: X(est), y1: 68, y2: 68, stroke: 'currentColor', 'stroke-width': 1.5, opacity: .6 }))
   svg.append(S('text', { class: 'n', x: (X(D.tmrRise) + X(est)) / 2, y: 86, 'text-anchor': 'middle', 'font-size': 16, fill: 'currentColor', opacity: .75 }, `${gap} 分`))
   svg.append(S('circle', { cx: X(D.tmrRise), cy: 41, r: 9, fill: '#fff', stroke: '#ffb347', 'stroke-width': 3 }))
   svg.append(S('text', { class: 'n', x: X(D.tmrRise), y: 22, 'text-anchor': 'middle', 'font-size': 16, fill: 'currentColor' }, '太陽 ' + hm(D.tmrRise)))
-  svg.append(S('circle', { cx: X(est), cy: 41, r: 9, fill: ORANGE, stroke: '#0d1a38', 'stroke-width': 2 }))
+  svg.append(S('circle', { cx: X(est), cy: 41, r: 9, fill: ME, stroke: '#12281b', 'stroke-width': 2 }))
   svg.append(S('text', { class: 'n', x: X(est), y: 22, 'text-anchor': 'middle', 'font-size': 16, fill: 'currentColor' }, '我 ' + hm(est)))
   const rr = D.rides.length, d0 = D.rides[0].d
   $('#how').innerHTML = `
@@ -809,8 +793,8 @@ let rz = 0; addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout
 let DATA = null
 const redraw = () => { if (!DATA) return; renderStrips(DATA); renderTrend(DATA); renderWeek(DATA); placeSun(slides[cur], true) }
 NARROW.addEventListener('change', redraw)
-buildStars(); buildRidge()
-Promise.all([fetch('data/chronicle.json').then(r => r.json()), fetch('assets/dawn/portrait.svg').then(r => r.text())]).then(([d, svgText]) => {
+buildRidge()
+Promise.all([fetch('data/chronicle.json').then(r => r.json()), fetch('assets/dawn/rider.svg').then(r => r.text())]).then(([d, svgText]) => {
   const D = DATA = compute(d); window.__dawn = D
   buildSun(svgText.replace(/<svg[^>]*>/, '').replace('</svg>', ''))
   renderRing(D); renderStrips(D); renderTrend(D); renderWins(D); renderGauges(D); renderWeek(D); renderEnd(D)
