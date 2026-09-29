@@ -6741,6 +6741,7 @@ function render(data) {
   const viewsHtml = `
     <section class="view" data-view="overview">
       ${viewH('現況', 'Overview', `${tY} SEASON`)}
+      <div id="recap-slot"></div>
       <div id="rdy-mobile"></div>
       <div class="block">${seasonHtml}</div>
       ${tasksHtml}
@@ -10778,6 +10779,9 @@ Promise.all([
     window.__powerPrs = data.power_prs || []
     render(data)
     if (window.__cinemaMount) window.__cinemaMount(data)
+    // TODAY 重組後原本的 overview 區塊都收進底下的 td-grid；月總結入口要緊貼 hero 下面才看得到
+    { const rs = document.getElementById('recap-slot'), th = document.querySelector('.view[data-view="overview"] .td-hero')
+      if (rs && th) th.after(rs) }
     initQuoteWidget()
     bindNameCard()
     // ITT 的重資源（three.js 場景、卡片綁定）留到真的進到 ITT view 才掛（見 mountItt）
@@ -10788,6 +10792,9 @@ Promise.all([
     const ftpBtn = document.getElementById('deck-ftp')
     if (ftpBtn && window.__powerPrs.length)
       ftpBtn.addEventListener('click', () => openPowerModal(window.__powerPrs, 1200))
+    // 月總結（strava-recap.js，跟 strava.html 共用同一支）等資料都掛好才接手
+    window.__stravaReady = true
+    dispatchEvent(new Event('strava:ready'))
   })
   .catch(err => {
     document.getElementById('content').innerHTML = `
@@ -12262,5 +12269,6 @@ function motionLayer({ animate, createDrawable, stagger }) {
 <script src="strava-cinema-fx.js?v=20260907" defer></script>
 <script src="itt-achievements.js?v=20260827" defer></script>
 <script src="activity-modal.js?v=20260827" defer></script>
+<script src="strava-recap.js?v=20260929h" defer></script>
 </body>
 </html>
