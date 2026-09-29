@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW" data-theme="night">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>放映室 · Steve Chuang</title>
+<meta name="description" content="鵜鶘騎單車、十六分二十五秒、運動編年史——同一批騎乘資料做的三支片，用幻燈片翻過一遍。">
+<meta name="theme-color" content="#06070b">
+<link rel="icon" href="logo.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&family=Noto+Serif+TC:wght@900&display=swap" rel="stylesheet">
+<style>
+/* 俐方體 11（同 strava_chronicle.html）：原生格 12px，只用 12／24／48／72 這些整數倍 */
+@font-face{font-family:'Cubic11';src:url('https://cdn.jsdelivr.net/gh/ACh-K/Cubic-11@1.500/fonts/web/Cubic_11.woff2') format('woff2');font-display:swap}
+
+/* ── 基礎 ─────────────────────────────────────────────── */
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --sans:'PingFang TC','Noto Sans TC','Microsoft JhengHei',system-ui,sans-serif;
+  --serif:'Noto Serif TC','Songti TC','PMingLiU',serif;
+  --kai:'LXGW WenKai TC','Kaiti TC','BiauKai','DFKai-SB',serif;
+  --pixel:'Cubic11','PingFang TC','Noto Sans TC',sans-serif;
+  --iris:cubic-bezier(.7,0,.2,1);
+  --settle:cubic-bezier(.2,.7,.2,1);
+  --gut:clamp(20px,5vw,80px);
+  --top:68px;          /* 上緣工具列 */
+  --bot:88px;          /* 下緣翻頁列 */
+}
+html,body{height:100%;background:#06070b;overflow:hidden;overscroll-behavior:none}
+body{font-family:var(--sans);-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit}
+a{color:inherit}
+:focus-visible{outline:2px solid currentColor;outline-offset:3px}
+
+/* 四組配色：每一組是那支片自己的世界（色票來自各頁的 DESIGN.*.md）。
+   同一組變數同時掛在 slide 與 <html>，所以上下的工具列會跟著換色。 */
+.slide[data-theme=night],:root[data-theme=night]{--bg:#06070b;--fg:#ebe8f4;--fg2:#a6a3bc;--fg3:#6f6d86;--line:rgba(235,232,244,.16);--acc:#ffb347;--on-acc:#1b1206}
+.slide[data-theme=dusk],:root[data-theme=dusk]{--bg:#141a30;--fg:#efe8dc;--fg2:#bdbacb;--fg3:#8d8a9d;--line:rgba(239,232,220,.2);--acc:#ff9a5a;--on-acc:#25120a}
+.slide[data-theme=paper],:root[data-theme=paper]{--bg:#f3ecdf;--fg:#2a2622;--fg2:#5b554d;--fg3:#8a8278;--line:rgba(42,38,34,.22);--acc:#3f5748;--on-acc:#f3ecdf;--seal:#a8322b}
+.slide[data-theme=pixel],:root[data-theme=pixel]{--bg:#0b0d14;--fg:#ecead8;--fg2:#a3a7b8;--fg3:#62677c;--line:#252a39;--acc:#f3c969;--on-acc:#15161b;--edge:#9a7a2e;--org:#ff9a5a}
+
+/* ── 投影片容器 ───────────────────────────────────────── */
+.deck{position:fixed;inset:0;overflow:hidden;touch-action:pan-y}
+.slide{position:absolute;inset:0;display:grid;padding:var(--top) var(--gut) var(--bot);background:var(--bg);color:var(--fg);
+  visibility:hidden;overflow:hidden auto;overscroll-behavior:contain;scrollbar-width:none}
+.slide::-webkit-scrollbar{display:none}
+.slide.is-on{visibility:visible}
+.slide[data-theme=dusk]{background:linear-gradient(180deg,#0e1427 0%,#1b1a35 55%,#38294a 100%)}
+/* 宣紙的紙纖維：很淡的雜訊，multiply 進底色 */
+.slide[data-theme=paper]::before{content:'';position:absolute;inset:0;pointer-events:none;opacity:.55;mix-blend-mode:multiply;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 .55 0 0 0 0 .48 0 0 0 0 .38 0 0 0 .16 0'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23n)'/%3E%3C/svg%3E")}
+.slide>*{position:relative}
+
+/* ── 圓形預覽（disc）：圓形圖＋各自材質的環 ───────────────── */
+.disc{position:relative;display:block;flex:none;width:var(--d);height:var(--d);border-radius:50%;color:inherit;text-decoration:none}
+.disc-img{position:absolute;inset:8%;border-radius:50%;overflow:hidden;background:#000}
+.disc-img img{display:block;width:100%;height:100%;object-fit:cover;transition:transform .9s var(--settle)}
+.disc.px .disc-img img{image-rendering:pixelated}
+.disc-ring{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+a.disc:hover .disc-img img,.dbtn:hover .disc-img img{transform:scale(1.06)}
+/* 中央的播放記號：只在指到時出現，圖不被蓋住 */
+.disc-play{position:absolute;left:50%;top:50%;width:18%;aspect-ratio:1;translate:-50% -50%;border-radius:50%;
+  background:rgba(8,8,10,.55);backdrop-filter:blur(4px);display:grid;place-items:center;opacity:0;scale:.8;transition:opacity .25s,scale .3s var(--settle)}
+.disc-play::before{content:'';width:34%;aspect-ratio:1;margin-left:8%;background:#fff;clip-path:polygon(0 0,100% 50%,0 100%)}
+a.disc:hover .disc-play,a.disc:focus-visible .disc-play{opacity:1;scale:1}
+
+/* ── 共用：標題／說明／讀數／按鈕 ─────────────────────────── */
+.copy{display:flex;flex-direction:column;align-items:flex-start;min-width:0;max-width:640px}
+.s-lede{font-size:clamp(16px,1.36vw,20px);line-height:1.85;color:var(--fg2);max-width:27em}
+.s-facts{width:100%;max-width:560px;margin-top:clamp(20px,3.4vh,36px);border-bottom:1px solid var(--line)}
+.s-facts div{display:grid;grid-template-columns:5.2em 1fr;column-gap:16px;align-items:baseline;padding:12px 0;border-top:1px solid var(--line)}
+.s-facts dt{font-size:13px;letter-spacing:.14em;color:var(--fg3)}
+.s-facts dd{font-size:clamp(15px,1.22vw,18px);line-height:1.6;color:var(--fg)}
+.s-go{display:inline-flex;align-items:center;gap:12px;margin-top:clamp(22px,4vh,40px);padding:14px 26px 14px 22px;text-decoration:none;
+  background:var(--acc);color:var(--on-acc);font-size:16px;font-weight:600;letter-spacing:.14em;transition:transform .15s,filter .2s}
+.s-go svg{width:14px;height:14px;fill:currentColor;flex:none}
+.s-go:hover{filter:brightness(1.08)}
+.s-go:active{transform:translateY(1px)}
+.s-go:focus-visible{outline-color:var(--fg)}
+
+/* ── 封面 ───────────────────────────────────────────── */
+.s-cover{grid-template-rows:auto 1fr auto;row-gap:clamp(12px,2.4vh,28px)}
+.cover-title{font:900 clamp(64px,min(11.5vw,19dvh),176px)/.98 var(--serif);letter-spacing:.06em;margin-left:-.04em}
+.cover-sub{margin-top:clamp(10px,1.8vh,20px);font-size:clamp(16px,1.6vw,22px);letter-spacing:.06em;color:var(--fg2)}
+.cover-discs{align-self:end;list-style:none;display:grid;grid-template-columns:repeat(3,auto);justify-content:space-between;align-items:start;gap:clamp(12px,3vw,56px);--cd:min(24vw,32dvh,400px)}
+.dbtn{display:flex;flex-direction:column;align-items:center;gap:clamp(10px,1.8vh,18px);background:none;border:0;cursor:pointer;color:inherit;padding:0;text-align:center;
+  --glow:rgba(var(--rgb),.34)}
+.dbtn .disc{--d:var(--cd)}
+.dbtn .disc::before{content:'';position:absolute;inset:-6%;border-radius:50%;z-index:-1;background:radial-gradient(closest-side,var(--glow),transparent 72%)}
+.dbtn .cap{display:flex;flex-direction:column;gap:5px}
+.dbtn .cap b{font:700 clamp(16px,1.55vw,22px)/1.2 var(--sans);letter-spacing:.08em}
+.dbtn .cap i{font:normal 400 clamp(12px,1vw,14px)/1.2 var(--sans);letter-spacing:.1em;color:var(--fg3)}
+.cover-hint{font-size:13px;letter-spacing:.08em;color:var(--fg3);min-height:1.4em}
+.hint-kbd{display:none}
+@media (hover:hover) and (pointer:fine){.hint-kbd{display:inline}.hint-touch{display:none}}
+/* 封面開場：三顆鏡頭依序打開（整支片唯一一段自己會動的） */
+.s-cover:not(.go) .dbtn .disc-img{clip-path:circle(0)}
+.s-cover:not(.go) .dbtn .disc-ring,.s-cover:not(.go) .dbtn .cap,.s-cover:not(.go) .cover-copy>*{opacity:0}
+.s-cover.go .dbtn .disc-img{animation:lens 1s var(--iris) both;animation-delay:calc(var(--i)*.3s + .15s)}
+.s-cover.go .dbtn .disc-ring{animation:ringin 1s var(--settle) both;animation-delay:calc(var(--i)*.3s + .45s)}
+.s-cover.go .dbtn .cap{animation:fadein .7s ease both;animation-delay:calc(var(--i)*.3s + .9s)}
+.s-cover.go .cover-copy>*{animation:fadein .9s ease both}
+.s-cover.go .cover-sub{animation-delay:.25s}
+@keyframes lens{from{clip-path:circle(0%)}to{clip-path:circle(50%)}}
+@keyframes ringin{from{opacity:0;transform:rotate(-50deg) scale(.94)}to{opacity:1;transform:none}}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+
+/* ── 三張作品頁的共用版面 ─────────────────────────────────── */
+.s-work{--d:min(calc(100vh - var(--top) - var(--bot) - 8px),46vw,780px);grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"copy art";align-items:center;column-gap:clamp(24px,5vw,96px)}
+@supports (height:1dvh){.s-work{--d:min(calc(100dvh - var(--top) - var(--bot) - 8px),46vw,780px)}}
+.s-work .copy{grid-area:copy}
+.s-work .art{grid-area:art;justify-self:end;margin-right:-2%}
+.s-work.flip{grid-template-areas:"art copy"}
+.s-work.flip .art{justify-self:start;margin:0 0 0 -2%}
+
+/* 鵜鶘：日落橘、襯線大標、光暈 */
+.s-pelican .s-title{font:900 clamp(52px,7.6vw,124px)/1.02 var(--serif);letter-spacing:.02em;margin:0 0 clamp(14px,2.6vh,28px) -.04em}
+.s-pelican .art::before{content:'';position:absolute;inset:-16%;border-radius:50%;z-index:-1;background:radial-gradient(closest-side,rgba(255,154,90,.3),rgba(255,154,90,.08) 60%,transparent 76%)}
+.s-pelican .s-go{border-radius:999px}
+.s-pelican .s-facts dd b{font-weight:600;color:#ffb07a}
+
+/* 水墨：楷體、直書題簽、宣紙、松綠按鈕；紅色只留給那一枚印（在環上） */
+.s-film{font-family:var(--kai)}
+.s-film .copy{flex-direction:row;gap:clamp(20px,3.4vw,56px);align-items:flex-start;max-width:none}
+.plaque{display:flex;flex-direction:row-reverse;align-items:flex-start;gap:14px;flex:none}
+.s-film .s-title{writing-mode:vertical-rl;font:700 min(6.2vw,9.4dvh,96px)/1.12 var(--kai);letter-spacing:.14em;color:var(--fg)}
+.plaque-sub{writing-mode:vertical-rl;font-size:clamp(14px,1.3vw,19px);letter-spacing:.32em;color:var(--fg3);padding-top:.5em}
+.s-film .body{display:flex;flex-direction:column;align-items:flex-start;padding-top:.4em;min-width:0}
+.s-film .s-lede{font-family:var(--kai);font-size:clamp(17px,1.5vw,22px);line-height:1.9;color:var(--fg2)}
+.s-film .s-facts dt{font-family:var(--kai);font-size:15px;letter-spacing:.2em}
+.s-film .s-facts dd{font-family:var(--kai);font-size:clamp(16px,1.4vw,20px)}
+.s-film .s-go{font-family:var(--kai);font-weight:700;border-radius:3px;letter-spacing:.2em}
+.s-film .art .disc-img{box-shadow:0 26px 44px -22px rgba(42,38,34,.5)}
+
+/* 編年史：俐方體、金色硬邊按鈕、月時數長條 */
+.s-chronicle .s-title{font:400 72px/1.1 var(--pixel);letter-spacing:0;margin:0 0 clamp(12px,2.2vh,24px);-webkit-font-smoothing:none;font-smooth:never;text-rendering:optimizeSpeed;color:var(--acc)}
+.s-chronicle .s-lede{font-size:clamp(15px,1.22vw,18px)}
+.s-chronicle .s-facts dt{font:400 12px/1.4 var(--pixel);letter-spacing:0;-webkit-font-smoothing:none;color:var(--fg3)}
+.s-chronicle .s-facts dd{font:400 24px/1.35 var(--pixel);-webkit-font-smoothing:none;text-rendering:optimizeSpeed}
+.s-chronicle .s-facts div{border-top:2px dotted var(--line);grid-template-columns:4em 1fr}
+.s-chronicle .s-facts{border-bottom:2px dotted var(--line)}
+.s-chronicle .s-go{font:400 24px/1 var(--pixel);letter-spacing:0;border-radius:0;box-shadow:0 4px 0 var(--edge);margin-bottom:4px;-webkit-font-smoothing:none;padding:12px 24px 12px 18px}
+.s-chronicle .s-go:active{transform:translateY(4px);box-shadow:0 0 0 var(--edge)}
+.s-chronicle .art .disc-img{box-shadow:8px 8px 0 rgba(0,0,0,.55)}
+/* 月時數長條：1 格 = 1 小時、4px 一格（手機 3px）；橘色 = 超過損益線的月份 */
+.bars{--cell:4px;width:100%;max-width:560px;margin-top:clamp(18px,3vh,30px)}
+.bars[hidden]{display:none}
+.bars-plot{position:relative;display:flex;align-items:flex-end;gap:4px;height:calc(var(--maxn,26) * var(--cell) + 4px);border-bottom:2px solid var(--line)}
+.bars-plot i{flex:1 1 0;max-width:22px;height:calc(var(--n) * var(--cell));background:#4a5068;transform-origin:bottom;transform:scaleY(0)}
+.bars-plot i.over{background:var(--org)}
+.bars-plot i.part{background:repeating-linear-gradient(135deg,#4a5068 0 4px,#2a2f42 4px 8px)}
+.bars-plot i.over.part{background:repeating-linear-gradient(135deg,var(--org) 0 4px,#a5592f 4px 8px)}
+.slide.is-on .bars-plot i{animation:grow .5s steps(6,end) both;animation-delay:calc(var(--k)*28ms + .5s)}
+@keyframes grow{to{transform:none}}
+.bars-line{position:absolute;left:0;right:0;bottom:calc(var(--be,15.3) * var(--cell));border-top:2px dashed rgba(255,154,90,.6);pointer-events:none}
+.bars-line span{position:absolute;right:0;bottom:4px;font:400 12px/1 var(--pixel);color:var(--org);background:var(--bg);padding:0 0 0 6px}
+.bars figcaption{display:flex;justify-content:space-between;gap:12px;margin-top:8px;font:400 12px/1.4 var(--pixel);color:var(--fg3);-webkit-font-smoothing:none}
+
+/* ── 片尾 ───────────────────────────────────────────── */
+.s-end{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);grid-template-rows:1fr auto;column-gap:clamp(24px,6vw,110px);align-items:center}
+.end-main{grid-column:1;align-self:center}
+.end-title{font:900 clamp(56px,8.6vw,136px)/1 var(--serif);letter-spacing:.06em;margin-left:-.04em}
+.end-sub{margin-top:clamp(12px,2vh,22px);font-size:clamp(16px,1.4vw,20px);line-height:1.8;color:var(--fg2);max-width:24em}
+.end-acts{display:flex;flex-wrap:wrap;gap:12px;margin-top:clamp(22px,4vh,40px)}
+.end-btn{display:inline-flex;align-items:center;gap:10px;padding:12px 22px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--fg);font-size:15px;letter-spacing:.12em;text-decoration:none;cursor:pointer;transition:border-color .2s,background .2s}
+.end-btn:hover{border-color:var(--fg2);background:rgba(255,255,255,.05)}
+.end-btn svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.end-list{grid-column:2;grid-row:1;align-self:center;list-style:none;border-top:1px solid var(--line)}
+.end-list a{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:clamp(14px,1.6vw,24px);padding:clamp(12px,2.2vh,20px) 4px;border-bottom:1px solid var(--line);text-decoration:none;color:var(--fg);transition:background .2s}
+.end-list a:hover{background:rgba(255,255,255,.04)}
+.end-list .disc{--d:clamp(56px,7vw,92px)}
+.end-list b{display:block;font:700 clamp(17px,1.7vw,24px)/1.2 var(--sans);letter-spacing:.08em}
+.end-list i{display:block;margin-top:4px;font:normal 400 13px/1.3 var(--sans);letter-spacing:.1em;color:var(--fg3)}
+.end-list em{font:normal 500 14px var(--sans);letter-spacing:.14em;color:var(--fg2)}
+.credits{grid-column:1/-1;grid-row:2;display:flex;flex-wrap:wrap;gap:8px clamp(20px,3vw,48px);padding-top:clamp(14px,2.4vh,24px);font-size:12.5px;line-height:1.7;letter-spacing:.06em;color:var(--fg3)}
+.credits div{display:flex;gap:10px}
+.credits dt{color:var(--fg3);opacity:.8}
+.credits dd{color:var(--fg2)}
+
+/* ── 上下工具列 ─────────────────────────────────────── */
+.chrome{position:fixed;left:0;right:0;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;
+  padding:calc(12px + env(safe-area-inset-top)) var(--gut) 0;pointer-events:none;color:var(--fg);transition:color .35s}
+.chrome>*{pointer-events:auto}
+.home{display:inline-flex;align-items:center;gap:8px;padding:10px 4px;font-size:14px;letter-spacing:.08em;text-decoration:none;opacity:.78;transition:opacity .2s}
+.home:hover{opacity:1}
+.home svg,.tbtn svg,.arw svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.tools{display:flex;align-items:center;gap:8px}
+.count{margin-right:6px;font-size:13px;letter-spacing:.1em;font-variant-numeric:tabular-nums;opacity:.72}
+.tbtn,.arw{position:relative;display:grid;place-items:center;width:42px;height:42px;padding:0;border:1px solid var(--line);border-radius:50%;background:transparent;color:inherit;cursor:pointer;transition:border-color .2s,background .2s,opacity .2s,color .35s}
+.tbtn:hover,.arw:hover{border-color:currentColor}
+.tbtn[aria-pressed=true]{background:var(--fg);color:var(--bg)}
+.tbtn .i-pause,#auto[aria-pressed=true] .i-play{display:none}
+#auto[aria-pressed=true] .i-pause{display:block}
+.arw:disabled{opacity:.25;cursor:default}
+.arw:disabled:hover{border-color:var(--line)}
+.pager{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;justify-content:center;align-items:center;gap:clamp(10px,2vw,22px);
+  padding:0 var(--gut) calc(20px + env(safe-area-inset-bottom));pointer-events:none;color:var(--fg);transition:color .35s}
+.pager>*{pointer-events:auto}
+.pg{display:flex;align-items:center;gap:12px}
+.pg button{position:relative;width:32px;height:32px;padding:0;border:0;border-radius:50%;background:none;cursor:pointer;color:inherit;opacity:.5;transition:opacity .2s,transform .3s var(--settle)}
+.pg button:hover{opacity:.9}
+.pg button[aria-current=true]{opacity:1;transform:scale(1.16)}
+.pg .th{position:absolute;inset:4px;border-radius:50%;overflow:hidden;display:grid;place-items:center;border:1.5px solid currentColor}
+.pg .th img{width:100%;height:100%;object-fit:cover;display:block;border-radius:50%}
+.pg .th.px img{image-rendering:pixelated}
+.pg .th.glyph::after{content:'';width:34%;aspect-ratio:1;border-radius:50%;background:currentColor}
+.pg .th:has(img){border:0}
+.pg button[aria-current=true] .th{box-shadow:0 0 0 2px var(--bg),0 0 0 3.5px currentColor}
+:root.auto .pg button[aria-current=true] .th{box-shadow:0 0 0 2px var(--bg),0 0 0 3.5px var(--line)}
+.pg .pr{position:absolute;inset:0;width:100%;height:100%;rotate:-90deg;pointer-events:none;opacity:0}
+.pg .pr circle{fill:none;stroke:currentColor;stroke-width:2;stroke-dasharray:96.9;stroke-dashoffset:96.9}
+.pg button[aria-current=true] .pr{opacity:1}
+:root:not(.auto) .pg .pr{display:none}
+:root.auto .pg button[aria-current=true] .pr circle{animation:dwell var(--dwell,8s) linear forwards}
+@keyframes dwell{to{stroke-dashoffset:0}}
+.live{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.skip{position:absolute;left:-999px}
+
+/* ── 窄螢幕與矮螢幕 ───────────────────────────────────── */
+@media (max-aspect-ratio:1/1),(max-width:600px){
+  :root{--top:60px;--bot:80px}
+  .s-cover{grid-template-rows:auto 1fr auto}
+  .cover-title{font-size:clamp(60px,20vw,110px)}
+  .cover-discs{--cd:min(27vw,24dvh);gap:8px;align-self:center}
+  .dbtn .cap b{font-size:15px}
+  .dbtn .cap i{font-size:11px;letter-spacing:.04em}
+  .s-work{--d:min(62vw,34dvh);grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto;grid-template-areas:"art" "copy";row-gap:clamp(14px,2.4dvh,24px);align-content:start;align-items:start;padding-bottom:calc(var(--bot) + 8px)}
+  .s-work.flip{grid-template-areas:"art" "copy"}
+  .s-work .art,.s-work.flip .art{justify-self:center;margin:0}
+  .s-work .copy{max-width:none}
+  .s-lede{font-size:15px;line-height:1.75;max-width:none}
+  .s-facts{margin-top:14px}
+  .s-facts div{padding:9px 0}
+  .s-facts dd{font-size:15px}
+  .s-go{margin-top:18px;padding:12px 22px 12px 18px}
+  .s-pelican .s-title{font-size:clamp(40px,12vw,56px);margin-bottom:8px}
+  .s-film .copy{flex-direction:column;gap:6px}
+  .plaque{flex-direction:column;align-items:flex-start;gap:2px}
+  .s-film .s-title{writing-mode:horizontal-tb;font-size:clamp(30px,9.2vw,44px);letter-spacing:.1em;white-space:nowrap}
+  .plaque-sub{writing-mode:horizontal-tb;letter-spacing:.24em;padding:0}
+  .s-film .s-lede{font-size:16px}
+  .s-film .s-facts dd{font-size:16px}
+  .s-chronicle .s-title{font-size:48px}
+  .s-chronicle .s-lede{font-size:14px}
+  .s-chronicle .s-facts dd{font-size:12px;line-height:1.7}
+  .s-chronicle .s-facts dt{font-size:12px}
+  .s-chronicle .s-go{font-size:24px}
+  .bars{--cell:3px;margin-top:14px}
+  .s-chronicle{--d:min(54vw,27dvh)}
+  .s-end{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto auto;align-content:start;row-gap:22px;padding-bottom:calc(var(--bot) + 8px)}
+  .end-main,.end-list,.credits{grid-column:1;grid-row:auto}
+  .end-title{font-size:clamp(48px,15vw,84px)}
+  .end-sub{font-size:15px}
+  .end-acts{margin-top:16px}
+  .end-list .disc{--d:52px}
+  .end-list b{font-size:16px}
+  .end-list i{font-size:12px}
+  .credits{font-size:12px;flex-direction:column;gap:4px}
+  .count{display:none}
+  .home{font-size:13px}
+}
+/* 橫向矮螢幕（手機橫拿、小筆電）：維持左右兩欄，把所有東西收緊 */
+@media (max-height:560px) and (min-aspect-ratio:1/1) and (min-width:601px){
+  :root{--top:52px;--bot:68px}
+  .cover-title{font-size:min(11.5vw,17dvh)}
+  .cover-discs{--cd:min(24vw,26dvh)}
+  .cover-hint{display:none}
+  .s-lede{font-size:15px;line-height:1.7}
+  .s-pelican .s-title{font-size:min(7.6vw,13dvh);margin-bottom:8px}
+  .s-facts{margin-top:12px}
+  .s-facts div{padding:7px 0}
+  .s-facts dd{font-size:15px}
+  .s-go{margin-top:14px;padding:10px 20px}
+  .s-chronicle .s-title{font-size:48px}
+  .s-chronicle .s-facts dd{font-size:12px}
+  .s-film .s-title{font-size:min(6.2vw,7.6dvh)}
+  .s-film .plaque-sub{font-size:13px}
+  .bars{display:none}
+  .end-title{font-size:min(8.6vw,17dvh)}
+  .end-sub{font-size:15px}
+  .end-list .disc{--d:48px}
+  .end-list a{padding:8px 4px}
+  .credits{display:none}
+}
+/* 矮一點的橫向視窗（1366×650 之類）放不下長條圖 */
+@media (max-height:760px) and (min-aspect-ratio:1/1){
+  .bars{display:none}
+}
+@media (max-height:460px) and (min-aspect-ratio:1/1) and (min-width:601px){
+  .s-work .s-lede{display:none}
+}
+@media (max-height:700px) and (max-aspect-ratio:1/1){
+  .s-work{--d:min(56vw,28dvh)}
+  .cover-sub{font-size:15px}
+  .bars,.s-film .s-lede,.credits{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  .s-cover:not(.go) .dbtn .disc-img{clip-path:none}
+  .s-cover:not(.go) .dbtn .disc-ring,.s-cover:not(.go) .dbtn .cap,.s-cover:not(.go) .cover-copy>*{opacity:1}
+  .s-cover.go .dbtn .disc-img,.s-cover.go .dbtn .disc-ring,.s-cover.go .dbtn .cap,.s-cover.go .cover-copy>*{animation:none}
+  .slide.is-on .bars-plot i{animation:none;transform:none}
+  .disc-img img{transition:none}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#deck">跳到內容</a>
+
+<header class="chrome">
+  <a class="home" href="linkTreeIndex.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>首頁</a>
+  <div class="tools">
+    <span class="count" id="count" aria-hidden="true">1 / 5</span>
+    <button class="tbtn" id="auto" type="button" aria-pressed="false" aria-label="自動放映" title="自動放映（P）">
+      <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z" fill="currentColor" stroke="none"/></svg>
+      <svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 5.5v13M15.5 5.5v13" stroke-width="2.4"/></svg>
+    </button>
+    <button class="tbtn" id="fs" type="button" aria-pressed="false" aria-label="全螢幕" title="全螢幕（F）">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+    </button>
+  </div>
+</header>
+
+<main class="deck" id="deck" aria-roledescription="carousel" aria-label="放映室">
+
+  <!-- 1 封面 -->
+  <section class="slide s-cover is-on" data-theme="night" data-key="cover" data-title="放映室">
+    <div class="cover-copy">
+      <h1 class="cover-title">放映室</h1>
+      <p class="cover-sub">同一批騎乘資料，做了三支片。</p>
+    </div>
+    <ul class="cover-discs" role="list">
+      <li><button class="dbtn" type="button" data-go="1" style="--rgb:255,154,90;--i:0" aria-label="鵜鶘騎單車，3D 騎乘加數據">
+        <span class="disc"><span class="disc-img"><img src="assets/theatre/pelican-lg.jpg" alt="" decoding="async"></span><img class="disc-ring" src="assets/theatre/ring-pelican.svg" alt=""></span>
+        <span class="cap"><b>鵜鶘騎單車</b><i>3D 騎乘＋數據</i></span></button></li>
+      <li><button class="dbtn" type="button" data-go="2" style="--rgb:243,236,223;--i:1" aria-label="十六分二十五秒，水墨微電影">
+        <span class="disc"><span class="disc-img"><img src="assets/theatre/film-lg.jpg" alt="" decoding="async"></span><img class="disc-ring" src="assets/theatre/ring-film-paper.svg" alt=""></span>
+        <span class="cap"><b>十六分二十五秒</b><i>水墨微電影</i></span></button></li>
+      <li><button class="dbtn" type="button" data-go="3" style="--rgb:243,201,105;--i:2" aria-label="運動編年史，像素動畫加音樂">
+        <span class="disc px"><span class="disc-img"><img src="assets/theatre/chronicle-lg.png" alt="" decoding="async"></span><img class="disc-ring" src="assets/theatre/ring-chronicle.svg" alt=""></span>
+        <span class="cap"><b>運動編年史</b><i>像素動畫＋音樂</i></span></button></li>
+    </ul>
+    <p class="cover-hint"><span class="hint-kbd">← → 翻頁　F 全螢幕　P 自動放映</span><span class="hint-touch">左右滑動翻頁</span></p>
+  </section>
+
+  <!-- 2 鵜鶘騎單車 -->
+  <section class="slide s-work s-pelican" data-theme="dusk" data-key="pelican" data-title="鵜鶘騎單車" aria-hidden="true" inert>
+    <div class="copy">
+      <h2 class="s-title">鵜鶘騎單車</h2>
+      <p class="s-lede">白鵜鶘戴著安全帽，把某一趟真實的逐秒功率騎一遍。旁邊半透明的，是自己的 PR 和上一次。</p>
+      <dl class="s-facts">
+        <div><dt>油門</dt><dd>真實 FIT 檔的逐秒功率</dd></div>
+        <div><dt>場景</dt><dd>大稻埕河岸、北海岸台 2 線</dd></div>
+        <div><dt>往下</dt><dd>八章數據，從「今天」讀到「紀錄」</dd></div>
+      </dl>
+      <a class="s-go" href="strava_pelican.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 2.5v19L21 12z"/></svg>進場觀看</a>
+    </div>
+    <a class="art disc" data-iris href="strava_pelican.html" tabindex="-1" aria-hidden="true">
+      <span class="disc-img"><img src="assets/theatre/pelican-lg.jpg" alt="" decoding="async"></span><img class="disc-ring" src="assets/theatre/ring-pelican.svg" alt=""><span class="disc-play"></span></a>
+  </section>
+
+  <!-- 3 十六分二十五秒 -->
+  <section class="slide s-work s-film flip" data-theme="paper" data-key="film" data-title="十六分二十五秒" aria-hidden="true" inert>
+    <div class="copy">
+      <div class="plaque">
+        <h2 class="s-title">十六分二十五秒</h2>
+        <p class="plaque-sub">中社路長卷</p>
+      </div>
+      <div class="body">
+        <p class="s-lede">從 38:01 騎到 16:25，花了一年追那時候的自己。一個人和一座山，用水墨的規則畫成長卷。</p>
+        <dl class="s-facts">
+          <div><dt>片長</dt><dd>約六分鐘，有聲音</dd></div>
+          <div><dt>地形</dt><dd>中社路 3.94 km，真實高程堆成 3D</dd></div>
+          <div><dt>筆畫</dt><dd>墨的粗細是當秒功率，鼓聲是那天的心跳</dd></div>
+        </dl>
+        <a class="s-go" href="strava_film.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 2.5v19L21 12z"/></svg>進場觀看</a>
+      </div>
+    </div>
+    <a class="art disc" data-iris href="strava_film.html" tabindex="-1" aria-hidden="true">
+      <span class="disc-img"><img src="assets/theatre/film-lg.jpg" alt="" decoding="async"></span><img class="disc-ring" src="assets/theatre/ring-film-ink.svg" alt=""><span class="disc-play"></span></a>
+  </section>
+
+  <!-- 4 運動編年史 -->
+  <section class="slide s-work s-chronicle" data-theme="pixel" data-key="chronicle" data-title="運動編年史" aria-hidden="true" inert>
+    <div class="copy">
+      <h2 class="s-title">運動編年史</h2>
+      <p class="s-lede">從 2025 年 4 月第一趟騎到今天，一個月一關的 16 位元橫向捲軸。</p>
+      <dl class="s-facts">
+        <div><dt>片長</dt><dd>約 100 秒，配樂當場合成</dd></div>
+        <div><dt>路</dt><dd>起伏是那個月騎了幾小時</dd></div>
+        <div><dt>金幣</dt><dd>一枚是一個路段 PR</dd></div>
+      </dl>
+      <figure class="bars" id="bars" hidden>
+        <div class="bars-plot" id="barsPlot"><span class="bars-line" id="barsLine"><span id="barsLineT"></span></span></div>
+        <figcaption><span id="barsFrom"></span><span>每月騎乘時數，橘色是超過損益線的月份</span><span id="barsTo"></span></figcaption>
+      </figure>
+      <a class="s-go" href="strava_chronicle.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 2.5v19L21 12z"/></svg>進場觀看</a>
+    </div>
+    <a class="art disc px" data-iris href="strava_chronicle.html" tabindex="-1" aria-hidden="true">
+      <span class="disc-img"><img src="assets/theatre/chronicle-lg.png" alt="" decoding="async"></span><img class="disc-ring" src="assets/theatre/ring-chronicle.svg" alt=""><span class="disc-play"></span></a>
+  </section>
+
+  <!-- 5 片尾 -->
+  <section class="slide s-end" data-theme="night" data-key="end" data-title="未完待續" aria-hidden="true" inert>
+    <div class="end-main">
+      <h2 class="end-title" data-iris>未完待續</h2>
+      <p class="end-sub">鵜鶘騎單車和運動編年史，會跟著新的騎乘一起更新。</p>
+      <div class="end-acts">
+        <button class="end-btn" type="button" data-go="0"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.6-5.9M4 4v4.5h4.5"/></svg>從頭再放一次</button>
+        <a class="end-btn" href="linkTreeIndex.html">回首頁</a>
+      </div>
+    </div>
+    <ul class="end-list" role="list">
+      <li><a href="strava_pelican.html"><span class="disc"><span class="disc-img"><img src="assets/theatre/pelican-sm.jpg" alt="" loading="lazy"></span><img class="disc-ring" src="assets/theatre/ring-pelican.svg" alt=""></span><span><b>鵜鶘騎單車</b><i>3D 騎乘＋數據</i></span><em>進場觀看</em></a></li>
+      <li><a href="strava_film.html"><span class="disc"><span class="disc-img"><img src="assets/theatre/film-sm.jpg" alt="" loading="lazy"></span><img class="disc-ring" src="assets/theatre/ring-film-paper.svg" alt=""></span><span><b>十六分二十五秒</b><i>水墨微電影</i></span><em>進場觀看</em></a></li>
+      <li><a href="strava_chronicle.html"><span class="disc px"><span class="disc-img"><img src="assets/theatre/chronicle-sm.png" alt="" loading="lazy"></span><img class="disc-ring" src="assets/theatre/ring-chronicle.svg" alt=""></span><span><b>運動編年史</b><i>像素動畫＋音樂</i></span><em>進場觀看</em></a></li>
+    </ul>
+    <dl class="credits">
+      <div><dt>資料</dt><dd>Garmin FIT、intervals.icu、Strava 路段</dd></div>
+      <div><dt>引擎</dt><dd>three.js、Canvas 2D、Web Audio</dd></div>
+      <div><dt>字體</dt><dd>Noto Serif TC、霞鶩文楷、俐方體 11</dd></div>
+    </dl>
+  </section>
+
+</main>
+
+<nav class="pager" aria-label="幻燈片">
+  <button class="arw" id="prev" type="button" aria-label="上一張" title="上一張（←）"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg></button>
+  <div class="pg" id="pg"></div>
+  <button class="arw" id="next" type="button" aria-label="下一張" title="下一張（→）"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 5.5L16 12l-6.5 6.5"/></svg></button>
+</nav>
+<div class="live" id="live" role="status" aria-live="polite"></div>
+
+<noscript><p style="position:fixed;inset:auto 20px 20px;color:#ebe8f4;font:15px/1.8 sans-serif;z-index:99">這頁需要 JavaScript。直接開：<a href="strava_pelican.html">鵜鶘騎單車</a>、<a href="strava_film.html">十六分二十五秒</a>、<a href="strava_chronicle.html">運動編年史</a>。</p></noscript>
+
+<script>
+(() => {
+  'use strict'
+  const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)]
+  const root = document.documentElement, deck = $('#deck'), slides = $$('.slide'), N = slides.length
+  const keys = slides.map(s => s.dataset.key), titles = slides.map(s => s.dataset.title)
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)')
+  const DWELL = 8000, IRIS_MS = 950
+  let cur = Math.max(0, keys.indexOf(location.hash.slice(1))), anim = null, themeT = 0, autoT = 0, auto = false
+
+  /* ── 翻頁列：一張一顆圓；封面與片尾是空心圓，三部片是縮圖 ── */
+  const pg = $('#pg'), thumbs = [null, ['assets/theatre/pelican-sm.jpg', ''], ['assets/theatre/film-sm.jpg', ''], ['assets/theatre/chronicle-sm.png', 'px'], null]
+  slides.forEach((s, i) => {
+    const b = document.createElement('button')
+    b.type = 'button'; b.setAttribute('aria-label', `第 ${i + 1} 張：${titles[i]}`); b.title = titles[i]
+    b.innerHTML = (thumbs[i] ? `<span class="th ${thumbs[i][1]}"><img src="${thumbs[i][0]}" alt=""></span>` : '<span class="th glyph"></span>') +
+      '<svg class="pr" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="15.4"/></svg>'
+    b.addEventListener('click', () => go(i))
+    pg.appendChild(b)
+  })
+  const dots = $$('button', pg)
+
+  /* 狀態只有 cur 一個：paint() 把它畫到投影片，sync() 畫到工具列與無障礙 */
+  function paint() {
+    slides.forEach((s, i) => { const on = i === cur; s.classList.toggle('is-on', on); s.inert = !on; s.setAttribute('aria-hidden', on ? 'false' : 'true'); s.style.zIndex = ''; s.style.clipPath = '' })
+  }
+  function sync() {
+    dots.forEach((d, i) => d.setAttribute('aria-current', i === cur ? 'true' : 'false'))
+    $('#count').textContent = `${cur + 1} / ${N}`
+    $('#prev').disabled = cur === 0; $('#next').disabled = cur === N - 1
+    slides.forEach((s, i) => s.setAttribute('aria-label', `第 ${i + 1} 張，共 ${N} 張：${titles[i]}`))
+    $('#live').textContent = `第 ${cur + 1} 張，${titles[cur]}`
+    history.replaceState(null, '', '#' + keys[cur])
+    if (auto) armAuto()
+  }
+  function setTheme() { root.dataset.theme = slides[cur].dataset.theme; $('meta[name=theme-color]').content = getComputedStyle(slides[cur]).getPropertyValue('--bg').trim() || '#06070b' }
+  function settle() { if (anim) { anim.cancel(); anim = null } clearTimeout(themeT); setTheme(); paint() }
+
+  /* ── 換頁：虹膜（光圈）從下一張那顆圓的圓心打開，蓋過上一張 ── */
+  function go(to, { instant = false } = {}) {
+    to = Math.max(0, Math.min(N - 1, to))
+    if (to === cur && !instant) return
+    settle()
+    const prev = slides[cur], next = slides[to]
+    cur = to; sync()
+    if (instant) { settle(); return }
+    prev.style.zIndex = 1; next.style.zIndex = 2; next.classList.add('is-on')
+    let a
+    if (reduce.matches) { a = next.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 220 }); setTheme() }
+    else {
+      const focus = $('[data-iris]', next) || next, r = focus.getBoundingClientRect()
+      const x = r.left + r.width / 2, y = r.top + r.height / 2, R = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y)) + 4
+      a = next.animate([{ clipPath: `circle(0px at ${x}px ${y}px)` }, { clipPath: `circle(${R}px at ${x}px ${y}px)` }], { duration: IRIS_MS, easing: 'cubic-bezier(.7,0,.2,1)' })
+      const img = $('.disc-img img', next)
+      if (img) img.animate([{ transform: 'scale(1.24)' }, { transform: 'none' }], { duration: 1200, easing: 'cubic-bezier(.2,.7,.2,1)' })
+      themeT = setTimeout(setTheme, IRIS_MS * .4)   // 光圈開到快一半，上下工具列才換色
+    }
+    anim = a
+    a.onfinish = () => { if (anim === a) { anim = null; settle() } }
+  }
+  const next = () => go(cur + 1), prev = () => go(cur - 1)
+
+  /* ── 自動放映：每張 8 秒，放到片尾停 ── */
+  function armAuto() {
+    clearTimeout(autoT)
+    const c = $('.pr circle', dots[cur]); if (c) { c.style.animation = 'none'; void c.getBoundingClientRect(); c.style.animation = '' }
+    autoT = setTimeout(() => { if (cur < N - 1) go(cur + 1); else setAuto(false) }, DWELL)
+  }
+  function setAuto(on) {
+    auto = on; root.classList.toggle('auto', on); $('#auto').setAttribute('aria-pressed', String(on))
+    $('#auto').setAttribute('aria-label', on ? '停止自動放映' : '自動放映')
+    on ? (cur === N - 1 ? go(0) : armAuto()) : clearTimeout(autoT)
+  }
+  $('#auto').addEventListener('click', () => setAuto(!auto))
+  document.addEventListener('visibilitychange', () => { if (document.hidden) { clearTimeout(autoT) } else if (auto) armAuto() })
+
+  /* ── 全螢幕 ── */
+  const fsBtn = $('#fs')
+  if (!document.fullscreenEnabled) fsBtn.hidden = true
+  const toggleFs = () => { if (!document.fullscreenEnabled) return; document.fullscreenElement ? document.exitFullscreen() : root.requestFullscreen().catch(() => {}) }
+  fsBtn.addEventListener('click', toggleFs)
+  document.addEventListener('fullscreenchange', () => fsBtn.setAttribute('aria-pressed', String(!!document.fullscreenElement)))
+
+  /* ── 輸入：鍵盤、上下頁鈕、封面與片尾的跳頁、滑動、滾輪 ── */
+  $('#next').addEventListener('click', next); $('#prev').addEventListener('click', prev)
+  $$('[data-go]').forEach(b => b.addEventListener('click', () => go(+b.dataset.go)))
+  addEventListener('keydown', e => {
+    if (e.altKey || e.ctrlKey || e.metaKey) return
+    const onCtl = e.target.closest && e.target.closest('a,button,input,textarea,select')
+    switch (e.key) {
+      case 'ArrowRight': case 'ArrowDown': case 'PageDown': next(); break
+      case 'ArrowLeft': case 'ArrowUp': case 'PageUp': prev(); break
+      case ' ': if (onCtl) return; e.shiftKey ? prev() : next(); break
+      case 'Home': go(0); break
+      case 'End': go(N - 1); break
+      case 'f': case 'F': toggleFs(); break
+      case 'p': case 'P': setAuto(!auto); break
+      default: if (/^[1-9]$/.test(e.key) && +e.key <= N) go(+e.key - 1); else return
+    }
+    e.preventDefault()
+  })
+  let sx = 0, sy = 0, st = 0, sid = null, swiped = false
+  deck.addEventListener('pointerdown', e => { if (e.pointerType === 'mouse') return; sx = e.clientX; sy = e.clientY; st = performance.now(); sid = e.pointerId; swiped = false })
+  deck.addEventListener('pointerup', e => {
+    if (e.pointerId !== sid) return; sid = null
+    const dx = e.clientX - sx, dy = e.clientY - sy
+    if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy) * 1.4 && performance.now() - st < 800) { swiped = true; dx < 0 ? next() : prev() }
+  })
+  deck.addEventListener('click', e => { if (swiped) { e.preventDefault(); e.stopPropagation(); swiped = false } }, true)
+  let wLock = false, wAt = 0, wLast = 0
+  deck.addEventListener('wheel', e => {
+    if (e.ctrlKey) return
+    const now = performance.now(), gap = now - wLast; wLast = now
+    if (wLock) { if (now - wAt > 700 && gap > 140) wLock = false; else return }   // 觸控板的慣性尾巴不要再翻一頁
+    const d = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX
+    if (Math.abs(d) < 24) return
+    wLock = true; wAt = now; d > 0 ? next() : prev()
+  }, { passive: true })
+  addEventListener('hashchange', () => { const i = keys.indexOf(location.hash.slice(1)); if (i >= 0 && i !== cur) go(i) })
+
+  /* ── 編年史那張的月時數長條：讀 data/chronicle.json，自己會長 ── */
+  fetch('data/chronicle.json').then(r => r.json()).then(d => {
+    const ms = d.months || [], be = d.breakeven_h || 15.3, plot = $('#barsPlot')
+    if (!ms.length) return
+    const maxN = Math.max(be + 2, ...ms.map(m => Math.round(m.h))) + 1
+    plot.style.setProperty('--maxn', maxN); plot.style.setProperty('--be', be)
+    $('#barsLineT').textContent = be + ' h'
+    ms.forEach((m, k) => {
+      const i = document.createElement('i')
+      i.style.setProperty('--n', Math.max(1, Math.round(m.h))); i.style.setProperty('--k', k)
+      i.className = (m.h >= be ? 'over ' : '') + (m.partial ? 'part' : '')
+      i.title = `${m.m}　${m.h} 小時${m.partial ? '（進行中）' : ''}`
+      plot.insertBefore(i, $('#barsLine'))
+    })
+    const over = ms.filter(m => m.h >= be && !m.partial).length
+    $('#bars').setAttribute('role', 'img'); $('#bars').setAttribute('aria-label', `每月騎乘時數，共 ${ms.length} 個月，其中 ${over} 個月超過 ${be} 小時。`)
+    $('#barsFrom').textContent = ms[0].m.replace('-', '.'); $('#barsTo').textContent = ms[ms.length - 1].m.replace('-', '.')
+    $('#bars').hidden = false
+  }).catch(() => {})
+
+  /* ── 開場 ── */
+  go(cur, { instant: true })
+  const cover = slides[0]
+  const imgs = $$('img', cover).filter(i => !i.complete)
+  const ready = Promise.race([Promise.all(imgs.map(i => i.decode().catch(() => {}))), new Promise(r => setTimeout(r, 1800))])
+  ready.then(() => { root.dataset.ready = '1'; cover.classList.add('go') })
+  window.__theatre = { go, get cur() { return cur }, get N() { return N }, setAuto, get auto() { return auto } }
+})()
+</script>
+</body>
+</html>
