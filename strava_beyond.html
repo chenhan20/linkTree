@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#080b0e">
+<meta name="description" content="未竟 STILL BECOMING — Steve Chuang 的真實運動紀錄，化成一部即時生成的山岳電影。">
+<title>未竟 · STILL BECOMING · Steve Chuang</title>
+<link rel="icon" href="logo.ico"><link rel="stylesheet" href="strava-beyond.css">
+<script defer src="vendor-three-r128.js"></script><script defer src="strava-beyond.js"></script>
+</head>
+<body>
+<main id="film" aria-label="未竟：互動運動短片">
+<canvas id="world" aria-label="根據中社路真實地形繪製的動畫山景"></canvas>
+<div class="atmosphere"></div><div class="grain"></div><div class="letterbox top"></div><div class="letterbox bottom"></div>
+<header><a class="identity" href="strava.html">STEVE CHUANG<span>AN ATHLETE’S JOURNAL</span></a><span class="edition">A REAL-TIME FILM <i></i> VOL. 01</span><button id="fullscreen" title="全螢幕" aria-label="切換全螢幕">⛶</button></header>
+<div class="coordinates">25°06′ N &nbsp; 121°34′ E<span>TAIPEI · TAIWAN</span></div>
+<section id="intro" class="intro">
+<div class="eyebrow"><span></span> EVERY RETURN LEAVES A TRACE</div>
+<h1>未<span>竟</span><small>STILL BECOMING</small></h1>
+<p class="intro-copy">山沒有變。<br>每一次回來的人，都不一樣。</p>
+<div class="intro-actions"><button id="start" disabled><span class="play-icon">▶</span><span id="start-label">正在構築山脈</span><span class="duration">01:40</span></button><span class="intro-note">你的軌跡。你的時間。你的電影。</span></div>
+</section>
+<aside id="cover-note"><span class="tiny">BASED ON REAL EFFORTS</span><strong>一個人，一座山。<br>以及還沒結束的故事。</strong><span class="cover-rule"></span><span class="tiny">STRAVA RECORDS / 2025 — 2026</span></aside>
+<section id="story" aria-live="polite" hidden>
+<div id="act-label" class="eyebrow"></div><h2 id="act-title"></h2><p id="act-copy"></p>
+</section>
+<div id="hero-number" aria-hidden="true"><span id="hero-value"></span><small id="hero-unit"></small></div>
+<aside id="evidence" hidden><span id="evidence-label" class="tiny"></span><strong id="evidence-value"></strong><span id="evidence-note"></span><svg id="sparkline" viewBox="0 0 220 36" aria-label="中社路歷次成績走勢"><path/></svg></aside>
+<div id="subtitle"></div>
+<div id="end-actions" hidden><button id="replay">↺ 再走一次</button><a href="strava.html">回到運動紀錄 ↗</a></div>
+<footer>
+<div class="footer-top"><span id="film-state">原創運動短片 / 即時 3D</span><div class="utilities"><button id="sound" aria-pressed="false">聲音 OFF <span>▂▅▃▆</span></button><button id="sources" aria-expanded="false">關於這部片 ↗</button></div></div>
+<nav id="chapters" aria-label="電影章節"><button data-time="0"><b>01</b> 起點</button><button data-time="18"><b>02</b> 重力</button><button data-time="38"><b>03</b> 突破</button><button data-time="60"><b>04</b> 遠方</button><button data-time="80"><b>05</b> 未竟</button></nav>
+<div class="transport"><button id="pause" aria-label="播放" disabled>▶</button><span id="elapsed">00:00</span><input id="seek" type="range" min="0" max="100" step="0.1" value="0" aria-label="影片播放進度（秒）"><span>01:40</span><span class="keyboard-hint">SPACE 暫停</span></div>
+</footer>
+<dialog id="about"><button id="close-about" aria-label="關閉">×</button><span class="eyebrow">THE RECORD BEHIND THE FILM</span><h2>每一個數字，都有來處。</h2><p>中社路的山體與發光路線來自專案保存的地形與道路資料。歷次成績、最佳紀錄、累積騎乘里程與最長騎乘，取自你的運動資料。</p><p>鏡頭運動、天空、微粒與配樂為即時生成的藝術演繹；路線亮點表示影片進度，並非當下 GPS 或即時功率。山體高度經視覺強化。</p><p id="source-date"></p><p class="source-files">資料來源：data/film.json · data/strava.json<br>視覺：Three.js / GLSL · 聲音：Web Audio</p></dialog>
+<div id="error" role="alert" hidden></div>
+<noscript>這部互動短片需要 JavaScript。請啟用 JavaScript 後重新載入。</noscript>
+</main>
+</body></html>
