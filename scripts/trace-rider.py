@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""騎車照 → 向量插畫「騎士」，給 dawn.html（天還沒亮）當太陽裡的主角；輸出 assets/dawn/rider.svg。
+"""騎車照 → 向量插畫「騎士」，給 dawn.html（天還沒亮）當太陽裡的主角；輸出 assets/hero/rider.svg。
 
 照片本身不進 repo（只留描出來的向量）。這支要 numpy / scipy / scikit-image / opencv-python-headless，
 不在專案依賴裡，用臨時 venv 跑：
 
     python3 -m venv /tmp/trace-venv && /tmp/trace-venv/bin/pip install numpy scipy scikit-image opencv-python-headless
-    /tmp/trace-venv/bin/python scripts/trace-rider.py <photo.png> assets/dawn/rider.svg [icon.svg]
+    /tmp/trace-venv/bin/python scripts/trace-rider.py <photo.png> assets/hero/rider.svg [icon.svg]
 
 做法：
   1. GrabCut 把騎士從背景摳出來。下面的矩形／多邊形是「這張照片」的提示（座標是 1440×960 原圖）：
@@ -13,7 +13,7 @@
   2. 在騎士外框裡：mean-shift＋雙邊濾波壓平顏色 → k-means（Lab，K=16）→ 眾數濾波抹掉碎斑 → 每一類的平均色。
   3. 每一類用 marching squares 描輪廓、RDP 簡化、中點二次貝茲平滑；由大到小疊上去，最底下是一圈墨線（剪影外擴 3px）。
 輸出 viewBox = 530×770（騎士外框）。可選的第三個參數：另存一份「橘色太陽圓盤＋騎士」的獨立 SVG，
-首頁圖示 assets/dawn/rider-icon-128.png 就是它用 headless Chrome 透明背景截成 128px。
+首頁圖示 assets/hero/rider-icon-128.png 就是它用 headless Chrome 透明背景截成 128px。
 """
 import os
 import sys
