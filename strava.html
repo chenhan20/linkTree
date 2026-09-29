@@ -6935,6 +6935,7 @@ function render(data) {
   const viewsHtml = `
     <section class="view" data-view="overview">
       ${viewH('現況', 'Overview', `${tY} SEASON`)}
+      <div id="recap-slot"></div>
       <div id="rdy-mobile"></div>
       <div class="block">${seasonHtml}</div>
       ${tasksHtml}
@@ -10908,6 +10909,9 @@ Promise.all([
     const ftpBtn = document.getElementById('deck-ftp')
     if (ftpBtn && window.__powerPrs.length)
       ftpBtn.addEventListener('click', () => openPowerModal(window.__powerPrs, 1200))
+    // 月總結（strava-recap.js）等資料都掛好才接手；它比這裡早或晚載到都接得上
+    window.__stravaReady = true
+    dispatchEvent(new Event('strava:ready'))
   })
   .catch(err => {
     document.getElementById('content').innerHTML = `
@@ -11286,5 +11290,6 @@ function motionLayer({ animate, createDrawable, stagger }) {
 <style>:root{--am-accent:#FC4C02;--am-accent-soft:rgba(252,76,2,.18);--am-panel:#14100c;--am-panel-2:#1c160f}</style>
 <script src="itt-achievements.js?v=20260827" defer></script>
 <script src="activity-modal.js?v=20260827" defer></script>
+<script src="strava-recap.js?v=20260929g" defer></script>
 </body>
 </html>
