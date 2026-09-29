@@ -260,17 +260,17 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 .rd:focus-visible{outline:2px solid rgba(var(--rgb),.8);outline-offset:2px;border-radius:6px}
 /* 首頁的門：三部片的小圓疊在一起當圖示 */
 .door-art{position:relative;display:block;flex-shrink:0;width:58px;height:30px}
-.door-art img{position:absolute;top:0;width:30px;height:30px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(6,10,25,.95);
+.door-art img{position:absolute;top:0;width:30px;height:30px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(2,4,10,.94);
   box-shadow:0 0 0 1px rgba(var(--br,255,179,71),.35);transition:transform .25s cubic-bezier(.2,.7,.2,1)}
 .door-art img:nth-child(1){left:0;z-index:3}.door-art img:nth-child(2){left:14px;z-index:2}.door-art img:nth-child(3){left:28px;z-index:1}
 .door-art img.px{image-rendering:pixelated}
 .sp-btn:hover .door-art img:nth-child(1),.sp-btn:active .door-art img:nth-child(1){transform:translateX(-3px)}
 .sp-btn:hover .door-art img:nth-child(3),.sp-btn:active .door-art img:nth-child(3){transform:translateX(3px)}
-.door-sub{display:block;font-style:normal;font-size:9.5px;letter-spacing:1px;color:rgba(150,150,190,.6);margin-top:3px}
+.door-sub{display:block;font-style:normal;font-size:9.5px;letter-spacing:1px;color:rgba(150,150,190,.55);margin-top:3px}
 /* 放映室這一頁 */
 .th-body{max-width:620px}
 .th-title{font:600 24px monospace;letter-spacing:8px;color:#e8e4ff;text-align:center;margin:.6rem 0 .4rem;padding-left:8px}
-.th-intro{text-align:center;font-size:12px;letter-spacing:.6px;color:rgba(160,158,205,.72);margin-bottom:1.5rem}
+.th-intro{text-align:center;font-size:12px;letter-spacing:.6px;color:var(--muted);margin-bottom:1.5rem}
 .th-sec{margin-top:1.5rem}
 .th-films{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 .th-films .rd-art{width:min(100%,168px)}
@@ -281,7 +281,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 .th-card{display:flex;align-items:center;gap:14px;padding:12px 16px 12px 12px;border-radius:6px;border:1px solid rgba(255,255,255,.07);
   background:rgba(8,12,28,.8);color:#d8d6f4;text-decoration:none;font-family:monospace;animation:btn-in .4s both;
   transition:transform .18s,border-color .18s,background .18s;-webkit-tap-highlight-color:transparent}
-.th-card:hover,.th-card:active{transform:translateX(4px);border-color:rgba(var(--rgb),.42);background:rgba(12,18,40,.92)}
+.th-card:hover,.th-card:active{transform:translateX(4px);border-color:rgba(var(--rgb),.42);background:rgba(10,16,40,.88)}
 .th-card:focus-visible{outline:2px solid rgba(var(--rgb),.8);outline-offset:2px}
 .th-card-art{flex-shrink:0;display:grid;place-items:center;width:82px;height:56px}
 .th-card-img{display:block;width:56px;height:56px;filter:drop-shadow(0 0 10px rgba(255,190,40,.3))}
@@ -290,7 +290,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 .door-art-lg img:nth-child(2){left:21px}.door-art-lg img:nth-child(3){left:42px}
 .th-card-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
 .th-card-txt b{font-size:14px;font-weight:600;letter-spacing:.4px;color:#ece9ff}
-.th-card-txt i{font-style:normal;font-size:10.5px;letter-spacing:.8px;color:rgba(150,150,190,.72)}
+.th-card-txt i{font-style:normal;font-size:10.5px;letter-spacing:.8px;color:rgba(150,150,180,.72)}
 .th-card-go{flex-shrink:0;font-size:11px;letter-spacing:1px;color:rgb(var(--rgb));opacity:.75;transition:opacity .18s}
 .th-card:hover .th-card-go{opacity:1}
 @media(max-width:360px){.rd-name{font-size:11px;letter-spacing:0}.rd-sub{font-size:8.5px;letter-spacing:.2px}}
