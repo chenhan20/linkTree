@@ -479,7 +479,7 @@
 .mr-cal{margin-top:22px}
 .mr-cal-h,.mr-cal-g{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
 .mr-cal-h span{text-align:center;font-size:11px;color:rgba(255,255,255,.5);padding-bottom:4px}
-.mr-cal-g i{aspect-ratio:1;border-radius:7px;display:grid;place-items:center;font:600 11px var(--f-ui);font-style:normal;color:rgba(255,255,255,.45);background:rgba(255,255,255,.06)}
+.mr-cal-g i{aspect-ratio:1;border-radius:8px;display:grid;place-items:center;font:600 11px var(--f-ui);font-style:normal;color:rgba(255,255,255,.45);background:rgba(255,255,255,.06)}
 .mr-cal-g i.pad{background:none}
 .mr-cal-g i.ride{background:#fff;color:#8a1c02}
 .mr-cal-g i.train{background:rgba(255,255,255,.3);color:#fff}
