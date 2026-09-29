@@ -1035,92 +1035,57 @@
       "date": "2026-09-29",
       "week": "W2",
       "block": "zhongshe-2026-09-return",
-      "label": "3×10分持續功率",
+      "label": "中社ITT＋30分有氧（事後依實際菜單改列）",
       "type": "QUALITY",
-      "intent": "9/21依新紀錄複核；首週以210W附近起步。上週主段完整穩定、RPE6–8且恢復正常才進階，否則沿用上週或減5–10W。W3從3×10改2×15，總工作同30分，增加單段持續時間，不同時硬加瓦。",
+      "intent": "2026-09-29事後改列：原排3×10分210–220W，當天自己改成中社全段全力一次，接30分Z2有氧（140–170W）。中社18:10／254W，9/15以來最佳。",
       "score_policy": "prescription",
       "segments": [
         {
           "name": "前往＋熱身",
           "role": "warmup",
-          "minutes": 25,
+          "minutes": 30,
           "target_w": {
             "lo": 110,
-            "hi": 160,
-            "about": 135.0
+            "hi": 170,
+            "about": 140
           },
           "target_cadence": null
         },
         {
-          "name": "主課1/3",
-          "role": "work",
-          "minutes": 10,
+          "name": "中社全段一次，全力（以終點結束）",
+          "role": "allout",
+          "minutes": 18,
           "target_w": {
-            "lo": 210,
-            "hi": 220,
-            "about": 215.0
+            "allout": true
           },
           "target_cadence": null
         },
         {
-          "name": "組間恢復／安全下滑",
+          "name": "中社頂→轉有氧",
           "role": "recovery",
-          "minutes": 8,
+          "minutes": 6,
           "target_w": {
             "lo": null,
             "hi": null,
-            "about": 115
+            "about": 110
           },
           "target_cadence": null
         },
         {
-          "name": "主課2/3",
+          "name": "Z2有氧",
           "role": "work",
-          "minutes": 10,
+          "minutes": 30,
           "target_w": {
-            "lo": 210,
-            "hi": 220,
-            "about": 215.0
+            "lo": 140,
+            "hi": 170,
+            "about": 155
           },
           "target_cadence": null
         },
         {
-          "name": "組間恢復／安全下滑",
+          "name": "返程",
           "role": "recovery",
-          "minutes": 8,
-          "target_w": {
-            "lo": null,
-            "hi": null,
-            "about": 115
-          },
-          "target_cadence": null
-        },
-        {
-          "name": "主課3/3",
-          "role": "work",
-          "minutes": 10,
-          "target_w": {
-            "lo": 210,
-            "hi": 220,
-            "about": 215.0
-          },
-          "target_cadence": null
-        },
-        {
-          "name": "輕鬆續騎／返程",
-          "role": "recovery",
-          "minutes": 34,
-          "target_w": {
-            "lo": null,
-            "hi": null,
-            "about": 145
-          },
-          "target_cadence": null
-        },
-        {
-          "name": "收操",
-          "role": "cooldown",
-          "minutes": 15,
+          "minutes": 21,
           "target_w": {
             "lo": null,
             "hi": null,
@@ -1130,16 +1095,17 @@
         }
       ],
       "time_budget": {
-        "window_min": 150
+        "window_min": 150,
+        "ride_min": 105
       },
       "selected_variant": "outdoor",
       "export_mode": "free_ride",
-      "route": "9/22先用熟悉連續河濱；9/29、10/6可用中社較緩段，安全下滑不足預算則少做一組或改河濱。",
-      "rain_summary": "訓練台85分，同3×10分210–220W，組間5分。",
+      "route": "實際菜單：公司出發→中社全段全力→Z2有氧30分→返程",
+      "rain_summary": "訓練台：20分全力＋30分140–170W。",
       "variants": {
         "outdoor": {
           "venue": "outdoor",
-          "summary": "3×10分210–220W，恢復至少8分；含往返120分。"
+          "summary": "實際菜單：中社全段全力一次＋30分Z2有氧140–170W"
         },
         "rain": {
           "venue": "indoor",
@@ -1151,80 +1117,45 @@
               "target_w": {
                 "lo": 110,
                 "hi": 160,
-                "about": 135.0
+                "about": 135
               },
               "target_cadence": null
             },
             {
-              "name": "主課1/3",
-              "role": "work",
-              "minutes": 10,
-              "target_w": {
-                "lo": 210,
-                "hi": 220,
-                "about": 215.0
-              },
-              "target_cadence": null
-            },
-            {
-              "name": "組間恢復／安全下滑",
-              "role": "recovery",
-              "minutes": 5,
-              "target_w": {
-                "lo": null,
-                "hi": null,
-                "about": 115
-              },
-              "target_cadence": null
-            },
-            {
-              "name": "主課2/3",
-              "role": "work",
-              "minutes": 10,
-              "target_w": {
-                "lo": 210,
-                "hi": 220,
-                "about": 215.0
-              },
-              "target_cadence": null
-            },
-            {
-              "name": "組間恢復／安全下滑",
-              "role": "recovery",
-              "minutes": 5,
-              "target_w": {
-                "lo": null,
-                "hi": null,
-                "about": 115
-              },
-              "target_cadence": null
-            },
-            {
-              "name": "主課3/3",
-              "role": "work",
-              "minutes": 10,
-              "target_w": {
-                "lo": 210,
-                "hi": 220,
-                "about": 215.0
-              },
-              "target_cadence": null
-            },
-            {
-              "name": "輕鬆續騎／返程",
-              "role": "recovery",
+              "name": "20分全力",
+              "role": "allout",
               "minutes": 20,
               "target_w": {
+                "allout": true
+              },
+              "target_cadence": null
+            },
+            {
+              "name": "恢復",
+              "role": "recovery",
+              "minutes": 5,
+              "target_w": {
                 "lo": null,
                 "hi": null,
-                "about": 145
+                "about": 110
+              },
+              "target_cadence": null
+            },
+            {
+              "name": "Z2有氧",
+              "role": "work",
+              "minutes": 30,
+              "target_w": {
+                "lo": 140,
+                "hi": 170,
+                "about": 155
               },
               "target_cadence": null
             },
             {
               "name": "收操",
               "role": "cooldown",
-              "minutes": 10,
+              "minutes": 5,
               "target_w": {
                 "lo": null,
                 "hi": null,
@@ -1233,7 +1164,7 @@
               "target_cadence": null
             }
           ],
-          "summary": "訓練台85分，同3×10分210–220W，組間5分。"
+          "summary": "訓練台：20分全力＋30分140–170W。"
         }
       }
     },
