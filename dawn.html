@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW" data-tone="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>天還沒亮 · Steve Chuang</title>
+<meta name="description" content="107 趟戶外騎乘，跟太陽比誰先出門。每個數字都是從我的騎乘紀錄現算的。">
+<meta name="theme-color" content="#02040a">
+<link rel="icon" href="logo.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@700;900&family=Saira+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --serif:'Noto Serif TC','Songti TC','PMingLiU',serif;
+  --sans:'PingFang TC','Noto Sans TC','Microsoft JhengHei',system-ui,sans-serif;
+  --num:'Saira Condensed','Arial Narrow','PingFang TC',sans-serif;
+  --gut:clamp(20px,5vw,84px);
+  --top:68px;
+  --bot:92px;
+  --orange:#ff8a45;          /* 他自己的橘：車衣、毛衣、每一趟 */
+  --settle:cubic-bezier(.2,.7,.2,1);
+  /* 舞台（由 JS 每一格更新） */
+  --sky-a:#02040a;--sky-b:#060b1e;--sky-c:#10183a;
+  --far:#0d1330;--mid:#090e26;--near:#04060e;
+  --stars:1;--lights:.9;--glow:#4a5cb0;--ga:.22;
+}
+html,body{height:100%;background:var(--sky-a);overflow:hidden;overscroll-behavior:none}
+body{font-family:var(--sans);color:var(--fg);-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit}
+a{color:inherit}
+:focus-visible{outline:2px solid currentColor;outline-offset:3px}
+
+/* 兩種字色：整張投影片一個色調，天空慢慢換，字不跟著漸變（換張時內容早就淡出了） */
+:root[data-tone=light],.slide[data-tone=light]{--fg:#f1f4ff;--fg2:#b6c0e0;--fg3:#7f8bb4;--line:rgba(241,244,255,.18);--chip:rgba(4,8,24,.42)}
+:root[data-tone=dark],.slide[data-tone=dark]{--fg:#0d1a38;--fg2:#2f3f66;--fg3:#55648c;--line:rgba(13,26,56,.22);--chip:rgba(255,255,255,.4)}
+
+/* ── 舞台：天空、星、城、稜線、太陽 ─────────────────────── */
+.stage{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.sky{position:absolute;inset:0;background:linear-gradient(to bottom,var(--sky-a) 0%,var(--sky-b) 58%,var(--sky-c) 100%)}
+.stars{position:absolute;inset:0;width:100%;height:100%;opacity:var(--stars)}
+.stars circle{fill:#fff}
+.stars .tw{animation:tw 4s ease-in-out infinite}
+@keyframes tw{50%{opacity:.25}}
+.ridge{position:absolute;left:0;right:0;bottom:0;width:100%;height:min(30vh,300px);z-index:2}
+.ridge .far{fill:var(--far)}.ridge .mid{fill:var(--mid)}.ridge .near{fill:var(--near)}
+.ridge .lights circle{fill:#ffd08a}
+.ridge .lights{opacity:var(--lights)}
+.sun{position:absolute;left:0;top:0;z-index:1;transform-origin:0 0;will-change:transform;transition:transform 1.5s cubic-bezier(.65,0,.25,1)}
+.sun-box{position:relative;width:100%;height:100%}
+.sun::before{content:'';position:absolute;left:50%;top:58%;width:170%;aspect-ratio:1;translate:-50% -50%;border-radius:50%;
+  background:radial-gradient(closest-side,var(--glow),transparent 72%);opacity:var(--ga)}
+.sun svg{position:relative;display:block;width:100%;height:100%;overflow:visible}
+.sun .tick{stroke:var(--tick,#ffd9a0);stroke-linecap:round}
+.sun.no-tr{transition:none}
+
+/* ── 投影片容器 ───────────────────────────────────── */
+.deck{position:fixed;inset:0;z-index:3;touch-action:pan-y}
+.slide{position:absolute;inset:0;padding:var(--top) var(--gut) var(--bot);display:grid;color:var(--fg);
+  opacity:0;visibility:hidden;overflow:hidden auto;scrollbar-width:none;overscroll-behavior:contain;
+  transition:opacity .28s ease,visibility 0s .28s}
+.slide::-webkit-scrollbar{display:none}
+.slide.is-on{opacity:1;visibility:visible;transition:opacity .5s ease .28s,visibility 0s}
+.slide h2{font:900 clamp(28px,3.5vw,54px)/1.28 var(--serif);letter-spacing:.02em}
+.ph{display:inline-block}
+.lede{margin-top:clamp(14px,2.4vh,26px);font-size:clamp(15px,1.3vw,19px);line-height:1.85;color:var(--fg2);max-width:26em;text-wrap:pretty}
+.lede b{font-weight:700;color:var(--fg)}
+.two{grid-template-columns:minmax(0,.82fr) minmax(0,1.4fr);column-gap:clamp(24px,4.5vw,84px);align-items:center}
+.two .copy{min-width:0}
+.two .art{min-width:0;display:flex;justify-content:center;align-items:center}
+.sun-slot{width:var(--slot,132px);height:var(--slot,132px);margin-top:clamp(18px,4vh,40px)}
+.num{font-family:var(--num);font-variant-numeric:tabular-nums;font-weight:600;letter-spacing:.01em}
+svg text{font-family:var(--sans)}
+svg .n{font-family:var(--num);font-weight:600}
+
+/* 封面 */
+.s-cover{grid-template-rows:1fr auto;align-items:end;justify-items:center;text-align:center}
+.cover-copy{align-self:start;padding-top:clamp(8px,4vh,48px)}
+.s-cover h1{font:900 clamp(72px,14vw,220px)/1 var(--serif);letter-spacing:.08em;padding-left:.08em}
+.s-cover .sub{margin-top:clamp(10px,2vh,22px);font-size:clamp(15px,1.5vw,21px);letter-spacing:.06em;color:var(--fg2)}
+.cover-sun{position:absolute;left:50%;bottom:0;width:min(46vmin,420px);aspect-ratio:1;translate:-50% 0}
+.hint{margin-top:clamp(14px,2.6vh,26px);font-size:13px;letter-spacing:.08em;color:var(--fg3)}
+.sun-slot.fin{--slot:min(46vh,34vw,420px);margin:0}
+.hint-kbd{display:none}
+@media (hover:hover) and (pointer:fine){.hint-kbd{display:inline}.hint-touch{display:none}}
+
+/* 圖表共通 */
+.chart{width:100%;height:auto;display:block;overflow:visible}
+.art>.chart{max-height:calc(100vh - var(--top) - var(--bot) - 12px)}
+@supports (height:1dvh){.art>.chart{max-height:calc(100dvh - var(--top) - var(--bot) - 12px)}}
+.chart .ax{stroke:var(--line);stroke-width:1}
+.chart .lb{fill:var(--fg3);font-size:12px}
+.chart .lb2{fill:var(--fg2);font-size:13px}
+.hl{fill:var(--orange)}
+
+/* 二：24 小時環 */
+.ring-wrap{position:relative;width:min(68vh,46vw,640px);aspect-ratio:1}
+.ring-wrap .chart{position:absolute;inset:0;height:100%}
+.ring-slot{position:absolute;left:50%;top:50%;width:41%;aspect-ratio:1;translate:-50% -50%}
+.bar{transform-box:fill-box;transform-origin:center bottom;opacity:0}
+.slide.is-on .bar{animation:barin .7s var(--settle) both;animation-delay:calc(var(--k)*40ms + .55s)}
+@keyframes barin{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:none}}
+
+/* 三：一個早晨一條 */
+.strips .row{opacity:0}
+.slide.is-on .strips .row{animation:rowin .5s ease both;animation-delay:calc(var(--k)*22ms + .6s)}
+@keyframes rowin{from{opacity:0}to{opacity:1}}
+.score{display:flex;align-items:flex-end;gap:clamp(18px,3vw,44px);margin-top:clamp(16px,3vh,30px)}
+.score b{display:block;font:600 clamp(52px,6.4vw,96px)/1 var(--num);letter-spacing:.01em}
+.score .me b{color:var(--orange)}
+.score small{display:block;margin-top:8px;font-size:13px;color:var(--fg3);letter-spacing:.14em}
+.score .vs{align-self:center;font-size:15px;color:var(--fg3);padding-bottom:26px}
+
+/* 四：差距 */
+.gap{display:flex;align-items:baseline;flex-wrap:wrap;gap:6px 16px;margin-top:clamp(16px,3vh,30px);font-family:var(--num)}
+.gap .a{font-size:clamp(40px,4.6vw,72px);font-weight:600;line-height:1;color:var(--fg2)}
+.gap .arr{font-size:clamp(26px,3vw,44px);color:var(--fg3)}
+.gap .b{font-size:clamp(56px,7vw,112px);font-weight:700;line-height:1;color:var(--orange)}
+.gap .u{font:400 13.5px/1.6 var(--sans);color:var(--fg3);letter-spacing:.04em;flex-basis:100%;text-wrap:balance}
+.dot{opacity:0}
+.slide.is-on .dot{animation:rowin .4s ease both;animation-delay:calc(var(--k)*16ms + .7s)}
+.mline{stroke-dasharray:1;stroke-dashoffset:1}
+.slide.is-on .mline{animation:draw 1.6s ease-out .9s both}
+@keyframes draw{to{stroke-dashoffset:0}}
+
+/* 五：贏的六次 */
+.wins{list-style:none;width:100%;border-top:1px solid var(--line)}
+.wins li{display:grid;grid-template-columns:7.2em minmax(0,1fr) auto;align-items:center;gap:clamp(10px,2vw,28px);padding:clamp(9px,1.8vh,16px) 2px;border-bottom:1px solid var(--line);opacity:0}
+.slide.is-on .wins li{animation:rowin .5s ease both;animation-delay:calc(var(--k)*110ms + .6s)}
+.wins .dt{font:600 clamp(18px,1.7vw,24px)/1.1 var(--num);letter-spacing:.02em}
+.wins .dt small{display:block;margin-top:3px;font:400 12px var(--sans);color:var(--fg3);letter-spacing:.06em}
+.wins .mid{min-width:0}
+.wins .mid svg{display:block;width:100%;height:14px;border-radius:2px;overflow:hidden}
+.wins .mid p{margin-top:6px;font-size:13px;color:var(--fg2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wins .ahead{font:700 clamp(24px,2.4vw,34px)/1 var(--num);color:var(--orange);text-align:right}
+.wins .ahead small{display:block;margin-top:3px;font:400 12px var(--sans);color:var(--fg3)}
+
+/* 六：三個圈 */
+.gauges{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(8px,2vw,32px);width:100%;max-width:820px}
+.gauge{text-align:center}
+.gauge svg{width:100%;max-width:230px;height:auto;display:block;margin:0 auto}
+.gauge .trk{fill:none;stroke:var(--line);stroke-width:12}
+.gauge .prg{fill:none;stroke:var(--orange);stroke-width:12;stroke-linecap:round;stroke-dasharray:0 1000;transform:rotate(-90deg);transform-origin:50% 50%}
+.slide.is-on .gauge .prg{animation:gfill 1.3s var(--settle) both;animation-delay:calc(var(--k)*180ms + .7s)}
+@keyframes gfill{to{stroke-dasharray:var(--len) 1000}}
+.gauge .big{font:700 clamp(38px,4.4vw,64px)/1 var(--num);fill:var(--fg)}
+.gauge h3{margin-top:clamp(8px,1.6vh,16px);font:700 clamp(16px,1.5vw,21px)/1.2 var(--serif);letter-spacing:.06em}
+.gauge p{margin-top:6px;font-size:13px;color:var(--fg3)}
+
+/* 七：星期 */
+.wd .b{transform-box:fill-box;transform-origin:center;transform:scale(0)}
+.slide.is-on .wd .b{animation:pop .6s var(--settle) both;animation-delay:calc(var(--k)*70ms + .6s)}
+@keyframes pop{to{transform:none}}
+
+/* 八：結尾 */
+.s-end{grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:clamp(24px,5vw,90px);align-items:center}
+.sr{font:700 clamp(64px,9vw,150px)/1 var(--num);color:var(--orange);letter-spacing:.01em;margin-top:clamp(10px,2vh,22px)}
+.race{margin-top:clamp(20px,4vh,40px);max-width:560px}
+.race svg{width:100%;height:auto;display:block;overflow:visible}
+.acts{display:flex;flex-wrap:wrap;gap:12px;margin-top:clamp(20px,4vh,36px)}
+.btn{display:inline-flex;align-items:center;gap:10px;padding:12px 22px;border-radius:999px;border:1px solid var(--line);background:var(--chip);color:var(--fg);font-size:15px;letter-spacing:.1em;text-decoration:none;cursor:pointer;transition:border-color .2s,transform .15s}
+.btn:hover{border-color:var(--fg2)}
+.btn.pri{background:var(--orange);border-color:var(--orange);color:#1e0d04;font-weight:700}
+.btn svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+details.how{margin-top:clamp(20px,4vh,36px);max-width:34em;color:var(--fg2);font-size:13.5px;line-height:1.8}
+details.how summary{cursor:pointer;color:var(--fg3);letter-spacing:.08em;padding:6px 0;width:max-content}
+details.how ul{margin:8px 0 0 1.1em}
+details.how li{margin-top:4px}
+
+/* ── 工具列與翻頁列 ─────────────────────────────────── */
+.chrome{position:fixed;left:0;right:0;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;
+  padding:calc(12px + env(safe-area-inset-top)) var(--gut) 0;pointer-events:none;color:var(--fg);transition:color .4s}
+.chrome>*{pointer-events:auto}
+.home{display:inline-flex;align-items:center;gap:8px;padding:10px 4px;font-size:14px;letter-spacing:.08em;text-decoration:none;opacity:.8}
+.home:hover{opacity:1}
+.home svg,.tbtn svg,.arw svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.tools{display:flex;align-items:center;gap:8px}
+.count{margin-right:6px;font:500 15px var(--num);letter-spacing:.1em;opacity:.75}
+.tbtn,.arw{display:grid;place-items:center;width:42px;height:42px;padding:0;border:1px solid var(--line);border-radius:50%;background:transparent;color:inherit;cursor:pointer;transition:border-color .2s,opacity .2s,background .3s}
+.tbtn:hover,.arw:hover{border-color:currentColor}
+.tbtn[aria-pressed=true]{background:var(--fg);color:var(--sky-a)}
+.tbtn .i-pause,#auto[aria-pressed=true] .i-play{display:none}
+#auto[aria-pressed=true] .i-pause{display:block}
+.arw:disabled{opacity:.25;cursor:default}
+.pager{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;justify-content:center;align-items:center;gap:clamp(10px,2vw,22px);
+  padding:0 var(--gut) calc(22px + env(safe-area-inset-bottom));pointer-events:none;color:var(--fg);transition:color .4s}
+.pager>*{pointer-events:auto}
+.pg{display:flex;align-items:center;gap:6px}
+.pg button{width:26px;height:26px;padding:0;border:0;background:none;cursor:pointer;color:inherit;display:grid;place-items:center}
+.pg button i{display:block;width:8px;height:8px;border-radius:50%;background:currentColor;opacity:.4;transition:opacity .3s,transform .35s var(--settle),box-shadow .3s}
+.pg button:hover i{opacity:.8}
+.pg button[aria-current=true] i{opacity:1;transform:scale(1.5);box-shadow:0 0 0 3px var(--sky-a),0 0 0 4.5px currentColor}
+:root[data-tone=dark] .pg button[aria-current=true] i{box-shadow:0 0 0 3px #d9e8f8,0 0 0 4.5px currentColor}
+.pg .pr{display:none}
+.live{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+:root.auto .pg button[aria-current=true]::after{content:'';position:absolute}
+
+/* ── 窄螢幕 ─────────────────────────────────────── */
+@media (max-aspect-ratio:1/1),(max-width:700px){
+  :root{--top:60px;--bot:84px}
+  .slide{padding-top:calc(var(--top) + 6px)}
+  .two,.s-end{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);align-content:start;row-gap:clamp(12px,2.4dvh,24px);align-items:start}
+  .two .art{justify-content:center;align-items:flex-start}
+  .slide h2{font-size:clamp(25px,7vw,34px)}
+  .two .copy{display:grid;grid-template-columns:64px minmax(0,1fr);column-gap:14px;align-items:center;max-width:none}
+  .two .copy>*{grid-column:1/-1}
+  .two .copy>.sun-slot{grid-column:1;grid-row:1;width:64px;height:64px;margin:0;--slot:64px}
+  .two .copy>h2{grid-column:2;grid-row:1}
+  .two .copy.noslot{display:block}
+  .lede{font-size:15px;line-height:1.75;max-width:none}
+  .s-end .art{order:-1;justify-content:center}
+  .sun-slot.fin{--slot:min(50vw,25dvh)}
+  .s-cover h1{font-size:clamp(56px,17vw,110px)}
+  .cover-sun{width:min(74vw,340px)}
+  .ring-wrap{width:min(88vw,52dvh)}
+  .ring-slot{width:38%}
+  .score{margin-top:12px}.score b{font-size:46px}
+  .gap{margin-top:12px}.gap .a{font-size:34px}.gap .b{font-size:54px}.gap .arr{font-size:22px}
+  .wins li{grid-template-columns:5.6em minmax(0,1fr) auto;gap:10px}
+  .gauges{gap:6px}
+  .gauge h3{font-size:14px}.gauge p{font-size:11.5px}
+  .sr{font-size:clamp(56px,17vw,88px);margin-top:6px}
+  .count{display:none}
+}
+@media (max-height:700px) and (max-aspect-ratio:1/1){
+  .lede{display:none}
+  .s-cover .lede{display:block}
+}
+@media (max-height:600px) and (min-aspect-ratio:1/1) and (min-width:701px){
+  :root{--top:52px;--bot:66px}
+  .lede{font-size:14px;line-height:1.7}
+  .sun-slot{--slot:84px}
+  .ring-wrap{width:min(72vh,46vw)}
+}
+/* 橫拿手機（很矮的橫向視窗）：只留標題、圖、按鈕，說明文字收起來 */
+@media (max-height:520px) and (min-aspect-ratio:1/1){
+  :root{--top:46px;--bot:58px}
+  .slide h2{font-size:clamp(20px,3vw,26px)}
+  .lede,details.how{display:none}
+  .s-cover .sub{display:block}
+  .s-cover h1{font-size:min(13vw,26dvh)}
+  .cover-sun{width:min(40vmin,240px)}
+  .hint{display:none}
+  .sun-slot{--slot:60px;margin-top:12px}
+  .sun-slot.fin{--slot:min(62dvh,300px)}
+  .score b{font-size:38px}.score{margin-top:6px}.score small{margin-top:2px}
+  .gap{margin-top:8px}.gap .a{font-size:34px}.gap .b{font-size:52px}.gap .u{display:none}
+  .wins li{padding:5px 2px}.wins .mid p,.wins .dt small,.wins .ahead small{display:none}
+  .gauge p{display:none}.gauge h3{margin-top:2px}
+  .sr{font-size:52px;margin-top:2px}
+  .race{margin-top:8px}
+  .acts{margin-top:10px}.btn{padding:8px 16px;font-size:13px}
+  .ring-wrap{width:min(calc(100dvh - var(--top) - var(--bot)),46vw)}
+}
+@media (prefers-reduced-motion:reduce){
+  .sun{transition:none}
+  .stars .tw{animation:none}
+  .slide.is-on .bar,.slide.is-on .strips .row,.slide.is-on .dot,.slide.is-on .wins li,.slide.is-on .gauge .prg,.slide.is-on .wd .b,.slide.is-on .mline{animation:none}
+  .bar,.strips .row,.dot,.wins li,.wd .b{opacity:1;transform:none}
+  .mline{stroke-dashoffset:0}
+  .gauge .prg{stroke-dasharray:var(--len) 1000}
+}
+</style>
+</head>
+<body>
+
+<div class="stage" aria-hidden="true">
+  <div class="sky"></div>
+  <svg class="stars" id="stars" preserveAspectRatio="none"></svg>
+  <div class="sun" id="sun"><div class="sun-box" id="sunBox"></div></div>
+  <svg class="ridge" id="ridge" viewBox="0 0 1600 300" preserveAspectRatio="xMidYMax slice"></svg>
+</div>
+
+<header class="chrome">
+  <a class="home" href="linkTreeIndex.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>首頁</a>
+  <div class="tools">
+    <span class="count" id="count" aria-hidden="true"></span>
+    <button class="tbtn" id="auto" type="button" aria-pressed="false" aria-label="自動放映" title="自動放映（P）">
+      <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z" fill="currentColor" stroke="none"/></svg>
+      <svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 5.5v13M15.5 5.5v13" stroke-width="2.4"/></svg>
+    </button>
+    <button class="tbtn" id="fs" type="button" aria-pressed="false" aria-label="全螢幕" title="全螢幕（F）">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+    </button>
+  </div>
+</header>
+
+<main class="deck" id="deck" aria-roledescription="carousel" aria-label="天還沒亮">
+
+  <!-- 1 封面 -->
+  <section class="slide s-cover is-on" data-tone="light" data-key="cover" data-title="天還沒亮">
+    <div class="cover-copy">
+      <h1>天還沒亮</h1>
+      <p class="sub" id="coverSub">跟太陽比誰先出門。</p>
+      <p class="hint"><span class="hint-kbd">← → 翻頁　F 全螢幕　P 自動放映</span><span class="hint-touch">左右滑動翻頁</span></p>
+    </div>
+    <div class="cover-sun" data-sun data-pose="cover"></div>
+  </section>
+
+  <!-- 2 二十四小時 -->
+  <section class="slide two" data-tone="light" data-key="hour" data-title="六點">
+    <div class="copy noslot">
+      <h2><span class="ph">六點，</span><span class="ph">是我最常</span><span class="ph">出門的時間。</span></h2>
+      <p class="lede" id="hourLede"></p>
+    </div>
+    <div class="art"><div class="ring-wrap"><svg class="chart" id="ring" viewBox="0 0 700 700" role="img"></svg><div class="ring-slot" data-sun data-pose="ring"></div></div></div>
+  </section>
+
+  <!-- 3 一個早晨一條 -->
+  <section class="slide two" data-tone="light" data-key="race" data-title="太陽先到">
+    <div class="copy">
+      <h2 id="raceH"></h2>
+      <p class="lede" id="raceLede"></p>
+      <div class="score" id="score"></div>
+      <div class="sun-slot" data-sun data-pose="corner"></div>
+    </div>
+    <div class="art"><svg class="chart strips" id="strips" viewBox="0 0 720 560" role="img"></svg></div>
+  </section>
+
+  <!-- 4 差距在縮 -->
+  <section class="slide two" data-tone="light" data-key="gap" data-title="差距在縮">
+    <div class="copy">
+      <h2>但差距在縮。</h2>
+      <p class="lede" id="gapLede"></p>
+      <div class="gap" id="gapNums"></div>
+      <div class="sun-slot" data-sun data-pose="corner"></div>
+    </div>
+    <div class="art"><svg class="chart" id="trend" viewBox="0 0 760 460" role="img"></svg></div>
+  </section>
+
+  <!-- 5 贏的那幾次 -->
+  <section class="slide two" data-tone="light" data-key="wins" data-title="贏的那幾次">
+    <div class="copy">
+      <h2 id="winsH"></h2>
+      <p class="lede" id="winsLede"></p>
+      <div class="sun-slot" data-sun data-pose="corner"></div>
+    </div>
+    <div class="art"><ol class="wins" id="wins"></ol></div>
+  </section>
+
+  <!-- 6 主場 -->
+  <section class="slide two" data-tone="light" data-key="share" data-title="早上是主場">
+    <div class="copy">
+      <h2><span class="ph">早上是</span><span class="ph">我的主場。</span></h2>
+      <p class="lede" id="shareLede"></p>
+      <div class="sun-slot" data-sun data-pose="corner"></div>
+    </div>
+    <div class="art"><div class="gauges" id="gauges"></div></div>
+  </section>
+
+  <!-- 7 星期 -->
+  <section class="slide two" data-tone="dark" data-key="week" data-title="二和四">
+    <div class="copy">
+      <h2 id="weekH"></h2>
+      <p class="lede" id="weekLede"></p>
+      <div class="sun-slot" data-sun data-pose="corner"></div>
+    </div>
+    <div class="art"><svg class="chart wd" id="week" viewBox="0 0 700 300" role="img"></svg></div>
+  </section>
+
+  <!-- 8 明天 -->
+  <section class="slide s-end" data-tone="dark" data-key="end" data-title="明天日出">
+    <div class="copy">
+      <h2>明天日出</h2>
+      <div class="sr" id="sr">--:--</div>
+      <p class="lede" id="endLede"></p>
+      <div class="race" id="race"></div>
+      <div class="acts">
+        <button class="btn pri" type="button" data-go="0"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.6-5.9M4 4v4.5h4.5"/></svg>再看一次</button>
+        <a class="btn" href="linkTreeIndex.html">回首頁</a>
+        <a class="btn" href="theatre.html">放映室</a>
+      </div>
+      <details class="how"><summary>這些數字怎麼算的</summary>
+        <ul id="how"></ul>
+      </details>
+    </div>
+    <div class="art"><div class="sun-slot fin" data-sun data-pose="finale"></div></div>
+  </section>
+
+</main>
+
+<nav class="pager" aria-label="幻燈片">
+  <button class="arw" id="prev" type="button" aria-label="上一張" title="上一張（←）"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg></button>
+  <div class="pg" id="pg"></div>
+  <button class="arw" id="next" type="button" aria-label="下一張" title="下一張（→）"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 5.5L16 12l-6.5 6.5"/></svg></button>
+</nav>
+<div class="live" id="live" role="status" aria-live="polite"></div>
+<noscript><p style="position:fixed;inset:auto 20px 20px;color:#f1f4ff;font:15px/1.8 sans-serif;z-index:99">這頁需要 JavaScript。回<a href="linkTreeIndex.html">首頁</a>。</p></noscript>
+
+<script>
+(() => {
+'use strict'
+const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)]
+const NS = 'http://www.w3.org/2000/svg'
+const S = (tag, attrs = {}, ...kids) => { const e = document.createElementNS(NS, tag); for (const k in attrs) if (attrs[k] != null) e.setAttribute(k, attrs[k]); kids.forEach(c => c != null && e.append(c)); return e }
+const root = document.documentElement
+const reduce = matchMedia('(prefers-reduced-motion: reduce)')
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v))
+const fmt = n => Math.round(n).toLocaleString('en-US')
+const hm = m => { m = Math.round(m); return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0') }
+const WD = ['一', '二', '三', '四', '五', '六', '日']
+const NARROW = matchMedia('(max-aspect-ratio: 1/1), (max-width: 700px)')
+
+/* ═══ 太陽：NOAA 日出日落（台北 25.033°N 121.565°E，UTC+8），單位是當天的分鐘數 ═══ */
+const LAT = 25.033, LON = 121.565, TZ = 8
+function sunTimes(dateStr, elev = -0.833) {
+  const [y, m, d] = dateStr.split('-').map(Number)
+  const jd = Date.UTC(y, m - 1, d) / 86400000 + 2440587.5 + (12 - TZ) / 24 - 0.5 + 0.5
+  const T = (jd - 2451545.0) / 36525, rad = Math.PI / 180
+  const L0 = (280.46646 + T * (36000.76983 + T * 0.0003032)) % 360
+  const M = 357.52911 + T * (35999.05029 - 0.0001537 * T)
+  const e = 0.016708634 - T * (0.000042037 + 0.0000001267 * T)
+  const C = Math.sin(M * rad) * (1.914602 - T * (0.004817 + 0.000014 * T)) + Math.sin(2 * M * rad) * (0.019993 - 0.000101 * T) + Math.sin(3 * M * rad) * 0.000289
+  const om = 125.04 - 1934.136 * T, lam = L0 + C - 0.00569 - 0.00478 * Math.sin(om * rad)
+  const e0 = 23 + (26 + (21.448 - T * (46.815 + T * (0.00059 - T * 0.001813))) / 60) / 60, eps = e0 + 0.00256 * Math.cos(om * rad)
+  const decl = Math.asin(Math.sin(eps * rad) * Math.sin(lam * rad)) / rad
+  const y2 = Math.tan(eps * rad / 2) ** 2
+  const eqt = 4 * (y2 * Math.sin(2 * L0 * rad) - 2 * e * Math.sin(M * rad) + 4 * e * y2 * Math.sin(M * rad) * Math.cos(2 * L0 * rad) - 0.5 * y2 * y2 * Math.sin(4 * L0 * rad) - 1.25 * e * e * Math.sin(2 * M * rad)) / rad
+  const cosH = (Math.sin(elev * rad) - Math.sin(LAT * rad) * Math.sin(decl * rad)) / (Math.cos(LAT * rad) * Math.cos(decl * rad))
+  const H = Math.acos(clamp(cosH, -1, 1)) / rad, noon = 720 - 4 * LON - eqt + TZ * 60
+  return [noon - 4 * H, noon + 4 * H]
+}
+const addDays = (s, n) => { const [y, m, d] = s.split('-').map(Number); return new Date(Date.UTC(y, m - 1, d + n)).toISOString().slice(0, 10) }
+const dayDiff = (a, b) => Math.round((Date.parse(b) - Date.parse(a)) / 86400000)
+const median = a => { const s = [...a].sort((x, y) => x - y), n = s.length; return n ? (n % 2 ? s[(n - 1) / 2] : (s[n / 2 - 1] + s[n / 2]) / 2) : NaN }
+
+/* ═══ 統計：全部從 data/chronicle.json 現算，每天 CI 更新後這頁自己就會變 ═══ */
+function compute(d) {
+  const rides = []
+  for (const a of d.acts) {
+    // 戶外騎乘：ride 且有爬升（室內／虛擬騎乘沒有），排除極短的
+    if (a[2] !== 'ride' || !(a[5] > 0) || !(a[4] > 0.3)) continue
+    const [h, mi] = a[1].split(':').map(Number), st = h * 60 + mi
+    const [rise, set] = sunTimes(a[0]), civil = sunTimes(a[0], -6)[0]
+    rides.push({ d: a[0], st, end: st + a[4] * 60, km: a[3], h: a[4], el: a[5], pr: a[6] || 0, name: a[8] || '', rise, set, civil, off: st - rise, wd: (new Date(a[0] + 'T00:00:00Z').getUTCDay() + 6) % 7 })
+  }
+  const am = rides.filter(r => r.st < 540)
+  const wins = am.filter(r => r.off < 0)
+  const hist = Array(24).fill(0); rides.forEach(r => hist[Math.floor(r.st / 60)]++)
+  const wd = Array(7).fill(0); am.forEach(r => wd[r.wd]++)
+  const sum = (a, f) => a.reduce((t, r) => t + f(r), 0)
+  const n10 = Math.min(10, Math.floor(am.length / 2))
+  const first = median(am.slice(0, n10).map(r => r.off)), last = median(am.slice(-n10).map(r => r.off))
+  const today = d.today, tmr = addDays(today, 1), tmrRise = sunTimes(tmr)[0]
+  const months = new Set(d.acts.map(a => a[0].slice(0, 7))).size
+  return {
+    d, rides, am, wins, hist, wd, n10, first, last, months, today, tmr, tmrRise,
+    pr: { am: sum(am, r => r.pr), all: sum(rides, r => r.pr) }, el: { am: sum(am, r => r.el), all: sum(rides, r => r.el) },
+    km: { am: sum(am, r => r.km), all: sum(rides, r => r.km) },
+    sunRange: [Math.min(...rides.map(r => r.rise)), Math.max(...rides.map(r => r.rise))],
+    setRange: [Math.min(...rides.map(r => r.set)), Math.max(...rides.map(r => r.set))],
+    winter: wins.filter(r => [12, 1, 2].includes(+r.d.slice(5, 7))).length
+  }
+}
+
+/* ═══ 舞台：每張投影片一組天空顏色（由暗到亮），JS 在兩張之間補間 ═══ */
+const hex = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16))
+const mixC = (a, b, t) => '#' + hex(a).map((v, i) => Math.round(v + (hex(b)[i] - v) * t).toString(16).padStart(2, '0')).join('')
+const lerp = (a, b, t) => a + (b - a) * t
+//        天頂      中段      地平線     遠山      中山      近山      星  燈   光暈色     光暈 太陽色階 眼瞼
+const ST = [
+  ['#02040a', '#060b1e', '#10183a', '#0d1330', '#090e26', '#04060e', 1, .95, '#4a5cb0', .22, 0, 1],
+  ['#040817', '#0a1230', '#1b2552', '#101838', '#0b1129', '#05070f', .9, .9, '#5163b6', .25, .06, 1],
+  ['#071029', '#131d47', '#2f3a72', '#162044', '#0e1533', '#060810', .7, .8, '#6470c0', .3, .14, .85],
+  ['#0d1a44', '#232b5f', '#5d4f86', '#1d2650', '#121a3c', '#070a17', .45, .6, '#8a72b8', .4, .28, .6],
+  ['#14275c', '#3b3777', '#b8628a', '#2a2f63', '#1a2049', '#0a0e21', .2, .45, '#f0907a', .5, .42, .35],
+  ['#1f3f82', '#5e5a97', '#f0925c', '#4a4d86', '#33396e', '#141a3a', .05, .25, '#ffb070', .55, .6, .15],
+  ['#6ea2dc', '#a4c0e4', '#f7c283', '#8a9fca', '#6f88b8', '#4d6796', 0, .1, '#ffd08a', .55, .8, 0],
+  ['#79aee6', '#b8d6f0', '#fde9c6', '#a8c3e2', '#8fb0d6', '#6c93c0', 0, 0, '#ffe2a0', .6, 1, 0]
+]
+// 太陽（肖像）的三組色票：夜（月）→ 破曉 → 白天
+const PAL = {
+  night: { sk0: '#aab3cc', sk1: '#909bb8', sk2: '#7883a3', sk3: '#616c8d', sw0: '#8a4c40', sw1: '#74403a', sw2: '#5c322d', sw3: '#9c5c4c', ink0: '#0a0b12', ink1: '#262a3a', ink2: '#222634', hi: '#cfd5e2', disc: '#38446e', tick: '#8f9bd0' },
+  dawn: { sk0: '#e9c6b3', sk1: '#dea98f', sk2: '#c98f78', sk3: '#b17561', sw0: '#c95a3d', sw1: '#b04a30', sw2: '#8f3a24', sw3: '#dc7048', ink0: '#17110f', ink1: '#4a342c', ink2: '#3c332e', hi: '#f6e9de', disc: '#f0b07a', tick: '#ffd2a0' },
+  day: { sk0: '#f4d6bf', sk1: '#ebbea0', sk2: '#d9a584', sk3: '#c48a69', sw0: '#cc5b3a', sw1: '#b44b2c', sw2: '#923a21', sw3: '#e07248', ink0: '#17110f', ink1: '#4a342b', ink2: '#3c332e', hi: '#fbf0e4', disc: '#ffe19a', tick: '#fff0c4' }
+}
+const palAt = u => { const [a, b, t] = u < .5 ? [PAL.night, PAL.dawn, u * 2] : [PAL.dawn, PAL.day, (u - .5) * 2]; const o = {}; for (const k in a) o[k] = mixC(a[k], b[k], t); return o }
+
+const stage = {
+  x: 0, tween: null,
+  apply(x) {
+    const i = clamp(Math.floor(x), 0, ST.length - 2), t = clamp(x - i, 0, 1), A = ST[i], B = ST[i + 1]
+    const v = (k, n) => n <= 5 ? mixC(A[n], B[n], t) : lerp(A[n], B[n], t)
+    const st = root.style
+    st.setProperty('--sky-a', v(0, 0)); st.setProperty('--sky-b', v(0, 1)); st.setProperty('--sky-c', v(0, 2))
+    st.setProperty('--far', v(0, 3)); st.setProperty('--mid', v(0, 4)); st.setProperty('--near', v(0, 5))
+    st.setProperty('--stars', v(0, 6).toFixed(3)); st.setProperty('--lights', v(0, 7).toFixed(3))
+    st.setProperty('--glow', mixC(A[8], B[8], t)); st.setProperty('--ga', v(0, 9).toFixed(3))
+    const sunEl = $('#sun'), pal = palAt(v(0, 10))
+    for (const k in pal) sunEl.style.setProperty(k === 'tick' ? '--tick' : '--' + k, pal[k])
+    sunEl.style.setProperty('--lid', v(0, 11).toFixed(3))
+    $('meta[name=theme-color]').content = v(0, 0)
+  },
+  to(x, ms = 1500) {
+    cancelAnimationFrame(this.raf)
+    const x0 = this.x, t0 = performance.now()
+    if (reduce.matches || ms === 0) { this.x = x; this.apply(x); return }
+    const step = now => {
+      const k = clamp((now - t0) / ms, 0, 1), e = k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2
+      this.x = lerp(x0, x, e); this.apply(this.x)
+      if (k < 1) this.raf = requestAnimationFrame(step)
+    }
+    this.raf = requestAnimationFrame(step)
+  }
+}
+
+/* 稜線與城市燈火（程式畫，種子固定；101 在遠山線上） */
+function buildRidge() {
+  const svg = $('#ridge'); svg.textContent = ''
+  let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647
+  const layer = (cls, y0, amp, f, ph) => {
+    const pts = []
+    for (let x = 0; x <= 1600; x += 16) {
+      const y = y0 - amp * (.5 * Math.sin(x * f + ph) + .3 * Math.sin(x * f * 2.3 + ph * 1.7) + .2 * Math.sin(x * f * 5.1 + ph * .6) + .35)
+      pts.push([x, y])
+    }
+    let d = `M0 300L0 ${pts[0][1].toFixed(1)}`
+    for (let i = 1; i < pts.length; i++) { const [x, y] = pts[i], [px, py] = pts[i - 1]; d += `Q${px} ${py} ${((x + px) / 2).toFixed(1)} ${((y + py) / 2).toFixed(1)}` }
+    d += 'L1600 300Z'
+    return [S('path', { class: cls, d }), pts]
+  }
+  const [far, farPts] = layer('far', 176, 74, .0052, 1.3)
+  // 101：八節梯形＋尖頂，站在遠山線上
+  const bx = 1176, by = farPts[Math.round(bx / 16)][1] + 4, seg = []
+  let w = 15, y = by
+  for (let i = 0; i < 8; i++) { const h = 11, w2 = w * 1.09; seg.push(`M${bx - w / 2} ${y}L${bx - w2 / 2} ${y - h}L${bx + w2 / 2} ${y - h}L${bx + w / 2} ${y}Z`); y -= h; w = w2 }
+  seg.push(`M${bx - w / 2} ${y}L${bx - 5} ${y - 22}L${bx + 5} ${y - 22}L${bx + w / 2} ${y}Z`, `M${bx - 2} ${y - 22}L${bx} ${y - 46}L${bx + 2} ${y - 22}Z`)
+  const [mid] = layer('mid', 222, 44, .0091, 4.2)
+  const [near, nearPts] = layer('near', 262, 22, .0135, 2.1)
+  const lights = S('g', { class: 'lights' })
+  for (let i = 0; i < 90; i++) { const x = rnd() * 1600, yy = 236 + rnd() * 54; lights.append(S('circle', { cx: x.toFixed(0), cy: yy.toFixed(0), r: (.6 + rnd() * 1.1).toFixed(1), opacity: (.35 + rnd() * .55).toFixed(2) })) }
+  svg.append(far, S('path', { class: 'far', d: seg.join('') }), mid, lights, near)
+}
+function buildStars() {
+  const svg = $('#stars'); svg.textContent = ''; svg.setAttribute('viewBox', '0 0 1000 600')
+  let seed = 11; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647
+  for (let i = 0; i < 110; i++) { const c = S('circle', { cx: (rnd() * 1000).toFixed(0), cy: (rnd() * 420).toFixed(0), r: (.5 + rnd() * 1.1).toFixed(1), opacity: (.25 + rnd() * .7).toFixed(2) }); if (i % 9 === 0) { c.setAttribute('class', 'tw'); c.style.animationDelay = (rnd() * 4).toFixed(1) + 's' } svg.append(c) }
+}
+
+/* 肖像：把 assets/dawn/portrait.svg 的圖層放進圓盤，圓盤上緣以上不裁（頭髮探出去） */
+let sunSVG = null
+function buildSun(inner) {
+  const ticks = S('g', { class: 'ticks' })
+  for (let i = 0; i < 24; i++) { const a = i / 24 * Math.PI * 2, r0 = 398, r1 = i % 6 === 0 ? 426 : 412; ticks.append(S('line', { class: 'tick', x1: (450 + Math.sin(a) * r0).toFixed(1), y1: (522 - Math.cos(a) * r0).toFixed(1), x2: (450 + Math.sin(a) * r1).toFixed(1), y2: (522 - Math.cos(a) * r1).toFixed(1), 'stroke-width': i % 6 === 0 ? 5 : 3, opacity: i % 6 === 0 ? .9 : .5 })) }
+  const svg = S('svg', { viewBox: '0 0 900 900' })
+  svg.innerHTML = `<defs><clipPath id="sunClip"><rect x="-200" y="-200" width="1300" height="722"/><circle cx="450" cy="522" r="378"/></clipPath></defs>`
+  svg.append(ticks)
+  svg.insertAdjacentHTML('beforeend', `<circle cx="450" cy="522" r="378" fill="var(--disc,#ffe19a)"/><g clip-path="url(#sunClip)">${inner}</g>`)
+  $('#sunBox').replaceChildren(svg); sunSVG = svg
+}
+// 太陽的位置：圓盤圓心對到該張投影片的錨點（[data-sun]）
+const SUN_UNITS = { w: 900, cx: 450, cy: 522, d: 756 }
+function placeSun(slide, instant) {
+  const el = $('#sun'), a = $('[data-sun]', slide); if (!a) return
+  const r = a.getBoundingClientRect(); if (!r.width) return
+  const pose = a.dataset.pose
+  let d = Math.min(r.width, r.height), cx = r.left + r.width / 2, cy = r.top + r.height / 2
+  if (pose === 'cover') { d = r.width * .95; cy = r.bottom - d * .3; cx = r.left + r.width / 2 }   // 封面：剛從稜線後面升起，眼睛以上露出來（還睜不開）
+  const k = d / SUN_UNITS.d, boxW = SUN_UNITS.w * k
+  el.style.width = el.style.height = boxW + 'px'
+  if (instant) el.classList.add('no-tr')
+  el.style.transform = `translate(${(cx - SUN_UNITS.cx * k).toFixed(1)}px,${(cy - SUN_UNITS.cy * k).toFixed(1)}px)`
+  if (instant) requestAnimationFrame(() => requestAnimationFrame(() => el.classList.remove('no-tr')))
+}
+
+/* ═══ 圖表 ═══ */
+const ORANGE = '#ff8a45'
+function renderRing(D) {
+  const svg = $('#ring'), C = 350, r0 = 190, per = 2.3
+  svg.textContent = ''
+  const ang = h => (h - 12) / 24 * Math.PI * 2, pt = (r, h) => [C + r * Math.sin(ang(h)), C - r * Math.cos(ang(h))]
+  const arc = (ra, rb, h0, h1) => { const [x0, y0] = pt(rb, h0), [x1, y1] = pt(rb, h1), [x2, y2] = pt(ra, h1), [x3, y3] = pt(ra, h0), big = (h1 - h0) / 24 > .5 ? 1 : 0
+    return `M${x0.toFixed(1)} ${y0.toFixed(1)}A${rb} ${rb} 0 ${big} 1 ${x1.toFixed(1)} ${y1.toFixed(1)}L${x2.toFixed(1)} ${y2.toFixed(1)}A${ra} ${ra} 0 ${big} 0 ${x3.toFixed(1)} ${y3.toFixed(1)}Z` }
+  // 白天／夜晚外環：用這一年日出日落的平均
+  const rise = (D.sunRange[0] + D.sunRange[1]) / 2 / 60, set = (D.setRange[0] + D.setRange[1]) / 2 / 60
+  svg.append(S('path', { d: arc(324, 332, rise, set), fill: '#f6c56f', opacity: .85 }))
+  svg.append(S('path', { d: arc(324, 332, set, rise + 24), fill: '#33407a', opacity: .9 }))
+  // 日出日落的範圍（這一年裡最早到最晚）
+  svg.append(S('path', { d: arc(r0 - 22, r0 - 14, D.sunRange[0] / 60, D.sunRange[1] / 60), fill: '#ffd47a' }))
+  svg.append(S('path', { d: arc(r0 - 22, r0 - 14, D.setRange[0] / 60, D.setRange[1] / 60), fill: '#ffd47a', opacity: .5 }))
+  for (const h of [0, 6, 12, 18]) { const [x, y] = pt(352, h); svg.append(S('text', { class: 'lb2 n', x: x.toFixed(1), y: (y + 5).toFixed(1), 'text-anchor': 'middle', 'font-size': 15 }, String(h === 0 ? 24 : h))) }
+  const max = Math.max(...D.hist)
+  let k = 0
+  D.hist.forEach((n, h) => {
+    if (!n) return
+    const morning = h >= 4 && h < 9, len = Math.max(4, n * per)
+    const g = S('path', { class: 'bar', d: arc(r0, r0 + len, h + .07, h + .93), fill: morning ? ORANGE : '#8b9ad6', opacity: morning ? 1 : .8, style: `--k:${k++}` })
+    g.append(S('title', {}, `${String(h).padStart(2, '0')}:00–${String(h).padStart(2, '0')}:59　${n} 趟`))
+    svg.append(g)
+    if (n >= 8) { const [x, y] = pt(r0 + len + 15, h + .5); svg.append(S('text', { class: 'n', x: x.toFixed(1), y: (y + 7).toFixed(1), 'text-anchor': 'middle', 'font-size': 20, fill: morning ? ORANGE : '#c4ccf0' }, String(n))) }
+  })
+  const n6 = D.hist[6], n18 = D.hist[18]
+  svg.setAttribute('aria-label', `一天二十四小時，每小時的出發趟數。6 點 ${n6} 趟最多，18 點 ${n18} 趟居次。`)
+  $('#hourLede').innerHTML = `${D.rides.length} 趟戶外騎乘，<b>${n6} 趟從 6 點開始</b>，傍晚 6 點是第二名（${n18} 趟）。外圈金色是白天；內圈的金色短弧，是這些騎乘當天的日出時間（最早 ${hm(D.sunRange[0])}，最晚 ${hm(D.sunRange[1])}）——6 點的橘色，就緊貼在它後面。`
+}
+
+function skyRow(y, r, X, h, gid) {
+  // 一列天空：夜（黑）→ 曙光 → 天亮；再疊上我騎的那一段
+  const x = m => X(clamp(m, X.min, X.max)), g = S('g', { class: 'row' })
+  g.append(S('rect', { x: X(X.min), y, width: X(X.max) - X(X.min), height: h, fill: '#0c1232' }))
+  g.append(S('rect', { x: x(r.civil), y, width: Math.max(0, x(r.rise) - x(r.civil)), height: h, fill: `url(#${gid})` }))
+  g.append(S('rect', { x: x(r.rise), y, width: Math.max(0, X(X.max) - x(r.rise)), height: h, fill: `url(#${gid}d)` }))
+  const bx = x(r.st), bw = Math.max(1.5, x(r.end) - bx)
+  g.append(S('rect', { x: bx, y: y + h * .18, width: bw, height: h * .64, rx: 1, fill: r.off < 0 ? '#ff5a1f' : '#e8702c', stroke: '#0a0f28', 'stroke-width': .8 }))
+  if (r.off < 0) g.append(S('circle', { cx: bx, cy: y + h / 2, r: h * .62, fill: '#fff', opacity: .95 }))
+  return g
+}
+const gradDefs = id => S('defs', {}, S('linearGradient', { id, x1: 0, x2: 1, y1: 0, y2: 0 }, S('stop', { offset: 0, 'stop-color': '#2a2f6e' }), S('stop', { offset: .55, 'stop-color': '#d8735a' }), S('stop', { offset: 1, 'stop-color': '#f7c98a' })),
+  S('linearGradient', { id: id + 'd', x1: 0, x2: 1, y1: 0, y2: 0 }, S('stop', { offset: 0, 'stop-color': '#f7c98a' }), S('stop', { offset: .1, 'stop-color': '#c7b0bd' }), S('stop', { offset: .28, 'stop-color': '#8ea2dc' }), S('stop', { offset: 1, 'stop-color': '#7488d0' })))
+
+function renderStrips(D) {
+  const nw = NARROW.matches, svg = $('#strips'), am = D.am, W = nw ? 380 : 720, L = nw ? 52 : 74, R = 10, T = nw ? 24 : 30, ph = nw ? 6.2 : 8, h = nw ? 4.8 : 6.2
+  svg.textContent = ''; svg.setAttribute('viewBox', `0 0 ${W} ${T + am.length * ph + 8}`)
+  const t0 = 270, t1 = 660, X = m => L + (m - t0) / (t1 - t0) * (W - L - R); X.min = t0; X.max = t1
+  svg.append(gradDefs('tw'))
+  for (let m = 300; m <= 600; m += 60) {
+    svg.append(S('line', { class: 'ax', x1: X(m), x2: X(m), y1: T - 6, y2: T + am.length * ph, 'stroke-dasharray': '2 4' }))
+    svg.append(S('text', { class: 'lb n', x: X(m), y: T - 12, 'text-anchor': 'middle', 'font-size': nw ? 12 : 14 }, String(m / 60).padStart(2, '0') + (nw ? '' : ':00')))
+  }
+  let lastMonth = ''
+  am.forEach((r, i) => {
+    const y = T + i * ph, row = skyRow(y, r, X, h, 'tw'); row.style.setProperty('--k', i)
+    row.append(S('title', {}, `${r.d}（週${WD[r.wd]}）${hm(r.st)} 出發，日出 ${hm(r.rise)}，${r.off < 0 ? '早' : '晚'} ${Math.abs(Math.round(r.off))} 分　${r.km} km`))
+    svg.append(row)
+    const mo = r.d.slice(0, 7)
+    if (mo !== lastMonth && (+mo.slice(5) % 3 === 1 || i === 0)) svg.append(S('text', { class: 'lb n', x: L - 8, y: y + h - .5, 'text-anchor': 'end', 'font-size': nw ? 11 : 13 }, mo.replace('-', '.')))
+    lastMonth = mo
+  })
+  svg.setAttribute('aria-label', `${am.length} 個九點前出發的早晨，每一列是一天：底色是那天的天空（深藍是天黑，金色是天亮），橘條是我騎的時段。其中 ${D.wins.length} 天橘條在天亮之前開始。`)
+  const lose = am.length - D.wins.length
+  $('#raceH').innerHTML = `<span class="ph">九點前出門的</span> <span class="ph">${am.length} 個早晨，</span><span class="ph">太陽先到了</span> <span class="ph">${lose} 次。</span>`
+  $('#raceLede').innerHTML = `每一列是一個早晨。底色是那天的天空，橘條是我騎的那一段——橘條起點落在金色之前、還在黑的裡面，就是我先到。`
+  $('#score').innerHTML = `<div class="sn"><b>${lose}</b><small>太陽先到</small></div><span class="vs">比</span><div class="me"><b>${D.wins.length}</b><small>我先到</small></div>`
+}
+
+function renderTrend(D) {
+  const nw = NARROW.matches, svg = $('#trend'), am = D.am, W = nw ? 380 : 760, H = nw ? 400 : 460, L = nw ? 40 : 60, R = nw ? 12 : 24, T = 20, B = nw ? 36 : 44, fs = nw ? 12 : 14
+  svg.textContent = ''
+  const dmin = am[0].d, dmax = D.today, X = d => L + dayDiff(dmin, d) / dayDiff(dmin, dmax) * (W - L - R)
+  const y0 = -100, y1 = 260, Y = m => T + (m - y0) / (y1 - y0) * (H - T - B)
+  svg.append(S('rect', { x: L, y: T, width: W - L - R, height: Y(0) - T, fill: '#ffd47a', opacity: .1 }))
+  for (const m of [60, 120, 180, 240]) { svg.append(S('line', { class: 'ax', x1: L, x2: W - R, y1: Y(m), y2: Y(m), 'stroke-dasharray': '2 5' })); svg.append(S('text', { class: 'lb n', x: L - 8, y: Y(m) + 5, 'text-anchor': 'end', 'font-size': fs }, '+' + m)) }
+  svg.append(S('line', { x1: L, x2: W - R, y1: Y(0), y2: Y(0), stroke: '#ffd47a', 'stroke-width': 2 }))
+  svg.append(S('text', { class: 'lb2', x: L + 6, y: Y(0) - 9, fill: '#ffd47a', 'font-size': nw ? 12 : 13 }, '日出'))
+  svg.append(S('text', { class: 'lb', x: L + 6, y: Y(-100) + 18, 'font-size': nw ? 12 : 13 }, '日出前'))
+  svg.append(S('text', { class: 'lb', x: L - 4, y: Y(240) + 26, 'text-anchor': 'end', 'font-size': nw ? 11 : 12 }, '晚（分）'))
+  // 月份刻度
+  const seen = new Set()
+  am.forEach(r => { const mo = r.d.slice(0, 7); if (!seen.has(mo) && ['01', '04', '07', '10'].includes(mo.slice(5))) { seen.add(mo); svg.append(S('text', { class: 'lb n', x: X(mo + '-01'), y: H - 12, 'text-anchor': 'middle', 'font-size': nw ? 11 : 14 }, mo.replace('-', '.'))) } })
+  // 滾動中位數（前後各 4 趟）
+  const med = am.map((r, i) => [X(r.d), Y(median(am.slice(Math.max(0, i - 4), i + 5).map(q => q.off)))])
+  let d = `M${med[0][0]} ${med[0][1]}`; for (let i = 1; i < med.length; i++) { const [x, y] = med[i], [px, py] = med[i - 1]; d += `Q${px} ${py} ${((x + px) / 2).toFixed(1)} ${((y + py) / 2).toFixed(1)}` }
+  am.forEach((r, i) => {
+    const win = r.off < 0
+    const c = S('circle', { class: 'dot', cx: X(r.d).toFixed(1), cy: Y(r.off).toFixed(1), r: win ? (nw ? 5 : 6.5) : (nw ? 3.4 : 4.6), fill: win ? '#fff' : '#9fb0e6', opacity: win ? 1 : .75, stroke: win ? ORANGE : 'none', 'stroke-width': nw ? 2.4 : 3, style: `--k:${i}` })
+    c.append(S('title', {}, `${r.d}　${hm(r.st)} 出發，${r.off < 0 ? '比日出早' : '比日出晚'} ${Math.abs(Math.round(r.off))} 分`)); svg.append(c)
+  })
+  svg.append(S('path', { class: 'mline', d, pathLength: 1, fill: 'none', stroke: ORANGE, 'stroke-width': nw ? 3 : 4, 'stroke-linecap': 'round', opacity: .95 }))
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`)
+  svg.setAttribute('aria-label', `每個早晨出門時間比日出晚幾分鐘。最早的 ${D.n10} 個早晨中位數晚 ${Math.round(D.first)} 分，最近 ${D.n10} 個晚 ${Math.round(D.last)} 分。`)
+  $('#gapLede').innerHTML = `每個點是一個早晨，金色橫線是日出。點愈靠近橫線，代表我出門的時間愈貼近太陽。中間也有往回退的時候，但整體是往線靠。`
+  $('#gapNums').innerHTML = `<span class="a">${Math.round(D.first)}</span><span class="arr">→</span><span class="b">${Math.round(D.last)}</span><span class="u">分鐘。最早 ${D.n10} 個早晨 → 最近 ${D.n10} 個早晨，比日出晚多久（中位數）</span>`
+}
+
+function renderWins(D) {
+  const ol = $('#wins'); ol.textContent = ''
+  const X = m => 6 + (m - 270) / 390 * 388; X.min = 270; X.max = 660
+  D.wins.forEach((r, i) => {
+    const li = document.createElement('li'); li.style.setProperty('--k', i)
+    const svg = S('svg', { viewBox: '0 0 400 14', preserveAspectRatio: 'none' }); svg.append(gradDefs('tw' + i))
+    const g = skyRow(0, r, (m => 6 + (m - 270) / 390 * 388), 14, 'tw' + i); g.style.opacity = 1; g.classList.remove('row')
+    const fx = m => 6 + (clamp(m, 270, 660) - 270) / 390 * 388; fx.min = 270; fx.max = 660
+    const g2 = skyRow(0, r, fx, 14, 'tw' + i); g2.style.opacity = 1; svg.append(g2)
+    li.innerHTML = `<div class="dt">${r.d.replace(/-/g, '.')}<small>週${WD[r.wd]} · ${hm(r.st)} 出發</small></div><div class="mid"></div><div class="ahead">−${Math.abs(Math.round(r.off))}<small>比日出早（分）</small></div>`
+    $('.mid', li).append(svg); const p = document.createElement('p'); p.textContent = `${r.km} km　${r.name || '晨間騎乘'}`; $('.mid', li).append(p)
+    ol.append(li)
+  })
+  const n = D.wins.length, w = D.winter
+  $('#winsH').innerHTML = `<span class="ph">贏的那 ${n} 次，</span><span class="ph">有 ${w} 次在冬天。</span>`
+  const latest = Math.max(...D.rides.map(r => r.rise))
+  $('#winsLede').innerHTML = `十二月到二月，是日出最晚的幾個月，最晚到 <b>${hm(latest)}</b>。比太陽早出門，最多的一次早了 ${Math.abs(Math.round(Math.min(...D.wins.map(r => r.off))))} 分鐘。`
+}
+
+function renderGauges(D) {
+  const el = $('#gauges'); el.textContent = ''
+  const items = [
+    ['趟數', D.am.length / D.rides.length, `${D.am.length} / ${D.rides.length} 趟`],
+    ['爬升', D.el.am / D.el.all, `${fmt(D.el.am)} / ${fmt(D.el.all)} m`],
+    ['路段 PR', D.pr.am / D.pr.all, `${fmt(D.pr.am)} / ${fmt(D.pr.all)} 個`]
+  ]
+  items.forEach(([name, v, sub], i) => {
+    const r = 84, len = (v * 2 * Math.PI * r).toFixed(1), g = document.createElement('div'); g.className = 'gauge'; g.style.setProperty('--k', i)
+    g.innerHTML = `<svg viewBox="0 0 220 220" role="img" aria-label="${name}：早上佔 ${Math.round(v * 100)}%"><circle class="trk" cx="110" cy="110" r="${r}"/><circle class="prg" cx="110" cy="110" r="${r}" style="--len:${len}px"/><text class="big" x="110" y="128" text-anchor="middle">${Math.round(v * 100)}<tspan font-size="24" dy="-16" dx="2">%</tspan></text></svg><h3>${name}</h3><p>${sub}</p>`
+    el.append(g)
+  })
+  $('#shareLede').innerHTML = `九點前出發的騎乘，只佔 ${Math.round(D.am.length / D.rides.length * 100)}% 的趟數，卻拿了 <b>${Math.round(D.el.am / D.el.all * 100)}% 的爬升</b>和 ${Math.round(D.pr.am / D.pr.all * 100)}% 的 Strava 路段 PR。爬坡的腿，是早上的腿。`
+}
+
+function renderWeek(D) {
+  const nw = NARROW.matches, sp = nw ? 52 : 100, svg = $('#week'); svg.textContent = ''; svg.setAttribute('viewBox', `0 0 ${sp * 7} ${nw ? 210 : 300}`)
+  const cy = nw ? 80 : 130, max = Math.max(...D.wd), k = (nw ? 24 : 60) / Math.sqrt(max), top = new Set([...D.wd.keys()].sort((a, b) => D.wd[b] - D.wd[a]).slice(0, 2))
+  D.wd.forEach((n, i) => {
+    const x = sp / 2 + i * sp, r = Math.max(n ? (nw ? 4 : 6) : 2.5, Math.sqrt(n) * k)
+    const g = S('g', { class: 'b', style: `--k:${i}` })
+    g.append(S('circle', { cx: x, cy, r, fill: top.has(i) ? ORANGE : 'none', stroke: top.has(i) ? 'none' : 'currentColor', 'stroke-opacity': .55, 'stroke-width': 2 }))
+    if (n >= 5) g.append(S('text', { class: 'n', x, y: cy + (top.has(i) ? (nw ? 8 : 10) : (nw ? 6 : 8)), 'text-anchor': 'middle', 'font-size': top.has(i) ? (nw ? 22 : 30) : (nw ? 15 : 22), fill: top.has(i) ? '#1e0d04' : 'currentColor' }, String(n)))
+    svg.append(g)
+    svg.append(S('text', { x, y: nw ? 160 : 240, 'text-anchor': 'middle', 'font-size': nw ? 13 : 16, fill: 'currentColor', opacity: top.has(i) ? 1 : .75, 'font-weight': top.has(i) ? 700 : 400 }, '週' + WD[i]))
+    if (n < 5) svg.append(S('text', { class: 'n', x, y: nw ? 182 : 264, 'text-anchor': 'middle', 'font-size': nw ? 14 : 17, fill: 'currentColor', opacity: .7 }, String(n)))
+  })
+  const [a, b] = [...top].sort(), tot = D.wd.reduce((s, v) => s + v, 0), pct = Math.round((D.wd[a] + D.wd[b]) / tot * 100)
+  svg.setAttribute('aria-label', `九點前出發的 ${tot} 趟，依星期分布：${D.wd.map((n, i) => '週' + WD[i] + ' ' + n).join('、')}。`)
+  $('#weekH').innerHTML = `<span class="ph">週${WD[a]}和週${WD[b]}</span><span class="ph">的早晨，</span><span class="ph">佔了 ${pct}%。</span>`
+  const sun = D.wd[6]
+  $('#weekLede').innerHTML = `${D.wd[a]} 個週${WD[a]}、${D.wd[b]} 個週${WD[b]}，再加上 ${sun} 個週日。週間的早晨，我大概只有這兩天。`
+}
+
+function renderEnd(D) {
+  $('#sr').textContent = hm(D.tmrRise)
+  const gap = Math.round(D.last), est = D.tmrRise + gap
+  $('#endLede').innerHTML = `明天是 ${+D.tmr.slice(5, 7)} 月 ${+D.tmr.slice(8)} 日（週${WD[(new Date(D.tmr + 'T00:00:00Z').getUTCDay() + 6) % 7]}）。照最近 ${D.n10} 個早晨的習慣，我大約 <b>${hm(est)}</b> 出門，比太陽晚 ${gap} 分鐘。想贏它，要在日出之前上路。`
+  const host = $('#race'), svg = S('svg', { role: 'img' }); host.replaceChildren(svg)
+  const t0 = D.tmrRise - 40, t1 = est + 30, W = 560, X = m => 20 + (m - t0) / (t1 - t0) * (W - 40)
+  svg.setAttribute('viewBox', '0 0 560 92'); svg.setAttribute('aria-label', `明天日出 ${hm(D.tmrRise)}，照習慣我約 ${hm(est)} 出門，晚 ${gap} 分鐘。`)
+  svg.append(gradDefs('tw9'))
+  svg.append(S('rect', { x: 20, y: 34, width: X(D.tmrRise - 24) - 20, height: 14, fill: '#0c1232', opacity: .9 }))
+  svg.append(S('rect', { x: X(D.tmrRise - 24), y: 34, width: X(D.tmrRise) - X(D.tmrRise - 24), height: 14, fill: 'url(#tw9)' }))
+  svg.append(S('rect', { x: X(D.tmrRise), y: 34, width: W - 20 - X(D.tmrRise), height: 14, fill: 'url(#tw9d)' }))
+  svg.append(S('line', { x1: X(D.tmrRise), x2: X(est), y1: 68, y2: 68, stroke: 'currentColor', 'stroke-width': 1.5, opacity: .6 }))
+  svg.append(S('text', { class: 'n', x: (X(D.tmrRise) + X(est)) / 2, y: 86, 'text-anchor': 'middle', 'font-size': 16, fill: 'currentColor', opacity: .75 }, `${gap} 分`))
+  svg.append(S('circle', { cx: X(D.tmrRise), cy: 41, r: 9, fill: '#fff', stroke: '#ffb347', 'stroke-width': 3 }))
+  svg.append(S('text', { class: 'n', x: X(D.tmrRise), y: 22, 'text-anchor': 'middle', 'font-size': 16, fill: 'currentColor' }, '太陽 ' + hm(D.tmrRise)))
+  svg.append(S('circle', { cx: X(est), cy: 41, r: 9, fill: ORANGE, stroke: '#0d1a38', 'stroke-width': 2 }))
+  svg.append(S('text', { class: 'n', x: X(est), y: 22, 'text-anchor': 'middle', 'font-size': 16, fill: 'currentColor' }, '我 ' + hm(est)))
+  const rr = D.rides.length, d0 = D.rides[0].d
+  $('#how').innerHTML = `
+    <li>戶外騎乘＝有爬升的騎乘（室內與虛擬騎乘沒有），共 ${rr} 趟，${d0.slice(0, 7).replace('-', '.')} 起；早上＝九點前出發。</li>
+    <li>出發時間是活動的當地開始時間；日出、天亮（太陽在地平線下 6°）用 NOAA 太陽位置公式，台北 25.03°N、121.57°E。</li>
+    <li>「比日出晚」＝出發時間減當天日出時間；負數就是我先到。最早／最近各取 ${D.n10} 個早晨的中位數。</li>
+    <li>路段 PR 是 Strava 的紀錄，到 ${D.d.strava_through || D.today} 為止；明天的預估＝明天日出加上最近 ${D.n10} 個早晨的中位數。</li>
+    <li>資料每天由 GitHub Actions 更新，這頁每次打開都重算。</li>`
+  $('#coverSub').textContent = `${D.months} 個月、${D.rides.length} 趟戶外騎乘，一路在跟太陽比誰先出門。`
+}
+
+/* ═══ 投影片控制 ═══ */
+const slides = $$('.slide'), N = slides.length, keys = slides.map(s => s.dataset.key), titles = slides.map(s => s.dataset.title)
+let cur = Math.max(0, keys.indexOf(location.hash.slice(1))), auto = false, autoT = 0
+const pg = $('#pg')
+slides.forEach((s, i) => { const b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-label', `第 ${i + 1} 張：${titles[i]}`); b.title = titles[i]; b.innerHTML = '<i></i>'; b.addEventListener('click', () => go(i)); pg.append(b) })
+const dots = $$('button', pg)
+function sync() {
+  slides.forEach((s, i) => { const on = i === cur; s.classList.toggle('is-on', on); s.inert = !on; s.setAttribute('aria-hidden', String(!on)); s.setAttribute('aria-label', `第 ${i + 1} 張，共 ${N} 張：${titles[i]}`) })
+  dots.forEach((d, i) => d.setAttribute('aria-current', String(i === cur)))
+  $('#count').textContent = `${cur + 1} / ${N}`; $('#prev').disabled = cur === 0; $('#next').disabled = cur === N - 1
+  root.dataset.tone = slides[cur].dataset.tone
+  $('#live').textContent = `第 ${cur + 1} 張，${titles[cur]}`
+  history.replaceState(null, '', '#' + keys[cur])
+}
+function go(to, { instant = false } = {}) {
+  to = clamp(to, 0, N - 1); if (to === cur && !instant) return
+  cur = to; sync(); stage.to(cur, instant ? 0 : 1500); placeSun(slides[cur], instant)
+  if (auto) armAuto()
+}
+const next = () => go(cur + 1), prev = () => go(cur - 1)
+function armAuto() { clearTimeout(autoT); autoT = setTimeout(() => { if (cur < N - 1) go(cur + 1); else setAuto(false) }, 9000) }
+function setAuto(on) { auto = on; root.classList.toggle('auto', on); $('#auto').setAttribute('aria-pressed', String(on)); $('#auto').setAttribute('aria-label', on ? '停止自動放映' : '自動放映'); on ? (cur === N - 1 ? go(0) : armAuto()) : clearTimeout(autoT) }
+$('#auto').addEventListener('click', () => setAuto(!auto))
+document.addEventListener('visibilitychange', () => { if (document.hidden) clearTimeout(autoT); else if (auto) armAuto() })
+const fsBtn = $('#fs'); if (!document.fullscreenEnabled) fsBtn.hidden = true
+const toggleFs = () => { if (!document.fullscreenEnabled) return; document.fullscreenElement ? document.exitFullscreen() : root.requestFullscreen().catch(() => {}) }
+fsBtn.addEventListener('click', toggleFs)
+document.addEventListener('fullscreenchange', () => { fsBtn.setAttribute('aria-pressed', String(!!document.fullscreenElement)); requestAnimationFrame(() => placeSun(slides[cur], true)) })
+$('#next').addEventListener('click', next); $('#prev').addEventListener('click', prev)
+$$('[data-go]').forEach(b => b.addEventListener('click', () => go(+b.dataset.go)))
+addEventListener('keydown', e => {
+  if (e.altKey || e.ctrlKey || e.metaKey) return
+  const onCtl = e.target.closest && e.target.closest('a,button,input,textarea,select,summary')
+  switch (e.key) {
+    case 'ArrowRight': case 'ArrowDown': case 'PageDown': next(); break
+    case 'ArrowLeft': case 'ArrowUp': case 'PageUp': prev(); break
+    case ' ': if (onCtl) return; e.shiftKey ? prev() : next(); break
+    case 'Home': go(0); break
+    case 'End': go(N - 1); break
+    case 'f': case 'F': toggleFs(); break
+    case 'p': case 'P': setAuto(!auto); break
+    default: if (/^[1-9]$/.test(e.key) && +e.key <= N) go(+e.key - 1); else return
+  }
+  e.preventDefault()
+})
+const deck = $('#deck')
+let sx = 0, sy = 0, st = 0, sid = null, swiped = false
+deck.addEventListener('pointerdown', e => { if (e.pointerType === 'mouse') return; sx = e.clientX; sy = e.clientY; st = performance.now(); sid = e.pointerId; swiped = false })
+deck.addEventListener('pointerup', e => { if (e.pointerId !== sid) return; sid = null; const dx = e.clientX - sx, dy = e.clientY - sy; if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy) * 1.4 && performance.now() - st < 800) { swiped = true; dx < 0 ? next() : prev() } })
+deck.addEventListener('click', e => { if (swiped) { e.preventDefault(); e.stopPropagation(); swiped = false } }, true)
+let wLock = false, wAt = 0, wLast = 0
+deck.addEventListener('wheel', e => {
+  if (e.ctrlKey) return
+  const now = performance.now(), gap = now - wLast; wLast = now
+  if (wLock) { if (now - wAt > 900 && gap > 140) wLock = false; else return }
+  const dd = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX
+  if (Math.abs(dd) < 24) return
+  wLock = true; wAt = now; dd > 0 ? next() : prev()
+}, { passive: true })
+addEventListener('hashchange', () => { const i = keys.indexOf(location.hash.slice(1)); if (i >= 0 && i !== cur) go(i) })
+let rz = 0; addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => placeSun(slides[cur], true), 120) })
+
+/* ═══ 開場 ═══ */
+let DATA = null
+const redraw = () => { if (!DATA) return; renderStrips(DATA); renderTrend(DATA); renderWeek(DATA); placeSun(slides[cur], true) }
+NARROW.addEventListener('change', redraw)
+buildStars(); buildRidge()
+Promise.all([fetch('data/chronicle.json').then(r => r.json()), fetch('assets/dawn/portrait.svg').then(r => r.text())]).then(([d, svgText]) => {
+  const D = DATA = compute(d); window.__dawn = D
+  buildSun(svgText.replace(/<svg[^>]*>/, '').replace('</svg>', ''))
+  renderRing(D); renderStrips(D); renderTrend(D); renderWins(D); renderGauges(D); renderWeek(D); renderEnd(D)
+  go(cur, { instant: true })
+  document.fonts && document.fonts.ready.then(() => placeSun(slides[cur], true))
+  root.dataset.ready = '1'
+}).catch(err => {
+  console.error(err)
+  $('#coverSub').textContent = '資料讀不到——請從網站首頁開啟這一頁。'
+  go(cur, { instant: true }); root.dataset.ready = 'err'
+})
+window.__dawnGo = go
+})()
+</script>
+</body>
+</html>

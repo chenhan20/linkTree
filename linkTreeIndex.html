@@ -87,6 +87,8 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 .btn-icon{width:28px;height:28px;flex-shrink:0;border-radius:3px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(var(--br,127,119,221),.2);background:rgba(var(--br,127,119,221),.07);transition:transform .25s cubic-bezier(.34,1.56,.64,1),background .18s}
 .sp-btn:hover .btn-icon,.sp-btn:active .btn-icon{transform:scale(1.18) rotate(6deg);background:rgba(var(--br,127,119,221),.16)}
 .btn-icon svg{width:14px;height:14px}
+.btn-icon.av{border-radius:50%;background:none!important;border-color:transparent!important;overflow:visible}
+.btn-avatar{display:block;width:34px;height:34px;flex:none;filter:drop-shadow(0 0 8px rgba(255,150,70,.35))}
 .btn-label{flex:1}
 .btn-arrow{font-size:12px;color:var(--bc,#7F77DD);opacity:0;transform:translateX(-5px);transition:opacity .18s,transform .18s}
 .sp-btn:hover .btn-arrow,.sp-btn:active .btn-arrow{opacity:1;transform:none}
@@ -445,8 +447,9 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
             :style="{'--bc':'rgb('+link.rgb+')','--br':link.rgb,animationDelay:(0.28+i*0.07)+'s'}"
             @click="handleLink(link,$event)">
             <span class="btn-seq">{{ String(i+1).padStart(2,'0') }}</span>
-            <span class="btn-icon" :style="{borderColor:'rgba('+link.rgb+',.22)',background:'rgba('+link.rgb+',.07)'}">
-              <svg viewBox="0 0 24 24" :style="{fill:'rgb('+link.rgb+')'}"><path :d="link.icon"/></svg>
+            <span class="btn-icon" :class="{av:link.img}" :style="{borderColor:'rgba('+link.rgb+',.22)',background:'rgba('+link.rgb+',.07)'}">
+              <img v-if="link.img" class="btn-avatar" :src="link.img" alt="" width="32" height="32" loading="lazy" decoding="async">
+              <svg v-else viewBox="0 0 24 24" :style="{fill:'rgb('+link.rgb+')'}"><path :d="link.icon"/></svg>
             </span>
             <span class="btn-label">{{ link.label }}<span v-if="link.badge" class="btn-badge">{{ link.badge }}</span></span>
             <span class="btn-arrow">→</span>
@@ -569,6 +572,8 @@ createApp({
         icon:'M23.495 6.205a3.007 3.007 0 0 0-2.088-2.088c-1.87-.501-9.396-.501-9.396-.501s-7.507-.01-9.396.501A3.007 3.007 0 0 0 .527 6.205a31.247 31.247 0 0 0-.522 5.805 31.247 31.247 0 0 0 .522 5.783 3.007 3.007 0 0 0 2.088 2.088c1.868.502 9.396.502 9.396.502s7.506 0 9.396-.502a3.007 3.007 0 0 0 2.088-2.088 31.247 31.247 0 0 0 .5-5.783 31.247 31.247 0 0 0-.5-5.805zM9.609 15.601V8.408l6.264 3.602z' },
       { label:'Strava', url:'https://www.strava.com/athletes/161539959', rgb:'252,76,2',
         icon:'M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169' },
+      // 天還沒亮：用我自己的騎乘紀錄說的一個故事（幻燈片；每個數字現算自 data/chronicle.json）。圖示是我的臉，描成向量再截成小圖。
+      { label:'天還沒亮 · 跟太陽比誰先出門', url:'dawn.html', rgb:'255,138,69', badge:'NEW', img:'assets/dawn/sun-128.png' },
       // 現行主版本是 Taiwan Ride Cinema：一張帶車手電影 icon 與背景預覽的卡（這一列約七成的視覺重量）。
       // 四個歷代實驗版本收在 ARCHIVE 裡，預設收合、展開後是細小的灰色清單，不逐項寫「舊版」。
       { label:'STEVE · RIDE CINEMA', sub:'個人騎行資料與訓練控制台', rgb:'255,179,71',
