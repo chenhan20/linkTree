@@ -1379,3 +1379,177 @@ body[data-hub="today"] .cam-demo{display:flex}
 .td-hero.is-swapping .td-panel,.td-hero.is-swapping .td-hud,.td-hero.is-swapping .fx-dials.in-hero,.td-hero.is-swapping .td-sign{opacity:0}
 .td-hero.is-swapping .td-hud{--hud:0}
 @media (prefers-reduced-motion:reduce){.td-panel,.td-hud,.fx-dials.in-hero,.td-sign{transition:none}}
+
+/* ══ 距離最佳 · BEST EFFORTS ═══════════════════════════════════════════════
+   現況一塊（六列總表）、ITT 頂端一塊（選擇器＋前 10 名＋紀錄簿）、紀錄徽章（.dist-achv，吃 .pwr-achv 外殼）。
+   Glow-Is-State：金色／光暈／shimmer 只給 rank 1；2、3 名只換字色，其餘不亮。
+   窄體（--f-num）只給 ≥26px 的時間；中文一律 ≥12px。 */
+.td-distbest{margin-top:26px}
+.db-cov{font-size:12.5px;letter-spacing:.6px;color:var(--ink-3);font-variant-numeric:tabular-nums;white-space:nowrap}
+.db-sub{margin:0 0 14px;max-width:78ch;font-size:13.5px;line-height:1.7;color:var(--ink-3)}
+
+/* 最新一趟：rank 1 走這頁既有的 PR 語彙（橘框、金字、光暈、shimmer），其餘只是普通框 */
+.db-latest{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin:0 0 16px;font-size:13.5px;color:var(--ink-2)}
+.db-latest>i{font-style:normal;font-size:13px;font-weight:700;letter-spacing:.6px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.db-pod{position:relative;overflow:hidden;display:inline-flex;align-items:baseline;gap:8px;padding:5px 12px 6px;border:1px solid var(--hair-2);border-radius:8px;background:rgba(var(--cn-bg-rgb),.6)}
+.db-pod small{font-size:13px;font-weight:700;color:var(--ink-2)}
+.db-pod b{font-family:var(--f-num);font-size:26px;font-weight:800;line-height:1;letter-spacing:-.3px;color:var(--ink-1);font-variant-numeric:tabular-nums}
+.db-pod>span{font-size:13.5px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.db-pod.r2,.db-pod.r3{border-color:rgba(var(--amber-rgb),.35)}
+.db-pod.r2 b{color:#dfe6f2}
+.db-pod.r3 b{color:#d8a878}
+.db-pod.r1{border-color:rgba(252,76,2,.55);background:linear-gradient(90deg,rgba(252,76,2,.14),rgba(255,208,90,.05) 45%,rgba(252,76,2,.03))}
+.db-pod.r1 b{color:#ffd05a;text-shadow:0 0 12px rgba(255,208,90,.45)}
+.db-pod.r1>span{color:rgba(255,208,90,.82)}
+/* 只掃三趟就停：跟 .pwr-achv.pr 同一支 keyframes，但閒置時沒有任何東西在跑 */
+.db-pod.r1::after,.db-tr.r1.is-new::after{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(105deg,transparent 38%,rgba(255,208,90,.16) 50%,transparent 62%);
+  transform:translateX(-120%);animation:pa-sweep 4.2s ease-in-out 1.2s 3;
+}
+/* 紀錄徽章借用 .pwr-achv.pr 的無限 shimmer；距離這顆同樣只掃三趟（功率／ITT 那兩顆維持原樣，不動） */
+.dist-achv.pr::after{animation-iteration-count:3}
+@media (prefers-reduced-motion:reduce){.db-pod.r1::after,.db-tr.r1.is-new::after{animation:none}}
+body[data-fx="quiet"] .db-pod.r1::after,body[data-fx="quiet"] .db-tr.r1.is-new::after,body[data-fx="quiet"] .dist-achv.pr::after{animation:none}
+
+/* 共用的格子 */
+.db-dt{font-size:13.5px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.db-sp{font-size:15px;font-weight:600;color:var(--ink-1);font-variant-numeric:tabular-nums}
+.db-sp small{font-size:12px;font-weight:600;color:var(--ink-3);margin-left:3px}
+.db-dr{font-size:13.5px;color:var(--ink-3);white-space:nowrap}
+.db-dr.hi{color:var(--amber);font-weight:700}
+.db-dr.nil{opacity:.45}
+.db-notes{margin-top:10px}
+.db-notes p{margin:0 0 4px;font-size:12.5px;line-height:1.65;color:var(--ink-3)}
+
+/* 現況：六列總表。整列是按鈕（點了帶著距離跳到 ITT），所以跟 .row 一樣往兩側各出 8px */
+.db-th,.db-row{display:grid;grid-template-columns:72px 128px 108px 122px 104px minmax(0,1fr) 20px;column-gap:14px;align-items:baseline}
+.db-th{margin:0 -8px;padding:0 8px 7px;font-size:12px;letter-spacing:.6px;color:var(--ink-3)}
+.db-rows{border-top:1px solid var(--hair)}
+.db-row{
+  width:calc(100% + 16px);margin:0 -8px;padding:10px 8px;border:0;border-bottom:1px solid var(--hair);
+  background:transparent;font-family:inherit;color:var(--ink-2);text-align:left;cursor:pointer;
+  transition:background .13s;-webkit-tap-highlight-color:transparent;
+}
+.db-row:hover{background:rgba(255,255,255,.03)}
+.db-row:focus-visible{outline:1px solid rgba(var(--amber-rgb),.7);outline-offset:-1px}
+.db-meta{display:contents}
+.db-row .db-km{font-size:15px;font-weight:700;color:var(--ink-1)}
+.db-row .db-tm{font-family:var(--f-num);font-size:26px;font-weight:800;line-height:1;letter-spacing:-.3px;color:var(--ink-1);font-variant-numeric:tabular-nums}
+.db-row.is-pr .db-tm{color:#ffd05a;text-shadow:0 0 12px rgba(255,208,90,.4)}
+.db-lt{font-size:13.5px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.db-lt i{font-style:normal;font-size:15px;font-weight:600;color:var(--ink-2);margin-right:8px}
+.db-lt.r1,.db-lt.r1 i{color:#ffd05a;font-weight:700}
+.db-lt.r1{text-shadow:0 0 9px rgba(255,208,90,.4)}
+.db-lt.r2,.db-lt.r2 i{color:#dfe6f2;font-weight:700}
+.db-lt.r3,.db-lt.r3 i{color:#d8a878;font-weight:700}
+.db-go{font-size:13px;color:var(--ink-3);text-align:right;transition:color .13s}
+.db-row:hover .db-go{color:var(--amber)}
+
+/* ITT：距離選擇器（跟 .rt-i 同一套邊框語彙） */
+.db-full{margin-bottom:30px}
+.db-sel{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin:0 0 10px}
+.db-k{
+  display:flex;flex-direction:column;gap:2px;padding:9px 12px 8px;min-width:0;
+  border:1px solid var(--hair);border-radius:10px;background:rgba(var(--cn-bg-rgb),.64);
+  font-family:inherit;color:var(--ink-2);text-align:left;cursor:pointer;
+  transition:border-color .15s,background .15s;-webkit-tap-highlight-color:transparent;
+}
+.db-k:hover{border-color:var(--hair-2)}
+.db-k:focus-visible{outline:1px solid rgba(var(--amber-rgb),.7);outline-offset:1px}
+.db-k b{font-size:15px;font-weight:700;color:var(--ink-1)}
+.db-k i{font-style:normal;font-size:13px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.db-k[aria-selected="true"]{border-color:rgba(var(--amber-rgb),.6);background:rgba(var(--amber-rgb),.09)}
+.db-k[aria-selected="true"] i{color:var(--amber)}
+/* ITT 預設收合：一行摘要＋展開鈕（前 10 名與紀錄簿在 .db-body[hidden]）。1440 寬收合高度目標 ≤ 200px */
+.db-sum{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;padding:9px 0 0;border-top:1px solid var(--hair)}
+.db-sum-main{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 24px;flex:1 1 auto;min-width:0}
+.db-sm-tm{font-family:var(--f-num);font-size:26px;font-weight:800;line-height:1;letter-spacing:-.3px;color:var(--ink-1);font-variant-numeric:tabular-nums}
+.db-sum.is-pr .db-sm-tm{color:#ffd05a;text-shadow:0 0 12px rgba(255,208,90,.4)}
+.db-si{display:inline-flex;align-items:baseline;gap:6px;font-size:14px;color:var(--ink-2)}
+.db-si i{font-style:normal;font-size:12.5px;color:var(--ink-3)}
+.db-si b{font-size:15px;font-weight:600;color:var(--ink-1);font-variant-numeric:tabular-nums}
+.db-si small{font-size:12px;color:var(--ink-3);margin-left:-2px}
+.db-si .db-dr{font-size:15px;font-weight:600}
+.db-si .db-dr.hi{font-weight:700}
+.db-sum .db-lt em{font-style:normal;font-size:15px;font-weight:600;color:var(--ink-2);margin-right:8px}
+.db-sum .db-lt.r1,.db-sum .db-lt.r1 em{color:#ffd05a;font-weight:700}
+.db-sum .db-lt.r2,.db-sum .db-lt.r2 em{color:#dfe6f2;font-weight:700}
+.db-sum .db-lt.r3,.db-sum .db-lt.r3 em{color:#d8a878;font-weight:700}
+.db-tog{
+  margin-left:auto;display:inline-flex;align-items:center;gap:9px;padding:7px 14px;
+  border:1px solid var(--hair-2);border-radius:8px;background:rgba(var(--cn-bg-rgb),.64);
+  font-family:inherit;font-size:13.5px;font-weight:600;color:var(--ink-1);cursor:pointer;
+  transition:border-color .15s,background .15s;-webkit-tap-highlight-color:transparent;
+}
+.db-tog::after{content:'';width:7px;height:7px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(45deg) translateY(-2px);transition:transform .15s}
+.db-tog[aria-expanded="true"]::after{transform:rotate(-135deg) translate(-1px,-1px)}
+.db-tog:hover{border-color:rgba(var(--amber-rgb),.5);background:rgba(var(--amber-rgb),.06)}
+.db-tog:focus-visible{outline:1px solid rgba(var(--amber-rgb),.7);outline-offset:1px}
+.db-body{padding-top:16px}
+@media (prefers-reduced-motion:reduce){.db-tog,.db-tog::after{transition:none}}
+.db-cap{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;margin:0 0 8px;font-size:13.5px;color:var(--ink-3)}
+.db-cap b{font-size:15px;color:var(--ink-1)}
+
+/* ITT：前 10 名 */
+.db-th-t,.db-tr{display:grid;grid-template-columns:44px 156px 104px 150px 160px 96px minmax(0,1fr);column-gap:14px;align-items:baseline}
+.db-th-t{margin:0 -8px;padding:0 8px 7px;font-size:12px;letter-spacing:.6px;color:var(--ink-3)}
+.db-trs{border-top:1px solid var(--hair)}
+.db-tr{position:relative;overflow:hidden;margin:0 -8px;padding:10px 8px;border-bottom:1px solid var(--hair)}
+.db-x{display:contents}
+.db-rk{font-size:15px;font-weight:700;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.db-tr .db-tm{display:flex;align-items:baseline;gap:8px;min-width:0}
+.db-tr .db-tm b{font-family:var(--f-num);font-size:26px;font-weight:800;line-height:1;letter-spacing:-.3px;color:var(--ink-1);font-variant-numeric:tabular-nums}
+.db-pw,.db-el{font-size:13.5px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.db-lnk{color:var(--ink-1);text-decoration:none;border-bottom:1px solid rgba(var(--amber-rgb),.4);transition:color .13s,border-color .13s}
+.db-lnk:hover{color:var(--amber);border-bottom-color:var(--amber)}
+.db-lnk:focus-visible{outline:1px solid rgba(var(--amber-rgb),.7);outline-offset:2px;border-radius:2px}
+.db-new{font-style:normal;font-size:12px;font-weight:700;letter-spacing:.6px;padding:1px 7px 2px;border-radius:4px;border:1px solid rgba(var(--amber-rgb),.55);color:var(--amber)}
+.db-tr.is-new{background:linear-gradient(90deg,rgba(var(--amber-rgb),.08),transparent 70%)}
+.db-tr.r1 .db-rk,.db-tr.r1 .db-tm b{color:#ffd05a;text-shadow:0 0 12px rgba(255,208,90,.4)}
+.db-tr.r2 .db-rk,.db-tr.r2 .db-tm b{color:#dfe6f2}
+.db-tr.r3 .db-rk,.db-tr.r3 .db-tm b{color:#d8a878}
+
+/* ITT：紀錄簿（依時間刷新紀錄的每一筆；最後一格＝現在的紀錄，所以是唯一亮的） */
+.db-hist{display:flex;flex-wrap:wrap;align-items:flex-start;gap:10px 12px;margin:18px 0 0;padding-top:14px;border-top:1px solid var(--hair)}
+.db-hk{font-size:13px;font-weight:700;letter-spacing:.6px;color:var(--ink-3);padding-top:2px}
+.db-hs{display:flex;flex-direction:column;gap:1px}
+.db-hs b{font-size:17px;font-weight:700;color:var(--ink-1);font-variant-numeric:tabular-nums}
+.db-hs i{font-style:normal;font-size:12px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.db-hs .db-dr{font-size:12px}
+.db-hs.last b{color:#ffd05a;text-shadow:0 0 10px rgba(255,208,90,.4)}
+.db-ar{font-size:14px;color:var(--ink-3);padding-top:2px}
+
+/* 紀錄：徽章外殼是 .pwr-achv（見內嵌樣式），只把字級撐到 ≥12px 並補「跟車」 */
+.dist-achv .pa-head{font-size:11px}
+.dist-achv .pa-head .pa-zh{font-size:12.5px}
+.dist-achv .pa-chips{gap:6px}
+.dist-achv .pa-chip{font-size:12px;gap:0 6px;align-items:baseline;flex-wrap:wrap;max-width:100%}   /* 窄螢幕讓「跟車」掉到下一行，不要撐出去 */
+.dist-achv .pa-chip i{font-size:12px;letter-spacing:0;color:var(--ink-3)}
+.dist-achv .pa-chip b{font-size:14px}
+.dist-achv .pa-chip u{font-size:12px;letter-spacing:0;color:var(--ink-3)}
+.dist-achv .pa-chip em{font-style:normal;font-size:12px;color:var(--ink-3)}
+.dist-achv .pa-chip em.hi{color:var(--amber);font-weight:700}
+.dist-achv .pa-chip.r1 i{color:rgba(252,76,2,.85)}
+
+@media(max-width:767px){
+  .db-th,.db-th-t{display:none}
+  .db-row{grid-template-columns:56px minmax(0,1fr) auto;column-gap:10px;row-gap:3px}
+  .db-row .db-km{grid-area:1/1}
+  .db-row .db-tm{grid-area:1/2}
+  .db-row .db-lt{grid-area:1/3;text-align:right}
+  .db-row .db-meta{grid-area:2/2/3/4;display:flex;flex-wrap:wrap;gap:2px 12px}
+  .db-row .db-go{display:none}
+  .db-tr{grid-template-columns:28px minmax(0,1fr) auto;grid-template-areas:"rk tm sp" "rk dt fd" "rk x x";column-gap:10px;row-gap:3px}
+  .db-tr .db-rk{grid-area:rk}
+  .db-tr .db-tm{grid-area:tm}
+  .db-tr .db-sp{grid-area:sp;text-align:right}
+  .db-tr .db-dt{grid-area:dt}
+  .db-tr .db-fd{grid-area:fd;text-align:right}
+  .db-tr .db-x{grid-area:x;display:flex;flex-wrap:wrap;gap:2px 12px}
+}
+@media(max-width:560px){
+  .db-sel{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .db-tog{margin-left:0;width:100%;justify-content:center}
+  .db-pod{flex-wrap:wrap}
+}

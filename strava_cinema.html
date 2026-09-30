@@ -2591,7 +2591,7 @@ button.ov-cell:focus-visible{outline:1px solid rgba(252,76,2,.6);outline-offset:
 .pa-chip.r2 b{color:#dfe6f2}
 .pa-chip.r3 b{color:#d8a878}
 /* day header marker so a PR day is findable while scrolling */
-.td-pr{
+.td-pr,.td-dpr{
   display:inline-flex;align-items:center;gap:4px;margin-left:8px;
   padding:1px 7px 2px;border-radius:3px;font-size:9px;letter-spacing:1.5px;
   border:1px solid rgba(252,76,2,.45);background:rgba(252,76,2,.12);color:#ffd05a;
@@ -3100,7 +3100,7 @@ button.ov-cell:focus-visible{outline:1px solid rgba(252,76,2,.6);outline-offset:
   .at-read{right:8px;top:8px;min-width:0;padding:7px 9px}
 }
 </style>
-<link rel="stylesheet" href="theme-strava-cinema.css?v=20260907">
+<link rel="stylesheet" href="theme-strava-cinema.css?v=20260930b">
 </head>
 <body>
 
@@ -6082,11 +6082,17 @@ function renderTimeline(list, type, expanded, pwrAchv, ittAllByAct) {
   const visible = hasMore ? groups.slice(0, LIMIT) : groups
 
   const achvOf = a => (pwrAchv && a && a.id) ? pwrAchv[String(a.id)] : null
+  // 距離最佳（Best efforts）：這一趟在任一距離排前三的名單。同一天最多一顆章（td-dpr），
+  // 跟功率的 td-pr 分開，因為 decorateLog 用 .td-pr 判斷「功率 PR」。
+  const distOf = (a, acts) => ((isAll ? (a._type || 'ride') : type) === 'ride')
+    ? distAchvOf(a, acts.filter(x => (isAll ? (x._type || 'ride') : type) === 'ride').length) : null
 
   const html = visible.map(([date, acts]) => `
     <div class="timeline-day" id="act-${date}">
       <div class="timeline-date">${fmtDate(date)}${
         acts.some(a => (achvOf(a) || []).some(x => x.rank === 1)) ? '<span class="td-pr">🏆 功率 PR</span>' : ''
+      }${
+        acts.some(a => (distOf(a, acts) || []).some(x => x.rank === 1)) ? '<span class="td-dpr">🏆 距離 PR</span>' : ''
       }</div>
       ${acts.map(a => {
         const aType    = isAll ? (a._type || 'ride') : type
@@ -6121,6 +6127,7 @@ function renderTimeline(list, type, expanded, pwrAchv, ittAllByAct) {
         const route3dBtn = (aIsRide && a.id && a.route_stream && a.route_stream.length > 1)
           ? `<button class="r3d-trigger-btn" onclick="openRoute3D(${a.id})" title="3D 路線回放">🛰️ 3D</button>` : ''
         const pwrBadge = aIsRide ? powerAchvHTML(achvOf(a)) : ''
+        const distBadge = aIsRide ? distAchvHTML(distOf(a, acts)) : ''
         /* ITT 成就列：一趟「劍中中中中劍」會刷掉三十幾個重疊路段（母路線 + 上半 + 四等分 …），
            全部攤在活動列裡會把那一天洗成一面牆。門檻抄 Strava 活動頁的「最佳結果」——
            只有全時前三（外加一個較弱的「今年最佳」）會浮出來，其餘收進抽屜鈕。
@@ -6146,6 +6153,7 @@ function renderTimeline(list, type, expanded, pwrAchv, ittAllByAct) {
             ${powerHtml}
             ${lapHtml}
             ${pwrBadge}
+            ${distBadge}
             ${ittBadges}
           </div>
           <div class="ac-n ac-time">${fmtDur(a.moving_time_hr || 0)}</div>
@@ -6732,6 +6740,10 @@ function render(data) {
     </div>` : ''
   })()
 
+  // 距離最佳（data/distance-prs.json，選配）：缺檔或排版出錯 → 空字串 → 兩處都不出現
+  const distBestHtml = window._distPrs ? dbSafe(() => distBestOverviewHTML(window._distPrs)) : ''
+  const distFullHtml = window._distPrs ? dbSafe(() => distBestFullHTML(window._distPrs)) : ''
+
   // ══ 組裝五個 View ══════════════════════════════════════════════════
   const viewH = (zh, en, right) =>
     `<div class="view-h"><b>${zh}</b><i>${en}</i>${right ? `<span>${right}</span>` : ''}</div>`
@@ -6744,6 +6756,7 @@ function render(data) {
       <div id="recap-slot"></div>
       <div id="rdy-mobile"></div>
       <div class="block">${seasonHtml}</div>
+      ${distBestHtml}
       ${tasksHtml}
       ${renderRhythmCalendar(data)}
       ${blockHtml}
@@ -6767,7 +6780,7 @@ function render(data) {
     </section>
 
     <section class="view" data-view="itt">
-      ${(sHtml => viewH('ITT 區間', 'Individual time trial', window.__ittCount || '歷來最佳') + (sHtml || '<div class="nil">尚無路段成績。</div>'))(renderSegments(data.segments))}
+      ${(sHtml => viewH('ITT 區間', 'Individual time trial', window.__ittCount || '歷來最佳') + distFullHtml + (sHtml || '<div class="nil">尚無路段成績。</div>'))(renderSegments(data.segments))}
     </section>
 
     <section class="view" data-view="playbook">
@@ -8340,6 +8353,235 @@ function ittMoreHTML(date, dayList, shownRows) {
   return `<button class="lap-toggle itt-more" type="button" data-ittday="${date}">
       ${shown.size ? '另外 ' : ''}${rest.length} 次路段挑戰${bestRank < 9999 ? ` · 最佳第 ${bestRank} 名` : ''} →
     </button>`
+}
+/* ══ 距離最佳 · BEST EFFORTS ═══════════════════════════════════════════
+   「一趟裡任意連續 N 公里最快多久」（Strava 的 Best Efforts 那一類）。資料是 data/distance-prs.json，
+   這裡只讀不算；欄位定義在那支檔的 method。三個落點：
+     現況 overview：六個距離的總表＋最新一趟的名次（distBestOverviewHTML）
+     ITT：距離選擇器＋前 10 名＋紀錄簿（distBestFullHTML／distSelect）
+     紀錄 log：每趟戶外騎乘排進前三就掛徽章（distAchvOf／distAchvHTML）
+   幾條不能弄丟的規矩：
+   ．只收頭尾淨海拔差 ±3 m／km 內的平路窗，時間是經過時間；只算有 GPS 的戶外騎乘。
+   ．資料只從 coverage.from 起，畫面上一律寫「2025-08-12 起」，不寫「歷年」。
+   ．他的最快窗幾乎都是團騎（跟車 42–92%），draft_pct 不顯示的話團騎的 20 km 會跟單騎的並排。
+   ．光暈／shimmer 只給 rank 1（Glow-Is-State）。
+   ．整個功能是選配：fetch 在 Promise.all 最後、缺檔或壞檔 → window._distPrs 是 null → 三處全部靜默消失。 */
+const dbEsc = v => String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+const dbMD = d => (d || '').slice(5).replace('-', '/')
+const dbSpd = v => (v == null || !isFinite(v)) ? '—' : (+v).toFixed(1)
+const dbNet = n => (n == null || !isFinite(n)) ? '—' : n < 0 ? `−${Math.abs(n)}` : n > 0 ? `+${n}` : '0'
+function dbHM(s) { const m = /^(\d{1,2}):(\d{2})/.exec(s || ''); return m ? (+m[1]) * 60 + (+m[2]) : null }
+/* 通過才算有資料：至少一個距離有榜單。壞形狀一律當作沒有這支檔。 */
+function dbValid(dp) {
+  if (!dp || !Array.isArray(dp.distances)) return null
+  const ds = dp.distances.filter(d => d && d.km > 0 && Array.isArray(d.top) && d.top.length && d.top[0] && d.top[0].elapsed_str)
+  return ds.length ? Object.assign({}, dp, { distances: ds }) : null
+}
+/* 排版函式的例外一律吞掉：這是選配功能，不能因為它讓整頁掛成「載入失敗」。 */
+function dbSafe(fn) { try { return fn() || '' } catch (e) { window.__distErr = e; return '' } }
+const dbCov = dp => { const c = dp.coverage || {}; return c.from ? `${dbEsc(c.from)} 起${c.rides ? ` · ${c.rides} 趟戶外` : ''}` : '' }
+const dbSub = dp => {
+  const c = dp.coverage || {}
+  return `任意連續 N 公里跑得最快的一段，只收頭尾淨海拔差 ±${c.level_rule_m_per_km != null ? c.level_rule_m_per_km : 3} m／km 的平路窗，下坡衝刺不算。`
+}
+const DB_DRAFT_NOTE = '跟車＝窗內平路時段功率明顯低於單騎所需的比例。'
+function dbDraft(pct) {
+  if (pct == null || !isFinite(pct)) return ''
+  return `<span class="db-dr${pct >= 50 ? ' hi' : ''}">跟車 ${Math.round(pct)}%</span>`
+}
+const dbRawTxt = d => {
+  const r = d.raw_best
+  if (!r || !r.elapsed_str) return ''
+  const n = r.elev_net_m
+  return `${d.km} km ${dbEsc(r.elapsed_str)}${n != null ? `（${n < 0 ? '淨降' : '淨升'} ${Math.abs(n)} m）` : ''}`
+}
+
+/* ── 現況：六列總表 ── */
+function distBestOverviewHTML(dp) {
+  const ds = dp.distances, c = dp.coverage || {}, lr = dp.latest_ride
+  const pod = (lr && Array.isArray(lr.podium) ? lr.podium : []).filter(p => p && p.rank > 0 && p.elapsed_str)
+    .slice().sort((a, b) => a.rank - b.rank || b.km - a.km)
+  const podHtml = pod.length
+    ? `<p class="db-latest"><i>最新 ${dbMD(lr.date)}</i>${pod.map((p, i) =>
+        `<span class="db-pod${p.rank <= 3 ? ' r' + p.rank : ''}"><small>${p.km} km</small><b>${dbEsc(p.elapsed_str)}</b><span>${i === 0 && c.from ? dbEsc(c.from) + ' 起' : ''}第 ${p.rank}／${p.of}</span></span>`).join('')}</p>`
+    : ''
+  const rows = ds.map(d => {
+    const b = d.best || d.top[0], lt = d.latest
+    const ltCls = lt && lt.rank <= 3 ? ' r' + lt.rank : ''
+    return `<button class="db-row${lt && lt.is_pr ? ' is-pr' : ''}" type="button" data-distkm="${d.km}" title="看 ${d.km} km 的前 10 名">
+      <span class="db-km">${d.km} km</span>
+      <span class="db-tm">${dbEsc(b.elapsed_str)}</span>
+      <span class="db-meta">
+        <span class="db-sp">${dbSpd(b.avg_kmh)}<small>km/h</small></span>
+        <span class="db-dt">${dbEsc(b.date)}</span>
+        <span class="db-fd">${dbDraft(b.draft_pct)}</span>
+      </span>
+      <span class="db-lt${ltCls}">${lt ? `<i>${dbEsc(lt.elapsed_str)}</i>第 ${lt.rank}／${lt.of}` : '—'}</span>
+      <span class="db-go" aria-hidden="true">→</span>
+    </button>`
+  }).join('')
+  const raws = ds.map(dbRawTxt).filter(Boolean)
+  return `<div class="block td-distbest" data-anchor="dist">
+    <div class="section-title">距離最佳 <span class="muted">· BEST EFFORTS</span><span class="section-title-text"></span><span class="db-cov">${dbCov(dp)}</span></div>
+    <p class="db-sub">${dbSub(dp)}</p>
+    ${podHtml}
+    <div class="db-th" aria-hidden="true"><span>距離</span><span>最佳時間</span><span>均速</span><span>日期</span><span>跟車</span><span>最新一趟</span><span></span></div>
+    <div class="db-rows">${rows}</div>
+    <div class="db-notes">
+      ${raws.length ? `<p>含下坡的原始最快：${raws.join(' · ')}。</p>` : ''}
+      <p>${DB_DRAFT_NOTE}</p>
+    </div>
+  </div>`
+}
+
+/* ── ITT：距離選擇器＋前 10 名＋紀錄簿 ── */
+function distBodyHTML(d, dp) {
+  const lrDate = dp.latest_ride && dp.latest_ride.date
+  const top = d.top.slice(0, 10)
+  const rows = top.map(t => {
+    const isNew = !!lrDate && t.date === lrDate
+    const pw = [t.avg_w != null ? `${t.avg_w} W` : '', t.avg_hr != null ? `${t.avg_hr} bpm` : ''].filter(Boolean).join(' · ') || '—'
+    const el = `${t.elev_gain_m != null ? `↑${t.elev_gain_m} m` : '↑—'} · 淨 ${dbNet(t.elev_net_m)} m`
+    const rep = typeof t.report === 'string' && /^rides\/[\w.-]+\.html$/.test(t.report) ? t.report : null
+    return `<div class="db-tr r${t.rank <= 3 ? t.rank : 0}${isNew ? ' is-new' : ''}">
+      <span class="db-rk">${t.rank}</span>
+      <span class="db-tm"><b>${dbEsc(t.elapsed_str)}</b>${isNew ? '<em class="db-new">最新</em>' : ''}</span>
+      <span class="db-sp">${dbSpd(t.avg_kmh)}<small>km/h</small></span>
+      <span class="db-x"><span class="db-pw">${pw}</span><span class="db-el">${el}</span></span>
+      <span class="db-fd">${dbDraft(t.draft_pct) || '<span class="db-dr nil">—</span>'}</span>
+      <span class="db-dt">${rep ? `<a class="db-lnk" href="${dbEsc(rep)}" title="打開這一趟的報告">${dbEsc(t.date)}</a>` : dbEsc(t.date)}</span>
+    </div>`
+  }).join('')
+  const hist = (d.history || []).filter(h => h && h.elapsed_str)
+  const histHtml = hist.length > 1
+    ? `<div class="db-hist"><span class="db-hk">紀錄簿</span>${hist.map((h, i) =>
+        (i ? '<span class="db-ar" aria-hidden="true">→</span>' : '') +
+        `<span class="db-hs${i === hist.length - 1 ? ' last' : ''}"><b>${dbEsc(h.elapsed_str)}</b><i>${dbEsc(h.date)}</i>${dbDraft(h.draft_pct)}</span>`).join('')}</div>`
+    : ''
+  const raw = dbRawTxt(d)
+  return `<div class="db-cap"><b>${d.km} km</b><span>前 ${top.length} 名${d.n ? ` · 共 ${d.n} 趟有成績` : ''}</span></div>
+    <div class="db-th db-th-t" aria-hidden="true"><span>名次</span><span>時間</span><span>均速</span><span>均瓦／心率</span><span>爬升／淨海拔</span><span>跟車</span><span>日期</span></div>
+    <div class="db-trs">${rows}</div>
+    ${histHtml}
+    <div class="db-notes">
+      ${raw ? `<p>含下坡的原始最快：${raw}，不計入榜單。</p>` : ''}
+      <p>${DB_DRAFT_NOTE}</p>
+    </div>`
+}
+/* 收合時只看得到這一行：所選距離的最佳時間、均速、跟車、日期、最新一趟名次。
+   前 10 名與紀錄簿收在 .db-body（[hidden]），按鈕展開；3D 路線舞台才回得到第一屏。 */
+function distSumHTML(d) {
+  const b = d.best || d.top[0], lt = d.latest
+  const ltCls = lt && lt.rank <= 3 ? ' r' + lt.rank : ''
+  return `<span class="db-sm-tm">${dbEsc(b.elapsed_str)}</span>
+    <span class="db-si"><i>均速</i><b>${dbSpd(b.avg_kmh)}</b><small>km/h</small></span>
+    ${b.draft_pct != null ? `<span class="db-si" title="${dbEsc(DB_DRAFT_NOTE)}"><i>跟車</i>${dbDraft(b.draft_pct).replace('跟車 ', '')}</span>` : ''}
+    <span class="db-si"><i>日期</i><b>${dbEsc(b.date)}</b></span>
+    <span class="db-si"><i>最新一趟</i>${lt ? `<span class="db-lt${ltCls}"><em>${dbEsc(lt.elapsed_str)}</em>第 ${lt.rank}／${lt.of}</span>` : '<b>—</b>'}</span>`
+}
+function distBestFullHTML(dp) {
+  const ds = dp.distances
+  const cur = ds.find(d => d.km === (window.__distKm || 20)) || ds.find(d => d.km === 20) || ds[0]
+  window.__distKm = cur.km
+  const sel = ds.map(d => `<button class="db-k" type="button" role="tab" data-db-km="${d.km}" aria-selected="${d.km === cur.km}">
+      <b>${d.km} km</b><i>${dbEsc((d.best || d.top[0]).elapsed_str)}</i></button>`).join('')
+  return `<div class="block db-full">
+    <div class="section-title">距離最佳 <span class="muted">· BEST EFFORTS</span><span class="section-title-text"></span><span class="db-cov">${dbCov(dp)}</span></div>
+    <div class="db-sel" role="tablist" aria-label="距離">${sel}</div>
+    <div class="db-sum${cur.latest && cur.latest.is_pr ? ' is-pr' : ''}">
+      <div class="db-sum-main">${distSumHTML(cur)}</div>
+      <button class="db-tog" type="button" data-db-toggle aria-expanded="false" aria-controls="db-body">展開前 10 名</button>
+    </div>
+    <div class="db-body" id="db-body" hidden><p class="db-sub">${dbSub(dp)}</p>${distBodyHTML(cur, dp)}</div>
+  </div>`
+}
+/* 收合／展開：aria-expanded＋hidden，按鈕是原生 <button>，Enter／Space 直接可用 */
+function distToggle(open) {
+  const box = document.querySelector('#content .db-full')
+  if (!box) return
+  const btn = box.querySelector('[data-db-toggle]'), body = box.querySelector('.db-body')
+  if (!btn || !body) return
+  const on = typeof open === 'boolean' ? open : btn.getAttribute('aria-expanded') !== 'true'
+  btn.setAttribute('aria-expanded', String(on))
+  btn.textContent = on ? '收合前 10 名' : '展開前 10 名'
+  body.hidden = !on
+}
+function distSelect(km, open) {
+  const dp = window._distPrs
+  const box = document.querySelector('#content .db-full')
+  const d = dp && dp.distances.find(x => x.km === km)
+  if (!box || !d) return
+  window.__distKm = km
+  box.querySelectorAll('.db-k').forEach(b => b.setAttribute('aria-selected', String(+b.dataset.dbKm === km)))
+  const sum = box.querySelector('.db-sum-main')
+  if (sum) sum.innerHTML = dbSafe(() => distSumHTML(d))
+  const sumBox = box.querySelector('.db-sum')
+  if (sumBox) sumBox.classList.toggle('is-pr', !!(d.latest && d.latest.is_pr))
+  const body = box.querySelector('.db-body')
+  if (body) body.innerHTML = dbSafe(() => `<p class="db-sub">${dbSub(dp)}</p>${distBodyHTML(d, dp)}`)
+  if (open === true) distToggle(true)
+}
+let _dbBound = false
+function initDistBest() {
+  if (_dbBound) return
+  const root = document.getElementById('content')
+  if (!root) return
+  _dbBound = true
+  /* 掛在 #content：view 會被整片 innerHTML 換掉，掛在按鈕上換一次就掉一次。
+     現況的列不用 data-goto —— 那條通用路徑不知道要順手選哪個距離。切 view 仍然只走 navTo。 */
+  root.addEventListener('click', e => {
+    const t = e.target
+    if (!t || !t.closest) return
+    const k = t.closest('[data-db-km]')
+    if (k) { distSelect(+k.dataset.dbKm); return }
+    if (t.closest('[data-db-toggle]')) { distToggle(); return }
+    // 現況的列寫著「看 N km 的前 10 名」，所以跳過去時順手展開
+    const g = t.closest('[data-distkm]')
+    if (g) { const km = +g.dataset.distkm; navTo('itt', { push: true }, () => distSelect(km, true)) }
+  })
+}
+
+/* ── 紀錄：每趟戶外騎乘排進前三 → 徽章 ──
+   對應方式：日期＋開始時間（±3 分鐘）。活動沒有開始時間時，只有當天恰好一趟才退而只比日期。
+   榜單的 date／ride_start_hm 是手錶 FIT 的當地時間，時間軸的 date／time 是 Strava 的當地時間。 */
+function distAchvIndex(dp) {
+  const m = new Map()
+  ;(dp.distances || []).forEach(d => (d.top || []).forEach(t => {
+    if (!t || !t.date || !(t.rank >= 1 && t.rank <= 3)) return
+    if (!m.has(t.date)) m.set(t.date, [])
+    m.get(t.date).push({ km: d.km, rank: t.rank, of: d.n, elapsed_str: t.elapsed_str, draft_pct: t.draft_pct, hm: dbHM(t.ride_start_hm) })
+  }))
+  return m
+}
+function distAchvOf(a, dayRides) {
+  try {
+    const idx = window._distIdx
+    if (!idx || !a) return null
+    if (a.trainer || a.sport_type === 'VirtualRide') return null      // 榜單只算有 GPS 的戶外騎乘
+    const list = idx.get((a.date || '').slice(0, 10))
+    if (!list) return null
+    const t = dbHM(a.time)
+    const hit = list.filter(e => t != null && e.hm != null ? Math.abs(e.hm - t) <= 3 : dayRides === 1)
+    return hit.length ? hit.slice().sort((x, y) => x.rank - y.rank || y.km - x.km) : null
+  } catch (e) { return null }
+}
+function distAchvHTML(hits) {
+  if (!hits || !hits.length) return ''
+  const best = hits[0].rank
+  const prs = hits.filter(h => h.rank === 1)
+  const medal = best === 1 ? '🏆' : best === 2 ? '🥈' : '🥉'
+  const head = best === 1
+    ? `<span class="pa-zh">距離最佳 · ${prs.map(p => p.km).join('／')} km 現存紀錄</span><span>DISTANCE PR</span>`
+    : `<span class="pa-zh">距離佳績 · 擠進前三</span><span>DISTANCE TOP 3</span>`
+  const chips = hits.map(h => `<span class="pa-chip r${h.rank}"><i>${h.km} km</i><b>${dbEsc(h.elapsed_str)}</b><u>第 ${h.rank}／${h.of}</u>${h.draft_pct != null ? `<em class="${h.draft_pct >= 50 ? 'hi' : ''}">跟車 ${Math.round(h.draft_pct)}%</em>` : ''}</span>`).join('')
+  const pill = best === 1 ? `${prs.map(p => p.km).join('·')} km PR` : `${hits[0].km} km ${hits[0].rank === 2 ? '2ND' : '3RD'}`
+  return `<div class="pwr-achv dist-achv${best === 1 ? ' pr' : ''}" data-dbest="${best}" data-dpill="${dbEsc(pill)}">
+    <div class="pa-medal">${medal}</div>
+    <div class="pa-body">
+      <div class="pa-head">${head}</div>
+      <div class="pa-chips">${chips}</div>
+    </div>
+  </div>`
 }
 function renderNameCard(data) {
   // 身分列：併進出發名單卡的頂端，不再是獨立一塊。
@@ -10745,9 +10987,14 @@ Promise.all([
   // 代辦清單（scripts/build-tasks.py 推導出來的）；缺檔就不顯示那張卡
   fetchData('data/tasks.json').then(r => r.ok ? r.json() : null).catch(() => null),
   fetchData('data/playbook.json').then(r => r.ok ? r.json() : null).catch(() => null),
+  // 距離最佳（scripts 產生的 data/distance-prs.json）。位置解構，所以新的 fetch 一律排最後。
+  // 缺檔、壞檔都回 null → 現況／ITT／紀錄三處的距離最佳靜默消失，其他行為不變。
+  fetchData('data/distance-prs.json').then(r => r.ok ? r.json() : null).catch(() => null),
 ])
-  .then(([data, ittConfig, segStreams, segTerrain, segGrades, landmarks, rivals, taipeiOutline, quotesData, trainingBlock, planRx, ittSegments, wellness, doms, activities, powerHr, powerShift, tasks, playbook]) => {
+  .then(([data, ittConfig, segStreams, segTerrain, segGrades, landmarks, rivals, taipeiOutline, quotesData, trainingBlock, planRx, ittSegments, wellness, doms, activities, powerHr, powerShift, tasks, playbook, distPrs]) => {
     mergeIttSegments(data, ittSegments)
+    try { window._distPrs = dbValid(distPrs); window._distIdx = window._distPrs ? distAchvIndex(window._distPrs) : null }
+    catch (e) { window._distPrs = null; window._distIdx = null }
     window._wellness = wellness || null
     window._doms = doms || null
     window._activities = activities || null
@@ -10778,6 +11025,7 @@ Promise.all([
     window._quotePool = mapQuotes(quotesData)
     window.__powerPrs = data.power_prs || []
     render(data)
+    initDistBest()
     if (window.__cinemaMount) window.__cinemaMount(data)
     // TODAY 重組後原本的 overview 區塊都收進底下的 td-grid；月總結入口要緊貼 hero 下面才看得到
     { const rs = document.getElementById('recap-slot'), th = document.querySelector('.view[data-view="overview"] .td-hero')
@@ -11264,6 +11512,7 @@ Promise.all([
     const evid = document.createElement('div'); evid.innerHTML = todayEvidenceHTML()
     const state = document.createElement('div'); state.innerHTML = todayStateHTML()
     const snap = document.createElement('div'); snap.innerHTML = seasonSnapHTML(data)
+    const distBlk = block('距離最佳')   // 賽季快照之後、兩欄之前（選配：沒有資料就是 undefined，filter(Boolean) 會濾掉）
     const tasksBlk = block('代辦'); if (tasksBlk) tasksBlk.dataset.anchor = 'tasks'
     const pmcBlk = block('體能與疲勞'); if (pmcBlk) pmcBlk.dataset.anchor = 'pmc'
     // hero 之後分兩欄：左欄是「要處理的事」（注意、代辦、週期、PMC、訊號），
@@ -11275,7 +11524,7 @@ Promise.all([
     const grid = document.createElement('div'); grid.className = 'td-grid'; grid.append(colL, colR)
     const order = [
       kids.find(el => el.classList.contains('view-h')), kids.find(el => el.id === 'rdy-mobile'),
-      hero.firstElementChild, state.firstElementChild, evid.firstElementChild, snap.firstElementChild, grid,
+      hero.firstElementChild, state.firstElementChild, evid.firstElementChild, snap.firstElementChild, distBlk, grid,
     ].filter(Boolean)
     order.forEach(el => sec.appendChild(el))
     const placed = new Set([...colL.children, ...colR.children, rhythmT, rhythm])
@@ -11609,8 +11858,11 @@ Promise.all([
       const glyph = (typeof ICONS !== 'undefined' && ICONS[types[0]]) || ''
       const thumb = withRoute ? routeThumbSVG(withRoute.route_stream, 84, 54) : `<svg viewBox="0 0 24 24" class="fs-glyph" aria-hidden="true">${glyph}</svg>`
       const pills = []
-      if (day.querySelector('.td-pr, .pwr-achv.pr')) pills.push('<i class="pr">功率 PR</i>')
-      else if (day.querySelector('.pwr-achv')) pills.push('<i>功率前三</i>')
+      if (day.querySelector('.td-pr, .pwr-achv.pr:not(.dist-achv)')) pills.push('<i class="pr">功率 PR</i>')
+      else if (day.querySelector('.pwr-achv:not(.dist-achv)')) pills.push('<i>功率前三</i>')
+      // 距離最佳：跟功率徽章分開判斷（.dist-achv 也掛著 .pwr-achv 外殼）。同一天只留一顆：有 PR 用 PR 的，沒有就用最好的那個名次。
+      const dba = [...day.querySelectorAll('.dist-achv')].sort((x, y) => (+x.dataset.dbest) - (+y.dataset.dbest))[0]
+      if (dba && dba.dataset.dpill) pills.push(`<i${+dba.dataset.dbest === 1 ? ' class="pr"' : ''}>${esc(dba.dataset.dpill)}</i>`)
       const ia = day.querySelectorAll('.ia-row').length
       if (ia) pills.push(`<i class="itt">ITT ×${ia}</i>`)
       if (day.querySelector('.r3d-trigger-btn')) pills.push('<i>3D</i>')

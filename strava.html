@@ -2012,6 +2012,118 @@ button.ov-cell:focus-visible{outline:1px solid rgba(252,76,2,.6);outline-offset:
 .seg.alt button{font-family:var(--f-mono);font-size:10.5px;letter-spacing:1.2px;padding:5px 9px}
 @media(max-width:640px){.seg.alt{margin-left:0}.seg button i{display:none}}
 
+/* ══ 距離最佳 · BEST EFFORTS（Overview 摘要卡 ＋ ITT 頂部完整版）═════════════
+   資料 data/distance-prs.json；缺檔時整組都不渲染（見 renderDistBestCard / renderDistBestFull）。
+   字級：數字一律 Archivo tabular（≤13.5px 是計時紙那一層，Saira 只給 ≥26px 的板牌），
+   最新一趟那行用 headline 19px；中文一律 ≥12px；不新增 14–29px 的層級。
+   斷點用 container query 而不是 media query：同一塊卡在桌機主欄、平板窄主欄、手機
+   三種寬度下，能用的寬度跟視窗寬度不是同一件事（側欄 148／188px 會吃掉一截）。 */
+.dbe{container-type:inline-size}
+.dbe .section-title .dbe-cov{margin-left:auto;font-size:12px;font-weight:400;letter-spacing:.3px;
+  color:var(--ink-3);white-space:nowrap;font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+.dbe-sub,.dbe-note{margin:0 0 14px;font-size:12px;line-height:1.7;color:var(--ink-3);max-width:84ch;text-wrap:pretty}
+.dbe-note{margin:10px 0 0}
+.dbe-row,.dbe-r,.dbe-book,.dbe-latest{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+/* 最新一趟：headline 層級。rank 1 走 PR 強調（金字＋讀數暈，同 .ittd.is-pr），其餘只是普通強調 */
+.dbe-latest{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 10px;margin:0 0 14px}
+.dbe-pod+.dbe-pod{margin-left:14px}
+.dbe-lk{font-size:12px;color:var(--ink-3);letter-spacing:.3px}
+.dbe-lk b{font-weight:700;color:var(--ink-2)}
+.dbe-pod{display:inline-flex;align-items:baseline;gap:4px 9px;flex-wrap:wrap}
+.dbe-pkm{font-size:13.5px;font-weight:700;letter-spacing:.3px;color:var(--ink-2)}
+.dbe-pt{font-size:19px;font-weight:700;line-height:1.25;letter-spacing:.4px;color:var(--ink-1)}
+.dbe-prk{font-size:12px;color:var(--ink-2)}
+.dbe-pod.is-pr .dbe-pt,.dbe-pod.is-pr .dbe-prk{color:#FFD700}
+.dbe-pod.is-pr .dbe-pt{text-shadow:0 0 12px rgba(255,215,0,.35)}
+.dbe-pr{font-size:9px;font-weight:700;letter-spacing:1.5px;text-decoration:none;align-self:center;
+  padding:1px 6px 2px;border-radius:3px;border:1px solid rgba(252,76,2,.45);background:rgba(252,76,2,.12);color:#ffd05a}
+/* 六列摘要（Overview）：距離｜最佳時間｜均速｜日期｜跟車｜最新一趟｜→ */
+.dbe-row{--row-cols:54px 74px 96px 92px 84px minmax(0,1fr) 14px;border-top:0}   /* button 預設的 2px outset 上緣在深色底上會亮成一條白線 */
+.dbe-row>*{min-width:0}
+.dbe-more{display:contents}
+.dbe-k{font-size:13.5px;font-weight:700;letter-spacing:.3px;color:var(--ink-1);white-space:nowrap}
+.dbe-t{font-size:13.5px;font-weight:800;color:var(--ink-1);text-align:right;white-space:nowrap}
+.dbe-row.is-new .dbe-t,.dbe-r.is-pr .dbe-tm{color:#FFD700;text-shadow:0 0 12px rgba(255,215,0,.35)}
+.dbe-s{font-size:12.5px;color:var(--ink-2);text-align:right;white-space:nowrap}
+.dbe-s small{font-size:9px;font-weight:700;letter-spacing:.8px;color:var(--ink-3)}
+.dbe-d{font-size:12px;color:var(--ink-3);white-space:nowrap}
+.dbe-dr{font-size:12px;font-style:normal;font-weight:600;color:var(--ink-3);white-space:nowrap}
+.dbe-dr.is-heavy{font-weight:800;color:var(--ink-1)}     /* 跟車 ≥50%：加重，別讓團騎的成績看起來像單騎 */
+.dbe-lt{font-size:12px;color:var(--ink-3)}
+.dbe-lt i{font-style:normal}
+.dbe-lt.is-top{font-weight:700;color:var(--ink-1)}
+.dbe-lt.is-pr{font-weight:700;color:#FFD700}
+@container (max-width:700px){
+  .dbe-row{--row-cols:44px auto auto minmax(0,1fr) 14px;grid-template-areas:"k t s . go" ". m m m m"}
+  .dbe-row>.dbe-k{grid-area:k}.dbe-row>.dbe-t{grid-area:t}.dbe-row>.dbe-s{grid-area:s}.dbe-row>.row-go{grid-area:go}
+  .dbe-row>.dbe-more{display:flex;flex-wrap:wrap;gap:2px 14px;grid-area:m}
+  .dbe-more>:empty{display:none}
+}
+/* ITT 頂部完整版：距離選擇器 ＋ 前 10 名 ＋ 紀錄簿 */
+/* ITT 頂部預設收合：標題列＋六顆距離＋一行摘要＋一顆展開鈕（≤200px），路線舞台回到第一屏 */
+.dbe-sum{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px 16px;min-height:34px}
+.dbe-sum-main{flex:1 1 auto;min-width:0}
+.dbe-sm{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 16px}
+.dbe-sm-k{font-size:12px;color:var(--ink-3);letter-spacing:.3px;margin-right:-8px}
+.dbe-sm-t{font-size:19px;font-weight:700;line-height:1.25;letter-spacing:.4px;color:var(--ink-1)}
+.dbe-sm.is-new .dbe-sm-t{color:#FFD700;text-shadow:0 0 12px rgba(255,215,0,.35)}
+.dbe-sm-i{font-size:12.5px;color:var(--ink-2);white-space:nowrap}
+.dbe-sm-i small{font-size:9px;font-weight:700;letter-spacing:.8px;color:var(--ink-3)}
+.dbe-sm-d{font-size:12px;color:var(--ink-3);white-space:nowrap}
+.dbe-tog{flex:none;margin-left:auto;padding:6px 14px;border-radius:6px;border:1px solid var(--hair-2);background:transparent;
+  font-family:inherit;font-size:12px;font-weight:650;letter-spacing:.3px;color:var(--ink-2);cursor:pointer;
+  transition:background .13s,color .13s,border-color .13s}
+.dbe-tog:hover{color:#FC4C02;border-color:rgba(252,76,2,.45);background:rgba(252,76,2,.07)}
+.dbe-tog:focus-visible{outline:1px solid rgba(252,76,2,.6);outline-offset:2px}
+.dbe-tog[aria-expanded="true"]{color:var(--ink-1);border-color:rgba(252,76,2,.35)}
+.dbe-body{margin-top:14px}
+.dbe-body[hidden]{display:none}
+.dbe-seg button{min-width:44px;justify-content:center}
+.dbe-seg button[aria-pressed="true"]{background:rgba(252,76,2,.16);color:#FC4C02}
+.dbe-ctl-n{font-size:12px;color:var(--ink-3)}
+.dbe-panel[hidden]{display:none}
+.dbe-r{--row-cols:28px 70px 86px 118px minmax(140px,1fr) 74px 124px;align-items:baseline}
+.dbe-r>*{min-width:0}
+.dbe-x{display:contents}
+.dbe-rk{font-size:12.5px;font-weight:700;color:var(--ink-3);text-align:center}
+.dbe-r.is-pr .dbe-rk{color:#FFD700}
+.dbe-tm{font-size:13.5px;font-weight:800;color:var(--ink-1);white-space:nowrap}
+.dbe-sp{font-size:12.5px;color:var(--ink-2);white-space:nowrap}
+.dbe-sp small{font-size:9px;font-weight:700;letter-spacing:.8px;color:var(--ink-3)}
+.dbe-pw,.dbe-cl{font-size:12px;color:var(--ink-3);white-space:nowrap}
+.dbe-dt{font-size:12px;color:var(--ink-2);white-space:nowrap}
+.dbe-dt a{color:inherit;text-decoration:none;border-bottom:1px solid var(--hair-2);transition:color .13s,border-color .13s}
+.dbe-dt a:hover{color:#FC4C02;border-bottom-color:rgba(252,76,2,.6)}
+.dbe-dt a:focus-visible{outline:1px solid rgba(252,76,2,.6);outline-offset:2px}
+.dbe-now{display:inline-block;margin-left:7px;padding:0 5px 1px;border-radius:3px;font-size:12px;line-height:1.35;
+  border:1px solid rgba(252,76,2,.45);background:rgba(252,76,2,.1);color:#FC4C02}
+.dbe-r.is-latest{border-left:2px solid #FC4C02;padding-left:6px;border-radius:0 5px 5px 0}   /* 左緣色條＝標記「當前項」 */
+.dbe-book{margin:14px 0 0;display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;font-size:12px;color:var(--ink-3)}
+.dbe-book .dbe-bk{margin-right:4px;letter-spacing:.3px}
+.dbe-book b{font-weight:700;color:var(--ink-2);cursor:default}
+.dbe-book b.is-now{color:#FFD700}
+.dbe-book i{font-style:normal;opacity:.55}
+.dbe-hi{display:inline-flex;flex-direction:column;gap:1px}
+.dbe-hi b{font-size:13.5px}
+.dbe-hi small{font-size:12px;color:var(--ink-3);white-space:nowrap}
+.dbe-hi small em{font-style:normal}
+.dbe-hi small em.is-heavy{font-weight:700;color:var(--ink-2)}
+@container (max-width:760px){
+  .dbe-r{--row-cols:28px auto minmax(0,1fr) auto;grid-template-areas:"rk tm sp dr" ". x x x" ". dt dt dt"}
+  .dbe-r>.dbe-rk{grid-area:rk;text-align:left}.dbe-r>.dbe-tm{grid-area:tm}.dbe-r>.dbe-sp{grid-area:sp}
+  .dbe-r>.dbe-dr{grid-area:dr;text-align:right}
+  .dbe-r>.dbe-x{display:flex;flex-wrap:wrap;gap:2px 14px;grid-area:x}
+  .dbe-r>.dbe-dt{grid-area:dt}
+}
+@media(max-width:640px){.dbe-seg button{min-height:34px}.dbe-tog{min-height:34px}}
+/* 活動紀錄上的距離最佳徽章：沿用 .pwr-achv 外殼（與功率／ITT 成就列同一套），只補中文 ≥12px 與幾個小件 */
+.dbe-achv .pa-head .pa-zh{font-size:12px;letter-spacing:.4px}
+.dbe-of{font-style:normal;font-size:12px;margin-left:2px;color:rgba(255,255,255,.7)}
+.dbe-achv .pa-chip.r1 .dbe-of{color:#FC4C02;font-weight:700}
+.dbe-achv .pa-chip .dbe-dr{font-size:12px;font-weight:400;color:#8a919c}
+.dbe-achv .pa-chip .dbe-dr.is-heavy{font-weight:700;color:rgba(230,236,245,.85)}
+.td-pr.has-dist{font-size:12px;letter-spacing:.4px;text-transform:none}
+
 /* ══ MONTHLY VOLUME（一次一個指標）════════════════════════════════ */
 .vol{border-top:1px solid var(--hair)}
 .vrow{
@@ -6280,7 +6392,7 @@ function renderTimeline(list, type, expanded, pwrAchv, ittAllByAct) {
   const html = visible.map(([date, acts]) => `
     <div class="timeline-day" id="act-${date}">
       <div class="timeline-date">${fmtDate(date)}${
-        acts.some(a => (achvOf(a) || []).some(x => x.rank === 1)) ? '<span class="td-pr">🏆 功率 PR</span>' : ''
+        dbeDayChipHTML(acts.some(a => (achvOf(a) || []).some(x => x.rank === 1)), acts, type)
       }</div>
       ${acts.map(a => {
         const aType    = isAll ? (a._type || 'ride') : type
@@ -6328,6 +6440,8 @@ function renderTimeline(list, type, expanded, pwrAchv, ittAllByAct) {
         const ittBadges = ittList.length
           ? ittAchvHTML(ittShown) + ittMoreHTML(date, ittList, ittShown)
           : ''
+        // 距離最佳（data/distance-prs.json）：這一趟在任一距離排前三就掛徽章；缺檔時是空字串
+        const distBadge = aIsRide ? distPrBadgeHTML(distPrHitsFor(a)) : ''
         const distCell = (!aIsWeight && !aIsSwim && a.distance_km)
           ? `${a.distance_km}<small>km</small>`
           : (!aIsWeight && aIsSwim && a.distance_km) ? `${Math.round(a.distance_km*1000)}<small>m</small>` : '—'
@@ -6341,6 +6455,7 @@ function renderTimeline(list, type, expanded, pwrAchv, ittAllByAct) {
             ${lapHtml}
             ${pwrBadge}
             ${ittBadges}
+            ${distBadge}
           </div>
           <div class="ac-n ac-time">${fmtDur(a.moving_time_hr || 0)}</div>
           <div class="ac-n activity-dist">${distCell}</div>
@@ -6938,6 +7053,7 @@ function render(data) {
       <div id="recap-slot"></div>
       <div id="rdy-mobile"></div>
       <div class="block">${seasonHtml}</div>
+      ${renderDistBestCard()}
       ${tasksHtml}
       ${renderRhythmCalendar(data)}
       ${blockHtml}
@@ -6961,7 +7077,7 @@ function render(data) {
     </section>
 
     <section class="view" data-view="itt">
-      ${(sHtml => viewH('ITT 區間', 'Individual time trial', window.__ittCount || '歷來最佳') + (sHtml || '<div class="nil">尚無路段成績。</div>'))(renderSegments(data.segments))}
+      ${(sHtml => viewH('ITT 區間', 'Individual time trial', window.__ittCount || '歷來最佳') + renderDistBestFull() + (sHtml || '<div class="nil">尚無路段成績。</div>'))(renderSegments(data.segments))}
     </section>
 
     <section class="view" data-view="playbook">
@@ -8535,6 +8651,256 @@ function ittMoreHTML(date, dayList, shownRows) {
   return `<button class="lap-toggle itt-more" type="button" data-ittday="${date}">
       ${shown.size ? '另外 ' : ''}${rest.length} 次路段挑戰${bestRank < 9999 ? ` · 最佳第 ${bestRank} 名` : ''} →
     </button>`
+}
+
+/* ══ 距離最佳 · BEST EFFORTS ═══════════════════════════════════════════════
+   「一趟裡任意連續 N 公里最快多久」，Strava Best Efforts 那一類。資料 data/distance-prs.json
+   （從 FIT 算；主榜只收頭尾淨海拔差 ±3 m／km 內的平路窗，時間是經過時間，含窗內停等）。
+   資料只從 coverage.from（手錶 FIT 開始的那天）算起，所以文案一律寫「2025-08-12 起」，不寫「歷年」。
+   三個落點：Overview 摘要卡（renderDistBestCard）、ITT 頂部完整版（renderDistBestFull）、
+   Log 每趟的徽章與日期章（distPrHitsFor / distPrBadgeHTML / dbeDayChipHTML）。
+   缺檔、壞檔、欄位對不上時 dbeData() 回 null，三處全部靜默消失；每個渲染入口另外包 try/catch，
+   因為它們是在 render() 的樣板字串裡被呼叫的 —— 這裡丟例外會讓整頁變成「載入失敗」。 */
+const dbeEsc = v => String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+const dbeIsNum = v => typeof v === 'number' && Number.isFinite(v)
+const dbeMD = d => `${(d || '').slice(5, 7)}/${(d || '').slice(8, 10)}`
+const dbeYMD = d => (d || '').slice(2).replace(/-/g, '/')
+const dbeSgn = n => n > 0 ? `+${Math.round(n)}` : n < 0 ? `−${Math.abs(Math.round(n))}` : '0'
+const dbeHM = hm => { const m = /^(\d{1,2}):(\d{2})/.exec(hm || ''); return m ? +m[1] * 60 + +m[2] : null }
+const DBE_EXPLAIN = '跟車＝窗內平路時段功率明顯低於單騎所需的比例。時間是經過時間，含窗內停等。'
+function dbeData() {
+  const d = window._distPrs
+  if (!d || !Array.isArray(d.distances)) return null
+  const ds = d.distances.filter(x => x && dbeIsNum(x.km) && Array.isArray(x.top) && x.top.length)
+  return ds.length ? { d, ds } : null
+}
+function dbeCov(d) {
+  const c = d.coverage || {}
+  return c.from ? `${dbeEsc(c.from)} 起${dbeIsNum(c.rides) ? ` · ${c.rides} 趟戶外` : ''}` : ''
+}
+function dbeSubText(d) {
+  const r = dbeIsNum((d.coverage || {}).level_rule_m_per_km) ? d.coverage.level_rule_m_per_km : 3
+  return `任意連續 N 公里騎得最快的一段，只收頭尾淨海拔差 ±${r} m／km 以內的平路窗，下坡衝刺不算。`
+}
+/* 不濾地形的最快窗（通常是大下坡）。只有比主榜快 1% 以上才有，所以多數距離沒有這一行。 */
+function dbeRawNote(ds, withKm) {
+  const list = ds.filter(x => x.raw_best && dbeIsNum(x.raw_best.elapsed_sec) && x.raw_best.elapsed_str)
+  if (!list.length) return ''
+  return list.map(x => {
+    const n = x.raw_best.elev_net_m
+    const net = dbeIsNum(n) ? `（${n < 0 ? '淨降' : '淨升'} ${Math.abs(Math.round(n))} m）` : ''
+    return `${withKm ? `${x.km} km ` : ''}${dbeEsc(x.raw_best.elapsed_str)}${net}`
+  }).join(' · ')
+}
+const dbeDraft = (t, cls) => dbeIsNum(t.draft_pct)
+  ? `<span class="${cls}${t.draft_pct >= 50 ? ' is-heavy' : ''}">跟車 ${Math.round(t.draft_pct)}%</span>`
+  : `<span class="${cls}"></span>`     // 空的也要留著：display:contents 的欄位是照順序排的，少一顆後面整排會左移
+
+function renderDistBestCard() {
+  try {
+    const dd = dbeData(); if (!dd) return ''
+    const { d, ds } = dd
+    const lr = d.latest_ride || {}
+    const pod = (Array.isArray(lr.podium) ? lr.podium : []).filter(p => p && dbeIsNum(p.km) && dbeIsNum(p.rank))
+      .slice().sort((a, b) => a.rank - b.rank || b.km - a.km)
+    const latestHtml = pod.length ? `
+      <div class="dbe-latest">
+        <span class="dbe-lk">最新 <b>${dbeMD(lr.date)}</b>：</span>
+        ${pod.map(p => `<span class="dbe-pod${p.rank === 1 ? ' is-pr' : ''}"><span class="dbe-pkm">${p.km} km</span><b class="dbe-pt">${dbeEsc(p.elapsed_str)}</b><span class="dbe-prk">第 ${p.rank}${dbeIsNum(p.of) ? `／${p.of}` : ''}</span>${p.rank === 1 ? '<u class="dbe-pr">PR</u>' : ''}</span>`).join('')}
+      </div>` : ''
+    const rows = ds.map(x => {
+      const b = x.best || x.top[0]
+      const L = x.latest
+      const lt = (L && dbeIsNum(L.rank))
+        ? `<span class="dbe-lt${L.rank === 1 ? ' is-pr' : L.rank <= 3 ? ' is-top' : ''}">最新一趟 第 ${L.rank}${dbeIsNum(L.of) ? `／${L.of}` : ''}${L.elapsed_str ? `<i> · ${dbeEsc(L.elapsed_str)}</i>` : ''}</span>`
+        : '<span class="dbe-lt"></span>'
+      return `<button class="row dbe-row${lr.date && b.date === lr.date ? ' is-new' : ''}" type="button" data-goto="itt" data-dbe-km="${x.km}" title="看 ${x.km} km 的前 10 名">
+        <span class="dbe-k">${x.km} km</span>
+        <span class="dbe-t">${dbeEsc(b.elapsed_str)}</span>
+        <span class="dbe-s">${dbeIsNum(b.avg_kmh) ? b.avg_kmh.toFixed(1) : '—'} <small>km/h</small></span>
+        <span class="dbe-more">
+          <span class="dbe-d">${dbeEsc(b.date)}</span>
+          ${dbeDraft(b, 'dbe-dr')}
+          ${lt}
+        </span>
+        <span class="row-go">→</span></button>`
+    }).join('')
+    const raw = dbeRawNote(ds, true)
+    return `
+    <div class="block dbe" id="dbe-card">
+      <div class="section-title">距離最佳 <span class="muted">· BEST EFFORTS</span><span class="dbe-cov">${dbeCov(d)}</span></div>
+      <p class="dbe-sub">${dbeSubText(d)}</p>
+      ${latestHtml}
+      <div class="rows">${rows}</div>
+      ${raw ? `<p class="dbe-note">含下坡的原始最快（不計入榜）：${raw}</p>` : ''}
+      <p class="dbe-note">${DBE_EXPLAIN}</p>
+    </div>`
+  } catch (e) { return '' }
+}
+
+function renderDistBestFull() {
+  try {
+    const dd = dbeData(); if (!dd) return ''
+    const { d, ds } = dd
+    const lr = d.latest_ride || {}
+    const def = ds.find(x => x.km === 20) || ds[0]
+    const picker = ds.map(x => `<button type="button" data-dbe-pick="${x.km}" aria-pressed="${x === def}">${x.km} km</button>`).join('')
+    const row = (t, i) => {
+      const rank = dbeIsNum(t.rank) ? t.rank : i + 1
+      const isNow = !!(lr.date && t.date === lr.date)
+      // report 來自產生器，但仍限定成 rides/ 底下的 .html，不讓任意字串進 href
+      const date = /^rides\/[\w.\-]+\.html$/.test(t.report || '')
+        ? `<a href="${dbeEsc(t.report)}" title="${dbeEsc(t.date)} 訓練報告">${dbeEsc(t.date)}</a>` : dbeEsc(t.date)
+      const pw = [dbeIsNum(t.avg_w) ? `${Math.round(t.avg_w)} W` : '', dbeIsNum(t.avg_hr) ? `${Math.round(t.avg_hr)} bpm` : ''].filter(Boolean).join(' · ') || '—'
+      const cl = [dbeIsNum(t.elev_gain_m) ? `爬升 ${Math.round(t.elev_gain_m)} m` : '', dbeIsNum(t.elev_net_m) ? `淨海拔 ${dbeSgn(t.elev_net_m)} m` : ''].filter(Boolean).join(' · ') || '—'
+      return `<div class="row dbe-r${rank === 1 ? ' is-pr' : ''}${isNow ? ' is-latest' : ''}" role="row">
+        <span class="dbe-rk" role="cell">${rank}</span>
+        <b class="dbe-tm" role="cell">${dbeEsc(t.elapsed_str)}</b>
+        <span class="dbe-sp" role="cell">${dbeIsNum(t.avg_kmh) ? t.avg_kmh.toFixed(1) : '—'} <small>km/h</small></span>
+        <span class="dbe-x"><span class="dbe-pw" role="cell">${pw}</span><span class="dbe-cl" role="cell">${cl}</span></span>
+        ${dbeDraft(t, 'dbe-dr')}
+        <span class="dbe-dt" role="cell">${date}${isNow ? '<em class="dbe-now">最新</em>' : ''}</span>
+      </div>`
+    }
+    const panel = x => {
+      const top = x.top.slice(0, 10)
+      const raw = dbeRawNote([x], false)
+      const hist = (Array.isArray(x.history) ? x.history : []).filter(h => h && h.elapsed_str)
+      const book = hist.length ? `<div class="dbe-book"><span class="dbe-bk">紀錄簿</span>${hist.map((h, i) =>
+        `${i ? '<i>→</i>' : ''}<span class="dbe-hi"><b${i === hist.length - 1 ? ' class="is-now"' : ''}>${dbeEsc(h.elapsed_str)}</b><small>${dbeEsc(dbeYMD(h.date))}${dbeIsNum(h.draft_pct) ? ` · <em${h.draft_pct >= 50 ? ' class="is-heavy"' : ''}>跟車 ${Math.round(h.draft_pct)}%</em>` : ''}</small></span>`
+      ).join('')}</div>` : ''
+      return `<div class="dbe-panel" data-dbe-panel="${x.km}"${x === def ? '' : ' hidden'}>
+        <p class="dbe-ctl-n">${dbeIsNum(x.n) ? `${x.n} 趟有 ${x.km} km 的平路窗，` : ''}列前 ${top.length} 名</p>
+        <div class="rows" role="table" aria-label="${x.km} km 距離最佳 前 ${top.length} 名">${top.map(row).join('')}</div>
+        ${raw ? `<p class="dbe-note">含下坡的原始最快（不計入榜）：${raw}</p>` : ''}
+        ${book}
+      </div>`
+    }
+    /* 收合時只看得到這一行：所選距離的最佳時間、均速、跟車、日期、最新一趟名次。
+       前 10 名、紀錄簿、raw_best 與跟車定義收進 #dbe-body（[hidden]），按鈕展開 ——
+       ITT 頁的第一屏要留給下面的路線舞台。六個距離的摘要都先算好，切換只是換哪一個顯示。 */
+    const sum = x => {
+      const b = x.best || x.top[0], L = x.latest
+      const lt = (L && dbeIsNum(L.rank))
+        ? `<span class="dbe-lt${L.rank === 1 ? ' is-pr' : L.rank <= 3 ? ' is-top' : ''}">最新一趟 第 ${L.rank}${dbeIsNum(L.of) ? `／${L.of}` : ''}${L.elapsed_str ? `<i> · ${dbeEsc(L.elapsed_str)}</i>` : ''}</span>` : ''
+      return `<div class="dbe-sm${lr.date && b.date === lr.date ? ' is-new' : ''}" data-dbe-sum="${x.km}"${x === def ? '' : ' hidden'}>
+        <span class="dbe-sm-k">最佳</span><b class="dbe-sm-t">${dbeEsc(b.elapsed_str)}</b>
+        <span class="dbe-sm-i">${dbeIsNum(b.avg_kmh) ? b.avg_kmh.toFixed(1) : '—'} <small>km/h</small></span>
+        ${dbeIsNum(b.draft_pct) ? `<span class="dbe-dr${b.draft_pct >= 50 ? ' is-heavy' : ''}" title="${dbeEsc(DBE_EXPLAIN)}">跟車 ${Math.round(b.draft_pct)}%</span>` : ''}
+        <span class="dbe-sm-d">${dbeEsc(b.date)}</span>
+        ${lt}
+      </div>`
+    }
+    return `
+    <div class="block dbe" id="dbe-full">
+      <div class="section-title">距離最佳 <span class="muted">· BEST EFFORTS · TOP 10</span><span class="dbe-cov">${dbeCov(d)}</span></div>
+      <div class="ctl"><div class="seg dbe-seg" role="group" aria-label="距離">${picker}</div></div>
+      <div class="dbe-sum">
+        <div class="dbe-sum-main">${ds.map(sum).join('')}</div>
+        <button class="dbe-tog" type="button" data-dbe-toggle aria-expanded="false" aria-controls="dbe-body">展開前 10 名</button>
+      </div>
+      <div class="dbe-body" id="dbe-body" hidden>
+        <p class="dbe-sub">${dbeSubText(d)}</p>
+        ${ds.map(panel).join('')}
+        <p class="dbe-note">${DBE_EXPLAIN}</p>
+      </div>
+    </div>`
+  } catch (e) { return '' }
+}
+
+/* 展開／收合 ITT 頂部的前 10 名：原生 <button aria-expanded aria-controls>，Enter／Space 直接可用。
+   狀態只存在按鈕的 aria-expanded 上，切換距離不碰它，所以展開後換距離仍是展開。 */
+function dbeToggle(open) {
+  const root = document.getElementById('dbe-full')
+  const btn = root && root.querySelector('[data-dbe-toggle]')
+  const body = root && root.querySelector('#dbe-body')
+  if (!btn || !body) return
+  const on = typeof open === 'boolean' ? open : btn.getAttribute('aria-expanded') !== 'true'
+  btn.setAttribute('aria-expanded', String(on))
+  btn.textContent = on ? '收合前 10 名' : '展開前 10 名'
+  body.hidden = !on
+}
+/* 切換 ITT 頂部的距離。Overview 的列（data-dbe-km）跳過來時也走這條，並且順手展開
+   （那一列寫著「看 N km 的前 10 名」）。 */
+function dbeSelect(km, open) {
+  const root = document.getElementById('dbe-full')
+  if (!root) return
+  const k = String(km)
+  const btns = [...root.querySelectorAll('[data-dbe-pick]')]
+  if (!btns.some(b => b.dataset.dbePick === k)) return
+  btns.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.dbePick === k)))
+  root.querySelectorAll('[data-dbe-panel]').forEach(p => { p.hidden = p.dataset.dbePanel !== k })
+  root.querySelectorAll('[data-dbe-sum]').forEach(p => { p.hidden = p.dataset.dbeSum !== k })
+  if (open === true) dbeToggle(true)
+}
+
+/* Log：每趟騎乘 → 它在哪些距離排前三。
+   對應用「日期 ＋ 開始時間」：時間軸活動的 time（Strava 本地 HH:MM）對榜上的 ride_start_hm，
+   差 ±3 分鐘內算同一趟。任一邊沒有時間時，只有當天恰好一趟戶外騎乘才退而只比日期
+   —— 一天兩趟的日子若只比日期，早上的名次會掛到傍晚那趟。索引只建一次。 */
+function dbeIndex() {
+  if (window.__dbeIdx !== undefined) return window.__dbeIdx
+  let idx = null
+  try {
+    const dd = dbeData()
+    if (dd) {
+      idx = new Map()
+      dd.ds.forEach(x => x.top.forEach(t => {
+        if (!t || !t.date || !(t.rank >= 1 && t.rank <= 3)) return
+        if (!idx.has(t.date)) idx.set(t.date, [])
+        idx.get(t.date).push({ km: x.km, n: x.n, rank: t.rank, elapsed_str: t.elapsed_str, draft_pct: t.draft_pct, min: dbeHM(t.ride_start_hm) })
+      }))
+    }
+  } catch (e) { idx = null }
+  window.__dbeIdx = idx
+  return idx
+}
+function distPrHitsFor(a) {
+  try {
+    const idx = dbeIndex()
+    if (!idx || !a || a.trainer || !a.date) return []
+    const list = idx.get(a.date)
+    if (!list) return []
+    const am = dbeHM(a.time)
+    const solo = (window.__rideFeed || []).filter(r => r && r.date === a.date && !r.trainer).length === 1
+    return list.filter(h => (am != null && h.min != null) ? Math.abs(h.min - am) <= 3 : solo)
+      .sort((p, q) => p.rank - q.rank || q.km - p.km)
+  } catch (e) { return [] }
+}
+function distPrBadgeHTML(hits) {
+  if (!hits || !hits.length) return ''
+  try {
+    const best = Math.min(...hits.map(h => h.rank))
+    const tops = hits.filter(h => h.rank === 1).length
+    const medal = best === 1 ? '🏆' : best === 2 ? '🥈' : '🥉'
+    const head = best === 1
+      ? `<span class="pa-zh">距離最佳 · 榜首 ${tops} 項</span><span>DISTANCE PR</span>`
+      : `<span class="pa-zh">距離最佳 · 擠進前三</span><span>DISTANCE TOP 3</span>`
+    const from = ((window._distPrs || {}).coverage || {}).from
+    const chips = hits.map(h => `<span class="pa-chip r${h.rank}"><i>${h.km} km</i><b>${dbeEsc(h.elapsed_str)}</b><em class="dbe-of">第 ${h.rank}${dbeIsNum(h.n) ? `／${h.n}` : ''}</em>${dbeIsNum(h.draft_pct) ? `<em class="dbe-dr${h.draft_pct >= 50 ? ' is-heavy' : ''}">跟車 ${Math.round(h.draft_pct)}%</em>` : ''}</span>`).join('')
+    return `<div class="pwr-achv dbe-achv${best === 1 ? ' pr' : ''}"${from ? ` title="${dbeEsc(from)} 起的戶外騎乘"` : ''}>
+      <div class="pa-medal">${medal}</div>
+      <div class="pa-body">
+        <div class="pa-head">${head}</div>
+        <div class="pa-chips">${chips}</div>
+      </div>
+    </div>`
+  } catch (e) { return '' }
+}
+/* 日期標題的章：同一天只留一顆。只有功率 PR 時字面跟以前一模一樣；有距離最佳（rank 1）才多一段。 */
+function dbeDayChipHTML(powPr, acts, tabType) {
+  let kms = []
+  try {
+    const ks = new Set()
+    ;(acts || []).forEach(a => {
+      if ((tabType === 'all' ? (a._type || 'ride') : tabType) !== 'ride') return
+      distPrHitsFor(a).forEach(h => { if (h.rank === 1) ks.add(h.km) })
+    })
+    kms = [...ks].sort((p, q) => p - q)
+  } catch (e) { kms = [] }
+  if (!powPr && !kms.length) return ''
+  if (!kms.length) return '<span class="td-pr">🏆 功率 PR</span>'
+  return `<span class="td-pr has-dist">🏆 ${[powPr ? '功率 PR' : '', `距離最佳 ${kms.join(' / ')} km`].filter(Boolean).join(' · ')}</span>`
 }
 function renderNameCard(data) {
   // 身分列：併進出發名單卡的頂端，不再是獨立一塊。
@@ -10626,6 +10992,9 @@ function initRouter() {
     if (ses) { openSessionDrawer(ses.dataset.ses); return }
     const iday = e.target.closest('[data-ittday]')
     if (iday) { openIttDayDrawer(iday.dataset.ittday); return }
+    const dpick = e.target.closest('[data-dbe-pick]')
+    if (dpick) { dbeSelect(dpick.dataset.dbePick); return }
+    if (e.target.closest('[data-dbe-toggle]')) { dbeToggle(); return }
     const hvm = e.target.closest('[data-hvm]')
     if (hvm) { openHarvestMonth(hvm.dataset.hvm); return }
     const pw = e.target.closest('[data-power]')
@@ -10638,6 +11007,7 @@ function initRouter() {
     const date = go.dataset.actdate
     setView(go.dataset.goto, { push: true })
     if (date) focusActivity(date)
+    if (go.dataset.dbeKm) dbeSelect(go.dataset.dbeKm, true)   // 現況的距離最佳列 → ITT 頂部切到同一個距離並展開
   })
 
   /* 功率曲線的讀數列。掛在 #content 上而不是曲線上：#content 這顆節點從頭到尾
@@ -10866,8 +11236,11 @@ Promise.all([
   // 代辦清單（scripts/build-tasks.py 推導出來的）；缺檔就不顯示那張卡
   fetchData('data/tasks.json').then(r => r.ok ? r.json() : null).catch(() => null),
   fetchData('data/playbook.json').then(r => r.ok ? r.json() : null).catch(() => null),
+  // 距離最佳（一趟裡任意連續 N 公里最快多久；data/distance-prs.json）。位置解構，所以一定排在陣列最後。
+  // 缺檔或壞檔就回 null → 現況的摘要卡、ITT 頂部的完整版、活動紀錄的徽章三處一起消失，其餘不受影響。
+  fetchData('data/distance-prs.json').then(r => r.ok ? r.json() : null).catch(() => null),
 ])
-  .then(([data, ittConfig, segStreams, segTerrain, segGrades, landmarks, rivals, taipeiOutline, quotesData, trainingBlock, planRx, ittSegments, wellness, doms, activities, powerHr, powerShift, tasks, playbook]) => {
+  .then(([data, ittConfig, segStreams, segTerrain, segGrades, landmarks, rivals, taipeiOutline, quotesData, trainingBlock, planRx, ittSegments, wellness, doms, activities, powerHr, powerShift, tasks, playbook, distPrs]) => {
     mergeIttSegments(data, ittSegments)
     window._wellness = wellness || null
     window._doms = doms || null
@@ -10894,6 +11267,7 @@ Promise.all([
     window._trainingBlock = trainingBlock || null
     window._planRx = planRx || null
     window._playbook = playbook || null
+    window._distPrs = (distPrs && Array.isArray(distPrs.distances)) ? distPrs : null
     window._powerShift = powerShift || null
     window._taipeiMiniMap = buildTaipeiMiniMap(taipeiOutline)
     window._quotePool = mapQuotes(quotesData)
