@@ -17,7 +17,8 @@ build-tasks.py —— 產生 data/tasks.json（現況頁那張「代辦」卡，
   note     rides/<date>.html 存在但 rides/notes/<date>.json 不存在
   score    data/fit/_scores/<date>.json 的 total.score 低於 scoreBelow
   data     同一天 Strava 與手錶各有一筆室內（Rouvy 那份沒刪）／ITT 兩份檔筆數漂移
-  missing  最近 missingWindowDays 天內完全沒有紀錄的日子（籃球、有氧課不戴錶就是 0 筆）
+  missing  從昨天往回數，連續 missingStreakDays（預設 7）天以上完全沒有紀錄才報（籃球、有氧課不戴錶就是 0 筆）。
+           今天已經有紀錄就不報。2026-09-30 改：舊版是「7 天內空白 5 天」，一個週休加上不錄的球類就會響，太吵
   gear     最近一趟騎乘 FIT 裡的器材狀態（data/fit-extras.json，scripts/build-fit-extras.py 產的）：
            功率計電池 low／critical、Di2 電量 ≤ gearDi2Below、左右平衡超出 gearLrbRange、
            功率掉線 ≥ gearGapSec 秒。2026-08-27 平衡壞掉、09-22 電池 low 都是事後用眼睛看到的，這條就是補那個洞
@@ -52,8 +53,7 @@ EXTRAS = os.path.join(ROOT, "data", "fit-extras.json")
 DEFAULT_CONFIG = {
     "noteSince": None,          # None = 第一次跑的那天；只看這天之後的報告
     "scoreBelow": 80,           # 課表分數低於這個就列入
-    "missingWindowDays": 7,     # 往回看幾天
-    "missingMinDays": 2,        # 空白天數達到這個才報（一天空白很正常）
+    "missingStreakDays": 7,     # 連續幾天完全沒有紀錄才報（從昨天往回數）
     "gearDi2Below": 25,         # Di2 電量 ≤ 這個 % 就提醒
     "gearLrbRange": [35, 65],   # 右腳 % 在這個範圍外＝感測器讀值不合理（他正常在 48–58）
     "gearGapSec": 60,           # 一趟裡功率掉線累計超過這麼多秒
@@ -175,18 +175,20 @@ def rule_data(cfg):
 def rule_missing(cfg, today):
     acts = load(ACTIVITIES, {}) or {}
     have = {str(a.get("start_date_local") or "")[:10] for a in acts.values()}
-    blank = []
-    for i in range(1, cfg["missingWindowDays"] + 1):
-        d = (today - timedelta(days=i)).isoformat()
-        if d not in have:
-            blank.append(d)
-    if len(blank) < cfg["missingMinDays"]:
+    have.discard("")
+    if not have or today.isoformat() in have:
+        return []                       # 沒有資料可判斷，或今天已經動過＝連續空白到此為止
+    earliest = date.fromisoformat(min(have))
+    streak, d = [], today - timedelta(days=1)
+    while d >= earliest and d.isoformat() not in have:
+        streak.append(d)
+        d -= timedelta(days=1)
+    if len(streak) < cfg["missingStreakDays"]:
         return []
-    wd = "一二三四五六日"
-    label = "、".join(f"{d[5:]}（{wd[date.fromisoformat(d).weekday()]}）" for d in sorted(blank))
+    first, last = streak[-1], streak[0]
     return [{"id": f"missing-{today.isoformat()}", "kind": "missing", "priority": 3,
-             "title": f"最近 {cfg['missingWindowDays']} 天有 {len(blank)} 天完全沒有紀錄",
-             "detail": f"{label} —— 籃球／有氧課不戴錶就是 0 筆，有漏的跟我說，我補進佔位表",
+             "title": f"已經連續 {len(streak)} 天完全沒有紀錄（{first.isoformat()[5:]}–{last.isoformat()[5:]}）",
+             "detail": "籃球／有氧課不戴錶就是 0 筆，有漏的跟我說，我補進佔位表",
              "date": None, "link": None}]
 
 
