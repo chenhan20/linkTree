@@ -1,0 +1,1340 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>課表的解剖 · Steve Chuang</title>
+<meta name="description" content="一份課表怎麼讓人變強：拿我正在跑的「中社四週」拆開來看——超補償、TSS 與 CTL、月時數損益線、七個功率區間、限制因子、配速、週期化、減量與恢復。每個數字都從我的紀錄現算。">
+<meta name="theme-color" content="#0b0906">
+<link rel="icon" href="logo.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,500;0,600;0,700;1,700;1,800&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   課表的解剖（anatomy.html）——放映室的第四套幻燈片
+   自己的視覺世界：暖黑底＋會「升溫」的熱場背景（WebGL），顏色只有一條熱度色階，
+   對應七個功率區間（Z1 灰→Z7 深紅），因為區間本身就是輕重的排序。
+   黃色（--me）只給「我自己的成績」。
+   ═══════════════════════════════════════════════════════════════ */
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0b0906;--bg2:#16110b;--fg:#f7f1e6;--fg2:#cfc5b4;--fg3:#8f8577;--line:rgba(247,241,230,.13);--line2:rgba(247,241,230,.26);
+  --me:#ffe600;
+  --z1:#8a8175;--z2:#f6d55c;--z3:#f7b32b;--z4:#f7801d;--z5:#ef4e23;--z6:#d11f3a;--z7:#a3155a;
+  --fit:#f7f1e6;--fat:#ef4e23;
+  --heat:var(--z4);
+  --sans:'Noto Sans TC','PingFang TC','Microsoft JhengHei',system-ui,sans-serif;
+  --num:'Barlow Condensed','Arial Narrow','PingFang TC',sans-serif;
+  --gut:clamp(18px,5vw,84px);
+  --ease:cubic-bezier(.2,.75,.15,1);
+}
+html,body{height:100%;background:var(--bg);overflow:hidden;overscroll-behavior:none}
+body{font-family:var(--sans);color:var(--fg);-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+button,input{font:inherit;color:inherit}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--me);outline-offset:3px}
+
+/* ── 背景熱場 ── */
+#heat{position:fixed;inset:0;width:100%;height:100%;z-index:0;display:block;background:radial-gradient(120% 90% at 50% 110%,#3a1a08 0%,var(--bg) 60%)}
+.veil{position:fixed;inset:0;z-index:1;pointer-events:none;
+  background:linear-gradient(90deg,rgba(11,9,6,.82) 0%,rgba(11,9,6,.55) 38%,rgba(11,9,6,.2) 70%,rgba(11,9,6,.35) 100%)}
+
+/* ── 上方列 ── */
+.bar{position:fixed;left:0;right:0;top:0;z-index:5;background:linear-gradient(rgba(11,9,6,.92),rgba(11,9,6,.6) 70%,transparent);display:flex;align-items:center;gap:14px;padding:14px var(--gut);font:600 13px/1 var(--num);letter-spacing:.14em;text-transform:uppercase;color:var(--fg3)}
+.bar a{text-decoration:none;color:var(--fg2);display:inline-flex;align-items:center;gap:6px;padding:8px 0}
+.bar a:hover{color:var(--me)}
+.bar .t{flex:1;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar .t b{color:var(--heat);font-weight:700;transition:color .8s}
+.bar .r{display:flex;align-items:center;gap:6px}
+.bar .r span{min-width:4.2em;text-align:right;color:var(--fg2)}
+.ib{width:34px;height:34px;border:1px solid var(--line2);border-radius:50%;background:rgba(11,9,6,.4);display:grid;place-items:center;cursor:pointer}
+.ib:hover{border-color:var(--me);color:var(--me)}
+.ib svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ib[aria-pressed=true]{background:var(--me);color:var(--bg);border-color:var(--me)}
+
+/* ── 投影片 ── */
+.deck{position:fixed;inset:0;z-index:3;touch-action:pan-y}
+.slide{position:absolute;inset:0;padding:74px var(--gut) 96px;display:grid;align-content:center;gap:clamp(24px,4vw,72px);
+  opacity:0;visibility:hidden;overflow:hidden auto;scrollbar-width:none;overscroll-behavior:contain;
+  transition:opacity .35s,visibility 0s .35s}
+.slide::-webkit-scrollbar{display:none}
+.slide.is-on{opacity:1;visibility:visible;transition:opacity .4s .22s,visibility 0s}
+.two{grid-template-columns:minmax(300px,.82fr) minmax(0,1.38fr);align-items:center}
+.copy{max-width:36em;position:relative;z-index:1}
+.copy>*{opacity:0;transform:translateY(22px)}
+.is-on .copy>*{animation:rise .75s var(--ease) forwards;animation-delay:calc(.32s + var(--i,0)*.075s)}
+@keyframes rise{to{opacity:1;transform:none}}
+.kick{font:700 13px/1.2 var(--num);letter-spacing:.22em;text-transform:uppercase;color:var(--heat);margin-bottom:14px;display:flex;gap:12px;align-items:center}
+.kick::before{content:'';width:28px;height:2px;background:currentColor}
+h1,h2{font-weight:900;letter-spacing:.01em;line-height:1.12;text-wrap:balance}
+h2{font-size:clamp(28px,3.5vw,52px);margin-bottom:18px}
+h1{font-size:clamp(42px,5.8vw,90px);line-height:1.04}
+.lede{font-size:clamp(15.5px,1.15vw,18px);line-height:1.85;color:var(--fg2);margin-bottom:12px}
+.lede b,.hl{color:var(--fg);font-weight:700}
+.me{color:var(--me)}
+.hot{color:var(--z5)}
+.note{font-size:13px;line-height:1.7;color:var(--fg3);margin-top:12px;border-left:2px solid var(--line2);padding-left:12px}
+.n{font-family:var(--num);font-weight:700;font-size:1.12em;letter-spacing:.02em}
+.art{position:relative;min-width:0}
+.chart{display:block;width:100%;height:min(64vh,560px);overflow:visible}
+.no{position:absolute;right:calc(var(--gut) - 6px);bottom:70px;font:italic 800 clamp(120px,22vw,300px)/.8 var(--num);color:transparent;
+  -webkit-text-stroke:1px rgba(247,241,230,.07);pointer-events:none;z-index:0;user-select:none}
+
+/* SVG 共用 */
+.chart text{font-family:var(--num);font-size:13px;fill:var(--fg3);letter-spacing:.03em}
+.chart .lb{font-family:var(--sans);font-size:13px;fill:var(--fg2);letter-spacing:0}
+.chart text{paint-order:stroke;stroke:rgba(11,9,6,.85);stroke-width:4px;stroke-linejoin:round}
+.chart .lb.b{fill:var(--fg);font-weight:700}
+.chart .big{font:italic 800 34px var(--num);fill:var(--fg)}
+.chart .mid{font:700 20px var(--num);fill:var(--fg)}
+.chart .grid{stroke:var(--line);stroke-width:1}
+.chart .axis{stroke:var(--line2);stroke-width:1}
+.glow{filter:drop-shadow(0 0 6px var(--c,var(--me)))}
+.draw{stroke-dasharray:1;stroke-dashoffset:1}
+.is-on .draw{animation:draw 1.5s var(--ease) forwards;animation-delay:var(--d,.45s)}
+@keyframes draw{to{stroke-dashoffset:0}}
+.pop{opacity:0}
+.is-on .pop{animation:pop .55s var(--ease) forwards;animation-delay:var(--d,1.1s)}
+@keyframes pop{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.grow{transform:scaleY(0);transform-box:fill-box;transform-origin:50% 100%}
+.is-on .grow{animation:grow .8s var(--ease) forwards;animation-delay:var(--d,.4s)}
+@keyframes grow{to{transform:none}}
+.growx{transform:scaleX(0);transform-origin:0 50%}
+.is-on .growx{animation:growx .9s var(--ease) forwards;animation-delay:var(--d,.4s)}
+@keyframes growx{to{transform:none}}
+.static .draw,.static .pop,.static .grow,.static .growx{animation:none!important;stroke-dashoffset:0;opacity:1;transform:none}
+
+/* ── 封面 ── */
+.s-cover{grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);align-items:end}
+.s-cover .copy{max-width:none}
+.s-cover .lede{max-width:30em}
+.scores{display:flex;flex-wrap:wrap;gap:clamp(18px,3vw,40px);margin:26px 0 10px;align-items:flex-end}
+.score .v{font:italic 800 clamp(44px,5.6vw,84px)/.9 var(--num);letter-spacing:.01em}
+.score .k{font-size:13px;color:var(--fg3);margin-top:8px;line-height:1.5}
+.score.pr .v{color:transparent;-webkit-text-stroke:1.5px var(--fg2)}
+.score.now .v{color:var(--me);text-shadow:0 0 28px rgba(255,230,0,.35)}
+.score.q .v{color:var(--z5)}
+.hint{font:600 13px var(--num);letter-spacing:.16em;text-transform:uppercase;color:var(--fg3);margin-top:22px}
+.parts{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:18px;font-size:14px;color:var(--fg2)}
+.parts button{background:none;border:0;cursor:pointer;padding:4px 0;border-bottom:1px solid var(--line2)}
+.parts button:hover{color:var(--me);border-color:var(--me)}
+.parts i{font:italic 700 15px var(--num);color:var(--heat);margin-right:6px;font-style:italic}
+
+/* ── 互動控制 ── */
+.ctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:16px 0 6px}
+.chip{border:1px solid var(--line2);background:rgba(11,9,6,.5);border-radius:999px;padding:8px 14px;font-size:14px;cursor:pointer;transition:.2s}
+.chip:hover{border-color:var(--fg2)}
+.chip[aria-pressed=true]{background:var(--me);color:var(--bg);border-color:var(--me);font-weight:700}
+.range{display:flex;align-items:center;gap:12px;margin-top:10px;font-size:14px;color:var(--fg2)}
+.range input{flex:1;max-width:260px;accent-color:var(--me)}
+.range output{font:700 20px var(--num);color:var(--me);min-width:3.4em}
+.read{margin-top:14px;font-size:16px;line-height:1.7;min-height:3.4em}
+.read b{color:var(--me)}
+
+/* ── 算式 ── */
+.calc{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 12px;font:700 clamp(22px,2.3vw,34px)/1.2 var(--num);margin:14px 0 6px}
+.calc span{display:inline-flex;flex-direction:column;align-items:center}
+.calc small{font:400 12px var(--sans);color:var(--fg3);margin-top:4px}
+.calc .eq{color:var(--fg3)}
+.calc .res{color:var(--me);font-style:italic;font-size:1.35em}
+.defs{display:grid;grid-template-columns:auto 1fr;gap:10px 16px;margin-top:18px;font-size:15px;line-height:1.6;color:var(--fg2)}
+.defs dt{font:700 18px var(--num);letter-spacing:.06em;color:var(--fg)}
+.defs dt.atl{color:var(--fat)}.defs dt.tsb{color:var(--me)}
+
+/* ── 區間梯 ── */
+.zones{display:grid;gap:6px}
+.zr{display:grid;grid-template-columns:3.2em 7.4em minmax(90px,1fr) minmax(0,1.5fr);gap:14px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)}
+.zr .zn{font:italic 800 26px/1 var(--num);color:var(--zc)}
+.zr .zw{font:700 17px var(--num);color:var(--fg)}
+.zr .zw small{display:block;font:400 12px var(--sans);color:var(--fg3);margin-top:2px}
+.zr .zb{height:10px;position:relative;background:rgba(247,241,230,.05);border-radius:2px}
+.zr .zb i{position:absolute;top:0;bottom:0;background:var(--zc);border-radius:2px;box-shadow:0 0 14px var(--zc)}
+.zr .zt{font-size:14px;line-height:1.55;color:var(--fg2)}
+.zr .zt b{color:var(--fg);font-weight:700}
+.zr .zt em{font-style:normal;color:var(--fg3);font-size:13px}
+.zr.me-row{background:linear-gradient(90deg,rgba(255,230,0,.07),transparent 70%)}
+.zr .tag{display:inline-block;margin-left:6px;font:700 11px var(--num);letter-spacing:.14em;color:var(--bg);background:var(--me);padding:2px 6px;border-radius:3px;vertical-align:2px}
+
+/* ── 堆疊長條 ── */
+.mix{display:grid;gap:26px}
+.mx h3{font-size:15px;font-weight:700;margin-bottom:4px}
+.mx h3 small{font-weight:400;color:var(--fg3);margin-left:8px;font-size:13px}
+.mx .st{display:flex;height:44px;border-radius:4px;overflow:hidden;margin-top:8px}
+.mx .st i{display:flex;align-items:center;justify-content:center;background:var(--zc);color:#140d05;font:700 14px var(--num);min-width:0;overflow:hidden;white-space:nowrap}
+.mx .st i.lt{color:var(--fg)}
+.mx .cum{font-size:13px;color:var(--fg3);margin-top:8px}
+.mx .cum b{color:var(--fg2)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font:600 13px var(--num);color:var(--fg3);letter-spacing:.06em}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--zc);margin-right:5px;vertical-align:-1px}
+
+/* ── 月曆 ── */
+.cal{display:grid;grid-template-columns:4.6em repeat(7,minmax(0,1fr)) 5.2em;gap:4px;font-size:12.5px}
+.cal .hd{font:600 12px var(--num);letter-spacing:.14em;color:var(--fg3);text-align:center;padding-bottom:4px}
+.cal .wk{font:italic 800 18px/1.1 var(--num);color:var(--fg2);display:flex;flex-direction:column;justify-content:center}
+.cal .wk small{font:400 11px var(--sans);color:var(--fg3);font-style:normal}
+.cal .c{min-height:64px;border-radius:4px;padding:6px 7px;background:rgba(247,241,230,.035);position:relative;line-height:1.35;overflow:hidden}
+.cal .c .d{font:600 11px var(--num);color:var(--fg3);letter-spacing:.06em}
+.cal .c .nm{display:block;color:var(--fg);font-weight:500;margin-top:2px;overflow-wrap:anywhere}
+.cal .c .mn{font:700 13px var(--num);color:var(--fg2)}
+.cal .c.s{background:color-mix(in srgb,var(--zc) 22%,transparent);border-left:3px solid var(--zc)}
+.cal .c.s.fut{background:transparent;outline:1px dashed color-mix(in srgb,var(--zc) 70%,transparent);outline-offset:-1px;border-left:3px solid color-mix(in srgb,var(--zc) 50%,transparent)}
+.cal .c.test{background:rgba(255,230,0,.16);border-left:3px solid var(--me)}
+.cal .c.test.fut{outline-color:var(--me);background:rgba(255,230,0,.05)}
+.cal .c.gym .nm{color:var(--fg3);font-weight:400}
+.cal .c.today{box-shadow:0 0 0 2px var(--me)}
+.cal .tot{display:flex;flex-direction:column;justify-content:center;gap:4px;font:700 15px var(--num);color:var(--fg2)}
+.cal .tot i{display:block;height:6px;background:var(--heat);border-radius:2px;box-shadow:0 0 10px var(--heat)}
+
+/* ── 一週 ── */
+.week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;align-items:end;height:min(46vh,400px)}
+.dy{display:flex;flex-direction:column;justify-content:flex-end;height:100%;text-align:center;gap:8px}
+.dy .col{position:relative;border-radius:4px 4px 0 0;background:color-mix(in srgb,var(--zc) 30%,transparent);border-top:3px solid var(--zc);display:flex;align-items:flex-start;justify-content:center;padding-top:8px;font:700 18px var(--num);box-shadow:0 -6px 24px -8px var(--zc)}
+.dy .col.none{background:repeating-linear-gradient(135deg,rgba(247,241,230,.06) 0 6px,transparent 6px 12px);border-top-color:var(--line2);box-shadow:none;color:var(--fg3);min-height:36px}
+.dy .col .bb{position:absolute;left:50%;top:-34px;translate:-50% 0;font:600 11px var(--sans);white-space:nowrap;color:var(--z5);letter-spacing:.02em}
+.dy b{font:italic 800 22px var(--num)}
+.dy span{font-size:12.5px;color:var(--fg2);line-height:1.45;min-height:3.9em}
+
+/* ── 規則 ── */
+.rules{list-style:none;display:grid;gap:0;counter-reset:r}
+.rules li{display:grid;grid-template-columns:3.2em 1fr;gap:14px;padding:16px 0;border-bottom:1px solid var(--line);counter-increment:r}
+.rules li::before{content:counter(r,decimal-leading-zero);font:italic 800 28px/1 var(--num);color:var(--z5)}
+.rules b{display:block;font-size:17px;margin-bottom:4px}
+.rules span{font-size:14.5px;line-height:1.7;color:var(--fg2)}
+
+/* ── 結尾 ── */
+.s-end{grid-template-columns:1fr;justify-items:start;align-content:center}
+.count{font:italic 800 clamp(120px,20vw,260px)/.85 var(--num);color:var(--me);text-shadow:0 0 60px rgba(255,230,0,.35)}
+.count small{font:700 clamp(18px,2vw,26px) var(--sans);font-style:normal;color:var(--fg);margin-left:12px;text-shadow:none}
+.formula{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;margin:26px 0;font:700 clamp(16px,1.6vw,22px) var(--sans)}
+.formula i{font:italic 800 26px var(--num);color:var(--fg3)}
+.formula span{padding:6px 14px;border:1px solid var(--line2);border-radius:999px;white-space:nowrap}
+.s-end .copy{max-width:60em}
+.acts{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 18px;border-radius:999px;border:1px solid var(--line2);text-decoration:none;font-size:15px;background:rgba(11,9,6,.5);cursor:pointer}
+.btn:hover{border-color:var(--me);color:var(--me)}
+.btn.pri{background:var(--me);color:var(--bg);border-color:var(--me);font-weight:700}
+.btn.pri:hover{color:var(--bg);filter:brightness(1.08)}
+.how{margin-top:26px;max-width:52em;font-size:13.5px;color:var(--fg3);line-height:1.8}
+.how summary{cursor:pointer;color:var(--fg2)}
+.how ul{margin:10px 0 0 1.2em}
+
+/* ── 掃過去的速度條 ── */
+.wipe{position:fixed;top:-20vh;bottom:-20vh;left:0;width:70vw;z-index:4;pointer-events:none;display:flex;gap:2.2vw;transform:translateX(-120vw) skewX(-16deg);opacity:0}
+.wipe i{flex:0 0 auto;height:100%;background:var(--c);box-shadow:0 0 50px var(--c)}
+.wipe i:nth-child(1){width:1.2vw;--c:var(--z3);opacity:.8}
+.wipe i:nth-child(2){width:4vw;--c:var(--z4)}
+.wipe i:nth-child(3){width:14vw;--c:var(--z5)}
+.wipe i:nth-child(4){width:2vw;--c:var(--me);opacity:.9}
+
+/* ── 下方頁碼 ── */
+.pager{position:fixed;left:0;right:0;bottom:0;z-index:5;background:linear-gradient(transparent,rgba(11,9,6,.7) 40%,rgba(11,9,6,.92));display:flex;align-items:center;gap:14px;padding:16px var(--gut) calc(16px + env(safe-area-inset-bottom))}
+.pg{flex:1;display:flex;gap:4px;align-items:center;min-width:0}
+.pg button{flex:1;height:26px;border:0;background:none;cursor:pointer;display:flex;align-items:center;min-width:6px}
+.pg button i{display:block;width:100%;height:3px;background:var(--line2);border-radius:2px;transition:.3s}
+.pg button.gap{margin-left:10px}
+.pg button[aria-current=true] i{background:var(--heat);height:5px;box-shadow:0 0 10px var(--heat)}
+.pg button.past i{background:var(--fg3)}
+.pg button:hover i{background:var(--fg2)}
+.arw{width:40px;height:40px;border-radius:50%;border:1px solid var(--line2);background:rgba(11,9,6,.5);display:grid;place-items:center;cursor:pointer;flex:none}
+.arw:hover:not(:disabled){border-color:var(--me);color:var(--me)}
+.arw:disabled{opacity:.3;cursor:default}
+.arw svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.live{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* ── 窄螢幕 ── */
+@media (max-width:860px){
+  .slide{align-content:start;padding-top:66px;padding-bottom:110px}
+  .two,.s-cover{grid-template-columns:1fr}
+  .chart{height:320px}
+  .chart text{font-size:12px}
+  .no{display:none}
+  .veil{background:rgba(11,9,6,.55)}
+  .zr{grid-template-columns:2.6em 6.2em 1fr;gap:10px}
+  .zr .zt{grid-column:2/-1}
+  .cal{grid-template-columns:repeat(7,minmax(0,1fr));font-size:11px}
+  .cal .wk{grid-column:1/-1;flex-direction:row;gap:8px;align-items:baseline;margin-top:6px}
+  .cal .tot{display:none}
+  .cal .hd.wkh,.cal .hd.toth{display:none}
+  .cal .c{min-height:52px;padding:4px}
+  .cal .c .nm{font-size:10.5px}
+  .week{height:300px;gap:4px}
+  .dy span{font-size:11px}
+  .bar .t{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  .copy>*,.draw,.pop,.grow,.growx{animation:none!important;opacity:1!important;transform:none!important;stroke-dashoffset:0!important}
+  .wipe{display:none}
+}
+</style>
+</head>
+<body>
+<canvas id="heat" aria-hidden="true"></canvas>
+<div class="veil" aria-hidden="true"></div>
+
+<header class="bar">
+  <a href="linkTreeIndex.html#theatre"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg>放映室</a>
+  <div class="t">課表的解剖 · <b id="partName"></b></div>
+  <div class="r">
+    <span id="count"></span>
+    <button class="ib" id="auto" type="button" aria-pressed="false" aria-label="自動放映" title="自動放映（P）"><svg viewBox="0 0 24 24"><path d="M7 4.5v15L19 12z"/></svg></button>
+    <button class="ib" id="fs" type="button" aria-pressed="false" aria-label="全螢幕" title="全螢幕（F）"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+  </div>
+</header>
+
+<main class="deck" id="deck">
+
+<!-- 00 封面 -->
+<section class="slide s-cover" data-key="cover" data-title="封面" data-z="3" data-part="">
+  <div class="copy">
+    <div class="kick">ANATOMY OF A TRAINING BLOCK</div>
+    <h1>課表，是怎麼<br>讓一個人<br><span class="me">變強</span>的</h1>
+    <p class="lede">拿我正在跑的這一期——<b id="blockTitle">鬼月後回山＋中社四週</b>——整份拆開：每一堂為什麼排在那天、為什麼是那個瓦數、為什麼最後一週反而要少騎。量尺是同一條爬坡，中社路。</p>
+    <div class="scores">
+      <div class="score now"><div class="v" id="cvNow">—</div><div class="k" id="ckNow">最近一次</div></div>
+      <div class="score pr"><div class="v" id="cvPr">—</div><div class="k" id="ckPr">個人紀錄</div></div>
+      <div class="score q"><div class="v" id="cvQ">?</div><div class="k" id="ckQ">四週驗收</div></div>
+    </div>
+    <div class="parts" id="parts"></div>
+    <div class="hint">← → 換頁　·　五章 <span id="nSlides"></span> 張　·　P 自動放映</div>
+  </div>
+  <div class="art"><svg class="chart" id="g-cover" role="img" aria-label="中社路每一次的時間"></svg></div>
+</section>
+
+<!-- 01 超補償 -->
+<section class="slide two" data-key="rebound" data-title="變強發生在休息" data-z="2" data-part="原理">
+  <div class="copy">
+    <div class="kick">第一章 · 原理</div>
+    <h2>騎車的當下，<br>你其實在<span class="hot">變弱</span></h2>
+    <p class="lede">一堂硬課結束時，肝醣用掉了、肌纖維有細小的損傷，能力比出門前<b>低</b>。接下來兩三天身體在修補，而且會修得比原本多一點，好應付下一次。這叫<b>超補償</b>。</p>
+    <p class="lede">所以課表真正在決定的是「下一堂落在哪」。落在反彈的高點上，就一階一階往上；太早，疲勞疊疲勞；太晚，反彈已經退回原點。</p>
+    <div class="ctl" id="gapBtns">
+      <button class="chip" type="button" data-gap="1">每天都練</button>
+      <button class="chip" type="button" data-gap="3" aria-pressed="true">隔兩天一堂</button>
+      <button class="chip" type="button" data-gap="7">一週一次</button>
+    </div>
+    <label class="range">每 <output id="gapOut">3 天</output> 一堂<input type="range" id="gap" min="1" max="8" step="0.5" value="3"></label>
+    <p class="read" id="gapRead"></p>
+    <p class="note">示意模型：Banister 體能—疲勞模型，加上 Busso 的「累積疲勞會放大下一堂的傷害」。常數是為了畫清楚挑的，不是我的量測；形狀才是重點。</p>
+  </div>
+  <div class="art"><svg class="chart" id="g-rebound" role="img" aria-label="不同訓練間隔下的能力曲線"></svg></div>
+  <div class="no" aria-hidden="true">01</div>
+</section>
+
+<!-- 02 TSS -->
+<section class="slide two" data-key="tss" data-title="把每一堂換成同一種貨幣" data-z="2" data-part="原理">
+  <div class="copy">
+    <div class="kick">第一章 · 原理</div>
+    <h2>把每一堂課<br>換成同一種貨幣</h2>
+    <p class="lede">一小時輕鬆踩和一小時爬坡，累的程度差很多。<b>TSS</b>（訓練壓力分數）把「多久」和「多硬」合成一個數字：強度用 IF（標準化功率 ÷ FTP）算，而且是<b>平方</b>——硬一點，代價不是多一點，是多很多。</p>
+    <div class="calc" id="calc"></div>
+    <p class="lede" id="calcNote"></p>
+    <dl class="defs">
+      <dt>CTL</dt><dd>過去 42 天每日 TSS 的加權平均＝<b>體能</b>。存得慢、提得也慢。</dd>
+      <dt class="atl">ATL</dt><dd>過去 7 天的加權平均＝<b>疲勞</b>。來得快、走得也快。</dd>
+      <dt class="tsb">TSB</dt><dd>CTL − ATL＝<b>狀態</b>。負的是累，正的是新鮮。</dd>
+    </dl>
+  </div>
+  <div class="art"><svg class="chart" id="impulse" role="img" aria-label="一趟騎乘之後疲勞與體能的變化"></svg></div>
+  <div class="no" aria-hidden="true">02</div>
+</section>
+
+<!-- 03 CTL 帳本 -->
+<section class="slide two" data-key="ledger" data-title="體能帳本" data-z="3" data-part="原理">
+  <div class="copy">
+    <div class="kick">第一章 · 原理</div>
+    <h2>體能是存出來的，<br>也會被提走</h2>
+    <p class="lede" id="ledgerLede"></p>
+    <p class="lede">這條線沒有捷徑：CTL 每天最多只會往目標靠近 1/42。想從 30 爬回 40，就算每天都騎到 TSS 60，也要將近一個月。<b>課表的第一個任務，是讓這條線不要斷。</b></p>
+  </div>
+  <div class="art"><svg class="chart" id="ctl" role="img" aria-label="CTL 與 ATL 的歷史"></svg></div>
+  <div class="no" aria-hidden="true">03</div>
+</section>
+
+<!-- 04 量 -->
+<section class="slide two" data-key="volume" data-title="先有量" data-z="3" data-part="原理">
+  <div class="copy">
+    <div class="kick">第一章 · 原理</div>
+    <h2>先有量，<br>強度才有地方放</h2>
+    <p class="lede" id="volLede"></p>
+    <p class="lede">原因在上一張：CTL 是 TSS 的平均，而 TSS 的一半是「時間」。強度可以把一小時變得更值錢，但不能把零小時變成有價值。</p>
+    <p class="note">這條線本身有不確定性：它來自少量月份的迴歸，換算法重跑會落在 16–17 小時。拿來當量級，不要當精確門檻。</p>
+  </div>
+  <div class="art"><svg class="chart" id="g-volume" role="img" aria-label="每月騎乘時數與損益線"></svg></div>
+  <div class="no" aria-hidden="true">04</div>
+</section>
+
+<!-- 05 區間 -->
+<section class="slide two" data-key="zones" data-title="七個區間" data-z="4" data-part="強度">
+  <div class="copy">
+    <div class="kick">第二章 · 強度</div>
+    <h2>同一台車，<br>七種不同的訓練</h2>
+    <p class="lede">功率區間不是裝飾，是「你想讓身體改哪裡」的開關。每一格刺激的系統不同，改變的速度也不同：Z2 的改變要好幾個月才看得到，但它是所有東西的地基；Z5 幾週就有反應，但也最快退。</p>
+    <p class="lede">格子是用 <b>FTP <span class="n" id="zFtp">234</span> W</b> 切的——能撐大約一小時的功率。FTP 一變，所有課表的瓦數跟著動。</p>
+  </div>
+  <div class="art"><div class="zones" id="g-zones"></div></div>
+  <div class="no" aria-hidden="true">05</div>
+</section>
+
+<!-- 06 分配 -->
+<section class="slide two" data-key="mix" data-title="時間花在哪" data-z="4" data-part="強度">
+  <div class="copy">
+    <div class="kick">第二章 · 強度</div>
+    <h2>簡單的要夠簡單，<br>硬的才硬得起來</h2>
+    <p class="lede">耐力運動員的時間分配幾乎都是金字塔：大部分在 Z1–Z2，少量在閾值以上。原因很實際——高強度的恢復成本太高，一週只付得起兩三次；其他時間如果「有點硬」，只會讓真正的硬課做不到位。</p>
+    <p class="lede" id="mixLede"></p>
+  </div>
+  <div class="art"><div class="mix" id="g-mix"></div></div>
+  <div class="no" aria-hidden="true">06</div>
+</section>
+
+<!-- 07 限制因子 -->
+<section class="slide two" data-key="limiter" data-title="練最弱的那一環" data-z="5" data-part="強度">
+  <div class="copy">
+    <div class="kick">第二章 · 強度</div>
+    <h2>目標是 18 分鐘，<br>就練 18 分鐘撐得住的那個數字</h2>
+    <p class="lede">功率曲線可以拆成兩個數：<b>CP</b>（臨界功率，能長時間維持的上限）和 <b>W′</b>（高於 CP 時能花的一筆「存款」）。越短的努力越靠 W′，越長的越靠 CP。</p>
+    <p class="lede" id="limLede"></p>
+  </div>
+  <div class="art"><svg class="chart" id="curve" role="img" aria-label="近 90 天功率曲線與 CP 模型"></svg></div>
+  <div class="no" aria-hidden="true">07</div>
+</section>
+
+<!-- 08 目標 -->
+<section class="slide two" data-key="climb" data-title="中社路" data-z="5" data-part="目標">
+  <div class="copy">
+    <div class="kick">第三章 · 目標</div>
+    <h2>目標長什麼樣，<br>就練什麼樣</h2>
+    <p class="lede" id="climbLede"></p>
+    <p class="lede">這叫<b>特異性</b>：身體只會變成你要它做的那件事。所以這一期的主課全在真的坡上（風櫃嘴、露營場），瓦數比全力低一截、時間比目標長——在同一種坡度、同一種踏頻下，把「撐住」練成習慣。</p>
+  </div>
+  <div class="art"><svg class="chart" id="g-climb" role="img" aria-label="中社路坡度剖面"></svg></div>
+  <div class="no" aria-hidden="true">08</div>
+</section>
+
+<!-- 09 配速 -->
+<section class="slide two" data-key="pace" data-title="配速也是訓練" data-z="5" data-part="目標">
+  <div class="copy">
+    <div class="kick">第三章 · 目標</div>
+    <h2>同一雙腿，<br>配速換來的是秒數</h2>
+    <p class="lede" id="paceLede"></p>
+    <p class="lede">超過 CP 的每一秒都在花 W′，存款花光就只能掉到 CP 以下，而且會掉很多。均勻出力把存款留到最後一公里，是不花力氣就能拿到的秒數——前提是你<b>練過</b>那個節奏，不然出發時的腎上腺素會替你決定。</p>
+  </div>
+  <div class="art"><svg class="chart" id="g-pace" role="img" aria-label="每 100 公尺的功率：紀錄、最近一次與模型"></svg></div>
+  <div class="no" aria-hidden="true">09</div>
+</section>
+
+<!-- 10 四週 -->
+<section class="slide two" data-key="block" data-title="四週怎麼排" data-z="4" data-part="排法">
+  <div class="copy">
+    <div class="kick">第四章 · 排法</div>
+    <h2>四週：量先穩住，<br>強度往上，最後收</h2>
+    <p class="lede">週期化就是把「會互相打架的東西」拆到不同的時間：先回到山上、建立基準（過渡），再兩三週把最貴的刺激放進去（W1–W3），最後一週砍量、只留一次全力（W4）。</p>
+    <p class="lede" id="blockLede"></p>
+  </div>
+  <div class="art"><div class="cal" id="cal"></div></div>
+  <div class="no" aria-hidden="true">10</div>
+</section>
+
+<!-- 11 一週 -->
+<section class="slide two" data-key="week" data-title="一週的形狀" data-z="3" data-part="排法">
+  <div class="copy">
+    <div class="kick">第四章 · 排法</div>
+    <h2>硬的日子要硬，<br>軟的日子要軟</h2>
+    <p class="lede">一週的骨架是先被生活決定的：上班前的時間窗、週三的重訓、週二晚上的籃球。課表只是在這個骨架裡找兩個最長的窗口放主課。</p>
+    <p class="lede">週二、週四隔 48 小時，剛好是一堂硬課的反彈期。<b>週三不騎</b>不是偷懶，是把腿留給週四——在前一天多騎一小時的代價，是週四的主課打折。週日的輕鬆踩只准聊天強度：它的任務是讓血流過腿，不是再存一筆體能。</p>
+  </div>
+  <div class="art"><div class="week" id="g-week"></div></div>
+  <div class="no" aria-hidden="true">11</div>
+</section>
+
+<!-- 12 漸進 -->
+<section class="slide two" data-key="progress" data-title="測驗是尺" data-z="4" data-part="排法">
+  <div class="copy">
+    <div class="kick">第四章 · 排法</div>
+    <h2>測驗是尺，<br>中間是累積</h2>
+    <p class="lede">這一期每兩週騎一次中社全力，當作量尺。兩次量尺之間的主課，瓦數刻意壓在測驗的八到九成，換來的是<b>更長的時間</b>：一次 26–35 分鐘、或兩組 15 分鐘——都比測驗本身長。</p>
+    <p class="lede">能調的旋鈕有四個：時間、強度、組間休息、頻率。一次只轉一個。升級的條件寫在課表裡：<b>前一週的工作段穩定完成、自覺費力 6–8、恢復正常才升；否則同級再做一次。</b></p>
+    <p class="lede" id="progLede"></p>
+  </div>
+  <div class="art"><svg class="chart" id="prog" role="img" aria-label="這一期的測驗成績與主課瓦數"></svg></div>
+  <div class="no" aria-hidden="true">12</div>
+</section>
+
+<!-- 13 減量模擬 -->
+<section class="slide two" data-key="taper" data-title="最後一週為什麼少騎" data-z="3" data-part="排法">
+  <div class="copy">
+    <div class="kick">第四章 · 排法</div>
+    <h2>最後一週少騎，<br>是讓疲勞先走</h2>
+    <p class="lede">還記得那個不對稱嗎？疲勞 7 天、體能 42 天。驗收前把量砍掉三四成、強度留著，ATL 會在幾天內退掉，CTL 幾乎不動——TSB 翻正，腿是新的，引擎還在。</p>
+    <p class="lede">從我今天真實的 CTL / ATL 出發，按這份課表往下算。換幾種排法試試：</p>
+    <div class="ctl" id="simBtns">
+      <button class="chip" type="button" data-sim="plan" aria-pressed="true">照課表</button>
+      <button class="chip" type="button" data-sim="cram">考前一週加碼 60%</button>
+      <button class="chip" type="button" data-sim="rest">最後十天全休</button>
+      <button class="chip" type="button" data-sim="daily">每天都騎一小時</button>
+    </div>
+    <p class="read" id="simRead"></p>
+    <p class="note">TSS 用這一期已完成的主課實際值換算（每分鐘 <span id="tpm">1.07</span>），週日輕鬆踩每分鐘 0.5；籃球與重訓沒算進來。</p>
+  </div>
+  <div class="art"><svg class="chart" id="sim" role="img" aria-label="到驗收日的 CTL、ATL 與 TSB 推算"></svg></div>
+  <div class="no" aria-hidden="true">13</div>
+</section>
+
+<!-- 14 恢復 -->
+<section class="slide two" data-key="recover" data-title="恢復也要排" data-z="2" data-part="紀律">
+  <div class="copy">
+    <div class="kick">第五章 · 恢復與紀律</div>
+    <h2>恢復不是空白，<br>是課表的另一半</h2>
+    <p class="lede">超補償只發生在恢復裡。所以每天早上要看的不是「想不想騎」，而是身體給的數字。</p>
+    <p class="lede" id="hrvLede"></p>
+    <p class="lede">我自己的資料裡，早上的 <b>HRV、靜息心率、出門時的 Body Battery</b> 跟當天爬坡表現有關（r 約 0.33–0.36）；睡了幾小時反而看不出關係。所以恢復是用量的，不是用猜的。</p>
+  </div>
+  <div class="art"><svg class="chart" id="hrv" role="img" aria-label="近 90 天 HRV 與基線"></svg></div>
+  <div class="no" aria-hidden="true">14</div>
+</section>
+
+<!-- 15 規則 -->
+<section class="slide two" data-key="rules" data-title="不做的事" data-z="2" data-part="紀律">
+  <div class="copy">
+    <div class="kick">第五章 · 恢復與紀律</div>
+    <h2>一份課表，<br>一半是「不做」</h2>
+    <p class="lede">大部分課表不是毀在練太少，是毀在臨時加戲。下面五條是這一期寫死的：</p>
+  </div>
+  <div class="art">
+    <ol class="rules">
+      <li><div><b>漏掉的課不補</b><span>區塊的漸進是算過的。把上週的量塞進這週，等於在錯的日子疊疲勞，驗收的數字也就不準了。一週少做不算欠帳。</span></div></li>
+      <li><div><b>驗收日和測法不動</b><span>那是整個區塊唯一的產出。同一條路、同一個時段、只測一次，前後才比得起來。</span></div></li>
+      <li><div><b>這期不排 VO2</b><span>目標 18 分鐘，九成以上靠 CP。把最貴的恢復預算花在不是瓶頸的系統上，是最常見的浪費。</span></div></li>
+      <li><div><b>每一堂都有中止條件</b><span>「第二組已經崩了就減 5–10 W 或少一組」「幾點沒到頂就掉頭」。寫在出門前，不在喘的時候決定。</span></div></li>
+      <li><div><b>有全力段的日子不用 ERG</b><span>ERG 會把全力鎖成固定瓦數，測驗值就沒了。室內也看曲柄的真實功率。</span></div></li>
+    </ol>
+  </div>
+  <div class="no" aria-hidden="true">15</div>
+</section>
+
+<!-- 16 結尾 -->
+<section class="slide s-end" data-key="end" data-title="驗收" data-z="6" data-part="紀律">
+  <div class="copy">
+    <div class="kick">FINAL · 中社路</div>
+    <div class="count" id="countdown">—</div>
+    <p class="lede" id="endLede" style="max-width:40em"></p>
+    <div class="formula"><span>量</span><i>×</i><span>強度分配</span><i>×</i><span>特異性</span><i>×</i><span>恢復</span><i>×</i><span>時間</span></div>
+    <p class="lede" style="max-width:40em">變強的不是哪一堂課，是這張表的形狀。一堂課只是一個刺激；排在對的位置、隔對的距離、重複夠多次，它才變成能力。</p>
+    <div class="acts">
+      <button class="btn pri" type="button" data-go="0">再看一次</button>
+      <a class="btn" href="hero.html">From zero to HERO</a>
+      <a class="btn" href="strava_film.html">《十六分二十五秒》</a>
+      <a class="btn" href="linkTreeIndex.html#theatre">回放映室</a>
+    </div>
+    <details class="how"><summary>這些數字怎麼算的</summary><ul id="how"></ul></details>
+  </div>
+</section>
+
+</main>
+
+<div class="wipe" id="wipe" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+
+<nav class="pager" aria-label="幻燈片">
+  <button class="arw" id="prev" type="button" aria-label="上一張" title="上一張（←）"><svg viewBox="0 0 24 24"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg></button>
+  <div class="pg" id="pg"></div>
+  <button class="arw" id="next" type="button" aria-label="下一張" title="下一張（→）"><svg viewBox="0 0 24 24"><path d="M9.5 5.5L16 12l-6.5 6.5"/></svg></button>
+</nav>
+<div class="live" id="live" role="status" aria-live="polite"></div>
+<noscript><p style="position:fixed;inset:auto 20px 20px;color:#f7f1e6;font:15px/1.8 sans-serif;z-index:99">這頁需要 JavaScript。回<a href="linkTreeIndex.html">首頁</a>。</p></noscript>
+
+<script>
+'use strict'
+const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)]
+const NS = 'http://www.w3.org/2000/svg'
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v))
+const RM = matchMedia('(prefers-reduced-motion: reduce)')
+const NARROW = matchMedia('(max-width: 860px)')
+const root = document.documentElement
+const ZC = ['--z1', '--z2', '--z3', '--z4', '--z5', '--z6', '--z7'].map(v => getComputedStyle(root).getPropertyValue(v).trim())
+const TODAY = new Date(Date.now() + 8 * 3600e3).toISOString().slice(0, 10)   // 台北時間
+const d2n = s => Date.UTC(+s.slice(0, 4), +s.slice(5, 7) - 1, +s.slice(8, 10)) / 864e5
+const n2d = n => new Date(n * 864e5).toISOString().slice(0, 10)
+const md = s => `${+s.slice(5, 7)}/${+s.slice(8, 10)}`
+const mmss = s => { s = Math.round(s); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}` }
+const f1 = v => (Math.round(v * 10) / 10).toFixed(1)
+const avg = a => a.reduce((x, y) => x + y, 0) / a.length
+const lin = (d0, d1, r0, r1) => v => r0 + (v - d0) * (r1 - r0) / (d1 - d0)
+const P = pts => 'M' + pts.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join('L')
+
+function el(tag, attrs, parent, text) {
+  const e = document.createElementNS(NS, tag)
+  for (const k in attrs) if (attrs[k] != null) e.setAttribute(k, attrs[k])
+  if (text != null) e.textContent = text
+  if (parent) parent.append(e)
+  return e
+}
+function frame(svg) {
+  const r = svg.getBoundingClientRect()
+  const w = Math.max(280, Math.round(r.width)), h = Math.max(220, Math.round(r.height))
+  svg.setAttribute('viewBox', `0 0 ${w} ${h}`); svg.textContent = ''
+  return [w, h]
+}
+const drawPath = (g, d, attrs) => el('path', Object.assign({ d, fill: 'none', pathLength: 1, class: 'draw' }, attrs), g)
+
+/* ═══ 背景熱場（WebGL；沒有就留 CSS 漸層） ═══ */
+const Heat = (() => {
+  const cv = $('#heat'); const gl = cv.getContext('webgl', { antialias: false, alpha: false, premultipliedAlpha: false })
+  const cur = { a: [0.97, 0.7, 0.17], b: [0.94, 0.3, 0.14], k: .5 }, tgt = { a: cur.a.slice(), b: cur.b.slice(), k: cur.k }
+  if (!gl) return { to() {}, start() {} }
+  const vs = 'attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}'
+  const fs = `precision mediump float;uniform vec2 r;uniform float t;uniform vec3 a;uniform vec3 b;uniform float k;
+  float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+  float n(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y);}
+  float fbm(vec2 p){float s=0.,m=.5;for(int i=0;i<5;i++){s+=m*n(p);p=p*2.03+vec2(1.7,9.2);m*=.5;}return s;}
+  void main(){vec2 uv=gl_FragCoord.xy/r;vec2 p=uv*vec2(r.x/r.y,1.)*2.;float tt=t*.045;
+    vec2 q=vec2(fbm(p+vec2(tt,0.)),fbm(p+vec2(5.2,1.3)-tt));
+    float f=fbm(p*vec2(.55,2.1)+q*1.7+vec2(-tt*2.2,0.));
+    float band=smoothstep(.42,.92,f);
+    float low=mix(.35,1.,smoothstep(1.,0.,uv.y));
+    vec3 col=vec3(.043,.035,.024);
+    col=mix(col,a*.62,band*k*low);
+    col+=b*pow(band,3.)*k*1.45*low;
+    float d=abs(fract(f*9.)-.5);
+    col+=a*smoothstep(.455,.5,d)*.16*k*low;
+    col*=1.-.45*length((uv-vec2(.5,.35))*vec2(.9,1.1));
+    gl_FragColor=vec4(col,1.);}`
+  const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); return s }
+  const pr = gl.createProgram(); gl.attachShader(pr, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(pr)
+  if (!gl.getProgramParameter(pr, gl.LINK_STATUS)) return { to() {}, start() {} }
+  gl.useProgram(pr)
+  const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW)
+  const lp = gl.getAttribLocation(pr, 'p'); gl.enableVertexAttribArray(lp); gl.vertexAttribPointer(lp, 2, gl.FLOAT, false, 0, 0)
+  const U = n => gl.getUniformLocation(pr, n), ur = U('r'), ut = U('t'), ua = U('a'), ub = U('b'), uk = U('k')
+  const hex = c => { const m = c.replace('#', ''); return [0, 2, 4].map(i => parseInt(m.slice(i, i + 2), 16) / 255) }
+  let W = 0, H = 0, t0 = performance.now(), last = 0, raf = 0
+  function size() { const s = Math.min(devicePixelRatio || 1, 2) * .5; W = Math.round(innerWidth * s); H = Math.round(innerHeight * s); cv.width = W; cv.height = H; gl.viewport(0, 0, W, H) }
+  function frame(now) {
+    raf = requestAnimationFrame(frame)
+    if (now - last < 33) return; last = now
+    const e = .045
+    for (let i = 0; i < 3; i++) { cur.a[i] += (tgt.a[i] - cur.a[i]) * e; cur.b[i] += (tgt.b[i] - cur.b[i]) * e }
+    cur.k += (tgt.k - cur.k) * e
+    gl.uniform2f(ur, W, H); gl.uniform1f(ut, RM.matches ? 40 : (now - t0) / 1000)
+    gl.uniform3fv(ua, cur.a); gl.uniform3fv(ub, cur.b); gl.uniform1f(uk, cur.k)
+    gl.drawArrays(gl.TRIANGLES, 0, 3)
+  }
+  addEventListener('resize', size); size()
+  document.addEventListener('visibilitychange', () => { if (document.hidden) cancelAnimationFrame(raf); else raf = requestAnimationFrame(frame) })
+  return {
+    to(z) { tgt.a = hex(ZC[clamp(z - 1, 0, 6)]); tgt.b = hex(ZC[clamp(z, 0, 6)]); tgt.k = .45 + z * .1 },
+    start() { raf = requestAnimationFrame(frame) }
+  }
+})()
+
+/* ═══ 各張的內容 ═══ */
+const D = {}   // 讀進來的資料
+const V = {}   // 算出來、跨張共用的數字
+
+function prep() {
+  const B = D.block, Pc = D.pacing
+  // 中社路：所有紀錄（去重）
+  const seg = D.itt && D.itt.find(s => s.id === 1761462)
+  const seen = new Map()
+  for (const e of (seg ? seg.efforts : [])) { const k = e.date + (e.start_time || ''); if (!seen.has(k) || e.source === 'fit') seen.set(k, e) }
+  V.efforts = [...seen.values()].filter(e => e.elapsed_sec > 0).sort((a, b) => a.date < b.date ? -1 : 1)
+  const zs = Pc && Pc.segments['1761462']
+  V.zs = zs
+  V.best = zs ? zs.best : V.efforts.reduce((m, e) => !m || e.elapsed_sec < m.elapsed_sec ? e : m, null)
+  V.last = zs ? zs.last : V.efforts[V.efforts.length - 1]
+  V.bestT = V.best && (V.best.elapsed ?? V.best.elapsed_sec); V.bestW = V.best && (V.best.avg_w ?? V.best.avg_watts)
+  V.lastT = V.last && (V.last.elapsed ?? V.last.elapsed_sec); V.lastW = V.last && (V.last.avg_w ?? V.last.avg_watts)
+  V.first = V.efforts[0]
+  // 區塊
+  if (B) {
+    V.ftp = B.ftp; V.testDay = (B.sessions.find(s => s.code === 'POST') || {}).date
+    V.blockTests = V.efforts.filter(e => e.date >= B.start && e.date <= B.end)
+    const done = B.sessions.filter(s => !s.support && s.actual && s.actual.tss && s.minutes)
+    V.tpm = done.length ? done.reduce((a, s) => a + s.actual.tss, 0) / done.reduce((a, s) => a + s.minutes, 0) : 1.05
+  }
+  // 騎乘
+  if (D.acts) {
+    V.rides = Object.values(D.acts).filter(x => (x.type === 'Ride' || x.type === 'VirtualRide') && x.start_date_local.slice(0, 10) <= TODAY)
+      .sort((a, b) => a.start_date_local < b.start_date_local ? -1 : 1)
+    V.zonesPct = (V.rides.filter(x => x.icu_power_zones).slice(-1)[0] || {}).icu_power_zones || [55, 75, 90, 105, 120, 150, 999]
+  }
+  if (!V.ftp) V.ftp = 234
+  // wellness（切到今天，未來日是推算值）
+  if (D.well) {
+    V.wk = Object.keys(D.well).filter(k => k <= TODAY).sort()
+    const lastK = V.wk.filter(k => D.well[k].ctl != null).slice(-1)[0]
+    V.nowK = lastK; V.nowCtl = D.well[lastK].ctl; V.nowAtl = D.well[lastK].atl
+  }
+}
+
+/* 00 封面：中社路每一次 */
+function renderCover() {
+  const B = D.block
+  if (B) $('#blockTitle').textContent = B.title
+  if (V.lastT) { $('#cvNow').textContent = mmss(V.lastT); $('#ckNow').textContent = `最近一次 · ${md(V.last.date)} · ${V.lastW} W` }
+  if (V.bestT) { $('#cvPr').textContent = mmss(V.bestT); $('#ckPr').textContent = `個人紀錄 · ${V.best.date.slice(0, 4)}/${md(V.best.date)} · ${V.bestW} W` }
+  const past = V.testDay && V.testDay < TODAY
+  const tEff = past && V.efforts.find(e => e.date === V.testDay)
+  if (tEff) { $('#cvQ').textContent = mmss(tEff.elapsed_sec); $('#ckQ').textContent = `四週驗收 · ${md(V.testDay)}` }
+  else if (V.testDay) $('#ckQ').textContent = `四週驗收 · ${md(V.testDay)}`
+  const svg = $('#g-cover'); const [w, h] = frame(svg)
+  const E = V.efforts; if (!E.length) return
+  const x0 = d2n(E[0].date) - 10, x1 = Math.max(d2n(V.testDay || TODAY), d2n(TODAY)) + 14
+  const tmin = Math.min(...E.map(e => e.elapsed_sec)), tmax = Math.max(...E.map(e => e.elapsed_sec))
+  const L = 44, R = w - 16, T = 48, Bm = h - 34
+  const X = lin(x0, x1, L, R), Y = v => lin(Math.log(tmin * .96), Math.log(tmax * 1.04), T, Bm)(Math.log(v))
+  const g = el('g', {}, svg)
+  for (const s of [960, 1080, 1200, 1500, 1800, 2400]) if (s > tmin * .96 && s < tmax * 1.04) {
+    el('line', { x1: L, x2: R, y1: Y(s), y2: Y(s), class: 'grid' }, g); el('text', { x: L - 8, y: Y(s) + 4, 'text-anchor': 'end' }, g, mmss(s).replace(/:00$/, "'"))
+  }
+  for (let y = +E[0].date.slice(0, 4); y <= +TODAY.slice(0, 4) + 1; y++) for (const m of [1, 7]) {
+    const n = d2n(`${y}-${String(m).padStart(2, '0')}-01`); if (n < x0 || n > x1) continue
+    el('line', { x1: X(n), x2: X(n), y1: T, y2: Bm, class: 'grid' }, g); el('text', { x: X(n) + 4, y: Bm + 20 }, g, `${y}/${m}`)
+  }
+  // 逐次最佳的階梯
+  let bestSoFar = Infinity; const st = []
+  for (const e of E) { const x = X(d2n(e.date)); if (e.elapsed_sec < bestSoFar) { if (st.length) st.push([x, Y(bestSoFar)]); bestSoFar = e.elapsed_sec; st.push([x, Y(bestSoFar)]) } }
+  st.push([X(d2n(TODAY)), Y(bestSoFar)])
+  drawPath(g, P(st), { stroke: 'var(--me)', 'stroke-width': 2.5, class: 'draw glow', style: '--d:.5s' })
+  E.forEach((e, i) => el('circle', { cx: X(d2n(e.date)), cy: Y(e.elapsed_sec), r: 3.2, fill: 'var(--fg)', 'fill-opacity': .55, class: 'pop', style: `--d:${(.4 + i * .03).toFixed(2)}s` }, g))
+  const mark = (e, t, col, lab, anchor, dy) => {
+    const x = X(d2n(e.date)), y = Y(t)
+    el('circle', { cx: x, cy: y, r: 7, fill: col, class: 'pop glow', style: `--c:${col};--d:1.6s` }, g)
+    el('text', { x: x + (anchor === 'end' ? -12 : 12), y: y + dy, 'text-anchor': anchor, class: 'mid pop', style: '--d:1.8s', fill: col }, g, lab)
+  }
+  mark(E[0], E[0].elapsed_sec, 'var(--fg2)', `${mmss(E[0].elapsed_sec)} 第一次`, 'start', -10)
+  if (V.bestT) mark(V.best, V.bestT, 'var(--me)', `${mmss(V.bestT)} PR`, 'start', -12)
+  if (V.lastT) mark(V.last, V.lastT, 'var(--z4)', `${mmss(V.lastT)} 最近`, 'end', 24)
+  if (V.testDay && !tEff) {
+    const x = X(d2n(V.testDay))
+    el('line', { x1: x, x2: x, y1: T, y2: Bm, stroke: 'var(--z5)', 'stroke-dasharray': '4 5', class: 'pop', style: '--d:2s' }, g)
+    el('text', { x: x - 8, y: T + 12, 'text-anchor': 'end', class: 'lb b pop', style: '--d:2.1s' }, g, `${md(V.testDay)} 驗收`)
+  }
+  el('text', { x: L, y: T - 30, class: 'lb' }, g, `中社路 ${seg().distance_km || 3.94} km · 全部 ${E.length} 次（越上面越快）`)
+}
+const seg = () => (D.itt && D.itt.find(s => s.id === 1761462)) || {}
+
+/* 01 超補償模型 */
+function simRebound(gap, days = 40) {
+  const t1 = 25, t2 = 1.8, k1 = .45, k2 = 1.5, c = .5
+  const S = []; for (let t = 1; t < days - 2; t += gap) S.push(t)
+  const hs = []
+  for (const ti of S) { let f = 0; S.forEach((tj, j) => { if (j < hs.length) f += hs[j] * Math.exp(-(ti - tj) / t2) }); hs.push(k2 * (1 + c * f)) }
+  const out = []
+  for (let d = 0; d <= days; d += .1) {
+    let p = 0; S.forEach((ti, j) => { if (ti <= d) p += k1 * Math.exp(-(d - ti) / t1) - hs[j] * Math.exp(-(d - ti) / t2) })
+    out.push([d, p])
+  }
+  return { S, out }
+}
+let gapNow = 3
+function renderRebound(anim = true) {
+  const svg = $('#g-rebound'); const [w, h] = frame(svg); svg.classList.toggle('static', !anim)
+  const days = 40, { S, out } = simRebound(gapNow, days)
+  const L = 34, R = w - 12, T = 30, Bm = h - 46
+  const X = lin(0, days, L, R), Y = lin(3, -2.6, T, Bm)
+  const g = el('g', {}, svg)
+  const cp = el('clipPath', { id: 'rbClip' }, el('defs', {}, svg)); el('rect', { x: L, y: T - 10, width: R - L, height: Bm - T + 10 }, cp)
+  for (let d = 0; d <= days; d += 7) { el('line', { x1: X(d), x2: X(d), y1: T, y2: Bm, class: 'grid' }, g); el('text', { x: X(d), y: Bm + 38, 'text-anchor': 'middle' }, g, d ? `第 ${d} 天` : '') }
+  el('line', { x1: L, x2: R, y1: Y(0), y2: Y(0), stroke: 'var(--fg3)', 'stroke-dasharray': '3 5' }, g)
+  el('text', { x: R, y: Y(0) - 8, 'text-anchor': 'end', class: 'lb' }, g, '出門前的你')
+  const gg = el('g', { 'clip-path': 'url(#rbClip)' }, g)
+  const pts = out.map(([d, p]) => [X(d), Y(p)])
+  const area = P(pts) + `L${X(days)},${Y(0)}L${X(0)},${Y(0)}Z`
+  el('path', { d: area, fill: 'var(--me)', 'fill-opacity': .07, class: 'pop', style: '--d:1.2s' }, gg)
+  drawPath(gg, P(pts), { stroke: 'var(--me)', 'stroke-width': 2.6, class: 'draw glow', style: '--d:.35s' })
+  S.forEach((s, i) => el('path', { d: `M${X(s)},${Bm + 6}l-5,9h10z`, fill: 'var(--z5)', class: 'pop', style: `--d:${(.4 + i * .05).toFixed(2)}s` }, g))
+  el('text', { x: L, y: Bm + 38, class: 'lb' }, g, '▲ 一堂硬課')
+  const tail = out.filter(o => o[0] >= days - 12), end = avg(tail.map(o => o[1]))   // 最後 12 天的平均，不看單一天（會剛好落在反彈高點）
+  const lo = Math.min(...out.map(o => o[1]))
+  if (lo < -2.6) el('text', { x: R - 4, y: Bm - 10, 'text-anchor': 'end', class: 'lb b', fill: 'var(--z5)' }, g, '疲勞疊疲勞，一路往下')
+  let read
+  if (end < -.3) read = `每 ${gapNow} 天一堂：每一堂都落在上一堂還沒修好的時候。<b>越練越弱</b>——這就是過度訓練的形狀。`
+  else if (end < 1.2) read = `每 ${gapNow} 天一堂：反彈都有，但下一堂來得太晚，大部分的超補償已經退掉了。<b>有進步，但很慢。</b>`
+  else read = `每 ${gapNow} 天一堂：每一堂都踩在上一堂的反彈上。<b>一階一階往上。</b>`
+  $('#gapRead').innerHTML = read
+  $('#gapOut').textContent = `${gapNow} 天`
+}
+$('#gap').addEventListener('input', e => { gapNow = +e.target.value; syncGapBtns(); renderRebound(false) })
+$$('#gapBtns [data-gap]').forEach(b => b.addEventListener('click', () => { gapNow = +b.dataset.gap; $('#gap').value = gapNow; syncGapBtns(); renderRebound(false) }))
+function syncGapBtns() { $$('#gapBtns [data-gap]').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.gap === gapNow))) }
+
+/* 02 TSS 算式＋一趟騎乘的衝擊 */
+function renderTss() {
+  const r = V.rides && V.rides.filter(x => x.icu_training_load && x.icu_weighted_avg_watts && x.icu_ftp).slice(-1)[0]
+  let X = 110
+  if (r) {
+    const hrs = r.moving_time / 3600, IF = r.icu_weighted_avg_watts / r.icu_ftp, calc = hrs * IF * IF * 100
+    X = r.icu_training_load
+    $('#calc').innerHTML = `<span>${hrs.toFixed(2)}<small>小時</small></span><span class="eq">×</span><span>${IF.toFixed(2)}²<small>IF＝${r.icu_weighted_avg_watts}÷${r.icu_ftp}</small></span><span class="eq">× 100 ≈</span><span class="res">${Math.round(calc)}<small>TSS</small></span>`
+    $('#calcNote').innerHTML = `這是我最近一趟（${md(r.start_date_local)}，${Math.round(r.moving_time / 60)} 分鐘）。intervals.icu 用逐秒功率算，記成 <b class="n">${X}</b>。同樣的時間如果 IF 是 0.65，只有 ${Math.round(hrs * .65 * .65 * 100)}。`
+  }
+  const svg = $('#impulse'); const [w, h] = frame(svg)
+  const days = 42, ka = 1 - Math.exp(-1 / 7), kc = 1 - Math.exp(-1 / 42)
+  const atl = [], ctl = []
+  for (let d = 0; d <= days; d++) { atl.push(X * ka * Math.pow(1 - ka, d)); ctl.push(X * kc * Math.pow(1 - kc, d)) }
+  const L = 40, R = w - 14, T = 36, Bm = h - 40
+  const Xs = lin(0, days, L, R), Y = lin(0, Math.ceil(atl[0] / 5) * 5, Bm, T)
+  const g = el('g', {}, svg)
+  for (let v = 0; v <= atl[0] + 1; v += 5) { el('line', { x1: L, x2: R, y1: Y(v), y2: Y(v), class: 'grid' }, g); el('text', { x: L - 8, y: Y(v) + 4, 'text-anchor': 'end' }, g, v) }
+  for (let d = 0; d <= days; d += 7) el('text', { x: Xs(d), y: Bm + 22, 'text-anchor': 'middle' }, g, d ? `+${d} 天` : '騎完')
+  const pa = atl.map((v, d) => [Xs(d), Y(v)]), pc = ctl.map((v, d) => [Xs(d), Y(v)])
+  el('path', { d: P(pa) + 'L' + pc.slice().reverse().map(p => p.join(',')).join('L') + 'Z', fill: 'var(--fat)', 'fill-opacity': .1, class: 'pop', style: '--d:1.4s' }, g)
+  drawPath(g, P(pa), { stroke: 'var(--fat)', 'stroke-width': 2.6, class: 'draw glow', style: '--c:var(--fat);--d:.4s' })
+  drawPath(g, P(pc), { stroke: 'var(--fit)', 'stroke-width': 2.6, class: 'draw glow', style: '--c:rgba(255,255,255,.5);--d:.7s' })
+  const cross = Math.log(1 / 6) / Math.log((1 - ka) / (1 - kc))   // X·ka·(1−ka)^d = X·kc·(1−kc)^d
+  const halfA = Math.log(.5) / Math.log(1 - ka), halfC = Math.log(.5) / Math.log(1 - kc)
+  el('text', { x: Xs(0) + 10, y: Y(atl[0]) + 4, class: 'big pop', fill: 'var(--fat)', style: '--d:1.2s' }, g, `疲勞 +${f1(atl[0])}`)
+  el('text', { x: Xs(1.5), y: Y(atl[0]) + 26, class: 'lb pop', style: '--d:1.3s' }, g, `一半在 ${f1(halfA)} 天內散掉`)
+  el('text', { x: Xs(days) - 2, y: Y(ctl[0]) - 40, 'text-anchor': 'end', class: 'mid pop', style: '--d:1.5s' }, g, `體能 +${f1(ctl[0])}，半衰期 ${Math.round(halfC)} 天`)
+  const cx = Xs(cross), cy = Y(X * ka * Math.pow(1 - ka, cross))
+  el('circle', { cx, cy, r: 6, fill: 'var(--me)', class: 'pop glow', style: '--d:1.9s' }, g)
+  el('line', { x1: cx, x2: cx, y1: cy - 8, y2: cy - 58, stroke: 'var(--me)', 'stroke-width': 1, class: 'pop', style: '--d:1.95s' }, g)
+  el('text', { x: cx + 8, y: cy - 74, class: 'lb b pop', style: '--d:2s' }, g, `第 ${Math.round(cross)} 天：疲勞退到體能以下`)
+  el('text', { x: cx + 8, y: cy - 56, class: 'lb pop', style: '--d:2.05s' }, g, '這一趟的好處，現在才真的拿得到')
+  el('text', { x: L, y: T - 16, class: 'lb' }, g, `一趟 TSS ${X} 的騎乘，之後 42 天的帳`)
+}
+
+/* 03 CTL 帳本 */
+function renderLedger() {
+  if (!V.wk) return
+  const ks = V.wk.filter(k => D.well[k].ctl != null)
+  const svg = $('#ctl'); const [w, h] = frame(svg)
+  const L = 36, R = w - 14, T = 34, Bm = h - 36
+  const n0 = d2n(ks[0]), n1 = d2n(ks[ks.length - 1])
+  const maxA = Math.max(...ks.map(k => D.well[k].atl || 0))
+  const X = lin(n0, n1, L, R), Y = lin(0, Math.ceil(maxA / 20) * 20, Bm, T)
+  const g = el('g', {}, svg)
+  for (let v = 0; v <= maxA + 19; v += 20) { el('line', { x1: L, x2: R, y1: Y(v), y2: Y(v), class: 'grid' }, g); el('text', { x: L - 8, y: Y(v) + 4, 'text-anchor': 'end' }, g, v) }
+  for (let n = n0; n <= n1; n++) { const s = n2d(n); if (s.slice(8) === '01' && (+s.slice(5, 7)) % 3 === 1) { el('line', { x1: X(n), x2: X(n), y1: T, y2: Bm, class: 'grid' }, g); el('text', { x: X(n) + 4, y: Bm + 22 }, g, `${s.slice(2, 4)}/${+s.slice(5, 7)}`) } }
+  const pa = ks.map(k => [X(d2n(k)), Y(D.well[k].atl || 0)]), pc = ks.map(k => [X(d2n(k)), Y(D.well[k].ctl)])
+  drawPath(g, P(pa), { stroke: 'var(--fat)', 'stroke-width': 1.2, 'stroke-opacity': .55, style: '--d:.3s' })
+  el('path', { d: P(pc) + `L${X(n1)},${Bm}L${X(n0)},${Bm}Z`, fill: 'url(#ctlFill)', class: 'pop', style: '--d:1.3s' }, g)
+  const lg = el('linearGradient', { id: 'ctlFill', x1: 0, x2: 0, y1: 0, y2: 1 }, el('defs', {}, svg))
+  el('stop', { offset: 0, 'stop-color': '#f7f1e6', 'stop-opacity': .22 }, lg); el('stop', { offset: 1, 'stop-color': '#f7f1e6', 'stop-opacity': 0 }, lg)
+  drawPath(g, P(pc), { stroke: 'var(--fit)', 'stroke-width': 2.8, class: 'draw glow', style: '--c:rgba(255,255,255,.45);--d:.5s' })
+  let pk = ks[0]; ks.forEach(k => { if (D.well[k].ctl > D.well[pk].ctl) pk = k })
+  const after = ks.filter(k => d2n(k) > d2n(pk) + 45), maxAfter = after.length ? Math.max(...after.map(k => D.well[k].ctl)) : 0
+  const now = ks[ks.length - 1], cNow = D.well[now].ctl
+  const dot = (k, lab, sub, anchor, col) => {
+    const x = X(d2n(k)), y = Y(D.well[k].ctl)
+    el('circle', { cx: x, cy: y, r: 6, fill: col, class: 'pop glow', style: `--c:${col};--d:2s` }, g)
+    el('text', { x: x + (anchor === 'end' ? -10 : 10), y: y - 22, 'text-anchor': anchor, class: 'big pop', fill: col, style: '--d:2.1s' }, g, lab)
+    el('text', { x: x + (anchor === 'end' ? -10 : 10), y: y - 50, 'text-anchor': anchor, class: 'lb pop', style: '--d:2.15s' }, g, sub)
+  }
+  dot(pk, f1(D.well[pk].ctl), `最高 · ${pk.slice(0, 4)}/${md(pk)}`, 'start', 'var(--me)')
+  dot(now, f1(cNow), `今天 · ${md(now)}`, 'end', 'var(--fg)')
+  el('text', { x: L, y: T - 16, class: 'lb' }, g, 'CTL（體能，白）與 ATL（疲勞，紅）')
+  const pkMonth = pk.slice(0, 7), pkH = D.chron ? (D.chron.months.find(m => m.m === pkMonth) || {}).h : null
+  $('#ledgerLede').innerHTML = `白線是我的 CTL。最高點在 <b>${pk.slice(0, 4)} 年 ${md(pk)}，${f1(D.well[pk].ctl)}</b>${pkH ? `——那個月騎了 ${f1(pkH)} 小時` : ''}。${maxAfter < Math.floor(D.well[pk].ctl / 5) * 5 ? `之後它掉下來，再也沒回到 ${Math.floor(D.well[pk].ctl / 5) * 5} 以上（後來最高 ${f1(maxAfter)}）` : `之後掉下來又爬回過 ${f1(maxAfter)}`}，今天是 <b>${f1(cNow)}</b>。紅線的每一個尖刺都是一週的硬課；尖刺過後白線有沒有被墊高，看的是下一週有沒有接上。`
+}
+
+/* 04 月時數 */
+function renderVolume() {
+  const C = D.chron; if (!C) return
+  const ms = C.months, be = C.breakeven_h
+  const svg = $('#g-volume'); const [w, h] = frame(svg)
+  const L = 40, R = w - 44, T = 40, Bm = h - 40
+  const hmax = Math.ceil(Math.max(...ms.map(m => m.h), be) / 5) * 5
+  const bw = (R - L) / ms.length
+  const Y = lin(0, hmax, Bm, T)
+  const ef = ms.filter(m => m.eftp), emin = Math.min(...ef.map(m => m.eftp)) - 8, emax = Math.max(...ef.map(m => m.eftp)) + 6
+  const YE = lin(emin, emax, Bm - 10, T + 10)
+  const g = el('g', {}, svg)
+  for (let v = 0; v <= hmax; v += 5) { el('line', { x1: L, x2: R, y1: Y(v), y2: Y(v), class: 'grid' }, g); el('text', { x: L - 8, y: Y(v) + 4, 'text-anchor': 'end' }, g, v + 'h') }
+  ms.forEach((m, i) => {
+    const x = L + i * bw, over = m.h >= be
+    el('rect', { x: x + bw * .16, width: bw * .68, y: Y(m.h), height: Bm - Y(m.h), rx: 2, fill: over ? 'var(--z4)' : 'var(--z1)', 'fill-opacity': over ? 1 : .55, class: 'grow' + (over ? ' glow' : ''), style: `--c:var(--z4);--d:${(.2 + i * .04).toFixed(2)}s` }, g)
+    if (over) el('text', { x: x + bw / 2, y: Y(m.h) - 8, 'text-anchor': 'middle', class: 'pop', fill: 'var(--z4)', style: '--d:1.4s' }, g, f1(m.h))
+    const step = NARROW.matches ? 3 : 2
+    if (i % step === 0) el('text', { x: x + bw / 2, y: Bm + 20, 'text-anchor': 'middle' }, g, `${m.m.slice(2, 4)}/${+m.m.slice(5)}`)
+  })
+  el('line', { x1: L, x2: R, y1: Y(be), y2: Y(be), stroke: 'var(--me)', 'stroke-width': 1.5, 'stroke-dasharray': '6 5', class: 'pop', style: '--d:1.1s' }, g)
+  el('text', { x: L + 6, y: Y(be) - 8, class: 'lb b pop', fill: 'var(--me)', style: '--d:1.2s' }, g, `損益線 ${be} h／月`)
+  const pe = ms.map((m, i) => m.eftp ? [L + i * bw + bw / 2, YE(m.eftp)] : null).filter(Boolean)
+  drawPath(g, P(pe), { stroke: 'var(--fg)', 'stroke-width': 2, style: '--d:1.3s' })
+  pe.forEach(p => el('circle', { cx: p[0], cy: p[1], r: 3, fill: 'var(--fg)', class: 'pop', style: '--d:2.2s' }, g))
+  const lastE = ms.filter(m => m.eftp).slice(-1)[0], firstE = ms.find(m => m.eftp), maxE = ef.reduce((a, m) => m.eftp > a.eftp ? m : a)
+  el('text', { x: R + 6, y: YE(lastE.eftp) + 4, class: 'pop', fill: 'var(--fg)', style: '--d:2.3s' }, g, lastE.eftp + 'W')
+  el('text', { x: L + (ms.indexOf(maxE) + .5) * bw, y: YE(maxE.eftp) - 12, 'text-anchor': 'middle', class: 'pop', fill: 'var(--fg)', style: '--d:2.3s' }, g, `eFTP ${maxE.eftp}`)
+  el('text', { x: L, y: T - 18, class: 'lb' }, g, '每月騎乘時數（長條）與 eFTP（白線）')
+  const full = ms.filter(m => !m.partial), over = full.filter(m => m.h >= be)
+  $('#volLede').innerHTML = `黃色虛線是我自己的資料算出來的：<b>一個月騎不到 ${be} 小時，eFTP 就在往下掉</b>，每多騎一小時大約 +0.64 W。${full.length} 個完整月份裡，只有 <b>${over.length} 個月</b>過線（${over.map(m => `${m.m.slice(2, 4)}/${+m.m.slice(5)}`).join('、')}），平均是 ${f1(avg(full.map(m => m.h)))} 小時。中社路的紀錄，全部出在第一段連續過線之後。${(() => { const sp = ef.find(m => m.eftp === maxE.eftp); return sp && sp.h < be ? `白線 ${sp.m.slice(2, 4)}/${+sp.m.slice(5)} 那個 ${sp.eftp} W 的尖峰不是那個月練出來的：eFTP 是估計值，一趟全力就能把它推上去。` : '' })()}`
+}
+
+/* 05 區間 */
+const ZINFO = [
+  ['恢復', '血液循環，幫前一天的課收尾', '可以完整聊天'],
+  ['耐力', '粒線體變多、微血管變密、更會燒脂肪——所有東西的地基', '講得出完整句子'],
+  ['節奏', '肌耐力與肝醣儲存，長爬坡的巡航速度', '講話斷斷續續'],
+  ['閾值', '乳酸清除能力、FTP 本身——中社路就在這一格', '只能擠幾個字'],
+  ['最大攝氧', '心臟每一跳打出去的血量，有氧的天花板', '3–8 分鐘就結束'],
+  ['無氧', 'W′：衝坡、跟車時花的那筆存款', '30 秒到 2 分鐘'],
+  ['神經肌肉', '爆發與衝刺，徵召更多肌纖維', '幾秒鐘'],
+]
+function renderZones() {
+  const ftp = V.ftp, zp = V.zonesPct
+  $('#zFtp').textContent = ftp
+  const wmax = ftp * 1.7, box = $('#g-zones'); box.textContent = ''
+  let lo = 0
+  zp.forEach((hiP, i) => {
+    const hi = hiP >= 900 ? null : Math.round(ftp * hiP / 100)
+    const row = document.createElement('div'); row.className = 'zr' + (i === 3 ? ' me-row' : ''); row.style.setProperty('--zc', ZC[i])
+    const wTxt = hi == null ? `${lo}+ W` : i === 0 ? `< ${hi} W` : `${lo}–${hi} W`
+    const pTxt = hi == null ? `> ${zp[i - 1]}%` : i === 0 ? `< ${hiP}%` : `${zp[i - 1] + 1}–${hiP}%`
+    const a = lo / wmax * 100, b = ((hi == null ? wmax : hi) / wmax) * 100
+    row.innerHTML = `<div class="zn">Z${i + 1}</div><div class="zw">${wTxt}<small>${pTxt} FTP</small></div><div class="zb"><i class="growx" style="left:${a}%;width:${b - a}%;--d:${(.35 + i * .07).toFixed(2)}s"></i></div><div class="zt"><b>${ZINFO[i][0]}</b>${i === 3 ? '<span class="tag">目標</span>' : ''}　${ZINFO[i][1]}<br><em>${ZINFO[i][2]}</em></div>`
+    box.append(row); lo = (hi || 0) + 1
+  })
+}
+
+/* 06 時間分配 */
+function zoneMix(filter) {
+  const z = [0, 0, 0, 0, 0, 0, 0]; let n = 0, coast = 0, mov = 0
+  for (const x of V.rides) { const d = x.start_date_local.slice(0, 10); if (!filter(d) || !x.icu_zone_times) continue; n++; coast += x.coasting_time || 0; mov += x.moving_time || 0; x.icu_zone_times.forEach(t => { const i = +t.id.slice(1) - 1; if (t.id[0] === 'Z' && i >= 0 && i < 7) z[i] += t.secs }) }
+  const tot = z.reduce((a, b) => a + b, 0)
+  return { n, h: tot / 3600, pct: z.map(v => tot ? v / tot * 100 : 0), coast: mov ? coast / mov * 100 : 0 }
+}
+function renderMix() {
+  if (!V.rides) return
+  let pk = null
+  if (V.wk) { const ks = V.wk.filter(k => D.well[k].ctl != null); pk = ks.reduce((a, k) => D.well[k].ctl > D.well[a].ctl ? k : a, ks[0]) }
+  const pkEnd = pk || '2025-09-30', pkStart = n2d(d2n(pkEnd) - 60)
+  const bs = D.block ? D.block.start : n2d(d2n(TODAY) - 28)
+  const rows = [
+    ['全部騎乘', zoneMix(() => true)],
+    [`CTL 衝上最高點的那 60 天`, zoneMix(d => d > pkStart && d <= pkEnd)],
+    [`這一期（${md(bs)} 起）`, zoneMix(d => d >= bs)],
+  ]
+  const box = $('#g-mix'); box.textContent = ''
+  const lg = document.createElement('div'); lg.className = 'legend'
+  lg.innerHTML = ZC.map((c, i) => `<span style="--zc:${c}"><i></i>Z${i + 1}</span>`).join('')
+  rows.forEach(([name, m], ri) => {
+    const d = document.createElement('div'); d.className = 'mx'
+    const easy = m.pct[0] + m.pct[1], thr = m.pct[3]
+    d.innerHTML = `<h3>${name}<small>${m.n} 趟 · ${f1(m.h)} 小時</small></h3><div class="st">${m.pct.map((p, i) => `<i class="${i === 0 ? 'lt' : ''}" style="--zc:${ZC[i]};flex:${p.toFixed(2)} 1 0">${p >= 6 ? Math.round(p) + '%' : ''}</i>`).join('')}</div><div class="cum">Z1＋Z2 <b>${Math.round(easy)}%</b>　·　Z4 閾值 <b>${f1(thr)}%</b>　·　Z5 以上 <b>${f1(m.pct[4] + m.pct[5] + m.pct[6])}%</b></div>`
+    d.querySelector('.st').classList.add('growx'); d.querySelector('.st').style.setProperty('--d', (.35 + ri * .18) + 's')
+    box.append(d)
+  })
+  box.append(lg)
+  const all = rows[0][1], blk = rows[2][1]
+  $('#mixLede').innerHTML = `我也是金字塔型：全部騎乘 <b>${Math.round(all.pct[0] + all.pct[1])}%</b> 在 Z1–Z2。但要老實說——Z1 裡有很大一塊是下坡滑行跟紅燈（騎乘時間的 ${Math.round(all.coast)}% 功率是零），不是刻意的恢復。這一期的變化在 Z4：從 ${f1(all.pct[3])}% 拉到 <b>${f1(blk.pct[3])}%</b>。把時間挪到目標需要的那一格，這就是區塊在做的事。`
+}
+
+/* 07 限制因子：功率曲線＋CP 模型 */
+function renderCurve() {
+  const A = D.pacing && D.pacing.athlete; if (!A) return
+  const cp = A.cp, wp = A.wp, mmp = Object.entries(A.mmp).map(([s, v]) => [+s, v[0], v[1]]).sort((a, b) => a[0] - b[0])
+  const tgtT = V.bestT || 985, tgtW = V.bestW || 269
+  const svg = $('#curve'); const [w, h] = frame(svg)
+  const L = 44, R = w - 16, T = 36, Bm = h - 40
+  const lx = v => Math.log(v), X = s => lin(lx(50), lx(4000), L, R)(lx(s))
+  const wmax = Math.ceil(Math.max(...mmp.map(m => m[1])) / 50) * 50, wmin = 150
+  const Y = lin(wmin, wmax, Bm, T)
+  const g = el('g', {}, svg)
+  for (let v = wmin; v <= wmax; v += 50) { el('line', { x1: L, x2: R, y1: Y(v), y2: Y(v), class: 'grid' }, g); el('text', { x: L - 8, y: Y(v) + 4, 'text-anchor': 'end' }, g, v) }
+  for (const [s, lab] of [[60, '1 分'], [120, '2'], [300, '5'], [600, '10'], [1200, '20'], [1800, '30'], [3600, '60 分']]) { el('line', { x1: X(s), x2: X(s), y1: T, y2: Bm, class: 'grid' }, g); el('text', { x: X(s), y: Bm + 22, 'text-anchor': 'middle' }, g, lab) }
+  // W′ 的區域（CP 以上）
+  const cps = []; for (let s = 90; s <= 3600; s *= 1.05) cps.push([X(s), Y(Math.min(wmax, cp + wp / s))])
+  el('path', { d: P(cps) + `L${X(3600)},${Y(cp)}L${X(90)},${Y(cp)}Z`, fill: 'var(--z5)', 'fill-opacity': .16, class: 'pop', style: '--d:1.2s' }, g)
+  el('line', { x1: L, x2: R, y1: Y(cp), y2: Y(cp), stroke: 'var(--fg)', 'stroke-dasharray': '6 5', 'stroke-width': 1.4 }, g)
+  el('text', { x: R - 4, y: Y(cp) + 20, 'text-anchor': 'end', class: 'lb b' }, g, `CP ${Math.round(cp)} W`)
+  drawPath(g, P(cps), { stroke: 'var(--z5)', 'stroke-width': 2.4, class: 'draw glow', style: '--c:var(--z5);--d:.4s' })
+  el('text', { x: X(130), y: Y(cp + wp / 130) - 12, class: 'lb pop', fill: 'var(--z5)', style: '--d:1.4s' }, g, `W′ ${f1(wp / 1000)} kJ 的貢獻`)
+  mmp.forEach((m, i) => el('circle', { cx: X(m[0]), cy: Y(m[1]), r: 4, fill: 'var(--fg)', class: 'pop', style: `--d:${(.6 + i * .06).toFixed(2)}s` }, g))
+  // 目標那一點
+  const model = cp + wp / tgtT, x = X(tgtT)
+  el('line', { x1: x, x2: x, y1: Y(model), y2: Y(tgtW), stroke: 'var(--me)', 'stroke-width': 2, class: 'pop', style: '--d:1.9s' }, g)
+  el('circle', { cx: x, cy: Y(tgtW), r: 7, fill: 'var(--me)', class: 'pop glow', style: '--d:2s' }, g)
+  el('circle', { cx: x, cy: Y(model), r: 5, fill: 'none', stroke: 'var(--me)', 'stroke-width': 2, class: 'pop', style: '--d:2s' }, g)
+  el('text', { x: x + 12, y: Y(tgtW) - 4, class: 'mid pop', fill: 'var(--me)', style: '--d:2.1s' }, g, `${mmss(tgtT)} 要 ${tgtW} W`)
+  el('text', { x: x - 12, y: Y(tgtW) - 4, 'text-anchor': 'end', class: 'lb pop', style: '--d:2.15s' }, g, `現在的模型 ${Math.round(model)} W ↓`)
+  el('text', { x: L, y: T - 16, class: 'lb' }, g, `近 ${A.days} 天最佳功率（白點）與 CP 模型`)
+  const share = (wp / tgtT) / model * 100, needCp = tgtW - wp / tgtT
+  $('#limLede').innerHTML = `我現在的 <b>CP ${Math.round(cp)} W、W′ ${f1(wp / 1000)} kJ</b>。在 ${mmss(tgtT)} 這個長度，模型給的是 ${Math.round(model)} W，其中 W′ 只佔 <b>${Math.round(share)}%</b>——剩下 ${100 - Math.round(share)}% 全是 CP。紀錄那天平均 ${tgtW} W；W′ 不變的話，<b>CP 要到 ${Math.round(needCp)} W</b>，差 ${Math.round(needCp - cp)} W。這就是為什麼這一期沒有 VO2、沒有衝刺，全是 20–35 分鐘的長段。`
+}
+
+/* 08 中社路剖面 */
+function renderClimb() {
+  const zs = V.zs; if (!zs) return
+  const g100 = zs.g100, Lm = zs.L
+  const el0 = [0]; g100.forEach((gr, i) => el0.push(el0[i] + gr * 100 / 100 * (i === g100.length - 1 ? (Lm - 100 * (g100.length - 1)) / 100 : 1)))
+  const gain = el0[el0.length - 1], steep = Math.max(...g100)
+  const svg = $('#g-climb'); const [w, h] = frame(svg)
+  const L = 44, R = w - 16, T = 50, Bm = h - 40
+  const X = lin(0, Lm / 1000, L, R), Y = lin(0, Math.ceil(gain / 50) * 50 + 20, Bm, T)
+  const g = el('g', {}, svg)
+  for (let v = 0; v <= gain + 20; v += 50) { el('line', { x1: L, x2: R, y1: Y(v), y2: Y(v), class: 'grid' }, g); el('text', { x: L - 8, y: Y(v) + 4, 'text-anchor': 'end' }, g, v + 'm') }
+  for (let k = 0; k <= Lm / 1000; k++) el('text', { x: X(k), y: Bm + 22, 'text-anchor': 'middle' }, g, k + ' km')
+  const col = gr => gr >= 8 ? ZC[5] : gr >= 6.5 ? ZC[4] : gr >= 5 ? ZC[3] : gr >= 3.5 ? ZC[2] : ZC[1]
+  g100.forEach((gr, i) => {
+    const x0 = X(i / 10), x1 = X(Math.min((i + 1) / 10, Lm / 1000))
+    el('path', { d: `M${x0},${Bm}L${x0},${Y(el0[i])}L${x1},${Y(el0[i + 1])}L${x1},${Bm}Z`, fill: col(gr), 'fill-opacity': .85, class: 'grow', style: `--d:${(.25 + i * .025).toFixed(3)}s` }, g)
+  })
+  drawPath(g, P(el0.map((e, i) => [X(Math.min(i / 10, Lm / 1000)), Y(e)])), { stroke: 'var(--fg)', 'stroke-width': 2, style: '--d:1.3s' })
+  const iS = g100.indexOf(steep)
+  el('text', { x: X(iS / 10 + .05), y: Y(el0[iS + 1]) - 14, 'text-anchor': 'middle', class: 'mid pop', style: '--d:1.8s', fill: ZC[5] }, g, `${steep}%`)
+  const leg = [['< 3.5%', ZC[1]], ['3.5–5', ZC[2]], ['5–6.5', ZC[3]], ['6.5–8', ZC[4]], ['8% +', ZC[5]]]
+  leg.forEach(([t, c], i) => { el('rect', { x: L + i * 74, y: T - 36, width: 10, height: 10, fill: c, rx: 2 }, g); el('text', { x: L + i * 74 + 15, y: T - 27 }, g, t) })
+  const opt = zs.opt
+  $('#climbLede').innerHTML = `中社路 <b>${seg().distance_km || (Lm / 1000).toFixed(2)} km、爬升 ${Math.round(gain)} m，平均 ${f1(gain / Lm * 100)}%</b>，最陡的 100 公尺 ${steep}%。紀錄 ${mmss(V.bestT)}（${V.bestW} W），最近一次 ${mmss(V.lastT)}（${V.lastW} W）。照我今天的體能，配速模型說全力大約 <b>${mmss(opt.t)}、平均 ${opt.avg} W</b>。所以要的是 16–18 分鐘、6% 上下、踏頻偏低的持續出力。`
+}
+
+/* 09 配速對照 */
+function renderPace() {
+  const zs = V.zs; if (!zs) return
+  const lines = [
+    ['紀錄 ' + mmss(zs.best.elapsed), zs.best.w100, 'var(--me)', ''],
+    ['最近 ' + mmss(zs.last.elapsed), zs.last.w100, 'var(--z4)', ''],
+    ['模型 ' + mmss(zs.opt.t), zs.opt.w100, 'var(--fg)', '5 5'],
+  ]
+  const all = lines.flatMap(l => l[1].map((v, j, a) => avg(a.slice(Math.max(0, j - 1), j + 2))))
+  const svg = $('#g-pace'); const [w, h] = frame(svg)
+  const L = 44, R = w - 16, T = 50, Bm = h - 40
+  const n = zs.best.w100.length, X = lin(0, n, L, R)
+  const wmin = Math.floor(Math.min(...all) / 20) * 20, wmax = Math.min(460, Math.ceil(Math.max(...all) / 20) * 20)
+  const Y = lin(wmin, wmax, Bm, T)
+  const g = el('g', {}, svg)
+  for (let v = wmin; v <= wmax; v += 40) { el('line', { x1: L, x2: R, y1: Y(v), y2: Y(v), class: 'grid' }, g); el('text', { x: L - 8, y: Y(v) + 4, 'text-anchor': 'end' }, g, v) }
+  for (let k = 0; k <= n / 10; k++) el('text', { x: X(k * 10), y: Bm + 22, 'text-anchor': 'middle' }, g, k + ' km')
+  const cp = D.pacing.athlete.cp
+  el('line', { x1: L, x2: R, y1: Y(cp), y2: Y(cp), stroke: 'var(--z5)', 'stroke-dasharray': '2 4' }, g)
+  el('text', { x: R, y: Y(cp) + 16, 'text-anchor': 'end', fill: 'var(--z5)' }, g, `CP ${Math.round(cp)}`)
+  lines.forEach(([lab, arr, c, dash], i) => {
+    const sm = arr.map((v, j) => avg(arr.slice(Math.max(0, j - 1), j + 2)))
+    const pts = sm.map((v, j) => [X(j + .5), Y(clamp(v, wmin, wmax))])
+    drawPath(g, P(pts), { stroke: c, 'stroke-width': i === 2 ? 1.8 : 2.4, 'stroke-dasharray': dash || null, class: dash ? 'pop' : 'draw glow', style: `--c:${c};--d:${(.4 + i * .35).toFixed(2)}s` })
+    el('rect', { x: L + i * 128, y: T - 40, width: 18, height: 3, fill: c }, g)
+    el('text', { x: L + i * 128 + 24, y: T - 35, class: 'lb' }, g, lab)
+  })
+  const q = (a, s, e) => Math.round(avg(a.slice(s, e)))
+  const B = zs.best.w100, La = zs.last.w100, k = Math.round(n / 4)
+  $('#paceLede').innerHTML = `每 100 公尺的功率（300 公尺滑動平均）。紀錄那次前 1 公里 <b>${q(B, 0, k)} W</b>、最後 1 公里 ${q(B, n - k, n)} W——前面衝、後面掉，但那天的 CP 撐得住。最近一次反過來：${q(La, 0, k)} → <b>${q(La, n - k, n)} W</b>，最後 300 公尺裡還有一格 ${Math.max(...La.slice(n - 3))} W——存款沒花完就到了終點。模型（白線）幾乎是一條直線，照坡度微調幾瓦。${D.block ? '9/15 那次開頭衝到 286 W、第 10–15 分鐘垮到 217 W，所以給 10/13 的規定是：<b>第 2–5 分 255–262 W，不准超過 265。</b>' : ''}`
+}
+
+/* 10 四週月曆 */
+const KIND = { QUALITY: 4, ENDURANCE: 2, SUPPORT: 1, CAL: 5, POST: 5 }
+function renderCal() {
+  const B = D.block; if (!B) return
+  const box = $('#cal'); box.textContent = ''
+  const add = (cls, html, style) => { const d = document.createElement('div'); d.className = cls; d.innerHTML = html; if (style) d.setAttribute('style', style); box.append(d); return d }
+  add('hd wkh', '')
+  ;['一', '二', '三', '四', '五', '六', '日'].forEach(t => add('hd', t))
+  add('hd toth', '分鐘')
+  const by = new Map(B.sessions.map(s => [s.date, s]))
+  const s0 = d2n(B.start), dow = (new Date(s0 * 864e5).getUTCDay() + 6) % 7, mon0 = s0 - dow
+  const end = d2n(B.end)
+  const weeks = []; for (let m = mon0; m <= end; m += 7) { let has = false; for (let i = 0; i < 7; i++) if (by.has(n2d(m + i))) has = true; if (has) weeks.push(m) }
+  const tots = weeks.map(m => { let t = 0; for (let i = 0; i < 7; i++) { const s = by.get(n2d(m + i)); if (s) t += s.minutes || 0 } return t })
+  const tmax = Math.max(...tots)
+  weeks.forEach((m, wi) => {
+    const ss = []; for (let i = 0; i < 7; i++) { const s = by.get(n2d(m + i)); if (s) ss.push(s) }
+    const wk = (ss.find(s => s.wk) || {}).wk || ''
+    add('wk', `${wk || '—'}<small>${md(n2d(m))}–${md(n2d(m + 6))}</small>`)
+    for (let i = 0; i < 7; i++) {
+      const ds = n2d(m + i), s = by.get(ds), fut = ds > TODAY || (ds === TODAY && !(s && s.actual))
+      const today = ds === TODAY ? ' today' : ''
+      if (s) {
+        const z = KIND[s.code] || 2, test = s.code === 'POST' || s.code === 'CAL'
+        const nm = s.name.replace(/（.*?）/g, '').replace(/：.*/, '')
+        add(`c s${test ? ' test' : ''}${fut ? ' fut' : ''}${today}`, `<span class="d">${md(ds)}</span><span class="nm">${nm}</span><span class="mn">${s.minutes || ''}′</span>`, `--zc:${ZC[z - 1]}`)
+      } else if (i === 2 && m + i >= s0 && m + i <= end) add(`c gym${today}`, `<span class="d">${md(ds)}</span><span class="nm">重訓</span>`)
+      else add(`c${today}`, `<span class="d">${md(ds)}</span>`, (m + i < s0 || m + i > end) ? 'opacity:.35' : '')
+    }
+    add('tot', `${tots[wi]}<i class="growx" style="width:${(tots[wi] / tmax * 100).toFixed(1)}%;--d:${(.5 + wi * .1).toFixed(1)}s"></i>`)
+  })
+  const W = k => B.sessions.filter(s => s.wk === k).reduce((a, s) => a + (s.minutes || 0), 0)
+  const w1 = W('W1'), w2 = W('W2'), w3 = W('W3'), w4 = W('W4')
+  $('#blockLede').innerHTML = `實際的分鐘數：W1 <b class="n">${w1}</b>、W2 <b class="n">${w2}</b>、W3 <b class="n">${w3}</b>、W4 <b class="n">${w4}</b>。量沒有一路堆高——生活的窗口只有這麼大——所以往上加的是<b>強度的密度</b>：W3 的 2×15 分鐘是整期最硬的一堂，W4 砍掉 ${Math.round((1 - w4 / Math.max(w1, w2, w3)) * 100)}%，只留驗收。實線是做完的，虛線是還沒到的，黃框是量尺。`
+}
+
+/* 11 一週骨架 */
+function renderWeek() {
+  const box = $('#g-week'); box.textContent = ''
+  const days = [
+    ['一', 60, 1, '≤ 60 分<br>輕鬆或休'],
+    ['二', 150, 4, '早上 150 分<br>主課'],
+    ['三', 0, 0, '重訓<br>不騎車'],
+    ['四', 120, 4, '早上 120 分<br>主課'],
+    ['五', 60, 1, '≤ 60 分<br>輕鬆或休'],
+    ['六', 0, 0, '不可用'],
+    ['日', 60, 2, '≤ 60 分<br>聊天強度'],
+  ]
+  days.forEach(([d, min, z, txt], i) => {
+    const c = document.createElement('div'); c.className = 'dy'
+    const hPct = min ? (min / 150 * 78) : 0
+    c.innerHTML = `<div class="col ${min ? 'grow' : 'none'}" style="--zc:${z ? ZC[z - 1] : 'transparent'};height:${min ? hPct + '%' : 'auto'};--d:${(.35 + i * .08).toFixed(2)}s">${min ? min + '′' : ''}${i === 1 ? '<span class="bb">晚上籃球</span>' : ''}</div><b>${d}</b><span>${txt}</span>`
+    box.append(c)
+  })
+}
+
+/* 12 測驗與主課 */
+function renderProg() {
+  const B = D.block; if (!B) return
+  const tests = V.blockTests.map(e => ({ d: e.date, w: e.avg_watts, t: e.elapsed_sec }))
+  const work = [
+    { d: '2026-09-17', lo: 180, hi: 200, min: 60, lab: '風櫃嘴控制騎' },
+    { d: '2026-09-22', lo: 220, hi: 235, min: 33, lab: '風櫃嘴全段 33′' },
+    { d: '2026-09-23', lo: 210, hi: 225, min: 26, lab: '露營場 26′' },
+    { d: '2026-09-23', lo: 190, hi: 205, min: 35, lab: '＋風櫃嘴後段 35′', off: 1 },
+    { d: '2026-10-01', lo: 180, hi: 200, min: 60, lab: '風櫃嘴控制騎' },
+    { d: '2026-10-06', lo: 210, hi: 225, min: 30, lab: '2×15′' },
+  ]
+  const svg = $('#prog'); const [w, h] = frame(svg)
+  const L = 44, R = w - 20, T = 40, Bm = h - 44
+  const n0 = d2n(B.start) + 2, n1 = d2n(V.testDay || B.end) + 3
+  const X = lin(n0, n1, L, R), Y = lin(170, 280, Bm, T)
+  const g = el('g', {}, svg)
+  for (let v = 180; v <= 280; v += 20) { el('line', { x1: L, x2: R, y1: Y(v), y2: Y(v), class: 'grid' }, g); el('text', { x: L - 8, y: Y(v) + 4, 'text-anchor': 'end' }, g, v) }
+  for (let n = n0; n <= n1; n++) { const s = n2d(n); if ((new Date(n * 864e5).getUTCDay()) === 1) el('text', { x: X(n), y: Bm + 22, 'text-anchor': 'middle' }, g, md(s)) }
+  const cp = D.pacing ? D.pacing.athlete.cp : null
+  if (cp) { el('line', { x1: L, x2: R, y1: Y(cp), y2: Y(cp), stroke: 'var(--fg3)', 'stroke-dasharray': '4 5' }, g); el('text', { x: L + 4, y: Y(cp) - 6 }, g, `CP ${Math.round(cp)}`) }
+  const tnx = d2n(TODAY)
+  work.forEach((k, i) => {
+    const x = X(d2n(k.d) + (k.off ? .45 : 0)), bw = Math.max(14, k.min / 60 * (X(n0 + 1) - X(n0)) * .9), fut = d2n(k.d) > tnx
+    el('rect', { x: x - bw / 2, y: Y(k.hi), width: bw, height: Y(k.lo) - Y(k.hi), rx: 2, fill: k.hi >= 210 ? 'var(--z4)' : 'var(--z3)', 'fill-opacity': fut ? .25 : .85, stroke: fut ? 'var(--z4)' : 'none', 'stroke-dasharray': '3 3', class: 'grow', style: `--d:${(.3 + i * .1).toFixed(1)}s` }, g)
+    const above = !k.off && i % 2 === 1
+    el('text', { x: x + (k.off ? 10 : 0), y: above ? Y(k.hi) - 10 : Y(k.lo) + 18, 'text-anchor': k.off ? 'start' : 'middle', class: 'lb pop', style: `--d:${(.9 + i * .1).toFixed(1)}s` }, g, k.lab)
+  })
+  const tp = tests.map(t => [X(d2n(t.d)), Y(t.w)])
+  if (tp.length > 1) drawPath(g, P(tp), { stroke: 'var(--me)', 'stroke-width': 2, class: 'draw glow', style: '--d:1.4s' })
+  tests.forEach((t, i) => {
+    const x = X(d2n(t.d)), y = Y(t.w)
+    el('circle', { cx: x, cy: y, r: 8, fill: 'var(--me)', class: 'pop glow', style: `--d:${(1.2 + i * .3).toFixed(1)}s` }, g)
+    el('text', { x, y: y - 16, 'text-anchor': 'middle', class: 'mid pop', fill: 'var(--me)', style: `--d:${(1.3 + i * .3).toFixed(1)}s` }, g, `${t.w} W`)
+    el('text', { x, y: y - 38, 'text-anchor': 'middle', class: 'lb pop', style: `--d:${(1.3 + i * .3).toFixed(1)}s` }, g, `${md(t.d)} · ${mmss(t.t)}`)
+  })
+  if (V.testDay && !tests.find(t => t.d === V.testDay)) {
+    const x = X(d2n(V.testDay)), y = Y(262)
+    el('circle', { cx: x, cy: y, r: 16, fill: 'none', stroke: 'var(--me)', 'stroke-width': 2, 'stroke-dasharray': '4 4', class: 'pop', style: '--d:2s' }, g)
+    el('text', { x, y: y + 7, 'text-anchor': 'middle', class: 'mid pop', fill: 'var(--me)', style: '--d:2s' }, g, '?')
+    el('text', { x, y: y - 26, 'text-anchor': 'middle', class: 'lb b pop', style: '--d:2.1s' }, g, `${md(V.testDay)} 驗收`)
+  }
+  el('text', { x: L, y: T - 18, class: 'lb' }, g, '黃點：中社全力（平均瓦數）　長條：主課的處方瓦數帶，寬度＝時間')
+  if (tests.length >= 2) {
+    const a = tests[0], b = tests[tests.length - 1]
+    $('#progLede').innerHTML = `到目前為止：${md(a.d)} <b>${mmss(a.t)}／${a.w} W</b> → ${md(b.d)} <b>${mmss(b.t)}／${b.w} W</b>，兩週 ${b.w - a.w >= 0 ? '+' : ''}${b.w - a.w} W、快 ${Math.round(a.t - b.t)} 秒。`
+  }
+}
+
+/* 13 減量模擬 */
+let simMode = 'plan'
+function simulate(mode) {
+  const B = D.block, tpm = V.tpm, test = V.testDay
+  const nT = d2n(TODAY), nEnd = d2n(B.end), nTest = d2n(test)
+  const load = new Map()
+  for (const s of B.sessions) {
+    const n = d2n(s.date); if (n < nT || (n === nT && s.actual)) continue
+    let tss = s.minutes * (s.support ? .5 : tpm)
+    if (mode === 'cram' && n >= nTest - 7 && n < nTest) tss *= 1.6
+    if (mode === 'rest' && n >= nTest - 10 && n < nTest) tss = 0
+    load.set(n, (load.get(n) || 0) + tss)
+  }
+  if (mode === 'daily') for (let n = nT + 1; n <= nEnd; n++) if (n !== nTest) load.set(n, 64)
+  const ka = 1 - Math.exp(-1 / 7), kc = 1 - Math.exp(-1 / 42)
+  let c = V.nowCtl, a = V.nowAtl
+  const out = [[nT, c, a]]
+  for (let n = nT + 1; n <= nEnd; n++) { const t = load.get(n) || 0; c += (t - c) * kc; a += (t - a) * ka; out.push([n, c, a]) }
+  return { out, load }
+}
+function renderSim(anim = true) {
+  if (!D.block || !V.wk || !V.testDay) return
+  $('#tpm').textContent = V.tpm.toFixed(2)
+  const svg = $('#sim'); const [w, h] = frame(svg); svg.classList.toggle('static', !anim)
+  const { out, load } = simulate(simMode)
+  const nT = d2n(TODAY), nTest = d2n(V.testDay), nPast = nT - 28
+  const past = V.wk.filter(k => d2n(k) >= nPast && D.well[k].ctl != null).map(k => [d2n(k), D.well[k].ctl, D.well[k].atl])
+  const all = past.concat(out.slice(1))
+  const L = 40, R = w - 16, T = 40, Bm = h - 44
+  const n0 = nPast, n1 = out[out.length - 1][0]
+  const vals = all.flatMap(r => [r[1], r[2], r[1] - r[2]])
+  const vmin = Math.floor(Math.min(...vals, -10) / 10) * 10, vmax = Math.ceil(Math.max(...vals, 50) / 10) * 10
+  const X = lin(n0, n1, L, R), Y = lin(vmin, vmax, Bm, T)
+  const g = el('g', {}, svg)
+  for (let v = vmin; v <= vmax; v += 10) { el('line', { x1: L, x2: R, y1: Y(v), y2: Y(v), class: v === 0 ? 'axis' : 'grid' }, g); el('text', { x: L - 8, y: Y(v) + 4, 'text-anchor': 'end' }, g, v) }
+  for (let n = n0; n <= n1; n++) if (new Date(n * 864e5).getUTCDay() === 1) el('text', { x: X(n), y: Bm + 22, 'text-anchor': 'middle' }, g, md(n2d(n)))
+  el('rect', { x: X(nT), y: T, width: R - X(nT), height: Bm - T, fill: 'rgba(247,241,230,.03)' }, g)
+  el('text', { x: X(nT) + 6, y: T + 14 }, g, '推算 →')
+  el('text', { x: X(nT) - 6, y: T + 14, 'text-anchor': 'end' }, g, '← 真實')
+  // TSB 面積
+  const tsb = all.map(r => [X(r[0]), Y(r[1] - r[2])])
+  el('path', { d: P(tsb) + `L${X(n1)},${Y(0)}L${X(n0)},${Y(0)}Z`, fill: 'var(--me)', 'fill-opacity': .13 }, g)
+  drawPath(g, P(tsb), { stroke: 'var(--me)', 'stroke-width': 2, class: 'draw glow', style: '--d:.6s' })
+  drawPath(g, P(all.map(r => [X(r[0]), Y(r[2])])), { stroke: 'var(--fat)', 'stroke-width': 2, class: 'draw', style: '--d:.45s' })
+  drawPath(g, P(all.map(r => [X(r[0]), Y(r[1])])), { stroke: 'var(--fit)', 'stroke-width': 2.6, class: 'draw glow', style: '--c:rgba(255,255,255,.45);--d:.3s' })
+  for (const [n, t] of load) if (t > 0) el('rect', { x: X(n) - 3, y: Bm - t / 6, width: 6, height: t / 6, fill: 'var(--z4)', 'fill-opacity': .7 }, g)
+  const xt = X(nTest)
+  el('line', { x1: xt, x2: xt, y1: T, y2: Bm, stroke: 'var(--z5)', 'stroke-width': 1.5, 'stroke-dasharray': '4 4' }, g)
+  const pre = out.find(r => r[0] === nTest - 1) || out[0]
+  const c = pre[1], a = pre[2], f = c - a
+  el('circle', { cx: xt, cy: Y(f), r: 7, fill: 'var(--me)', class: 'pop glow', style: '--d:1.6s' }, g)
+  el('text', { x: xt - 10, y: T + 34, 'text-anchor': 'end', class: 'lb b' }, g, `${md(V.testDay)} 驗收`)
+  const lx = R - 4
+  el('text', { x: lx, y: Y(all[all.length - 1][1]) - 8, 'text-anchor': 'end', fill: 'var(--fit)' }, g, 'CTL 體能')
+  el('text', { x: lx, y: Y(all[all.length - 1][2]) + 16, 'text-anchor': 'end', fill: 'var(--fat)' }, g, 'ATL 疲勞')
+  el('text', { x: lx, y: Y(all[all.length - 1][1] - all[all.length - 1][2]) - 8, 'text-anchor': 'end', fill: 'var(--me)' }, g, 'TSB 狀態')
+  let verdict
+  if (f > 12) verdict = '腿很新，但體能也在流失——休太多了。'
+  else if (f >= 0) verdict = '新鮮、體能又還在：驗收要的就是這個狀態。'
+  else if (f >= -10) verdict = '帶著一點疲勞上場，全力會打折。'
+  else verdict = '腿是沉的。體能再高，這天也拿不出來。'
+  const base = simulate('plan').out.find(r => r[0] === nTest - 1)
+  $('#simRead').innerHTML = `${md(V.testDay)} 出門前：CTL <b>${f1(c)}</b>、ATL <b>${f1(a)}</b>、TSB <b>${f >= 0 ? '+' : ''}${f1(f)}</b>。${verdict}${simMode !== 'plan' ? `（照課表是 TSB ${base[1] - base[2] >= 0 ? '+' : ''}${f1(base[1] - base[2])}、CTL ${f1(base[1])}）` : ''}`
+}
+$$('#simBtns [data-sim]').forEach(b => b.addEventListener('click', () => { simMode = b.dataset.sim; $$('#simBtns [data-sim]').forEach(x => x.setAttribute('aria-pressed', String(x === b))); renderSim(false) }))
+
+/* 14 HRV */
+function renderHrv() {
+  if (!V.wk) return
+  const n1 = d2n(TODAY), n0 = n1 - 90
+  const ks = V.wk.filter(k => d2n(k) >= n0 && D.well[k].hrv)
+  if (ks.length < 10) return
+  const base = V.wk.filter(k => d2n(k) > n1 - 60 && D.well[k].hrv).map(k => D.well[k].hrv)
+  const mu = avg(base), sd = Math.sqrt(avg(base.map(v => (v - mu) ** 2))), lo = mu - sd, hi = mu + sd
+  const svg = $('#hrv'); const [w, h] = frame(svg)
+  const L = 40, R = w - 16, T = 40, Bm = h - 40
+  const vs = ks.map(k => D.well[k].hrv), vmin = Math.floor(Math.min(...vs, lo) / 10) * 10 - 5, vmax = Math.ceil(Math.max(...vs, hi) / 10) * 10 + 5
+  const X = lin(n0, n1, L, R), Y = lin(vmin, vmax, Bm, T)
+  const g = el('g', {}, svg)
+  for (let v = Math.ceil(vmin / 10) * 10; v <= vmax; v += 10) { el('line', { x1: L, x2: R, y1: Y(v), y2: Y(v), class: 'grid' }, g); el('text', { x: L - 8, y: Y(v) + 4, 'text-anchor': 'end' }, g, v) }
+  for (let n = n0; n <= n1; n++) { const s = n2d(n); if (s.slice(8) === '01') el('text', { x: X(n), y: Bm + 22, 'text-anchor': 'middle' }, g, `${+s.slice(5, 7)} 月`) }
+  el('rect', { x: L, y: Y(hi), width: R - L, height: Y(lo) - Y(hi), fill: 'var(--z2)', 'fill-opacity': .08, class: 'pop', style: '--d:.3s' }, g)
+  el('line', { x1: L, x2: R, y1: Y(lo), y2: Y(lo), stroke: 'var(--z5)', 'stroke-dasharray': '5 5' }, g)
+  el('text', { x: R - 6, y: Y(lo) + 20, 'text-anchor': 'end', class: 'lb', fill: 'var(--z5)' }, g, `${Math.round(lo)}：連兩天低於這裡就踩煞車`)
+  el('text', { x: L + 6, y: Y(hi) - 8, class: 'lb' }, g, `平常的範圍 ${Math.round(lo)}–${Math.round(hi)}`)
+  const roll = ks.map(k => { const n = d2n(k), win = V.wk.filter(j => d2n(j) > n - 7 && d2n(j) <= n && D.well[j].hrv).map(j => D.well[j].hrv); return [X(n), Y(avg(win))] })
+  drawPath(g, P(roll), { stroke: 'var(--fg)', 'stroke-width': 2.4, class: 'draw glow', style: '--c:rgba(255,255,255,.4);--d:.5s' })
+  ks.forEach((k, i) => { const v = D.well[k].hrv; el('circle', { cx: X(d2n(k)), cy: Y(v), r: 3.2, fill: v < lo ? 'var(--z5)' : 'var(--z2)', class: 'pop', style: `--d:${(.3 + i * .012).toFixed(2)}s` }, g) })
+  const lastK = ks[ks.length - 1]
+  el('text', { x: L, y: T - 16, class: 'lb' }, g, '每天早上的 HRV（點）與 7 日平均（線）')
+  const below = ks.filter(k => D.well[k].hrv < lo).length
+  $('#hrvLede').innerHTML = `近 60 天我的 HRV 平常落在 <b>${Math.round(lo)}–${Math.round(hi)}</b>。規則很簡單：<b>連兩天低於 ${Math.round(lo)}，當天的主課降一級</b>（門檻改成耐力、或整堂改輕鬆踩）。近 90 天有 ${below} 個早上掉到線下；最新一筆 ${md(lastK)} 是 <b>${D.well[lastK].hrv}</b>。`
+}
+
+/* 16 結尾 */
+function renderEnd() {
+  if (!V.testDay) return
+  const days = d2n(V.testDay) - d2n(TODAY)
+  const cd = $('#countdown')
+  if (days > 0) { cd.innerHTML = `${days}<small>天後，${md(V.testDay)}</small>`; $('#endLede').innerHTML = `驗收在 ${md(V.testDay)}。只測一次，首段保守、後段漸進。目標不是保證破 ${mmss(V.bestT)}——四週破不了很正常——而是這一期的每一堂都有沒有把 CP 往上推；時間只是那個數字的影子。` }
+  else if (days === 0) { cd.innerHTML = `今天<small>${md(V.testDay)}</small>`; $('#endLede').textContent = '就是今天。第 2–5 分鐘守住，第 10 分鐘看圈速，最後一公里再全部花掉。' }
+  else { const e = V.efforts.find(x => x.date === V.testDay); cd.innerHTML = e ? `${mmss(e.elapsed_sec)}<small>${md(V.testDay)} 驗收</small>` : `${md(V.testDay)}<small>驗收已經過了</small>`; $('#endLede').textContent = '四週的結果出來了。下一期從這個數字重新開始排。' }
+  $('#how').innerHTML = `
+    <li>中社路每一次：data/itt-segments.json（有 FIT 用自己算的，沒有才用 Strava）；紀錄與配速：data/pacing.json。</li>
+    <li>CTL／ATL／HRV：intervals.icu 的每日 wellness（data/fit/_wellness.json），只取到今天——未來日是推算值。</li>
+    <li>區間時間：每趟騎乘的 icu_zone_times 加總；滑行比例＝coasting_time ÷ moving_time。</li>
+    <li>月時數與 eFTP：data/chronicle.json；損益線 ${D.chron ? D.chron.breakeven_h : 15.3} h 是月時數對 eFTP 變化的迴歸，樣本少，當量級看。</li>
+    <li>CP／W′：近 90 天 2–20 分鐘最佳功率擬合（scripts/build-pacing.py）。</li>
+    <li>減量模擬：CTL、ATL 用 42／7 天時間常數的指數平均，從今天的真實值往下推；每堂 TSS＝處方分鐘 × 本期已完成主課的 TSS/分鐘。</li>
+    <li>第一張的超補償曲線是示意模型，不是量測。資料每天由 GitHub Actions 更新，這頁每次打開都重算。</li>`
+}
+
+/* ═══ 投影片控制 ═══ */
+const slides = $$('.slide'), N = slides.length, keys = slides.map(s => s.dataset.key), titles = slides.map(s => s.dataset.title), parts = slides.map(s => s.dataset.part)
+slides.forEach(s => $$('.copy>*', s).forEach((c, i) => c.style.setProperty('--i', i)))
+let cur = Math.max(0, keys.indexOf(location.hash.slice(1))), auto = false, autoT = 0
+const pg = $('#pg')
+slides.forEach((s, i) => { const b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-label', `第 ${i + 1} 張：${titles[i]}`); b.title = `${parts[i] ? parts[i] + ' · ' : ''}${titles[i]}`; b.innerHTML = '<i></i>'; if (i > 0 && parts[i] !== parts[i - 1]) b.classList.add('gap'); b.addEventListener('click', () => go(i)); pg.append(b) })
+const dots = $$('button', pg)
+$('#nSlides').textContent = N
+// 封面上的章節入口
+{ const seenP = []; parts.forEach((p, i) => { if (p && !seenP.includes(p)) seenP.push(p) })
+  const names = { 原理: '原理：超補償、TSS、體能帳本、量', 強度: '強度：區間、分配、限制因子', 目標: '目標：中社路、配速', 排法: '排法：四週、一週、漸進、減量', 紀律: '恢復與紀律' }
+  $('#parts').innerHTML = seenP.map((p, i) => `<button type="button" data-go="${parts.indexOf(p)}"><i>${String(i + 1).padStart(2, '0')}</i>${names[p] || p}</button>`).join('') }
+function sync() {
+  slides.forEach((s, i) => { const on = i === cur; s.classList.toggle('is-on', on); s.inert = !on; s.setAttribute('aria-hidden', String(!on)) })
+  dots.forEach((d, i) => { d.setAttribute('aria-current', String(i === cur)); d.classList.toggle('past', i < cur) })
+  $('#count').textContent = `${String(cur + 1).padStart(2, '0')} / ${N}`; $('#prev').disabled = cur === 0; $('#next').disabled = cur === N - 1
+  $('#partName').textContent = parts[cur] ? `${parts[cur]} · ${titles[cur]}` : 'ANATOMY'
+  const z = +slides[cur].dataset.z || 3
+  root.style.setProperty('--heat', ZC[clamp(z, 1, 7) - 1]); Heat.to(z)
+  $('#live').textContent = `第 ${cur + 1} 張，${titles[cur]}`
+  history.replaceState(null, '', '#' + keys[cur])
+  slides[cur].scrollTop = 0
+}
+const wipe = $('#wipe')
+function sweep(dir) {
+  if (RM.matches || !wipe.animate) return
+  const a = dir > 0 ? ['-120vw', '150vw'] : ['150vw', '-120vw']
+  wipe.animate([{ transform: `translateX(${a[0]}) skewX(-16deg)`, opacity: 1 }, { transform: `translateX(${a[1]}) skewX(-16deg)`, opacity: 1 }], { duration: 720, easing: 'cubic-bezier(.6,0,.3,1)' })
+}
+function go(to) {
+  to = clamp(to, 0, N - 1); if (to === cur) return
+  sweep(to > cur ? 1 : -1)
+  cur = to; sync()
+  // 重新觸發這張的動畫
+  const s = slides[cur]; s.classList.remove('is-on'); void s.offsetWidth; s.classList.add('is-on')
+  $$('svg.static', s).forEach(x => x.classList.remove('static'))
+  if (auto) armAuto()
+}
+const next = () => go(cur + 1), prev = () => go(cur - 1)
+function armAuto() { clearTimeout(autoT); autoT = setTimeout(() => { if (cur < N - 1) go(cur + 1); else setAuto(false) }, 12000) }
+function setAuto(on) { auto = on; $('#auto').setAttribute('aria-pressed', String(on)); $('#auto').setAttribute('aria-label', on ? '停止自動放映' : '自動放映'); on ? (cur === N - 1 ? go(0) : armAuto()) : clearTimeout(autoT) }
+$('#auto').addEventListener('click', () => setAuto(!auto))
+document.addEventListener('visibilitychange', () => { if (document.hidden) clearTimeout(autoT); else if (auto) armAuto() })
+const fsBtn = $('#fs'); if (!document.fullscreenEnabled) fsBtn.hidden = true
+const toggleFs = () => { if (!document.fullscreenEnabled) return; document.fullscreenElement ? document.exitFullscreen() : root.requestFullscreen().catch(() => {}) }
+fsBtn.addEventListener('click', toggleFs)
+document.addEventListener('fullscreenchange', () => fsBtn.setAttribute('aria-pressed', String(!!document.fullscreenElement)))
+$('#next').addEventListener('click', next); $('#prev').addEventListener('click', prev)
+document.addEventListener('click', e => { const b = e.target.closest('[data-go]'); if (b) go(+b.dataset.go) })
+addEventListener('keydown', e => {
+  if (e.altKey || e.ctrlKey || e.metaKey) return
+  if (e.target.closest && e.target.closest('input')) return
+  const onCtl = e.target.closest && e.target.closest('a,button,summary')
+  switch (e.key) {
+    case 'ArrowRight': case 'PageDown': next(); break
+    case 'ArrowLeft': case 'PageUp': prev(); break
+    case 'ArrowDown': case 'ArrowUp': return   // 留給捲動長的張
+    case ' ': if (onCtl) return; e.shiftKey ? prev() : next(); break
+    case 'Home': go(0); break
+    case 'End': go(N - 1); break
+    case 'f': case 'F': toggleFs(); break
+    case 'p': case 'P': setAuto(!auto); break
+    default: if (/^[1-9]$/.test(e.key) && +e.key <= N) go(+e.key - 1); else return
+  }
+  e.preventDefault()
+})
+const deck = $('#deck')
+let sx = 0, sy = 0, st = 0, sid = null, swiped = false
+deck.addEventListener('pointerdown', e => { if (e.pointerType === 'mouse' || e.target.closest('input')) return; sx = e.clientX; sy = e.clientY; st = performance.now(); sid = e.pointerId; swiped = false })
+deck.addEventListener('pointerup', e => { if (e.pointerId !== sid) return; sid = null; const dx = e.clientX - sx, dy = e.clientY - sy; if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy) * 1.4 && performance.now() - st < 800) { swiped = true; dx < 0 ? next() : prev() } })
+deck.addEventListener('click', e => { if (swiped) { e.preventDefault(); e.stopPropagation(); swiped = false } }, true)
+// 滾輪：這張本身還能捲就先捲，捲到底才換張；一次手勢只換一張
+let wLock = false, wAt = 0, wLast = 0
+deck.addEventListener('wheel', e => {
+  if (e.ctrlKey || e.target.closest('input')) return
+  const now = performance.now(), gap = now - wLast; wLast = now
+  const s = slides[cur], dy = e.deltaY
+  if (Math.abs(dy) >= Math.abs(e.deltaX)) {
+    const canDown = s.scrollTop + s.clientHeight < s.scrollHeight - 2, canUp = s.scrollTop > 2
+    if ((dy > 0 && canDown) || (dy < 0 && canUp)) { wAt = now; return }
+  }
+  if (wLock) { if (now - wAt > 900 && gap > 140) wLock = false; else return }
+  if (now - wAt < 350) return
+  const dd = Math.abs(dy) >= Math.abs(e.deltaX) ? dy : e.deltaX
+  if (Math.abs(dd) < 24) return
+  wLock = true; wAt = now; dd > 0 ? next() : prev()
+}, { passive: true })
+addEventListener('hashchange', () => { const i = keys.indexOf(location.hash.slice(1)); if (i >= 0 && i !== cur) go(i) })
+
+/* ═══ 開場 ═══ */
+const renderers = [renderCover, renderRebound, renderTss, renderLedger, renderVolume, renderZones, renderMix, renderCurve, renderClimb, renderPace, renderCal, renderWeek, renderProg, renderSim, renderHrv, renderEnd]
+function renderAll(anim = true) {
+  for (const f of renderers) { try { f(anim) } catch (err) { console.error(f.name, err) } }
+  if (!anim) $$('svg.chart').forEach(s => s.classList.add('static'))
+}
+let rz = 0, lastW = innerWidth; addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { if (Math.abs(innerWidth - lastW) < 2 && !NARROW.matches) return; lastW = innerWidth; renderAll(false) }, 160) })
+sync(); Heat.start()
+const J = (u, n = 2) => fetch(u).then(r => { if (!r.ok) throw new Error(u + ' ' + r.status); return r.json() }).catch(e => n ? new Promise(r => setTimeout(r, 500)).then(() => J(u, n - 1)) : Promise.reject(e))
+Promise.allSettled([J('data/chronicle.json'), J('data/fit/_wellness.json'), J('data/fit/_activities.json'), J('data/training-block.json'), J('data/pacing.json'), J('data/itt-segments.json')])
+  .then(([c, w, a, b, p, i]) => {
+    D.chron = c.value; D.well = w.value; D.acts = a.value; D.block = b.value; D.pacing = p.value; D.itt = i.value
+    ;[c, w, a, b, p, i].forEach(r => r.status === 'rejected' && console.warn(r.reason))
+    prep(); renderAll(true)
+    const s = slides[cur]; s.classList.remove('is-on'); void s.offsetWidth; s.classList.add('is-on')
+    document.body.dataset.ready = '1'
+  })
+</script>
+</body>
+</html>
