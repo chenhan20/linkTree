@@ -10,7 +10,9 @@ Strava 的 Best Efforts 那一類功能：一趟騎乘裡，任何連續的 5／
 時間用**經過時間**（含窗內的停等），所以窗內遇紅燈就是被扣時間，最佳窗自然會避開停等。
 一趟只留每個距離的最佳一窗（Strava 也是每筆活動一個），再跨趟排名。
 
-只算戶外：要有 GPS。室內訓練台／Rouvy 的距離是虛擬或推估的，不進榜。
+只算戶外：要有 GPS，而且 intervals 的活動類型不是 VirtualRide。Rouvy 匯出的 FIT 帶的是
+虛擬路線的座標，光看有沒有 GPS 擋不住（2026-08-19 那筆就混進來過，前端先發現的）；
+室內訓練台的距離是虛擬或推估的，也不進榜。
 
 **主榜只收「平路窗」**：窗頭窗尾的淨海拔差必須在 ±3 m／km 以內（20 km ≤ ±60 m）。
 不濾的話 5 km、10 km 的榜首全是下坡（2026-09-30 實測：最快 5 km 是淨降 254 m 的 6:17，
@@ -37,6 +39,7 @@ Strava 的 Best Efforts 那一類功能：一趟騎乘裡，任何連續的 5／
 import argparse
 import json
 import os
+import re
 import sys
 from datetime import timedelta, timezone
 
@@ -56,6 +59,21 @@ TOP_N = 10
 LEVEL_M_PER_KM = 3.0   # 平路窗：頭尾淨海拔差不超過 ±3 m／km（0.3% 平均坡度）
 MAX_KMH = 65.0         # 窗內平均時速超過這個一定是 GPS／里程跳點，丟掉那一窗
 CACHE_VERSION = 2
+
+
+def virtual_ids():
+    """intervals 標成 VirtualRide 的活動 id（Rouvy 等）。_activities.json 讀不到就回空集合，
+    改靠檔名裡的 ROUVY 字樣兜底。"""
+    try:
+        acts = json.load(open(os.path.join(FIT_DIR, "_activities.json"), encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return set()
+    return {k for k, v in acts.items() if str((v or {}).get("type") or "").startswith("Virtual")}
+
+
+def is_virtual(fname, vids):
+    m = re.search(r"_(i\d+)_", fname)
+    return bool((m and m.group(1) in vids) or "rouvy" in fname.lower())
 
 
 def fmt(sec):
@@ -288,10 +306,16 @@ def main(argv=None):
     stale = [n for n in cache["rides"] if n not in fits]
     for n in stale:
         del cache["rides"][n]
+    vids = virtual_ids()
     todo = []
     for f in fits:
         size = os.path.getsize(os.path.join(FIT_DIR, f))
         c = cache["rides"].get(f)
+        if is_virtual(f, vids):
+            # 已經算進去過的也要撤掉（快取是按檔案大小判斷新舊，不會自己發現類型變了）
+            if c is None or not c.get("skip"):
+                cache["rides"][f] = {"size": size, "skip": True, "why": "virtual"}
+            continue
         if c is not None and c.get("size") == size:
             continue
         todo.append((f, size))
