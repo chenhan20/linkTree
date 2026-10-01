@@ -701,7 +701,8 @@ createApp({
        三部片連續放映：theatre.html，五張，換頁是從下一張那顆圓打開的虹膜轉場。
        課表的解剖：anatomy.html，十七張，拿「中社四週」拆解課表怎麼讓人變強；黑底＋WebGL 熱場，數字現算自 data/ 底下六份檔。
        ONE PIECE 航海誌（漫畫類）：onepiece.html，十七張，講海賊王從東海到艾爾巴夫的故事篇章，進度在那支檔的 NOW；kind 欄位決定在放映室列在哪一類。
-       變強，變壯（訓練指南類）：lifting.html，十章四十張的重量訓練教材，內容在 DECK、範例課表在 PROGRAMS、肌群在 MUSCLES；跟我的數據無關。 */
+       變強，變壯（訓練指南類）：lifting.html，十章四十張的重量訓練教材，內容在 DECK、範例課表在 PROGRAMS、肌群在 MUSCLES；跟我的數據無關。
+       騎得更快（訓練指南類）：road.html，十三章的公路車訓練教材，同一套骨架；內容在 DECK、一週範本在 WEEKS；七個計算工具。 */
     const slides = [
       { id:'hero',    kind:'data',  name:'From zero to HERO', sub:'資料說的故事・十張',       url:'hero.html',    rgb:'247,209,16', img:'assets/hero/rider-icon-128.png' },
       { id:'theatre', kind:'data',  name:'三部片連續放映',     sub:'五張・虹膜轉場・自動放映', url:'theatre.html', rgb:'255,179,71' },
@@ -710,6 +711,7 @@ createApp({
       { id:'onepiece', kind:'manga', name:'ONE PIECE 航海誌', sub:'海賊王故事篇章・十七張・截至第 1194 話', url:'onepiece.html', rgb:'244,196,48', img:'assets/onepiece/jolly-roger.svg' },
       // 訓練指南類（通用教材，不是我的數據）：變強，變壯——重量訓練全方位，中階，每個動作附 YouTube 搜尋關鍵字
       { id:'lifting', kind:'guide', name:'變強，變壯', sub:'重量訓練全方位指南・中階・四十張・可互動', url:'lifting.html', rgb:'224,57,47', img:'assets/lifting/icon.svg' },
+      { id:'road', kind:'guide', name:'騎得更快', sub:'公路車訓練全方位指南・中階・四十四張・七個計算工具', url:'road.html', rgb:'245,196,0', img:'assets/road/icon.svg' },
     ]
     // 放映室把幻燈片分兩類列：我的數據（每一格都是真的騎乘資料）與漫畫（讀者筆記，不是數據）
     const slideKinds = [

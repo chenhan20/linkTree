@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>騎得更快 · 公路車訓練指南 · Steve Chuang</title>
+<meta name="description" content="給中階車手的公路車訓練全方位簡報：什麼決定你騎多快、區間與強度、測驗、負荷與恢復、課表怎麼排、課表庫、爬坡與下坡、技術與團騎、室內與重訓、飲食補給、睡眠與健康、器材與設定、配速與比賽。七個計算工具，技術動作附 YouTube 搜尋關鍵字。">
+<meta name="theme-color" content="#0f1316">
+<link rel="icon" href="assets/road/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Saira+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --sans:'Noto Sans TC','PingFang TC','Microsoft JhengHei',system-ui,sans-serif;
+  --num:'Saira Condensed','Arial Narrow','Noto Sans TC',sans-serif;
+  --bg:#0f1316;--bg2:#171c21;--bg3:#20262c;
+  --fg:#ece6d8;--fg2:#b7bcc2;--fg3:#7f868e;--line:rgba(236,230,216,.16);--line2:rgba(236,230,216,.08);
+  --red:#f5c400;--red2:#ffd84a;--chalk:#ece6d8;
+  --gut:clamp(20px,5vw,84px);--top:88px;--bot:92px;
+  --settle:cubic-bezier(.2,.7,.2,1);
+}
+html,body{height:100%;background:var(--bg);overflow:hidden;overscroll-behavior:none}
+body{font-family:var(--sans);color:var(--fg);-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;line-height:1.6}
+button{font:inherit;color:inherit}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--red2);outline-offset:3px}
+
+/* ── 地板：橡膠地墊的點紋＋角落的光 ─────────────────────── */
+.floor{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;
+  background:radial-gradient(120% 90% at 50% 110%,#20262c 0%,#141a1f 45%,var(--bg) 100%)}
+.floor::before{content:'';position:absolute;inset:0;opacity:.6;
+  background-image:radial-gradient(rgba(236,230,216,.06) .7px,transparent 1px);background-size:9px 9px}
+/* 路面的中線：一條斜斜的虛線，很淡 */
+.floor .lane{position:absolute;left:-10%;right:-10%;top:62%;height:3px;background:repeating-linear-gradient(90deg,rgba(245,196,0,.12) 0 60px,transparent 60px 120px);transform:rotate(-6deg);transform-origin:center}
+.floor::after{content:'';position:absolute;left:-20vw;top:-30vh;width:70vw;height:70vh;border-radius:50%;
+  background:radial-gradient(closest-side,rgba(236,230,216,.045),transparent 70%)}
+
+/* ── 頂欄：回首頁、名字、槓鈴（章節導覽）、工具 ──────────── */
+.top{position:fixed;left:0;right:0;top:0;z-index:20;display:grid;grid-template-columns:auto auto minmax(0,1fr) auto;align-items:center;
+  gap:clamp(12px,2vw,28px);padding:16px var(--gut) 0;pointer-events:none;color:var(--fg)}
+.top>*{pointer-events:auto}
+.home{display:inline-flex;align-items:center;gap:6px;font-size:13px;letter-spacing:.06em;text-decoration:none;opacity:.78;white-space:nowrap}
+.home:hover{opacity:1}
+.home svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.brand{display:flex;align-items:center;gap:9px;white-space:nowrap}
+.brand img{width:26px;height:26px}
+.brand b{font:600 14px/1 var(--num);letter-spacing:.2em;text-transform:uppercase}
+.brand span{font:900 15px/1 var(--sans);letter-spacing:.14em;color:var(--fg2)}
+.chbar{position:relative;height:56px;min-width:0}
+.chbar svg{position:absolute;left:0;top:0;width:100%;height:36px;overflow:visible;display:block}
+.chbar svg .rod{stroke:rgba(236,230,216,.3);stroke-width:3;stroke-linecap:round}
+.chbar svg .rodon{stroke:var(--chalk);stroke-width:3;stroke-linecap:round;transition:stroke-dashoffset .8s var(--settle)}
+.chbar svg .seg{fill:rgba(236,230,216,.12);stroke:rgba(236,230,216,.28);stroke-width:1;cursor:pointer;transition:fill .3s,stroke .3s}
+.chbar svg .road{fill:none;stroke:rgba(236,230,216,.35);stroke-width:1.5;stroke-linejoin:round}
+.chbar svg .seg.done{fill:rgba(236,230,216,.55);stroke:rgba(236,230,216,.7)}
+.chbar svg .seg.on{fill:var(--red);stroke:var(--red2)}
+.chbar svg text.on{fill:#15130a;font-weight:600}
+.chbar svg .seg:hover{stroke:var(--chalk)}
+.chbar svg text{font:500 10px var(--num);fill:var(--fg3);letter-spacing:.08em;pointer-events:none}
+.chbar svg text.on{fill:var(--fg)}
+.chbar .cur{position:absolute;left:0;right:0;bottom:0;font:500 11px/1.2 var(--num);letter-spacing:.1em;color:var(--fg3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chbar .cur b{color:var(--fg);font-weight:700;margin-right:8px;font-family:var(--sans);font-size:11.5px;letter-spacing:.06em}
+.tools{display:flex;align-items:center;gap:8px}
+.count{margin-right:4px;font:500 15px var(--num);letter-spacing:.1em;opacity:.75}
+.tbtn{display:grid;place-items:center;width:40px;height:40px;padding:0;border:1px solid var(--line);border-radius:50%;background:transparent;cursor:pointer;transition:border-color .2s,background .3s}
+.tbtn:hover{border-color:currentColor}
+.tbtn[aria-pressed=true]{background:var(--fg);color:var(--bg)}
+.tbtn svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tbtn .i-pause,#auto[aria-pressed=true] .i-play{display:none}
+#auto[aria-pressed=true] .i-pause{display:block}
+
+/* ── 投影片 ───────────────────────────────────────── */
+.deck{position:fixed;inset:0;z-index:3;touch-action:pan-y}
+.slide{position:absolute;inset:0;padding:var(--top) var(--gut) var(--bot);display:grid;color:var(--fg);align-content:start;row-gap:clamp(12px,2.2vh,22px);
+  opacity:0;visibility:hidden;overflow:hidden auto;scrollbar-width:none;overscroll-behavior:contain;
+  transition:opacity .3s ease,visibility 0s .3s}
+.slide::-webkit-scrollbar{display:none}
+.slide.is-on{opacity:1;visibility:visible;transition:opacity .5s ease .25s,visibility 0s}
+.eyebrow{font:500 13px/1.3 var(--num);letter-spacing:.2em;color:var(--red2);text-transform:uppercase}
+.eyebrow em{font-style:normal;color:var(--fg3);margin-left:10px;letter-spacing:.14em}
+.slide h2{margin-top:8px;font:900 clamp(26px,3.4vw,50px)/1.22 var(--sans);letter-spacing:.01em;text-wrap:balance}
+.lede{margin-top:clamp(8px,1.6vh,16px);font-size:clamp(14.5px,1.15vw,17px);line-height:1.85;color:var(--fg2);max-width:34em;text-wrap:pretty}
+.lede b,.body b{color:var(--fg);font-weight:700}
+.head{min-width:0}
+.body{min-width:0;display:grid;gap:clamp(12px,2vh,20px);align-content:start}
+.two{grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:clamp(24px,4vw,64px)}
+.two>.body{align-self:start}
+.wide{grid-template-columns:minmax(0,1fr)}
+.wm{position:absolute;right:var(--gut);bottom:calc(var(--bot) - 36px);font:600 clamp(110px,20vw,300px)/1 var(--num);letter-spacing:-.02em;color:rgba(236,230,216,.04);pointer-events:none;user-select:none;overflow:hidden}
+
+/* 進場 */
+.rv{opacity:0}
+.slide.is-on .rv{animation:rvin .5s ease both;animation-delay:calc(var(--k,0)*50ms + .45s)}
+@keyframes rvin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* 文字元件：一條線＋留白，不做卡片 */
+.pts{list-style:none;max-width:44em}
+.pts li{display:grid;grid-template-columns:minmax(6.5em,auto) minmax(0,1fr);gap:2px 16px;padding:9px 0;border-top:1px solid var(--line);align-items:baseline}
+.pts li:last-child{border-bottom:1px solid var(--line)}
+.pts .k{font-weight:700;font-size:14px;letter-spacing:.02em}
+.pts .k small{display:block;margin-top:2px;font:500 12px/1.4 var(--num);letter-spacing:.08em;color:var(--fg3)}
+.pts p{font-size:13.5px;line-height:1.72;color:var(--fg2);text-wrap:pretty}
+.pts li.hot .k{color:var(--red2)}
+.steps{list-style:none;counter-reset:s;max-width:44em}
+.steps li{position:relative;padding:8px 0 8px 2.4em;border-top:1px solid var(--line);font-size:13.5px;line-height:1.72;color:var(--fg2)}
+.steps li:last-child{border-bottom:1px solid var(--line)}
+.steps li::before{counter-increment:s;content:counter(s,decimal-leading-zero);position:absolute;left:0;top:10px;font:600 14px var(--num);letter-spacing:.06em;color:var(--red2)}
+.steps li b{color:var(--fg)}
+.quote{padding:10px 0 10px 16px;border-left:2px solid var(--red);font-size:14px;line-height:1.75;color:var(--fg2);max-width:40em}
+.quote b{color:var(--fg)}
+.note{font-size:12.5px;line-height:1.7;color:var(--fg3);max-width:60em;text-wrap:pretty}
+.note a{color:var(--fg2)}
+.chips{display:flex;flex-wrap:wrap;gap:6px 8px}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border:1px solid var(--line);border-radius:999px;font-size:12.5px;color:var(--fg2);text-decoration:none;white-space:nowrap;transition:border-color .2s,color .2s}
+.chip:hover{border-color:var(--chalk);color:var(--fg)}
+.chip i{font-style:normal;font:500 11px var(--num);letter-spacing:.08em;color:var(--red2)}
+
+/* 表格 */
+.tw{overflow-x:auto;scrollbar-width:thin;max-width:100%;touch-action:pan-x pan-y}
+table.t{border-collapse:collapse;width:100%;font-size:13px;line-height:1.55}
+table.t th{text-align:left;font:500 11.5px var(--num);letter-spacing:.12em;color:var(--fg3);padding:6px 10px 6px 0;border-bottom:1px solid var(--line);white-space:nowrap;text-transform:uppercase}
+table.t td{padding:7px 10px 7px 0;border-bottom:1px solid var(--line2);vertical-align:top;color:var(--fg2)}
+table.t td:first-child{color:var(--fg);font-weight:700;white-space:nowrap}
+table.t tr.hot td{color:var(--fg)}
+table.t tr.hot td:first-child{color:var(--red2)}
+table.t td.n,table.t th.n{font-family:var(--num);font-weight:500;letter-spacing:.04em;white-space:nowrap;font-size:14px}
+table.t .yt{display:inline-block;margin-left:6px;font:500 10.5px var(--num);letter-spacing:.1em;color:var(--red2);text-decoration:none;border-bottom:1px dotted rgba(255,106,92,.5)}
+table.t .yt:hover{border-bottom-style:solid}
+table.t .bad{display:block;margin-top:2px;font-size:12px;color:var(--fg3)}
+table.t.dense td,table.t.dense th{padding-top:5px;padding-bottom:5px;font-size:12.5px}
+.tier{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(14px,2.4vw,32px)}
+.tier>div{min-width:0}
+.tier-4{grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(12px,1.6vw,24px)}
+.tier-5{grid-template-columns:repeat(5,minmax(0,1fr));gap:clamp(10px,1.2vw,18px)}
+table.t.prog td:first-child{white-space:normal}
+table.t.prog td,table.t.prog th{padding-right:6px;font-size:12px}
+.tier-5 table.t.prog td,.tier-5 table.t.prog th{font-size:11.5px}
+.tier-5 table.t.prog td.n{font-size:12.5px}
+.tier h3{font:600 12px var(--num);letter-spacing:.18em;color:var(--fg3);text-transform:uppercase;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.tier h3 b{display:block;margin-top:3px;font:700 15px var(--sans);letter-spacing:.04em;color:var(--fg)}
+.tier.hot1>div:first-child h3 b{color:var(--red2)}
+.tier ul{list-style:none}
+.tier li{padding:7px 0;border-bottom:1px solid var(--line2);font-size:13px;line-height:1.6;color:var(--fg2)}
+.tier li b{color:var(--fg);font-weight:700}
+.tier li small{display:block;font:500 12px var(--num);letter-spacing:.06em;color:var(--fg3);margin-top:1px}
+
+/* 圖表 */
+.fig{width:100%;min-width:0}
+.fig svg{width:100%;height:auto;display:block;overflow:visible}
+.fig text{font-family:var(--sans);fill:var(--fg2);font-size:12px}
+.fig .n{font-family:var(--num);font-weight:500;letter-spacing:.04em}
+.fig .ax{stroke:var(--line);stroke-width:1}
+.fig .ax2{stroke:var(--line2);stroke-width:1;stroke-dasharray:2 4}
+.fig .ln{fill:none;stroke:var(--chalk);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.fig .ln.red{stroke:var(--red2)}
+.fig .ln.dim{stroke:rgba(236,230,216,.35);stroke-dasharray:3 5}
+.fig .area{fill:rgba(224,57,47,.16)}
+.fig .bar{fill:rgba(236,230,216,.55)}
+.fig .bar.red{fill:var(--red)}
+.fig .bar.dim{fill:rgba(236,230,216,.2)}
+.fig .lb{fill:var(--fg3);font-size:11.5px}
+.fig .lb2{fill:var(--fg);font-size:13px;font-weight:700}
+.fig .dot{fill:var(--red);stroke:var(--bg);stroke-width:2}
+.cap{font-size:12px;line-height:1.6;color:var(--fg3);margin-top:6px;text-wrap:pretty}
+.draw{stroke-dasharray:1;stroke-dashoffset:1}
+.slide.is-on .draw{animation:draw 1.3s ease-out .6s both}
+@keyframes draw{to{stroke-dashoffset:0}}
+.grow{transform-box:fill-box;transform-origin:bottom;transform:scaleY(0)}
+.slide.is-on .grow{animation:grow .7s var(--settle) both;animation-delay:calc(var(--k,0)*40ms + .5s)}
+@keyframes grow{to{transform:none}}
+
+/* 互動控制 */
+.ctl{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px}
+.ctl label{font-size:13px;color:var(--fg2);display:inline-flex;align-items:center;gap:8px}
+.ctl input[type=range]{width:clamp(120px,16vw,220px);accent-color:var(--red)}
+.ctl input[type=number]{width:5.2em;padding:5px 8px;border:1px solid var(--line);border-radius:4px;background:var(--bg3);color:var(--fg);font:500 15px var(--num);letter-spacing:.04em}
+.ctl output,.ctl .v{font:600 16px var(--num);letter-spacing:.04em;color:var(--fg);min-width:3.2em}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.seg button{padding:6px 14px;border:0;background:transparent;color:var(--fg2);font-size:13px;letter-spacing:.04em;cursor:pointer;transition:background .2s,color .2s}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed=true]{background:var(--chalk);color:var(--bg);font-weight:700}
+.seg button:hover:not([aria-pressed=true]){color:var(--fg)}
+.big{display:flex;flex-wrap:wrap;gap:6px 22px;align-items:baseline}
+.big div{display:flex;flex-direction:column;gap:2px}
+.big b{font:600 clamp(28px,2.8vw,40px)/1 var(--num);letter-spacing:.01em;color:var(--fg)}
+.big b.red{color:var(--red2)}
+.big b small{font-size:.5em;color:var(--fg3);margin-left:4px;letter-spacing:.06em}
+.big span{font-size:12px;letter-spacing:.08em;color:var(--fg3)}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:9px 16px;border:1px solid var(--line);border-radius:999px;background:transparent;color:var(--fg);text-decoration:none;font-size:13.5px;letter-spacing:.06em;cursor:pointer;transition:border-color .2s,background .2s}
+.btn:hover{border-color:currentColor}
+.btn.pri{background:var(--red);border-color:var(--red);color:#15130a;font-weight:700}
+.btn.pri:hover{background:var(--red2)}
+.btn:disabled{opacity:.35;cursor:default}
+
+/* 週曆（分化規劃） */
+.week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.week>div{min-height:88px;padding:8px 8px 10px;border:1px solid var(--line2);border-radius:4px;background:rgba(236,230,216,.03)}
+.week>div.on{border-color:var(--line);background:rgba(236,230,216,.06)}
+.week .d{font:500 11px var(--num);letter-spacing:.14em;color:var(--fg3)}
+.week .s{margin-top:6px;font-weight:700;font-size:13.5px;letter-spacing:.02em}
+.week .s.rest{color:var(--fg3);font-weight:400}
+.week .m{margin-top:4px;font-size:11.5px;line-height:1.5;color:var(--fg2)}
+.sets{display:grid;grid-template-columns:repeat(auto-fit,minmax(86px,1fr));gap:6px 14px}
+.sets div{display:flex;flex-direction:column;gap:3px;padding:6px 0;border-top:1px solid var(--line2)}
+.sets span{font-size:12px;color:var(--fg3);letter-spacing:.04em}
+.sets b{font:600 18px/1 var(--num);letter-spacing:.02em}
+.sets i{display:block;height:4px;border-radius:2px;background:rgba(236,230,216,.12);overflow:hidden}
+.sets i::after{content:'';display:block;height:100%;width:var(--p);background:var(--chalk)}
+.sets div.lo b{color:var(--fg3)}.sets div.ok b{color:var(--fg)}.sets div.hi b{color:var(--red2)}
+.sets div.hi i::after{background:var(--red)}
+
+/* 肌群地圖 */
+.map{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:clamp(18px,3vw,48px);align-items:start}
+.bodies{display:flex;justify-content:center;gap:clamp(10px,2vw,28px)}
+.bodies figure{flex:1 1 0;max-width:205px;min-width:0;text-align:center}
+.bodies figcaption{font:500 11px var(--num);letter-spacing:.2em;color:var(--fg3);margin-top:6px}
+.bodies svg{width:100%;height:auto;display:block;overflow:visible}
+.bodies .skin{fill:rgba(236,230,216,.06);stroke:rgba(236,230,216,.16);stroke-width:.8}
+.bodies [data-m]{fill:rgba(236,230,216,.14);stroke:rgba(236,230,216,.34);stroke-width:.8;cursor:pointer;transition:fill .25s,stroke .25s}
+.bodies [data-m]:hover{fill:rgba(236,230,216,.34);stroke:var(--chalk)}
+.bodies [data-m].on{fill:var(--red);stroke:var(--red2)}
+.mpanel{min-width:0}
+.mpanel h3{font:900 clamp(22px,2.2vw,30px)/1.2 var(--sans);letter-spacing:.02em}
+.mpanel h3 small{display:block;margin-top:4px;font:500 12px var(--num);letter-spacing:.2em;color:var(--fg3)}
+.mpanel .fn{margin-top:8px;font-size:13.5px;line-height:1.75;color:var(--fg2)}
+.mpanel .land{margin-top:10px}
+.mlist{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.mlist button{padding:5px 11px;border:1px solid var(--line);border-radius:999px;background:transparent;color:var(--fg2);font-size:12.5px;cursor:pointer;transition:border-color .2s,color .2s,background .2s}
+.mlist button:hover{color:var(--fg);border-color:var(--chalk)}
+.mlist button[aria-pressed=true]{background:var(--chalk);color:var(--bg);border-color:var(--chalk);font-weight:700}
+.land{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;max-width:420px}
+.land div{padding:6px 0;border-top:1px solid var(--line)}
+.land span{font-size:11.5px;letter-spacing:.08em;color:var(--fg3)}
+.land b{display:block;font:600 20px/1.1 var(--num);letter-spacing:.02em}
+
+/* 槓片計算（1RM） */
+.barbell{width:100%;max-width:560px}
+.barbell svg{width:100%;height:auto;display:block;overflow:visible}
+.plates{display:flex;flex-wrap:wrap;gap:8px 12px;font:500 12px var(--num);letter-spacing:.08em;color:var(--fg3)}
+.plates i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+
+/* 封面與結尾 */
+.s-cover{grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);align-items:center;align-content:center;column-gap:clamp(20px,4vw,70px)}
+.s-cover h1{margin-top:14px;font:900 clamp(56px,min(8.6vw,15dvh),130px)/1.05 var(--sans);letter-spacing:.02em}
+.s-cover h1 span{display:block}
+.s-cover .sub{margin-top:clamp(12px,2.4vh,26px);font-size:clamp(15px,1.3vw,19px);line-height:1.8;color:var(--fg2);text-wrap:pretty;max-width:30em}
+.s-cover .sub b{font:600 1.2em/1 var(--num);color:var(--red2);letter-spacing:.02em}
+.hint{margin-top:clamp(14px,3vh,30px);font-size:13px;letter-spacing:.08em;color:var(--fg3)}
+.hint-kbd{display:none}
+@media (hover:hover) and (pointer:fine){.hint-kbd{display:inline}.hint-touch{display:none}}
+.cover-art{display:flex;justify-content:center;align-items:center}
+.cover-art svg{width:min(42vmin,440px);height:auto;display:block;overflow:visible;filter:drop-shadow(0 20px 40px rgba(0,0,0,.5))}
+.toc{list-style:none;columns:2;column-gap:clamp(24px,4vw,64px);max-width:980px}
+.toc li{break-inside:avoid}
+.toc button{display:grid;grid-template-columns:2.4em minmax(0,1fr) auto;gap:12px;align-items:baseline;width:100%;padding:10px 0;border:0;border-top:1px solid var(--line);background:none;color:var(--fg);text-align:left;cursor:pointer}
+.toc li:last-child button{border-bottom:1px solid var(--line)}
+.toc .n{font:600 15px var(--num);letter-spacing:.08em;color:var(--red2)}
+.toc .t{font-weight:700;font-size:15px;letter-spacing:.02em;transition:color .2s}
+.toc .t small{display:block;font-weight:400;font-size:12px;color:var(--fg3);margin-top:2px;letter-spacing:.02em}
+.toc .c{font:500 12px var(--num);letter-spacing:.1em;color:var(--fg3);white-space:nowrap}
+.toc button:hover .t{color:var(--red2)}
+.acts{display:flex;flex-wrap:wrap;gap:10px}
+.asof{font-size:11.5px;letter-spacing:.06em;color:var(--fg3)}
+
+/* 區間表的色階：只有這裡用漸層，因為區間本來就是輕到重的順序 */
+table.t td .zbar{display:inline-block;height:8px;border-radius:2px;background:var(--chalk);vertical-align:middle;margin-right:8px;opacity:var(--o,.5)}
+.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px 18px}
+.kv div{padding:7px 0;border-top:1px solid var(--line2)}
+.kv span{display:block;font-size:11.5px;letter-spacing:.06em;color:var(--fg3)}
+.kv b{font:600 22px/1.15 var(--num);letter-spacing:.02em}
+.kv b small{font-size:.55em;color:var(--fg3);margin-left:3px}
+.kv b.hot{color:var(--red2)}
+.week>div.hard{border-color:rgba(245,196,0,.45)}
+.week .s.hard{color:var(--red2)}
+/* ── 底部換頁 ───────────────────────────────────── */
+.pager{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;justify-content:center;align-items:center;gap:clamp(8px,2vw,22px);
+  padding:0 var(--gut) calc(22px + env(safe-area-inset-bottom));pointer-events:none;color:var(--fg)}
+.pager>*{pointer-events:auto}
+.arw{display:grid;place-items:center;width:42px;height:42px;padding:0;border:1px solid var(--line);border-radius:50%;background:rgba(21,23,26,.6);color:inherit;cursor:pointer;transition:border-color .2s,opacity .2s}
+.arw:hover{border-color:currentColor}
+.arw:disabled{opacity:.25;cursor:default}
+.arw svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.pg{display:flex;align-items:center;gap:2px}
+.pg button{width:16px;height:26px;padding:0;border:0;background:none;cursor:pointer;color:inherit;display:grid;place-items:center}
+.pg button i{display:block;width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.32;transition:opacity .3s,transform .35s var(--settle),background .3s}
+.pg button.ch i{width:6px;height:6px;opacity:.55}
+.pg button:hover i{opacity:.85}
+.pg button[aria-current=true] i{opacity:1;transform:scale(1.6);background:var(--red)}
+.live{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ── 窄螢幕 ─────────────────────────────────────── */
+@media (max-aspect-ratio:1/1),(max-width:820px){
+  :root{--top:96px;--bot:84px}
+  .top{grid-template-columns:auto minmax(0,1fr) auto;gap:12px;padding-top:12px}
+  .brand{display:none}
+  .home span{display:none}
+  .chbar{height:60px}
+  .chbar .cur{font-size:10.5px}
+  .count{display:none}
+  .tbtn{width:36px;height:36px}
+  .slide{padding-top:calc(var(--top) + 4px)}
+  .two,.s-cover,.map{grid-template-columns:minmax(0,1fr)}
+  .s-cover{align-content:start;justify-items:center;text-align:center}
+  .s-cover h1{font-size:clamp(44px,13vw,80px)}
+  .s-cover .sub{max-width:none}
+  .cover-art{order:-1;padding-top:4px}
+  .cover-art svg{width:min(56vw,260px)}
+  .slide h2{font-size:clamp(24px,6.4vw,34px)}
+  .lede{font-size:14.5px;line-height:1.75;max-width:none}
+  .wm{display:none}
+  .pts li{grid-template-columns:minmax(0,1fr);gap:3px 0}
+  .pts .k small{display:inline;margin-left:8px}
+  .tier,.tier-4,.tier-5{grid-template-columns:minmax(0,1fr)}
+  .toc{columns:1}
+  .week{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .week>div{min-height:0}
+  .bodies figure{max-width:170px}
+  .land{max-width:none}
+  .arw{width:38px;height:38px}
+  .pg{display:none}
+  .pager .count{display:block;margin:0 6px}
+  .pager::before{content:'';position:absolute;left:0;right:0;bottom:0;height:120px;z-index:-1;pointer-events:none;background:linear-gradient(to top,var(--bg2) 30%,transparent)}
+}
+@media (max-height:720px) and (min-aspect-ratio:1/1){
+  :root{--top:78px;--bot:74px}
+  .lede{font-size:14px;line-height:1.7}
+  .pts li{padding:6px 0}.pts p{font-size:13px;line-height:1.6}
+  table.t td{padding-top:5px;padding-bottom:5px}
+}
+@media (prefers-reduced-motion:reduce){
+  .slide.is-on .rv,.slide.is-on .draw,.slide.is-on .grow{animation:none;opacity:1;stroke-dashoffset:0;transform:none}
+  .chbar svg .rodon{transition:none}
+}
+</style>
+</head>
+<body>
+<div class="floor" aria-hidden="true"><div class="lane"></div></div>
+
+<header class="top">
+  <a class="home" href="linkTreeIndex.html#theatre" title="回放映室"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg><span>放映室</span></a>
+  <div class="brand"><img src="assets/road/icon.svg" alt="" width="26" height="26"><b>Road Guide</b><span>騎得更快</span></div>
+  <nav class="chbar" id="bar" aria-label="章節"><svg id="barsvg" viewBox="0 0 1000 36"></svg><div class="cur" id="cur"></div></nav>
+  <div class="tools">
+    <span class="count" id="count" aria-hidden="true"></span>
+    <button class="tbtn" id="auto" type="button" aria-pressed="false" aria-label="自動放映" title="自動放映（P）">
+      <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10-6.5z"/></svg>
+      <svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 5.5v13M15.5 5.5v13"/></svg>
+    </button>
+    <button class="tbtn" id="fs" type="button" aria-pressed="false" aria-label="全螢幕" title="全螢幕（F）">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg>
+    </button>
+  </div>
+</header>
+
+<main class="deck" id="deck" aria-roledescription="簡報">
+  <section class="slide s-cover" data-key="cover" data-title="封面" data-ch="0">
+    <div>
+      <p class="eyebrow">Road Guide <em>公路車 · 中階 · 全方位</em></p>
+      <h1><span>騎得</span><span>更快</span></h1>
+      <p class="sub">從功率的物理到課表、補給、器材與配速，<b id="nSlides">—</b> 張講完公路車訓練的每一塊。七個計算工具可以直接輸入你的數字；技術動作附 YouTube 搜尋關鍵字。通用教材，不是任何人的課表。</p>
+      <p class="hint"><span class="hint-kbd">← → 或空白鍵換頁 · 1–9 跳章 · F 全螢幕 · P 自動放映</span><span class="hint-touch">左右滑動換頁 · 點上面的爬坡剖面跳章</span></p>
+    </div>
+    <div class="cover-art" aria-hidden="true">
+      <svg viewBox="0 0 400 300">
+        <g fill="none" stroke="#f5c400" stroke-width="9"><circle cx="92" cy="206" r="62"/><circle cx="308" cy="206" r="62"/></g>
+        <g fill="none" stroke="#ece6d8" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M92 206 L170 92 L262 92 L308 206"/><path d="M170 92 L206 206 L92 206"/><path d="M206 206 L262 92"/><path d="M152 70 L186 70"/><path d="M262 92 L254 58 L292 54"/>
+        </g>
+        <circle cx="206" cy="206" r="22" fill="none" stroke="#ece6d8" stroke-width="7"/><circle cx="206" cy="206" r="7" fill="#f5c400"/>
+        <path d="M206 206 L232 236" stroke="#f5c400" stroke-width="7" stroke-linecap="round"/>
+      </svg>
+    </div>
+  </section>
+  <!-- 其餘投影片由 JS 從 DECK 產生，插在這裡 -->
+  <div id="anchor" hidden></div>
+</main>
+
+<nav class="pager" aria-label="投影片">
+  <button class="arw" id="prev" type="button" aria-label="上一張" title="上一張（←）"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg></button>
+  <div class="pg" id="pg"></div>
+  <button class="arw" id="next" type="button" aria-label="下一張" title="下一張（→）"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 5.5L16 12l-6.5 6.5"/></svg></button>
+</nav>
+<div class="live" id="live" role="status" aria-live="polite"></div>
+<noscript><p style="position:fixed;inset:auto 20px 20px;color:#ece6d8;font:15px/1.8 sans-serif;z-index:99">這頁需要 JavaScript。回<a href="linkTreeIndex.html">首頁</a>。</p></noscript>
+
+<script>
+(() => {
+'use strict'
+const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)]
+const NS = 'http://www.w3.org/2000/svg'
+const S = (tag, attrs = {}, ...kids) => { const e = document.createElementNS(NS, tag); for (const k in attrs) { const v = attrs[k]; if (v == null) continue; if (k === 'style') e.style.cssText += ';' + v; else e.setAttribute(k, v) } kids.forEach(c => c != null && e.append(c)); return e }
+const root = document.documentElement
+const NARROW = matchMedia('(max-aspect-ratio: 1/1), (max-width: 820px)')
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v))
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))
+const r1 = n => Math.round(n * 10) / 10
+/* YouTube 一律用搜尋網址，不寫死影片 ID（影片會下架，關鍵字不會） */
+const ytUrl = kw => 'https://www.youtube.com/results?search_query=' + encodeURIComponent(kw)
+const yt = kw => `<a class="yt" href="${ytUrl(kw)}" target="_blank" rel="noopener" title="YouTube 搜尋：${esc(kw)}">YT</a>`
+/* 表格：rows 裡的字串原樣輸出（可含 yt()），hot 列用 {hot:true, c:[...]} */
+const tbl = (heads, rows, cls = '') => `<div class="tw"><table class="t ${cls}"><thead><tr>${heads.map(h => `<th${/^#/.test(h) ? ' class="n"' : ''}>${h.replace(/^#/, '')}</th>`).join('')}</tr></thead><tbody>${rows.map(r => { const hot = r.hot, c = r.c || r; return `<tr${hot ? ' class="hot"' : ''}>${c.map((x, i) => `<td${/^#/.test(heads[i] || '') ? ' class="n"' : ''}>${x}</td>`).join('')}</tr>` }).join('')}</tbody></table></div>`
+/* 動作：中文名＋英文關鍵字（連到 YouTube 搜尋）＋「你會做錯的地方」 */
+const ex = (zh, kw, bad) => `${esc(zh)}${yt(kw)}${bad ? `<span class="bad">${esc(bad)}</span>` : ''}`
+const pts = items => `<ul class="pts">${items.map((it, i) => `<li class="rv${it.hot ? ' hot' : ''}" style="--k:${i + 1}"><span class="k">${esc(it.k)}${it.s ? `<small>${esc(it.s)}</small>` : ''}</span><p>${it.p}</p></li>`).join('')}</ul>`
+const steps = items => `<ol class="steps">${items.map((p, i) => `<li class="rv" style="--k:${i + 1}">${p}</li>`).join('')}</ol>`
+
+/* 功率的物理：P = (空氣 + 滾動 + 重力) × 速度 ÷ 傳動效率。單位 SI。 */
+const PHY = { rho: 1.2, g: 9.81, eta: .975 }
+const powerFor = (v, grade, m, cda, crr) => { const s = grade / 100, sin = s / Math.sqrt(1 + s * s), cos = 1 / Math.sqrt(1 + s * s); const aero = .5 * PHY.rho * cda * v * v * v, roll = crr * m * PHY.g * cos * v, grav = m * PHY.g * sin * v; return { aero: aero / PHY.eta, roll: roll / PHY.eta, grav: grav / PHY.eta, total: (aero + roll + grav) / PHY.eta } }
+const speedFor = (P, grade, m, cda, crr) => { let lo = 0, hi = 30; for (let i = 0; i < 60; i++) { const mid = (lo + hi) / 2; if (powerFor(mid, grade, m, cda, crr).total > P) hi = mid; else lo = mid } return (lo + hi) / 2 }
+const mmss = s => { s = Math.round(s); const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = s % 60; return h ? `${h}:${String(m).padStart(2, '0')}:${String(x).padStart(2, '0')}` : `${m}:${String(x).padStart(2, '0')}` }
+
+/* ═══ 內容：一章一個物件，一張一個物件。html 是投影片主體；需要互動的張用 mount 掛上去 ═══ */
+const MOUNT = {}
+const DECK = []
+const head = (eyebrow, h2, lede) => `<div class="head"><p class="eyebrow">${eyebrow}</p><h2>${h2}</h2>${lede ? `<p class="lede">${lede}</p>` : ''}</div>`
+
+/* ── 第 1 章 什麼決定你騎多快 ── */
+DECK.push({ n: 1, title: '什麼決定你騎多快', en: 'THE PHYSICS', sub: '功率、三種阻力、三個指標', slides: [
+  { key: 'toc', title: '目錄', type: 'toc' },
+  { key: 'physics', title: '三種阻力', cls: 'two', html: head('第 1 章 <em>什麼決定你騎多快</em>', '你的功率都花去哪了', '騎車的速度只由一件事決定：你踩出來的功率，減掉三種阻力。平路快不快是空氣阻力（跟速度的三次方成正比），爬坡快不快是重力（跟體重成正比），滾動阻力永遠在那裡。拉動滑桿看功率怎麼分。') +
+    `<div class="body"><div class="ctl"><label>速度 <input type="range" id="ph-v" min="10" max="55" value="32"><output id="ph-vv">32</output> km/h</label><label>坡度 <input type="range" id="ph-g" min="-5" max="15" step=".5" value="0"><output id="ph-gv">0</output> %</label></div><div class="ctl"><label>人＋車 <input type="number" id="ph-m" value="80" min="40" max="150"> kg</label><label>姿勢 <span class="seg" id="ph-pos"><button type="button" data-cda=".40" aria-pressed="false">上把</button><button type="button" data-cda=".34" aria-pressed="true">握把</button><button type="button" data-cda=".28" aria-pressed="false">下把</button><button type="button" data-cda=".23" aria-pressed="false">計時</button></span></label></div><div class="kv" id="ph-out"></div><div class="fig" id="f-phy"></div><p class="note">空氣密度 1.2、滾阻係數 0.004（好的公路胎）、傳動效率 97.5%。CdA 是風阻面積：上把約 0.40、握把 0.34、下把 0.28、計時姿勢 0.23 平方公尺，這些是常見範圍，實際值每個人差很多。</p></div>` },
+  { key: 'engine', title: '三個指標', cls: 'two', html: head('第 1 章 <em>什麼決定你騎多快</em>', '引擎的三個數字：天花板、閾值、效率', '有氧引擎能輸出多少功率，由三件事決定：VO2max 是天花板，閾值是能撐一小時的那個百分比，效率是每公升氧氣換多少瓦。中階車手天花板已經不太會動，閾值的百分比與效率才是練出來的。') +
+    `<div class="body">${pts([
+      { k: 'VO2max', s: '天花板', p: '每分鐘每公斤能用的氧氣。前兩三年漲最多，之後每年 1 到 3%。對應的功率大約是你 5 分鐘全力的輸出。', hot: false },
+      { k: '閾值 FTP', s: '能撐約一小時的功率', p: '通常落在 VO2max 功率的 75 到 85%。中階要漲的是這個百分比：從 75 推到 85，等於 FTP 多一成。', hot: true },
+      { k: '效率', s: '每瓦要燒多少氧', p: '同樣的氧氣輸出更多瓦。靠長時間的低強度騎乘、重訓與踩踏技術慢慢進步，一年 1 到 2%，但累積十年很可觀。' },
+      { k: 'CP 與 W′', s: '另一套講法', p: '臨界功率 CP 跟 FTP 大致相同；W′ 是 CP 以上可以燒掉的能量存量（中階約 15 到 25 kJ）。配速與爬坡那章會用它。' },
+      { k: '功率曲線', s: '5 秒、1 分、5 分、20 分', p: '四個時間點的最大功率畫成一條線，就是你的車手類型：衝刺型 5 秒很高、爬坡型 20 分相對高、全能型平均。' },
+    ])}</div>` },
+] })
+MOUNT['physics'] = sec => {
+  let cda = .34
+  const out = $('#ph-out', sec), fig = $('#f-phy', sec)
+  const upd = () => {
+    const v = +$('#ph-v', sec).value, g = +$('#ph-g', sec).value, m = +$('#ph-m', sec).value || 80
+    $('#ph-vv', sec).textContent = v; $('#ph-gv', sec).textContent = g
+    const p = powerFor(v / 3.6, g, m, cda, .004)
+    out.innerHTML = `<div><span>需要的功率</span><b class="hot">${Math.round(p.total)}<small>W</small></b></div><div><span>空氣阻力</span><b>${Math.round(p.aero)}<small>W</small></b></div><div><span>滾動阻力</span><b>${Math.round(p.roll)}<small>W</small></b></div><div><span>重力</span><b>${Math.round(p.grav)}<small>W</small></b></div>`
+    const W = 640, H = 150, svg = S('svg', { viewBox: `0 0 ${W} ${H}` }), tot = Math.max(1, p.total)
+    let x = 40; const parts = [['空氣', p.aero, 'rgba(236,230,216,.85)'], ['滾動', p.roll, 'rgba(236,230,216,.45)'], ['重力', p.grav, 'var(--red)']]
+    parts.forEach(([n, q, c]) => { const w = Math.max(0, q) / tot * (W - 80); if (w > 0) { svg.append(S('rect', { x, y: 40, width: w, height: 34, fill: c })); if (w > 36) svg.append(S('text', { class: 'lb2 n', x: x + w / 2, y: 62, 'text-anchor': 'middle', style: 'fill:#15130a' }, `${Math.round(q / tot * 100)}%`)); svg.append(S('text', { class: 'lb', x: x + w / 2, y: 96, 'text-anchor': 'middle' }, w > 36 ? n : '')); x += w } })
+    if (p.grav < 0) svg.append(S('text', { class: 'lb', x: 40, y: 125 }, `下坡：重力幫你出 ${Math.round(-p.grav)} W`))
+    svg.append(S('text', { class: 'lb', x: W - 40, y: 125, 'text-anchor': 'end' }, `${v} km/h · ${g}% · ${m} kg · CdA ${cda}`))
+    fig.textContent = ''; fig.append(svg)
+  }
+  ;['ph-v', 'ph-g', 'ph-m'].forEach(id => $('#' + id, sec).addEventListener('input', upd))
+  $('#ph-pos', sec).addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; cda = +b.dataset.cda; $$('button', $('#ph-pos', sec)).forEach(x => x.setAttribute('aria-pressed', String(x === b))); upd() })
+  upd()
+}
+
+/* ── 第 2 章 區間與強度 ── */
+const ZONES = [
+  ['Z1 恢復', 0, .55, '聊天完全不喘', '恢復騎、熱身收操'],
+  ['Z2 耐力', .56, .75, '能整句講話', '有氧引擎的主體，佔七到八成'],
+  ['Z3 節奏', .76, .87, '講話要換氣', '長距離活動的配速區'],
+  ['Z4 閾值', .88, 1.05, '只能講短句', 'FTP 的本體：2×20、甜蜜點'],
+  ['Z5 最大攝氧', 1.06, 1.2, '講不出話', '4 到 8 分鐘的間歇，撐高天花板'],
+  ['Z6 無氧', 1.21, 1.5, '30 秒到 2 分鐘', '攻擊、短坡、W′'],
+  ['Z7 神經肌肉', 1.51, 3, '5 到 15 秒', '衝刺、起步'],
+]
+DECK.push({ n: 2, title: '區間與強度', en: 'ZONES', sub: '七區間、強度分佈、甜蜜點、心率與 RPE', slides: [
+  { key: 'zones', title: '七個區間', cls: 'wide', html: head('第 2 章 <em>區間與強度</em>', '七個區間，全部從 FTP 算', '輸入你的 FTP，下表就是你的功率區間（Coggan 七區）。區間不是硬邊界，是給每種課表一個目標範圍；真正的尺是「這個強度能撐多久、講不講得出話」。') +
+    `<div class="body"><div class="ctl"><label>FTP <input type="number" id="zn-ftp" value="250" min="80" max="500" step="5"> W</label><label>體重 <input type="number" id="zn-w" value="70" min="40" max="150"> kg</label><span class="v" id="zn-wkg"></span></div><div id="zn-table"></div><p class="note">心率區間另外算：用閾值心率（LTHR，20 分鐘測驗後 15 分鐘的平均心率）的百分比：Z1 &lt;81%、Z2 81–89%、Z3 90–93%、Z4 94–99%、Z5 100–102%、Z6 &gt;103%。心率會漂、會受熱與睡眠影響，功率不會。</p></div>` },
+  { key: 'distribution', title: '強度分佈', cls: 'two', html: head('第 2 章 <em>區間與強度</em>', '八成輕鬆，兩成很硬，中間少做', '菁英耐力運動員的訓練時間分佈幾乎都是：八成在 Z1–Z2、兩成在 Z4 以上，中間的 Z3 很少。這叫極化訓練。原因不是 Z3 沒用，是它太累、佔掉恢復，又不夠硬到推高天花板。中階最常見的錯就是每一趟都騎在 Z3。') +
+    `<div class="body"><div class="fig" id="f-dist"></div>${tbl(['模型', '分佈', '適合'], [
+      { hot: true, c: ['極化 80/20', 'Z1–2 八成、Z4+ 兩成、Z3 幾乎沒有', '一週 8 小時以上、有兩堂間歇的人'] },
+      ['金字塔', 'Z1–2 七成、Z3 兩成、Z4+ 一成', '準備長距離活動（Gran Fondo）、Z3 是比賽強度的人'],
+      ['甜蜜點為主', 'Z2 六成、Z3–4 三成、Z5 一成', '一週 6 小時以下、時間不夠的人'],
+      ['全部 Z3', '每趟都「有點喘」', '最常見、進步最慢：太累又不夠硬'],
+    ], 'dense')}</div>` },
+  { key: 'sweetspot', title: '甜蜜點與閾值', cls: 'two', html: head('第 2 章 <em>區間與強度</em>', '時間不夠的人，甜蜜點是最划算的區間', 'FTP 的 88 到 94% 叫甜蜜點：夠硬到推閾值、又沒硬到隔天廢掉，一堂 60 到 75 分鐘就能拿到不錯的刺激。閾值（95 到 105%）更有效但更累，一週最多兩堂。兩者都是「推 FTP」的工具，差在恢復成本。') +
+    `<div class="body">${tbl(['區間', '#%FTP', '代表課表', '一週', '感覺'], [
+      ['甜蜜點', '88–94', '3×12、2×20、1×40', '1–3 堂', '硬但可控，做完還能騎回家'],
+      { hot: true, c: ['閾值', '95–105', '2×20、3×15、over-under', '1–2 堂', '最後五分鐘很想停'] },
+      ['最大攝氧 VO2', '106–120', '4×4、5×5、30/30', '1 堂', '每一趟都像比賽'],
+      ['無氧 W′', '121–150', '8×1 分、短坡衝', '視目標', '短而暴力'],
+    ], 'dense')}${pts([
+      { k: '怎麼選', p: '一週 6 小時以下：一堂甜蜜點加一堂 VO2，其餘 Z2。8 小時以上：兩堂硬的（閾值、VO2 各一）加一趟長 Z2，其餘恢復。' },
+      { k: '一個原則', p: '硬的課表要真的硬、輕的要真的輕。不要把 Z2 騎成 Z3、把閾值做成甜蜜點，那就是全部 Z3。', hot: true },
+    ])}</div>` },
+  { key: 'rpe-hr', title: '功率、心率、RPE', cls: 'two', html: head('第 2 章 <em>區間與強度</em>', '功率看輸出，心率看代價，RPE 看真話', '三把尺各有盲點：功率計是最客觀的，但不知道你今天累不累；心率告訴你身體花了多少力氣，但會被熱、咖啡因、睡眠帶著跑；自覺強度是最誠實的，前提是你願意老實打分數。三個一起看才完整。') +
+    `<div class="body">${tbl(['尺', '優點', '盲點', '用在'], [
+      ['功率', '即時、客觀、可重複', '不反映疲勞與環境', '間歇的目標、配速、TSS'],
+      ['心率', '反映身體狀態與環境', '延遲 1–2 分鐘、會漂移、受熱與睡眠影響', 'Z2 的上限、長騎的脫鉤'],
+      { hot: true, c: ['RPE 1–10', '最誠實、免費', '需要練習校正', '每趟結束打分數，對照功率看狀態'] },
+    ], 'dense')}${pts([
+      { k: '心率脫鉤', s: 'DECOUPLING', p: '同樣功率下心率往上漂超過 5%，代表有氧基礎還不夠或當天沒恢復。長騎後半段的脫鉤低於 5%，是基礎期結束的訊號。' },
+      { k: '狀態判讀', p: '功率正常、心率偏低、RPE 偏高：疲勞或沒睡飽，該降階。功率正常、心率偏高：熱、脫水或咖啡因。三者都正常：練。' },
+    ])}</div>` },
+] })
+MOUNT['zones'] = sec => {
+  const upd = () => {
+    const ftp = +$('#zn-ftp', sec).value || 0, w = +$('#zn-w', sec).value || 0
+    $('#zn-wkg', sec).textContent = w ? `${(ftp / w).toFixed(2)} W/kg` : ''
+    $('#zn-table', sec).innerHTML = tbl(['區間', '#%FTP', '#功率', '講話', '用途'], ZONES.map((z, i) => ({ hot: i === 3, c: [`<span class="zbar" style="width:${14 + i * 12}px;--o:${.3 + i * .1}"></span>${z[0]}`, `${Math.round(z[1] * 100)}–${z[2] >= 3 ? '' : Math.round(z[2] * 100)}${z[2] >= 3 ? '+' : ''}`, `${Math.round(ftp * z[1])}–${z[2] >= 3 ? '' : Math.round(ftp * z[2])}${z[2] >= 3 ? '+' : ''} W`, z[3], z[4]] })), 'dense')
+  }
+  ;['zn-ftp', 'zn-w'].forEach(id => $('#' + id, sec).addEventListener('input', upd)); upd()
+}
+MOUNT['distribution'] = sec => {
+  const W = 640, H = 200, g = S('svg', { viewBox: `0 0 ${W} ${H}` })
+  const groups = [['極化 80/20', [80, 3, 17]], ['金字塔', [70, 20, 10]], ['全部 Z3', [15, 75, 10]]]
+  const y0 = H - 30, top = 30, bw = 36
+  groups.forEach(([n, vals], gi) => { const x0 = 60 + gi * 200; g.append(S('text', { class: 'lb2', x: x0 + 60, y: top - 10, 'text-anchor': 'middle' }, n)); vals.forEach((v, i) => { const h = v / 100 * (y0 - top); g.append(S('rect', { class: 'bar grow' + (i === 1 ? ' dim' : i === 2 ? ' red' : ''), x: x0 + i * (bw + 6), y: y0 - h, width: bw, height: h, style: `--k:${gi * 3 + i}` })); g.append(S('text', { class: 'lb n', x: x0 + i * (bw + 6) + bw / 2, y: y0 + 16, 'text-anchor': 'middle' }, ['Z1–2', 'Z3', 'Z4+'][i])); g.append(S('text', { class: 'lb n', x: x0 + i * (bw + 6) + bw / 2, y: y0 - h - 5, 'text-anchor': 'middle' }, `${v}%`)) }) })
+  g.append(S('line', { class: 'ax', x1: 40, y1: y0, x2: W - 20, y2: y0 }))
+  $('#f-dist', sec).append(g)
+}
+
+/* ── 第 3 章 測驗 ── */
+DECK.push({ n: 3, title: '測驗', en: 'TESTING', sub: 'FTP 怎麼測、什麼時候測、怎麼讀', slides: [
+  { key: 'ftp-test', title: 'FTP 測驗', cls: 'two', html: head('第 3 章 <em>測驗</em>', 'FTP 不用測一小時', '四種常見的測法，各有偏誤。重點不是哪一種最準，是每次用同一種、同一條件，前後才能比。每 6 到 8 週測一次，或一個訓練週期結束時。') +
+    `<div class="body">${tbl(['測法', '做法', '#FTP ＝', '偏誤'], [
+      { hot: true, c: ['20 分鐘', '充分熱身、5 分鐘全力清掉 W′、休 10 分、20 分鐘全力', '20 分均功率 × 0.95', '無氧能力強的人會高估；最通用'] },
+      ['爬升測驗 Ramp', '每分鐘加 20 W 直到做不下去', '最後 1 分鐘功率 × 0.75', '無氧能力強的人高估更多；室內最方便、最不痛苦'],
+      ['8 分鐘 ×2', '2 趟 8 分鐘全力，中間休 10 分', '較高那趟 × 0.90', '比 20 分更依賴無氧'],
+      ['CP：3 分＋12 分', '兩天各做一趟全力', '算出 CP 與 W′', '最有理論基礎，兩個數字都拿到'],
+      ['真的騎 1 小時', '計時賽或獨推 60 分', '60 分均功率', '最準也最痛，一年一次就好'],
+    ], 'dense')}<p class="quote"><b>室內與戶外要分開看：</b>多數人室內 FTP 低 5 到 10%（散熱、固定姿勢），兩邊各測一次、各設一組區間。</p></div>` },
+  { key: 'test-day', title: '測驗日', cls: 'two', html: head('第 3 章 <em>測驗</em>', '測驗日的執行與判讀', '測驗是一堂課，不是儀式。前一天輕鬆、當天吃飽、熱身要夠長、配速要平。測完的數字只是一個起點，真正該看的是整條功率曲線告訴你的車手類型。') +
+    `<div class="body">${steps([
+      '<b>前 48 小時</b>：沒有硬課；前一天 Z1 30 分鐘開腿就好。',
+      '<b>吃</b>：測前 2 到 3 小時一餐碳水，測前 30 分可以一包果膠或一根香蕉；咖啡因有效，但以後每次測都要一樣。',
+      '<b>熱身 20 分鐘</b>：10 分 Z2、3 × 1 分鐘 Z4 各休 1 分、5 分鐘全力清 W′、休 10 分。',
+      '<b>配速</b>：前 2 分鐘比目標低一點，第 5 分鐘到目標，最後 3 分鐘才往上。前半衝太快是最常見的失敗。',
+      '<b>判讀</b>：新 FTP 比舊的差 3% 以內就是誤差。看功率曲線：5 秒、1 分、5 分、20 分各自跟上次比，哪一段漲了就是上個週期練的東西。',
+    ])}${tbl(['類型', '#5 秒', '#1 分', '#5 分', '#20 分'], [
+      ['衝刺型', '很高', '高', '普通', '普通'],
+      ['全能型', '普通', '普通', '普通', '普通'],
+      { hot: true, c: ['爬坡／計時型', '低', '普通', '高', '高'] },
+    ], 'dense')}</div>` },
+] })
+
+/* ── 第 4 章 負荷與恢復 ── */
+/* 一週的範本：依每週小時數，一天一堂 [名稱, 分鐘, 類型 easy|hard|long|rest, TSS]；PMC 模擬與週課表規劃都讀它 */
+const WEEKS = {
+  4: [['休', 0, 'rest', 0], ['甜蜜點 3×10', 60, 'hard', 70], ['休', 0, 'rest', 0], ['VO2 4×4', 60, 'hard', 72], ['休', 0, 'rest', 0], ['長騎 Z2', 120, 'long', 110], ['休', 0, 'rest', 0]],
+  6: [['休', 0, 'rest', 0], ['甜蜜點 3×12', 75, 'hard', 85], ['Z2 耐力', 60, 'easy', 50], ['VO2 5×4', 60, 'hard', 75], ['休', 0, 'rest', 0], ['長騎 Z2', 150, 'long', 140], ['Z1 恢復', 30, 'easy', 15]],
+  8: [['休', 0, 'rest', 0], ['閾值 2×20', 75, 'hard', 90], ['Z2 耐力', 75, 'easy', 60], ['VO2 5×5', 75, 'hard', 85], ['休', 0, 'rest', 0], ['長騎 Z2', 180, 'long', 175], ['Z2 耐力', 90, 'easy', 75]],
+  10: [['休', 0, 'rest', 0], ['閾值 3×15', 90, 'hard', 105], ['Z2 耐力', 90, 'easy', 75], ['VO2 5×5', 75, 'hard', 85], ['Z1 恢復', 45, 'easy', 25], ['長騎 Z2＋節奏', 210, 'long', 215], ['Z2 耐力', 120, 'easy', 100]],
+  12: [['Z1 恢復', 45, 'easy', 25], ['閾值 3×15', 90, 'hard', 105], ['Z2 耐力', 120, 'easy', 100], ['VO2 6×4', 90, 'hard', 95], ['Z1 恢復', 60, 'easy', 30], ['長騎 Z2＋節奏', 240, 'long', 250], ['Z2 耐力', 150, 'easy', 125]],
+}
+DECK.push({ n: 4, title: '負荷與恢復', en: 'LOAD & RECOVERY', sub: 'TSS、PMC、爬升速度、恢復週', slides: [
+  { key: 'tss', title: 'TSS 與 IF', cls: 'two', html: head('第 4 章 <em>負荷與恢復</em>', '一趟騎乘有多重：TSS', '訓練壓力分數把強度與時間合成一個數字：以 FTP 騎一小時＝100。強度因子 IF 是標準化功率除以 FTP，TSS ＝ 小時 × IF² × 100。它不完美，但是目前把不同課表放在同一把尺上最實用的方法。') +
+    `<div class="body">${tbl(['騎乘', '#時間', '#IF', '#TSS', '感覺'], [
+      ['Z1 恢復騎', '1 h', '0.55', '30', '隔天沒感覺'],
+      ['Z2 耐力騎', '2 h', '0.68', '92', '有點累，隔天正常'],
+      { hot: true, c: ['閾值 2×20（含熱身收操）', '1.25 h', '0.85', '90', '當天腿重，隔天恢復'] },
+      ['VO2 5×5', '1.25 h', '0.88', '97', '當天很累'],
+      ['長騎 Z2＋節奏', '4 h', '0.72', '207', '隔天需要休或 Z1'],
+      ['Gran Fondo 全力', '5 h', '0.80', '320', '要休兩三天'],
+    ], 'dense')}${pts([
+      { k: '標準化功率 NP', p: '把忽高忽低的功率依生理代價加權後的平均。間歇課的 NP 比平均功率高很多，TSS 用 NP 算才公平。' },
+      { k: '一週的量', p: '中階一週 300 到 600 TSS；小時數 × 60 是粗估。超過每週 700 需要很好的恢復條件。' },
+    ])}</div>` },
+  { key: 'pmc', title: 'PMC 模擬', cls: 'wide', html: head('第 4 章 <em>負荷與恢復</em>', '體能、疲勞、狀態：PMC', '把每天的 TSS 用兩個時間常數平滑：42 天的叫體能 CTL，7 天的叫疲勞 ATL，兩者相減就是狀態 TSB。選一週幾小時，看 12 週會長成什麼樣子（第 4、8、12 週是恢復週，量減四成五）。') +
+    `<div class="body"><div class="ctl"><span class="seg" id="pm-seg">${[4, 6, 8, 10, 12].map(h => `<button type="button" data-h="${h}" aria-pressed="${h === 8}">${h} h／週</button>`).join('')}</span><label>起始體能 <input type="number" id="pm-start" value="40" min="0" max="150"></label></div><div class="kv" id="pm-kv"></div><div class="fig" id="f-pmc" style="max-width:760px"></div><p class="note">判讀：CTL 每週漲 3 到 7 是安全的爬升速度，超過 8 連續兩週多半會生病或撞牆。TSB 低於 −30 要警覺、−10 到 +5 是練得動的狀態、+10 到 +25 是比賽日。恢復週的功能就是把 TSB 拉回來、讓 CTL 守住。</p></div>` },
+  { key: 'ramp', title: '爬升速度與過度訓練', cls: 'two', html: head('第 4 章 <em>負荷與恢復</em>', '加量的規則，與該停的訊號', '體能要慢慢加：CTL 每週 3 到 7、小時數每週不超過 10 到 15%、每 3 到 4 週一個恢復週。身體給的訊號比數字早，學會讀它。') +
+    `<div class="body">${pts([
+      { k: '每週 +3 到 +7 CTL', s: 'RAMP RATE', p: '新手上緣、中階取中間、年紀大或睡不好的人取下緣。一個 12 週的週期 CTL 漲 20 到 30 就很好。', hot: true },
+      { k: '每 3 到 4 週恢復一週', p: '量減 40 到 50%、強度留一堂短的。這週結束時 TSB 應該回到正值，下一週才能再加。' },
+      { k: '該停的訊號', p: '晨間靜息心率比基線高 5 下以上連續三天；HRV 掉到基線以下；同功率心率反常地高或低；睡不好、情緒差、沒食慾；小感冒一直不好。' },
+      { k: '功能性過度訓練', p: '刻意超載一兩週再恢復，是進階的手段；非刻意、超過兩週的狀態下降就是過度訓練，恢復要一個月起跳。' },
+      { k: 'HRV 怎麼用', p: '看 7 天平均對 60 天基線，不看單日。平均掉出基線範圍就把這週的硬課降一階，不用停。' },
+    ])}</div>` },
+  { key: 'recovery-week', title: '恢復週', cls: 'two', html: head('第 4 章 <em>負荷與恢復</em>', '恢復週不是休假週', '量砍一半，但不要停。保留一堂短的強度課維持神經與代謝的適應，其餘全部 Z1–Z2。這週適合測驗、整理器材、補睡眠。') +
+    `<div class="body">${tbl(['', '正常週（8 h）', '恢復週'], [
+      ['總時數', '8 h', '4–4.5 h'],
+      ['TSS', '約 480', '約 250'],
+      ['硬課', '閾值 + VO2 兩堂', '一堂短的：3×8 分甜蜜點或測驗'],
+      ['長騎', '3 h Z2', '1.5–2 h Z2'],
+      ['其他', 'Z2 兩趟', 'Z1 一到兩趟，或完全休'],
+      { hot: true, c: ['目標', 'CTL 上升', 'TSB 回到 0 以上，CTL 掉不到 3'] },
+    ], 'dense')}<p class="quote"><b>一個常見的錯：</b>恢復週覺得狀態很好，忍不住騎很硬。恢復週的好狀態是下一週要用的，不是這週。</p></div>` },
+] })
+MOUNT['pmc'] = sec => {
+  let hours = 8
+  const run = () => {
+    const start = +$('#pm-start', sec).value || 0, days = [], tpl = WEEKS[hours]
+    for (let w = 0; w < 12; w++) for (let d = 0; d < 7; d++) days.push(tpl[d][3] * ((w + 1) % 4 === 0 ? .55 : 1))
+    let ctl = start, atl = start; const C = [], A = [], B = []
+    days.forEach(t => { B.push(ctl - atl); ctl += (t - ctl) / 42; atl += (t - atl) / 7; C.push(ctl); A.push(atl) })
+    const W = 640, H = 220, g = S('svg', { viewBox: `0 0 ${W} ${H}` }), n = days.length
+    const vmax = Math.max(...A, ...C) * 1.15, vmin = Math.min(...B, -10) * 1.15
+    const x = i => 40 + i / (n - 1) * (W - 60), y = v => 20 + (vmax - v) / (vmax - vmin) * (H - 50)
+    g.append(S('line', { class: 'ax', x1: 40, y1: y(0), x2: W - 20, y2: y(0) }))
+    for (let w = 1; w <= 12; w++) { const xx = x(w * 7 - 1); g.append(S('text', { class: 'lb n', x: xx, y: H - 8, 'text-anchor': 'end' }, w)); if (w % 4 === 0) g.append(S('rect', { x: x((w - 1) * 7), y: 20, width: xx - x((w - 1) * 7), height: H - 50, fill: 'rgba(236,230,216,.05)' })) }
+    const line = (arr, cls) => g.append(S('polyline', { class: cls, points: arr.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ') }))
+    line(A, 'ln dim'); line(B, 'ln red'); line(C, 'ln')
+    g.append(S('text', { class: 'lb2', x: 44, y: 32 }, `CTL 體能 ${Math.round(C[n - 1])}`)); g.append(S('text', { class: 'lb', x: 44, y: 48 }, `ATL 疲勞 ${Math.round(A[n - 1])}（虛線）`)); g.append(S('text', { class: 'lb', x: 44, y: 64, style: 'fill:var(--red2)' }, `TSB 狀態 ${Math.round(B[n - 1])}`))
+    $('#f-pmc', sec).textContent = ''; $('#f-pmc', sec).append(g)
+    const weekly = tpl.reduce((a, d) => a + d[3], 0)
+    $('#pm-kv', sec).innerHTML = `<div><span>每週 TSS</span><b>${weekly}</b></div><div><span>12 週後 CTL</span><b class="hot">${Math.round(C[n - 1])}</b></div><div><span>平均每週爬升</span><b>${((C[n - 1] - start) / 12).toFixed(1)}</b></div><div><span>最低 TSB</span><b>${Math.round(Math.min(...B))}</b></div><div><span>穩定後的 CTL</span><b>${Math.round(weekly / 7 * .89)}<small>長期上限</small></b></div>`
+  }
+  $('#pm-seg', sec).addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; hours = +b.dataset.h; $$('button', $('#pm-seg', sec)).forEach(x => x.setAttribute('aria-pressed', String(x === b))); run() })
+  $('#pm-start', sec).addEventListener('input', run); run()
+}
+
+/* ── 第 5 章 課表怎麼排 ── */
+DECK.push({ n: 5, title: '課表怎麼排', en: 'PROGRAMMING', sub: '週期、一週的樣子、關鍵課表、長騎、時間不夠怎麼辦', slides: [
+  { key: 'periodization', title: '年度週期', cls: 'two', html: head('第 5 章 <em>課表怎麼排</em>', '一年分四段：基礎、建構、高峰、過渡', '傳統週期化到今天還是最可靠的骨架：先用低強度堆有氧基礎，再加閾值與 VO2 把天花板推高，比賽前兩週減量，比賽後休。每一段 3 到 4 週一個小週期，第 4 週恢復。') +
+    `<div class="body"><div class="fig" id="f-year"></div>${tbl(['階段', '#長度', '主軸', '強度分佈'], [
+      { hot: true, c: ['基礎 Base', '8–12 週', '堆 Z2 時數、一堂甜蜜點、重訓', 'Z1–2 八成五'] },
+      ['建構 Build', '6–8 週', '閾值＋VO2 各一堂、長騎加節奏段', 'Z1–2 七成五、Z4+ 兩成'],
+      ['高峰 Peak', '2–3 週', '比賽強度的模擬、量減', '強度留、量減四成'],
+      ['減量 Taper', '1–2 週', '量減四到六成、頻率與強度不變', '短而硬的開腿'],
+      ['過渡', '2–4 週', '不看功率、換項目、處理身體的小毛病', '隨意'],
+    ], 'dense')}</div>` },
+  { key: 'week', title: '一週的樣子', cls: 'wide', html: head('第 5 章 <em>課表怎麼排</em>', '一週幾小時，就長這個樣子', '選每週能騎的小時數，下面是一週的範本：硬課之間隔一天、長騎放週末、恢復日真的恢復。右邊是這一週的 TSS 與強度分佈，可以看出時間越多、Z2 的比例應該越高。') +
+    `<div class="body"><div class="ctl"><span class="seg" id="wk-seg">${[4, 6, 8, 10, 12].map(h => `<button type="button" data-h="${h}" aria-pressed="${h === 8}">${h} h</button>`).join('')}</span><span class="note" id="wk-note"></span></div><div class="week" id="wk-week"></div><div class="kv" id="wk-kv"></div></div>` },
+  { key: 'key-sessions', title: '四種關鍵課表', cls: 'two', html: head('第 5 章 <em>課表怎麼排</em>', '一週只要四種課：長、甜、硬、鬆', '所有課表都是這四種的排列組合：一趟長騎堆基礎、一堂甜蜜點或閾值推 FTP、一堂 VO2 推天花板、其餘全部輕鬆。順序也固定：硬課後面接輕鬆日，長騎前一天不要硬。') +
+    `<div class="body">${tbl(['課', '#時間', '#強度', '目的', '一週'], [
+      ['長騎', '2–5 h', 'Z2，後段可加 Z3', '有氧引擎、脂肪代謝、補給練習、心理', '1'],
+      { hot: true, c: ['甜蜜點／閾值', '60–90 分', 'Z3 上緣到 Z4', '把 FTP 往上推', '1–2'] },
+      ['VO2max', '60–75 分', 'Z5', '推天花板、提升閾值能佔的百分比', '1'],
+      ['輕鬆', '30–120 分', 'Z1–Z2', '恢復、累積時數、技術', '其餘'],
+    ], 'dense')}${pts([
+      { k: '排法', p: '週二硬、週三鬆、週四硬、週五休或鬆、週六長、週日鬆、週一休。時間少就砍鬆的，不要砍長騎跟硬課。' },
+      { k: '進階的順序', p: '先加時數（Z2），再加硬課的量（組數、時間），最後才加強度。反過來做會很快撞牆。', hot: true },
+    ])}</div>` },
+  { key: 'long-ride', title: '長騎', cls: 'two', html: head('第 5 章 <em>課表怎麼排</em>', '長騎是整套課表的地基', '一週一趟、2 到 5 小時、九成時間在 Z2。它練的東西別的課換不到：粒線體、脂肪氧化、肌耐力、補給與配速的習慣。每兩週加 15 到 30 分鐘，恢復週縮短。') +
+    `<div class="body">${steps([
+      '<b>強度</b>：Z2 為主，心率不超過閾值心率的 89%。前兩小時不要被團騎帶快。',
+      '<b>長度</b>：目標活動時間的 70 到 80%。要騎 5 小時的活動，長騎練到 3.5 到 4 小時就夠。',
+      '<b>加量</b>：每兩週 +15 到 30 分鐘，一次不超過 15%。',
+      '<b>補給</b>：第一小時就開始吃，每小時 60 到 90 公克碳水、500 到 800 毫升水。長騎就是練補給的地方。',
+      '<b>後段的節奏段</b>：建構期在最後一小時加 2 到 3 段 10 到 20 分鐘的 Z3，模擬累的時候的比賽強度。',
+      '<b>脫鉤</b>：後半段同功率心率漂移不到 5%，代表基礎夠了，可以把時間拿去做強度。',
+    ])}</div>` },
+  { key: 'time-crunched', title: '時間不夠', cls: 'two', html: head('第 5 章 <em>課表怎麼排</em>', '一週 4 到 6 小時怎麼練', '時間少就放棄極化，改成甜蜜點為主：兩堂硬課加一趟盡量長的週末騎。室內訓練台把每一分鐘都變成有效時間；通勤騎乘算進 Z1–Z2。') +
+    `<div class="body">${tbl(['', '#時間', '內容'], [
+      { hot: true, c: ['週二', '60 分', '甜蜜點 3×10 或 2×15，室內'] },
+      ['週四', '60 分', 'VO2 4×4 或 30/30 ×2 組，室內'],
+      ['週六', '2–3 h', '長騎 Z2，最後 30 分加一段 Z3'],
+      ['其他天', '0–45 分', '通勤或 Z1，可有可無'],
+    ], 'dense')}${pts([
+      { k: '室內', p: '沒有紅綠燈與下坡，60 分鐘室內課約等於 80 分鐘戶外；用 ERG 模式做間歇最省心。' },
+      { k: '取捨', p: '時間少的人進步的上限比較低，但 6 小時練得對，比 10 小時全部 Z3 進步快。' },
+      { k: '不要做的', p: '每天都騎 45 分鐘中等強度。頻率高、強度中、時間短，是最累又最沒效的組合。', hot: true },
+    ])}</div>` },
+] })
+MOUNT['periodization'] = sec => {
+  const W = 640, H = 170, g = S('svg', { viewBox: `0 0 ${W} ${H}` })
+  const segs = [['基礎', 12, .55], ['建構', 7, .8], ['高峰', 3, .9], ['減量', 2, .45], ['比賽', 1, 1], ['過渡', 3, .2]]
+  const tot = segs.reduce((a, s) => a + s[1], 0); let x = 40; const y0 = H - 30, top = 30
+  segs.forEach(([n, w, q], i) => { const ww = w / tot * (W - 60); const h = q * (y0 - top); g.append(S('rect', { class: 'bar grow' + (n === '比賽' ? ' red' : n === '減量' || n === '過渡' ? ' dim' : ''), x: x + 2, y: y0 - h, width: ww - 4, height: h, style: `--k:${i}` })); g.append(S('text', { class: 'lb', x: x + ww / 2, y: y0 + 16, 'text-anchor': 'middle' }, `${n} ${w} 週`)); x += ww })
+  g.append(S('line', { class: 'ax', x1: 40, y1: y0, x2: W - 20, y2: y0 }))
+  g.append(S('text', { class: 'lb', x: W - 20, y: top - 10, 'text-anchor': 'end' }, '柱高＝訓練負荷；一個約 28 週的週期'))
+  $('#f-year', sec).append(g)
+}
+MOUNT['week'] = sec => {
+  const DAYS = ['一', '二', '三', '四', '五', '六', '日']
+  const render = h => {
+    const tpl = WEEKS[h]
+    $('#wk-week', sec).innerHTML = tpl.map(([n, min, t, tss], i) => `<div class="${t === 'rest' ? '' : 'on'}${t === 'hard' ? ' hard' : ''}"><div class="d">週${DAYS[i]}</div><div class="s ${t === 'rest' ? 'rest' : ''}${t === 'hard' ? ' hard' : ''}">${n}</div>${min ? `<div class="m">${min >= 60 ? `${(min / 60).toFixed(min % 60 ? 2 : 0).replace(/\.?0+$/, '')} h` : `${min} 分`} · TSS ${tss}</div>` : ''}</div>`).join('')
+    const tot = tpl.reduce((a, d) => a + d[1], 0), tss = tpl.reduce((a, d) => a + d[3], 0)
+    const hardMin = tpl.filter(d => d[2] === 'hard').reduce((a, d) => a + d[1], 0), z4 = hardMin * .38, z3 = tpl.filter(d => d[2] === 'long').reduce((a, d) => a + d[1], 0) * .12, z12 = tot - z4 - z3
+    $('#wk-kv', sec).innerHTML = `<div><span>總時數</span><b class="hot">${(tot / 60).toFixed(1)}<small>h</small></b></div><div><span>週 TSS</span><b>${tss}</b></div><div><span>Z1–2</span><b>${Math.round(z12 / tot * 100)}<small>%</small></b></div><div><span>Z3</span><b>${Math.round(z3 / tot * 100)}<small>%</small></b></div><div><span>Z4 以上</span><b>${Math.round(z4 / tot * 100)}<small>%</small></b></div><div><span>硬課</span><b>${tpl.filter(d => d[2] === 'hard').length}<small>堂</small></b></div>`
+    $('#wk-note', sec).textContent = h <= 6 ? '時間少：兩堂硬課、一趟長騎，其餘可有可無。' : h <= 10 ? '中階的主流：硬課之間隔一天，週末長騎。' : '12 小時以上：Z2 的比例要跟著上升，硬課還是兩堂。'
+    $$('button', $('#wk-seg', sec)).forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.h === h)))
+  }
+  $('#wk-seg', sec).addEventListener('click', e => { const b = e.target.closest('button'); if (b) render(+b.dataset.h) }); render(8)
+}
+
+/* ── 第 6 章 課表庫 ── */
+DECK.push({ n: 6, title: '課表庫', en: 'SESSION LIBRARY', sub: '十四堂課與各自的進階', slides: [
+  { key: 'library', title: '課表庫', cls: 'wide', html: head('第 6 章 <em>課表庫</em>', '十四堂課，涵蓋每個區間', '每一堂都寫清楚目的、結構與強度。間歇課一律含 15 到 20 分鐘熱身與 10 分鐘收操；功率以 FTP 的百分比寫，心率只當參考。') +
+    `<div class="body">${tbl(['課', '目的', '結構', '#強度', '#休息', '週期'], [
+      ['Z2 耐力', '有氧基礎', '60–180 分穩定', '56–75%', '—', '全年'],
+      ['長騎', '基礎、補給、肌耐力', '2–5 h Z2，後段可加節奏', '60–75%', '—', '全年'],
+      ['節奏 Tempo', '長距離的比賽強度', '2×20 或 1×40', '76–87%', '5 分', '基礎後段'],
+      { hot: true, c: ['甜蜜點', '推 FTP，恢復成本低', '3×10 → 3×12 → 2×20 → 1×40', '88–94%', '5 分', '基礎、建構'] },
+      ['閾值', '推 FTP', '2×20 → 3×15 → 2×30', '95–102%', '5–8 分', '建構'],
+      ['Over-Under', '乳酸處理、比賽的忽快忽慢', '3×12（2 分 95% ＋ 1 分 110% 交替）', '95／110%', '6 分', '建構、高峰'],
+      ['VO2 長間歇', '推天花板', '4×4 → 5×4 → 5×5 → 6×4', '106–118%', '4 分', '建構'],
+      ['30/30', 'VO2 但比較不痛', '2–3 組 × 10 趟（30 秒 120% ／ 30 秒 55%）', '120／55%', '組間 5 分', '建構'],
+      ['爬坡重複', '爬坡專項、肌力', '5×5 分坡道，坐姿低迴轉', '95–105%，迴轉 60–70', '滑下來', '建構'],
+      ['無氧 1 分', 'W′、攻擊', '8×1 分', '130–150%', '2 分', '高峰'],
+      ['衝刺', '神經肌肉、起步', '6–8 × 10–15 秒全力', '全力', '4–5 分', '全年一週一次'],
+      ['迴轉練習', '踩踏技術', 'Z2 中插 5×2 分 110 rpm 以上', 'Z2', '—', '基礎'],
+      ['模擬賽', '配速與補給的演練', '目標活動的 60–70% 距離，照比賽強度', '視目標', '—', '高峰'],
+      ['開腿', '比賽前一天', '45 分 Z1 ＋ 3×1 分閾值 ＋ 2 次短衝', 'Z1 為主', '—', '比賽前'],
+    ], 'dense')}</div>` },
+  { key: 'progressions', title: '怎麼進階', cls: 'two', html: head('第 6 章 <em>課表庫</em>', '六週的進階：先長、再多、最後才重', '同一堂課在一個週期裡的變化順序：先把每趟的時間拉長，再加趟數，最後才把功率往上調。功率一次加 2 到 3%，做得完才加。每四週回頭看：如果同課表的 RPE 下降，就是進步了。') +
+    `<div class="body">${tbl(['#週', '甜蜜點', '閾值', 'VO2', '長騎'], [
+      ['1', '3×10 @ 88%', '2×15 @ 95%', '4×3 @ 110%', '2.5 h'],
+      ['2', '3×12 @ 90%', '2×20 @ 95%', '4×4 @ 108%', '2.75 h'],
+      ['3', '2×20 @ 90%', '3×15 @ 97%', '5×4 @ 110%', '3 h'],
+      { hot: true, c: ['4 恢復', '2×10 @ 88%', '—', '—', '2 h'] },
+      ['5', '2×25 @ 92%', '2×20 @ 100%', '5×5 @ 108%', '3.25 h'],
+      ['6', '1×45 @ 90%', '3×15 @ 100%', '6×4 @ 112%', '3.5 h ＋ 2×15 節奏'],
+    ], 'dense')}<p class="quote"><b>做不完怎麼辦：</b>最後一趟功率掉超過 5% 就停，記錄下來。下次同樣的課表先把功率降 3%，做滿再往上。間歇的價值在「做滿」，不在「做很硬但做不完」。</p></div>` },
+] })
+
+/* ── 第 7 章 爬坡與下坡 ── */
+DECK.push({ n: 7, title: '爬坡與下坡', en: 'CLIMBING', sub: 'W/kg、VAM、配速、迴轉、下坡', slides: [
+  { key: 'climbing', title: '爬坡', cls: 'two', html: head('第 7 章 <em>爬坡與下坡</em>', '爬坡看 W/kg，不看瓦數', '坡度超過 5% 之後，速度幾乎只由每公斤體重的功率決定。所以爬坡的進步有兩條路：功率往上、體重往下，各佔一半。配速的原則是前三分之一壓著騎、最後三分之一才放。') +
+    `<div class="body">${tbl(['#FTP W/kg', '程度', '#VAM（10% 坡）'], [
+      ['2.5', '入門', '約 900 m/h'],
+      ['3.0', '中階', '約 1,050'],
+      { hot: true, c: ['3.5', '好的業餘', '約 1,200'] },
+      ['4.0', '區域賽前段', '約 1,350'],
+      ['4.5', '菁英業餘', '約 1,500'],
+      ['5.5–6.0', '職業', '1,700 以上'],
+    ], 'dense')}${pts([
+      { k: 'VAM', s: '每小時爬升公尺', p: '爬升高度 ÷ 時間。跟 W/kg 幾乎是線性關係，是比較不同坡道爬坡表現最好用的數字。' },
+      { k: '迴轉', p: '長坡 75 到 90、陡坡 65 到 75。齒比要夠輕：34×32 以上才不會被迫低迴轉硬扛。' },
+      { k: '坐姿與站姿', p: '坐姿效率高，站姿多出一成功率但心率也高。超過 10% 或變換節奏時站 30 秒，不要一路站。', hot: true },
+    ])}</div>` },
+  { key: 'climb-calc', title: '爬坡時間', cls: 'two', html: head('第 7 章 <em>爬坡與下坡</em>', '這座坡要騎多久', '輸入坡長、平均坡度與你能撐的 W/kg，算出時間、速度與 VAM。用第 1 章的物理模型，人車總重以你的體重加 9 公斤計。長坡用 FTP 的 90 到 95%，10 分鐘內的坡可以用 105 到 110%。') +
+    `<div class="body"><div class="ctl"><label>坡長 <input type="number" id="cl-d" value="8" min=".5" max="40" step=".5"> km</label><label>坡度 <input type="number" id="cl-g" value="7" min="1" max="20" step=".5"> %</label><label>體重 <input type="number" id="cl-w" value="70" min="40" max="130"> kg</label></div><div class="ctl"><label>功率 <input type="range" id="cl-p" min="100" max="450" step="5" value="250"><output id="cl-pv">250</output> W</label><span class="v" id="cl-wkg"></span></div><div class="kv" id="cl-out"></div><p class="note" id="cl-note"></p><p class="note">風阻用握把姿勢的 CdA 0.34；陡坡時空氣阻力幾乎不重要，所以估得準；緩坡（3% 以下）風與姿勢的影響變大，誤差也變大。</p></div>` },
+  { key: 'descending', title: '下坡', cls: 'two', html: head('第 7 章 <em>爬坡與下坡</em>', '下坡：看遠、煞在前、外腳踩低', '下坡的時間差不是靠膽子，是靠進彎前就把速度處理好。每一條都有 YouTube 關鍵字，看完再去練，先找安全的空路。') +
+    `<div class="body">${tbl(['要點', '做法'], [
+      [ex('看遠', 'cycling descending look through the corner'), '眼睛看彎道的出口，車會跟著眼睛走；看前輪就會往路邊飄'],
+      [ex('煞車在彎前', 'cycling braking technique descending'), '直線段把速度煞到位，進彎後盡量不煞；兩個煞車一起、前煞占六七成'],
+      [ex('外腳踩低、重心往內', 'cornering technique road bike outside pedal down'), '外側腳在 6 點鐘位置用力踩，把重量壓在外側踏板；上半身低、手肘彎'],
+      [ex('路線：外內外', 'cornering line road cycling'), '彎前靠外、彎心切內、出彎回外；看不見出口的彎提早減速，不要賭'],
+      [ex('下把位', 'descending in the drops'), '下坡握下把：重心低、煞車槓桿好、風阻小。不熟就先在緩坡練'],
+      [ex('濕路', 'cornering in the rain cycling'), '速度減三成、煞車提早一倍、避開白線與人孔蓋、不要壓著煞車進彎'],
+    ], 'dense')}</div>` },
+] })
+MOUNT['climb-calc'] = sec => {
+  const upd = () => {
+    const d = +$('#cl-d', sec).value || 1, g = +$('#cl-g', sec).value || 0, w = +$('#cl-w', sec).value || 70, p = +$('#cl-p', sec).value
+    $('#cl-pv', sec).textContent = p; $('#cl-wkg', sec).textContent = `${(p / w).toFixed(2)} W/kg`
+    const v = speedFor(p, g, w + 9, .34, .004), t = d * 1000 / v, climb = d * 1000 * (g / 100) / Math.sqrt(1 + (g / 100) ** 2), vam = climb / (t / 3600)
+    $('#cl-out', sec).innerHTML = `<div><span>時間</span><b class="hot">${mmss(t)}</b></div><div><span>速度</span><b>${(v * 3.6).toFixed(1)}<small>km/h</small></b></div><div><span>爬升</span><b>${Math.round(climb)}<small>m</small></b></div><div><span>VAM</span><b>${Math.round(vam)}<small>m/h</small></b></div><div><span>每公斤少 1 kg 快</span><b>${mmss(t - d * 1000 / speedFor(p, g, w + 8, .34, .004))}</b></div><div><span>多 10 W 快</span><b>${mmss(t - d * 1000 / speedFor(p + 10, g, w + 9, .34, .004))}</b></div>`
+    $('#cl-note', sec).textContent = t > 1500 ? '超過 25 分鐘的坡：用 FTP 的 90 到 95% 配速，前三分之一不要超過目標。' : t > 600 ? '10 到 25 分鐘：接近 FTP，最後三分之一可以到 105%。' : '10 分鐘內：可以用 FTP 的 105 到 115%，W′ 會用掉一大半，上坡後需要恢復。'
+  }
+  ;['cl-d', 'cl-g', 'cl-w', 'cl-p'].forEach(id => $('#' + id, sec).addEventListener('input', upd)); upd()
+}
+
+/* ── 第 8 章 技術、安全與團騎 ── */
+DECK.push({ n: 8, title: '技術與團騎', en: 'SKILLS & GROUP', sub: '踩踏、過彎、團騎的節省與規矩', slides: [
+  { key: 'skills', title: '技術', cls: 'wide', html: head('第 8 章 <em>技術與團騎</em>', '省下來的瓦數，跟練出來的一樣值錢', '技術是免費的功率：踩踏順、姿勢低、過彎不煞多餘的車，同樣的腿可以快 5 到 10%。每一項附 YouTube 關鍵字，Z2 的時候順便練。') +
+    `<div class="body">${tbl(['技術', '要點', '練法', '你會做錯的地方'], [
+      [ex('踩踏', 'cycling pedaling technique efficiency'), '下踩之外，過底時像在刮鞋底、往上時放鬆不要拉', 'Z2 中插 5×2 分單腳或高迴轉', '用力拉上去，大腿前側提早累'],
+      [ex('迴轉', 'cadence drills cycling'), '平路 85–95、爬坡 70–85；低迴轉練肌力、高迴轉練神經', '每週一次 5×2 分 110 rpm 不跳', '一路都 70 以下，膝蓋先壞'],
+      [ex('站起來', 'standing climbing technique cycling'), '換重一到兩檔再站、身體前移、車子左右輕擺', '每趟爬坡站 30 秒 × 5', '站的時候迴轉掉一半'],
+      [ex('過彎', 'cornering technique road cycling'), '外腳低、看出口、煞在彎前', '找空停車場畫八字', '進彎才煞、眼睛看前輪'],
+      [ex('煞車', 'road bike braking technique'), '前煞為主、身體後移、直線煞', '長下坡練間歇煞車，不要一直壓', '只用後煞、鎖死'],
+      [ex('邊騎邊吃', 'how to eat on the bike'), '直線路、看前方、單手拿、果膠先撕好', '長騎每 20 分練一次', '低頭找口袋、在下坡吃'],
+      [ex('看後方', 'looking behind while cycling'), '手不離把、肩膀轉、車不偏', '空路練 10 次', '一回頭車就往右飄'],
+      [ex('計時姿勢', 'aero position road bike'), '手肘彎、背平、頭縮，下把或把手上臂撐', '每趟 Z2 練 5 分鐘', '只壓低頭，脖子痛'],
+    ], 'dense')}</div>` },
+  { key: 'group', title: '團騎', cls: 'two', html: head('第 8 章 <em>技術與團騎</em>', '跟車省三成，規矩省一條命', '跟在前輪後面半個車身，風阻少 25 到 40%，第三位以後更多。省下來的功率是比賽與活動的全部策略。團騎的規矩不是禮貌，是安全：平穩、可預期、不要突然。') +
+    `<div class="body">${tbl(['位置', '#省下的功率', '備註'], [
+      ['領騎', '0%', '輪流，一次 30 秒到 2 分鐘'],
+      { hot: true, c: ['第二位', '25–35%', '輪距 30–50 公分，看前面兩個人'] },
+      ['第三到五位', '35–45%', '最省的位置，比賽就待這'],
+      ['側風時的側後方', '40%+', '梯隊（echelon）：往背風側斜著排'],
+    ], 'dense')}${pts([
+      { k: '輪車', p: '領完往上風側退、滑到隊尾再接上；退的時候不要煞，輕踩讓隊伍過。' },
+      { k: '平穩', p: '不要突然煞、突然站、突然變線。要站起來先踩一下再站，不然車會往後彈。', hot: true },
+      { k: '手勢與喊話', p: '指路面的坑、揮手示意變線、喊「車」「停」。前面的人負責後面的人看得到的一切。' },
+      { k: '跟不上的時候', p: '提早說、往後退，不要硬撐到爆掉在隊伍中間掉速。' },
+      { k: '重疊前輪', p: '永遠不要讓自己的前輪跟前車的後輪重疊；前車一偏你就倒。' },
+    ])}</div>` },
+] })
+
+/* ── 第 9 章 室內與重訓 ── */
+DECK.push({ n: 9, title: '室內與重訓', en: 'INDOOR & STRENGTH', sub: '訓練台怎麼用、重訓對公路車的價值', slides: [
+  { key: 'indoor', title: '室內訓練', cls: 'two', html: head('第 9 章 <em>室內與重訓</em>', '室內是做間歇最好的地方', '沒有紅綠燈、沒有下坡、ERG 模式把功率鎖死。缺點是熱與無聊：風扇是必需品，功率通常比戶外低 5 到 10%。把硬課放室內、長騎放戶外，是多數人最好的分配。') +
+    `<div class="body">${pts([
+      { k: 'ERG 模式', p: '訓練台自動調阻力到目標功率，你只管踩。間歇用 ERG；要練變速與感覺的課關掉。注意 ERG 的死亡螺旋：迴轉掉了阻力會變更重，掉了就立刻換到輕檔重新起。' },
+      { k: '風扇與水', s: '必需', p: '室內沒有風，體溫會快速上升，心率跟著飄。一台大風扇對著胸口，每小時喝 750 到 1000 毫升，一條毛巾。' },
+      { k: '功率差', p: '室內 FTP 低 5 到 10% 是正常的：散熱、固定姿勢、沒有慣性。室內用室內測的 FTP。' },
+      { k: '時間換算', p: '室內 60 分鐘約等於戶外 75 到 90 分鐘（沒有滑行）。長騎還是去戶外，室內超過 2 小時的效益遞減。', hot: true },
+      { k: '無聊', p: '間歇課的結構本身就是對抗無聊的方法；Z2 的時候看影片。虛擬平台的團騎會把 Z2 騎成 Z3，要克制。' },
+    ])}</div>` },
+  { key: 'strength', title: '重訓', cls: 'two', html: head('第 9 章 <em>室內與重訓</em>', '重訓讓每一瓦更便宜', '研究很一致：一週兩次大重量的下肢重訓，10 到 12 週後踩踏效率與 5 分鐘功率都進步，體重不會明顯增加。基礎期兩次、建構期一次維持、比賽前兩週停。') +
+    `<div class="body">${tbl(['動作', '#組 × 次', '為什麼'], [
+      [ex('深蹲（或六角槓硬舉）', 'barbell back squat form'), '3–4 × 4–6', '髖與膝伸展的最大力量，爬坡與衝刺的根'],
+      [ex('保加利亞分腿蹲', 'bulgarian split squat form'), '3 × 6–8 / 側', '單腳，跟踩踏一樣；處理左右差'],
+      [ex('羅馬尼亞硬舉', 'romanian deadlift form'), '3 × 6–8', '腿後側與臀，長時間握下把的背'],
+      [ex('站姿提踵', 'standing calf raise form'), '3 × 8–12', '小腿是踩踏的末端'],
+      [ex('核心：側棒式、死蟲、Pallof', 'cycling core workout'), '各 3 組', '穩定的骨盆才傳得出功率'],
+      [ex('跳躍（基礎期）', 'box jump landing technique'), '3 × 5', '神經徵召，衝刺用'],
+    ], 'dense')}<p class="note">重量訓練的細節（RIR、進階、肌群地圖）在放映室的另一套《變強，變壯》。給車手的差別：次數少（4–6）、重量重、不練到力竭、不追肥大，排在騎乘硬課的同一天（先騎後練）或隔 24 小時以上。</p></div>` },
+] })
+
+/* ── 第 10 章 飲食與補給 ── */
+DECK.push({ n: 10, title: '飲食與補給', en: 'FUELING', sub: '每天的碳水、騎乘中的補給、水與鹽、訓練前後', slides: [
+  { key: 'daily-carbs', title: '每天怎麼吃', cls: 'two', html: head('第 10 章 <em>飲食與補給</em>', '碳水跟著訓練日走', '耐力運動的主燃料是碳水化合物，需求量隨當天的訓練量變，叫週期化碳水：輕鬆日少、硬課日多、長騎日最多。蛋白質穩定在每公斤 1.6 到 2.0 公克，脂肪補足剩下的熱量。') +
+    `<div class="body">${tbl(['當天', '#碳水 g/kg', '70 kg 的人', '例子'], [
+      ['休息或 Z1', '3–4', '210–280 g', '三餐正常、少加點心'],
+      ['Z2 一到兩小時', '4–5', '280–350 g', '騎前後各一份碳水'],
+      { hot: true, c: ['硬課或 2–3 小時', '5–7', '350–490 g', '騎前一餐、騎中補、騎後一餐'] },
+      ['長騎 3 小時以上', '7–10', '490–700 g', '騎中每小時 60–90 g 算進去'],
+      ['比賽前一天', '8–10', '560–700 g', '肝醣裝填，低纖維'],
+    ], 'dense')}${pts([
+      { k: '蛋白質', p: '每公斤 1.6 到 2.0 公克，分四餐；騎後 30 到 40 公克。' },
+      { k: '脂肪', p: '每公斤 0.8 到 1.0 公克，最低 0.5。長期低脂肪會影響荷爾蒙與恢復。' },
+      { k: '空腹騎', p: 'Z1–Z2 一小時以內可以空腹，練脂肪代謝；超過一小時或任何強度課都要吃，不然練到的是疲勞。' },
+    ])}</div>` },
+  { key: 'fueling', title: '補給計算', cls: 'two', html: head('第 10 章 <em>飲食與補給</em>', '這趟要帶多少', '輸入時間與強度，算出每小時該吃的碳水、總量、水與鈉，以及換算成常見的補給品。超過 2.5 小時的騎乘，補給不夠是掉速最常見的原因，比腿不夠常見得多。') +
+    `<div class="body"><div class="ctl"><label>時間 <input type="range" id="fu-h" min="1" max="7" step=".5" value="3"><output id="fu-hv">3</output> h</label><label>強度 <span class="seg" id="fu-i"><button type="button" data-i="1" aria-pressed="false">Z1–2 輕鬆</button><button type="button" data-i="2" aria-pressed="true">Z2–3 一般</button><button type="button" data-i="3" aria-pressed="false">比賽</button></span></label><label>天氣 <span class="seg" id="fu-t"><button type="button" data-t="1" aria-pressed="true">涼</button><button type="button" data-t="2" aria-pressed="false">熱</button></span></label></div><div class="kv" id="fu-kv"></div><div id="fu-list"></div><p class="note">碳水每小時：一小時內不用吃；1 到 2.5 小時 30 到 60 公克；2.5 小時以上 60 到 90 公克；比賽強度可到 90 到 120 公克，但要先在訓練中練過腸胃（葡萄糖加果糖 1:0.8 的產品）。水每小時 400 到 800 毫升、熱天到 1000；鈉每公升 500 到 1000 毫克。</p></div>` },
+  { key: 'hydration', title: '水與鹽', cls: 'two', html: head('第 10 章 <em>飲食與補給</em>', '渴了再喝太晚，喝太多也會出事', '脫水 2% 體重，功率掉 5% 以上；但只喝白開水喝太多會低血鈉。原則：每小時 400 到 800 毫升、含鈉、熱天多、長騎前後量體重校正。') +
+    `<div class="body">${pts([
+      { k: '每小時喝多少', p: '涼天 400 到 600 毫升、熱天 700 到 1000。超過 1 公升／小時腸胃吸收不了，會在肚子裡晃。' },
+      { k: '鈉', p: '汗的鈉濃度平均每公升約 900 毫克，個體差三倍。補給飲料每公升 500 到 1000 毫克鈉；衣服有白色鹽漬的人取上限。', hot: true },
+      { k: '校正', p: '長騎前後裸重：每掉 1 公斤＝少喝了 1 公升。目標是騎完體重掉不超過 2%。' },
+      { k: '熱適應', p: '連續 7 到 10 天在熱裡騎 60 分鐘，血漿量增加、排汗提早，熱天的功率損失從 10% 降到 3 到 5%。' },
+      { k: '咖啡因', p: '每公斤 3 到 6 毫克，騎前 60 分；長騎後段再補 100 毫克有感。不會脫水。' },
+    ])}</div>` },
+  { key: 'pre-post', title: '騎前騎後', cls: 'two', html: head('第 10 章 <em>飲食與補給</em>', '騎前兩小時吃，騎後兩小時補', '騎前一餐以碳水為主、低脂低纖，2 到 3 小時前吃完；騎後 30 到 60 分鐘內碳水加蛋白質一起進來，肝醣回補最快。比賽前一天的肝醣裝填是把碳水拉到每公斤 8 到 10 公克，不是吃到撐。') +
+    `<div class="body">${tbl(['時間', '吃什麼', '#量'], [
+      ['騎前 2–3 h', '飯、麵、吐司、香蕉，少油少纖維', '碳水 1–2 g/kg'],
+      ['騎前 15–30 分', '果膠、香蕉或運動飲料', '碳水 20–30 g'],
+      { hot: true, c: ['騎中', '果膠、能量棒、香蕉、飯糰、運動飲料', '第 10 章的計算'] },
+      ['騎後 30–60 分', '巧克力牛奶、飯糰＋豆漿、乳清＋香蕉', '碳水 1 g/kg ＋ 蛋白質 25–40 g'],
+      ['騎後 2 h 內', '正餐：飯一碗半、肉、菜', '正常一餐'],
+      ['比賽前一天', '三餐都是碳水為主、晚餐早一點、不碰沒吃過的', '碳水 8–10 g/kg'],
+    ], 'dense')}<p class="quote"><b>撞牆（bonk）：</b>肝醣耗盡，功率瞬間掉三成、頭昏、手抖。原因九成是前兩小時沒吃。發生了就立刻吃 60 公克快速碳水、降到 Z1，20 分鐘後會回來一些。</p></div>` },
+  { key: 'supps', title: '營養品', cls: 'wide', html: head('第 10 章 <em>飲食與補給</em>', '耐力運動的營養品三級', '對耐力真正有證據的只有幾樣，而且多半是「比賽日」用的。日常先把碳水、蛋白質、睡眠做對。') +
+    `<div class="body"><div class="tier hot1"><div><h3>第一級<b>有證據</b></h3><ul>
+      <li><b>咖啡因</b><small>每公斤 3–6 mg，賽前 60 分</small>耐力表現進步 2 到 4%，研究最一致的一個。</li>
+      <li><b>碳水（騎中）</b><small>每小時 60–120 g</small>技術上不是營養品，但它是效果最大的。</li>
+      <li><b>硝酸鹽（甜菜根汁）</b><small>6–8 mmol，賽前 2–3 h，連續 3 天更好</small>對 5 到 30 分鐘的努力有 1 到 3%；訓練有素的人效果較小。</li>
+      <li><b>鐵</b><small>先驗血：鐵蛋白低於 30 再補</small>耐力運動員、尤其女性常缺；缺鐵的人補了功率差很多，不缺補了沒用。</li>
+      <li><b>維生素 D</b><small>每天 1000–2000 IU，冬天與室內派</small>缺的人補回來，免疫與骨頭。</li>
+    </ul></div><div><h3>第二級<b>看情況</b></h3><ul>
+      <li><b>小蘇打</b><small>每公斤 0.3 g，賽前 60–90 分</small>對 1 到 7 分鐘的全力有效，腸胃副作用大，要先試。</li>
+      <li><b>β-丙胺酸</b><small>每天 3.2–6.4 g 分次，吃 4 週</small>對 1 到 4 分鐘的努力有一點。</li>
+      <li><b>肌酸</b><small>每天 3–5 g</small>衝刺與重訓有幫助，但多 1 到 2 公斤水，爬坡型的人要算。</li>
+      <li><b>電解質錠</b><small>熱天、長騎</small>就是鈉；運動飲料含量夠就不用另外加。</li>
+      <li><b>乳清</b><small>騎後 25–40 g</small>方便而已，食物吃得到就不需要。</li>
+    </ul></div><div><h3>第三級<b>不值得</b></h3><ul>
+      <li><b>BCAA</b><small>蛋白質夠就多餘</small></li>
+      <li><b>抗氧化劑高劑量（維生素 C、E）</b><small>反而鈍化訓練適應</small></li>
+      <li><b>酮體、MCT 油</b><small>證據不支持表現進步</small></li>
+      <li><b>燃脂劑、睪固酮促進劑</b><small>沒有</small></li>
+      <li><b>大部分「恢復」粉末</b><small>看成分，通常就是碳水加蛋白質，自己配便宜十倍</small></li>
+    </ul></div></div></div>` },
+] })
+MOUNT['fueling'] = sec => {
+  let inten = 2, hot = 1
+  const upd = () => {
+    const h = +$('#fu-h', sec).value; $('#fu-hv', sec).textContent = h
+    const cph = h <= 1 ? 0 : h <= 2.5 ? [30, 45, 60][inten - 1] : [60, 75, 90][inten - 1]
+    const carbs = Math.round(cph * h), fluid = ([500, 600, 650][inten - 1] + (hot === 2 ? 250 : 0)) * h, na = Math.round(fluid / 1000 * (hot === 2 ? 900 : 700))
+    $('#fu-kv', sec).innerHTML = `<div><span>每小時碳水</span><b class="hot">${cph}<small>g</small></b></div><div><span>總碳水</span><b>${carbs}<small>g</small></b></div><div><span>水</span><b>${(fluid / 1000).toFixed(1)}<small>L</small></b></div><div><span>鈉</span><b>${na}<small>mg</small></b></div>`
+    const gels = Math.ceil(carbs * .5 / 25), bars = Math.ceil(carbs * .3 / 40), bananas = Math.ceil(carbs * .2 / 25)
+    $('#fu-list', sec).innerHTML = carbs ? tbl(['帶什麼', '#數量', '#碳水'], [[`果膠（每包約 25 g）`, gels, `${gels * 25} g`], ['能量棒或飯糰（每個約 40 g）', bars, `${bars * 40} g`], ['香蕉（每根約 25 g）', bananas, `${bananas * 25} g`], { hot: true, c: ['水壺（每瓶 750 ml，泡運動飲料）', Math.ceil(fluid / 750), `${Math.ceil(fluid / 750) * 750} ml`] }], 'dense') : '<p class="note">一小時內的騎乘不需要補碳水，帶一瓶水就好。</p>'
+  }
+  $('#fu-h', sec).addEventListener('input', upd)
+  $('#fu-i', sec).addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; inten = +b.dataset.i; $$('button', $('#fu-i', sec)).forEach(x => x.setAttribute('aria-pressed', String(x === b))); upd() })
+  $('#fu-t', sec).addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; hot = +b.dataset.t; $$('button', $('#fu-t', sec)).forEach(x => x.setAttribute('aria-pressed', String(x === b))); upd() })
+  upd()
+}
+
+/* ── 第 11 章 睡眠、恢復與健康 ── */
+DECK.push({ n: 11, title: '睡眠與健康', en: 'SLEEP & HEALTH', sub: '睡眠、生病時怎麼練、能量可用性', slides: [
+  { key: 'sleep', title: '睡眠', cls: 'two', html: head('第 11 章 <em>睡眠與健康</em>', '睡眠是最強的恢復手段，沒有之一', '耐力訓練的適應幾乎都在睡眠中發生：肝醣回補、肌肉修復、生長激素。研究把睡眠延長到 9 到 10 小時，運動員的衝刺與反應都進步；砍到 5 小時，耐力表現掉、受傷與生病機率都上升。') +
+    `<div class="body">${pts([
+      { k: '7 到 9 小時', p: '練得越多需要越多。週 10 小時以上的車手常常需要 8.5 以上。', hot: true },
+      { k: '固定起床時間', p: '比固定上床重要；早上 10 到 20 分鐘戶外光。' },
+      { k: '咖啡因截止', p: '午後 2 點以後的咖啡會偷走深睡，就算你睡得著。' },
+      { k: '晚上的硬課', p: '結束到上床留 2 到 3 小時，洗澡、降溫、吃東西；真的擠不出來就把硬課移到早上。' },
+      { k: '午睡', p: '20 分鐘或完整的 90 分鐘；長騎後的午睡是正當的訓練。' },
+      { k: '睡不好的隔天', p: '照騎，但硬課降一階（閾值改甜蜜點、VO2 改 Z2），時間不變。' },
+    ])}</div>` },
+  { key: 'illness', title: '生病、受傷、天氣', cls: 'two', html: head('第 11 章 <em>睡眠與健康</em>', '脖子以上可以騎，脖子以下不要', '感冒只有鼻塞喉嚨癢：Z1 短騎沒問題，甚至有助於感覺好一點。發燒、咳到胸口、全身痠：完全休，硬練會把一週的小病變成一個月。回來的第一週量減半、強度先不要。') +
+    `<div class="body">${tbl(['狀況', '怎麼辦'], [
+      ['症狀在脖子以上（鼻塞、喉嚨）', 'Z1–Z2 30 到 60 分，不做強度'],
+      { hot: true, c: ['發燒、咳嗽帶痰、全身痠痛', '完全休息，退燒後再等 48 小時'] },
+      ['膝蓋前側痛', '座墊太低或太前、迴轉太低；先調座墊、迴轉拉到 85 以上'],
+      ['膝蓋後側痛', '座墊太高；降 3 到 5 毫米'],
+      ['手麻、頸痛', '握把太遠太低；龍頭短 1 公分或墊高，核心不夠也會'],
+      ['座瘡', '褲墊要乾淨、每次換、用護臀膏；反覆發就是座墊或騎姿的問題'],
+      ['熱', '熱天中午不練強度；熱適應 7 到 10 天；心率會高 5 到 10 下是正常的'],
+      ['冷', '10 度以下穿多層、保護膝蓋；熱身要拉長到 20 分鐘'],
+    ], 'dense')}</div>` },
+  { key: 'energy', title: '能量可用性', cls: 'two', html: head('第 11 章 <em>睡眠與健康</em>', '減重可以，但不要掉進 RED-S', '爬坡要 W/kg，很多人就去少吃。問題是訓練量大的時候熱量吃太少，身體會先關掉不重要的系統：荷爾蒙、骨密度、免疫、情緒。這叫相對能量不足（RED-S），男女都會。減重要慢、要在基礎期、不要在建構期。') +
+    `<div class="body">${pts([
+      { k: '能量可用性', s: 'EA', p: '吃進來的熱量減掉運動消耗，除以去脂體重。低於每公斤 30 大卡就進入風險區。一個 70 公斤、去脂 60 公斤的人，騎 2 小時燒 1,500 大卡，那天至少要吃 3,300。', hot: true },
+      { k: '警訊', p: '靜息心率掉得異常低、反覆感冒、睡不好、訓練動力消失、女性月經不規則、男性晨勃減少、小傷不好、骨頭痛。' },
+      { k: '減重的做法', p: '每天赤字 300 到 500、每週掉 0.5%；只在基礎期做；蛋白質拉到每公斤 2.0；硬課日不赤字。' },
+      { k: '別碰的', p: '空腹做強度、長騎不吃、晚上不吃碳水。這些都是用「不吃」換短期體重，代價是下一個週期。' },
+    ])}</div>` },
+] })
+
+/* ── 第 12 章 器材與設定 ── */
+DECK.push({ n: 12, title: '器材與設定', en: 'BIKE & FIT', sub: '車子怎麼調、胎壓怎麼打、瓦數花在哪', slides: [
+  { key: 'fit', title: '車子怎麼調', cls: 'two', html: head('第 12 章 <em>器材與設定</em>', '先調人，再買東西', '坐墊高度差 1 公分，功率與膝蓋都有感。三個數字先對：座高、座墊前後、握把的距離與落差。調完騎兩週再微調，一次只動一個。') +
+    `<div class="body">${tbl(['項目', '起點', '怎麼驗', '症狀'], [
+      { hot: true, c: ['座墊高度', '跨下長 × 0.883（從 BB 中心到座墊面）', '踏板在最低點時膝蓋彎 140–150 度', '太高：髖左右搖、膝後痛；太低：膝前痛、迴轉上不去'] },
+      ['座墊前後', '曲柄水平時膝蓋前緣約在踏板軸正上方', '鉛垂線', '太前：膝前壓力；太後：手撐太多、腿後側緊'],
+      ['握把距離', '握上把時手肘微彎、肩膀放鬆', '騎 30 分不手麻、頸不痠', '太遠：手麻、頸痛；太近：膝蓋碰手肘、不好呼吸'],
+      ['握把落差', '中階 5–10 公分', '能在下把待 10 分鐘', '太大：腰與頸；太小：風阻大'],
+      ['卡鞋扣片', '腳掌第一蹠骨球在踏板軸上，略偏後', '不會膝蓋內外偏', '前腳掌麻：扣片往後；膝內痛：角度'],
+      ['曲柄長度', '身高 170 以下 165–170 mm', '迴轉上得去、髖不卡', '太長：髖角太小、腰痠'],
+    ], 'dense')}<p class="note">YouTube 關鍵字：${yt('bike fit saddle height knee angle')} 、${yt('cleat position setup road cycling')} 。這些是起點，不是答案；有預算做一次專業 fitting 是最划算的升級。</p></div>` },
+  { key: 'tires', title: '胎壓', cls: 'two', html: head('第 12 章 <em>器材與設定</em>', '胎打太硬，是最常見的免費損失', '寬胎、低壓比窄胎高壓更快：在真實路面上，太硬的胎一直跳，跳掉的能量比滾動阻力多。輸入人車重量與胎寬，給你一個起點；路面越差打越低，無內胎可以再低 5 到 10%。') +
+    `<div class="body"><div class="ctl"><label>人＋車 <input type="number" id="tp-m" value="80" min="40" max="150"> kg</label><label>胎寬 <span class="seg" id="tp-w">${[25, 28, 30, 32].map(w => `<button type="button" data-w="${w}" aria-pressed="${w === 28}">${w}c</button>`).join('')}</span></label><label>路面 <span class="seg" id="tp-s"><button type="button" data-s="1" aria-pressed="true">好</button><button type="button" data-s="2" aria-pressed="false">普通</button><button type="button" data-s="3" aria-pressed="false">差</button></span></label></div><div class="kv" id="tp-kv"></div>${tbl(['', '滾阻', '風阻', '舒適', '抓地'], [
+      ['25c', '略高', '略低', '差', '普通'],
+      { hot: true, c: ['28c', '低', '普通', '好', '好'] },
+      ['30–32c', '最低（在差路面）', '略高', '最好', '最好'],
+    ], 'dense')}<p class="note">經驗公式：後輪約 每公斤 0.9 psi 再依胎寬修正（25c ×1.0、28c ×0.85、30c ×0.75、32c ×0.65），前輪少 5 到 10%。好的外胎（低滾阻）比任何輪組都划算；內胎換成乳膠或 TPU 再省 2 到 4 瓦。</p></div>` },
+  { key: 'aero-gear', title: '瓦數花在哪', cls: 'two', html: head('第 12 章 <em>器材與設定</em>', '買東西之前，先看每一瓦多少錢', '平路 35 km/h 時九成功率在推空氣。省風阻最便宜的是姿勢與衣服，最貴的是輪組。下面是常見升級在 40 km/h 大約能省的瓦數，數字是常見測試的範圍，用來排優先順序。') +
+    `<div class="body">${tbl(['升級', '#省下（40 km/h）', '#花費', '每瓦成本'], [
+      { hot: true, c: ['姿勢：手肘彎、背平、頭縮', '15–30 W', '0', '最划算'] },
+      ['合身的車衣（不飄）', '5–15 W', '低', '很划算'],
+      ['空力安全帽', '3–8 W', '中', '划算'],
+      ['好的外胎＋正確胎壓', '5–12 W', '低', '很划算'],
+      ['乾淨上油的鏈條、蠟', '2–5 W', '低', '划算'],
+      ['50 mm 碳纖輪組', '5–10 W', '高', '最貴的那幾瓦'],
+      ['空力車架', '3–8 W', '很高', '最後再考慮'],
+      ['減重 1 公斤（平路）', '≈0 W', '—', '平路沒感覺，爬坡才有'],
+    ], 'dense')}<p class="quote"><b>功率計：</b>任何認真訓練的人第一個該買的東西。曲柄、踏板、花鼓都可以，單邊的便宜一半、誤差多一點；買了之後所有課表才有尺。</p></div>` },
+] })
+MOUNT['tires'] = sec => {
+  let w = 28, s = 1
+  const upd = () => {
+    const m = +$('#tp-m', sec).value || 80, k = { 25: 1, 28: .85, 30: .75, 32: .65 }[w], surf = [1, .93, .86][s - 1]
+    const rear = Math.round(m * .9 * k * surf), front = Math.round(rear * .93)
+    $('#tp-kv', sec).innerHTML = `<div><span>前輪</span><b class="hot">${front}<small>psi</small></b></div><div><span>後輪</span><b class="hot">${rear}<small>psi</small></b></div><div><span>換算</span><b>${(front / 14.5).toFixed(1)} / ${(rear / 14.5).toFixed(1)}<small>bar</small></b></div><div><span>無內胎</span><b>${Math.round(front * .93)} / ${Math.round(rear * .93)}<small>psi</small></b></div>`
+  }
+  $('#tp-m', sec).addEventListener('input', upd)
+  $('#tp-w', sec).addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; w = +b.dataset.w; $$('button', $('#tp-w', sec)).forEach(x => x.setAttribute('aria-pressed', String(x === b))); upd() })
+  $('#tp-s', sec).addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; s = +b.dataset.s; $$('button', $('#tp-s', sec)).forEach(x => x.setAttribute('aria-pressed', String(x === b))); upd() })
+  upd()
+}
+
+/* ── 第 13 章 配速、比賽與追蹤 ── */
+DECK.push({ n: 13, title: '配速與比賽', en: 'PACING & RACING', sub: '配速、減量、追蹤、12 週範例', slides: [
+  { key: 'pacing', title: '配速', cls: 'two', html: head('第 13 章 <em>配速與比賽</em>', '配速：前面壓著，後面才放', '所有耐力項目的配速真理只有一條：前段比你想的慢。衝太快燒掉的 W′ 要用十倍的時間還。長距離活動用 IF 配、爬坡用 W/kg 配、計時賽用「上坡與逆風多一點、下坡與順風少一點」的變速配。') +
+    `<div class="body">${tbl(['活動', '#時間', '#目標 IF', '做法'], [
+      ['計時賽', '20–60 分', '1.00–1.05', '前 2 分鐘低於目標，上坡與逆風段 +5%，下坡段 −10%'],
+      ['單座長坡', '20–60 分', '0.92–1.00', '前三分之一 95%，中段 100%，最後三分之一放'],
+      { hot: true, c: ['Gran Fondo', '4–6 h', '0.75–0.82', '前兩小時當 Z2 騎，坡上不超過 FTP，下半段再說'] },
+      ['超長（8 h 以上）', '8 h+', '0.65–0.72', '一切以補給為準；坡上壓著，平路跟車'],
+      ['公路賽', '2–4 h', '視戰術', '省：跟車、不追無意義的攻擊；花：關鍵的坡與最後 10 公里'],
+    ], 'dense')}${pts([
+      { k: 'W′ 的預算', p: 'FTP 以上的每一秒都在燒 W′（中階約 15 到 25 kJ）。250 W FTP 的人用 300 W 衝一分鐘燒掉 3 kJ，要在 FTP 以下騎好幾分鐘才回來。一場活動裡，W′ 要留給真正需要的地方。', hot: true },
+    ])}</div>` },
+  { key: 'taper', title: '減量與比賽週', cls: 'two', html: head('第 13 章 <em>配速與比賽</em>', '減量：量減六成，強度與頻率不減', '統合分析的結論很清楚：比賽前 1 到 2 週把訓練量減 40 到 60%，但保留強度與騎乘的頻率，表現平均進步 2 到 3%。減量不是休息，是把疲勞卸掉、體能留著。') +
+    `<div class="body"><div class="fig" id="f-taper"></div>${steps([
+      '<b>比賽前 10 到 14 天</b>：最後一堂完整的硬課。之後量每週減一半。',
+      '<b>比賽前一週</b>：三趟短的，每趟含 3 到 5 分鐘的比賽強度；其餘 Z1。',
+      '<b>前兩天</b>：休或 30 分 Z1。碳水拉到每公斤 8 到 10 公克，不吃沒吃過的東西。',
+      '<b>前一天</b>：45 分開腿（Z1 ＋ 3×1 分閾值 ＋ 2 次短衝），檢查車、充電、備好補給。',
+      '<b>當天</b>：起床後 3 小時吃完早餐（碳水 2 g/kg）、熱身 20 到 30 分含幾段比賽強度、出發前 15 分一包果膠。',
+    ])}</div>` },
+  { key: 'tracking', title: '追蹤與常見錯誤', cls: 'two', html: head('第 13 章 <em>配速與比賽</em>', '追蹤五個數字，避開八個錯', '每趟騎乘都記錄，但只看五個數字的趨勢：FTP 與 W/kg、功率曲線、CTL、同功率心率、週時數。體重每天量取週平均，HRV 看 7 天均線。') +
+    `<div class="body">${tbl(['數字', '頻率', '看什麼'], [
+      ['FTP、W/kg', '每 6–8 週測', '一個週期 +3–5% 很好'],
+      ['功率曲線 5 秒／1 分／5 分／20 分', '每月', '哪一段漲了＝那個週期練對了'],
+      { hot: true, c: ['CTL 與 TSB', '每週', '爬升 3–7／週；TSB 不要連續三週低於 −20'] },
+      ['同功率心率', '每趟 Z2', '往下＝有氧進步；忽然上升＝累或病'],
+      ['睡眠、HRV、靜息心率', '每天', '7 天平均對 60 天基線'],
+    ], 'dense')}${tbl(['錯', '為什麼慢'], [
+      ['每趟都 Z3', '太累又不夠硬，第 2 章'], ['硬課做不滿硬撐', '價值在做滿'], ['不吃，想輕', '練到的是疲勞，掉的是肌肉'],
+      ['長騎不夠長', '基礎沒有別的來源'], ['從不減量', '體能一直被疲勞蓋住'], ['跟著團騎的強度', '別人的課表'], ['一直換課表', '沒有一個週期跑完'], ['只練強項', '衝刺型永遠不練長坡'],
+    ], 'dense')}</div>` },
+  { key: 'plan12', title: '12 週範例', cls: 'wide', html: head('第 13 章 <em>配速與比賽</em>', '照抄的 12 週：每週 6 到 8 小時的基礎到建構', '前四週堆 Z2 加甜蜜點，中四週加閾值，後四週加 VO2，第 4、8、12 週恢復並測驗。每週兩堂硬課、一趟長騎、一到兩趟 Z2。') +
+    `<div class="body">${tbl(['#週', '硬課 1（週二）', '硬課 2（週四）', '長騎（週六）', '#時數', '要做的事'], [
+      ['1', '甜蜜點 3×10', 'Z2 迴轉練習', '2 h Z2', '6', '測 FTP、設區間'],
+      ['2', '甜蜜點 3×12', 'Z2 迴轉練習', '2.25 h', '6.5', ''],
+      ['3', '甜蜜點 2×20', '節奏 2×15', '2.5 h', '7', '最硬的一週'],
+      { hot: true, c: ['4 恢復', '甜蜜點 2×10', '—', '1.5 h', '4', '量體重、整理器材'] },
+      ['5', '閾值 2×15', 'VO2 4×3', '2.5 h', '7', '加第二堂硬課'],
+      ['6', '閾值 2×20', 'VO2 4×4', '2.75 h', '7.5', ''],
+      ['7', '閾值 3×15', 'VO2 5×4', '3 h ＋ 2×10 節奏', '8', ''],
+      { hot: true, c: ['8 恢復', '甜蜜點 2×12', '—', '2 h', '4.5', '測 FTP，調區間'] },
+      ['9', 'Over-Under 3×12', 'VO2 5×5', '3 h ＋ 2×15 節奏', '8', ''],
+      ['10', '閾值 2×20 @100%', 'VO2 6×4', '3.25 h', '8', ''],
+      ['11', 'Over-Under 3×12', '30/30 ×3 組', '3.5 h ＋ 3×10 節奏', '8', '最硬的一週'],
+      { hot: true, c: ['12 恢復', '開腿或模擬賽', '—', '2 h', '4', '測 FTP、功率曲線、比第 1 週'] },
+    ], 'dense')}<p class="note">其餘天：週三 Z2 60 到 90 分、週日 Z2 或 Z1 45 到 90 分、週一與週五休。小時數少就先砍週日，再砍週三，不砍硬課與長騎。</p></div>` },
+] })
+MOUNT['taper'] = sec => {
+  const W = 640, H = 170, g = S('svg', { viewBox: `0 0 ${W} ${H}` })
+  const vol = [100, 100, 100, 70, 45, 20], ints = [100, 100, 100, 100, 95, 60]
+  const y0 = H - 30, top = 26, x = i => 40 + i * 100
+  g.append(S('line', { class: 'ax', x1: 40, y1: y0, x2: W - 20, y2: y0 }))
+  vol.forEach((v, i) => { const h = v / 100 * (y0 - top); g.append(S('rect', { class: 'bar grow' + (i >= 3 ? ' dim' : ''), x: x(i) + 4, y: y0 - h, width: 40, height: h, style: `--k:${i}` })); const hi = ints[i] / 100 * (y0 - top); g.append(S('rect', { class: 'bar grow red', x: x(i) + 50, y: y0 - hi, width: 14, height: hi, style: `--k:${i}` })); g.append(S('text', { class: 'lb', x: x(i) + 34, y: y0 + 16, 'text-anchor': 'middle' }, ['−5 週', '−4', '−3', '−2', '−1 週', '比賽週'][i])) })
+  g.append(S('text', { class: 'lb', x: 44, y: top - 8 }, '寬柱＝訓練量；細黃柱＝強度（留著）'))
+  $('#f-taper', sec).append(g)
+}
+
+/* ── 結尾 ── */
+DECK.push({ n: 14, title: '結尾', en: 'TEN RULES', sub: '記不住全部，記這十條', slides: [
+  { key: 'end', title: '結尾', cls: 'two', html: head('結尾 <em>TEN RULES</em>', '記不住全部，記這十條', '') +
+    `<div class="body">${steps([
+      '八成輕鬆、兩成很硬，中間少做。', '一週一趟長騎，它是地基。', '硬課要做滿，做不滿就降功率。', 'CTL 每週 +3 到 +7，每 3 到 4 週恢復一週。', '每 6 到 8 週測一次，用同一種方法。',
+      '超過一小時就要吃，每小時 60 到 90 公克碳水。', '七到九小時睡眠，咖啡因午後停。', '爬坡看 W/kg，減重只在基礎期慢慢來。', '先調車再買車；胎壓與姿勢是免費的瓦。', '前段壓著，後段才放。',
+    ])}<div class="acts"><button class="btn pri" type="button" data-go="0">從封面再看一次</button><a class="btn" href="linkTreeIndex.html#theatre">回放映室</a><a class="btn" href="lifting.html">重訓那一套 →</a></div><p class="asof">內容整理自耐力訓練的常見教材與統合分析（Coggan 與 Allen 的功率訓練、Seiler 的強度分佈研究、Jeukendrup 的補給研究、Bosquet 的減量統合分析等），數字都是多數人的範圍，不是處方。有心血管病史請先問醫生。</p></div>` },
+] })
+
+/* ═══ 產生投影片 ═══ */
+const flat = []   // { key, title, ch, chTitle, slide }
+DECK.forEach(ch => ch.slides.forEach(s => flat.push({ ...s, ch: ch.n, chTitle: ch.title })))
+const tocHTML = () => head('目錄 <em>CONTENTS</em>', `十三章，${flat.length + 1} 張`, '點任何一章直接跳過去；上面那條爬坡剖面的每一段也是章節。') +
+  `<div class="body"><ol class="toc">${DECK.map(ch => `<li class="rv" style="--k:${ch.n}"><button type="button" data-key="${ch.slides[0].key}"><span class="n">${String(ch.n).padStart(2, '0')}</span><span class="t">${esc(ch.title)}<small>${esc(ch.sub)}</small></span><span class="c">${ch.slides.length} 張</span></button></li>`).join('')}</ol></div>`
+const anchor = $('#anchor')
+anchor.insertAdjacentHTML('beforebegin', flat.map(s => `<section class="slide ${s.cls || 'wide'}" data-key="${s.key}" data-title="${esc(s.title)}" data-ch="${s.ch}">${s.type === 'toc' ? tocHTML() : s.html}${s.key !== 'toc' && s.key !== 'end' ? `<div class="wm" aria-hidden="true">${String(s.ch).padStart(2, '0')}</div>` : ''}</section>`).join(''))
+anchor.remove()
+$$('.slide').forEach(sec => { const m = MOUNT[sec.dataset.key]; if (m) { try { m(sec) } catch (e) { console.error(sec.dataset.key, e) } } })
+$('#nSlides').textContent = flat.length + 1
+
+/* ═══ 頂欄的爬坡剖面：一章一段（寬 ∝ 張數），沿著一條往上的坡；走過的段白、目前那段黃 ═══ */
+const slides = $$('.slide'), N = slides.length, keys = slides.map(s => s.dataset.key), titles = slides.map(s => s.dataset.title), chOf = slides.map(s => +s.dataset.ch)
+const barsvg = $('#barsvg')
+const totalN = DECK.reduce((a, c) => a + c.slides.length, 0)
+let plates = [], ready = false   // ready：cur 宣告在後面，layoutBar 第一次跑時還不能 paintBar
+const road = S('path', { class: 'road' })
+function layoutBar() {
+  const BW = Math.max(120, Math.round($('#bar').clientWidth)), pad = Math.min(30, BW * .04), gap = 2
+  barsvg.setAttribute('viewBox', `0 0 ${BW} 36`); barsvg.textContent = ''
+  let px = pad; const avail = BW - pad * 2 - gap * (DECK.length - 1), n = DECK.length
+  const pts = []
+  plates = DECK.map((ch, i) => { const w = Math.max(8, (ch.slides.length / totalN) * avail); const y0 = 32 - (i / (n - 1)) * 22, y1 = 32 - ((i + 1) / (n - 1)) * 22; const r = S('path', { class: 'seg', d: `M${px} 36 L${px} ${y0} L${px + w} ${Math.max(3, y1)} L${px + w} 36 Z`, 'data-ch': ch.n }); const t = S('text', { x: px + w / 2, y: 33, 'text-anchor': 'middle', 'data-ch': ch.n, style: w < 16 ? 'display:none' : '' }, String(ch.n)); barsvg.append(r, t); pts.push(`${px},${y0}`, `${px + w},${Math.max(3, y1)}`); px += w + gap; return { ch: ch.n, r, t } })
+  road.setAttribute('d', 'M' + pts.join(' L')); barsvg.append(road)
+  if (ready) paintBar()
+}
+layoutBar()
+let rz = 0; addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(layoutBar, 120) })
+barsvg.addEventListener('click', e => { const r = e.target.closest('.seg'); if (r) goKey(DECK.find(c => c.n === +r.dataset.ch).slides[0].key) })
+function paintBar() {
+  const c = chOf[cur]
+  plates.forEach(p => { p.r.classList.toggle('on', p.ch === c); p.r.classList.toggle('done', p.ch < c || keys[cur] === 'end'); p.t.classList.toggle('on', p.ch === c) })
+  const ch = DECK.find(x => x.n === c)
+  $('#cur').innerHTML = ch ? `<b>第 ${ch.n} 章 ${esc(ch.title)}</b>${esc(ch.en)} · ${esc(titles[cur])}` : `<b>${esc(titles[cur])}</b>${flat.length + 1} 張`
+}
+
+/* ═══ 投影片控制 ═══ */
+let cur = Math.max(0, keys.indexOf(location.hash.slice(1))), auto = false, autoT = 0
+const pg = $('#pg')
+slides.forEach((s, i) => { const b = document.createElement('button'); b.type = 'button'; if (i === 0 || chOf[i] !== chOf[i - 1]) b.classList.add('ch'); b.setAttribute('aria-label', `第 ${i + 1} 張：${titles[i]}`); b.title = titles[i]; b.innerHTML = '<i></i>'; b.addEventListener('click', () => go(i)); pg.append(b) })
+const dots = $$('button', pg)
+function sync() {
+  slides.forEach((s, i) => { const on = i === cur; s.classList.toggle('is-on', on); s.inert = !on; s.setAttribute('aria-hidden', String(!on)) })
+  dots.forEach((d, i) => d.setAttribute('aria-current', String(i === cur)))
+  $('#count').textContent = `${cur + 1} / ${N}`; $('#prev').disabled = cur === 0; $('#next').disabled = cur === N - 1
+  $('#live').textContent = `第 ${cur + 1} 張，${titles[cur]}`
+  paintBar()
+  history.replaceState(null, '', '#' + keys[cur])
+}
+function go(to, { instant = false } = {}) { to = clamp(to, 0, N - 1); if (to === cur && !instant) return; cur = to; sync(); if (auto) armAuto() }
+const goKey = k => { const i = keys.indexOf(k); if (i >= 0) go(i) }
+const next = () => go(cur + 1), prev = () => go(cur - 1)
+function armAuto() { clearTimeout(autoT); autoT = setTimeout(() => { if (cur < N - 1) go(cur + 1); else setAuto(false) }, 15000) }
+function setAuto(on) { auto = on; $('#auto').setAttribute('aria-pressed', String(on)); $('#auto').setAttribute('aria-label', on ? '停止自動放映' : '自動放映'); on ? (cur === N - 1 ? go(0) : armAuto()) : clearTimeout(autoT) }
+$('#auto').addEventListener('click', () => setAuto(!auto))
+document.addEventListener('visibilitychange', () => { if (document.hidden) clearTimeout(autoT); else if (auto) armAuto() })
+const fsBtn = $('#fs'); if (!document.fullscreenEnabled) fsBtn.hidden = true
+const toggleFs = () => { if (!document.fullscreenEnabled) return; document.fullscreenElement ? document.exitFullscreen() : root.requestFullscreen().catch(() => {}) }
+fsBtn.addEventListener('click', toggleFs)
+document.addEventListener('fullscreenchange', () => fsBtn.setAttribute('aria-pressed', String(!!document.fullscreenElement)))
+$('#next').addEventListener('click', next); $('#prev').addEventListener('click', prev)
+$$('[data-go]').forEach(b => b.addEventListener('click', () => go(+b.dataset.go)))
+$$('.toc button').forEach(b => b.addEventListener('click', () => goKey(b.dataset.key)))
+addEventListener('keydown', e => {
+  if (e.altKey || e.ctrlKey || e.metaKey) return
+  const onCtl = e.target.closest && e.target.closest('a,button,input,textarea,select,summary')
+  if (e.target.closest && e.target.closest('input')) return   // 計算機裡打字不換頁
+  switch (e.key) {
+    case 'ArrowRight': case 'ArrowDown': case 'PageDown': next(); break
+    case 'ArrowLeft': case 'ArrowUp': case 'PageUp': prev(); break
+    case ' ': if (onCtl) return; e.shiftKey ? prev() : next(); break
+    case 'Home': go(0); break
+    case 'End': go(N - 1); break
+    case 'f': case 'F': toggleFs(); break
+    case 'p': case 'P': setAuto(!auto); break
+    default: if (/^[0-9]$/.test(e.key)) { const n = e.key === '0' ? 10 : +e.key; const ch = DECK.find(c => c.n === n); if (ch) goKey(ch.slides[0].key) } else return
+  }
+  e.preventDefault()
+})
+const deck = $('#deck')
+let sx = 0, sy = 0, st = 0, sid = null, swiped = false
+deck.addEventListener('pointerdown', e => { if (e.pointerType === 'mouse' || e.target.closest('input')) return; const tw = e.target.closest('.tw'); if (tw && tw.scrollWidth > tw.clientWidth + 2) return; sx = e.clientX; sy = e.clientY; st = performance.now(); sid = e.pointerId; swiped = false })
+deck.addEventListener('pointerup', e => { if (e.pointerId !== sid) return; sid = null; const dx = e.clientX - sx, dy = e.clientY - sy; if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy) * 1.4 && performance.now() - st < 800) { swiped = true; dx < 0 ? next() : prev() } })
+deck.addEventListener('click', e => { if (swiped) { e.preventDefault(); e.stopPropagation(); swiped = false } }, true)
+let wLock = false, wAt = 0, wLast = 0
+deck.addEventListener('wheel', e => {
+  if (e.ctrlKey) return
+  if (e.target.closest && e.target.closest('.tw') && Math.abs(e.deltaX) > Math.abs(e.deltaY)) return   // 表格橫向捲動
+  const sl = slides[cur]; if (sl.scrollHeight > sl.clientHeight + 24) { const top = sl.scrollTop <= 0, bot = sl.scrollTop + sl.clientHeight >= sl.scrollHeight - 1; if (!(e.deltaY > 0 ? bot : top)) return }
+  const now = performance.now(), gap = now - wLast; wLast = now
+  if (wLock) { if (now - wAt > 900 && gap > 140) wLock = false; else return }
+  const dd = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX
+  if (Math.abs(dd) < 24) return
+  wLock = true; wAt = now; dd > 0 ? next() : prev()
+}, { passive: true })
+addEventListener('hashchange', () => { const i = keys.indexOf(location.hash.slice(1)); if (i >= 0 && i !== cur) go(i) })
+
+ready = true
+go(cur, { instant: true })
+root.dataset.ready = '1'
+window.__road = { DECK, WEEKS, go, goKey, keys }
+})()
+</script>
+</body>
+</html>
