@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ONE PIECE 航海誌 · Steve Chuang</title>
+<meta name="description" content="用簡報的方式一篇章一張，講《ONE PIECE 航海王》從東海到艾爾巴夫的故事——截至第 1194 話的連載進度。">
+<meta name="theme-color" content="#061a33">
+<link rel="icon" href="assets/onepiece/jolly-roger.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@700;900&family=Saira+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+/* 海的顏色登記成可過渡的自訂屬性：換篇章時整片海慢慢換色（不支援 @property 的瀏覽器就直接切） */
+@property --sea-a{syntax:'<color>';inherits:true;initial-value:#061a33}
+@property --sea-b{syntax:'<color>';inherits:true;initial-value:#0b2e55}
+@property --sea-c{syntax:'<color>';inherits:true;initial-value:#13548f}
+@property --glow-a{syntax:'<number>';inherits:true;initial-value:0}
+:root{
+  --serif:'Noto Serif TC','Songti TC','PMingLiU',serif;
+  --sans:'PingFang TC','Noto Sans TC','Microsoft JhengHei',system-ui,sans-serif;
+  --num:'Saira Condensed','Arial Narrow','PingFang TC',sans-serif;
+  --fg:#f3eee2;--fg2:#c9d3dc;--fg3:#86a0b5;--line:rgba(243,238,226,.18);
+  --straw:#f4c430;--red:#e2383f;
+  --gut:clamp(20px,5vw,84px);--top:84px;--bot:92px;
+  --settle:cubic-bezier(.2,.7,.2,1);
+  --sea-a:#04101f;--sea-b:#082a4a;--sea-c:#0f4a7a;--glow-a:0;
+  transition:--sea-a 1.4s ease,--sea-b 1.4s ease,--sea-c 1.4s ease,--glow-a 1.4s ease;
+}
+html,body{height:100%;background:var(--sea-a);overflow:hidden;overscroll-behavior:none}
+body{font-family:var(--sans);color:var(--fg);-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--straw);outline-offset:3px}
+
+/* ── 海：漸層、羅盤方位線、海浪、地平線的光 ───────────────── */
+.sea{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;
+  background:linear-gradient(to bottom,var(--sea-a) 0%,var(--sea-b) 56%,var(--sea-c) 100%)}
+.rose{position:absolute;left:62%;top:38%;width:220vmax;height:220vmax;translate:-50% -50%;opacity:.9}
+.rose line{stroke:rgba(243,238,226,.05);stroke-width:1}
+.rose line.maj{stroke:rgba(243,238,226,.09)}
+.rose circle{fill:none;stroke:rgba(243,238,226,.06);stroke-width:1}
+.glow{position:absolute;left:50%;bottom:-16vh;width:150vw;height:64vh;translate:-50% 0;border-radius:50%;
+  background:radial-gradient(closest-side,rgba(244,196,48,.5),rgba(244,196,48,0) 72%);opacity:var(--glow-a)}
+.waves{position:absolute;left:0;right:0;bottom:0;width:100%;height:clamp(70px,16vh,170px)}
+.waves path{fill:rgba(243,238,226,.045);animation:drift 22s linear infinite}
+.waves path:nth-child(2){fill:rgba(243,238,226,.035);animation-duration:31s;animation-direction:reverse}
+.waves path:nth-child(3){fill:rgba(243,238,226,.06);animation-duration:17s}
+@keyframes drift{to{transform:translateX(-1440px)}}
+
+/* ── 頂欄：回首頁、名字、航路列（也是導覽）、工具 ───────────── */
+.top{position:fixed;left:0;right:0;top:0;z-index:20;display:grid;grid-template-columns:auto auto minmax(0,1fr) auto;align-items:center;
+  gap:clamp(12px,2vw,28px);padding:16px var(--gut) 0;pointer-events:none;color:var(--fg)}
+.top>*{pointer-events:auto}
+.home{display:inline-flex;align-items:center;gap:6px;font-size:13px;letter-spacing:.06em;text-decoration:none;opacity:.78;white-space:nowrap}
+.home:hover{opacity:1}
+.home svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.brand{display:flex;align-items:center;gap:9px;white-space:nowrap}
+.brand img{width:26px;height:26px}
+.brand b{font:700 15px/1 var(--num);letter-spacing:.2em}
+.brand span{font:900 15px/1 var(--serif);letter-spacing:.14em;color:var(--fg2)}
+.route{position:relative;height:52px;padding:22px 0 16px;min-width:0}
+.route .segs{display:flex;gap:2px;height:14px;align-items:flex-end}
+.route .segs button{flex:var(--w) 1 0;min-width:5px;height:8px;border:0;padding:0;border-radius:1px;cursor:pointer;
+  background:rgba(243,238,226,.16);transition:background .3s,height .3s}
+.route .segs button.done{background:rgba(243,238,226,.4)}
+.route .segs button[aria-current=true]{background:var(--straw);height:14px}
+.route .segs button:hover{background:rgba(243,238,226,.75)}
+.route .segs button[aria-current=true]:hover{background:var(--straw)}
+.route .hat{position:absolute;top:0;width:24px;height:24px;translate:-50% 0;transition:left .8s var(--settle);pointer-events:none;filter:drop-shadow(0 1px 2px rgba(0,0,0,.5))}
+.route .cur{position:absolute;left:0;right:76px;bottom:0;font:500 11px/1.2 var(--num);letter-spacing:.1em;color:var(--fg3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.route .cur b{color:var(--fg);font-weight:600;margin-right:6px;font-family:var(--sans);font-size:11.5px;letter-spacing:.06em}
+.route .now{position:absolute;right:0;bottom:0;display:flex;align-items:center;gap:6px;font:600 12px/1 var(--num);letter-spacing:.08em;color:var(--fg2)}
+.route .now i{width:7px;height:7px;border-radius:50%;background:var(--red);box-shadow:0 0 0 0 rgba(226,56,63,.6);animation:ping 2.2s ease-out infinite}
+@keyframes ping{0%{box-shadow:0 0 0 0 rgba(226,56,63,.6)}70%{box-shadow:0 0 0 8px rgba(226,56,63,0)}100%{box-shadow:0 0 0 0 rgba(226,56,63,0)}}
+.tools{display:flex;align-items:center;gap:8px}
+.count{margin-right:4px;font:500 15px var(--num);letter-spacing:.1em;opacity:.75}
+.tbtn{display:grid;place-items:center;width:40px;height:40px;padding:0;border:1px solid var(--line);border-radius:50%;background:transparent;cursor:pointer;transition:border-color .2s,background .3s}
+.tbtn:hover{border-color:currentColor}
+.tbtn[aria-pressed=true]{background:var(--fg);color:var(--sea-a)}
+.tbtn svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tbtn .i-pause,#auto[aria-pressed=true] .i-play{display:none}
+#auto[aria-pressed=true] .i-pause{display:block}
+
+/* ── 投影片 ───────────────────────────────────────── */
+.deck{position:fixed;inset:0;z-index:3;touch-action:pan-y}
+.slide{position:absolute;inset:0;padding:var(--top) var(--gut) var(--bot);display:grid;color:var(--fg);
+  opacity:0;visibility:hidden;overflow:hidden auto;scrollbar-width:none;overscroll-behavior:contain;
+  transition:opacity .3s ease,visibility 0s .3s}
+.slide::-webkit-scrollbar{display:none}
+.slide.is-on{opacity:1;visibility:visible;transition:opacity .55s ease .25s,visibility 0s}
+.eyebrow{font:600 13px/1.3 var(--num);letter-spacing:.2em;color:var(--straw);text-transform:uppercase}
+.eyebrow em{font-style:normal;color:var(--fg3);margin-left:10px;letter-spacing:.14em}
+.slide h2{margin-top:10px;font:900 clamp(30px,3.9vw,58px)/1.2 var(--serif);letter-spacing:.03em;text-wrap:balance}
+.slide h2 small{display:block;margin-top:6px;font:600 clamp(12px,1vw,14px)/1.4 var(--num);letter-spacing:.24em;color:var(--fg3)}
+.lede{margin-top:clamp(12px,2.2vh,22px);font-size:clamp(14.5px,1.2vw,17.5px);line-height:1.85;color:var(--fg2);max-width:30em;text-wrap:pretty}
+.lede b{color:var(--fg);font-weight:700}
+.wm{position:absolute;right:var(--gut);bottom:calc(var(--bot) - 36px);font:700 clamp(120px,22vw,330px)/1 var(--num);letter-spacing:-.03em;color:rgba(243,238,226,.045);pointer-events:none;user-select:none;overflow:hidden}   /* overflow:hidden：行高小於字形內容區時，Chrome 會把它算進捲動範圍 */
+
+/* 進場：一個一個亮起來（只有目前這張會播） */
+.rv{opacity:0}
+.slide.is-on .rv{animation:rvin .55s ease both;animation-delay:calc(var(--k,0)*55ms + .5s)}
+@keyframes rvin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.draw{stroke-dasharray:1;stroke-dashoffset:1}
+.slide.is-on .draw{animation:draw 1.6s ease-out .7s both}
+@keyframes draw{to{stroke-dashoffset:0}}
+
+/* 封面 */
+.s-cover{grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);align-items:center;column-gap:clamp(20px,4vw,70px)}
+.s-cover h1{margin-top:14px;font:900 clamp(64px,min(9.5vw,17dvh),150px)/1.02 var(--serif);letter-spacing:.04em}
+.s-cover .sub{margin-top:clamp(12px,2.4vh,26px);font-size:clamp(15px,1.35vw,20px);line-height:1.8;color:var(--fg2);text-wrap:pretty;max-width:30em}
+.s-cover .sub b{font:600 1.25em/1 var(--num);color:var(--straw);letter-spacing:.02em}
+.hint{margin-top:clamp(14px,3vh,30px);font-size:13px;letter-spacing:.08em;color:var(--fg3)}
+.hint-kbd{display:none}
+@media (hover:hover) and (pointer:fine){.hint-kbd{display:inline}.hint-touch{display:none}}
+.flag{display:flex;justify-content:center;align-items:center}
+.flag img{width:min(44vmin,420px);height:auto;filter:drop-shadow(0 18px 40px rgba(0,0,0,.45));animation:bob 5.5s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(-1.2deg)}50%{transform:translateY(-10px) rotate(1.2deg)}}
+
+/* 篇章：左邊文字＋航海日誌，右邊這一段的海圖 */
+.s-saga{grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);column-gap:clamp(24px,4vw,72px);align-items:center}
+.copy{min-width:0;position:relative;z-index:1}
+.art{min-width:0;display:flex;justify-content:center;align-items:center}
+.chart{width:100%;height:auto;display:block;overflow:visible;max-height:calc(100vh - var(--top) - var(--bot) - 12px)}
+@supports (height:1dvh){.chart{max-height:calc(100dvh - var(--top) - var(--bot) - 12px)}}
+.chart text{font-family:var(--sans)}
+.chart .n{font-family:var(--num);font-weight:600;letter-spacing:.04em}
+.chart .lb{fill:var(--fg);font-size:14px;font-weight:700}
+.chart .lb2{fill:var(--fg3);font-size:12px}
+.chart .plan{stroke:rgba(243,238,226,.28);stroke-width:1.5;stroke-dasharray:3 6;fill:none}
+.chart .sail{stroke:var(--fg);stroke-width:2.2;fill:none;stroke-linecap:round}
+.chart .isle{fill:var(--sea-a);stroke:var(--fg);stroke-width:2}
+.chart .isle.hot{fill:var(--straw);stroke:var(--straw)}
+.chart .ring{fill:none;stroke:var(--red);stroke-width:2;transform-box:fill-box;transform-origin:center;animation:ringpulse 2.2s ease-out infinite}
+@keyframes ringpulse{0%{transform:scale(.7);opacity:.9}100%{transform:scale(1.9);opacity:0}}
+.chart .q{fill:var(--fg3);font:700 26px var(--num)}
+.log{list-style:none;margin-top:clamp(14px,2.4vh,24px);max-width:38em;border-bottom:1px solid var(--line)}
+.log li{display:grid;grid-template-columns:minmax(7.2em,auto) minmax(0,1fr);gap:2px 16px;padding:9px 0;border-top:1px solid var(--line);align-items:baseline}
+.log .arc{font-weight:700;font-size:14px;color:var(--fg);letter-spacing:.02em}
+.log .arc small{display:block;margin-top:2px;font:500 12px/1.4 var(--num);letter-spacing:.08em;color:var(--fg3)}
+.log p{font-size:13.5px;line-height:1.72;color:var(--fg2);text-wrap:pretty}
+.log li.now .arc{color:var(--straw)}
+.log li.now .arc small{color:var(--straw);opacity:.8}
+.joins{margin-top:14px;font-size:13.5px;line-height:1.9;color:var(--fg2)}
+.joins b{color:var(--straw);font-weight:700;margin-right:10px;letter-spacing:.1em}
+.joins span{margin-right:14px;white-space:nowrap}
+.joins small{font:500 12.5px var(--num);color:var(--fg3);letter-spacing:.04em;margin-left:4px}
+.joins .ret{color:var(--fg3)}
+
+/* 航路總覽：一列一篇章，長條＝話數 */
+.s-map{grid-template-rows:auto minmax(0,1fr);align-content:start;row-gap:clamp(10px,2vh,20px)}
+.map-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:10px 30px}
+.map-head .lede{margin-top:8px}
+.rows{min-width:0}
+.rows h3{display:flex;align-items:center;gap:12px;margin:clamp(8px,1.6vh,16px) 0 4px;font:700 12px/1 var(--sans);letter-spacing:.2em;color:var(--fg3)}
+.rows h3 small{font:600 11px var(--num);letter-spacing:.18em}
+.rows h3::after{content:'';flex:1;height:1px;background:var(--line)}
+.rows h3 .gate{font:400 11px var(--sans);letter-spacing:.06em;color:var(--fg3);margin-left:auto}
+.row{display:grid;grid-template-columns:2.2em minmax(6.2em,auto) minmax(0,1fr) 7.6em 6.4em;gap:14px;align-items:center;width:100%;padding:6px 0;border:0;background:none;cursor:pointer;text-align:left;color:var(--fg)}
+.row:hover .rname,.row:focus-visible .rname{color:var(--straw)}
+.row:hover .bar i{background:var(--straw)}
+.row .rn{font:600 15px var(--num);letter-spacing:.08em;color:var(--fg3)}
+.row .rname{font-weight:700;font-size:14.5px;letter-spacing:.03em;transition:color .2s}
+.row .rname small{font-weight:400;font-size:11.5px;color:var(--fg3);margin-left:6px;letter-spacing:.06em}
+.row .bar{position:relative;height:10px;background:rgba(243,238,226,.08);border-radius:1px}
+.row .bar i{position:absolute;left:0;top:0;bottom:0;width:var(--w);background:rgba(243,238,226,.62);border-radius:1px;transition:background .2s;transform-origin:left;animation:grow .9s var(--settle) both;animation-delay:calc(var(--k,0)*50ms + .5s)}
+.row .bar i.on{background:var(--straw)}
+@keyframes grow{from{transform:scaleX(0)}}
+.row .bar i.on::after{content:'';position:absolute;right:-5px;top:50%;width:9px;height:9px;translate:0 -50%;border-radius:50%;background:var(--red);box-shadow:0 0 0 3px rgba(226,56,63,.25)}
+.row .rch{font:600 15px var(--num);letter-spacing:.06em;color:var(--fg2);text-align:right;white-space:nowrap}
+.row .ry{font:500 13px var(--num);letter-spacing:.06em;color:var(--fg3);text-align:right;white-space:nowrap}
+
+/* 船員：入夥的位置畫在一條 1 → 1194 的軌上 */
+.s-crew{grid-template-rows:auto minmax(0,1fr);align-content:start;row-gap:clamp(10px,2vh,20px)}
+.crew{list-style:none;max-width:980px;border-bottom:1px solid var(--line)}
+.crew li{display:grid;grid-template-columns:4.6em 6.6em minmax(0,1fr) 5.4em;gap:14px;align-items:center;padding:7px 0;border-top:1px solid var(--line)}
+.crew .who{font-weight:700;font-size:15px;letter-spacing:.04em}
+.crew .role{font-size:12.5px;color:var(--fg3);letter-spacing:.06em}
+.crew .trk{position:relative;height:14px}
+.crew .trk::before{content:'';position:absolute;left:0;right:0;top:50%;height:1px;background:var(--line)}
+.crew .trk i{position:absolute;left:var(--x);top:50%;width:11px;height:11px;translate:-50% -50%;border-radius:50%;background:var(--straw);box-shadow:0 0 0 3px rgba(244,196,48,.18)}
+.crew .trk i.cap{background:var(--red);box-shadow:0 0 0 3px rgba(226,56,63,.2)}
+.crew .ch{font:600 16px var(--num);letter-spacing:.06em;color:var(--fg2);text-align:right;white-space:nowrap}
+.crew .ch small{font-size:11px;color:var(--fg3);margin-right:3px;font-family:var(--sans);letter-spacing:.04em}
+.crew-axis{display:flex;justify-content:space-between;max-width:980px;margin-top:6px;padding-left:calc(4.6em + 6.6em + 28px);padding-right:calc(5.4em + 14px);font:500 11.5px var(--num);letter-spacing:.08em;color:var(--fg3)}
+.note{margin-top:clamp(10px,2vh,18px);font-size:12.5px;line-height:1.75;color:var(--fg3);max-width:60em;text-wrap:pretty}
+
+/* 現在進度 */
+.s-now{grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);column-gap:clamp(24px,4vw,72px);align-items:center}
+.stats{list-style:none;margin-top:clamp(14px,2.6vh,26px);max-width:34em;border-bottom:1px solid var(--line)}
+.stats li{display:grid;grid-template-columns:5.6em minmax(0,1fr);gap:14px;align-items:baseline;padding:8px 0;border-top:1px solid var(--line)}
+.stats dt{font-size:13px;color:var(--fg3);letter-spacing:.08em}
+.stats dd b{font:600 clamp(26px,2.4vw,36px)/1 var(--num);letter-spacing:.02em;color:var(--fg)}
+.stats dd b.hot{color:var(--straw)}
+.stats dd span{display:block;margin-top:3px;font-size:13px;line-height:1.6;color:var(--fg2)}
+.open{list-style:none;margin-top:clamp(12px,2.2vh,22px);columns:2;column-gap:28px;max-width:34em}
+.open li{break-inside:avoid;padding:6px 0;border-top:1px solid var(--line);font-size:13.5px;line-height:1.6;color:var(--fg2)}
+.open li b{color:var(--fg);font-weight:700}
+.acts{display:flex;flex-wrap:wrap;gap:10px;margin-top:clamp(16px,3vh,30px)}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:11px 18px;border:1px solid var(--line);border-radius:999px;background:transparent;color:var(--fg);text-decoration:none;font-size:14px;letter-spacing:.06em;cursor:pointer;transition:border-color .2s,background .2s}
+.btn:hover{border-color:currentColor}
+.btn.pri{background:var(--straw);border-color:var(--straw);color:#1a1405;font-weight:700}
+.btn.pri:hover{background:#ffd558}
+.asof{margin-top:10px;font-size:11.5px;letter-spacing:.06em;color:var(--fg3)}
+
+/* ── 底部換頁 ───────────────────────────────────── */
+.pager{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;justify-content:center;align-items:center;gap:clamp(8px,2vw,22px);
+  padding:0 var(--gut) calc(22px + env(safe-area-inset-bottom));pointer-events:none;color:var(--fg)}
+.pager>*{pointer-events:auto}
+.arw{display:grid;place-items:center;width:42px;height:42px;padding:0;border:1px solid var(--line);border-radius:50%;background:transparent;color:inherit;cursor:pointer;transition:border-color .2s,opacity .2s}
+.arw:hover{border-color:currentColor}
+.arw:disabled{opacity:.25;cursor:default}
+.arw svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.pg{display:flex;align-items:center;gap:3px}
+.pg button{width:22px;height:26px;padding:0;border:0;background:none;cursor:pointer;color:inherit;display:grid;place-items:center}
+.pg button i{display:block;width:7px;height:7px;border-radius:50%;background:currentColor;opacity:.38;transition:opacity .3s,transform .35s var(--settle),box-shadow .3s}
+.pg button:hover i{opacity:.8}
+.pg button[aria-current=true] i{opacity:1;transform:scale(1.5);background:var(--straw);box-shadow:0 0 0 4px rgba(244,196,48,.25)}
+.live{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ── 窄螢幕 ─────────────────────────────────────── */
+@media (max-aspect-ratio:1/1),(max-width:760px){
+  :root{--top:92px;--bot:84px}
+  .top{grid-template-columns:auto minmax(0,1fr) auto;gap:12px;padding-top:12px}
+  .brand{display:none}
+  .home span{display:none}
+  .route{height:56px;padding:22px 0 18px}
+  .route .cur{font-size:10.5px}
+  .count{display:none}
+  .tbtn{width:36px;height:36px}
+  .slide{padding-top:calc(var(--top) + 4px)}
+  .s-cover,.s-saga,.s-now{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);align-content:start;row-gap:clamp(10px,2.4dvh,22px);align-items:start}
+  .s-cover{grid-template-rows:auto auto;justify-items:center;text-align:center}
+  .s-cover .sub{max-width:none}
+  .s-cover h1{font-size:clamp(56px,17vw,96px)}
+  .flag{order:-1;padding-top:6px}
+  .flag img{width:min(44vw,220px)}
+  .slide h2{font-size:clamp(26px,7vw,36px)}
+  .lede{font-size:15px;line-height:1.75;max-width:none}
+  .art{justify-content:center;align-items:flex-start}
+  .chart{max-height:min(44dvh,360px)}
+  .chart .lb{font-size:15px}.chart .lb2{font-size:13px}
+  .log li{grid-template-columns:minmax(0,1fr);gap:3px 0}
+  .log .arc small{display:inline;margin-left:8px}
+  .wm{display:none}
+  .row{grid-template-columns:2em minmax(0,1fr) 6.2em;gap:10px}
+  .row .bar{grid-column:1/-1;grid-row:2;height:8px}
+  .row .ry{display:none}
+  .row .rch{font-size:14px}
+  .crew li{grid-template-columns:4.2em minmax(0,1fr) 5.2em}
+  .crew .role{display:none}
+  .crew-axis{padding-left:calc(4.2em + 14px);padding-right:calc(5.2em + 14px)}
+  .open{columns:1}
+  .arw{width:38px;height:38px}
+  .pg{display:none}
+  .pager .count{display:block;margin:0 6px}
+  .pager::before{content:'';position:absolute;left:0;right:0;bottom:0;height:120px;z-index:-1;pointer-events:none;background:linear-gradient(to top,var(--sea-c) 30%,transparent)}
+}
+@media (max-height:700px) and (min-aspect-ratio:1/1){
+  :root{--top:76px;--bot:72px}
+  .lede{font-size:14px;line-height:1.7}
+  .log li{padding:6px 0}
+  .log p{font-size:13px;line-height:1.6}
+}
+@media (prefers-reduced-motion:reduce){
+  :root{transition:none}
+  .waves path,.flag img,.route .now i,.chart .ring{animation:none}
+  .slide.is-on .rv,.slide.is-on .draw,.row .bar i{animation:none;opacity:1;stroke-dashoffset:0}
+  .route .hat{transition:none}
+}
+</style>
+</head>
+<body>
+
+<div class="sea" aria-hidden="true">
+  <svg class="rose" id="rose" viewBox="-1000 -1000 2000 2000"></svg>
+  <div class="glow"></div>
+  <svg class="waves" viewBox="0 0 1440 120" preserveAspectRatio="none">
+    <path d="M0 64C120 30 240 98 360 64S600 30 720 64 960 98 1080 64 1320 30 1440 64 1680 98 1800 64 2040 30 2160 64 2400 98 2520 64 2760 30 2880 64V120H0Z"/>
+    <path d="M0 78C180 50 300 106 480 78S780 50 960 78 1260 106 1440 78 1740 50 1920 78 2220 106 2400 78 2700 50 2880 78V120H0Z"/>
+    <path d="M0 96C90 80 180 112 270 96S450 80 540 96 720 112 810 96 990 80 1080 96 1260 112 1350 96 1530 80 1620 96 1800 112 1890 96 2070 80 2160 96 2340 112 2430 96 2610 80 2700 96 2880 112 2880 96V120H0Z"/>
+  </svg>
+</div>
+
+<header class="top">
+  <a class="home" href="linkTreeIndex.html" title="回首頁"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg><span>首頁</span></a>
+  <div class="brand"><img src="assets/onepiece/jolly-roger.svg" alt="" width="26" height="26"><b>ONE PIECE</b><span>航海誌</span></div>
+  <nav class="route" id="route" aria-label="篇章">
+    <img class="hat" id="hat" src="assets/onepiece/jolly-roger.svg" alt="" width="24" height="24">
+    <div class="segs" id="segs"></div>
+    <div class="cur" id="cur"></div>
+  </nav>
+  <div class="tools">
+    <span class="count" id="count" aria-hidden="true"></span>
+    <button class="tbtn" id="auto" type="button" aria-pressed="false" aria-label="自動放映" title="自動放映（P）">
+      <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10-6.5z"/></svg>
+      <svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 5.5v13M15.5 5.5v13"/></svg>
+    </button>
+    <button class="tbtn" id="fs" type="button" aria-pressed="false" aria-label="全螢幕" title="全螢幕（F）">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg>
+    </button>
+  </div>
+</header>
+
+<main class="deck" id="deck" aria-roledescription="簡報">
+  <section class="slide s-cover" data-key="cover" data-title="封面" data-sea="cover">
+    <div class="cover-copy">
+      <p class="eyebrow">ONE PIECE <em>故事篇章 · 簡報</em></p>
+      <h1>航海誌</h1>
+      <p class="sub">從東海到艾爾巴夫——<b>1,194</b> 話、<b>29</b> 年的故事，一篇章一張。<br>截至 2026 年 9 月 28 日的連載進度，連載還在繼續。</p>
+      <p class="hint"><span class="hint-kbd">← → 或空白鍵換頁 · 1–9 跳章 · F 全螢幕 · P 自動放映</span><span class="hint-touch">左右滑動換頁 · 上面的航路列可以直接跳章</span></p>
+    </div>
+    <div class="flag"><img src="assets/onepiece/jolly-roger.svg" alt="草帽海賊旗" width="420" height="420"></div>
+  </section>
+
+  <section class="slide s-map" data-key="route" data-title="航路總覽" data-sea="cover">
+    <div class="map-head">
+      <div>
+        <p class="eyebrow">航路 <em>THE ROUTE</em></p>
+        <h2>十二段航程，一千一百九十四話</h2>
+        <p class="lede">長條是每一篇章的話數。東海只有一百話，偉大航路前半走了五百話，進新世界之後每一段都更長。點任何一列可以直接跳過去。</p>
+      </div>
+    </div>
+    <div class="rows" id="rows"></div>
+  </section>
+
+  <!-- 篇章投影片由 JS 從 SAGAS 產生，插在這裡 -->
+  <div id="sagas-anchor" hidden></div>
+
+  <section class="slide s-crew" data-key="crew" data-title="草帽一夥" data-sea="new">
+    <div>
+      <p class="eyebrow">草帽一夥 <em>THE CREW</em></p>
+      <h2>十個人，花了九百七十六話才到齊</h2>
+      <p class="lede">點是每個人正式入夥那一話在整條航路上的位置。前五個人在東海一百話內就齊了，之後每個夥伴都隔了一整段海。</p>
+    </div>
+    <div>
+      <ol class="crew" id="crew"></ol>
+      <div class="crew-axis"><span>第 1 話</span><span>第 597 話 · 兩年修行</span><span>第 1,194 話</span></div>
+      <p class="note">話數是正式入夥的那一話：娜美第 8 話登場、第 94 話才真正留下；羅賓第 217 話偷渡上船、第 218 話入夥；甚平在蛋糕島宣告加入、和之國第 976 話正式上船。途中離開又回來的：娜美（70→94）、騙人布（333→438）、香吉士（824→856）。</p>
+    </div>
+  </section>
+
+  <section class="slide s-now" data-key="now" data-title="現在進度" data-sea="now">
+    <div class="copy">
+      <p class="eyebrow">現在 <em>WHERE WE ARE</em></p>
+      <h2>第 1,194 話：艾爾巴夫還在打</h2>
+      <p class="lede">連載從 1997 年 7 月 22 日開始，到這張投影片打開的今天已經 <b id="days">—</b> 天。下面是漫畫、單行本與動畫各自走到哪裡，以及二十九年還沒揭開的事。</p>
+      <dl class="stats" id="stats"></dl>
+      <p class="asof">進度核對日 2026-10-01 · 來源：Wikipedia 章節列表、VIZ 連載頁、Weekly Shōnen Jump 休刊公告</p>
+    </div>
+    <div class="copy">
+      <p class="eyebrow">還沒揭開 <em>STILL OPEN</em></p>
+      <ul class="open" id="open"></ul>
+      <div class="acts">
+        <button class="btn pri" type="button" data-go="0">從封面再看一次</button>
+        <a class="btn" href="linkTreeIndex.html">回首頁</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<nav class="pager" aria-label="投影片">
+  <button class="arw" id="prev" type="button" aria-label="上一張" title="上一張（←）"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg></button>
+  <div class="pg" id="pg"></div>
+  <button class="arw" id="next" type="button" aria-label="下一張" title="下一張（→）"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 5.5L16 12l-6.5 6.5"/></svg></button>
+</nav>
+<div class="live" id="live" role="status" aria-live="polite"></div>
+<noscript><p style="position:fixed;inset:auto 20px 20px;color:#f3eee2;font:15px/1.8 sans-serif;z-index:99">這頁需要 JavaScript。回<a href="linkTreeIndex.html">首頁</a>。</p></noscript>
+
+<script>
+(() => {
+'use strict'
+const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)]
+const NS = 'http://www.w3.org/2000/svg'
+const S = (tag, attrs = {}, ...kids) => { const e = document.createElementNS(NS, tag); for (const k in attrs) { const v = attrs[k]; if (v == null) continue; if (k === 'style') e.style.cssText += ';' + v; else e.setAttribute(k, v) } kids.forEach(c => c != null && e.append(c)); return e }
+const root = document.documentElement
+const reduce = matchMedia('(prefers-reduced-motion: reduce)')
+const NARROW = matchMedia('(max-aspect-ratio: 1/1), (max-width: 760px)')
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v))
+const fmt = n => n.toLocaleString('en-US')
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))
+
+/* ═══ 進度：這幾個數字是人工核對的（2026-10-01），下一次更新改這裡 ═══ */
+const NOW = {
+  ch: 1194, chDate: '2026-09-28', chTitle: '諸行無常', next: 1195, nextDate: '2026-10-11',
+  vol: 115, volDate: '2026-07-03', volCh: [1167, 1179], volPages: 248,
+  ep: 1180, epDate: '2026-09-27', epBack: '2027 年春',
+  start: '1997-07-22',
+}
+
+/* ═══ 海的顏色：一個海域一組（天頂 → 中段 → 海面），加地平線的光 ═══ */
+const SEA = {
+  cover:    ['#04101f', '#082a4a', '#0f4a7a', 0],
+  prologue: ['#050c18', '#0a2340', '#12406b', .22],
+  east:     ['#07355f', '#0f5f9c', '#2a93cf', 0],
+  paradise: ['#06284d', '#0b4a84', '#1272b1', 0],
+  new:      ['#041a33', '#07325d', '#0a4f85', 0],
+  final:    ['#03101e', '#07243f', '#0d3b61', .3],
+  now:      ['#04111f', '#0a2b4c', '#135a8a', .4],
+}
+
+/* ═══ 篇章：全部內容都在這一個陣列 ═══
+   ch＝這一篇章的話數範圍；arcs 是裡面的各篇（航海日誌一列一篇）；joins＝正式入夥的夥伴（話數）。 */
+const SAGAS = [
+  { key: 'prologue', n: 0, name: '序章：大海賊時代', en: 'PROLOGUE', ch: null, years: '故事開始前', sea: 'prologue', region: null,
+    lede: '一切從一場處刑開始。海賊王哥爾·D·羅傑在羅格鎮的刑場上說，他的財寶就放在那個地方，想要的話就去找——大海賊時代由此掀開。十二年後，風車村的少年戴上一頂草帽。',
+    arcs: [
+      { name: '羅傑處刑', lab: '故事前 22 年', beat: '海賊王在故鄉羅格鎮被公開處刑。臨刑前那句「想要我的財寶嗎？想要的話就全部給你」，讓整個世界出海。' },
+      { name: '草帽的約定', lab: '故事前 10 年', beat: '紅髮傑克在風車村為了救魯夫失去左臂，把草帽交給他：「等你成為出色的海賊，再還給我。」' },
+      { name: '出海', lab: '第 1 話 · 1997.07.22', beat: '〈ROMANCE DAWN〉刊於《週刊少年 Jump》。十七歲的蒙其·D·魯夫一個人划小船出海，說要當海賊王。' },
+    ] },
+  { key: 'east', n: 1, name: '東海篇', en: 'EAST BLUE', ch: [1, 100], years: '1997–1999', sea: 'east', region: 'east',
+    lede: '最弱的海。一個戴草帽的少年從風車村出海，到羅格鎮為止，船上多了劍士、航海士、狙擊手、廚師，和一面自己畫的旗。',
+    arcs: [
+      { name: '羅曼史黎明', ch: [1, 7], beat: '魯夫出海；在海軍基地救下被綁在刑柱上的海賊獵人索隆，第一位夥伴。' },
+      { name: '橘子鎮', ch: [8, 21], beat: '小丑巴其；偷海賊寶物的小偷娜美暫時當上航海士。' },
+      { name: '西羅布村', ch: [22, 41], beat: '愛吹牛的騙人布與克洛海賊團的陰謀；可雅送上黃金梅利號。' },
+      { name: '海上餐廳', ch: [42, 68], beat: '香吉士與哲普的恩情；鷹眼密佛格一刀擊倒索隆，索隆立誓此生不再敗。' },
+      { name: '惡龍公園', ch: [69, 95], beat: '娜美的八年與那句「幫幫我」；魯夫打倒惡龍，娜美正式入夥。' },
+      { name: '羅格鎮', ch: [96, 100], beat: '羅傑被處刑的廣場、斯摩格與多拉格；穿過暴風雨，衝向顛倒山。' },
+    ],
+    joins: [['索隆', 6], ['騙人布', 41], ['香吉士', 68], ['娜美', 94]] },
+  { key: 'alabasta', n: 2, name: '阿拉巴斯坦篇', en: 'ALABASTA', ch: [101, 217], years: '1999–2001', sea: 'paradise', region: 'paradise',
+    lede: '翻過顛倒山，偉大航路第一程。從雙子海角等了五十年的鯨魚，到沙漠王國的內戰，船上多了一位醫生，船尾載著一位公主。',
+    arcs: [
+      { name: '顛倒山・雙子海角', ch: [101, 105], beat: '被海流推上紅土大陸；燈塔看守克洛卡斯與等了五十年的鯨魚拉布恩；拿到記錄指針。' },
+      { name: '威士忌山峰', ch: [106, 114], beat: '賞金獵人的鎮其實是巴洛克華克的巢；Miss Wednesday 是阿拉巴斯坦的公主薇薇。' },
+      { name: '小花園', ch: [115, 129], beat: '恐龍島上多利與布羅基打了一百年的決鬥；「艾爾巴夫」這個名字第一次出現。' },
+      { name: '磁鼓島', ch: [130, 154], beat: '娜美高燒；馴鹿喬巴與西爾爾克醫生的櫻花；喬巴入夥。' },
+      { name: '阿拉巴斯坦', ch: [155, 217], beat: '沙鱷克洛克達爾與巴洛克華克要奪取一國；艾斯登場；雨宴之戰、鐘樓上的炸彈。薇薇留在國家，羅賓偷偷上了船。' },
+    ],
+    joins: [['喬巴', 153], ['羅賓', 218]] },
+  { key: 'sky', n: 3, name: '空島篇', en: 'SKY ISLAND', ch: [218, 302], years: '2001–2003', sea: 'paradise', region: 'paradise',
+    lede: '記錄指針指向天空。從加亞被嘲笑的夢想，到一萬公尺上的雲海、自稱神的人，和一口四百年沒有響過的鐘。',
+    arcs: [
+      { name: '加亞', ch: [218, 236], beat: '莫克鎮，貝拉米嘲笑夢想；黑鬍子汀奇說「人的夢想是不會結束的」；蒙布朗·克利凱與諾蘭德的血脈。' },
+      { name: '衝上天空', ch: [237, 272], beat: '突進流、白白海、斯凱皮亞；神艾涅爾與神官們的試煉；香狄亞人與空島人四百年的土地之戰。' },
+      { name: '黃金鄉', ch: [273, 302], beat: '諾蘭德與卡爾加拉友情的真相；艾涅爾的方舟馬克西姆；魯夫敲響黃金鐘；歷史正文上留著羅傑的字。' },
+    ],
+    joins: [] },
+  { key: 'water7', n: 4, name: '水之七島篇', en: 'WATER 7', ch: [303, 441], years: '2003–2006', sea: 'paradise', region: 'paradise',
+    lede: '梅利號撐不住了。造船之都的一筆買賣、同伴的離開、對世界政府宣戰——然後是一場海上的火葬。',
+    arcs: [
+      { name: '長環長島', ch: [303, 321], beat: '弗克西海賊團的 Davy Back Fight；海軍大將青雉現身，羅賓的過去投下第一道陰影。' },
+      { name: '水之七島', ch: [322, 374], beat: '找船匠；佛朗基一家；市長艾斯巴古遇刺、CP9 浮上檯面；騙人布為了梅利號退團，與魯夫決鬥。' },
+      { name: '司法島', ch: [375, 430], beat: '羅賓喊出「我想活下去！」；魯夫叫騙人布射穿世界政府的旗；大戰路基與 CP9；屠魔令下，黃金梅利號最後一次來接他們。' },
+      { name: '戰後', ch: [431, 441], beat: '梅利號的火葬；佛朗基入夥、千陽號下水；海軍中將卡普原來是魯夫的爺爺；全員懸賞金更新。' },
+    ],
+    joins: [['佛朗基', 437]], ret: [['騙人布', 438]] },
+  { key: 'thriller', n: 5, name: '恐怖三桅帆船篇', en: 'THRILLER BARK', ch: [442, 489], years: '2007–2008', sea: 'paradise', region: 'paradise',
+    lede: '魔幻三角地帶的霧裡有一艘比島還大的船。船上有影子的軍隊、一具會唱歌的骷髏，和一夜「什麼事都沒發生」。',
+    arcs: [
+      { name: '幽靈船', ch: [442, 448], beat: '會說話的骷髏布魯克：他五十年前的夥伴、對拉布恩的約定，和被偷走的影子。' },
+      { name: '恐怖三桅帆船', ch: [449, 483], beat: '七武海月光莫利亞的影影果實、殭屍大軍與巨人歐茲；一夥人靠日出贏回影子。' },
+      { name: '一夜無事', ch: [484, 489], beat: '七武海巴索羅米·熊到來；索隆接下魯夫全部的疲勞與痛，只說「什麼事都沒發生」；布魯克入夥。' },
+    ],
+    joins: [['布魯克', 489]] },
+  { key: 'summit', n: 6, name: '頂上戰爭篇', en: 'SUMMIT WAR', ch: [490, 597], years: '2008–2010', sea: 'paradise', region: 'paradise',
+    lede: '香波地的天龍人、十一個超新星。一夥人第一次被打散，然後是大監獄推進城，與那場把時代劈成兩半的戰爭。',
+    arcs: [
+      { name: '香波地群島', ch: [490, 513], beat: '十一位超新星齊聚；魯夫一拳打飛天龍人；冥王雷利；和平主義者與巴索羅米·熊把草帽一夥拍飛到世界各地。' },
+      { name: '女人島', ch: [514, 524], beat: '九蛇的女帝漢考克；報紙上印著艾斯的處刑日。' },
+      { name: '推進城', ch: [525, 549], beat: '潛入大監獄；馮·克雷與伊娃柯夫；克洛克達爾、甚平同行逃獄；黑鬍子進城挑走戰力。' },
+      { name: '馬林福特', ch: [550, 580], beat: '白鬍子海賊團對海軍本部。艾斯死在魯夫懷裡；白鬍子的遺言「ONE PIECE 是真實存在的」；黑鬍子奪走震震果實；紅髮傑克出面終戰。' },
+      { name: '戰後', ch: [581, 597], beat: '魯夫、艾斯、薩波的童年；3D2Y——向夥伴傳話，跟雷利修行兩年再見。' },
+    ],
+    joins: [] },
+  { key: 'fishman', n: 7, name: '魚人島篇', en: 'FISH-MAN ISLAND', ch: [598, 653], years: '2010–2012', sea: 'new', region: 'new',
+    lede: '兩年後，九個人在香波地重聚。塗了膜的千陽號沉到一萬公尺下，魚人島的歷史比想像中更重。',
+    arcs: [
+      { name: '重返香波地', ch: [598, 602], beat: '九人重聚，各自都變強了；甩開海軍，潛入深海。' },
+      { name: '魚人島', ch: [603, 653], beat: '霍迪·瓊斯的新魚人海賊團；人魚公主白星其實是古代兵器海王；乙姬王妃與費雪·泰格的過去、方舟諾亞。魯夫對 BIG MOM 宣戰；甚平婉拒入夥，約定日後。' },
+    ],
+    joins: [] },
+  { key: 'dressrosa', n: 8, name: '德雷斯羅薩篇', en: 'DRESSROSA', ch: [654, 801], years: '2012–2015', sea: 'new', region: 'new',
+    lede: '新世界的第一站是半冰半火的島，接著是玩具與鬥技場的國家、一個鳥籠，和五千六百人的船團。',
+    arcs: [
+      { name: '龐克哈薩德', ch: [654, 699], beat: '凱薩的毒氣實驗室與被實驗的孩子；托拉法爾加·羅提議同盟，目標是多佛朗明哥與凱多的 SMILE 工廠。' },
+      { name: '德雷斯羅薩', ch: [700, 801], beat: '被變成玩具的人、鬥技場上的燄燄果實與活著的薩波；多佛朗明哥的鳥籠；蕾貝卡與克洛斯、海軍大將藤虎、柯拉松與羅的過去。魯夫四檔擊倒多佛朗明哥；七支海賊團自組「草帽大船團」。' },
+    ],
+    joins: [] },
+  { key: 'yonko', n: 9, name: '四皇篇', en: 'FOUR EMPERORS', ch: [802, 908], years: '2015–2018', sea: 'new', region: 'new',
+    lede: '目標直指四皇。象主背上的國家、BIG MOM 的茶會與一場婚禮，再到聖地瑪麗喬亞的世界會議。',
+    arcs: [
+      { name: '佐烏', ch: [802, 824], beat: '象主背上的毛皮族與百獸的旱災傑克；桃之助、錦衛門的真相與光月家；路標歷史正文一共四塊；香吉士被帶走。' },
+      { name: '蛋糕島', ch: [825, 902], beat: 'BIG MOM 的夏洛特家族與文斯莫克家的傑爾馬 66；香吉士的婚禮與布丁；卡塔庫栗之戰、佩德羅的犧牲；甚平宣告離開 BIG MOM、加入草帽一夥。' },
+      { name: '世界會議', ch: [903, 908], beat: '薇薇、白星與各國國王齊聚聖地；薩波與革命軍行動；空王座上坐著伊姆。' },
+    ],
+    joins: [], ret: [['香吉士', 856]] },
+  { key: 'wano', n: 10, name: '和之國篇', en: 'WANO COUNTRY', ch: [909, 1057], years: '2018–2022', sea: 'new', region: 'new',
+    lede: '閉關鎖國的武士之國。先是二十年前光月御田的故事，然後是鬼島上那一夜——四皇倒下，太陽神醒來。',
+    arcs: [
+      { name: '第一幕～第三幕', ch: [909, 988], beat: '潛入花之都；赤鞘九俠的二十年；御田出海，隨白鬍子、再隨羅傑抵達拉夫德魯；凱多的百獸海賊團與黑炭大蛇。' },
+      { name: '鬼島決戰', ch: [989, 1043], beat: '海賊同盟突襲宴會；大和；索隆對 King、香吉士對 Queen；BIG MOM 落海；魯夫被凱多三次擊倒。' },
+      { name: '五檔', ch: [1044, 1057], beat: '橡膠果實的真名是人人果實・幻獸種・尼卡形態；凱多倒下、和之國開國；新四皇魯夫與巴其，懸賞三十億；紅髮傑克現身；甚平正式入夥。' },
+    ],
+    joins: [['甚平', 976]] },
+  { key: 'egghead', n: 11, name: '蛋頭篇', en: 'EGGHEAD · FINAL SAGA I', ch: [1058, 1125], years: '2022–2024', sea: 'final', region: 'final',
+    lede: '最終章從一座五百年後的未來島開始。天才博士、熊的旅程，和一場讓全世界都聽見的廣播。',
+    arcs: [
+      { name: '未來島', ch: [1058, 1092], beat: '貝卡帕庫博士與六個分身、邦妮；CP0 的路基來「處理」博士；黃猿、五老星薩坦親自登島。' },
+      { name: '熊的旅程', ch: [1093, 1103], beat: '巴索羅米·熊從奴隸到革命軍、再到被改造成兵器的一生；他留給邦妮的每一封信。' },
+      { name: '廣播', ch: [1104, 1125], beat: '貝卡帕庫向全世界宣告「世界將沉入海底」、空白一百年與喬伊波伊的名字；巨人海賊團多利與布羅基趕到；卡普在海賊島對上黑鬍子團；一夥人航向艾爾巴夫。' },
+    ],
+    joins: [] },
+  { key: 'elbaph', n: 12, name: '艾爾巴夫篇', en: 'ELBAPH · FINAL SAGA II', ch: [1126, 1194], years: '2024– 連載中', sea: 'final', region: 'final', live: true,
+    lede: '巨人之國。被鎖在世界樹上的王子、紅髮的雙胞胎兄弟、史上最長的一段回憶——然後，坐在空王座上八百年的那個人，親自下來了。',
+    arcs: [
+      { name: '抵達', ch: [1126, 1133], beat: '進入艾爾巴夫；哈拉爾德王已死，王子洛基被鎖在亞當樹上、被叫做詛咒之子。巨人說他是壞人，魯夫卻帶著索隆、娜美偷溜去找他。' },
+      { name: '圖書館與騎士團', ch: [1134, 1144], beat: '羅賓在海象學校的貓頭鷹圖書館找到哈拉爾德保存的歐哈拉藏書；神之騎士團登島，團長夏姆洛克是紅髮傑克的雙胞胎兄弟；第 1141 話魯夫與索隆解開洛基的鎖。' },
+      { name: '史上最長的回憶', ch: [1145, 1178], beat: '哈拉爾德的一生、洛克斯海賊團與神之谷事件，洛克斯本名 Davy D. Xebec；哈拉爾德晚年受伊姆操控，命洛基吃下艾爾巴夫的惡魔果實——洛基弒父的真相。第 1171 話伊姆說：「艾爾巴夫就是 D」。' },
+      { name: '伊姆降臨', ch: [1179, 1186], beat: 'Nerona Imu 親自踏上艾爾巴夫，霸王色一放數名巨人倒下，巨人被「Domi Reversi」變成惡魔。長老亞魯爾向全國宣告洛基無罪、艾爾巴夫與世界政府為敵。' },
+      { name: '現在', ch: [1187, 1194], beat: '魯夫五檔被伊姆壓制、被虛空之刃貫穿胸口（1188）；洛基、海爾丁與魯夫三人合擊把伊姆打進亞當樹（1191–1193），但魯夫的心跳聲正在變弱。索隆領悟霸王色纏繞，三刀纏上黑雷準備了結神之騎士 Sommers（1194〈諸行無常〉）；香吉士對 Killingham，阻止巨人孩童被綁走；喬巴在圖書館密室解讀空白一百年前留下的箱子。', now: true },
+    ],
+    joins: [], next: '第 1195 話預定 2026 年 10 月 11 日刊出（本週休刊）。' },
+]
+const TOTAL = NOW.ch
+const sagasWithCh = SAGAS.filter(s => s.ch)
+const REGIONS = [
+  { id: 'east', name: '東海', en: 'EAST BLUE', gate: '' },
+  { id: 'paradise', name: '偉大航路前半 · 樂園', en: 'PARADISE', gate: '第 100 話翻過顛倒山' },
+  { id: 'new', name: '新世界', en: 'NEW WORLD', gate: '第 597 → 598 話之間兩年修行' },
+  { id: 'final', name: '最終章', en: 'FINAL SAGA', gate: '第 1058 話起' },
+]
+const CREW = [
+  ['魯夫', '船長', 1], ['索隆', '戰鬥員', 6], ['騙人布', '狙擊手', 41], ['香吉士', '廚師', 68], ['娜美', '航海士', 94],
+  ['喬巴', '船醫', 153], ['羅賓', '考古學家', 218], ['佛朗基', '船匠', 437], ['布魯克', '音樂家', 489], ['甚平', '操舵手', 976],
+]
+const OPEN = [
+  ['ONE PIECE 到底是什麼', '羅傑看到之後大笑，白鬍子說它真實存在。'],
+  ['拉夫德魯', '四塊路標歷史正文指向的最後一島；羅傑一夥只到過一次。'],
+  ['空白的一百年', '歐哈拉為此被滅；貝卡帕庫說世界會沉。'],
+  ['喬伊波伊與尼卡', '八百年前的那個人，和魯夫身上醒來的太陽神。'],
+  ['D 的意志', '天龍人的宿敵；伊姆說艾爾巴夫就是 D。'],
+  ['伊姆', '世界政府真正的主人，第 1179 話第一次親自出場。'],
+  ['三件古代兵器', '冥王、海王（白星）、天王——第三件還沒出現。'],
+  ['紅髮與黑鬍子', '一個是那頂草帽的主人，一個是艾斯之死的起點。'],
+]
+
+/* ═══ 工具 ═══ */
+const chaps = s => s.ch[1] - s.ch[0] + 1
+const rng = ch => ch ? `${fmt(ch[0])}–${fmt(ch[1])}` : ''
+const two = n => String(n).padStart(2, '0')
+
+/* ═══ 篇章投影片 ═══ */
+function sagaHTML(s) {
+  const eyebrow = s.ch ? `第 ${two(s.n)} 篇章 <em>CH. ${rng(s.ch)} · ${s.years}</em>` : `${s.en} <em>${esc(s.years)}</em>`
+  const log = s.arcs.map((a, i) => `<li class="rv${a.now ? ' now' : ''}" style="--k:${i + 1}"><span class="arc">${esc(a.name)}<small>${a.ch ? `${a.ch[0]}–${a.ch[1]}` : esc(a.lab || '')}</small></span><p>${esc(a.beat)}</p></li>`).join('')
+  const joins = (s.joins && s.joins.length) || (s.ret && s.ret.length)
+    ? `<p class="joins rv" style="--k:${s.arcs.length + 1}">${s.joins && s.joins.length ? `<b>新夥伴</b>${s.joins.map(([w, c]) => `<span>${esc(w)}<small>第 ${c} 話</small></span>`).join('')}` : ''}${s.ret && s.ret.length ? `<span class="ret">歸隊 ${s.ret.map(([w, c]) => `${esc(w)}<small>第 ${c} 話</small>`).join('、')}</span>` : ''}</p>` : ''
+  const next = s.next ? `<p class="joins rv" style="--k:${s.arcs.length + 2}"><b>下一話</b><span>${esc(s.next)}</span></p>` : ''
+  return `<section class="slide s-saga" data-key="${s.key}" data-title="${esc(s.name)}" data-sea="${s.sea}">
+    <div class="copy">
+      <p class="eyebrow">${eyebrow}</p>
+      <h2>${esc(s.name)}<small>${esc(s.en)}</small></h2>
+      <p class="lede">${esc(s.lede)}</p>
+      <ol class="log">${log}</ol>${joins}${next}
+    </div>
+    <div class="art"><svg class="chart" data-chart="${s.key}" role="img" aria-label="${esc(s.name)}的航線圖：${s.arcs.map(a => a.name).join('、')}"></svg></div>
+    ${s.ch ? `<div class="wm" aria-hidden="true">${two(s.n)}</div>` : ''}
+  </section>`
+}
+const anchor = $('#sagas-anchor')
+anchor.insertAdjacentHTML('beforebegin', SAGAS.map(sagaHTML).join(''))
+anchor.remove()
+
+/* 這一段的海圖：各篇是島，航線穿過去。寬螢幕橫著走、窄螢幕直著走；連載中的篇章，最後一島之後是虛線與問號 */
+const smooth = pts => { let d = `M${pts[0][0].toFixed(1)} ${pts[0][1].toFixed(1)}`; for (let i = 1; i < pts.length; i++) { const [x, y] = pts[i], [px, py] = pts[i - 1]; d += `Q${px.toFixed(1)} ${py.toFixed(1)} ${((x + px) / 2).toFixed(1)} ${((y + py) / 2).toFixed(1)}` } return d + `L${pts[pts.length - 1][0].toFixed(1)} ${pts[pts.length - 1][1].toFixed(1)}` }
+function drawRoute(svg, s) {
+  svg.textContent = ''
+  const narrow = NARROW.matches, n = s.arcs.length
+  const W = narrow ? 360 : 720, H = narrow ? Math.max(260, 70 + n * 82) : 400
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`)
+  const cnt = a => a.ch ? a.ch[1] - a.ch[0] + 1 : 20
+  const maxC = Math.max(...s.arcs.map(cnt))
+  const rad = a => 9 + 13 * Math.sqrt(cnt(a) / maxC)
+  const amp = H * .24
+  const pts = s.arcs.map((a, i) => {
+    const t = n === 1 ? .5 : i / (n - 1)
+    if (narrow) return [W * .2 + (i % 2 ? 44 : 0), 50 + t * (H - 100)]
+    return [76 + t * (W - 152), H * .5 + (i % 2 ? -amp : amp)]
+  })
+  const g = S('g')
+  svg.append(g)
+  if (s.live) {   // 連載中：最後一島之後是虛線與問號
+    const [lx, ly] = pts[n - 1]
+    const end = narrow ? [lx, H - 12] : [W - 14, ly - 44]
+    g.append(S('path', { class: 'plan', d: smooth([[lx, ly], narrow ? [lx + 12, (ly + end[1]) / 2] : [(lx + end[0]) / 2, ly - 52], end]) }))
+    g.append(S('text', { class: 'q', x: end[0], y: end[1] + (narrow ? 4 : -10), 'text-anchor': 'middle' }, '?'))
+  }
+  g.append(S('path', { class: 'plan', d: smooth(pts) }))
+  g.append(S('path', { class: 'sail draw', d: smooth(pts), pathLength: 1 }))
+  s.arcs.forEach((a, i) => {
+    const [x, y] = pts[i], r = rad(a), hot = !!a.now
+    const node = S('g', { class: 'rv', style: `--k:${i + 1}` })
+    if (hot) node.append(S('circle', { class: 'ring', cx: x, cy: y, r: r + 6 }))
+    node.append(S('circle', { class: 'isle' + (hot ? ' hot' : ''), cx: x, cy: y, r }))
+    const sub = a.ch ? `${a.ch[0]}–${a.ch[1]}` : (a.lab || '')
+    let tx, nameY, subY, anchorT
+    if (narrow) { tx = x + r + 14; nameY = y - 3; subY = y + 15; anchorT = 'start' }
+    else {
+      // 上面的島字放島的上方、下面的島字放下方——都在航線外側，不會壓到線
+      const up = y < H * .5
+      tx = x; anchorT = i === 0 ? 'start' : i === n - 1 ? 'end' : 'middle'
+      if (i === 0) tx = x - r; if (i === n - 1) tx = x + r
+      if (up) { nameY = y - r - 26; subY = y - r - 9 } else { nameY = y + r + 22; subY = y + r + 40 }
+    }
+    const st = hot ? 'fill:var(--straw)' : ''
+    node.append(S('text', { class: 'lb', x: tx, y: nameY, 'text-anchor': anchorT, style: st }, a.name))
+    node.append(S('text', { class: 'lb2 n', x: tx, y: subY, 'text-anchor': anchorT, style: st }, hot ? `${sub} · 連載中` : sub))
+    g.append(node)
+  })
+}
+const drawAll = () => $$('svg[data-chart]').forEach(svg => drawRoute(svg, SAGAS.find(s => s.key === svg.dataset.chart)))
+drawAll()
+
+/* ═══ 航路總覽（一列一篇章，長條＝話數） ═══ */
+;(() => {
+  const maxC = Math.max(...sagasWithCh.map(chaps))
+  let k = 0
+  $('#rows').innerHTML = REGIONS.map(r => {
+    const list = sagasWithCh.filter(s => s.region === r.id)
+    return `<h3>${esc(r.name)}<small>${esc(r.en)}</small>${r.gate ? `<span class="gate">${esc(r.gate)}</span>` : ''}</h3>` +
+      list.map(s => `<button class="row" type="button" data-key="${s.key}"><span class="rn">${two(s.n)}</span><span class="rname">${esc(s.name)}<small>${chaps(s)} 話</small></span><span class="bar"><i class="${s.live ? 'on' : ''}" style="--w:${(chaps(s) / maxC * 100).toFixed(1)}%;--k:${k++}"></i></span><span class="rch n">${rng(s.ch)}</span><span class="ry">${esc(s.years)}</span></button>`).join('')
+  }).join('')
+})()
+
+/* ═══ 船員 ═══ */
+$('#crew').innerHTML = CREW.map(([w, role, c], i) => `<li class="rv" style="--k:${i + 1}"><span class="who">${esc(w)}</span><span class="role">${esc(role)}</span><span class="trk"><i class="${c === 1 ? 'cap' : ''}" style="--x:${(c / TOTAL * 100).toFixed(2)}%"></i></span><span class="ch"><small>第</small>${c}<small style="margin:0 0 0 3px">話</small></span></li>`).join('')
+
+/* ═══ 現在進度 ═══ */
+;(() => {
+  const d = (a, b) => Math.round((Date.parse(b) - Date.parse(a)) / 86400000)
+  const today = new Date(), iso = today.toISOString().slice(0, 10)
+  const days = d(NOW.start, iso)
+  const y = Math.floor(days / 365.25), m = Math.floor((days - y * 365.25) / 30.44)
+  $('#days').textContent = fmt(days)
+  const md = s => `${+s.slice(5, 7)} 月 ${+s.slice(8)} 日`
+  $('#stats').innerHTML = [
+    ['漫畫', `<b class="hot">${fmt(NOW.ch)}</b> 話`, `${NOW.chDate.slice(0, 4)} 年 ${md(NOW.chDate)}〈${esc(NOW.chTitle)}〉。下一話第 ${fmt(NOW.next)} 話預定 ${md(NOW.nextDate)}，本週休刊。`],
+    ['單行本', `<b>${NOW.vol}</b> 卷`, `${NOW.volDate.slice(0, 4)} 年 ${md(NOW.volDate)}出版，收錄第 ${fmt(NOW.volCh[0])}–${fmt(NOW.volCh[1])} 話；${NOW.volPages} 頁，史上最厚的一卷。`],
+    ['動畫', `<b>${fmt(NOW.ep)}</b> 集`, `${NOW.epDate.slice(0, 4)} 年 ${md(NOW.epDate)}播出本年度最後一集，改成一年 26 集的季播制，${esc(NOW.epBack)}回歸。`],
+    ['連載', `<b>${y}</b> 年 <b>${m}</b> 個月`, `從 1997 年 7 月 22 日第 1 話到今天。尾田榮一郎說過最終章已經開始，但沒有說還有幾話。`],
+  ].map(([t, big, sub], i) => `<li class="rv" style="--k:${i + 1}"><dt>${t}</dt><dd>${big}<span>${sub}</span></dd></li>`).join('')
+  $('#open').innerHTML = OPEN.map(([t, s], i) => `<li class="rv" style="--k:${i + 1}"><b>${esc(t)}</b>　${esc(s)}</li>`).join('')
+})()
+
+/* ═══ 羅盤方位線（背景） ═══ */
+;(() => {
+  const g = $('#rose')
+  for (let i = 0; i < 32; i++) { const a = i * Math.PI / 16; g.append(S('line', { class: i % 4 ? '' : 'maj', x1: 0, y1: 0, x2: (Math.cos(a) * 1000).toFixed(1), y2: (Math.sin(a) * 1000).toFixed(1) })) }
+  ;[160, 380, 700].forEach(r => g.append(S('circle', { cx: 0, cy: 0, r })))
+})()
+
+/* ═══ 頂欄航路列：十二段寬度＝話數，目前篇章亮黃、草帽停在上面 ═══ */
+const segs = $('#segs'), hat = $('#hat'), curLbl = $('#cur')
+sagasWithCh.forEach(s => { const b = document.createElement('button'); b.type = 'button'; b.style.setProperty('--w', chaps(s)); b.dataset.key = s.key; b.title = `${two(s.n)} ${s.name} · ${rng(s.ch)}`; b.setAttribute('aria-label', b.title); segs.append(b) })
+const segBtns = $$('button', segs)
+const nowTag = document.createElement('div'); nowTag.className = 'now'; nowTag.innerHTML = `<i></i>${fmt(NOW.ch)}`; $('#route').append(nowTag)
+
+/* ═══ 投影片控制 ═══ */
+const slides = $$('.slide'), N = slides.length, keys = slides.map(s => s.dataset.key), titles = slides.map(s => s.dataset.title)
+let cur = Math.max(0, keys.indexOf(location.hash.slice(1))), auto = false, autoT = 0
+const pg = $('#pg')
+slides.forEach((s, i) => { const b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-label', `第 ${i + 1} 張：${titles[i]}`); b.title = titles[i]; b.innerHTML = '<i></i>'; b.addEventListener('click', () => go(i)); pg.append(b) })
+const dots = $$('button', pg)
+const sagaOf = i => SAGAS.find(s => s.key === keys[i])
+function paintSea(key) { const c = SEA[key] || SEA.cover; root.style.setProperty('--sea-a', c[0]); root.style.setProperty('--sea-b', c[1]); root.style.setProperty('--sea-c', c[2]); root.style.setProperty('--glow-a', c[3]) }
+function placeHat() {
+  const s = sagaOf(cur), rw = segs.getBoundingClientRect()
+  let x, label
+  if (s && s.ch) { const b = segBtns.find(b => b.dataset.key === s.key), r = b.getBoundingClientRect(); x = r.left - rw.left + r.width / 2; label = `<b>${two(s.n)} ${esc(s.name)}</b>CH. ${rng(s.ch)} · ${esc(s.years)}` }
+  else if (keys[cur] === 'crew' || keys[cur] === 'now') { x = rw.width; label = `<b>${esc(titles[cur])}</b>CH. 1–${fmt(NOW.ch)}` }
+  else { x = 0; label = `<b>${esc(titles[cur])}</b>${keys[cur] === 'prologue' ? '故事開始前' : `十二段 · ${fmt(NOW.ch)} 話`}` }
+  hat.style.left = x + 'px'
+  curLbl.innerHTML = label
+  segBtns.forEach(b => { const ss = SAGAS.find(q => q.key === b.dataset.key); const on = s && s.ch && ss.key === s.key; b.setAttribute('aria-current', String(!!on)); b.classList.toggle('done', !on && (keys[cur] === 'crew' || keys[cur] === 'now' || (s && s.ch && ss.n < s.n))) })
+}
+function sync() {
+  slides.forEach((s, i) => { const on = i === cur; s.classList.toggle('is-on', on); s.inert = !on; s.setAttribute('aria-hidden', String(!on)) })
+  dots.forEach((d, i) => d.setAttribute('aria-current', String(i === cur)))
+  $('#count').textContent = `${cur + 1} / ${N}`; $('#prev').disabled = cur === 0; $('#next').disabled = cur === N - 1
+  $('#live').textContent = `第 ${cur + 1} 張，${titles[cur]}`
+  paintSea(slides[cur].dataset.sea)
+  placeHat()
+  history.replaceState(null, '', '#' + keys[cur])
+}
+function go(to, { instant = false } = {}) {
+  to = clamp(to, 0, N - 1); if (to === cur && !instant) return
+  cur = to; sync(); if (auto) armAuto()
+}
+const goKey = k => { const i = keys.indexOf(k); if (i >= 0) go(i) }
+const next = () => go(cur + 1), prev = () => go(cur - 1)
+function armAuto() { clearTimeout(autoT); autoT = setTimeout(() => { if (cur < N - 1) go(cur + 1); else setAuto(false) }, 12000) }
+function setAuto(on) { auto = on; $('#auto').setAttribute('aria-pressed', String(on)); $('#auto').setAttribute('aria-label', on ? '停止自動放映' : '自動放映'); on ? (cur === N - 1 ? go(0) : armAuto()) : clearTimeout(autoT) }
+$('#auto').addEventListener('click', () => setAuto(!auto))
+document.addEventListener('visibilitychange', () => { if (document.hidden) clearTimeout(autoT); else if (auto) armAuto() })
+const fsBtn = $('#fs'); if (!document.fullscreenEnabled) fsBtn.hidden = true
+const toggleFs = () => { if (!document.fullscreenEnabled) return; document.fullscreenElement ? document.exitFullscreen() : root.requestFullscreen().catch(() => {}) }
+fsBtn.addEventListener('click', toggleFs)
+document.addEventListener('fullscreenchange', () => { fsBtn.setAttribute('aria-pressed', String(!!document.fullscreenElement)); requestAnimationFrame(placeHat) })
+$('#next').addEventListener('click', next); $('#prev').addEventListener('click', prev)
+$$('[data-go]').forEach(b => b.addEventListener('click', () => go(+b.dataset.go)))
+segs.addEventListener('click', e => { const b = e.target.closest('button'); if (b) goKey(b.dataset.key) })
+$('#rows').addEventListener('click', e => { const b = e.target.closest('.row'); if (b) goKey(b.dataset.key) })
+addEventListener('keydown', e => {
+  if (e.altKey || e.ctrlKey || e.metaKey) return
+  const onCtl = e.target.closest && e.target.closest('a,button,input,textarea,select,summary')
+  switch (e.key) {
+    case 'ArrowRight': case 'ArrowDown': case 'PageDown': next(); break
+    case 'ArrowLeft': case 'ArrowUp': case 'PageUp': prev(); break
+    case ' ': if (onCtl) return; e.shiftKey ? prev() : next(); break
+    case 'Home': go(0); break
+    case 'End': go(N - 1); break
+    case 'f': case 'F': toggleFs(); break
+    case 'p': case 'P': setAuto(!auto); break
+    default: if (/^[1-9]$/.test(e.key)) { const s = SAGAS.find(q => q.n === +e.key); if (s) goKey(s.key) } else return
+  }
+  e.preventDefault()
+})
+const deck = $('#deck')
+let sx = 0, sy = 0, st = 0, sid = null, swiped = false
+deck.addEventListener('pointerdown', e => { if (e.pointerType === 'mouse') return; sx = e.clientX; sy = e.clientY; st = performance.now(); sid = e.pointerId; swiped = false })
+deck.addEventListener('pointerup', e => { if (e.pointerId !== sid) return; sid = null; const dx = e.clientX - sx, dy = e.clientY - sy; if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy) * 1.4 && performance.now() - st < 800) { swiped = true; dx < 0 ? next() : prev() } })
+deck.addEventListener('click', e => { if (swiped) { e.preventDefault(); e.stopPropagation(); swiped = false } }, true)
+let wLock = false, wAt = 0, wLast = 0
+deck.addEventListener('wheel', e => {
+  if (e.ctrlKey) return
+  const sl = slides[cur]; if (sl.scrollHeight > sl.clientHeight + 24) { const top = sl.scrollTop <= 0, bot = sl.scrollTop + sl.clientHeight >= sl.scrollHeight - 1; if (!(e.deltaY > 0 ? bot : top)) return }   // 這張還能捲就先捲內容
+  const now = performance.now(), gap = now - wLast; wLast = now
+  if (wLock) { if (now - wAt > 900 && gap > 140) wLock = false; else return }
+  const dd = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX
+  if (Math.abs(dd) < 24) return
+  wLock = true; wAt = now; dd > 0 ? next() : prev()
+}, { passive: true })
+addEventListener('hashchange', () => { const i = keys.indexOf(location.hash.slice(1)); if (i >= 0 && i !== cur) go(i) })
+let rz = 0; addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { drawAll(); placeHat() }, 120) })
+NARROW.addEventListener('change', () => { drawAll(); placeHat() })
+
+go(cur, { instant: true })
+document.fonts && document.fonts.ready.then(placeHat)
+root.dataset.ready = '1'
+window.__op = { SAGAS, NOW, go, goKey }
+})()
+</script>
+</body>
+</html>

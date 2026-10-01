@@ -19,6 +19,14 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 .hud.tr{top:10px;right:10px;border-top:1px solid #378ADD;border-right:1px solid #378ADD}
 .hud.bl{bottom:22px;left:10px;border-bottom:1px solid #378ADD;border-left:1px solid #378ADD}
 .hud.br{bottom:22px;right:10px;border-bottom:1px solid #378ADD;border-right:1px solid #378ADD}
+/* 右上角：ONE PIECE 航海誌（海賊王故事篇章的簡報，onepiece.html）的入口；原本右上角那組框線讓位給它 */
+.hud.tr{display:none}
+.op-corner{position:fixed;top:10px;right:10px;z-index:30;display:grid;place-items:center;width:40px;height:40px;border-radius:50%;
+  border:1px solid rgba(244,196,48,.3);background:rgba(6,10,25,.74);text-decoration:none;
+  transition:transform .25s cubic-bezier(.34,1.56,.64,1),border-color .2s,box-shadow .3s;-webkit-tap-highlight-color:transparent}
+.op-corner img{display:block;width:26px;height:26px;filter:drop-shadow(0 0 6px rgba(244,196,48,.35))}
+.op-corner:hover,.op-corner:active{transform:scale(1.1) rotate(-6deg);border-color:rgba(244,196,48,.8);box-shadow:0 0 18px rgba(244,196,48,.3)}
+.op-corner:focus-visible{outline:2px solid #f4c430;outline-offset:2px}
 .telemetry{position:fixed;bottom:0;left:0;right:0;height:18px;background:rgba(2,4,8,.92);border-top:1px solid rgba(55,138,221,.1);font-family:monospace;font-size:9px;color:#163050;letter-spacing:1px;overflow:hidden;z-index:10;display:flex;align-items:center}
 .tele-inner{white-space:nowrap;animation:ticker 32s linear infinite}
 @keyframes ticker{from{transform:translateX(100vw)}to{transform:translateX(-100%)}}
@@ -278,6 +286,19 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 .th-films .rd-sub{font-size:10px}
 .th-len{display:block;font-weight:400;font-size:9px;letter-spacing:1.5px;color:rgba(var(--rgb),.72);margin-top:2px}
 .th-slides{display:flex;flex-direction:column;gap:8px}
+/* 幻燈片分類：一條小標＋線；漫畫類的卡片多一個「漫畫」字樣，不是我的數據 */
+.th-kind{display:flex;align-items:center;gap:10px;margin:14px 0 8px;font:600 11px monospace;letter-spacing:3px;color:#a9a4e8}
+.th-kind:first-of-type{margin-top:4px}
+.th-kind em{font-style:normal;font-size:9px;letter-spacing:2px;color:rgba(90,90,140,.7)}
+.th-kind i{flex:1;height:1px;background:linear-gradient(90deg,rgba(127,119,221,.28),transparent)}
+.th-kind-manga{color:#f4d26a}
+.th-kind-manga i{background:linear-gradient(90deg,rgba(244,196,48,.32),transparent)}
+.th-kind-guide{color:#ff8a7e}
+.th-kind-guide i{background:linear-gradient(90deg,rgba(224,57,47,.4),transparent)}
+.th-card-guide .th-tag{border-color:rgba(224,57,47,.55);color:#ff8a7e}
+.th-card-guide{border-color:rgba(224,57,47,.18)}
+.th-tag{display:inline-block;margin-left:8px;padding:1px 6px;border-radius:3px;border:1px solid rgba(244,196,48,.45);font-size:9px;font-weight:600;letter-spacing:2px;color:#f4d26a;text-decoration:none;vertical-align:middle;line-height:1.6}
+.th-card-manga{border-color:rgba(244,196,48,.16)}
 .th-card{display:flex;align-items:center;gap:14px;padding:12px 16px 12px 12px;border-radius:6px;border:1px solid rgba(255,255,255,.07);
   background:rgba(8,12,28,.8);color:#d8d6f4;text-decoration:none;font-family:monospace;animation:btn-in .4s both;
   transition:transform .18s,border-color .18s,background .18s;-webkit-tap-highlight-color:transparent}
@@ -416,6 +437,8 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 <div class="telemetry"><span class="tele-inner">FALCON 9 · STAGE SEP CONFIRMED · MECO · ENTRY BURN INITIATED · MAX-Q PASSED · T+02:34 · FAIRING SEP · SECO-1 · DRAGON NOMINAL · ORBIT INSERTION 400KM · BOOSTER LANDING CONFIRMED · MISSION: MARS 2026 · GO FOR LAUNCH · COMMIT · &nbsp;&nbsp;&nbsp;</span></div>
 
 <div id="app">
+  <!-- 右上角的門：ONE PIECE 航海誌（海賊王故事篇章簡報，onepiece.html）；只在首頁出現，圖示是自己畫的草帽海賊旗 -->
+  <a v-if="page==='home'" class="op-corner" href="onepiece.html" title="ONE PIECE 航海誌 · 海賊王故事篇章簡報" aria-label="ONE PIECE 航海誌：海賊王故事篇章簡報"><img src="assets/onepiece/jolly-roger.svg" alt="" width="26" height="26"></a>
   <transition name="slide" mode="out-in">
 
     <!-- ════ PAGE: HOME ════ -->
@@ -577,7 +600,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
       </div>
       <div class="sub-body th-body">
         <h1 class="th-title">放映室</h1>
-        <p class="th-intro">{{ films.length }} 部片、{{ slides.length }} 套幻燈片——每一格都是真的騎乘資料。</p>
+        <p class="th-intro">{{ films.length }} 部片、{{ slides.length }} 套幻燈片——影片與數據類的每一格都是真的騎乘資料；漫畫類是讀者的筆記，訓練指南是通用教材。</p>
         <section class="th-sec" aria-labelledby="th-films">
           <div class="reel-head"><i></i><h2 id="th-films">影片<em>{{ films.length }} FILMS</em></h2><i></i></div>
           <div class="th-films">
@@ -595,17 +618,20 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
         </section>
         <section class="th-sec" aria-labelledby="th-slides">
           <div class="reel-head"><i></i><h2 id="th-slides">幻燈片<em>{{ slides.length }} SLIDESHOWS</em></h2><i></i></div>
-          <div class="th-slides">
-            <a v-for="(d,i) in slides" :key="d.id" class="th-card" :href="d.url"
-              :style="{'--rgb':d.rgb,animationDelay:(0.33+i*0.07)+'s'}">
-              <span class="th-card-art" aria-hidden="true">
-                <img v-if="d.img" class="th-card-img" :src="d.img" alt="" width="56" height="56" loading="lazy" decoding="async">
-                <span v-else class="door-art door-art-lg"><img v-for="f in films" :key="f.id" :class="{px:f.px}" :src="f.img" alt="" width="40" height="40" loading="lazy" decoding="async"></span>
-              </span>
-              <span class="th-card-txt"><b>{{ d.name }}</b><i>{{ d.sub }}</i></span>
-              <span class="th-card-go">放映 →</span>
-            </a>
-          </div>
+          <template v-for="(k,ki) in slideKinds" :key="k.id">
+            <h3 class="th-kind" :class="'th-kind-'+k.id">{{ k.name }}<em>{{ k.en }} · {{ k.items.length }}</em><i></i></h3>
+            <div class="th-slides">
+              <a v-for="(d,i) in k.items" :key="d.id" class="th-card" :class="'th-card-'+d.kind" :href="d.url"
+                :style="{'--rgb':d.rgb,animationDelay:(0.33+(ki*3+i)*0.07)+'s'}">
+                <span class="th-card-art" aria-hidden="true">
+                  <img v-if="d.img" class="th-card-img" :src="d.img" alt="" width="56" height="56" loading="lazy" decoding="async">
+                  <span v-else class="door-art door-art-lg"><img v-for="f in films" :key="f.id" :class="{px:f.px}" :src="f.img" alt="" width="40" height="40" loading="lazy" decoding="async"></span>
+                </span>
+                <span class="th-card-txt"><b>{{ d.name }}<u v-if="d.kind!=='data'" class="th-tag">{{ k.name }}</u></b><i>{{ d.sub }}</i></span>
+                <span class="th-card-go">放映 →</span>
+              </a>
+            </div>
+          </template>
         </section>
       </div>
     </div>
@@ -632,7 +658,7 @@ createApp({
         icon:'M23.495 6.205a3.007 3.007 0 0 0-2.088-2.088c-1.87-.501-9.396-.501-9.396-.501s-7.507-.01-9.396.501A3.007 3.007 0 0 0 .527 6.205a31.247 31.247 0 0 0-.522 5.805 31.247 31.247 0 0 0 .522 5.783 3.007 3.007 0 0 0 2.088 2.088c1.868.502 9.396.502 9.396.502s7.506 0 9.396-.502a3.007 3.007 0 0 0 2.088-2.088 31.247 31.247 0 0 0 .5-5.783 31.247 31.247 0 0 0-.5-5.805zM9.609 15.601V8.408l6.264 3.602z' },
       { label:'Strava', url:'https://www.strava.com/athletes/161539959', rgb:'252,76,2',
         icon:'M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169' },
-      // 放映室：三部片＋三套幻燈片（From zero to HERO、三部片連續放映、課表的解剖）都收在自己的一頁，首頁只留這一扇門（見下面 films／slides）。
+      // 放映室：三部片＋四套幻燈片（數據類：From zero to HERO、三部片連續放映、課表的解剖；漫畫類：ONE PIECE 航海誌）都收在自己的一頁，首頁只留這一扇門（見下面 films／slides）。
       { label:'放映室 · 影片與幻燈片', page:'theatre', rgb:'255,179,71', badge:'NEW' },
       // 現行主版本是 Taiwan Ride Cinema：一張帶車手電影 icon 與背景預覽的卡（這一列約七成的視覺重量）。
       // 四個歷代實驗版本收在 ARCHIVE 裡，預設收合、展開後是細小的灰色清單，不逐項寫「舊版」。
@@ -673,12 +699,24 @@ createApp({
     /* ── 放映室的幻燈片 ──
        From zero to HERO：用我自己的紀錄說的一個故事（十張；每個數字現算自 data/chronicle.json）。圖示是我騎車的樣子（照片描成向量，站在橘色太陽上）。
        三部片連續放映：theatre.html，五張，換頁是從下一張那顆圓打開的虹膜轉場。
-       課表的解剖：anatomy.html，十七張，拿「中社四週」拆解課表怎麼讓人變強；黑底＋WebGL 熱場，數字現算自 data/ 底下六份檔。 */
+       課表的解剖：anatomy.html，十七張，拿「中社四週」拆解課表怎麼讓人變強；黑底＋WebGL 熱場，數字現算自 data/ 底下六份檔。
+       ONE PIECE 航海誌（漫畫類）：onepiece.html，十七張，講海賊王從東海到艾爾巴夫的故事篇章，進度在那支檔的 NOW；kind 欄位決定在放映室列在哪一類。
+       變強，變壯（訓練指南類）：lifting.html，十章四十張的重量訓練教材，內容在 DECK、範例課表在 PROGRAMS、肌群在 MUSCLES；跟我的數據無關。 */
     const slides = [
-      { id:'hero',    name:'From zero to HERO', sub:'資料說的故事・十張',       url:'hero.html',    rgb:'247,209,16', img:'assets/hero/rider-icon-128.png' },
-      { id:'theatre', name:'三部片連續放映',     sub:'五張・虹膜轉場・自動放映', url:'theatre.html', rgb:'255,179,71' },
-      { id:'anatomy', name:'課表的解剖',         sub:'課表怎麼讓人變強・十七張・可互動', url:'anatomy.html', rgb:'239,78,35', img:'assets/anatomy/icon.svg' },
+      { id:'hero',    kind:'data',  name:'From zero to HERO', sub:'資料說的故事・十張',       url:'hero.html',    rgb:'247,209,16', img:'assets/hero/rider-icon-128.png' },
+      { id:'theatre', kind:'data',  name:'三部片連續放映',     sub:'五張・虹膜轉場・自動放映', url:'theatre.html', rgb:'255,179,71' },
+      { id:'anatomy', kind:'data',  name:'課表的解剖',         sub:'課表怎麼讓人變強・十七張・可互動', url:'anatomy.html', rgb:'239,78,35', img:'assets/anatomy/icon.svg' },
+      // 漫畫類（不是我的數據）：ONE PIECE 航海誌，首頁右上角那顆草帽旗也連到同一頁
+      { id:'onepiece', kind:'manga', name:'ONE PIECE 航海誌', sub:'海賊王故事篇章・十七張・截至第 1194 話', url:'onepiece.html', rgb:'244,196,48', img:'assets/onepiece/jolly-roger.svg' },
+      // 訓練指南類（通用教材，不是我的數據）：變強，變壯——重量訓練全方位，中階，每個動作附 YouTube 搜尋關鍵字
+      { id:'lifting', kind:'guide', name:'變強，變壯', sub:'重量訓練全方位指南・中階・四十張・可互動', url:'lifting.html', rgb:'224,57,47', img:'assets/lifting/icon.svg' },
     ]
+    // 放映室把幻燈片分兩類列：我的數據（每一格都是真的騎乘資料）與漫畫（讀者筆記，不是數據）
+    const slideKinds = [
+      { id:'data',  name:'我的數據', en:'MY DATA' },
+      { id:'manga', name:'漫畫',     en:'MANGA' },
+      { id:'guide', name:'訓練指南', en:'GUIDE' },
+    ].map(k => ({ ...k, items: slides.filter(d => d.kind === k.id) })).filter(k => k.items.length)
 
     /* ── CV data ── */
     const experience = [
@@ -739,7 +777,7 @@ createApp({
       else skillsVisible.value=false
     })
 
-    return { page, links, films, slides, archiveOpen, experience, projects, skills, education, interests,
+    return { page, links, films, slides, slideKinds, archiveOpen, experience, projects, skills, education, interests,
              skillsVisible, handleLink, openTheatre, closeTheatre }
   }
 }).mount('#app')

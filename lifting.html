@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>變強，變壯 · 重量訓練指南 · Steve Chuang</title>
+<meta name="description" content="給中階訓練者的重量訓練全方位簡報：變強與變壯的原理、課表怎麼排、健美式孤立訓練的肌群地圖、功能性怎麼結合、飲食、營養品、睡眠與恢復、追蹤與停滯。每個動作附 YouTube 搜尋關鍵字。">
+<meta name="theme-color" content="#15171a">
+<link rel="icon" href="assets/lifting/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Oswald:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --sans:'Noto Sans TC','PingFang TC','Microsoft JhengHei',system-ui,sans-serif;
+  --num:'Oswald','Arial Narrow','Noto Sans TC',sans-serif;
+  --bg:#15171a;--bg2:#1d2024;--bg3:#262a2f;
+  --fg:#ece6d8;--fg2:#b7bcc2;--fg3:#7f868e;--line:rgba(236,230,216,.16);--line2:rgba(236,230,216,.08);
+  --red:#e0392f;--red2:#ff6a5c;--chalk:#ece6d8;
+  --gut:clamp(20px,5vw,84px);--top:88px;--bot:92px;
+  --settle:cubic-bezier(.2,.7,.2,1);
+}
+html,body{height:100%;background:var(--bg);overflow:hidden;overscroll-behavior:none}
+body{font-family:var(--sans);color:var(--fg);-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;line-height:1.6}
+button{font:inherit;color:inherit}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--red2);outline-offset:3px}
+
+/* ── 地板：橡膠地墊的點紋＋角落的光 ─────────────────────── */
+.floor{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;
+  background:radial-gradient(120% 90% at 50% 110%,#262a2f 0%,#1a1d21 45%,var(--bg) 100%)}
+.floor::before{content:'';position:absolute;inset:0;opacity:.5;
+  background-image:radial-gradient(rgba(236,230,216,.075) .8px,transparent 1.1px);background-size:14px 14px}
+.floor::after{content:'';position:absolute;left:-20vw;top:-30vh;width:70vw;height:70vh;border-radius:50%;
+  background:radial-gradient(closest-side,rgba(236,230,216,.045),transparent 70%)}
+
+/* ── 頂欄：回首頁、名字、槓鈴（章節導覽）、工具 ──────────── */
+.top{position:fixed;left:0;right:0;top:0;z-index:20;display:grid;grid-template-columns:auto auto minmax(0,1fr) auto;align-items:center;
+  gap:clamp(12px,2vw,28px);padding:16px var(--gut) 0;pointer-events:none;color:var(--fg)}
+.top>*{pointer-events:auto}
+.home{display:inline-flex;align-items:center;gap:6px;font-size:13px;letter-spacing:.06em;text-decoration:none;opacity:.78;white-space:nowrap}
+.home:hover{opacity:1}
+.home svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.brand{display:flex;align-items:center;gap:9px;white-space:nowrap}
+.brand img{width:26px;height:26px}
+.brand b{font:600 14px/1 var(--num);letter-spacing:.2em;text-transform:uppercase}
+.brand span{font:900 15px/1 var(--sans);letter-spacing:.14em;color:var(--fg2)}
+.chbar{position:relative;height:56px;min-width:0}
+.chbar svg{position:absolute;left:0;top:0;width:100%;height:36px;overflow:visible;display:block}
+.chbar svg .rod{stroke:rgba(236,230,216,.3);stroke-width:3;stroke-linecap:round}
+.chbar svg .rodon{stroke:var(--chalk);stroke-width:3;stroke-linecap:round;transition:stroke-dashoffset .8s var(--settle)}
+.chbar svg .plate{fill:rgba(236,230,216,.14);stroke:rgba(236,230,216,.3);stroke-width:1;cursor:pointer;transition:fill .3s,stroke .3s}
+.chbar svg .plate.done{fill:rgba(236,230,216,.55);stroke:rgba(236,230,216,.7)}
+.chbar svg .plate.on{fill:var(--red);stroke:var(--red2)}
+.chbar svg .plate:hover{stroke:var(--chalk)}
+.chbar svg text{font:500 10px var(--num);fill:var(--fg3);letter-spacing:.08em;pointer-events:none}
+.chbar svg text.on{fill:var(--fg)}
+.chbar .cur{position:absolute;left:0;right:0;bottom:0;font:500 11px/1.2 var(--num);letter-spacing:.1em;color:var(--fg3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chbar .cur b{color:var(--fg);font-weight:700;margin-right:8px;font-family:var(--sans);font-size:11.5px;letter-spacing:.06em}
+.tools{display:flex;align-items:center;gap:8px}
+.count{margin-right:4px;font:500 15px var(--num);letter-spacing:.1em;opacity:.75}
+.tbtn{display:grid;place-items:center;width:40px;height:40px;padding:0;border:1px solid var(--line);border-radius:50%;background:transparent;cursor:pointer;transition:border-color .2s,background .3s}
+.tbtn:hover{border-color:currentColor}
+.tbtn[aria-pressed=true]{background:var(--fg);color:var(--bg)}
+.tbtn svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tbtn .i-pause,#auto[aria-pressed=true] .i-play{display:none}
+#auto[aria-pressed=true] .i-pause{display:block}
+
+/* ── 投影片 ───────────────────────────────────────── */
+.deck{position:fixed;inset:0;z-index:3;touch-action:pan-y}
+.slide{position:absolute;inset:0;padding:var(--top) var(--gut) var(--bot);display:grid;color:var(--fg);align-content:start;row-gap:clamp(12px,2.2vh,22px);
+  opacity:0;visibility:hidden;overflow:hidden auto;scrollbar-width:none;overscroll-behavior:contain;
+  transition:opacity .3s ease,visibility 0s .3s}
+.slide::-webkit-scrollbar{display:none}
+.slide.is-on{opacity:1;visibility:visible;transition:opacity .5s ease .25s,visibility 0s}
+.eyebrow{font:500 13px/1.3 var(--num);letter-spacing:.2em;color:var(--red2);text-transform:uppercase}
+.eyebrow em{font-style:normal;color:var(--fg3);margin-left:10px;letter-spacing:.14em}
+.slide h2{margin-top:8px;font:900 clamp(26px,3.4vw,50px)/1.22 var(--sans);letter-spacing:.01em;text-wrap:balance}
+.lede{margin-top:clamp(8px,1.6vh,16px);font-size:clamp(14.5px,1.15vw,17px);line-height:1.85;color:var(--fg2);max-width:34em;text-wrap:pretty}
+.lede b,.body b{color:var(--fg);font-weight:700}
+.head{min-width:0}
+.body{min-width:0;display:grid;gap:clamp(12px,2vh,20px);align-content:start}
+.two{grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:clamp(24px,4vw,64px)}
+.two>.body{align-self:start}
+.wide{grid-template-columns:minmax(0,1fr)}
+.wm{position:absolute;right:var(--gut);bottom:calc(var(--bot) - 36px);font:600 clamp(110px,20vw,300px)/1 var(--num);letter-spacing:-.02em;color:rgba(236,230,216,.04);pointer-events:none;user-select:none;overflow:hidden}
+
+/* 進場 */
+.rv{opacity:0}
+.slide.is-on .rv{animation:rvin .5s ease both;animation-delay:calc(var(--k,0)*50ms + .45s)}
+@keyframes rvin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* 文字元件：一條線＋留白，不做卡片 */
+.pts{list-style:none;max-width:44em}
+.pts li{display:grid;grid-template-columns:minmax(6.5em,auto) minmax(0,1fr);gap:2px 16px;padding:9px 0;border-top:1px solid var(--line);align-items:baseline}
+.pts li:last-child{border-bottom:1px solid var(--line)}
+.pts .k{font-weight:700;font-size:14px;letter-spacing:.02em}
+.pts .k small{display:block;margin-top:2px;font:500 12px/1.4 var(--num);letter-spacing:.08em;color:var(--fg3)}
+.pts p{font-size:13.5px;line-height:1.72;color:var(--fg2);text-wrap:pretty}
+.pts li.hot .k{color:var(--red2)}
+.steps{list-style:none;counter-reset:s;max-width:44em}
+.steps li{position:relative;padding:8px 0 8px 2.4em;border-top:1px solid var(--line);font-size:13.5px;line-height:1.72;color:var(--fg2)}
+.steps li:last-child{border-bottom:1px solid var(--line)}
+.steps li::before{counter-increment:s;content:counter(s,decimal-leading-zero);position:absolute;left:0;top:10px;font:600 14px var(--num);letter-spacing:.06em;color:var(--red2)}
+.steps li b{color:var(--fg)}
+.quote{padding:10px 0 10px 16px;border-left:2px solid var(--red);font-size:14px;line-height:1.75;color:var(--fg2);max-width:40em}
+.quote b{color:var(--fg)}
+.note{font-size:12.5px;line-height:1.7;color:var(--fg3);max-width:60em;text-wrap:pretty}
+.note a{color:var(--fg2)}
+.chips{display:flex;flex-wrap:wrap;gap:6px 8px}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border:1px solid var(--line);border-radius:999px;font-size:12.5px;color:var(--fg2);text-decoration:none;white-space:nowrap;transition:border-color .2s,color .2s}
+.chip:hover{border-color:var(--chalk);color:var(--fg)}
+.chip i{font-style:normal;font:500 11px var(--num);letter-spacing:.08em;color:var(--red2)}
+
+/* 表格 */
+.tw{overflow-x:auto;scrollbar-width:thin;max-width:100%;touch-action:pan-x pan-y}
+table.t{border-collapse:collapse;width:100%;font-size:13px;line-height:1.55}
+table.t th{text-align:left;font:500 11.5px var(--num);letter-spacing:.12em;color:var(--fg3);padding:6px 10px 6px 0;border-bottom:1px solid var(--line);white-space:nowrap;text-transform:uppercase}
+table.t td{padding:7px 10px 7px 0;border-bottom:1px solid var(--line2);vertical-align:top;color:var(--fg2)}
+table.t td:first-child{color:var(--fg);font-weight:700;white-space:nowrap}
+table.t tr.hot td{color:var(--fg)}
+table.t tr.hot td:first-child{color:var(--red2)}
+table.t td.n,table.t th.n{font-family:var(--num);font-weight:500;letter-spacing:.04em;white-space:nowrap;font-size:14px}
+table.t .yt{display:inline-block;margin-left:6px;font:500 10.5px var(--num);letter-spacing:.1em;color:var(--red2);text-decoration:none;border-bottom:1px dotted rgba(255,106,92,.5)}
+table.t .yt:hover{border-bottom-style:solid}
+table.t .bad{display:block;margin-top:2px;font-size:12px;color:var(--fg3)}
+table.t.dense td,table.t.dense th{padding-top:5px;padding-bottom:5px;font-size:12.5px}
+.tier{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(14px,2.4vw,32px)}
+.tier>div{min-width:0}
+.tier-4{grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(12px,1.6vw,24px)}
+.tier-5{grid-template-columns:repeat(5,minmax(0,1fr));gap:clamp(10px,1.2vw,18px)}
+table.t.prog td:first-child{white-space:normal}
+table.t.prog td,table.t.prog th{padding-right:6px;font-size:12px}
+.tier-5 table.t.prog td,.tier-5 table.t.prog th{font-size:11.5px}
+.tier-5 table.t.prog td.n{font-size:12.5px}
+.tier h3{font:600 12px var(--num);letter-spacing:.18em;color:var(--fg3);text-transform:uppercase;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.tier h3 b{display:block;margin-top:3px;font:700 15px var(--sans);letter-spacing:.04em;color:var(--fg)}
+.tier.hot1>div:first-child h3 b{color:var(--red2)}
+.tier ul{list-style:none}
+.tier li{padding:7px 0;border-bottom:1px solid var(--line2);font-size:13px;line-height:1.6;color:var(--fg2)}
+.tier li b{color:var(--fg);font-weight:700}
+.tier li small{display:block;font:500 12px var(--num);letter-spacing:.06em;color:var(--fg3);margin-top:1px}
+
+/* 圖表 */
+.fig{width:100%;min-width:0}
+.fig svg{width:100%;height:auto;display:block;overflow:visible}
+.fig text{font-family:var(--sans);fill:var(--fg2);font-size:12px}
+.fig .n{font-family:var(--num);font-weight:500;letter-spacing:.04em}
+.fig .ax{stroke:var(--line);stroke-width:1}
+.fig .ax2{stroke:var(--line2);stroke-width:1;stroke-dasharray:2 4}
+.fig .ln{fill:none;stroke:var(--chalk);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.fig .ln.red{stroke:var(--red2)}
+.fig .ln.dim{stroke:rgba(236,230,216,.35);stroke-dasharray:3 5}
+.fig .area{fill:rgba(224,57,47,.16)}
+.fig .bar{fill:rgba(236,230,216,.55)}
+.fig .bar.red{fill:var(--red)}
+.fig .bar.dim{fill:rgba(236,230,216,.2)}
+.fig .lb{fill:var(--fg3);font-size:11.5px}
+.fig .lb2{fill:var(--fg);font-size:13px;font-weight:700}
+.fig .dot{fill:var(--red);stroke:var(--bg);stroke-width:2}
+.cap{font-size:12px;line-height:1.6;color:var(--fg3);margin-top:6px;text-wrap:pretty}
+.draw{stroke-dasharray:1;stroke-dashoffset:1}
+.slide.is-on .draw{animation:draw 1.3s ease-out .6s both}
+@keyframes draw{to{stroke-dashoffset:0}}
+.grow{transform-box:fill-box;transform-origin:bottom;transform:scaleY(0)}
+.slide.is-on .grow{animation:grow .7s var(--settle) both;animation-delay:calc(var(--k,0)*40ms + .5s)}
+@keyframes grow{to{transform:none}}
+
+/* 互動控制 */
+.ctl{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px}
+.ctl label{font-size:13px;color:var(--fg2);display:inline-flex;align-items:center;gap:8px}
+.ctl input[type=range]{width:clamp(120px,16vw,220px);accent-color:var(--red)}
+.ctl input[type=number]{width:5.2em;padding:5px 8px;border:1px solid var(--line);border-radius:4px;background:var(--bg3);color:var(--fg);font:500 15px var(--num);letter-spacing:.04em}
+.ctl output,.ctl .v{font:600 16px var(--num);letter-spacing:.04em;color:var(--fg);min-width:3.2em}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.seg button{padding:6px 14px;border:0;background:transparent;color:var(--fg2);font-size:13px;letter-spacing:.04em;cursor:pointer;transition:background .2s,color .2s}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed=true]{background:var(--chalk);color:var(--bg);font-weight:700}
+.seg button:hover:not([aria-pressed=true]){color:var(--fg)}
+.big{display:flex;flex-wrap:wrap;gap:6px 22px;align-items:baseline}
+.big div{display:flex;flex-direction:column;gap:2px}
+.big b{font:600 clamp(28px,2.8vw,40px)/1 var(--num);letter-spacing:.01em;color:var(--fg)}
+.big b.red{color:var(--red2)}
+.big b small{font-size:.5em;color:var(--fg3);margin-left:4px;letter-spacing:.06em}
+.big span{font-size:12px;letter-spacing:.08em;color:var(--fg3)}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:9px 16px;border:1px solid var(--line);border-radius:999px;background:transparent;color:var(--fg);text-decoration:none;font-size:13.5px;letter-spacing:.06em;cursor:pointer;transition:border-color .2s,background .2s}
+.btn:hover{border-color:currentColor}
+.btn.pri{background:var(--red);border-color:var(--red);color:#fff;font-weight:700}
+.btn.pri:hover{background:var(--red2)}
+.btn:disabled{opacity:.35;cursor:default}
+
+/* 週曆（分化規劃） */
+.week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.week>div{min-height:88px;padding:8px 8px 10px;border:1px solid var(--line2);border-radius:4px;background:rgba(236,230,216,.03)}
+.week>div.on{border-color:var(--line);background:rgba(236,230,216,.06)}
+.week .d{font:500 11px var(--num);letter-spacing:.14em;color:var(--fg3)}
+.week .s{margin-top:6px;font-weight:700;font-size:13.5px;letter-spacing:.02em}
+.week .s.rest{color:var(--fg3);font-weight:400}
+.week .m{margin-top:4px;font-size:11.5px;line-height:1.5;color:var(--fg2)}
+.sets{display:grid;grid-template-columns:repeat(auto-fit,minmax(86px,1fr));gap:6px 14px}
+.sets div{display:flex;flex-direction:column;gap:3px;padding:6px 0;border-top:1px solid var(--line2)}
+.sets span{font-size:12px;color:var(--fg3);letter-spacing:.04em}
+.sets b{font:600 18px/1 var(--num);letter-spacing:.02em}
+.sets i{display:block;height:4px;border-radius:2px;background:rgba(236,230,216,.12);overflow:hidden}
+.sets i::after{content:'';display:block;height:100%;width:var(--p);background:var(--chalk)}
+.sets div.lo b{color:var(--fg3)}.sets div.ok b{color:var(--fg)}.sets div.hi b{color:var(--red2)}
+.sets div.hi i::after{background:var(--red)}
+
+/* 肌群地圖 */
+.map{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:clamp(18px,3vw,48px);align-items:start}
+.bodies{display:flex;justify-content:center;gap:clamp(10px,2vw,28px)}
+.bodies figure{flex:1 1 0;max-width:205px;min-width:0;text-align:center}
+.bodies figcaption{font:500 11px var(--num);letter-spacing:.2em;color:var(--fg3);margin-top:6px}
+.bodies svg{width:100%;height:auto;display:block;overflow:visible}
+.bodies .skin{fill:rgba(236,230,216,.06);stroke:rgba(236,230,216,.16);stroke-width:.8}
+.bodies [data-m]{fill:rgba(236,230,216,.14);stroke:rgba(236,230,216,.34);stroke-width:.8;cursor:pointer;transition:fill .25s,stroke .25s}
+.bodies [data-m]:hover{fill:rgba(236,230,216,.34);stroke:var(--chalk)}
+.bodies [data-m].on{fill:var(--red);stroke:var(--red2)}
+.mpanel{min-width:0}
+.mpanel h3{font:900 clamp(22px,2.2vw,30px)/1.2 var(--sans);letter-spacing:.02em}
+.mpanel h3 small{display:block;margin-top:4px;font:500 12px var(--num);letter-spacing:.2em;color:var(--fg3)}
+.mpanel .fn{margin-top:8px;font-size:13.5px;line-height:1.75;color:var(--fg2)}
+.mpanel .land{margin-top:10px}
+.mlist{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.mlist button{padding:5px 11px;border:1px solid var(--line);border-radius:999px;background:transparent;color:var(--fg2);font-size:12.5px;cursor:pointer;transition:border-color .2s,color .2s,background .2s}
+.mlist button:hover{color:var(--fg);border-color:var(--chalk)}
+.mlist button[aria-pressed=true]{background:var(--chalk);color:var(--bg);border-color:var(--chalk);font-weight:700}
+.land{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;max-width:420px}
+.land div{padding:6px 0;border-top:1px solid var(--line)}
+.land span{font-size:11.5px;letter-spacing:.08em;color:var(--fg3)}
+.land b{display:block;font:600 20px/1.1 var(--num);letter-spacing:.02em}
+
+/* 槓片計算（1RM） */
+.barbell{width:100%;max-width:560px}
+.barbell svg{width:100%;height:auto;display:block;overflow:visible}
+.plates{display:flex;flex-wrap:wrap;gap:8px 12px;font:500 12px var(--num);letter-spacing:.08em;color:var(--fg3)}
+.plates i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+
+/* 封面與結尾 */
+.s-cover{grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);align-items:center;align-content:center;column-gap:clamp(20px,4vw,70px)}
+.s-cover h1{margin-top:14px;font:900 clamp(56px,min(8.6vw,15dvh),130px)/1.05 var(--sans);letter-spacing:.02em}
+.s-cover h1 span{display:block}
+.s-cover .sub{margin-top:clamp(12px,2.4vh,26px);font-size:clamp(15px,1.3vw,19px);line-height:1.8;color:var(--fg2);text-wrap:pretty;max-width:30em}
+.s-cover .sub b{font:600 1.2em/1 var(--num);color:var(--red2);letter-spacing:.02em}
+.hint{margin-top:clamp(14px,3vh,30px);font-size:13px;letter-spacing:.08em;color:var(--fg3)}
+.hint-kbd{display:none}
+@media (hover:hover) and (pointer:fine){.hint-kbd{display:inline}.hint-touch{display:none}}
+.cover-art{display:flex;justify-content:center;align-items:center}
+.cover-art svg{width:min(42vmin,440px);height:auto;display:block;overflow:visible;filter:drop-shadow(0 20px 40px rgba(0,0,0,.5))}
+.toc{list-style:none;columns:2;column-gap:clamp(24px,4vw,64px);max-width:980px}
+.toc li{break-inside:avoid}
+.toc button{display:grid;grid-template-columns:2.4em minmax(0,1fr) auto;gap:12px;align-items:baseline;width:100%;padding:10px 0;border:0;border-top:1px solid var(--line);background:none;color:var(--fg);text-align:left;cursor:pointer}
+.toc li:last-child button{border-bottom:1px solid var(--line)}
+.toc .n{font:600 15px var(--num);letter-spacing:.08em;color:var(--red2)}
+.toc .t{font-weight:700;font-size:15px;letter-spacing:.02em;transition:color .2s}
+.toc .t small{display:block;font-weight:400;font-size:12px;color:var(--fg3);margin-top:2px;letter-spacing:.02em}
+.toc .c{font:500 12px var(--num);letter-spacing:.1em;color:var(--fg3);white-space:nowrap}
+.toc button:hover .t{color:var(--red2)}
+.acts{display:flex;flex-wrap:wrap;gap:10px}
+.asof{font-size:11.5px;letter-spacing:.06em;color:var(--fg3)}
+
+/* ── 底部換頁 ───────────────────────────────────── */
+.pager{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;justify-content:center;align-items:center;gap:clamp(8px,2vw,22px);
+  padding:0 var(--gut) calc(22px + env(safe-area-inset-bottom));pointer-events:none;color:var(--fg)}
+.pager>*{pointer-events:auto}
+.arw{display:grid;place-items:center;width:42px;height:42px;padding:0;border:1px solid var(--line);border-radius:50%;background:rgba(21,23,26,.6);color:inherit;cursor:pointer;transition:border-color .2s,opacity .2s}
+.arw:hover{border-color:currentColor}
+.arw:disabled{opacity:.25;cursor:default}
+.arw svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.pg{display:flex;align-items:center;gap:2px}
+.pg button{width:16px;height:26px;padding:0;border:0;background:none;cursor:pointer;color:inherit;display:grid;place-items:center}
+.pg button i{display:block;width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.32;transition:opacity .3s,transform .35s var(--settle),background .3s}
+.pg button.ch i{width:6px;height:6px;opacity:.55}
+.pg button:hover i{opacity:.85}
+.pg button[aria-current=true] i{opacity:1;transform:scale(1.6);background:var(--red2)}
+.live{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ── 窄螢幕 ─────────────────────────────────────── */
+@media (max-aspect-ratio:1/1),(max-width:820px){
+  :root{--top:96px;--bot:84px}
+  .top{grid-template-columns:auto minmax(0,1fr) auto;gap:12px;padding-top:12px}
+  .brand{display:none}
+  .home span{display:none}
+  .chbar{height:60px}
+  .chbar .cur{font-size:10.5px}
+  .count{display:none}
+  .tbtn{width:36px;height:36px}
+  .slide{padding-top:calc(var(--top) + 4px)}
+  .two,.s-cover,.map{grid-template-columns:minmax(0,1fr)}
+  .s-cover{align-content:start;justify-items:center;text-align:center}
+  .s-cover h1{font-size:clamp(44px,13vw,80px)}
+  .s-cover .sub{max-width:none}
+  .cover-art{order:-1;padding-top:4px}
+  .cover-art svg{width:min(56vw,260px)}
+  .slide h2{font-size:clamp(24px,6.4vw,34px)}
+  .lede{font-size:14.5px;line-height:1.75;max-width:none}
+  .wm{display:none}
+  .pts li{grid-template-columns:minmax(0,1fr);gap:3px 0}
+  .pts .k small{display:inline;margin-left:8px}
+  .tier,.tier-4,.tier-5{grid-template-columns:minmax(0,1fr)}
+  .toc{columns:1}
+  .week{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .week>div{min-height:0}
+  .bodies figure{max-width:170px}
+  .land{max-width:none}
+  .arw{width:38px;height:38px}
+  .pg{display:none}
+  .pager .count{display:block;margin:0 6px}
+  .pager::before{content:'';position:absolute;left:0;right:0;bottom:0;height:120px;z-index:-1;pointer-events:none;background:linear-gradient(to top,var(--bg2) 30%,transparent)}
+}
+@media (max-height:720px) and (min-aspect-ratio:1/1){
+  :root{--top:78px;--bot:74px}
+  .lede{font-size:14px;line-height:1.7}
+  .pts li{padding:6px 0}.pts p{font-size:13px;line-height:1.6}
+  table.t td{padding-top:5px;padding-bottom:5px}
+}
+@media (prefers-reduced-motion:reduce){
+  .slide.is-on .rv,.slide.is-on .draw,.slide.is-on .grow{animation:none;opacity:1;stroke-dashoffset:0;transform:none}
+  .chbar svg .rodon{transition:none}
+}
+</style>
+</head>
+<body>
+<div class="floor" aria-hidden="true"></div>
+
+<header class="top">
+  <a class="home" href="linkTreeIndex.html#theatre" title="回放映室"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg><span>放映室</span></a>
+  <div class="brand"><img src="assets/lifting/icon.svg" alt="" width="26" height="26"><b>Training Guide</b><span>變強，變壯</span></div>
+  <nav class="chbar" id="bar" aria-label="章節"><svg id="barsvg" viewBox="0 0 1000 36"></svg><div class="cur" id="cur"></div></nav>
+  <div class="tools">
+    <span class="count" id="count" aria-hidden="true"></span>
+    <button class="tbtn" id="auto" type="button" aria-pressed="false" aria-label="自動放映" title="自動放映（P）">
+      <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10-6.5z"/></svg>
+      <svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 5.5v13M15.5 5.5v13"/></svg>
+    </button>
+    <button class="tbtn" id="fs" type="button" aria-pressed="false" aria-label="全螢幕" title="全螢幕（F）">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg>
+    </button>
+  </div>
+</header>
+
+<main class="deck" id="deck" aria-roledescription="簡報">
+  <section class="slide s-cover" data-key="cover" data-title="封面" data-ch="0">
+    <div>
+      <p class="eyebrow">Training Guide <em>重量訓練 · 中階 · 全方位</em></p>
+      <h1><span>變強，</span><span>變壯</span></h1>
+      <p class="sub">健美式的孤立訓練打底，加一點功能性。原理、課表、肌群地圖、飲食、營養品、睡眠、追蹤，<b id="nSlides">—</b> 張講完。每個動作都附 YouTube 搜尋關鍵字，英文關鍵字找到的影片品質比中文高。</p>
+      <p class="hint"><span class="hint-kbd">← → 或空白鍵換頁 · 0–9 跳章 · F 全螢幕 · P 自動放映</span><span class="hint-touch">左右滑動換頁 · 點上面的槓片跳章</span></p>
+    </div>
+    <div class="cover-art" aria-hidden="true">
+      <svg viewBox="0 0 320 320">
+        <rect x="20" y="152" width="280" height="16" rx="8" fill="#ece6d8"/>
+        <rect x="56" y="140" width="12" height="40" rx="3" fill="#8d877c"/>
+        <rect x="252" y="140" width="12" height="40" rx="3" fill="#8d877c"/>
+        <rect x="70" y="62" width="34" height="196" rx="8" fill="#e0392f"/>
+        <rect x="108" y="84" width="24" height="152" rx="7" fill="#ece6d8"/>
+        <rect x="136" y="104" width="16" height="112" rx="6" fill="#b9b3a6"/>
+        <rect x="168" y="104" width="16" height="112" rx="6" fill="#b9b3a6"/>
+        <rect x="188" y="84" width="24" height="152" rx="7" fill="#ece6d8"/>
+        <rect x="216" y="62" width="34" height="196" rx="8" fill="#e0392f"/>
+        <rect x="80" y="152" width="14" height="16" fill="#15171a" opacity=".5"/>
+        <rect x="226" y="152" width="14" height="16" fill="#15171a" opacity=".5"/>
+      </svg>
+    </div>
+  </section>
+  <!-- 其餘投影片由 JS 從 DECK 產生，插在這裡 -->
+  <div id="anchor" hidden></div>
+</main>
+
+<nav class="pager" aria-label="投影片">
+  <button class="arw" id="prev" type="button" aria-label="上一張" title="上一張（←）"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg></button>
+  <div class="pg" id="pg"></div>
+  <button class="arw" id="next" type="button" aria-label="下一張" title="下一張（→）"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 5.5L16 12l-6.5 6.5"/></svg></button>
+</nav>
+<div class="live" id="live" role="status" aria-live="polite"></div>
+<noscript><p style="position:fixed;inset:auto 20px 20px;color:#ece6d8;font:15px/1.8 sans-serif;z-index:99">這頁需要 JavaScript。回<a href="linkTreeIndex.html">首頁</a>。</p></noscript>
+
+<script>
+(() => {
+'use strict'
+const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)]
+const NS = 'http://www.w3.org/2000/svg'
+const S = (tag, attrs = {}, ...kids) => { const e = document.createElementNS(NS, tag); for (const k in attrs) { const v = attrs[k]; if (v == null) continue; if (k === 'style') e.style.cssText += ';' + v; else e.setAttribute(k, v) } kids.forEach(c => c != null && e.append(c)); return e }
+const root = document.documentElement
+const NARROW = matchMedia('(max-aspect-ratio: 1/1), (max-width: 820px)')
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v))
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))
+const r1 = n => Math.round(n * 10) / 10
+/* YouTube 一律用搜尋網址，不寫死影片 ID（影片會下架，關鍵字不會） */
+const ytUrl = kw => 'https://www.youtube.com/results?search_query=' + encodeURIComponent(kw)
+const yt = kw => `<a class="yt" href="${ytUrl(kw)}" target="_blank" rel="noopener" title="YouTube 搜尋：${esc(kw)}">YT</a>`
+/* 表格：rows 裡的字串原樣輸出（可含 yt()），hot 列用 {hot:true, c:[...]} */
+const tbl = (heads, rows, cls = '') => `<div class="tw"><table class="t ${cls}"><thead><tr>${heads.map(h => `<th${/^#/.test(h) ? ' class="n"' : ''}>${h.replace(/^#/, '')}</th>`).join('')}</tr></thead><tbody>${rows.map(r => { const hot = r.hot, c = r.c || r; return `<tr${hot ? ' class="hot"' : ''}>${c.map((x, i) => `<td${/^#/.test(heads[i] || '') ? ' class="n"' : ''}>${x}</td>`).join('')}</tr>` }).join('')}</tbody></table></div>`
+/* 動作：中文名＋英文關鍵字（連到 YouTube 搜尋）＋「你會做錯的地方」 */
+const ex = (zh, kw, bad) => `${esc(zh)}${yt(kw)}${bad ? `<span class="bad">${esc(bad)}</span>` : ''}`
+const pts = items => `<ul class="pts">${items.map((it, i) => `<li class="rv${it.hot ? ' hot' : ''}" style="--k:${i + 1}"><span class="k">${esc(it.k)}${it.s ? `<small>${esc(it.s)}</small>` : ''}</span><p>${it.p}</p></li>`).join('')}</ul>`
+const steps = items => `<ol class="steps">${items.map((p, i) => `<li class="rv" style="--k:${i + 1}">${p}</li>`).join('')}</ol>`
+
+/* ═══ 內容：一章一個物件，一張一個物件。html 是投影片主體；需要互動的張用 mount 掛上去 ═══ */
+const MOUNT = {}
+const DECK = []
+const head = (eyebrow, h2, lede) => `<div class="head"><p class="eyebrow">${eyebrow}</p><h2>${h2}</h2>${lede ? `<p class="lede">${lede}</p>` : ''}</div>`
+
+/* ── 第 1 章 兩件事 ── */
+DECK.push({ n: 1, title: '兩件事', en: 'STRONG VS BIG', sub: '變強與變壯不是同一條路', slides: [
+  { key: 'toc', title: '目錄', type: 'toc' },
+  { key: 'two-things', title: '變強跟變壯是兩件事', cls: 'two', html: head('第 1 章 <em>兩件事</em>', '變強跟變壯是兩件事', '力量是神經系統、技術加肌肉量的總和；肥大只看肌肉的橫截面積。兩條路重疊很大，但處方的重點不同，先把這張表看懂，後面每一章都在套它。') +
+    `<div class="body">${tbl(['', '變強（力量）', '變壯（肥大）'], [
+      ['主要適應', '神經徵召、動作技術、肌腱剛性，肌肉量是基礎', '肌纖維變粗（橫截面積），主要靠機械張力'],
+      ['#強度', '≥ 80% 1RM 為主', '30–85% 1RM 都會長，重點是接近力竭'],
+      ['#次數', '1–5 下', '6–30 下，6–12 最省時間'],
+      ['保留次數 RIR', '2–4，技術不能走樣', '0–3，最後幾下要慢下來'],
+      ['#組間休息', '3–5 分鐘', '複合 2–3 分、孤立 60–90 秒'],
+      ['動作', '少數幾個大動作反覆練，練的是技術', '複合打底，孤立補每一塊肌肉'],
+      ['進步的尺', '1RM 或 3–5RM 的重量', '相同重量做更多下、圍度、照片'],
+      ['看到結果', '第一週就會（神經）', '8–12 週才看得見'],
+    ])}<p class="note">中階的做法通常是兩者合一：每堂課開頭用 1 個大動作練力量（3–5 下、RIR 2–3），後面全部用肥大的處方。這一套簡報就是照這個順序排的。</p></div>` },
+  { key: 'timeline', title: '適應的時間軸', cls: 'two', html: head('第 1 章 <em>兩件事</em>', '前八週漲的是力量，不是肌肉', '剛開始練或換新動作時，重量漲很快，那是神經系統學會用力，不是肌肉長了。肥大要連續 8 到 12 週才看得見，而且年資越深越慢。知道這個，才不會在第四週換課表。') +
+    `<div class="body"><div class="fig" id="f-timeline"></div>${tbl(['訓練年資', '#每月可增肌（男）', '#每月可增肌（女）', '一年大約'], [
+      ['新手（0–1 年）', '0.7–1.0 kg', '0.35–0.5 kg', '男 8–12 kg'],
+      { hot: true, c: ['中階（1–3 年）', '0.35–0.5 kg', '0.2–0.25 kg', '男 4–6 kg'] },
+      ['高階（3 年以上）', '0.2–0.25 kg', '0.1–0.15 kg', '男 2–3 kg'],
+    ], 'dense')}<p class="note">增肌速率是常見的經驗模型（Aragon、McDonald 兩套大致相符），個體差異很大，拿來設定期待值就好。中階一個月 0.35 到 0.5 公斤的肌肉，體重計上幾乎看不出來，所以要用圍度跟照片追蹤。</p></div>` },
+] })
+MOUNT['timeline'] = sec => {
+  const W = 640, H = 230, g = S('svg', { viewBox: `0 0 ${W} ${H}` })
+  const x = w => 40 + (w / 24) * (W - 70), y0 = H - 36
+  g.append(S('line', { class: 'ax', x1: 40, y1: y0, x2: W - 20, y2: y0 }))
+  ;[0, 4, 8, 12, 16, 20, 24].forEach(w => { g.append(S('line', { class: 'ax', x1: x(w), y1: y0, x2: x(w), y2: y0 + 5 })); g.append(S('text', { class: 'lb n', x: x(w), y: y0 + 19, 'text-anchor': 'middle' }, w === 0 ? '第 0 週' : `${w}`)) })
+  const pts = (f, n = 48) => Array.from({ length: n + 1 }, (_, i) => { const w = 24 * i / n; return `${x(w).toFixed(1)},${(y0 - f(w) * (y0 - 40)).toFixed(1)}` }).join(' ')
+  // 神經：快速上升後趨平；肌肉：慢慢往上，8 週後才明顯
+  g.append(S('polyline', { class: 'ln dim', points: pts(w => 1 - Math.exp(-w / 3.2)) }))
+  g.append(S('polyline', { class: 'ln red draw', pathLength: 1, points: pts(w => Math.pow(w / 24, 1.35)) }))
+  g.append(S('text', { class: 'lb', x: x(6), y: 52 }, '神經適應（力量）'))
+  g.append(S('text', { class: 'lb2', x: x(16), y: y0 - 0.33 * (y0 - 40) - 10, style: 'fill:var(--red2)' }, '肌肉量（肥大）'))
+  g.append(S('line', { class: 'ax2', x1: x(8), y1: 40, x2: x(8), y2: y0 }))
+  g.append(S('text', { class: 'lb', x: x(8) + 6, y: 48 }, '8 週：肥大開始看得見'))
+  $('#f-timeline', sec).append(g)
+}
+
+/* ── 第 2 章 肌肉怎麼長 ── */
+DECK.push({ n: 2, title: '肌肉怎麼長', en: 'HOW MUSCLE GROWS', sub: '張力、接近力竭、組數、頻率、超負荷', slides: [
+  { key: 'drivers', title: '三個驅動力', cls: 'two', html: head('第 2 章 <em>肌肉怎麼長</em>', '長肌肉只有一個主因：機械張力', '肌肉長大的訊號來自肌纖維被高張力拉著做功。代謝壓力（泵感、灼熱）是附帶的，肌肉損傷更只是副作用。所以處方的核心永遠是：夠重、夠接近力竭、夠多組，再把每一塊肌肉都照顧到。') +
+    `<div class="body">${pts([
+      { k: '機械張力', s: 'MECHANICAL TENSION', p: '主因。肌纖維在收縮時被負荷拉著，張力越高、持續越久，訊號越強。接近力竭時慢縮肌帶不動了，快縮肌被徵召進來，這幾下最有價值。', hot: true },
+      { k: '代謝壓力', s: 'METABOLIC STRESS', p: '高次數、短休息時的灼熱與泵感。有一點貢獻，但多半是因為它讓你更接近力竭。不用為了泵感犧牲重量。' },
+      { k: '肌肉損傷', s: 'MUSCLE DAMAGE', p: '痠痛不是成長的尺。損傷太多反而佔掉恢復資源。新動作、大離心會讓你很痠，但痠不代表有效。' },
+      { k: '伸展位置的張力', s: 'LENGTHENED POSITION', p: '近年證據一致：在肌肉拉長的位置承受張力（上斜彎舉、坐姿腿彎舉、過頭三頭伸展）長得比縮短位置多。選動作時優先挑拉長時最吃力的那個。' },
+    ])}</div>` },
+  { key: 'rir', title: '接近力竭與 RIR', cls: 'two', html: head('第 2 章 <em>肌肉怎麼長</em>', '最有效的是最後那幾下', '一組做到還剩 0 到 3 下做不起來（RIR 0–3），這一組才算數。留 5 下以上的組叫垃圾組數，看起來有練，訊號很弱。中階最常見的問題不是練太少，是太多組都留了太多。') +
+    `<div class="body">${tbl(['#RIR', 'RPE', '感覺', '用在哪'], [
+      ['0', '10', '再一下都不行，最後一下很慢、動作開始變形', '孤立動作的最後一組，一週幾次就好'],
+      { hot: true, c: ['1–2', '8–9', '最後兩下明顯慢下來，還能維持動作', '肥大訓練的主力區間，大多數組停在這'] },
+      ['3', '7', '開始有點吃力，速度還沒明顯掉', '複合動作、增量週的第一週、大重量的工作組'],
+      ['4–5', '5–6', '輕鬆，像熱身', '熱身組、技術練習、減量週'],
+    ])}<p class="quote"><b>怎麼估 RIR：</b>看槓速。當一下的向心速度比前一下明顯慢，你大概還剩 2 下；慢到快停住，剩 1。偶爾把孤立動作做到真的力竭，校正自己的估計，多數人高估剩餘次數 2 到 3 下。</p></div>` },
+  { key: 'volume', title: '訓練量', cls: 'two', html: head('第 2 章 <em>肌肉怎麼長</em>', '每肌群每週 10 到 20 組', '一組＝接近力竭的一組。研究的劑量反應曲線大致是：10 組以下有效但不夠，10 到 20 組是甜蜜區，再往上多數人恢復不來。拉動下面的滑桿看每個區間代表什麼。') +
+    `<div class="body"><div class="ctl"><label>每週組數 <input type="range" id="vol" min="0" max="30" value="12"><output id="volv">12</output></label><span class="v" id="volt"></span></div><div class="fig" id="f-volume"></div>${tbl(['地標', '#組數／週', '意思'], [
+      ['維持量 MV', '4–6', '不會進步也不會退，減量週或旅行時用'],
+      ['最低有效量 MEV', '6–10', '剛開始有成長訊號，一個訓練週期從這裡起步'],
+      { hot: true, c: ['最佳量 MAV', '12–20', '成長最多、還恢復得了，週期中段待在這'] },
+      ['最大可恢復量 MRV', '20–25+', '再加就恢復不來，表現開始掉，撞到就減量'],
+    ], 'dense')}<p class="note">地標是 RP（Israetel）那套的講法，數字是多數人的範圍：側三角、二頭這類小肌群耐受高一點，股四頭、腿後側低一點。算組數時，複合動作對次要肌群算半組（臥推算三頭 0.5 組）。</p></div>` },
+  { key: 'frequency', title: '頻率', cls: 'two', html: head('第 2 章 <em>肌肉怎麼長</em>', '同樣的組數，拆成兩天做', '一週 16 組胸，一次做完跟拆成 2 次各 8 組，後者的每一組品質都比較好，恢復也平均。每肌群每週至少練 2 次，是分化設計的第一條規則，也是「一週練一次胸」那種分法被淘汰的原因。') +
+    `<div class="body"><div class="fig" id="f-freq"></div>${pts([
+      { k: '一次做 16 組', p: '第 10 組之後力竭越來越早、重量越掉越多，後面那 6 組的張力已經不夠；隔天痠到影響下一堂課。' },
+      { k: '拆成 2 × 8', s: '建議', p: '每一組都是高品質的；一週內有兩次成長訊號；一堂課的時間也縮短到 60 到 75 分鐘。', hot: true },
+      { k: '拆成 3 × 5 以上', p: '對高階者或總組數超過 20 的肌群有用，對中階不是必要，排課會變得很擠。' },
+    ])}</div>` },
+  { key: 'overload', title: '漸進超負荷', cls: 'two', html: head('第 2 章 <em>肌肉怎麼長</em>', '沒有變重或變多下，就沒有理由變壯', '身體只對比上次更難的刺激做出適應。最實用的規則叫雙重進階：在一個次數區間裡先加次數，全部組都到上限了就加重量、次數回到下限。按「下一週」看它怎麼跑。') +
+    `<div class="body"><div class="ctl"><button class="btn pri" id="ov-next" type="button">下一週</button><button class="btn" id="ov-reset" type="button">重來</button><span class="v" id="ov-week"></span></div><div class="fig" id="f-overload"></div><div id="ov-log"></div><p class="note">範例：啞鈴上斜臥推，區間 8 到 12 下、3 組。進階的方式不只加重量：次數、組數、動作幅度、放慢離心、縮短休息，都是超負荷。重量每次加最小單位（啞鈴 2 公斤、槓鈴 2.5 公斤），加太快會把 RIR 吃掉。</p></div>` },
+  { key: 'rom', title: '幅度與節奏', cls: 'two', html: head('第 2 章 <em>肌肉怎麼長</em>', '全幅度，離心控制，不用數秒', '全幅度動作長得比半程多，唯一的例外是「只做拉長那一半」的部分次數，效果跟全幅度差不多。節奏方面，一下 2 到 8 秒都會長，離心控制住、向心用力推，不要刻意做超慢速。') +
+    `<div class="body">${pts([
+      { k: '動作幅度', p: '以肌肉拉長的那一端為準：臥推槓碰胸、深蹲大腿低於水平、彎舉手臂完全伸直。縮短端可以不鎖死，拉長端不要偷。', hot: true },
+      { k: '離心', s: '2–3 秒', p: '控制住、不要掉下去。離心是肌肉在拉長時承受張力，是肥大訊號最強的時候。' },
+      { k: '向心', s: '用力推', p: '意圖要快，實際速度隨重量而定。接近力竭時向心一定會慢，那是正常的。' },
+      { k: '底部停頓', s: '選用', p: '在拉長位置停 1 秒可以消除反彈、增加張力時間，對腿彎舉、飛鳥、划船特別有感。' },
+      { k: '部分次數', s: '力竭之後', p: '一組做到力竭後，在拉長的那一半再做 3 到 5 下，是加張力時間最省時的方法；只用在孤立動作。' },
+    ])}</div>` },
+  { key: 'rest', title: '組間休息', cls: 'two', html: head('第 2 章 <em>肌肉怎麼長</em>', '休息夠，下一組才算數', '研究直接比較過：複合動作組間休 3 分鐘，長的肌肉跟力量都比休 1 分鐘多。短休息讓下一組的次數掉太多，總訓練量反而變少。時間不夠就用對抗肌超級組，不要砍休息。') +
+    `<div class="body">${tbl(['動作類型', '#休息', '為什麼'], [
+      ['大複合（深蹲、硬舉、臥推、划船）', '2–3 分鐘，力量組 3–5', '全身性疲勞高，心肺會先喘，肌肉還沒恢復就上下一組等於白做'],
+      ['小複合（上斜啞鈴、腿推、滑輪下拉）', '90 秒–2 分鐘', '局部疲勞為主，恢復比大複合快'],
+      ['孤立（側平舉、彎舉、腿伸）', '60–90 秒', '單關節、小肌群，恢復快，休太久反而浪費時間'],
+      { hot: true, c: ['對抗肌超級組（例：划船＋臥推）', '兩動作間 30–60 秒，一輪 2 分鐘', '一塊肌肉在練時另一塊在休息，省一半時間而且表現不掉'] },
+    ])}<p class="quote">手機計時，不要用感覺。多數人以為的 2 分鐘其實是 70 秒。</p></div>` },
+] })
+/* 第 2 章的互動圖 */
+MOUNT['volume'] = sec => {
+  const W = 640, H = 200, g = S('svg', { viewBox: `0 0 ${W} ${H}` }), box = $('#f-volume', sec)
+  const x = s => 40 + (s / 30) * (W - 60), y0 = H - 30, top = 30
+  const f = s => { // 示意的劑量反應：上升後趨平，過 22 組開始下降
+    const up = 1 - Math.exp(-s / 7.5); const down = s > 22 ? (s - 22) / 8 * 0.35 : 0; return Math.max(0, up - down) }
+  const line = Array.from({ length: 61 }, (_, i) => { const s = i / 2; return `${x(s).toFixed(1)},${(y0 - f(s) * (y0 - top)).toFixed(1)}` }).join(' ')
+  ;[[0, 6, '維持'], [6, 10, 'MEV'], [10, 20, 'MAV'], [20, 25, 'MRV'], [25, 30, '過量']].forEach(([a, b, t], i) => {
+    g.append(S('rect', { x: x(a), y: top - 10, width: x(b) - x(a), height: y0 - top + 10, fill: i === 2 ? 'rgba(224,57,47,.12)' : i % 2 ? 'rgba(236,230,216,.04)' : 'transparent' }))
+    g.append(S('text', { class: 'lb', x: (x(a) + x(b)) / 2, y: top - 14, 'text-anchor': 'middle' }, t))
+  })
+  g.append(S('line', { class: 'ax', x1: 40, y1: y0, x2: W - 20, y2: y0 }))
+  ;[0, 5, 10, 15, 20, 25, 30].forEach(s => g.append(S('text', { class: 'lb n', x: x(s), y: y0 + 16, 'text-anchor': 'middle' }, s)))
+  g.append(S('polyline', { class: 'ln', points: line }))
+  const dot = S('circle', { class: 'dot', r: 7 }), lab = S('text', { class: 'lb2 n', 'text-anchor': 'middle' })
+  g.append(dot, lab); box.append(g)
+  const msg = s => s < 6 ? '維持量：不會退步，也幾乎不會進步。' : s < 10 ? '最低有效量：有訊號，一個週期從這裡起步。' : s <= 20 ? '最佳量：成長最多、還恢復得了。' : s <= 25 ? '逼近最大可恢復量：表現開始掉就該減量。' : '過量：恢復不來，多做的每一組都在扣分。'
+  const upd = () => { const s = +$('#vol', sec).value; $('#volv', sec).textContent = s; $('#volt', sec).textContent = msg(s); dot.setAttribute('cx', x(s)); dot.setAttribute('cy', y0 - f(s) * (y0 - top)); lab.setAttribute('x', x(s)); lab.setAttribute('y', y0 - f(s) * (y0 - top) - 14); lab.textContent = `${s} 組` }
+  $('#vol', sec).addEventListener('input', upd); upd()
+}
+MOUNT['frequency'] = sec => {
+  const W = 640, H = 210, g = S('svg', { viewBox: `0 0 ${W} ${H}` })
+  const y0 = H - 34, top = 24, bw = 14
+  const draw = (x0, sets, label, dim) => {
+    g.append(S('text', { class: 'lb2', x: x0, y: top - 6 }, label))
+    sets.forEach((q, i) => { const h = q * (y0 - top); g.append(S('rect', { class: 'bar grow' + (dim && q < .6 ? ' dim' : '') + (!dim ? ' red' : ''), x: x0 + i * (bw + 4), y: y0 - h, width: bw, height: h, style: `--k:${i}` })) })
+    g.append(S('line', { class: 'ax', x1: x0 - 6, y1: y0, x2: x0 + sets.length * (bw + 4), y2: y0 }))
+    g.append(S('text', { class: 'lb', x: x0, y: y0 + 16 }, `${sets.length} 組 · 組的品質（張力）`))
+  }
+  draw(40, [1, .98, .95, .92, .88, .84, .78, .72, .64, .56, .5, .44, .4, .36, .33, .3], '同一天做 16 組', true)
+  draw(360, [1, .98, .95, .92, .88, .84, .78, .72], '週一 8 組', false)
+  draw(520, [1, .98, .95, .92, .88, .84, .78, .72], '週四 8 組', false)
+  $('#f-freq', sec).append(g)
+}
+MOUNT['overload'] = sec => {
+  const W = 640, H = 220, box = $('#f-overload', sec), log = $('#ov-log', sec)
+  let week = 0, w = 24, reps = [8, 8, 8], hist = []
+  const step = () => { // 雙重進階：三組都到 12 就加重、回 8；不然每週每組 +1（第三組稍慢）
+    if (reps.every(r => r >= 12)) { w += 2; reps = [8, 8, 8] } else reps = reps.map((r, i) => Math.min(12, r + (i === 2 && week % 2 ? 0 : 1)))
+    week++; hist.push({ week, w, reps: [...reps] })
+  }
+  const render = () => {
+    box.textContent = ''; const g = S('svg', { viewBox: `0 0 ${W} ${H}` })
+    const n = 12, x = i => 40 + (i / n) * (W - 60), y0 = H - 30, top = 26
+    g.append(S('line', { class: 'ax', x1: 40, y1: y0, x2: W - 20, y2: y0 }))
+    for (let i = 1; i <= n; i++) g.append(S('text', { class: 'lb n', x: x(i), y: y0 + 16, 'text-anchor': 'middle' }, i))
+    g.append(S('text', { class: 'lb', x: 40, y: y0 + 16 }, '週'))
+    const vol = h => h.w * h.reps.reduce((a, b) => a + b, 0)
+    const vmax = Math.max(...hist.map(vol), 1200)
+    hist.forEach((h, i) => { const hh = (vol(h) / vmax) * (y0 - top); g.append(S('rect', { class: 'bar' + (i === hist.length - 1 ? ' red' : ''), x: x(h.week) - 11, y: y0 - hh, width: 22, height: hh })); g.append(S('text', { class: 'lb n', x: x(h.week), y: y0 - hh - 6, 'text-anchor': 'middle' }, `${h.w}`)) })
+    g.append(S('text', { class: 'lb', x: W - 20, y: top - 8, 'text-anchor': 'end' }, '柱高＝總訓練量（重量 × 總次數）；數字＝啞鈴公斤'))
+    box.append(g)
+    $('#ov-week', sec).textContent = week ? `第 ${week} 週` : '第 0 週：24 kg × 8 / 8 / 8'
+    log.innerHTML = hist.length ? `<div class="tw">${tbl(['#週', '#啞鈴', '#三組次數', '規則'], hist.slice(-4).map(h => [h.week, `${h.w} kg`, h.reps.join(' / '), h.reps.every(r => r === 8) && h.week > 1 ? '三組都到 12，加 2 公斤、次數回 8' : h.reps.every(r => r >= 12) ? '全部到上限，下週加重' : '還在區間內，加次數']), 'dense')}</div>` : ''
+    $('#ov-next', sec).disabled = week >= 12
+  }
+  $('#ov-next', sec).addEventListener('click', () => { step(); render() })
+  $('#ov-reset', sec).addEventListener('click', () => { week = 0; w = 24; reps = [8, 8, 8]; hist = []; render() })
+  render()
+}
+
+/* ── 第 3 章 課表怎麼排 ── */
+DECK.push({ n: 3, title: '課表怎麼排', en: 'PROGRAMMING', sub: '分化、一堂課的骨架、進階、減量、週期', slides: [
+  { key: 'splits', title: '分化的選擇', cls: 'wide', html: head('第 3 章 <em>課表怎麼排</em>', '一週幾天，決定怎麼分', '規則只有兩條：每肌群每週練到 2 次、每堂課 60 到 75 分鐘內做完。3 天就全身、4 天就上下分化、5 天推拉腿加上下。點一下看每種分法的一週長什麼樣，以及每個肌群一週各拿到幾組。') +
+    `<div class="body"><div class="ctl"><span class="seg" id="sp-seg" role="group" aria-label="一週天數"><button type="button" data-d="3" aria-pressed="true">3 天 全身</button><button type="button" data-d="4" aria-pressed="false">4 天 上下</button><button type="button" data-d="5" aria-pressed="false">5 天 推拉腿＋上下</button></span><span class="note" id="sp-note"></span></div><div class="week" id="sp-week"></div><div class="sets" id="sp-sets"></div><p class="note">組數是範例課表（第 3 章後面三張）直接算出來的：直接動作算 1 組，複合動作對次要肌群算 0.5 組。灰＝低於 10 組、白＝10 到 20、紅＝超過 20。</p></div>` },
+  { key: 'session', title: '一堂課的骨架', cls: 'two', html: head('第 3 章 <em>課表怎麼排</em>', '一堂課 60 到 75 分鐘，順序固定', '最重的、最需要技術的放最前面；孤立動作放後面；功能性當熱身或收尾。每堂課的動作數 5 到 7 個，少動作、多組、每組都接近力竭，比 10 個動作各做 2 組有效得多。') +
+    `<div class="body">${tbl(['段落', '#時間', '內容'], [
+      ['一般熱身', '5 分', '跑步機或划船機把體溫拉起來，加 3 到 4 個關節活動（第 5 章的熱身塊）'],
+      ['專項熱身', '5 分', '第一個動作用 50%、70%、85% 的工作重量各做 5、3、1 下，不要做到累'],
+      { hot: true, c: ['主動作', '15 分', '1 個大複合，3 到 4 組。力量日 3 到 5 下 RIR 2 到 3；肥大日 6 到 10 下 RIR 1 到 2'] },
+      ['次要複合', '15 分', '1 到 2 個，8 到 12 下，例如上斜啞鈴臥推、滑輪下拉、腿推'],
+      ['孤立', '15–20 分', '2 到 3 個，10 到 20 下，每組 RIR 0 到 2，可以用對抗肌超級組省時間'],
+      ['功能性收尾', '8–10 分', '負重行走、抗旋轉、單側動作，二選一到三選一（第 5 章）'],
+    ])}</div>` },
+  { key: 'selection', title: '動作選擇', cls: 'two', html: head('第 3 章 <em>課表怎麼排</em>', '複合打底，孤立補洞，機器不是次等', '複合動作一次練到很多肌肉、能上重量；孤立動作讓每一塊肌肉都拿到足夠的組數。機器跟自由重量長的肌肉一樣多，機器更適合安全地做到力竭。不要每週換動作，換動作就要重新學技術。') +
+    `<div class="body">${pts([
+      { k: '每個肌群至少一複合一孤立', p: '胸：臥推＋飛鳥；背：划船＋直臂下壓；腿：深蹲類＋腿伸、腿彎舉。複合動作練不到的角度交給孤立。', hot: true },
+      { k: '機器 vs 自由重量', p: '孤立動作優先用機器與滑輪（張力曲線穩定、力竭時安全）；主動作用自由重量練技術與穩定肌。兩者混用最好。' },
+      { k: '選拉長位置吃力的版本', p: '坐姿腿彎舉優於俯臥、上斜彎舉優於站姿、過頭三頭伸展優於下壓、滑輪飛鳥優於啞鈴飛鳥。' },
+      { k: '什麼時候換動作', p: '只有三種情況：這個動作讓關節痛、連續兩個週期沒進步、或你的器材換了。不是因為無聊。' },
+      { k: '一個肌群兩堂課用不同動作', p: '週一平板臥推、週四上斜啞鈴，同一塊肌肉從不同角度拿到刺激，也分散關節的壓力。' },
+    ])}</div>` },
+  { key: 'progression', title: '進階與減量', cls: 'two', html: head('第 3 章 <em>課表怎麼排</em>', '怎麼加，什麼時候退', '進階照雙重進階（第 2 章）。一個週期 4 到 8 週，組數從 MEV 往 MAV 加，每週每肌群加 1 到 2 組；撞到表現下降或關節開始抗議，就減量一週，然後從比上個週期多一點的地方重新開始。') +
+    `<div class="body">${steps([
+      '<b>第 1 週</b>：每肌群從 8 到 10 組開始，RIR 3。重量用上一個週期最後一週的 90%。',
+      '<b>第 2 到 4 週</b>：每週加 1 到 2 組，RIR 一週降一級（3 → 2 → 1）。次數到區間上限就加重量。',
+      '<b>減量訊號</b>：同重量次數掉兩堂課、睡眠變差、關節痛、沒動力。三個中兩個就減量，不要撐。',
+      '<b>減量週</b>：組數砍一半，重量維持或降 10%，RIR 3 到 4。這週的目的是恢復，不是練。',
+      '<b>下一個週期</b>：從比上次起點多 1 到 2 組、重量多一格的地方開始。這就是長期的進步曲線。',
+    ])}<p class="note">固定每 4 到 6 週排一次減量比較不會忘，中階的恢復能力通常撐 5 週左右。減量週剛好拿來做測驗（第 9 章）。</p></div>` },
+  { key: 'periodization', title: '週期化', cls: 'two', html: head('第 3 章 <em>課表怎麼排</em>', '週期化就是波浪', '對中階來說，週期化不用複雜：以 4 到 6 週為一個波，組數與接近力竭程度逐週上升，末週減量，再從更高一點的起點開始下一波。一年大概 8 到 10 個波，每個波的主軸可以輪替：肥大波（8 到 15 下）、力量波（3 到 6 下）。') +
+    `<div class="body"><div class="fig" id="f-period"></div>${tbl(['波的類型', '#週數', '主動作', '孤立', '目的'], [
+      { hot: true, c: ['肥大波', '5 + 1 減量', '6–10 下', '10–20 下', '長肌肉，一年中佔 2/3'] },
+      ['力量波', '4 + 1 減量', '3–5 下，組數少', '8–12 下，組數少', '把長出來的肌肉變成力量，再回頭拉高肥大波的重量'],
+      ['減脂期的波', '視減脂長度', '維持重量、組數減 1/3', '維持重量', '熱量赤字時目標是保住肌肉，不是進步'],
+    ], 'dense')}</div>` },
+  { key: 'load', title: '用 1RM 選重量', cls: 'two', html: head('第 3 章 <em>課表怎麼排</em>', '不用真的測 1RM', '輸入你最近一組做到接近力竭的重量與次數，就能估 1RM，再換算每個次數區間該用的重量。槓鈴圖會畫出怎麼上片。估算在 10 下以內最準，超過 12 下誤差變大。') +
+    `<div class="body"><div class="ctl"><label>重量 <input type="number" id="rm-w" value="80" min="20" max="400" step="2.5"> kg</label><label>做了 <input type="number" id="rm-r" value="5" min="1" max="15"> 下</label><label>槓 <span class="seg" id="rm-bar"><button type="button" data-b="20" aria-pressed="true">20 kg</button><button type="button" data-b="15" aria-pressed="false">15 kg</button></span></label></div><div class="big"><div><b class="red" id="rm-1rm">—</b><span>估計 1RM（Epley）</span></div><div><b id="rm-5">—</b><span>5 下 · 87%</span></div><div><b id="rm-8">—</b><span>8 下 · 80%</span></div><div><b id="rm-12">—</b><span>12 下 · 70%</span></div></div><div class="ctl"><label>要上的重量 <input type="range" id="rm-load" min="20" max="300" step="2.5" value="100"><output id="rm-loadv">100</output> kg</label></div><div class="barbell" id="rm-fig"></div><p class="plates" id="rm-plates"></p><p class="note">Epley：1RM ＝ 重量 ×（1 ＋ 次數 ÷ 30）。槓片顏色照國際標準片：紅 25、藍 20、黃 15、綠 10、白 5、黑 2.5、銀 1.25 公斤。一般健身房的黑色鐵片一樣算法。</p></div>` },
+] })
+MOUNT['periodization'] = sec => {
+  const W = 640, H = 200, g = S('svg', { viewBox: `0 0 ${W} ${H}` })
+  const weeks = 18, x = i => 40 + (i / weeks) * (W - 60), y0 = H - 30, top = 28
+  g.append(S('line', { class: 'ax', x1: 40, y1: y0, x2: W - 20, y2: y0 }))
+  const pattern = [.45, .55, .65, .75, .85, .3]   // 5 週上升＋1 週減量
+  for (let i = 0; i < weeks; i++) { const k = i % 6, q = pattern[k] + Math.floor(i / 6) * .05, h = Math.min(1, q) * (y0 - top); g.append(S('rect', { class: 'bar grow' + (k === 5 ? ' dim' : i >= 12 ? ' red' : ''), x: x(i) + 3, y: y0 - h, width: (W - 60) / weeks - 6, height: h, style: `--k:${i}` })); if (k === 5) g.append(S('text', { class: 'lb', x: x(i) + (W - 60) / weeks / 2, y: y0 - h - 6, 'text-anchor': 'middle' }, '減量')) }
+  ;[[0, '第一波 · 肥大'], [6, '第二波 · 肥大'], [12, '第三波 · 力量']].forEach(([i, t]) => g.append(S('text', { class: 'lb2', x: x(i) + 3, y: top - 8 }, t)))
+  g.append(S('text', { class: 'lb', x: W - 20, y: y0 + 16, 'text-anchor': 'end' }, '柱高＝每週的訓練量與接近力竭程度，一波比一波高一點'))
+  $('#f-period', sec).append(g)
+}
+MOUNT['load'] = sec => {
+  const PL = [[25, '#d7262c'], [20, '#2860c4'], [15, '#e3b320'], [10, '#2f9c4a'], [5, '#ece6d8'], [2.5, '#2b2e33'], [1.25, '#9aa0a8']]
+  let bar = 20
+  const fig = $('#rm-fig', sec), plates = $('#rm-plates', sec)
+  const calc = () => {
+    const w = +$('#rm-w', sec).value || 0, r = clamp(+$('#rm-r', sec).value || 1, 1, 30), rm = w * (1 + r / 30)
+    $('#rm-1rm', sec).innerHTML = `${r1(rm)}<small>kg</small>`
+    $('#rm-5', sec).textContent = `${r1(rm * .87)} kg`; $('#rm-8', sec).textContent = `${r1(rm * .80)} kg`; $('#rm-12', sec).textContent = `${r1(rm * .70)} kg`
+  }
+  const draw = () => {
+    const total = +$('#rm-load', sec).value; $('#rm-loadv', sec).textContent = total
+    let side = (total - bar) / 2, used = []
+    for (const [p, c] of PL) { while (side >= p - 1e-9) { used.push([p, c]); side -= p } }
+    const W = 560, H = 120, g = S('svg', { viewBox: `0 0 ${W} ${H}` })
+    g.append(S('rect', { x: 20, y: 54, width: W - 40, height: 10, rx: 5, fill: '#ece6d8' }))
+    g.append(S('rect', { x: 150, y: 46, width: 8, height: 26, rx: 2, fill: '#8d877c' })); g.append(S('rect', { x: W - 158, y: 46, width: 8, height: 26, rx: 2, fill: '#8d877c' }))
+    const drawSide = (x0, dir) => { let x = x0; used.forEach(([p, c]) => { const h = 30 + Math.sqrt(p / 25) * 70, w = p >= 10 ? 14 : p >= 2.5 ? 9 : 6; g.append(S('rect', { x: dir > 0 ? x : x - w, y: 59 - h / 2, width: w, height: h, rx: 3, fill: c, stroke: 'rgba(236,230,216,.35)', 'stroke-width': .8 })); x += dir * (w + 2) }) }
+    drawSide(142, -1); drawSide(W - 142, 1)
+    g.append(S('text', { class: 'n', x: W / 2, y: 104, 'text-anchor': 'middle', style: 'fill:var(--fg2);font-size:13px' }, total < bar ? '比空槓還輕' : `${total} kg ＝ 槓 ${bar} ＋ 每側 ${(total - bar) / 2} kg${side > 0 ? `（剩 ${r1(side)} kg 沒有片可上）` : ''}`))
+    fig.textContent = ''; fig.append(g)
+    plates.innerHTML = PL.map(([p, c]) => `<span><i style="background:${c}"></i>${p}</span>`).join('')
+  }
+  ;['rm-w', 'rm-r'].forEach(id => $('#' + id, sec).addEventListener('input', calc))
+  $('#rm-load', sec).addEventListener('input', draw)
+  $('#rm-bar', sec).addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; bar = +b.dataset.b; $$('button', $('#rm-bar', sec)).forEach(x => x.setAttribute('aria-pressed', String(x === b))); draw() })
+  calc(); draw()
+}
+/* 範例課表：三套都是資料，表格與第 3 章的分化規劃都從這裡算。
+   每個動作 [中文, YouTube 關鍵字, 組, 次數, RIR, 肌群權重, 你會做錯的地方]；權重 1＝主要、0.5＝次要 */
+const M = { chest: '胸', back: '背', sdelt: '側三角', rdelt: '後三角', bi: '二頭', tri: '三頭', quad: '股四頭', ham: '腿後側', glute: '臀', calf: '小腿', core: '核心' }
+const PROGRAMS = {
+  3: { name: '3 天 · 全身', days: { 1: '全身 A', 3: '全身 B', 5: '全身 C' }, note: '每肌群一週約 8 到 10 組，剛好在最低有效量上緣：時間少的人用，要往最佳量走就得加到 4 天。', sessions: [
+    { name: '全身 A', ex: [
+      ['槓鈴深蹲', 'barbell back squat form', 3, '5–8', '2–3', { quad: 1, glute: 1, ham: .5, core: .5 }, '腳跟離地、膝蓋內夾，多半是踝關節活動度不夠，墊個小片'],
+      ['槓鈴臥推', 'barbell bench press form', 3, '6–10', '1–2', { chest: 1, tri: .5 }, '肩胛沒有後收下壓，肩膀往前跑，久了肩前側痛'],
+      ['槓鈴划船', 'barbell row form', 3, '8–12', '1–2', { back: 1, bi: .5, rdelt: .5 }, '用腰甩重量，軀幹角度每一下都在變'],
+      ['羅馬尼亞硬舉', 'romanian deadlift form', 2, '8–12', '1–2', { ham: 1, glute: 1 }, '變成彎腰而不是推臀，槓離開小腿'],
+      ['啞鈴側平舉', 'dumbbell lateral raise form', 3, '12–20', '0–1', { sdelt: 1 }, '太重然後聳肩，練到斜方肌'],
+      ['滑輪彎舉', 'cable curl form', 2, '10–15', '0–1', { bi: 1 }, '手肘往前跑，變成前三角在推'],
+      ['收尾：農夫走路', 'farmer carry form', 3, '40 m', '—', { core: 1 }, '一邊肩膀聳起來、身體歪一邊'],
+    ] },
+    { name: '全身 B', ex: [
+      ['六角槓硬舉', 'trap bar deadlift form', 3, '3–6', '2–3', { ham: 1, glute: 1, back: .5, core: .5 }, '起槓前沒有先把背繃緊，第一下是用腰拉起來的'],
+      ['槓鈴肩推', 'overhead press form', 3, '6–10', '1–2', { sdelt: .5, tri: .5 }, '腰過度後仰，變成上斜臥推'],
+      ['滑輪下拉', 'lat pulldown form', 3, '6–12', '1–2', { back: 1, bi: .5 }, '身體往後躺太多、用手臂拉，肩胛沒有先下壓'],
+      ['腿推', 'leg press form', 3, '10–15', '1–2', { quad: 1, glute: .5 }, '下放時臀部離開椅背，腰在圓'],
+      ['上斜啞鈴臥推', 'incline dumbbell press form', 2, '8–12', '1–2', { chest: 1, tri: .5 }, '椅背超過 45 度，變成在練前三角'],
+      ['三頭下壓', 'triceps pushdown form', 2, '10–15', '0–1', { tri: 1 }, '手肘離開身體、上半身壓下去借力'],
+      ['站姿提踵', 'standing calf raise form', 3, '10–15', '0–1', { calf: 1 }, '底部沒有拉到底、頂端沒有停，變成彈跳'],
+    ] },
+    { name: '全身 C', ex: [
+      ['哈克蹲', 'hack squat form', 3, '6–10', '1–2', { quad: 1, glute: .5 }, '腳放太低只蹲一半，膝蓋承受全部'],
+      ['啞鈴臥推', 'dumbbell bench press form', 3, '8–12', '1–2', { chest: 1, tri: .5 }, '底部沒拉到胸的高度，少掉最有效的那一段'],
+      ['胸支撐划船', 'chest supported row form', 3, '8–12', '1–2', { back: 1, rdelt: .5, bi: .5 }, '手臂拉完就放，肩胛沒有主動收'],
+      ['坐姿腿彎舉', 'seated leg curl form', 3, '10–15', '0–1', { ham: 1 }, '臀部抬起來借力，大腿墊沒壓緊'],
+      ['反向飛鳥機', 'reverse pec deck form', 3, '12–20', '0–1', { rdelt: 1 }, '手肘打直用斜方肌夾，應該是手肘微彎往外畫'],
+      ['滑輪側平舉', 'cable lateral raise form', 3, '12–20', '0–1', { sdelt: 1 }, '身體側傾借力'],
+      ['過頭三頭伸展', 'overhead cable triceps extension form', 2, '10–15', '0–1', { tri: 1 }, '手肘外開，變成肩膀在推'],
+    ] },
+  ] },
+  4: { name: '4 天 · 上下分化', days: { 1: '上肢 1', 2: '下肢 1', 4: '上肢 2', 5: '下肢 2' }, note: '多數中階的最佳解：每肌群一週兩次、12 到 16 組，一堂課 60 到 70 分鐘。', sessions: [
+    { name: '上肢 1（推為主）', ex: [
+      ['槓鈴臥推', 'barbell bench press form', 4, '5–8', '2–3', { chest: 1, tri: .5 }, '肩胛沒有後收下壓，肩膀往前跑'],
+      ['胸支撐划船', 'chest supported row form', 3, '8–12', '1–2', { back: 1, rdelt: .5, bi: .5 }, '手臂拉完就放，肩胛沒有主動收'],
+      ['上斜啞鈴臥推', 'incline dumbbell press form', 3, '8–12', '1–2', { chest: 1, tri: .5 }, '椅背超過 45 度'],
+      ['滑輪下拉', 'lat pulldown form', 3, '8–12', '1–2', { back: 1, bi: .5 }, '身體往後躺太多'],
+      ['啞鈴側平舉', 'dumbbell lateral raise form', 3, '12–20', '0–1', { sdelt: 1 }, '太重然後聳肩'],
+      ['過頭三頭伸展', 'overhead cable triceps extension form', 3, '10–15', '0–1', { tri: 1 }, '手肘外開'],
+      ['收尾：Pallof press', 'pallof press form', 3, '10 / 側', '—', { core: 1 }, '髖跟著轉，應該只有手臂在動'],
+    ] },
+    { name: '下肢 1（蹲為主）', ex: [
+      ['槓鈴深蹲', 'barbell back squat form', 4, '5–8', '2–3', { quad: 1, glute: 1, ham: .5, core: .5 }, '腳跟離地、膝蓋內夾'],
+      ['羅馬尼亞硬舉', 'romanian deadlift form', 3, '8–12', '1–2', { ham: 1, glute: 1 }, '變成彎腰而不是推臀'],
+      ['腿推', 'leg press form', 3, '10–15', '1–2', { quad: 1, glute: .5 }, '臀部離開椅背'],
+      ['坐姿腿彎舉', 'seated leg curl form', 3, '10–15', '0–1', { ham: 1 }, '臀部抬起來借力'],
+      ['站姿提踵', 'standing calf raise form', 4, '10–15', '0–1', { calf: 1 }, '底部沒拉到底、頂端沒有停'],
+      ['收尾：農夫走路', 'farmer carry form', 3, '40 m', '—', { core: 1 }, '一邊肩膀聳起來'],
+    ] },
+    { name: '上肢 2（拉為主）', ex: [
+      ['負重引體向上', 'weighted pull up form', 4, '6–10', '1–2', { back: 1, bi: .5 }, '只做半程、底部沒有完全伸直'],
+      ['槓鈴肩推', 'overhead press form', 3, '6–10', '1–2', { sdelt: .5, tri: .5 }, '腰過度後仰'],
+      ['單臂滑輪划船', 'single arm cable row form', 3, '10–15', '1–2', { back: 1, bi: .5 }, '軀幹跟著旋轉借力'],
+      ['低到高滑輪飛鳥', 'low to high cable fly form', 3, '12–15', '0–1', { chest: 1 }, '手肘彎太多變成推，應該是手臂畫弧'],
+      ['滑輪側平舉', 'cable lateral raise form', 3, '12–20', '0–1', { sdelt: 1 }, '身體側傾借力'],
+      ['反向飛鳥機', 'reverse pec deck form', 3, '15–20', '0–1', { rdelt: 1 }, '用斜方肌夾'],
+      ['上斜啞鈴彎舉', 'incline dumbbell curl form', 3, '10–15', '0–1', { bi: 1 }, '肩膀往前頂，手臂沒有留在身體後方'],
+      ['收尾：單手提行李走', 'suitcase carry form', 3, '30 m / 側', '—', { core: 1 }, '身體往負重那側倒'],
+    ] },
+    { name: '下肢 2（鉸鏈為主）', ex: [
+      ['六角槓硬舉', 'trap bar deadlift form', 3, '4–6', '2–3', { ham: 1, glute: 1, back: .5, core: .5 }, '起槓前沒有先把背繃緊'],
+      ['保加利亞分腿蹲', 'bulgarian split squat form', 3, '8–12', '1–2', { quad: 1, glute: 1 }, '前腳太靠近椅子，膝蓋往內倒'],
+      ['臀推', 'barbell hip thrust form', 3, '8–12', '1–2', { glute: 1, ham: .5 }, '頂端腰過度後仰，下巴應該收著'],
+      ['腿伸', 'leg extension form', 3, '12–15', '0–1', { quad: 1 }, '頂端沒有鎖住停一下、放下去是掉的'],
+      ['坐姿提踵', 'seated calf raise form', 3, '12–20', '0–1', { calf: 1 }, '彈跳'],
+      ['收尾：壺鈴擺盪', 'kettlebell swing form', 5, '10', '—', { glute: .5, core: .5 }, '變成蹲而不是鉸鏈，壺鈴是用臀推出去的'],
+    ] },
+  ] },
+  5: { name: '5 天 · 推拉腿＋上下', days: { 1: '推', 2: '拉', 3: '腿', 5: '上肢', 6: '下肢' }, note: '每肌群一週兩次、15 到 20 組，接近最佳量上緣。恢復與睡眠要跟得上，不然 4 天比較好。', sessions: [
+    { name: '推', ex: [
+      ['槓鈴臥推', 'barbell bench press form', 4, '5–8', '2–3', { chest: 1, tri: .5 }, '肩胛沒有後收下壓'],
+      ['槓鈴肩推', 'overhead press form', 3, '6–10', '1–2', { sdelt: .5, tri: .5 }, '腰過度後仰'],
+      ['上斜啞鈴臥推', 'incline dumbbell press form', 3, '8–12', '1–2', { chest: 1, tri: .5 }, '椅背超過 45 度'],
+      ['滑輪飛鳥', 'cable fly form', 3, '12–15', '0–1', { chest: 1 }, '手肘彎太多變成推'],
+      ['啞鈴側平舉', 'dumbbell lateral raise form', 4, '12–20', '0–1', { sdelt: 1 }, '太重然後聳肩'],
+      ['過頭三頭伸展', 'overhead cable triceps extension form', 3, '10–15', '0–1', { tri: 1 }, '手肘外開'],
+      ['三頭下壓', 'triceps pushdown form', 2, '12–15', '0–1', { tri: 1 }, '上半身壓下去借力'],
+    ] },
+    { name: '拉', ex: [
+      ['負重引體向上', 'weighted pull up form', 4, '6–10', '1–2', { back: 1, bi: .5 }, '只做半程'],
+      ['槓鈴划船', 'barbell row form', 3, '6–10', '1–2', { back: 1, bi: .5, rdelt: .5 }, '用腰甩重量'],
+      ['單臂滑輪划船', 'single arm cable row form', 3, '10–15', '1–2', { back: 1, bi: .5 }, '軀幹跟著旋轉'],
+      ['直臂下壓', 'straight arm pulldown form', 2, '12–15', '0–1', { back: 1 }, '手肘彎掉變成三頭在推'],
+      ['反向飛鳥機', 'reverse pec deck form', 3, '15–20', '0–1', { rdelt: 1 }, '用斜方肌夾'],
+      ['上斜啞鈴彎舉', 'incline dumbbell curl form', 3, '10–15', '0–1', { bi: 1 }, '肩膀往前頂'],
+      ['錘式彎舉', 'hammer curl form', 2, '10–15', '0–1', { bi: 1 }, '甩重量'],
+    ] },
+    { name: '腿', ex: [
+      ['槓鈴深蹲', 'barbell back squat form', 4, '5–8', '2–3', { quad: 1, glute: 1, ham: .5, core: .5 }, '腳跟離地、膝蓋內夾'],
+      ['羅馬尼亞硬舉', 'romanian deadlift form', 3, '8–12', '1–2', { ham: 1, glute: 1 }, '變成彎腰'],
+      ['腿推', 'leg press form', 3, '10–15', '1–2', { quad: 1, glute: .5 }, '臀部離開椅背'],
+      ['坐姿腿彎舉', 'seated leg curl form', 3, '10–15', '0–1', { ham: 1 }, '臀部抬起來借力'],
+      ['腿伸', 'leg extension form', 2, '12–15', '0–1', { quad: 1 }, '放下去是掉的'],
+      ['站姿提踵', 'standing calf raise form', 4, '10–15', '0–1', { calf: 1 }, '彈跳'],
+      ['收尾：農夫走路', 'farmer carry form', 3, '40 m', '—', { core: 1 }, '一邊肩膀聳起來'],
+    ] },
+    { name: '上肢', ex: [
+      ['上斜槓鈴臥推', 'incline barbell bench press form', 3, '6–10', '1–2', { chest: 1, tri: .5 }, '槓放到脖子，應該落在上胸'],
+      ['胸支撐划船', 'chest supported row form', 3, '8–12', '1–2', { back: 1, rdelt: .5, bi: .5 }, '肩胛沒有主動收'],
+      ['啞鈴肩推', 'seated dumbbell shoulder press form', 3, '8–12', '1–2', { sdelt: .5, tri: .5 }, '手肘往前太多變成上斜推'],
+      ['滑輪下拉', 'lat pulldown form', 3, '10–12', '1–2', { back: 1, bi: .5 }, '身體往後躺太多'],
+      ['滑輪側平舉', 'cable lateral raise form', 3, '15–20', '0–1', { sdelt: 1 }, '身體側傾'],
+      ['面拉', 'face pull form', 2, '15–20', '0–1', { rdelt: 1 }, '只拉到臉前，手肘沒有高過手腕'],
+      ['仰臥三頭＋滑輪彎舉 超級組', 'skull crusher form', 2, '10–15 各', '0–1', { tri: 1, bi: 1 }, '仰臥三頭手肘外開；彎舉手肘往前跑'],
+      ['收尾：Pallof press', 'pallof press form', 3, '10 / 側', '—', { core: 1 }, '髖跟著轉'],
+    ] },
+    { name: '下肢', ex: [
+      ['六角槓硬舉', 'trap bar deadlift form', 3, '4–6', '2–3', { ham: 1, glute: 1, back: .5, core: .5 }, '起槓前沒有先把背繃緊'],
+      ['保加利亞分腿蹲', 'bulgarian split squat form', 3, '8–12', '1–2', { quad: 1, glute: 1 }, '膝蓋往內倒'],
+      ['臀推', 'barbell hip thrust form', 3, '8–12', '1–2', { glute: 1, ham: .5 }, '頂端腰過度後仰'],
+      ['北歐腿彎舉（或坐姿腿彎舉）', 'nordic hamstring curl form', 3, '6–12', '1–2', { ham: 1 }, '髖彎掉變成彎腰往前倒'],
+      ['坐姿提踵', 'seated calf raise form', 3, '12–20', '0–1', { calf: 1 }, '彈跳'],
+      ['收尾：壺鈴擺盪', 'kettlebell swing form', 5, '10', '—', { glute: .5, core: .5 }, '變成蹲而不是鉸鏈'],
+    ] },
+  ] },
+}
+const weeklySets = p => { const out = {}; for (const k in M) out[k] = 0; p.sessions.forEach(s => s.ex.forEach(e => { for (const k in e[5]) out[k] += e[2] * e[5][k] })); return out }
+const progTable = s => tbl(['動作', '#組 × 次', '#RIR'], s.ex.map(e => [ex(e[0], e[1]), `${e[2]} × ${e[3]}`, e[4]]), 'dense prog')
+const progSlide = (d, key) => ({ key, title: PROGRAMS[d].name, cls: 'wide', html: head('第 3 章 <em>範例課表</em>', `範例：${PROGRAMS[d].name}`, PROGRAMS[d].note + ' 每個動作後面的 YT 是 YouTube 搜尋；每個動作最常做錯的地方在第 4 章肌群地圖與第 5 章動作庫。') +
+  `<div class="body"><div class="tier tier-${PROGRAMS[d].sessions.length}">${PROGRAMS[d].sessions.map(s => `<div><h3><b>${esc(s.name)}</b></h3>${progTable(s)}</div>`).join('')}</div></div>` })
+DECK[2].slides.push(progSlide(3, 'p3'), progSlide(4, 'p4'), progSlide(5, 'p5'))
+MOUNT['splits'] = sec => {
+  const DAYS = ['一', '二', '三', '四', '五', '六', '日']
+  const render = d => {
+    const p = PROGRAMS[d]
+    $('#sp-week', sec).innerHTML = DAYS.map((n, i) => { const s = p.days[i + 1]; return `<div class="${s ? 'on' : ''}"><div class="d">週${n}</div><div class="s ${s ? '' : 'rest'}">${s || '休息'}</div>${s ? `<div class="m">${p.sessions.find(x => x.name.startsWith(s)).ex.length - 1} 個動作＋收尾</div>` : ''}</div>` }).join('')
+    const ws = weeklySets(p)
+    $('#sp-sets', sec).innerHTML = Object.keys(M).map(k => { const v = ws[k], cls = v < 10 ? 'lo' : v > 20 ? 'hi' : 'ok'; return `<div class="${cls}"><span>${M[k]}</span><b>${r1(v)}</b><i style="--p:${Math.min(100, v / 25 * 100)}%"></i></div>` }).join('')
+    $('#sp-note', sec).textContent = p.note
+    $$('button', $('#sp-seg', sec)).forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.d === d)))
+  }
+  $('#sp-seg', sec).addEventListener('click', e => { const b = e.target.closest('button'); if (b) render(+b.dataset.d) })
+  render(3)
+}
+
+/* ── 第 4 章 孤立訓練 · 肌群地圖 ── */
+/* 每塊肌肉：功能一句、每週組數地標 [MEV, MAV, MRV]、孤立動作（中文, 關鍵字, 做錯的地方）、重點一句 */
+const MUSCLES = {
+  uchest: { name: '上胸', en: 'UPPER CHEST', fn: '鎖骨頭：手臂由下往上、往內推。多數人胸的「上緣」不夠就是它。', land: [8, 14, 22], tip: '角度 15 到 30 度就夠，再高前三角就接手了。', ex: [['上斜啞鈴臥推', 'incline dumbbell press form', '椅背超過 45 度變成練肩'], ['低到高滑輪飛鳥', 'low to high cable fly form', '手肘彎太多變成推'], ['上斜槓鈴臥推', 'incline barbell bench press form', '槓落在脖子，應該在上胸']] },
+  chest: { name: '中下胸', en: 'MID / LOWER CHEST', fn: '胸骨頭：手臂水平內收、往下往內。臥推與雙槓撐體的主力。', land: [8, 14, 22], tip: '飛鳥類的張力在拉長位置最高，滑輪優於啞鈴（啞鈴到頂端就沒張力了）。', ex: [['啞鈴臥推', 'dumbbell bench press form', '底部沒拉到胸的高度'], ['滑輪飛鳥', 'cable fly form', '手肘彎太多'], ['雙槓撐體', 'chest dips form', '身體太直變成三頭在做；要前傾']] },
+  sdelt: { name: '側三角', en: 'SIDE DELT', fn: '手臂往側邊抬。肩膀看起來寬不寬，九成是它。', land: [8, 16, 26], tip: '小肌群、恢復快，可以拉到一週 20 組以上；重量輕、次數高、每組都接近力竭。', ex: [['啞鈴側平舉', 'dumbbell lateral raise form', '太重然後聳肩'], ['滑輪側平舉（手從身後起）', 'cable lateral raise behind back form', '身體側傾借力'], ['側平舉機', 'machine lateral raise form', '手肘低於手腕']] },
+  fdelt: { name: '前三角', en: 'FRONT DELT', fn: '手臂往前抬。所有推的動作都練到它，通常不需要直接練。', land: [0, 6, 12], tip: '有做臥推、肩推的人，前平舉是多餘的，把組數讓給側三角與後三角。', ex: [['槓鈴肩推', 'overhead press form', '腰過度後仰'], ['啞鈴肩推', 'seated dumbbell shoulder press form', '手肘往前太多']] },
+  rdelt: { name: '後三角', en: 'REAR DELT', fn: '手臂水平外展、往後拉。肩膀從側面看的厚度，也是肩關節健康的保險。', land: [8, 16, 26], tip: '划船類會順便練到，但要它長大還是得直接練。手肘微彎、往外畫弧，不是往後夾。', ex: [['反向飛鳥機', 'reverse pec deck form', '用斜方肌夾'], ['面拉', 'face pull form', '手肘沒有高過手腕'], ['俯身啞鈴後三角飛鳥', 'rear delt dumbbell fly form', '身體跟著甩']] },
+  traps: { name: '斜方與上背', en: 'TRAPS / UPPER BACK', fn: '聳肩、肩胛後收與上旋。背從後面看的「厚度」。', land: [6, 12, 20], tip: '划船時手肘往外、肩胛主動夾，上背就練到了；聳肩只練上斜方。', ex: [['啞鈴聳肩', 'dumbbell shrug form', '前後轉圈，應該直上直下'], ['胸支撐划船（手肘外開）', 'chest supported row elbows out form', '手臂拉完就放'], ['面拉', 'face pull form', '只拉到臉前']] },
+  lats: { name: '背闊肌', en: 'LATS', fn: '手臂往下、往後拉向身體。背的「寬度」就是它。', land: [8, 14, 22], tip: '拉之前先把肩胛往下壓，手肘往口袋方向拉，感覺是「手肘在拉」不是「手在抓」。', ex: [['滑輪下拉', 'lat pulldown form', '身體往後躺太多'], ['直臂下壓', 'straight arm pulldown form', '手肘彎掉變三頭'], ['單臂滑輪划船（低位）', 'single arm low cable row form', '軀幹跟著轉'], ['引體向上', 'pull up form', '只做半程']] },
+  lowback: { name: '下背', en: 'LOWER BACK', fn: '豎脊肌：把脊椎撐直、對抗前彎。', land: [4, 8, 14], tip: '深蹲硬舉已經給它很多，直接練 4 到 8 組就夠；背伸展機做慢、不要過度後仰。', ex: [['背伸展（羅馬椅）', 'back extension form', '頂端過度後仰'], ['早安', 'good morning form', '膝蓋鎖死、重量太重'], ['羅馬尼亞硬舉', 'romanian deadlift form', '槓離開小腿']] },
+  bi: { name: '二頭', en: 'BICEPS', fn: '彎肘、前臂外旋。拉的動作都順便練到。', land: [6, 14, 22], tip: '拉長位置（手臂在身體後方）張力最高，上斜彎舉是首選；肱肌與肱橈肌靠錘式彎舉。', ex: [['上斜啞鈴彎舉', 'incline dumbbell curl form', '肩膀往前頂'], ['牧師椅彎舉', 'preacher curl form', '底部沒有完全伸直'], ['錘式彎舉', 'hammer curl form', '甩重量'], ['滑輪彎舉', 'cable curl form', '手肘往前跑']] },
+  tri: { name: '三頭', en: 'TRICEPS', fn: '伸肘。上臂的三分之二體積是它，手臂粗不粗看三頭。', land: [6, 14, 22], tip: '長頭跨過肩關節，要過頭的動作才拉得長；下壓只練外側頭與內側頭。', ex: [['過頭滑輪三頭伸展', 'overhead cable triceps extension form', '手肘外開'], ['仰臥三頭伸展', 'skull crusher form', '手肘外開、槓放額頭（應該放頭後）'], ['三頭下壓', 'triceps pushdown form', '上半身壓下去'], ['雙槓撐體', 'triceps dips form', '前傾太多變成練胸']] },
+  forearm: { name: '前臂', en: 'FOREARMS', fn: '握力、腕屈伸。硬舉、划船、負重行走都在練。', land: [0, 6, 12], tip: '握力不夠就用拉力帶做背，前臂另外用農夫走路與反向彎舉補。', ex: [['農夫走路', 'farmer carry form', '聳肩'], ['反向彎舉', 'reverse curl form', '手腕彎掉'], ['腕彎舉', 'wrist curl form', '幅度太小']] },
+  abs: { name: '腹直肌', en: 'ABS', fn: '把肋骨拉向骨盆（脊椎前屈）。看不看得到是體脂，厚不厚是訓練。', land: [0, 8, 16], tip: '要長厚就要加重量，滑輪捲腹、負重腿抬；只做高次數徒手只練到耐力。', ex: [['滑輪捲腹', 'cable crunch form', '用髖彎而不是捲脊椎'], ['懸垂抬腿', 'hanging leg raise form', '甩腿借力，骨盆沒有後傾'], ['健腹輪', 'ab wheel rollout form', '腰塌下去']] },
+  obl: { name: '腹斜與抗旋轉', en: 'OBLIQUES', fn: '旋轉、側彎，以及抵抗這兩者。功能性訓練的核心就在這。', land: [0, 6, 12], tip: '抗旋轉（Pallof）與側負重行走比扭轉類安全而且更實用。', ex: [['Pallof press', 'pallof press form', '髖跟著轉'], ['側棒式', 'side plank form', '髖掉下去'], ['單手提行李走', 'suitcase carry form', '身體往負重側倒'], ['地雷管旋轉', 'landmine rotation form', '只有手臂在動']] },
+  glute: { name: '臀大肌與臀中肌', en: 'GLUTES', fn: '髖伸展（大）、髖外展與骨盆穩定（中）。所有鉸鏈與單腳動作的引擎。', land: [6, 12, 18], tip: '臀推在縮短位置張力高、羅馬尼亞硬舉在拉長位置高，兩種各留一個。', ex: [['槓鈴臀推', 'barbell hip thrust form', '頂端腰過度後仰'], ['羅馬尼亞硬舉', 'romanian deadlift form', '變成彎腰'], ['保加利亞分腿蹲（前傾）', 'bulgarian split squat glute focus form', '膝蓋往內倒'], ['滑輪髖外展', 'cable hip abduction form', '身體側傾']] },
+  quad: { name: '股四頭', en: 'QUADS', fn: '伸膝。大腿前側四條肌肉，股直肌還跨過髖。', land: [8, 14, 20], tip: '深蹲類要蹲深，腿伸要做到完全拉長；股直肌要靠腿伸（髖伸直的狀態）才練得到。', ex: [['哈克蹲', 'hack squat form', '腳放太低只蹲一半'], ['腿推（腳位低）', 'leg press form', '臀部離開椅背'], ['腿伸', 'leg extension form', '放下去是掉的'], ['前蹲', 'front squat form', '手肘掉下來槓往前滾']] },
+  ham: { name: '腿後側', en: 'HAMSTRINGS', fn: '屈膝與髖伸展。跨過髖與膝兩個關節，兩種動作都要。', land: [6, 12, 18], tip: '坐姿腿彎舉比俯臥長得多（髖屈時肌肉更長）；鉸鏈類一週留一個。', ex: [['坐姿腿彎舉', 'seated leg curl form', '臀部抬起來借力'], ['羅馬尼亞硬舉', 'romanian deadlift form', '槓離開小腿'], ['北歐腿彎舉', 'nordic hamstring curl form', '髖彎掉變成往前倒'], ['俯臥腿彎舉', 'lying leg curl form', '臀部抬起']] },
+  add: { name: '內收肌', en: 'ADDUCTORS', fn: '把腿往中線拉。大腿內側的體積、也是深蹲底部的穩定。', land: [0, 6, 12], tip: '寬站深蹲與側弓步會練到，內收機與哥本哈根棒式是直接練法。', ex: [['內收機', 'hip adduction machine form', '彈跳'], ['哥本哈根棒式', 'copenhagen plank form', '髖掉下去'], ['側弓步', 'cossack squat form', '腳跟離地']] },
+  calf: { name: '小腿', en: 'CALVES', fn: '踮腳。腓腸肌（膝蓋直時）與比目魚肌（膝蓋彎時）。', land: [6, 12, 18], tip: '底部要拉到底、停 1 秒再起，頂端停 1 秒；站姿練腓腸、坐姿練比目魚，兩種都要。', ex: [['站姿提踵', 'standing calf raise form', '彈跳、幅度太小'], ['坐姿提踵', 'seated calf raise form', '彈跳'], ['腿推提踵', 'leg press calf raise form', '膝蓋鎖死']] },
+}
+const BODY_FRONT = `<svg viewBox="0 0 120 210" aria-label="正面">
+  <circle class="skin" cx="60" cy="15" r="12"/><path class="skin" d="M55 26 Q55 34 57 35 L63 35 Q65 34 65 26 Z"/>
+  <path class="skin" d="M37 37 Q49 30 57 35 L63 35 Q71 30 83 37 L79 44 Q60 40 41 44 Z"/>
+  <path data-m="fdelt" d="M19 49 Q17 38 37 37 L41 44 Q34 47 30 58 Q23 57 19 49 Z"/><path data-m="fdelt" d="M101 49 Q103 38 83 37 L79 44 Q86 47 90 58 Q97 57 101 49 Z"/>
+  <path data-m="uchest" d="M41 44 Q53 36 60 43 L60 56 Q50 58 39 55 Q39 49 41 44 Z"/><path data-m="uchest" d="M79 44 Q67 36 60 43 L60 56 Q70 58 81 55 Q81 49 79 44 Z"/>
+  <path data-m="chest" d="M39 56 Q50 59 60 57 L60 76 Q50 81 39 73 Q37 65 39 56 Z"/><path data-m="chest" d="M81 56 Q70 59 60 57 L60 76 Q70 81 81 73 Q83 65 81 56 Z"/>
+  <path data-m="abs" d="M45 79 L58 79 L58 114 L45 114 Z"/><path data-m="abs" d="M62 79 L75 79 L75 114 L62 114 Z"/>
+  <path data-m="obl" d="M37 74 Q39 78 41 116 L45 116 Q43 78 41 74 Z"/><path data-m="obl" d="M83 74 Q81 78 79 116 L75 116 Q77 78 79 74 Z"/>
+  <path class="skin" d="M37 118 Q60 126 83 118 L81 130 Q60 136 39 130 Z"/>
+  <path data-m="bi" d="M17 50 Q13 68 17 97 L28 97 Q26 68 25 52 Q21 46 17 50 Z"/><path data-m="bi" d="M103 50 Q107 68 103 97 L92 97 Q94 68 95 52 Q99 46 103 50 Z"/>
+  <path data-m="forearm" d="M17 99 Q15 118 19 135 L28 133 Q27 114 28 99 Z"/><path data-m="forearm" d="M103 99 Q105 118 101 135 L92 133 Q93 114 92 99 Z"/>
+  <path data-m="quad" d="M39 132 Q46 128 52 130 L51 175 Q46 178 40 175 Z"/><path data-m="quad" d="M81 132 Q74 128 68 130 L69 175 Q74 178 80 175 Z"/>
+  <path data-m="add" d="M53 131 L57 133 L56 160 L52 170 Z"/><path data-m="add" d="M67 131 L63 133 L64 160 L68 170 Z"/>
+  <ellipse class="skin" cx="47" cy="179" rx="8" ry="5"/><ellipse class="skin" cx="73" cy="179" rx="8" ry="5"/>
+  <path data-m="calf" d="M41 185 Q47 183 55 184 L53 206 Q47 208 43 206 Z"/><path data-m="calf" d="M79 185 Q73 183 65 184 L67 206 Q73 208 77 206 Z"/>
+</svg>`
+const BODY_BACK = `<svg viewBox="0 0 120 210" aria-label="背面">
+  <circle class="skin" cx="60" cy="15" r="12"/><path class="skin" d="M55 26 Q55 34 57 35 L63 35 Q65 34 65 26 Z"/>
+  <path data-m="traps" d="M37 37 Q49 28 60 30 Q71 28 83 37 L79 48 Q60 42 41 48 Z"/>
+  <path data-m="rdelt" d="M19 49 Q17 38 37 37 L41 48 Q34 51 30 62 Q23 60 19 49 Z"/><path data-m="rdelt" d="M101 49 Q103 38 83 37 L79 48 Q86 51 90 62 Q97 60 101 49 Z"/>
+  <path data-m="traps" d="M50 48 Q60 45 70 48 L68 80 L52 80 Z"/>
+  <path data-m="lats" d="M41 48 Q46 47 50 48 L52 80 L46 96 Q43 78 41 48 Z"/><path data-m="lats" d="M79 48 Q74 47 70 48 L68 80 L74 96 Q77 78 79 48 Z"/>
+  <path data-m="lowback" d="M46 82 L74 82 L76 122 L44 122 Z"/>
+  <path data-m="tri" d="M17 50 Q13 68 17 97 L28 97 Q26 68 25 52 Q21 46 17 50 Z"/><path data-m="tri" d="M103 50 Q107 68 103 97 L92 97 Q94 68 95 52 Q99 46 103 50 Z"/>
+  <path data-m="forearm" d="M17 99 Q15 118 19 135 L28 133 Q27 114 28 99 Z"/><path data-m="forearm" d="M103 99 Q105 118 101 135 L92 133 Q93 114 92 99 Z"/>
+  <path data-m="glute" d="M39 124 L57 124 L57 144 Q47 150 39 144 Z"/><path data-m="glute" d="M63 124 L81 124 L81 144 Q73 150 63 144 Z"/>
+  <path data-m="ham" d="M39 146 Q46 143 57 144 L55 176 Q46 179 40 176 Z"/><path data-m="ham" d="M81 146 Q74 143 63 144 L65 176 Q74 179 80 176 Z"/>
+  <ellipse class="skin" cx="47" cy="180" rx="8" ry="5"/><ellipse class="skin" cx="73" cy="180" rx="8" ry="5"/>
+  <path data-m="calf" d="M40 186 Q47 182 56 184 L54 205 Q47 210 42 206 Z"/><path data-m="calf" d="M80 186 Q73 182 64 184 L66 205 Q73 210 78 206 Z"/>
+</svg>`
+DECK.push({ n: 4, title: '肌群地圖', en: 'MUSCLE MAP', sub: '健美的核心：每一塊肌肉都拿到足夠的組數', slides: [
+  { key: 'map', title: '肌群地圖', cls: 'wide', html: head('第 4 章 <em>孤立訓練</em>', '點一塊肌肉，看它怎麼練', '健美跟力量訓練最大的差別：每一塊肌肉都要被直接練到。點正面或背面的任何一塊，右邊會列出它的功能、每週組數地標、最有效的孤立動作與你最可能做錯的地方。') +
+    `<div class="body"><div class="map"><div><div class="bodies"><figure>${BODY_FRONT}<figcaption>正面</figcaption></figure><figure>${BODY_BACK}<figcaption>背面</figcaption></figure></div><div class="mlist" id="mlist"></div></div><div class="mpanel" id="mpanel"></div></div></div>` },
+] })
+MOUNT['map'] = sec => {
+  const panel = $('#mpanel', sec), list = $('#mlist', sec)
+  list.innerHTML = Object.keys(MUSCLES).map(k => `<button type="button" data-m="${k}" aria-pressed="false">${MUSCLES[k].name}</button>`).join('')
+  const show = k => {
+    const m = MUSCLES[k]
+    $$('[data-m]', sec).forEach(el => { const on = el.dataset.m === k; el.classList.toggle('on', on); if (el.tagName === 'BUTTON') el.setAttribute('aria-pressed', String(on)) })
+    panel.innerHTML = `<h3>${esc(m.name)}<small>${esc(m.en)}</small></h3><p class="fn">${esc(m.fn)}</p><div class="land"><div><span>最低有效 MEV</span><b>${m.land[0]}</b></div><div><span>最佳 MAV</span><b>${m.land[1]}</b></div><div><span>最大可恢復 MRV</span><b>${m.land[2]}</b></div></div><p class="note" style="margin-top:4px">每週組數；直接動作 1 組、複合動作算 0.5 組。</p>${tbl(['孤立動作', '你會做錯的地方'], m.ex.map(e => [esc(e[0]) + yt(e[1]), esc(e[2])]), 'dense')}<p class="quote"><b>重點：</b>${esc(m.tip)}</p>`
+  }
+  sec.addEventListener('click', e => { const el = e.target.closest('[data-m]'); if (el) { show(el.dataset.m); if (NARROW.matches) panel.scrollIntoView({ behavior: 'smooth', block: 'start' }) } })
+  show('sdelt')
+}
+DECK[3].slides.push({ key: 'iso-rules', title: '孤立動作的做法', cls: 'two', html: head('第 4 章 <em>孤立訓練</em>', '孤立動作的五條規則', '孤立動作的價值在於可以安全地做到接近力竭、把張力放在一塊肌肉上。所以它的做法跟大複合不一樣：輕一點、慢一點、做滿一點、做到底一點。') +
+  `<div class="body">${pts([
+    { k: '重量以能感覺到目標肌肉為準', p: '側平舉用 8 公斤做得到位，比 14 公斤甩完更有效。孤立動作的重量永遠比你以為的輕。', hot: true },
+    { k: '每組 RIR 0 到 2', p: '單關節、小肌群，力竭很安全。把真的力竭留給這裡，大複合反而要保留。' },
+    { k: '拉長位置多停一下', p: '飛鳥的底部、彎舉的最低點、腿彎舉的伸直處停 1 秒，這是張力最高的位置。' },
+    { k: '優先用滑輪與機器', p: '張力曲線穩定、整個幅度都有阻力；啞鈴飛鳥到頂端張力歸零，滑輪不會。' },
+    { k: '單側動作處理左右差', p: '一邊明顯弱就先做弱邊，次數以弱邊為準。划船、側平舉、腿伸都能單側做。' },
+  ])}<p class="quote"><b>每肌群一週的配置：</b>兩堂課，各一個複合（6 到 10 下）加一到兩個孤立（10 到 20 下），總組數照第 4 章的地標。</p></div>` })
+
+/* ── 第 5 章 功能性 ── */
+DECK.push({ n: 5, title: '功能性怎麼結合', en: 'FUNCTIONAL', sub: '七個動作模式，當熱身與收尾塞進健美課表', slides: [
+  { key: 'patterns', title: '七個動作模式', cls: 'two', html: head('第 5 章 <em>功能性</em>', '健美課表缺的是這三種', '功能性訓練講的是動作模式而不是肌肉：蹲、鉸鏈、推、拉、負重行走、旋轉與抗旋轉、單側。健美分化把前四種練得很滿，缺的是後三種。補上它們，不用改課表，每堂課加 10 分鐘。') +
+    `<div class="body">${tbl(['動作模式', '健美課表裡', '補什麼'], [
+      ['蹲', '深蹲、腿推、哈克蹲，夠了', '偶爾換成前蹲或高腳杯蹲，練軀幹直立'],
+      ['鉸鏈', '硬舉、羅馬尼亞硬舉，夠了', '壺鈴擺盪，把鉸鏈練成爆發力'],
+      ['推與拉', '最不缺的', '單臂版本（單臂滑輪划船、單臂啞鈴推）處理左右差'],
+      { hot: true, c: ['負重行走', '幾乎沒有', '農夫走路、單手提行李走：握力、核心、肩膀穩定一次到位'] },
+      { hot: true, c: ['旋轉與抗旋轉', '幾乎沒有', 'Pallof press、地雷管旋轉、側棒式'] },
+      { hot: true, c: ['單側', '很少', '保加利亞分腿蹲、單腳羅馬尼亞硬舉、側弓步：平衡、髖穩定、膝蓋健康'] },
+    ])}<p class="note">「功能性」不是站在半圓平衡球上做臥推。能用大重量、能漸進、對應日常與運動的動作，才叫功能性。</p></div>` },
+  { key: 'blocks', title: '怎麼塞進課表', cls: 'two', html: head('第 5 章 <em>功能性</em>', '一堂課 10 分鐘：熱身塊或收尾塊', '不另外開一天。每堂課在開頭用熱身塊（活動度加啟動）或在結尾用收尾塊（負重行走加核心），一週的功能性時間佔總時間 10 到 15%。下面三組輪著用。') +
+    `<div class="body">${tbl(['塊', '#時間', '內容', '放在'], [
+      ['熱身塊 A', '8 分', '90/90 髖旋轉 每側 6 ＋ 髖飛機 每側 5 ＋ 彈力帶拉開 15 ＋ 死蟲 每側 8', '腿日開頭'],
+      ['熱身塊 B', '8 分', '肩胛伏地挺身 10 ＋ 面拉 15 ＋ 貓牛 8 ＋ 高腳杯蹲停底 5 下', '上肢日開頭'],
+      { hot: true, c: ['收尾塊 A', '10 分', '農夫走路 3 × 40 m ＋ Pallof press 3 × 10 每側', '任何一天結尾'] },
+      { hot: true, c: ['收尾塊 B', '10 分', '壺鈴擺盪 5 × 10 ＋ 側棒式 3 × 30 秒每側', '下肢日結尾'] },
+      ['收尾塊 C', '10 分', '單手提行李走 3 × 30 m 每側 ＋ 哥本哈根棒式 3 × 20 秒每側', '上肢日結尾'],
+    ], 'dense')}<p class="quote"><b>原則：</b>功能性塊不做到力竭、不加到讓隔天的主課變差。它是保險，不是主菜。</p></div>` },
+  { key: 'func-lib', title: '功能性動作庫', cls: 'wide', html: head('第 5 章 <em>功能性</em>', '功能性動作庫', '十二個動作，覆蓋三個健美課表缺的模式。每一個都能加重量、能漸進。') +
+    `<div class="body">${tbl(['動作', '模式', '#處方', '你會做錯的地方'], [
+      [ex('農夫走路', 'farmer carry form'), '負重行走', '3 × 40 m', '聳肩、步伐太大；重量以能走直線為準'],
+      [ex('單手提行李走', 'suitcase carry form'), '負重行走、抗側彎', '3 × 30 m / 側', '身體往負重側倒'],
+      [ex('過頭負重走', 'overhead carry form'), '負重行走、肩穩定', '3 × 20 m / 側', '腰後仰、肋骨外翻'],
+      [ex('Pallof press', 'pallof press form'), '抗旋轉', '3 × 10 / 側', '髖跟著轉'],
+      [ex('地雷管旋轉', 'landmine rotation form'), '旋轉', '3 × 8 / 側', '只有手臂在動，腳跟沒有跟著轉'],
+      [ex('側棒式', 'side plank form'), '抗側彎', '3 × 30 秒 / 側', '髖掉下去、身體前後折'],
+      [ex('哥本哈根棒式', 'copenhagen plank form'), '內收肌、抗側彎', '3 × 20 秒 / 側', '髖掉下去'],
+      [ex('死蟲', 'dead bug form'), '抗伸展', '3 × 8 / 側', '腰離開地面'],
+      [ex('單腳羅馬尼亞硬舉', 'single leg romanian deadlift form'), '單側鉸鏈', '3 × 8 / 側', '髖打開（骨盆旋轉）'],
+      [ex('保加利亞分腿蹲', 'bulgarian split squat form'), '單側蹲', '3 × 8–12 / 側', '前腳太靠近椅子、膝蓋內倒'],
+      [ex('側弓步', 'cossack squat form'), '單側、內收', '3 × 6 / 側', '腳跟離地'],
+      [ex('壺鈴擺盪', 'kettlebell swing form'), '鉸鏈、爆發', '5 × 10', '變成蹲；壺鈴是用臀推出去的，不是手抬'],
+      [ex('髖飛機', 'hip airplane form'), '單側髖穩定', '2 × 5 / 側', '失去平衡就扶牆，先求控制'],
+      [ex('土耳其起立', 'turkish get up form'), '全身、肩穩定', '2 × 3 / 側', '趕著做；每一步停住看壺鈴'],
+    ], 'dense')}</div>` },
+] })
+
+/* ── 第 6 章 飲食 ── */
+DECK.push({ n: 6, title: '飲食', en: 'NUTRITION', sub: '熱量、蛋白質、碳水與脂肪、時機、台灣版的一天', slides: [
+  { key: 'calories', title: '熱量', cls: 'two', html: head('第 6 章 <em>飲食</em>', '熱量決定你在長還是在掉', '肌肉在熱量盈餘時長最快，赤字時能保住已經很好。增肌期每天多 250 到 500 大卡、體重一週漲 0.25 到 0.5%；減脂期每天少 300 到 500、一週掉 0.5 到 1%。輸入體重與活動量算你的起點，再用體重趨勢修正。') +
+    `<div class="body"><div class="ctl"><label>體重 <input type="number" id="nu-w" value="75" min="40" max="150" step="0.5"> kg</label><label>活動量 <span class="seg" id="nu-act"><button type="button" data-a="30" aria-pressed="false">久坐</button><button type="button" data-a="33" aria-pressed="true">一週練 3–4 次</button><button type="button" data-a="36" aria-pressed="false">練 5 次以上</button></span></label></div><div class="big"><div><b id="nu-tdee">—</b><span>維持熱量（估）</span></div><div><b class="red" id="nu-bulk">—</b><span>增肌期 +350</span></div><div><b id="nu-cut">—</b><span>減脂期 −400</span></div></div>${tbl(['', '#每週體重變化', '#一個月', '做法'], [
+      { hot: true, c: ['增肌期', '+0.25–0.5%', '+0.3–0.5 kg（75 kg 的人）', '12 到 20 週，漲太快就減 100 大卡'] },
+      ['減脂期', '−0.5–1%', '−1.5–3 kg', '8 到 12 週，蛋白質拉到 2.0 以上，重量維持'],
+      ['維持期', '±0', '±0', '每兩個階段之間留 4 到 8 週，讓身體與食慾歸零'],
+    ], 'dense')}<p class="note">維持熱量用「體重 × 30 到 36」粗估，誤差可到 10%。真正的尺是兩週的平均體重：沒有照預期變化就調 100 到 200 大卡，不要算得更精。</p></div>` },
+  { key: 'protein', title: '蛋白質', cls: 'two', html: head('第 6 章 <em>飲食</em>', '每公斤 1.6 到 2.2 公克，分三到五餐', '統合分析的轉折點在每公斤體重 1.6 公克，再往上長的肌肉幾乎不再增加；減脂期拉到 2.0 到 2.4 保住肌肉。每餐 0.4 公克每公斤（約 25 到 40 公克）、分 3 到 5 餐，比一餐吃完有效。') +
+    `<div class="body"><div class="big"><div><b class="red" id="pr-day">—</b><span>每天（1.6–2.2 g/kg）</span></div><div><b id="pr-meal">—</b><span>每餐（0.4 g/kg）</span></div><div><b id="pr-cut">—</b><span>減脂期（2.0–2.4 g/kg）</span></div></div>${tbl(['食物', '#蛋白質', '備註'], [
+      ['雞胸肉（熟）100 g', '31 g', '最便宜的來源，超商舒肥一包約 24 g'],
+      ['雞腿肉（去皮）100 g', '26 g', '比雞胸多一點脂肪，好吃很多'],
+      ['豬里肌 / 牛腱 100 g', '27–30 g', '滷牛腱、滷里肌都算'],
+      ['鮭魚 / 鯖魚 100 g', '20–22 g', '順便拿到魚油'],
+      ['雞蛋 1 顆', '6.5 g', '茶葉蛋 7 g，一天吃三顆沒問題'],
+      ['無糖豆漿 400 ml', '14 g', '植物性來源，搭配其他'],
+      ['板豆腐 100 g', '8.5 g', '嫩豆腐只有一半'],
+      ['希臘優格 150 g', '14 g', '睡前吃的酪蛋白來源'],
+      ['乳清 1 匙', '24 g', '補不夠的時候用，不是必要'],
+    ], 'dense')}</div>` },
+  { key: 'macros', title: '碳水與脂肪', cls: 'two', html: head('第 6 章 <em>飲食</em>', '碳水給訓練，脂肪給荷爾蒙', '蛋白質定了之後，剩下的熱量分給碳水和脂肪。碳水是重訓的燃料，訓練日多一點；脂肪最低每公斤 0.5 公克，低於這個睪固酮會掉。不用怕碳水，也不用怕脂肪，怕的是兩個都不夠的日子。') +
+    `<div class="body">${tbl(['', '#每公斤體重', '75 kg 的人', '來源'], [
+      ['蛋白質', '1.6–2.2 g', '120–165 g', '上一張'],
+      { hot: true, c: ['碳水', '3–5 g，訓練日取上限', '225–375 g', '飯、麵、地瓜、水果、燕麥；訓練前後各一份'] },
+      ['脂肪', '0.8–1.0 g，最低 0.5', '60–75 g', '蛋、魚、堅果、橄欖油；不用刻意加'],
+      ['纖維', '每 1000 大卡 14 g', '35–40 g', '蔬菜兩拳、水果兩份、全穀'],
+    ], 'dense')}${pts([
+      { k: '訓練前 1 到 3 小時', p: '一餐有碳水跟蛋白質，例如飯加雞腿。空腹練力量會掉。' },
+      { k: '訓練後 2 小時內', p: '再一餐蛋白質 30 到 40 公克加碳水。所謂的「30 分鐘黃金窗口」不存在，窗口有好幾個小時。' },
+      { k: '睡前', p: '30 到 40 公克慢消化蛋白質（優格、牛奶、酪蛋白）對夜間合成有一點幫助，選用。' },
+    ])}</div>` },
+  { key: 'phases', title: '增肌期與減脂期', cls: 'two', html: head('第 6 章 <em>飲食</em>', '什麼時候該增、什麼時候該減', '長期來看是輪流的：增肌期把肌肉堆上去，難免帶一點脂肪；減脂期把脂肪拿掉，肌肉盡量留住。切換點看體脂與鏡子，不看日曆。') +
+    `<div class="body">${tbl(['階段', '#長度', '開始的條件', '結束的條件', '訓練'], [
+      { hot: true, c: ['增肌期', '12–20 週', '體脂看得到腹肌的輪廓（男約 12–15%）', '腹肌完全看不到、體重漲速超過每週 0.5%', '全力推進階，組數往 MAV 走'] },
+      ['減脂期', '8–12 週', '體脂超過舒服的範圍（男約 18–20%）', '到目標或連續兩週掉不動', '重量維持、組數減 1/3，目標是不退步'],
+      ['維持期', '4–8 週', '任何階段結束後', '食慾、睡眠、訓練表現回到正常', '照常練'],
+      ['迷你減脂', '2–4 週', '增肌期中段脂肪漲太快', '時間到就停', '赤字拉大到 −750，蛋白質拉高'],
+    ], 'dense')}<p class="quote"><b>中階最常見的錯：</b>一直處在小赤字「想同時增肌減脂」。肌肉量到了中階以後，重組的速度非常慢，分階段快得多。</p></div>` },
+  { key: 'day', title: '台灣版的一天', cls: 'wide', html: head('第 6 章 <em>飲食</em>', '一天怎麼吃：75 公斤、增肌期', '維持 2,500、增肌 2,850 大卡的一天，全部是外食買得到的東西。重點在每餐都有 30 公克以上的蛋白質，碳水放在訓練前後。') +
+    `<div class="body">${tbl(['#時間', '吃什麼', '#蛋白質', '#熱量', '為什麼'], [
+      ['07:30', '超商：茶葉蛋 2 顆、無糖豆漿 400 ml、御飯糰 1 個、香蕉', '33 g', '560', '起床先補蛋白質，碳水給上午'],
+      ['12:00', '自助餐：飯一碗半、滷雞腿、豆腐、兩樣青菜', '45 g', '820', '訓練前 2 小時的主餐，碳水最多的一餐'],
+      ['14:30', '訓練'],
+      ['15:30', '超商：舒肥雞胸 1 包、希臘優格、地瓜 1 條', '40 g', '420', '訓練後的蛋白質與碳水'],
+      ['19:00', '家裡：鮭魚或牛肉 150 g、飯一碗、青菜', '38 g', '700', '晚餐正常吃，脂肪在這一餐'],
+      ['22:00', '牛奶 300 ml 或優格', '10 g', '180', '睡前慢蛋白，選用'],
+      { hot: true, c: ['合計', '', '166 g（2.2 g/kg）', '2,680', '不夠的 170 大卡用堅果或多半碗飯補'] },
+    ], 'dense')}<p class="note">減脂期把同一份菜單的飯減半、御飯糰拿掉、晚餐脂肪換成雞胸，就落到 2,100 上下。熱量是估的，用兩週的體重趨勢修正。</p></div>` },
+] })
+MOUNT['calories'] = sec => {
+  let act = 33
+  const upd = () => { const w = +$('#nu-w', sec).value || 0, t = w * act; $('#nu-tdee', sec).innerHTML = `${Math.round(t)}<small>kcal</small>`; $('#nu-bulk', sec).innerHTML = `${Math.round(t + 350)}<small>kcal</small>`; $('#nu-cut', sec).innerHTML = `${Math.round(t - 400)}<small>kcal</small>`; const pr = $('#pr-day'); if (pr) { pr.innerHTML = `${Math.round(w * 1.6)}–${Math.round(w * 2.2)}<small>g</small>`; $('#pr-meal').innerHTML = `${Math.round(w * .4)}<small>g</small>`; $('#pr-cut').innerHTML = `${Math.round(w * 2)}–${Math.round(w * 2.4)}<small>g</small>` } }
+  $('#nu-w', sec).addEventListener('input', upd)
+  $('#nu-act', sec).addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; act = +b.dataset.a; $$('button', $('#nu-act', sec)).forEach(x => x.setAttribute('aria-pressed', String(x === b))); upd() })
+  upd()
+}
+
+/* ── 第 7 章 營養品 ── */
+DECK.push({ n: 7, title: '營養品', en: 'SUPPLEMENTS', sub: '三級：有證據、看情況、不值得', slides: [
+  { key: 'supp', title: '三級清單', cls: 'wide', html: head('第 7 章 <em>營養品</em>', '營養品只有三級', '飲食與睡眠做到位之後，營養品能加的大概是 5%。第一級有一致的證據、便宜、安全；第二級在特定情況有用；第三級是行銷。劑量都是研究用的量，產品標示比這高不代表更有效。') +
+    `<div class="body"><div class="tier hot1"><div><h3>第一級<b>有證據，值得</b></h3><ul>
+      <li><b>肌酸一水合物</b><small>每天 3–5 g，任何時間，不用裝填期</small>力量與重複次數多 5 到 10%，間接長更多肌肉。最便宜、研究最多的一個。</li>
+      <li><b>咖啡因</b><small>每公斤 3–6 mg，訓練前 30–60 分</small>力量、耐力、專注都有效。半衰期 5 到 6 小時，睡前 8 小時內不要碰。</li>
+      <li><b>乳清／酪蛋白</b><small>一匙 20–40 g 蛋白質</small>就是方便的蛋白質，食物吃得夠就不需要。酪蛋白適合睡前。</li>
+      <li><b>維生素 D</b><small>每天 1000–2000 IU，缺的人</small>曬不到太陽的上班族多半偏低；抽血確認最好。對肌肉的直接效果小，對免疫與骨頭有用。</li>
+      <li><b>魚油</b><small>每天 1–2 g EPA+DHA</small>一週吃不到兩次魚才需要。對肥大的證據弱，對整體健康與關節有一點。</li>
+    </ul></div><div><h3>第二級<b>看情況</b></h3><ul>
+      <li><b>β-丙胺酸</b><small>每天 3.2–6.4 g，分次</small>對 1 到 4 分鐘的高強度有幫助，對純力量幾乎沒有。皮膚刺麻是正常的。</li>
+      <li><b>瓜胺酸蘋果酸</b><small>6–8 g，訓練前 60 分</small>多做一兩下、泵感好一點，效果小但真的有。</li>
+      <li><b>硝酸鹽（甜菜根）</b><small>訓練前 2–3 小時</small>對耐力有效，對重訓證據薄。</li>
+      <li><b>電解質</b><small>大量流汗時</small>一堂 60 分鐘的重訓不需要，夏天戶外或兩小時以上才需要。</li>
+      <li><b>鎂、鋅</b><small>缺的人</small>缺乏時補回來有用，不缺多吃沒有額外效果。</li>
+    </ul></div><div><h3>第三級<b>不值得</b></h3><ul>
+      <li><b>BCAA</b><small>蛋白質吃夠就是多餘</small>乳清裡已經有，單獨補對合成沒有額外效果。</li>
+      <li><b>睪固酮促進劑</b><small>蒺藜、D-天門冬胺酸之類</small>對正常男性沒有效果，研究一致。</li>
+      <li><b>燃脂劑</b><small>有效的成分就是咖啡因</small>其餘成分多半沒證據，副作用倒是有。</li>
+      <li><b>麩醯胺酸、HMB</b><small>對有在練的人</small>對住院病人有用，對訓練者沒有。</li>
+      <li><b>綜合 pre-workout</b><small>看成分表</small>有效的只有咖啡因、瓜胺酸、β-丙胺酸，剩下是劑量不足的裝飾。</li>
+    </ul></div></div></div>` },
+  { key: 'creatine', title: '肌酸', cls: 'two', html: head('第 7 章 <em>營養品</em>', '肌酸：唯一必須認識的那個', '它讓肌肉裡的磷酸肌酸多 20%，每一組可以多做一兩下，累積起來就是更多肌肉。一天 3 到 5 公克、每天吃、什麼時間都可以，一個月不到一百塊。') +
+    `<div class="body">${pts([
+      { k: '效果', p: '力量與重複次數多 5 到 10%；長期多長一點肌肉。約兩成的人反應很小（肌肉本來就飽和）。', hot: true },
+      { k: '體重', p: '頭兩週會多 1 到 2 公斤，是肌肉裡的水，不是脂肪。要比 W/kg 的運動員要知道這點。' },
+      { k: '裝填期', p: '不需要。每天 3 到 5 公克，三到四週飽和；想快可以前五天每天 20 公克分四次，副作用是腸胃不舒服。' },
+      { k: '腎臟', p: '健康成人長期使用沒有腎損傷的證據。有腎病才要問醫生。' },
+      { k: '掉髮', p: '只有一篇 2009 年的小研究看到 DHT 上升，之後沒有被重複出來。目前證據不支持。' },
+      { k: '怎麼買', p: '肌酸一水合物，看到 Creapure 或 monohydrate 就對了。鹽酸鹽、緩衝型沒有比較好，只是比較貴。' },
+    ])}</div>` },
+] })
+
+/* ── 第 8 章 睡眠與恢復 ── */
+DECK.push({ n: 8, title: '睡眠與恢復', en: 'SLEEP & RECOVERY', sub: '肌肉是在睡覺時長的', slides: [
+  { key: 'sleep-why', title: '睡眠對肌肉做了什麼', cls: 'two', html: head('第 8 章 <em>睡眠與恢復</em>', '少睡一晚，合成掉兩成', '訓練給的是刺激，肌肉是在睡眠中合成的。研究把睡眠砍掉之後：一晚不睡，肌肉蛋白合成掉 18%、睪固酮掉兩成；減脂時每晚只睡 5.5 小時，掉的體重裡肌肉佔的比例多六成。7 到 9 小時不是建議，是處方的一部分。') +
+    `<div class="body"><div class="fig" id="f-sleep"></div>${tbl(['研究情境', '結果'], [
+      ['一晚完全不睡（Lamon 2021）', '肌肉蛋白合成 −18%，皮質醇 +21%，睪固酮 −24%'],
+      ['連續 5 晚只睡 5 小時（Leproult 2011）', '白天睪固酮 −10 到 15%，相當於老了十歲'],
+      { hot: true, c: ['減脂期每晚 5.5 vs 8.5 小時（Nedeltcheva 2010）', '同樣的赤字，脂肪少掉 55%、肌肉多掉 60%'] },
+      ['睡眠不足對力量（Knowles 2018 統合）', '單次表現掉得不多，下午更差；多日累積後明顯下降，受傷風險上升'],
+    ], 'dense')}</div>` },
+  { key: 'sleep-how', title: '睡眠衛生', cls: 'two', html: head('第 8 章 <em>睡眠與恢復</em>', '能控制的七件事', '睡眠品質大部分是習慣。固定起床時間比固定上床時間重要，早上的光比晚上的黑重要，咖啡因的截止時間比你以為的早。') +
+    `<div class="body">${steps([
+      '<b>固定起床時間</b>，包括週末。這一條決定生理時鐘，其他都是輔助。',
+      '<b>起床 30 分鐘內看到戶外的光</b> 10 到 20 分鐘。陰天也算，室內燈不算。',
+      '<b>咖啡因在睡前 8 到 10 小時停</b>。下午兩點以後的咖啡會留到半夜，就算你睡得著，深睡也會變少。',
+      '<b>房間涼、黑、安靜</b>：18 到 20 度，遮光，耳塞。體溫下降是入睡的開關。',
+      '<b>酒精不是助眠</b>。它讓你睡著，然後把後半夜切碎。',
+      '<b>睡前一小時放下螢幕</b>，做不到就把亮度調到最低並用夜間模式。',
+      '<b>午睡 20 分鐘或 90 分鐘</b>，不要 45。下午三點後不睡。',
+    ])}<p class="quote"><b>睡不好那天還要練嗎？</b>要。但組數減 20 到 30%、RIR 留 2 到 3，把主動作做完就好。連續睡不好一週，直接當減量週。</p></div>` },
+  { key: 'recovery', title: '恢復的其他槓桿', cls: 'two', html: head('第 8 章 <em>睡眠與恢復</em>', '痠不是尺，表現才是', '延遲性痠痛跟肌肉成長沒有相關。真正該看的是：同重量的次數有沒有回來、晨間心率、情緒、睡眠品質。恢復手段裡，有些有用、有些只是舒服、有一個會反效果。') +
+    `<div class="body">${tbl(['手段', '效果', '怎麼用'], [
+      { hot: true, c: ['睡眠與熱量', '最大', '上面兩張。沒有別的東西能取代'] },
+      ['減量週', '大', '每 4 到 6 週一次，組數減半'],
+      ['低強度活動', '中', '走路、輕鬆騎車 20 到 30 分鐘，促進血流、不加負荷'],
+      ['按摩、滾筒、伸展', '小（主觀）', '讓你覺得好一點，對修復沒有可測量的影響，想做就做'],
+      ['桑拿', '小', '放鬆、對心血管有益，不影響肥大'],
+      ['冷水浴、冰敷', '負', '練完立刻泡冷水會抑制肥大訊號（Roberts 2015）。比賽期間救急可以，增肌期不要'],
+    ], 'dense')}${pts([
+      { k: '過度訓練的訊號', p: '同重量次數連掉兩堂、晨間心率比平常高 5 下以上、睡眠變淺、對訓練沒興趣、小傷不斷。三個中兩個就減量。' },
+    ])}</div>` },
+] })
+MOUNT['sleep-why'] = sec => {
+  const W = 640, H = 190, g = S('svg', { viewBox: `0 0 ${W} ${H}` })
+  const rows = [['肌肉蛋白合成', -18], ['睪固酮（一晚不睡）', -24], ['睪固酮（5 晚 5 小時）', -12], ['減脂期掉的脂肪', -55], ['減脂期掉的肌肉', 60]]
+  const x0 = 200, xm = W - 30, scale = (xm - x0) / 70
+  rows.forEach(([n, v], i) => { const y = 22 + i * 32; g.append(S('text', { class: 'lb', x: x0 - 10, y: y + 11, 'text-anchor': 'end' }, n)); const w = Math.abs(v) * scale; g.append(S('rect', { class: 'bar grow' + (v > 0 ? ' red' : ''), x: x0, y, width: w, height: 16, style: `--k:${i};transform-origin:left;` })); g.append(S('text', { class: 'lb2 n', x: x0 + w + 8, y: y + 12 }, `${v > 0 ? '+' : ''}${v}%`)) })
+  g.append(S('line', { class: 'ax', x1: x0, y1: 10, x2: x0, y2: H - 10 }))
+  g.append(S('text', { class: 'lb', x: xm, y: H - 4, 'text-anchor': 'end' }, '相對於睡飽的對照組；紅色是變多（肌肉流失）'))
+  $('#f-sleep', sec).append(g)
+}
+
+/* ── 第 9 章 追蹤與停滯 ── */
+DECK.push({ n: 9, title: '追蹤與停滯', en: 'TRACKING', sub: '沒有紀錄就沒有進步', slides: [
+  { key: 'track', title: '紀錄什麼', cls: 'two', html: head('第 9 章 <em>追蹤與停滯</em>', '四種紀錄，各有自己的頻率', '體重計會騙人、鏡子會騙人、感覺更會。要同時看四種東西，每一種看的時間尺度不一樣。訓練紀錄每一組、體重每天、圍度每月、照片每月。') +
+    `<div class="body">${tbl(['紀錄', '頻率', '怎麼記', '看什麼'], [
+      { hot: true, c: ['訓練日誌', '每一組', '動作、重量、次數、RIR。手機備忘錄就夠', '同重量次數是否上升。這是唯一每週都該進步的東西'] },
+      ['體重', '每天早上，上完廁所', '算七天平均', '週平均的趨勢，單日的 ±1 公斤是水'],
+      ['圍度', '每月同一天', '上臂（屈）、胸、腰（肚臍）、大腿，皮尺同一位置', '上臂與大腿漲、腰不漲＝增的是肌肉'],
+      ['照片', '每月同一天', '同光線、同姿勢、同時間，正面側面背面', '三個月前的自己才是對照組'],
+    ], 'dense')}${tbl(['中階的力量參考（男，相對體重）', '#深蹲', '#臥推', '#硬舉', '#肩推'], [
+      ['中階', '1.25–1.5×', '1.0–1.25×', '1.5–2.0×', '0.6–0.75×'],
+      ['高階', '1.75–2×', '1.5×', '2.25–2.5×', '0.9–1×'],
+    ], 'dense')}<p class="note">力量參考值是常見的經驗表，女性約為 60 到 70%。健美的目標不是這些數字，但它們是「肌肉量有沒有在長」的旁證。</p></div>` },
+  { key: 'plateau', title: '停滯怎麼辦', cls: 'two', html: head('第 9 章 <em>追蹤與停滯</em>', '停滯：先找原因，再換變數', '連續兩個週期同一動作沒進步才叫停滯，兩堂課不算。原因按出現的機率排：吃不夠、睡不夠、組數太少或太多、沒有真的接近力竭、技術卡住。一次只改一個變數，給它一個週期。') +
+    `<div class="body">${steps([
+      '<b>熱量與蛋白質</b>：兩週平均體重沒漲就是沒有盈餘。先加 200 大卡。',
+      '<b>睡眠</b>：平均低於 7 小時，其他都不用看。',
+      '<b>接近力竭</b>：把停滯的動作最後一組做到真的力竭，看跟你估的 RIR 差幾下。多半差 2 到 3。',
+      '<b>組數</b>：低於 10 就加 2 組；超過 20 且表現在掉就減量一週再從 12 開始。',
+      '<b>次數區間</b>：一直做 8 到 12 的換成 5 到 8 一個週期，或反過來。',
+      '<b>動作變體</b>：同模式換一個（槓鈴臥推換上斜啞鈴），技術卡住時有效。',
+      '<b>減量</b>：以上都對還是不動，就是累積疲勞。減量一週，常常回來就破了。',
+    ])}</div>` },
+] })
+
+/* ── 第 10 章 錯誤與範例 ── */
+DECK.push({ n: 10, title: '錯誤與 12 週', en: 'MISTAKES & PLAN', sub: '中階最常犯的十個錯，加一份照抄的課表', slides: [
+  { key: 'mistakes', title: '十個錯', cls: 'wide', html: head('第 10 章 <em>錯誤與範例</em>', '中階最常犯的十個錯', '新手的錯是不知道，中階的錯是知道但做了相反的事。按造成損失的大小排。') +
+    `<div class="body"><div class="tier"><div>${steps([
+      '<b>一直換課表。</b>每個課表都沒跑滿 8 週，永遠在神經適應期。',
+      '<b>動作太多、每個做太少。</b>10 個動作各 2 組，不如 6 個動作各 3 到 4 組接近力竭。',
+      '<b>RIR 留太多。</b>看起來很努力，每一組都停在還能再做 5 下的地方。',
+      '<b>半程動作、重量超過技術。</b>臥推不碰胸、深蹲不過水平，為了數字犧牲張力。',
+      '<b>不做紀錄。</b>不知道上次做多重，就不可能超負荷。',
+    ])}</div><div>${steps([
+      '<b>蛋白質不夠、熱量也不夠。</b>然後怪課表。',
+      '<b>把痠痛當進度。</b>不痠就以為沒練到，痠就以為有效。',
+      '<b>不減量。</b>一路加到撞牆、受傷，再被迫休兩週。',
+      '<b>追泵感不追進階。</b>高次數短休息很有感，但半年後重量跟以前一樣。',
+      '<b>忽略腿、背的厚度、後三角、小腿。</b>鏡子看不到的都不練，體態就不平衡。',
+    ]).replace(/counter\(s,decimal-leading-zero\)/g, '')}</div></div></div>` },
+  { key: 'plan12', title: '12 週範例', cls: 'wide', html: head('第 10 章 <em>錯誤與範例</em>', '照抄的 12 週：4 天上下分化', '用第 3 章的 4 天課表跑三個波，每個波 3 週上升加 1 週減量。組數照每肌群算，RIR 逐週下降，複合動作每個波加一格重量。第 12 週順便做測驗（第 9 章的紀錄）。') +
+    `<div class="body">${tbl(['#週', '每肌群組數', '#RIR', '複合動作重量', '要做的事'], [
+      ['1', '10', '3', '上一週期末的 90%', '動作全部照表，技術優先'],
+      ['2', '12', '2', '同上，次數往上限加', ''],
+      ['3', '14', '1', '次數到上限就加 2.5 kg', '最硬的一週'],
+      { hot: true, c: ['4 減量', '6–7', '3–4', '第 3 週的 90%', '量體重、圍度、拍照'] },
+      ['5', '12', '3', '第 3 週的重量', '波的起點比上一波高'],
+      ['6', '14', '2', '次數往上限加', ''],
+      ['7', '16', '1', '到上限就加 2.5 kg', ''],
+      { hot: true, c: ['8 減量', '7–8', '3–4', '第 7 週的 90%', '檢查停滯清單'] },
+      ['9', '14', '3', '第 7 週的重量', ''],
+      ['10', '16', '2', '', ''],
+      ['11', '18', '1', '到上限就加 2.5 kg', '整個週期的頂點'],
+      { hot: true, c: ['12 測驗', '6', '2', '主動作做 3 到 5RM', '估 1RM、圍度、照片；比第 4 週'] },
+    ], 'dense')}<p class="note">減脂期跑同一份：組數固定在 10 到 12、重量不降、不追進階，目標是三個月後力量一樣。</p></div>` },
+  { key: 'end', title: '結尾', cls: 'two', html: head('結尾 <em>TEN RULES</em>', '記不住全部，記這十條', '') +
+    `<div class="body">${steps([
+      '每肌群每週 10 到 20 組、練 2 次。', '每一組 RIR 0 到 3，最後幾下要慢下來。', '複合先、孤立後，每堂課 5 到 7 個動作。', '雙重進階：先加次數，到上限再加重量。', '全幅度，離心控制，拉長位置多停一下。',
+      '每 4 到 6 週減量一週。', '每公斤 1.6 到 2.2 公克蛋白質，增肌期要有盈餘。', '肌酸 3 到 5 公克，其他營養品先別買。', '7 到 9 小時睡眠，固定起床時間。', '記錄每一組，照片每個月。',
+    ])}<div class="acts"><button class="btn pri" type="button" data-go="0">從封面再看一次</button><a class="btn" href="linkTreeIndex.html#theatre">回放映室</a></div><p class="asof">內容整理自 2016 到 2024 年的統合分析與常見實務指南（Schoenfeld、Helms、Israetel、Morton、Aragon 等），劑量與範圍都是多數人的區間，不是處方。有傷病請先問醫生。</p></div>` },
+] })
+
+/* ═══ 產生投影片 ═══ */
+const flat = []   // { key, title, ch, chTitle, slide }
+DECK.forEach(ch => ch.slides.forEach(s => flat.push({ ...s, ch: ch.n, chTitle: ch.title })))
+const tocHTML = () => head('目錄 <em>CONTENTS</em>', `十章，${flat.length + 1} 張`, '點任何一章直接跳過去；上面那根槓鈴的每一片也是章節。') +
+  `<div class="body"><ol class="toc">${DECK.map(ch => `<li class="rv" style="--k:${ch.n}"><button type="button" data-key="${ch.slides[0].key}"><span class="n">${String(ch.n).padStart(2, '0')}</span><span class="t">${esc(ch.title)}<small>${esc(ch.sub)}</small></span><span class="c">${ch.slides.length} 張</span></button></li>`).join('')}</ol></div>`
+const anchor = $('#anchor')
+anchor.insertAdjacentHTML('beforebegin', flat.map(s => `<section class="slide ${s.cls || 'wide'}" data-key="${s.key}" data-title="${esc(s.title)}" data-ch="${s.ch}">${s.type === 'toc' ? tocHTML() : s.html}${s.key !== 'toc' && s.key !== 'end' ? `<div class="wm" aria-hidden="true">${String(s.ch).padStart(2, '0')}</div>` : ''}</section>`).join(''))
+anchor.remove()
+$$('.slide').forEach(sec => { const m = MOUNT[sec.dataset.key]; if (m) { try { m(sec) } catch (e) { console.error(sec.dataset.key, e) } } })
+;(() => { const sec = $('.slide[data-key=mistakes]'); const ols = $$('.steps', sec); if (ols[1]) ols[1].style.counterReset = 's 5' })()
+$('#nSlides').textContent = flat.length + 1
+
+/* ═══ 頂欄的槓鈴：一章一片，片的寬度 ∝ 張數；目前那片紅、走過的片白 ═══ */
+const slides = $$('.slide'), N = slides.length, keys = slides.map(s => s.dataset.key), titles = slides.map(s => s.dataset.title), chOf = slides.map(s => +s.dataset.ch)
+const barsvg = $('#barsvg')
+const totalN = DECK.reduce((a, c) => a + c.slides.length, 0)
+let plates = [], ready = false   // ready：cur 宣告在後面，layoutBar 第一次跑時還不能 paintBar（typeof 碰到 TDZ 也會丟錯）
+const rod = S('line', { class: 'rod', y1: 18, y2: 18 }), rodon = S('line', { class: 'rodon', y1: 18, y2: 18, pathLength: 1, 'stroke-dasharray': 1, 'stroke-dashoffset': 1 })
+function layoutBar() {
+  const BW = Math.max(120, Math.round($('#bar').clientWidth)), pad = Math.min(40, BW * .05), gap = BW < 400 ? 3 : 6
+  barsvg.setAttribute('viewBox', `0 0 ${BW} 36`); barsvg.textContent = ''
+  rod.setAttribute('x1', 0); rod.setAttribute('x2', BW); rodon.setAttribute('x1', 0); rodon.setAttribute('x2', BW)
+  barsvg.append(rod, rodon)
+  let px = pad; const avail = BW - pad * 2 - gap * (DECK.length - 1)
+  plates = DECK.map(ch => { const w = Math.max(8, (ch.slides.length / totalN) * avail); const r = S('rect', { class: 'plate', x: px, y: 3, width: w, height: 30, rx: 3, 'data-ch': ch.n }); const t = S('text', { x: px + w / 2, y: 23, 'text-anchor': 'middle', 'data-ch': ch.n, style: w < 18 ? 'display:none' : '' }, String(ch.n)); barsvg.append(r, t); px += w + gap; return { ch: ch.n, r, t } })
+  if (ready) paintBar()
+}
+layoutBar()
+let rz = 0; addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(layoutBar, 120) })
+barsvg.addEventListener('click', e => { const r = e.target.closest('.plate'); if (r) goKey(DECK.find(c => c.n === +r.dataset.ch).slides[0].key) })
+function paintBar() {
+  const c = chOf[cur]
+  plates.forEach(p => { p.r.classList.toggle('on', p.ch === c); p.r.classList.toggle('done', p.ch < c || keys[cur] === 'end'); p.t.classList.toggle('on', p.ch === c) })
+  rodon.setAttribute('stroke-dashoffset', String(1 - cur / (N - 1)))
+  const ch = DECK.find(x => x.n === c)
+  $('#cur').innerHTML = ch ? `<b>第 ${ch.n} 章 ${esc(ch.title)}</b>${esc(ch.en)} · ${esc(titles[cur])}` : `<b>${esc(titles[cur])}</b>${flat.length + 1} 張`
+}
+
+/* ═══ 投影片控制 ═══ */
+let cur = Math.max(0, keys.indexOf(location.hash.slice(1))), auto = false, autoT = 0
+const pg = $('#pg')
+slides.forEach((s, i) => { const b = document.createElement('button'); b.type = 'button'; if (i === 0 || chOf[i] !== chOf[i - 1]) b.classList.add('ch'); b.setAttribute('aria-label', `第 ${i + 1} 張：${titles[i]}`); b.title = titles[i]; b.innerHTML = '<i></i>'; b.addEventListener('click', () => go(i)); pg.append(b) })
+const dots = $$('button', pg)
+function sync() {
+  slides.forEach((s, i) => { const on = i === cur; s.classList.toggle('is-on', on); s.inert = !on; s.setAttribute('aria-hidden', String(!on)) })
+  dots.forEach((d, i) => d.setAttribute('aria-current', String(i === cur)))
+  $('#count').textContent = `${cur + 1} / ${N}`; $('#prev').disabled = cur === 0; $('#next').disabled = cur === N - 1
+  $('#live').textContent = `第 ${cur + 1} 張，${titles[cur]}`
+  paintBar()
+  history.replaceState(null, '', '#' + keys[cur])
+}
+function go(to, { instant = false } = {}) { to = clamp(to, 0, N - 1); if (to === cur && !instant) return; cur = to; sync(); if (auto) armAuto() }
+const goKey = k => { const i = keys.indexOf(k); if (i >= 0) go(i) }
+const next = () => go(cur + 1), prev = () => go(cur - 1)
+function armAuto() { clearTimeout(autoT); autoT = setTimeout(() => { if (cur < N - 1) go(cur + 1); else setAuto(false) }, 15000) }
+function setAuto(on) { auto = on; $('#auto').setAttribute('aria-pressed', String(on)); $('#auto').setAttribute('aria-label', on ? '停止自動放映' : '自動放映'); on ? (cur === N - 1 ? go(0) : armAuto()) : clearTimeout(autoT) }
+$('#auto').addEventListener('click', () => setAuto(!auto))
+document.addEventListener('visibilitychange', () => { if (document.hidden) clearTimeout(autoT); else if (auto) armAuto() })
+const fsBtn = $('#fs'); if (!document.fullscreenEnabled) fsBtn.hidden = true
+const toggleFs = () => { if (!document.fullscreenEnabled) return; document.fullscreenElement ? document.exitFullscreen() : root.requestFullscreen().catch(() => {}) }
+fsBtn.addEventListener('click', toggleFs)
+document.addEventListener('fullscreenchange', () => fsBtn.setAttribute('aria-pressed', String(!!document.fullscreenElement)))
+$('#next').addEventListener('click', next); $('#prev').addEventListener('click', prev)
+$$('[data-go]').forEach(b => b.addEventListener('click', () => go(+b.dataset.go)))
+$$('.toc button').forEach(b => b.addEventListener('click', () => goKey(b.dataset.key)))
+addEventListener('keydown', e => {
+  if (e.altKey || e.ctrlKey || e.metaKey) return
+  const onCtl = e.target.closest && e.target.closest('a,button,input,textarea,select,summary')
+  if (e.target.closest && e.target.closest('input')) return   // 計算機裡打字不換頁
+  switch (e.key) {
+    case 'ArrowRight': case 'ArrowDown': case 'PageDown': next(); break
+    case 'ArrowLeft': case 'ArrowUp': case 'PageUp': prev(); break
+    case ' ': if (onCtl) return; e.shiftKey ? prev() : next(); break
+    case 'Home': go(0); break
+    case 'End': go(N - 1); break
+    case 'f': case 'F': toggleFs(); break
+    case 'p': case 'P': setAuto(!auto); break
+    default: if (/^[0-9]$/.test(e.key)) { const n = e.key === '0' ? 10 : +e.key; const ch = DECK.find(c => c.n === n); if (ch) goKey(ch.slides[0].key) } else return
+  }
+  e.preventDefault()
+})
+const deck = $('#deck')
+let sx = 0, sy = 0, st = 0, sid = null, swiped = false
+deck.addEventListener('pointerdown', e => { if (e.pointerType === 'mouse' || e.target.closest('input')) return; const tw = e.target.closest('.tw'); if (tw && tw.scrollWidth > tw.clientWidth + 2) return; sx = e.clientX; sy = e.clientY; st = performance.now(); sid = e.pointerId; swiped = false })
+deck.addEventListener('pointerup', e => { if (e.pointerId !== sid) return; sid = null; const dx = e.clientX - sx, dy = e.clientY - sy; if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy) * 1.4 && performance.now() - st < 800) { swiped = true; dx < 0 ? next() : prev() } })
+deck.addEventListener('click', e => { if (swiped) { e.preventDefault(); e.stopPropagation(); swiped = false } }, true)
+let wLock = false, wAt = 0, wLast = 0
+deck.addEventListener('wheel', e => {
+  if (e.ctrlKey) return
+  if (e.target.closest && e.target.closest('.tw') && Math.abs(e.deltaX) > Math.abs(e.deltaY)) return   // 表格橫向捲動
+  const sl = slides[cur]; if (sl.scrollHeight > sl.clientHeight + 24) { const top = sl.scrollTop <= 0, bot = sl.scrollTop + sl.clientHeight >= sl.scrollHeight - 1; if (!(e.deltaY > 0 ? bot : top)) return }
+  const now = performance.now(), gap = now - wLast; wLast = now
+  if (wLock) { if (now - wAt > 900 && gap > 140) wLock = false; else return }
+  const dd = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX
+  if (Math.abs(dd) < 24) return
+  wLock = true; wAt = now; dd > 0 ? next() : prev()
+}, { passive: true })
+addEventListener('hashchange', () => { const i = keys.indexOf(location.hash.slice(1)); if (i >= 0 && i !== cur) go(i) })
+
+ready = true
+go(cur, { instant: true })
+root.dataset.ready = '1'
+window.__lift = { DECK, PROGRAMS, MUSCLES, go, goKey, keys }
+})()
+</script>
+</body>
+</html>
