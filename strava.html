@@ -1851,6 +1851,38 @@ button.ov-cell:focus-visible{outline:1px solid rgba(252,76,2,.6);outline-offset:
 .il-table td.s{font-size:9px;letter-spacing:1px;color:var(--ink-3)}
 .il-table tr.pr td,.il-table tr.pr td.t{color:var(--ac,#e87c1a)}
 .il-none{font-size:10.5px;color:var(--ink-3);padding:0 2px 12px}
+/* 同功率進步趨勢（data/itt-progress.json）：摘要＋迷你折線＋成績表兩欄＋估計聲明。缺檔時整組不渲染。
+   顏色只用頁面既有的語意綠／紅（達標／退步），持平走中性墨階；沒有新色票。 */
+.il-pg{margin:0 0 10px;max-width:560px}
+.il-pg-sum{font-size:12.5px;line-height:1.7;color:var(--ink-2);text-wrap:pretty}
+.il-pg-sum b{font-family:var(--f-mono);font-weight:700;color:var(--ink-1);font-variant-numeric:tabular-nums}
+.il-pg-v{font-weight:700;color:var(--ink-1)}
+.il-pg[data-verdict="faster"] .il-pg-v,.il-pg[data-verdict="faster"] .il-pg-sum b.d{color:#5FD060}
+.il-pg[data-verdict="slower"] .il-pg-v,.il-pg[data-verdict="slower"] .il-pg-sum b.d{color:#FF6A6A}
+.il-pg-low{color:var(--ink-3)}
+.il-pg-best{font-size:12px;line-height:1.6;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.il-pg-best b{font-family:var(--f-mono);font-weight:700;color:var(--ink-2)}
+.il-pg-bestring{fill:none;stroke:rgba(244,240,234,.66);stroke-width:1}
+.il-pg-svg{display:block;width:100%;max-width:300px;height:auto;margin:4px 0 0;overflow:visible}
+.il-pg-ln{fill:none;stroke:rgba(244,240,234,.38);stroke-width:1.25;stroke-linejoin:round;stroke-linecap:round}
+.il-pg-dot{fill:#0a0408;stroke:rgba(244,240,234,.38);stroke-width:1.25}
+.il-pg-end{fill:var(--ink-1);stroke:var(--ink-1);stroke-width:1.25}
+.il-pg[data-verdict="faster"] .il-pg-end{fill:#5FD060;stroke:#5FD060}
+.il-pg[data-verdict="slower"] .il-pg-end{fill:#FF6A6A;stroke:#FF6A6A}
+.il-pg-lb{font-family:var(--f-mono);font-size:12px;fill:rgba(244,240,234,.66);font-variant-numeric:tabular-nums}
+.il-pg-cap{font-size:12px;line-height:1.6;color:var(--ink-3)}
+.il-pg-foot{margin:8px 0 0;max-width:560px;font-size:12px;line-height:1.65;color:var(--ink-3);text-wrap:pretty}
+.il-tw{max-width:560px;overflow-x:auto}
+.il-tw .il-table{max-width:none}
+.il-table.has-prog th{font-size:12px;letter-spacing:.2px;text-transform:none;white-space:nowrap}
+.il-table.has-prog td{font-size:12px;white-space:nowrap}
+.il-table.has-prog td.q{font-family:var(--f-mono);color:var(--ink-1)}
+@media(max-width:560px){
+  .il-table.has-prog th,.il-table.has-prog td{padding-left:3px;padding-right:3px}
+  .il-table.has-prog th:nth-child(5),.il-table.has-prog th:nth-child(6){white-space:normal;line-height:1.3;vertical-align:bottom}
+  .il-table.has-prog td:first-child{white-space:normal}
+  .il-table.has-prog td.s{letter-spacing:0}
+}
 @media(max-width:560px){.il-sdim{display:none}}
 @media(max-width:720px){
   .tsv{border-radius:11px}
@@ -5079,14 +5111,113 @@ function selectSegment(id, opts) {
    平常是乾淨的分段列（名稱＋PR＋次數），點某一段才展開它每一次挑戰的
    成績表——跟 Strava 的「segment → 你的成績」同一種讀法，
    也就是舊 Collection 點開看成績的直系後代。 */
-function ittEffortTableHTML(efforts, pr) {
+/* ── 同功率進步趨勢（data/itt-progress.json，scripts 產生；爬坡路段、n≥4 才有）──
+   換算時間是物理模型的估計，不是量測，畫面上一定要講。整組包在 try/catch：
+   這些函式在 render() 的樣板字串裡被呼叫，丟例外會讓整頁變成「載入失敗」。
+   任何一步對不上就回 null／空字串，成績表退回原樣。 */
+function ittProgFor(segId) {
+  try {
+    const d = window._ittProg
+    if (!d || !Array.isArray(d.segments)) return null
+    const g = d.segments.find(x => x && String(x.id) === String(segId))
+    if (!g || !Array.isArray(g.series) || g.series.length < 4) return null
+    const r = g.recent
+    if (!r || !['faster', 'flat', 'slower'].includes(r.verdict) || !Number.isFinite(+r.delta_pct)
+        || !r.now_str || !r.before_str || !Number.isFinite(+g.ref_w)) return null
+    const ok = g.series.every(p => p && typeof p.date === 'string' && Number.isFinite(+p.eq_sec) && typeof p.eq_str === 'string')
+    if (!ok) return null
+    const series = g.series.slice().sort((a, b) =>
+      (`${a.date} ${a.start_time || ''}`).localeCompare(`${b.date} ${b.start_time || ''}`))
+    return { g, series, recent: r, ref: Math.round(+g.ref_w) }
+  } catch (e) { return null }
+}
+function ittProgEsc(v) {
+  return String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
+}
+function ittProgHeadHTML(prog) {
+  try {
+    const { series, recent: r, ref } = prog
+    const n = series.length
+    const vWord = { faster: '變快', flat: '持平', slower: '變慢' }[r.verdict]
+    const dp = +r.delta_pct
+    const dTxt = (dp > 0 ? '+' : dp < 0 ? '−' : '') + Math.abs(dp).toFixed(1) + '%'
+    const low = r.low_sample ? `<span class="il-pg-low">　樣本少（n=${ittProgEsc(prog.g.n != null ? prog.g.n : n)}），只當方向</span>` : ''
+    // 迷你折線：x＝時間順序的各次挑戰，y＝換算時間，越快越高。兩端各留一格放首末值。
+    const W = 300, H = 60, X0 = 46, X1 = 254, Y0 = 9, Y1 = 51
+    const secs = series.map(p => +p.eq_sec)
+    const lo = Math.min(...secs), hi = Math.max(...secs)
+    const xs = i => X0 + (n === 1 ? 0 : (X1 - X0) * i / (n - 1))
+    const ys = v => hi === lo ? (Y0 + Y1) / 2 : Y0 + (Y1 - Y0) * (v - lo) / (hi - lo)   // 秒數小（快）→ y 小 → 在上方
+    const pts = series.map((p, i) => [xs(i), ys(+p.eq_sec)])
+    const f = v => v.toFixed(1)
+    const first = series[0], last = series[n - 1]
+    // 歷史最佳：best_eq 的日期＋換算字串對 series；對不到就不標、不寫那一行（不猜）
+    let bi = -1
+    const be = prog.g.best_eq
+    if (be && typeof be.date === 'string' && typeof be.eq_str === 'string') {
+      series.forEach((q, i) => { if (q.date === be.date && q.eq_str === be.eq_str && bi < 0) bi = i })
+      if (bi < 0) series.forEach((q, i) => { if (q.date === be.date && (bi < 0 || +q.eq_sec < +series[bi].eq_sec)) bi = i })
+    }
+    let bestLine = ''
+    if (bi >= 0) {
+      const gap = Number.isFinite(+r.now_sec) ? Math.round(+r.now_sec - +series[bi].eq_sec) : null
+      const isBest = bi === n - 1 || (gap != null && gap <= 0)
+      const tail = isBest ? (bi === n - 1 ? '最近一趟就是最佳' : `最近 <b>${ittProgEsc(r.now_str)}</b>，就是最佳`)
+        : (gap != null ? `最近 <b>${ittProgEsc(r.now_str)}</b>，距最佳 <b>${gap > 0 ? '+' : '−'}${Math.abs(gap)} 秒</b>` : '')
+      bestLine = `<div class="il-pg-best">歷史最佳換算 <b>${ittProgEsc(series[bi].eq_str)}</b>（${ittProgEsc(series[bi].date)}）${tail ? '；' + tail : ''}</div>`
+    }
+    const dots = series.map((p, i) => {
+      const isEnd = i === n - 1
+      return `<circle class="${isEnd ? 'il-pg-end' : 'il-pg-dot'}" cx="${f(pts[i][0])}" cy="${f(pts[i][1])}" r="${isEnd ? 4 : 2.5}"><title>${ittProgEsc(p.date)} ${ittProgEsc(p.eq_str)}</title></circle>`
+    }).join('')
+    const aria = `同功率換算 ${ref} 瓦的時間，共 ${n} 次挑戰，從 ${first.eq_str} 到 ${last.eq_str}，越高越快` +
+      (bi >= 0 ? `；最佳 ${series[bi].eq_str}（${series[bi].date}）` : '')
+    const ring = bi >= 0 ? `<circle class="il-pg-bestring" cx="${f(pts[bi][0])}" cy="${f(pts[bi][1])}" r="7"/>` : ''
+    const svg = `<svg class="il-pg-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${ittProgEsc(aria)}">
+      <polyline class="il-pg-ln" points="${pts.map(q => f(q[0]) + ',' + f(q[1])).join(' ')}"/>${dots}${ring}
+      <text class="il-pg-lb" x="${X0 - 9}" y="${f(pts[0][1])}" dy=".35em" text-anchor="end">${ittProgEsc(first.eq_str)}</text>
+      <text class="il-pg-lb" x="${X1 + 10}" y="${f(pts[n - 1][1])}" dy=".35em" text-anchor="start">${ittProgEsc(last.eq_str)}</text>
+    </svg>`
+    return `<div class="il-pg" data-verdict="${r.verdict}">
+      <div class="il-pg-sum">同功率換算 <b>${ref}W</b>：最近 <b>${ittProgEsc(r.now_str)}</b>，前 <b>${ittProgEsc(r.before_str)}</b>，<b class="d">${dTxt}</b>　<span class="il-pg-v">${vWord}</span>${low}</div>
+      ${bestLine}
+      ${svg}
+      <div class="il-pg-cap">每點一次挑戰，換算成 ${ref}W 會騎多久；越高越快（${ittProgEsc(r.basis || '最近 3 趟中位 vs 前 3 趟中位')}）；x 軸是挑戰次序，不是日期比例。${bi >= 0 ? '圓環是歷史最佳。' : ''}</div>
+    </div>`
+  } catch (e) { return '' }
+}
+const ITT_PROG_FOOT = '估計，不是量測：假設體重不變、沒有風與氣溫修正，也不看段內配速（前面衝、中段垮的趟會讓早期偏慢，進步可能被高估）。只做爬坡路段。跨度超過半年時體重可能不同（2025 年約 76–78 kg、現在約 80 kg），距最佳只當參考。'
+/** 把一筆成績對到 series 的點：日期＋開始時刻（±2 分）；沒有開始時刻時，該日恰一筆才採信。 */
+function ittProgMatch(prog, e, dayCount) {
+  try {
+    const same = prog.series.filter(p => p.date === e.date)
+    if (!same.length) return null
+    const toMin = t => { const m = /^(\d{1,2}):(\d{2})/.exec(t || ''); return m ? +m[1] * 60 + +m[2] : null }
+    const t = toMin(e.start_time)
+    if (t == null) return (same.length === 1 && dayCount === 1) ? same[0] : null
+    let best = null, bd = 3
+    same.forEach(p => { const m = toMin(p.start_time); if (m != null && Math.abs(m - t) < bd) { bd = Math.abs(m - t); best = p } })
+    return best
+  } catch (err) { return null }
+}
+function ittEffortTableHTML(efforts, pr, segId) {
   const rows = (efforts || []).slice()
     .sort((a, b) => (`${b.date || ''} ${b.start_time || ''}`).localeCompare(`${a.date || ''} ${a.start_time || ''}`))
   if (!rows.length) return '<div class="il-none">尚無成績</div>'
   const dayN = {}
   rows.forEach(e => { const d = e.date || ''; dayN[d] = (dayN[d] || 0) + 1 })
-  return `<table class="il-table">
-    <thead><tr><th>日期</th><th>時間</th><th>功率</th><th>心率</th><th>來源</th></tr></thead>
+  let prog = ittProgFor(segId)
+  const progHead = prog ? ittProgHeadHTML(prog) : ''
+  if (!progHead) prog = null
+  const extraTh = prog ? `<th>換算 ${prog.ref}W</th><th>瓦÷心率</th>` : ''
+  const extraTd = e => {
+    if (!prog) return ''
+    const m = ittProgMatch(prog, e, dayN[e.date || ''])
+    const hr = m && Number.isFinite(+m.w_hr) && m.w_hr !== null ? (+m.w_hr).toFixed(2) : ''
+    return `<td class="n q">${m ? ittProgEsc(m.eq_str) : ''}</td><td class="n">${hr}</td>`
+  }
+  const table = `<table class="il-table${prog ? ' has-prog' : ''}">
+    <thead><tr><th>日期</th><th>時間</th><th>功率</th><th>心率</th>${extraTh}<th>來源</th></tr></thead>
     <tbody>${rows.map(e => {
       const isPr = pr && sameEffort(e, pr)
       const rep = (dayN[e.date || ''] > 1 && e.start_time)
@@ -5095,11 +5226,13 @@ function ittEffortTableHTML(efforts, pr) {
         <td>${isPr ? '👑 ' : ''}${e.date ? e.date.replace(/-/g, '/') : '—'}${rep}</td>
         <td class="t">${e.elapsed_str}</td>
         <td class="n">${e.avg_watts ? e.avg_watts + 'w' : '—'}</td>
-        <td class="n">${e.avg_heartrate || '—'}</td>
+        <td class="n">${e.avg_heartrate || '—'}</td>${extraTd(e)}
         <td class="s" title="${e.fit_check ? `自建 ${e.fit_check.elapsed_str}，差 ${e.fit_check.diff_sec > 0 ? '+' : ''}${e.fit_check.diff_sec} 秒：偵測器待修，先顯示 Strava` : e.strava_check ? `Strava ${e.strava_check.elapsed_str}（對帳）` : ''}">${e.source === 'fit' ? '自建' : e.fit_check ? '⚠︎ STRAVA' : 'STRAVA'}</td>
       </tr>`
     }).join('')}</tbody>
   </table>`
+  if (!prog) return table
+  return `${progHead}<div class="il-tw">${table}</div><p class="il-pg-foot">${ITT_PROG_FOOT}</p>`
 }
 /** 一組（全段＋分段）的收合列。renderSegments 在每座檯下面各叫一次。 */
 function ittGroupRowsHTML(members, SEG_META) {
@@ -5125,7 +5258,7 @@ function ittGroupRowsHTML(members, SEG_META) {
       </button>
       <div class="il-det">
         <div class="il-prline">${pr ? `👑 PR <b>${pr.elapsed_str}</b>${pr.avg_watts ? ` · ${pr.avg_watts}w` : ''}${pr.date ? ` · ${pr.date}` : ''}` : '尚無 PR'}${kom ? ` <span class="il-kom">${kom}</span>` : ''}</div>
-        ${ittEffortTableHTML(efforts, pr)}
+        ${ittEffortTableHTML(efforts, pr, seg.id)}
       </div>
     </div>`
   }).join('')
@@ -11239,8 +11372,11 @@ Promise.all([
   // 距離最佳（一趟裡任意連續 N 公里最快多久；data/distance-prs.json）。位置解構，所以一定排在陣列最後。
   // 缺檔或壞檔就回 null → 現況的摘要卡、ITT 頂部的完整版、活動紀錄的徽章三處一起消失，其餘不受影響。
   fetchData('data/distance-prs.json').then(r => r.ok ? r.json() : null).catch(() => null),
+  // ITT 爬坡路段的同功率換算時間（進步趨勢；data/itt-progress.json）。位置解構，所以排在 distance-prs 之後、陣列最後。
+  // 缺檔、壞檔或結構不對 → null → 展開的成績表完全維持原樣（見 ittProgFor）。
+  fetchData('data/itt-progress.json').then(r => r.ok ? r.json() : null).catch(() => null),
 ])
-  .then(([data, ittConfig, segStreams, segTerrain, segGrades, landmarks, rivals, taipeiOutline, quotesData, trainingBlock, planRx, ittSegments, wellness, doms, activities, powerHr, powerShift, tasks, playbook, distPrs]) => {
+  .then(([data, ittConfig, segStreams, segTerrain, segGrades, landmarks, rivals, taipeiOutline, quotesData, trainingBlock, planRx, ittSegments, wellness, doms, activities, powerHr, powerShift, tasks, playbook, distPrs, ittProg]) => {
     mergeIttSegments(data, ittSegments)
     window._wellness = wellness || null
     window._doms = doms || null
@@ -11268,6 +11404,7 @@ Promise.all([
     window._planRx = planRx || null
     window._playbook = playbook || null
     window._distPrs = (distPrs && Array.isArray(distPrs.distances)) ? distPrs : null
+    window._ittProg = (ittProg && Array.isArray(ittProg.segments)) ? ittProg : null
     window._powerShift = powerShift || null
     window._taipeiMiniMap = buildTaipeiMiniMap(taipeiOutline)
     window._quotePool = mapQuotes(quotesData)

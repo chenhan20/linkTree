@@ -1905,6 +1905,29 @@ button.ov-cell:focus-visible{outline:1px solid rgba(252,76,2,.6);outline-offset:
 .il-table td.s{font-size:9px;letter-spacing:1px;color:var(--ink-3)}
 .il-table tr.pr td,.il-table tr.pr td.t{color:var(--ac,#e87c1a)}
 .il-none{font-size:10.5px;color:var(--ink-3);padding:0 2px 12px}
+/* 同功率進步趨勢：顏色只沿用既有語意色（綠＝好、紅＝差、灰＝持平），不發光——光暈只給歷來 PR */
+.ip{margin:2px 0 10px;max-width:560px}
+.ip-line{font-size:12.5px;line-height:1.7;color:var(--ink-2);letter-spacing:.3px}
+.ip-line b{font-family:var(--f-mono);font-weight:700;color:var(--ink-1);font-variant-numeric:tabular-nums}
+.ip-v{font-family:var(--f-mono);font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
+.ip-v.faster{color:#2ecc71}.ip-v.slower{color:#ff6a6a}.ip-v.flat{color:var(--ink-2)}
+.ip-best{margin-top:1px;font-size:12px;line-height:1.6;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.ip-sp .ip-ring{color:var(--ink-1)}
+.ip-low{margin-left:10px;font-size:12px;color:var(--ink-3);white-space:nowrap}
+.ip-chart{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:4px}
+.ip-sp{display:block;width:100%;max-width:280px;height:auto;max-height:64px;color:var(--ink-2);overflow:visible;flex:0 1 280px}
+.ip-sp .ip-dots circle{fill:var(--ink-3)}
+.ip-sp .ip-last{fill:var(--ac,#e87c1a)}
+.ip-sp .ip-t{font-family:var(--f-mono);font-size:12px;fill:var(--ink-3);font-variant-numeric:tabular-nums}
+.ip-sp .ip-t.is-last{fill:var(--ink-1);font-weight:700}
+.ip-cap{font-size:12px;line-height:1.5;color:var(--ink-3);flex:1 1 160px}
+.il-tw{overflow-x:auto;max-width:620px}
+.il-table.has-ip{max-width:none}
+.il-table th.pg{font-size:12px;letter-spacing:.3px;text-transform:none;white-space:nowrap}
+.il-table td.pg{font-family:var(--f-mono);font-size:11.5px;color:var(--ink-2)}
+.il-table td.pg.eq{color:var(--ink-1);font-weight:700}
+.ip-note{margin-top:8px;font-size:12px;line-height:1.6;color:var(--ink-3);max-width:560px}
+@media(max-width:560px){.il-table.has-ip th,.il-table.has-ip td{padding-left:2px;padding-right:2px}}
 @media(max-width:560px){.il-sdim{display:none}}
 @media(max-width:720px){
   .tsv{border-radius:11px}
@@ -4511,14 +4534,112 @@ function selectSegment(id, opts) {
    平常是乾淨的分段列（名稱＋PR＋次數），點某一段才展開它每一次挑戰的
    成績表——跟 Strava 的「segment → 你的成績」同一種讀法，
    也就是舊 Collection 點開看成績的直系後代。 */
-function ittEffortTableHTML(efforts, pr) {
+/* ── 同功率進步趨勢（data/itt-progress.json，選配）─────────────────────────
+   把每次爬坡成績換算成「參考功率下會騎多久」（物理模型估計，不是量測），
+   在每條爬坡路段展開後的成績表上方放一行摘要＋迷你折線、成績表多兩欄。
+   n<4、非爬坡（檔案裡沒有）、欄位殘缺 → 該路段什麼都不加；整檔壞 → window._ittProg 是 null，全部靜默消失。
+   排版函式的例外一律吞掉，不能讓選配功能拖垮 ITT 頁。 */
+const ipEsc = v => String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+const ipNum = v => typeof v === 'number' && isFinite(v)
+const ipStr = v => typeof v === 'string' && v.length > 0
+const IP_VERDICT = { faster: '變快', flat: '持平', slower: '變慢' }
+/** 歷史最佳那一點：先比 date＋eq_str，退而用同日最小 eq_sec；找不到回 null（整行與圓環都不出）。 */
+function ipBest(b, series, r) {
+  if (!b || !ipStr(b.date) || !ipStr(b.eq_str) || !ipNum(r.now_sec)) return null
+  let i = series.findIndex(p => p.date === b.date && p.eq_str === b.eq_str)
+  if (i < 0) {
+    series.forEach((p, k) => { if (p.date === b.date && (i < 0 || p.eq_sec < series[i].eq_sec)) i = k })
+  }
+  return i < 0 ? null : { i, date: b.date, eq_str: series[i].eq_str, eq_sec: series[i].eq_sec, isLast: i === series.length - 1 }
+}
+/** 通過才收：回 { [segId]: 該路段資料 }，一條都沒有就回 null。壞掉的路段單獨略過。 */
+function ittProgValid(p) {
+  if (!p || !Array.isArray(p.segments)) return null
+  const out = {}
+  for (const s of p.segments) {
+    try {
+      if (!s || s.id == null || !ipNum(s.ref_w) || !ipNum(s.n) || s.n < 4 || !Array.isArray(s.series)) continue
+      const r = s.recent
+      if (!r || !ipStr(r.now_str) || !ipStr(r.before_str) || !ipNum(r.delta_pct) || !IP_VERDICT[r.verdict]) continue
+      const series = s.series.filter(x => x && ipNum(x.eq_sec) && ipStr(x.eq_str))
+      if (series.length < 4) continue
+      out[String(s.id)] = { id: s.id, ref_w: Math.round(s.ref_w), n: s.n, series, recent: r, best: ipBest(s.best_eq, series, r) }
+    } catch (e) { /* 單一路段壞掉就略過 */ }
+  }
+  return Object.keys(out).length ? out : null
+}
+function ipSafe(fn, fallback) { try { return fn() } catch (e) { window.__ipErr = e; return fallback } }
+const ipPct = v => `${v < 0 ? '−' : v > 0 ? '+' : '±'}${Math.abs(v).toFixed(1)}%`
+/** 迷你折線：x 是挑戰先後、y 是換算秒數翻過來（越高越快），最後一點強調，首末點旁標換算時間。 */
+function ipSparkSVG(ip) {
+  const s = ip.series, n = s.length
+  const W = 260, H = 56, x0 = 44, x1 = 214, pad = 7
+  const ys = s.map(p => -p.eq_sec)                       // 翻轉：高＝快
+  const lo = Math.min(...ys), hi = Math.max(...ys), span = (hi - lo) || 1
+  const X = i => x0 + (n === 1 ? 0 : i * (x1 - x0) / (n - 1))
+  const Y = v => H - pad - (v - lo) / span * (H - 2 * pad)
+  const pts = s.map((p, i) => [X(i), Y(ys[i])])
+  const poly = pts.map(p => `${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ')
+  const dots = pts.slice(0, -1).map(p => `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${n > 12 ? 1.5 : 2.2}"/>`).join('')
+  const f = pts[0], l = pts[n - 1]
+  const bst = ip.best
+  const lab = `同功率換算時間走勢：共 ${n} 趟，從 ${s[0].eq_str} 到 ${s[n - 1].eq_str}，越高越快${bst ? `；最佳 ${bst.eq_str}（${bst.date}）` : ''}`
+  return `<svg class="ip-sp" viewBox="0 0 ${W} ${H}" role="img" aria-label="${ipEsc(lab)}" focusable="false">
+    <polyline points="${poly}" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round" opacity=".7"/>
+    <g class="ip-dots">${dots}</g>
+    ${bst ? `<circle class="ip-ring" cx="${pts[bst.i][0].toFixed(1)}" cy="${pts[bst.i][1].toFixed(1)}" r="7" fill="none" stroke="currentColor" stroke-width="1"/>` : ''}
+    <circle class="ip-last" cx="${l[0].toFixed(1)}" cy="${l[1].toFixed(1)}" r="3.6"/>
+    <text class="ip-t" x="${(f[0] - 7).toFixed(1)}" y="${(f[1] + 4).toFixed(1)}" text-anchor="end">${ipEsc(s[0].eq_str)}</text>
+    <text class="ip-t is-last" x="${(l[0] + 8).toFixed(1)}" y="${(l[1] + 4).toFixed(1)}" text-anchor="start">${ipEsc(s[n - 1].eq_str)}</text>
+  </svg>`
+}
+function ipSummaryHTML(ip) {
+  const r = ip.recent
+  const low = (r.low_sample || ip.n < 10) ? `<span class="ip-low">樣本少（n=${ip.n}），只當方向</span>` : ''
+  const b = ip.best
+  let best = ''
+  if (b) {
+    const gap = Math.round(r.now_sec - b.eq_sec)
+    best = `<div class="ip-best">歷史最佳換算 ${ipEsc(b.eq_str)}（${ipEsc(b.date)}）；${b.isLast ? '最近一趟就是最佳' : `最近 ${ipEsc(r.now_str)}，距最佳 ${gap < 0 ? '−' : '+'}${Math.abs(gap)} 秒`}</div>`
+  }
+  return `<div class="ip" data-ip="${ipEsc(ip.id)}">
+    <div class="ip-line">同功率換算 ${ip.ref_w}W：最近 <b>${ipEsc(r.now_str)}</b>，前 <b>${ipEsc(r.before_str)}</b>，<span class="ip-v ${ipEsc(r.verdict)}">${ipPct(r.delta_pct)}　${IP_VERDICT[r.verdict]}</span>${low}</div>
+    ${best}
+    <div class="ip-chart">${ipSparkSVG(ip)}<div class="ip-cap">${ip.n} 趟各自換算成 ${ip.ref_w}W 的時間，折線越高越快。x 軸是挑戰次序，不是日期比例。${ip.best ? '圓環是歷史最佳。' : ''}</div></div>
+  </div>`
+}
+const IP_NOTE = '估計值，非量測：假設體重不變、無風溫修正、不看段內配速（前面衝的趟會讓早期偏慢、進步可能被高估）；只做爬坡路段。跨度超過半年時體重可能不同（2025 年約 76–78 kg、現在約 80 kg），距最佳只當參考。'
+/** 用 日期＋開始時間 對列；沒有開始時間就退而求其次，只比日期且該日恰一筆。 */
+function ipMatcher(ip) {
+  const byKey = {}, byDate = {}
+  ip.series.forEach(p => {
+    const d = p.date || '', st = (p.start_time || '').slice(0, 5)
+    ;(byDate[d] = byDate[d] || []).push(p)
+    if (st) byKey[`${d} ${st}`] = p
+  })
+  return e => {
+    const d = e.date || '', st = (e.start_time || '').slice(0, 5)
+    if (st && byKey[`${d} ${st}`]) return byKey[`${d} ${st}`]
+    const day = byDate[d] || []
+    if (day.length === 1 && (!st || !day[0].start_time)) return day[0]
+    return null
+  }
+}
+function ittEffortTableHTML(efforts, pr, ip) {
   const rows = (efforts || []).slice()
     .sort((a, b) => (`${b.date || ''} ${b.start_time || ''}`).localeCompare(`${a.date || ''} ${a.start_time || ''}`))
   if (!rows.length) return '<div class="il-none">尚無成績</div>'
   const dayN = {}
   rows.forEach(e => { const d = e.date || ''; dayN[d] = (dayN[d] || 0) + 1 })
-  return `<table class="il-table">
-    <thead><tr><th>日期</th><th>時間</th><th>功率</th><th>心率</th><th>來源</th></tr></thead>
+  const match = ip ? ipMatcher(ip) : null
+  const ipCells = e => {
+    const m = match(e)
+    const eq = m && ipStr(m.eq_str) ? ipEsc(m.eq_str) : ''
+    const wh = m && ipNum(m.w_hr) ? m.w_hr.toFixed(2) : ''
+    return `<td class="pg eq">${eq}</td><td class="pg wh">${wh}</td>`
+  }
+  const table = `<table class="il-table${ip ? ' has-ip' : ''}">
+    <thead><tr><th>日期</th><th>時間</th><th>功率</th><th>心率</th>${ip ? `<th class="pg" title="把這趟換算成 ${ip.ref_w}W 會騎多久（估計）">換算 ${ip.ref_w}W</th><th class="pg" title="均功率 ÷ 均心率">瓦÷心率</th>` : ''}<th>來源</th></tr></thead>
     <tbody>${rows.map(e => {
       const isPr = pr && sameEffort(e, pr)
       const rep = (dayN[e.date || ''] > 1 && e.start_time)
@@ -4528,10 +4649,12 @@ function ittEffortTableHTML(efforts, pr) {
         <td class="t">${e.elapsed_str}</td>
         <td class="n">${e.avg_watts ? e.avg_watts + 'w' : '—'}</td>
         <td class="n">${e.avg_heartrate || '—'}</td>
+        ${ip ? ipCells(e) : ''}
         <td class="s" title="${e.fit_check ? `自建 ${e.fit_check.elapsed_str}，差 ${e.fit_check.diff_sec > 0 ? '+' : ''}${e.fit_check.diff_sec} 秒：偵測器待修，先顯示 Strava` : e.strava_check ? `Strava ${e.strava_check.elapsed_str}（對帳）` : ''}">${e.source === 'fit' ? '自建' : e.fit_check ? '⚠︎ STRAVA' : 'STRAVA'}</td>
       </tr>`
     }).join('')}</tbody>
   </table>`
+  return ip ? `<div class="il-tw">${table}</div>` : table
 }
 /** 一組（全段＋分段）的收合列。renderSegments 在每座檯下面各叫一次。 */
 function ittGroupRowsHTML(members, SEG_META) {
@@ -4546,6 +4669,16 @@ function ittGroupRowsHTML(members, SEG_META) {
       const gap = Math.round(pr.elapsed_sec - seg.kom_elapsed_sec)
       kom = `<b>${gap >= 0 ? '+' : '−'}${String(Math.floor(Math.abs(gap) / 60)).padStart(2, '0')}:${String(Math.abs(gap) % 60).padStart(2, '0')}</b> TO KOM`
     }
+    // 同功率進步趨勢（選配）：任何一步出錯就退回原本的成績表，什麼都不加
+    let ip = window._ittProg ? ipSafe(() => window._ittProg[String(seg.id)] || null, null) : null
+    let ipHead = '', ipFoot = '', ipTable = ''
+    if (ip && efforts.length) {
+      ipHead = ipSafe(() => ipSummaryHTML(ip), '')
+      ipTable = ipHead ? ipSafe(() => ittEffortTableHTML(efforts, pr, ip), '') : ''
+      if (ipTable) ipFoot = `<div class="ip-note">${IP_NOTE}</div>`
+      else { ipHead = ''; ip = null }
+    }
+    if (!ipTable) ipTable = ittEffortTableHTML(efforts, pr)
     return `<div class="il-seg" data-ilseg="${seg.id}">
       <button class="il-row" type="button" onclick="ittLogToggle(this)"
               aria-expanded="false" title="${m.nameZh || seg.name}：點開看每一次挑戰">
@@ -4557,7 +4690,7 @@ function ittGroupRowsHTML(members, SEG_META) {
       </button>
       <div class="il-det">
         <div class="il-prline">${pr ? `👑 PR <b>${pr.elapsed_str}</b>${pr.avg_watts ? ` · ${pr.avg_watts}w` : ''}${pr.date ? ` · ${pr.date}` : ''}` : '尚無 PR'}${kom ? ` <span class="il-kom">${kom}</span>` : ''}</div>
-        ${ittEffortTableHTML(efforts, pr)}
+        ${ipHead}${ipTable}${ipFoot}
       </div>
     </div>`
   }).join('')
@@ -10990,11 +11123,15 @@ Promise.all([
   // 距離最佳（scripts 產生的 data/distance-prs.json）。位置解構，所以新的 fetch 一律排最後。
   // 缺檔、壞檔都回 null → 現況／ITT／紀錄三處的距離最佳靜默消失，其他行為不變。
   fetchData('data/distance-prs.json').then(r => r.ok ? r.json() : null).catch(() => null),
+  // 同功率進步趨勢（scripts 產生的 data/itt-progress.json）：ITT 頁爬坡路段展開後的摘要／折線／兩欄。
+  // 缺檔、非 JSON、結構錯都回 null → 該功能靜默消失，其他行為不變。
+  fetchData('data/itt-progress.json').then(r => r.ok ? r.json() : null).catch(() => null),
 ])
-  .then(([data, ittConfig, segStreams, segTerrain, segGrades, landmarks, rivals, taipeiOutline, quotesData, trainingBlock, planRx, ittSegments, wellness, doms, activities, powerHr, powerShift, tasks, playbook, distPrs]) => {
+  .then(([data, ittConfig, segStreams, segTerrain, segGrades, landmarks, rivals, taipeiOutline, quotesData, trainingBlock, planRx, ittSegments, wellness, doms, activities, powerHr, powerShift, tasks, playbook, distPrs, ittProg]) => {
     mergeIttSegments(data, ittSegments)
     try { window._distPrs = dbValid(distPrs); window._distIdx = window._distPrs ? distAchvIndex(window._distPrs) : null }
     catch (e) { window._distPrs = null; window._distIdx = null }
+    try { window._ittProg = ittProgValid(ittProg) } catch (e) { window._ittProg = null }
     window._wellness = wellness || null
     window._doms = doms || null
     window._activities = activities || null
