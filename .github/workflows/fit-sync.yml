@@ -140,6 +140,10 @@ jobs:
           # 平路段的校準要排除團騎（讀 itt-conditions.json）。純本機，約 40 秒。
           python scripts/build-pacing.py || \
             echo "::warning::配速預估失敗，這班先跳過"
+          # 爬坡路段的「同功率換算時間」（ITT 頁每段展開後的進步趨勢）。純本機、不到一秒，要排在
+          # build-pacing 之後（讀它的 CLIMB 清單與 100 m 坡度）。
+          python scripts/build-itt-progress.py || \
+            echo "::warning::ITT 進步趨勢重建失敗，這班先跳過"
           # 各距離「最快連續 N 公里」（現況頁與 ITT 頁的「距離最佳」，紀錄頁的徽章）。純本機、
           # 增量：只解新的 FIT，快取在 data/fit/_distance_efforts.json（要跟成品一起 commit，
           # 否則下一班 runner 是空的，會整批重算約兩分鐘）。
@@ -166,7 +170,7 @@ jobs:
           git add data/itt-segments.json data/strava.json athlete/coach-context.md \
                   data/fit/_est_distance.json data/tasks.json data/training-block.json \
                   data/itt-conditions.json data/weather data/fit-extras.json data/pacing.json \
-                  data/chronicle.json data/distance-prs.json data/fit/_distance_efforts.json
+                  data/chronicle.json data/distance-prs.json data/fit/_distance_efforts.json data/itt-progress.json
           git diff --staged --quiet || \
             git commit -m "chore: 回補自建 ITT 成績 $(date -u '+%Y-%m-%d')"
           git push || (git pull --rebase --autostash && git push)
