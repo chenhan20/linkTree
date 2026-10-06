@@ -1403,89 +1403,57 @@
       "date": "2026-10-06",
       "week": "W3",
       "block": "zhongshe-2026-09-return",
-      "label": "2×15分持續功率",
+      "label": "露營場全段，壓在 210W（事後依實際路線改列）",
       "type": "QUALITY",
-      "intent": "9/21依新紀錄複核；首週以210W附近起步。上週主段完整穩定、RPE6–8且恢復正常才進階，否則沿用上週或減5–10W。W3從3×10改2×15，總工作同30分，增加單段持續時間，不同時硬加瓦。",
+      "intent": "2026-10-06事後改列：原排2×15分210–225W，實際只騎露營場一趟（27分），處方改成這條路線的上限導向：全段平均壓在210W內，不追25:35／229W的紀錄。當天HRV 78、TSB −3.8，恢復已回到基線以上。",
       "score_policy": "prescription",
       "segments": [
         {
-          "name": "前往＋熱身",
+          "name": "前往",
           "role": "warmup",
-          "minutes": 25,
+          "minutes": 9,
           "target_w": {
-            "lo": 110,
-            "hi": 160,
-            "about": 135.0
-          },
-          "target_cadence": null
-        },
-        {
-          "name": "主課1/2",
-          "role": "work",
-          "minutes": 15,
-          "target_w": {
-            "lo": 210,
-            "hi": 225,
-            "about": 217.5
-          },
-          "target_cadence": null
-        },
-        {
-          "name": "組間恢復／安全下滑",
-          "role": "recovery",
-          "minutes": 12,
-          "target_w": {
-            "lo": null,
-            "hi": null,
+            "lo": 80,
+            "hi": 150,
             "about": 115
           },
           "target_cadence": null
         },
         {
-          "name": "主課2/2",
+          "name": "露營場全段（以終點結束）",
           "role": "work",
-          "minutes": 15,
+          "minutes": 28,
           "target_w": {
-            "lo": 210,
-            "hi": 225,
-            "about": 217.5
+            "lo": null,
+            "hi": 210,
+            "about": 205
           },
           "target_cadence": null
         },
         {
-          "name": "輕鬆續騎／返程",
+          "name": "下山返程",
           "role": "recovery",
-          "minutes": 38,
+          "minutes": 30,
           "target_w": {
             "lo": null,
             "hi": null,
-            "about": 145
-          },
-          "target_cadence": null
-        },
-        {
-          "name": "收操",
-          "role": "cooldown",
-          "minutes": 15,
-          "target_w": {
-            "lo": null,
-            "hi": null,
-            "about": 110
+            "about": 60
           },
           "target_cadence": null
         }
       ],
       "time_budget": {
-        "window_min": 150
+        "window_min": 150,
+        "ride_min": 67
       },
       "selected_variant": "outdoor",
       "export_mode": "free_ride",
-      "route": "9/22先用熟悉連續河濱；9/29、10/6可用中社較緩段，安全下滑不足預算則少做一組或改河濱。",
-      "rain_summary": "訓練台85分，同2×15分210–225W，組間6分。",
+      "route": "實際路線：公司出發→碧山露營場全段（以終點結束）→原路下山",
+      "rain_summary": "訓練台：28分壓在210W內。",
       "variants": {
         "outdoor": {
           "venue": "outdoor",
-          "summary": "2×15分210–225W，恢復至少12分；含往返120分。"
+          "summary": "實際路線：露營場全段（上限210W）→下山"
         },
         "rain": {
           "venue": "indoor",
