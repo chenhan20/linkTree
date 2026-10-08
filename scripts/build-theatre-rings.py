@@ -6,6 +6,7 @@
   ring-pelican.svg      速度儀表弧 —— 鵜鶘騎單車的 HUD 語彙（270° 弧、刻度、日落橘掃到 68%）
   ring-film-paper.svg   水墨圓相（ensō）—— 宣紙白，用在深色底（首頁、序／尾）
   ring-film-ink.svg     同一筆，墨色，用在宣紙底（放映室的十六分二十五秒那一張）；右下角一枚朱紅印章（只有他和紀錄是紅的）
+  ring-t60.svg          倒數環 —— T-60 的語彙（60 格＝60 個倒數秒、每 10 格一個 GO 節點、12 點鐘那一格是 T-0 的訊號橘）
   ring-chronicle.svg    像素圈 —— 4 格一像素、金色，下緣一格深金，1 點鐘方向一枚橘色金幣
 
 viewBox 200×200，環帶在半徑 86–99；圓形預覽的半徑要 ≤ 84（CSS 裡是 inset:8%）。
@@ -169,6 +170,29 @@ def chronicle():
 '''
 
 
+# ── T-60：倒數環 ─────────────────────────────────────────────
+def t60():
+    ticks = []
+    for i in range(60):
+        a = -90 + 6 * i              # 12 點鐘＝T-0（i=0），順時針倒數回來
+        if i == 0:
+            continue                 # T-0 另畫
+        major = i % 10 == 0
+        r0, r1 = (84.5, 95) if major else (88, 93.5)
+        x0, y0 = pol(r0, a)
+        x1, y1 = pol(r1, a)
+        col, op, w = ('#9fb4e8', .8, 1.7) if major else ('#cfd8f0', .34, 1.0)
+        ticks.append(f'<path d="M{f(x0)} {f(y0)}L{f(x1)} {f(y1)}" stroke="{col}" stroke-opacity="{op}" stroke-width="{w}"/>')
+    x0, y0 = pol(83, -90)
+    x1, y1 = pol(99, -90)
+    return f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none" stroke-linecap="round">
+{chr(10).join(ticks)}
+<path d="M{f(x0)} {f(y0)}L{f(x1)} {f(y1)}" stroke="#ff6a1f" stroke-width="3"/>
+<circle cx="100" cy="{f(100 - 99)}" r="2.4" fill="#ffb27a" stroke="none"/>
+</svg>
+'''
+
+
 def main():
     os.makedirs(OUT, exist_ok=True)
     files = {
@@ -176,6 +200,7 @@ def main():
         'ring-film-paper.svg': enso('#f3ecdf', False),
         'ring-film-ink.svg': enso('#2a2622', True),
         'ring-chronicle.svg': chronicle(),
+        'ring-t60.svg': t60(),
     }
     for name, svg in files.items():
         with open(os.path.join(OUT, name), 'w', encoding='utf-8') as fh:

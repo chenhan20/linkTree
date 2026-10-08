@@ -280,7 +280,22 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 .th-title{font:600 24px monospace;letter-spacing:8px;color:#e8e4ff;text-align:center;margin:.6rem 0 .4rem;padding-left:8px}
 .th-intro{text-align:center;font-size:12px;letter-spacing:.6px;color:var(--muted);margin-bottom:1.5rem}
 .th-sec{margin-top:1.5rem}
-.th-films{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.th-films{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+@media(max-width:520px){.th-films{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:16px}}
+button.rd{background:none;border:0;cursor:pointer;font:inherit;width:100%}
+/* 站內播放器：影片檔直接在放映室播，不離開這一頁。同一支片兩個比例，換比例時接著上次的秒數 */
+.vp{padding:0;border:0;background:transparent;color:#d8d6f4;max-width:none;max-height:none;width:100vw;height:100dvh;font-family:monospace}
+.vp::backdrop{background:rgba(2,4,10,.92)}
+.vp[open]{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:12px;box-sizing:border-box}
+.vp-bar{display:flex;align-items:center;gap:10px;width:min(100%,var(--vp-w,960px));font-size:12px;letter-spacing:1.5px}
+.vp-bar b{flex:1;min-width:0;font-weight:600;color:#ece9ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vp-bar button{font:inherit;letter-spacing:1.5px;padding:6px 12px;border-radius:4px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.04);color:#d8d6f4;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.vp-bar button[aria-pressed=true]{border-color:rgba(var(--rgb),.7);color:rgb(var(--rgb));background:rgba(var(--rgb),.1)}
+.vp-bar button:focus-visible{outline:2px solid rgba(var(--rgb),.8);outline-offset:2px}
+.vp video{display:block;background:#000;border-radius:6px;max-width:100%;aspect-ratio:var(--vp-ar,16/9);
+  width:min(100%,var(--vp-w,960px),calc((100dvh - 90px) * 16 / 9));box-shadow:0 0 0 1px rgba(var(--rgb),.25),0 20px 60px rgba(0,0,0,.6)}
+.vp.v916 video{width:auto;height:min(calc(100dvh - 90px),calc((100vw - 24px) * 16 / 9))}
+
 .th-films .rd-art{width:min(100%,168px)}
 .th-films .rd-name{font-size:13px}
 .th-films .rd-sub{font-size:10px}
@@ -604,7 +619,8 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
         <section class="th-sec" aria-labelledby="th-films">
           <div class="reel-head"><i></i><h2 id="th-films">影片<em>{{ films.length }} FILMS</em></h2><i></i></div>
           <div class="th-films">
-            <a v-for="(f,i) in films" :key="f.id" class="rd" :class="{px:f.px}" :href="f.url"
+            <component :is="f.video?'button':'a'" v-for="(f,i) in films" :key="f.id" class="rd" :class="{px:f.px}"
+              :href="f.video?undefined:f.url" :type="f.video?'button':undefined" @click="f.video&&openFilm(f)"
               :style="{'--rgb':f.rgb,animationDelay:(0.12+i*0.07)+'s'}">
               <span class="rd-art">
                 <span class="rd-img"><img :src="f.img" alt="" width="240" height="240" loading="lazy" decoding="async"></span>
@@ -613,7 +629,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
               </span>
               <span class="rd-name">{{ f.name }}</span>
               <span class="rd-sub">{{ f.sub }}<b class="th-len">{{ f.len }}</b></span>
-            </a>
+            </component>
           </div>
         </section>
         <section class="th-sec" aria-labelledby="th-slides">
@@ -634,13 +650,23 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
           </template>
         </section>
       </div>
+      <dialog ref="dlg" class="vp" :class="{v916:cur&&cur.fmt==='916'}" :style="cur?{'--rgb':cur.rgb}:null" aria-label="影片播放器"
+        @close="vidStop" @click="e=>{ if(e.target===dlg) dlg.close() }">
+        <div v-if="cur" class="vp-bar" :style="{'--vp-w':cur.fmt==='916'?'420px':'960px'}">
+          <b>{{ cur.name }}</b>
+          <button v-for="o in cur.video" :key="o.fmt" type="button" :aria-pressed="o.fmt===cur.fmt" @click="setFmt(o.fmt)">{{ o.label }}</button>
+          <button type="button" @click="dlg.close()" aria-label="關閉">✕</button>
+        </div>
+        <video v-if="cur" ref="vid" controls playsinline preload="metadata" :src="curSrc.src" :poster="curSrc.poster"
+          :style="{'--vp-ar':curSrc.ar,'--vp-w':'960px'}"></video>
+      </dialog>
     </div>
 
   </transition>
 </div>
 
 <script>
-const { createApp, ref, watch, nextTick } = Vue
+const { createApp, ref, computed, watch, nextTick } = Vue
 
 createApp({
   setup() {
@@ -695,6 +721,13 @@ createApp({
         img:'assets/theatre/film-sm.jpg',      ring:'assets/theatre/ring-film-paper.svg' },
       { id:'chronicle', name:'運動編年史',     sub:'像素動畫＋音樂',    len:'100 秒',    url:'strava_chronicle.html', rgb:'243,201,105',
         img:'assets/theatre/chronicle-sm.png', ring:'assets/theatre/ring-chronicle.svg', px:true },
+      // 影片檔（不是網頁）：點開在這一頁播。一個倒數秒一格，六個系統回報 GO，倒數到零首頁點火（資料現算自 data/ 與 git log）。
+      { id:'t60',       name:'T-60',           sub:'發射倒數＋合成音樂', len:'60 秒',    rgb:'255,106,31',
+        img:'assets/theatre/t60-sm.jpg',       ring:'assets/theatre/ring-t60.svg',
+        video:[
+          { fmt:'169', label:'16:9', src:'assets/theatre/t60/t60.mp4',     poster:'assets/theatre/t60/poster.jpg',     ar:'16/9' },
+          { fmt:'916', label:'9:16', src:'assets/theatre/t60/t60_916.mp4', poster:'assets/theatre/t60/poster_916.jpg', ar:'9/16' },
+        ] },
     ]
     /* ── 放映室的幻燈片 ──
        From zero to HERO：用我自己的紀錄說的一個故事（十張；每個數字現算自 data/chronicle.json）。圖示是我騎車的樣子（照片描成向量，站在橘色太陽上）。
@@ -774,13 +807,32 @@ createApp({
       else if (page.value === 'theatre') page.value = 'home'
     })
 
+    /* ── 站內影片播放器：直式螢幕預設 9:16，換比例時接著上次的秒數 ── */
+    const dlg = ref(null), vid = ref(null), cur = ref(null)
+    const curSrc = computed(() => cur.value && cur.value.video.find(o => o.fmt === cur.value.fmt))
+    function openFilm(f) {
+      cur.value = { ...f, fmt: window.innerHeight > window.innerWidth ? '916' : '169' }
+      nextTick(() => { dlg.value.showModal(); const v = vid.value; if (v) v.play().catch(() => {}) })
+    }
+    function setFmt(fmt) {
+      if (!cur.value || cur.value.fmt === fmt) return
+      const t = vid.value ? vid.value.currentTime : 0, playing = vid.value && !vid.value.paused
+      cur.value = { ...cur.value, fmt }
+      nextTick(() => {
+        const v = vid.value; if (!v) return
+        v.addEventListener('loadedmetadata', () => { v.currentTime = t; if (playing) v.play().catch(() => {}) }, { once: true })
+      })
+    }
+    function vidStop() { if (vid.value) vid.value.pause(); cur.value = null }
+
     watch(page, v => {
+      if (dlg.value && dlg.value.open) dlg.value.close()
       if (v==='cv') nextTick(()=>{ skillsVisible.value=true })
       else skillsVisible.value=false
     })
 
     return { page, links, films, slides, slideKinds, archiveOpen, experience, projects, skills, education, interests,
-             skillsVisible, handleLink, openTheatre, closeTheatre }
+             skillsVisible, handleLink, openTheatre, closeTheatre, dlg, vid, cur, curSrc, openFilm, setFmt, vidStop }
   }
 }).mount('#app')
 
