@@ -43,6 +43,10 @@
 Strava 訂閱還在的期間可以拿兩邊的數字互相對照，之後要拆掉 Strava 只要停用
 `strava-sync.yml` 就好。
 
+> **2026-10-12 更新**：`strava-sync.yml` 已停用（Strava 回 `Application Inactive`，排程拿掉），
+> 上面這張圖的「基線層」不再運轉；`fit-sync.yml` 成為唯一的排程管線。
+> `data/strava.json` 的 `segments` 仍由 fit-sync 併 FIT 更新，其餘欄位凍結在 2026-10-11。
+
 `analyze_tcx.py` / `render_dashboard.py` / `build_index.py` 也都沒動。
 
 ---

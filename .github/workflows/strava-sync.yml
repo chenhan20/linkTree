@@ -1,19 +1,29 @@
 # .github/workflows/strava-sync.yml
 #
-# 台灣時間 (UTC+8) 每天三次自動執行：
-#   早上 10:00 (台灣) = 02:00 UTC
-#   下午 18:00 (台灣) = 10:00 UTC
-#   晚上 22:00 (台灣) = 14:00 UTC
+# ⛔ 已停用（2026-10-12）。排程已拿掉，只剩 workflow_dispatch 讓檔案留著當紀錄。
+#
+# 為什麼：Strava 把這個 App 停用了。最後一次成功是 2026-10-11 22:10（台灣），
+# 2026-10-12 10:36 起 activities API 回
+#   {"message":"Forbidden","errors":[{"resource":"Application","field":"Status","code":"Inactive"}]}
+# token 換得到、stats 還通，只有 activities 被擋＝App 層級停用，重試沒有用。
+#
+# 現在誰在更新資料：fit-sync.yml（Garmin → intervals.icu → FIT）。
+#   - data/strava.json 的 segments（ITT 成績）仍由 fit-sync 的 tag-itt-sources.py 併 FIT 更新
+#   - 其餘欄位（recent_rides／summary／monthly_*／weekly_quest／power_prs…）凍結在 2026-10-11
+#
+# 復活：訂閱／App 恢復後，把下面 schedule 的三行 cron 補回來即可（原本台灣 10:00／18:00／22:00，
+# UTC 02:00／10:00／14:00），repo Secrets 的 STRAVA_* 四個還留著。
+# 程式碼（scripts/fetch-strava.js、harvest-strava.js、scan-power-prs.js…）全部保留。
 
 name: Strava Daily Sync
 
 on:
-  schedule:
-    - cron: '0 2 * * *'    # 台灣早上 10:00
-    - cron: '0 10 * * *'   # 台灣下午 18:00
-    - cron: '0 14 * * *'   # 台灣晚上 22:00
+  # schedule 已拿掉（2026-10-12，見檔頭）。復活時補回：
+  #   - cron: '0 2 * * *'    # 台灣早上 10:00
+  #   - cron: '0 10 * * *'   # 台灣下午 18:00
+  #   - cron: '0 14 * * *'   # 台灣晚上 22:00
 
-  workflow_dispatch:        # 讓你可以在 GitHub 網頁手動觸發（測試用）
+  workflow_dispatch:        # 手動觸發（目前會失敗：Application Inactive）
     inputs:
       fetch_all:
         description: '全量抓取所有歷史活動並重建 monthly_history（第一次設定用）'

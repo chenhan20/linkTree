@@ -2,9 +2,11 @@
 #
 # 從 intervals.icu 抓 Garmin 原始 FIT，產出 rides/<date>.html。
 #
-# 這條路跟 strava-sync.yml 完全獨立，兩者不互相影響：
-#   strava-sync.yml → data/strava.json（前端總覽頁）      ← 不要動
-#   fit-sync.yml    → data/fit/*.fit + rides/*.html       ← 這支
+# 現在這是唯一的排程資料管線。strava-sync.yml 已在 2026-10-12 停用
+# （Strava 回 Application Inactive，見該檔檔頭），不再有第二條路跟它搶檔：
+#   fit-sync.yml    → data/fit/*.fit + rides/*.html + data/itt-segments.json
+#                     並用 tag-itt-sources.py 把 ITT 成績併回 data/strava.json 的 segments
+#   data/strava.json 其餘欄位（recent_rides／summary／monthly_*…）凍結在 2026-10-11
 #
 # 為什麼能放進 Action（推翻 docs/ride-report-pipeline.md 第四節的結論）：
 # intervals.icu 是 Garmin 官方核准的 partner，Garmin 走官方 webhook 主動 push 給它。
@@ -15,9 +17,8 @@ name: FIT Sync (intervals.icu)
 
 on:
   schedule:
-    - cron: '30 2,14 * * *'    # 台灣時間 10:30 與 22:30，各排在 strava-sync 早班/晚班之後
-                               # （strava-sync 是 10:00/18:00/22:00，錯開半小時避免同時 push master 打架，
-                               #   也讓產報告時抓到的 data/strava.json 是剛更新完的）
+    - cron: '30 2,14 * * *'    # 台灣時間 10:30 與 22:30
+                               # （原本排在 strava-sync 之後半小時錯開；strava-sync 已停用，時間不用動）
   workflow_dispatch:
     inputs:
       backfill:
@@ -90,12 +91,13 @@ jobs:
       # always()：產報告那步就算非零退出也要存檔。單一壞掉的 FIT 不該讓當班
       # 抓到的檔案與已產出的報告全部丟掉（runner 是拋棄式的，沒存就沒了）。
       #
-      # 這一步的順序是刻意的，為了避開跟 strava-sync 搶 data/itt-segments.json：
+      # 這一步的順序是刻意的，為了避開別人（本機手動同步、別的 session）先推 data/itt-segments.json：
       #   1. 先 commit「只有 fit-sync 會動」的東西（data/fit、rides）
-      #   2. 再 pull --rebase 吃掉 strava-sync 可能剛推的 itt-segments.json
+      #   2. 再 pull --rebase 吃掉先到的 itt-segments.json
       #      —— 我方這個 commit 完全沒碰那個檔，所以 rebase 不可能衝突
       #   3. 最後才在「最新版的 itt-segments.json」上跑回補，另開一個 commit
       # 反過來（先回補再 pull）就會兩邊都改同一個 JSON，rebase 撞在一起整班報銷。
+      # （從前先到的是 strava-sync；它 2026-10-12 停用後，這個順序仍照留。）
       - name: 存檔
         if: always()
         run: |
@@ -106,7 +108,7 @@ jobs:
           # actual 回填進去（見那支的 _write_block）。漏掉它，工作區就一路帶著未 stage 的
           # 變更，下面每一次 git pull --rebase 都會以 "You have unstaged changes" 失敗，
           # 平常看不出來（push 沒被拒就過了），一旦撞到別人先 push 就整班 exit 128。
-          # 2026-09-01 實際爆過一次。strava-sync 不碰這個檔，所以擺進第一個 commit
+          # 2026-09-01 實際爆過一次。這個檔只有 fit-sync 會動，所以擺進第一個 commit
           # 不會破壞「rebase 不可能衝突」那個前提。
           git add data/fit rides data/training-block.json data/training-blocks athlete/plans
           if [ -d data/training-history ]; then git add data/training-history; fi
@@ -115,7 +117,7 @@ jobs:
           else
             git commit -m "chore: fit sync $(date -u '+%Y-%m-%d')"
           fi
-          # 排程實際延遲 13~56 分，跟 strava-sync 的錯開設計會失效而撞車。
+          # 排程實際延遲 13~56 分，加上本機手動同步，rebase 時前面可能已經有人推了。
           # --autostash 是安全網：萬一又有哪支腳本寫了沒被 stage 的檔，
           # 也不要讓整條 rebase 直接躺平（真正的修法還是把該 commit 的檔 commit 掉）
           git pull --rebase --autostash || echo "::warning::rebase 失敗，改用當前 itt-segments.json 回補"
@@ -124,8 +126,8 @@ jobs:
           python scripts/backfill-itt-efforts.py --quiet || \
             echo "::warning::ITT 回補失敗，這班先跳過"
           # 補來源標記，並把成績併回 data/strava.json 的 segments 副本。
-          # 沒有這步的話兩份檔案會漂移：itt-segments.json 有 10 筆、strava.json 只有 1 筆，
-          # 而 strava-sync（已棄用、隨時可能停跑）是唯一會把它們對齊的東西。實測撞過。
+          # 沒有這步的話兩份檔案會漂移：itt-segments.json 有 10 筆、strava.json 只有 1 筆。
+          # strava-sync 已於 2026-10-12 停用，現在只剩這一步會把它們對齊。
           python scripts/tag-itt-sources.py || \
             echo "::warning::ITT 來源標記失敗，這班先跳過"
           # 平路 ITT 條件校正：風、空氣密度、跟車 → 換算成「單騎、無風」的時間（strava_pelican 第 05 章）。

@@ -1,9 +1,28 @@
-# Strava 管線（已棄用，仍在運轉）
+# Strava 管線（已停用，2026-10-12）
 
-> ## ⚠️ 這條路已經棄用
+> ## ⛔ 這條路已經停用
 >
-> **狀態**：還在跑，但**不再是主線**。等 Strava 付費訂閱到期就會拆掉。
+> **狀態**：**2026-10-12 起打不通。** 最後一次成功是 2026-10-11 22:10（台灣），
+> 隔天 10:36 的排程回：
+> `{"message":"Forbidden","errors":[{"resource":"Application","field":"Status","code":"Inactive"}]}`
+> —— App 層級被 Strava 停用（token 換得到、stats 還通，只有 activities 被擋）。
+> `strava-sync.yml` 的排程已拿掉，程式碼與 repo Secrets（`STRAVA_*`）都保留。
 > **取代它的是**：Garmin → intervals.icu → 原始 FIT，見 [主 README](../README.md)。
+>
+> ### 停用後的狀態
+>
+> | 項目 | 狀態 |
+> |---|---|
+> | ITT 成績（`strava.json` 的 `segments`） | 照常：fit-sync 的 `tag-itt-sources.py` 併 FIT 更新 |
+> | `recent_rides`／`summary`／`monthly_*`／`weekly_quest`／`recent_runs/swims/weights`／`power_prs` | **凍結在 2026-10-11**（前端頁面不會壞，但不再長新的） |
+> | 新增 ITT 路段的官方折線（`segment-streams.json`） | 拿不到；已拿過的 42 條在 `data/segment-streams.json`，目錄在 `data/strava-archive/segment-catalog.json` |
+> | KOM／全站排名 | 永久拿不到 |
+>
+> 復活方式：App 或訂閱恢復後，把 `strava-sync.yml` 的三行 `cron` 補回來。
+>
+> ---
+>
+> *以下是停用前（「已棄用，仍在運轉」階段）的說明，保留當紀錄與 fork 教學。*
 >
 > ### 為什麼棄用
 >

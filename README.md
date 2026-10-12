@@ -176,9 +176,11 @@
   佔掉整張卡的高度卻什麼也沒說明。要逐條覆寫就加 `"route3d": true / false`。
 - **`accent` 配色有語意**：山路走暖色家族（橘／琥珀／金／珊瑚），河濱平路走藍色家族。
 
-> ⚠️ **路段折線目前仍要跟 Strava 拿一次**（`scripts/fetch-segment-streams.js`），
+> ⚠️ **路段折線要跟 Strava 拿一次**（`scripts/fetch-segment-streams.js`），
 > 因為閘門座標來自官方路段資料。**拿到之後計時就完全不靠 Strava 了**，
-> 之後每一次計時都是本機從 FIT 算出來的。詳見[附錄](#附錄strava歷史資料與唯一殘留的相依)。
+> 之後每一次計時都是本機從 FIT 算出來的。
+> **2026-10-12 起 Strava API 已停用（`Application Inactive`），新增路段暫時拿不到官方折線**；
+> 已封存的路段不受影響。詳見[附錄](#附錄strava歷史資料與唯一殘留的相依)。
 
 ### 驗收清單
 
@@ -486,7 +488,8 @@ python3 tools/tcx/score.py data/fit/2026-08-13_*.fit --date 2026-08-13
 
 ## 附錄：Strava（歷史資料與唯一殘留的相依）
 
-> **Strava 已經不是主力。** 訂閱到期就會把那條管線拆掉。
+> **Strava 已經不是主力，而且 2026-10-12 起 API 已停用**（`Application Inactive`，
+> `strava-sync.yml` 排程已拿掉；`data/strava.json` 只剩 `segments` 還在更新）。
 > 完整教學、OAuth 流程、環境變數、rate limit 都保留在
 > [docs/strava-pipeline.md](docs/strava-pipeline.md)。
 

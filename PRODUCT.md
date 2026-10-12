@@ -31,8 +31,9 @@ GitHub Actions 一天三次（台灣時間 10:00 / 18:00 / 22:00）用 OAuth ref
 ## Operating Context
 
 - **部署**：GitHub Pages，`https://chenhan20.github.io/linkTree/linkTreeIndex.html`
-- **資料流**：`refresh_token → access_token` → 抓 stats／activities → CI 內建構 `monthly_summary` / `goals` / `quest` / `power_prs` / `segments` → 寫 `data/strava.json` + `data/itt-segments.json` → commit/push → Pages CDN → 前端 `fetch()` 渲染
-- **手動觸發**：GitHub repo → Actions → Strava Daily Sync → Run workflow；或本機 `node scripts/fetch-strava.js` 搭配 `FETCH_ALL` / `SCAN_SEGMENTS` / `SCAN_POWER` / `POWER_ONLY` 等環境變數
+- **⛔ 2026-10-12 起 Strava 這一段已停用**（App 被 Strava 設為 Inactive，`strava-sync.yml` 排程已拿掉）。下面兩條描述的是停用前的資料流；現行資料流是 Garmin → intervals.icu → FIT（`fit-sync.yml`），`data/strava.json` 只有 `segments` 還在更新，其餘欄位凍結在 2026-10-11。
+- **資料流（停用前）**：`refresh_token → access_token` → 抓 stats／activities → CI 內建構 `monthly_summary` / `goals` / `quest` / `power_prs` / `segments` → 寫 `data/strava.json` + `data/itt-segments.json` → commit/push → Pages CDN → 前端 `fetch()` 渲染
+- **手動觸發（停用前）**：GitHub repo → Actions → Strava Daily Sync → Run workflow；或本機 `node scripts/fetch-strava.js` 搭配 `FETCH_ALL` / `SCAN_SEGMENTS` / `SCAN_POWER` / `POWER_ONLY` 等環境變數
 - **手動維護的唯一資料檔**：`data/itt-config.json`（ITT 路段的中文名、類型、代表色）。其餘 `data/*.json` 皆為自動產生，不得手改。
 - **本機開發**：`python -m http.server`，無需安裝套件。專案 `.claude/launch.json` 已設定 port 4173。
 

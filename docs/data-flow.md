@@ -7,7 +7,8 @@
 > 與 [docs/fit-pipeline.md](fit-pipeline.md)。
 > 棄用的理由、還剩哪些相依，見 [docs/strava-pipeline.md](strava-pipeline.md)。
 >
-> ⚠️ 底下的排程時間也已經過時 —— 現行 `strava-sync.yml` 是 10:00 / 18:00 / 22:00 台灣時間。
+> ⛔ **2026-10-12 起這條管線已停用**：Strava 把 App 設為 Inactive，`strava-sync.yml` 的排程已拿掉。
+> 底下的排程時間也早已過時（停用前是 10:00 / 18:00 / 22:00 台灣時間）。
 
 ---
 

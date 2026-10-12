@@ -12,8 +12,11 @@ ITT 路段資料分三層：
 | 檔案 | 角色 | 誰維護 |
 |------|------|--------|
 | `data/itt-config.json` | 路段「設定」（中文名、類型、顏色） | **手動維護**，新增路段改這裡 |
-| `data/itt-segments.json` | 路段「成績」（每次努力的時間/功率/HR） | fetch-strava.js 自動寫入 |
-| `data/strava.json` | 主資料，`segments` 欄位同步自 itt-segments.json | fetch-strava.js 自動寫入 |
+| `data/itt-segments.json` | 路段「成績」（每次努力的時間/功率/HR） | fit-sync 的 `backfill-itt-efforts.py` 從 FIT 重算（Strava 的 `fetch-strava.js` 已於 2026-10-12 停用） |
+| `data/strava.json` | 主資料，`segments` 欄位同步自 itt-segments.json | fit-sync 的 `tag-itt-sources.py` 併回（其餘欄位凍結在 2026-10-11） |
+
+> ⛔ **2026-10-12 起 Strava API 回 `Application Inactive`**：下面凡是跑 `fetch-strava.js`、
+> 在 Actions 勾「全量抓取」的步驟都打不通，只留當紀錄。新增路段的官方折線暫時拿不到。
 
 ---
 
