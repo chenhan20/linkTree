@@ -57,7 +57,7 @@
 | 路 | 結論 |
 |---|---|
 | **Garmin 官方 Developer API** | ❌ **法人限定**，個人申請不到 |
-| **Strava API** | ⚠️ 拿得到活動，但資料是**處理過**的；路段成績**需付費訂閱** |
+| **Strava API** | ⚠️ 拿得到活動，但資料是**處理過**的；路段成績**需付費訂閱**。本 repo 的 App 已在 **2026-10-12 被停用**（`Application Inactive`） |
 | **intervals.icu 開放 API** | ✅ 免費、拿得到**原始 FIT**、不挑 IP |
 
 **關鍵洞察：你申請不到 Garmin 官方 API，但可以免費用別人已經拿到的。**
@@ -204,6 +204,10 @@
 5. **回填評分** —— 分數寫回 `data/training-block.json` 的 `sessions[].actual`
 6. **commit + push** 回 repo，GitHub Pages 自動重新部署
 
+> 這是現在**唯一**的排程。原本還有一條 `strava-sync.yml`（台灣 10:00 / 18:00 / 22:00 抓 Strava），
+> **2026-10-12 起停用**（Strava 把 App 設為 Inactive，排程已拿掉、程式碼保留）。
+> 詳見[附錄](#附錄strava歷史資料與唯一殘留的相依)。
+
 ---
 
 ## 單日訓練報告
@@ -312,16 +316,17 @@ python3 scripts/backfill-itt-efforts.py --compare -q
 
 > 2026-08-14 以前寫入的紀錄沒有 `source` 欄位（那時只有一個來源）。
 > `scripts/tag-itt-sources.py` 已經把它們一次性補成 `strava`，
-> 之後 `scripts/fetch-strava.js` 寫入時會自己標。
+> 之後新增的一律是自建計時（Strava 那條路 2026-10-12 起已停用）。
 
 ### 兩份檔案不要再漂移
 
 `data/itt-segments.json` 是 ITT 成績的**權威檔**（自建偵測器寫這裡）。
-`data/strava.json` 裡也有一份 `segments` 副本，但那份只有 Strava 同步跑過才會更新。
+`data/strava.json` 裡也有一份 `segments` 副本。Strava 還在跑的時候，那份只有 Strava 同步跑過才會更新；
+2026-10-12 Strava 停用之後，它只靠 `scripts/tag-itt-sources.py` 併回（fit-sync 每班都會跑）。
 
 實測撞過這個洞：三條新路段在 `itt-segments.json` 有 10 筆，`strava.json` 只有 1 筆，
 **畫面就是空的**。現在 `strava.html` 直接讀 `itt-segments.json` 並就地 union 合併，
-FIT 回補的成績不必等 Strava 同步就會出現。
+FIT 回補的成績不必等任何 Strava 同步就會出現。
 `scripts/tag-itt-sources.py` 可以隨時把兩份檔案重新對齊。
 
 ---
@@ -402,12 +407,12 @@ Canvas 星空 + 流星 + 粒子動畫、火箭導航動畫、社群連結、跳�
 | `rides/<date>.html` | 單日訓練報告 | 自動（FIT Sync） |
 | `rides/notes/<date>.json` | 教練評語（有的話標題與評語都以它為準，重生不會洗掉） | **手動** |
 | **`data/itt-segments.json`** | **ITT 成績權威檔**（自建計時 + Strava 歷史，靠 `source` 分辨） | 自動（FIT Sync） |
-| `data/segment-streams.json` | ITT 路段官方折線（每條 140 點，給 3D 路線圖與自建偵測器） | 自動（新增路段後跑一次） |
-| `data/segment-terrain.json` | ITT 路段地形高程（Tilezen DEM） | 自動（新增路段後跑一次） |
+| `data/segment-streams.json` | ITT 路段官方折線（每條 140 點，給 3D 路線圖與自建偵測器） | 新增路段後跑一次（⚠️ 要打 Strava，2026-10-12 起暫時拿不到；已有的 42 條不受影響） |
+| `data/segment-terrain.json` | ITT 路段地形高程（Tilezen DEM） | 新增路段後跑一次（`node scripts/fetch-segment-terrain.js`；strava-sync 停用後要手動跑） |
 | `data/segment-grades.json` | ITT 路段每 25 m 的實測坡度剖面（`scripts/build-segment-grades.py` 從 `data/fit` 算） | 自動（新增路段／補歷史後跑一次） |
 | `data/tasks.json` | 現況頁的代辦清單（`scripts/build-tasks.py` 從報告／評分／資料落差推導） | 自動（每次同步後跑一次） |
-| `data/strava.json` | 儀表板的活動列表／年度統計／功率 PR。ITT 那段只是副本，以 `itt-segments.json` 為準 | 自動（Strava Sync，**已棄用**） |
-| `data/power-prs.json` | 功率 PR 快取 | 自動（Strava Sync，**已棄用**） |
+| `data/strava.json` | 儀表板的活動列表／年度統計／功率 PR。ITT 那段只是副本，以 `itt-segments.json` 為準 | `segments` 由 FIT Sync 併回；其餘欄位**凍結在 2026-10-11**（Strava Sync 已停用） |
+| `data/power-prs.json` | 功率 PR 快取 | **凍結在 2026-10-06**（Strava Sync 已停用） |
 | **`data/itt-config.json`** | **ITT 路段設定（中文名、類型、顏色、要不要 3D）** | **手動** |
 | **`data/plan.json`** | **課表處方（每段目標瓦數／迴轉／可執行的規則／評分參數）** | **手動** |
 | **`data/training-block.json`** | **訓練週期計畫；`target` 手寫，`actual` 由 FIT Sync 回填** | **半自動** |
@@ -493,6 +498,20 @@ python3 tools/tcx/score.py data/fit/2026-08-13_*.fit --date 2026-08-13
 > 完整教學、OAuth 流程、環境變數、rate limit 都保留在
 > [docs/strava-pipeline.md](docs/strava-pipeline.md)。
 
+### 停用後的狀態（2026-10-12）
+
+最後一次成功是 2026-10-11 22:10（台灣），隔天 10:36 的排程回
+`{"message":"Forbidden","errors":[{"resource":"Application","field":"Status","code":"Inactive"}]}`
+——App 層級被停用（token 換得到、stats 還通，只有 activities 被擋），重試沒有用。
+
+| 項目 | 狀態 |
+|---|---|
+| ITT 成績（`strava.json` 的 `segments`、`itt-segments.json`） | **照常**：FIT 回補＋`tag-itt-sources.py` 併回 |
+| `recent_rides`／`summary`（年度統計）／`monthly_*`／`weekly_quest`／`recent_runs/swims/weights`／`power_prs` | **凍結在 2026-10-11**：頁面不會壞，但不再長新的 |
+| 新增 ITT 路段的官方折線 | 拿不到（已拿過的 42 條照用） |
+| KOM／全站排名 | 永久拿不到 |
+| 程式碼與 `STRAVA_*` Secrets | 全部保留；復活只要把 `strava-sync.yml` 的三行 `cron` 補回來 |
+
 ### 為什麼降級
 
 | | Strava | intervals.icu + 自建 |
@@ -508,13 +527,15 @@ python3 tools/tcx/score.py data/fit/2026-08-13_*.fit --date 2026-08-13
 1. **歷史資料** —— `data/itt-segments.json` 裡 93 筆標著 `STRAVA` 的成績，
    涵蓋 FIT 檔開始之前（2025-08-13 以前）的年代。**保留當歷史參考，不會再長。**
 2. **新增路段時拿一次官方折線** —— `scripts/fetch-segment-streams.js`。
-   閘門座標來自官方路段資料，拿到之後計時就完全不靠 Strava。
+   閘門座標來自官方路段資料，拿到之後計時就完全不靠 Strava。**（2026-10-12 起 API 停用，這一步目前執行不了。）**
 3. **KOM / 全站排名** —— 這種全站資料只有 Strava 有，搬不走。
 
 ### 只有 Strava 沒有 Garmin 的人
 
-`docs/strava-pipeline.md` 裡的完整教學仍然可用，但要注意
-**ITT 路段成績是 Strava 的付費功能**，沒訂閱就只有活動列表與統計。
+`docs/strava-pipeline.md` 裡的完整教學保留當紀錄。要注意兩件事：
+**ITT 路段成績是 Strava 的付費功能**，沒訂閱就只有活動列表與統計；
+而且 Strava 自 2026-06-30 起要求 Standard Tier 開發者有訂閱才能用 API，
+本 repo 的 App 就是這樣被停用的 —— 你自己建的 App 會遇到同一條規則。
 
 ---
 
@@ -530,6 +551,6 @@ python3 tools/tcx/score.py data/fit/2026-08-13_*.fit --date 2026-08-13
 | [DESIGN.helicorder.md](DESIGN.helicorder.md) | `strava_helicorder.html`（記震紙世界）專屬設計規範 |
 | [DESIGN.rides.md](DESIGN.rides.md) | 單日訓練報告（`rides/<date>.html`）視覺與排版規範 |
 | [docs/strava-goals-prd.md](docs/strava-goals-prd.md) | 月度目標與紀律追蹤 PRD |
-| [docs/strava-pipeline.md](docs/strava-pipeline.md) | **已棄用**的 Strava 路線，完整教學保留 |
+| [docs/strava-pipeline.md](docs/strava-pipeline.md) | **已停用**（2026-10-12）的 Strava 路線，完整教學保留 |
 | [docs/data-flow.md](docs/data-flow.md) | Strava 時代的資料流程圖（**歷史文件**） |
 | [PRODUCT.md](PRODUCT.md) | 產品事實與方向契約 |
