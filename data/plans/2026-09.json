@@ -1748,15 +1748,15 @@
       "date": "2026-10-13",
       "week": "W4",
       "block": "zhongshe-2026-09-return",
-      "label": "中社四週驗收／PR機會",
+      "label": "中社全力驗收＋露營場維持有氧（事後依實際菜單改列）",
       "type": "TEST",
-      "intent": "9/15是基準與PR機會，不保證破16:25；10/13按9/15有效成績與後續主課重新配速。全段預留20分不是要求20分停止；不設全力達標分數。晚籃球降為休息／輕鬆。",
-      "score_policy": "record_only",
+      "intent": "2026-10-13事後改列：原排只測中社一次、移除露營場；當天做完中社全段全力後，接露營場一趟維持有氧（沿用10/8本人決定的上限：平均≤190W、前1/3≤185W）。中社驗收只記錄時間／曲柄瓦數，不設全力達標分；有氧段才有帶。",
+      "score_policy": "prescription",
       "segments": [
         {
           "name": "往返前半＋漸進熱身",
           "role": "warmup",
-          "minutes": 35,
+          "minutes": 30,
           "target_w": {
             "lo": 110,
             "hi": 170,
@@ -1765,48 +1765,60 @@
           "target_cadence": null
         },
         {
-          "name": "中社全段一次，20分僅是預算，以終點結束",
+          "name": "中社全段一次，全力（以終點結束）",
           "role": "allout",
-          "minutes": 20,
+          "minutes": 18,
           "target_w": {
             "allout": true
           },
           "target_cadence": null
         },
         {
-          "name": "安全下坡與返程",
+          "name": "中社頂→下坡轉露營場",
           "role": "recovery",
-          "minutes": 40,
+          "minutes": 7,
           "target_w": {
             "lo": null,
             "hi": null,
-            "about": 130
+            "about": 60
           },
           "target_cadence": null
         },
         {
-          "name": "收操",
-          "role": "cooldown",
-          "minutes": 10,
+          "name": "露營場維持有氧（上限190W）",
+          "role": "work",
+          "minutes": 30,
+          "target_w": {
+            "lo": null,
+            "hi": 190,
+            "about": 180
+          },
+          "target_cadence": null
+        },
+        {
+          "name": "下山返程",
+          "role": "recovery",
+          "minutes": 18,
           "target_w": {
             "lo": null,
             "hi": null,
-            "about": 110
+            "about": 60
           },
           "target_cadence": null
         }
       ],
       "time_budget": {
-        "window_min": 150
+        "window_min": 150,
+        "ride_min": 103
       },
       "selected_variant": "outdoor",
       "export_mode": "free_ride",
-      "route": "中社全段1761462，同起終點；先核對往返可塞入窗口。移除露營場、額外劍南衝坡。",
+      "route": "實際菜單：公司出發→中社全段全力→露營場維持有氧→原路下山",
       "rain_summary": "45分輕鬆踩；未測且恢復正常才改10/15中社，不用室內數值代替路段PR。",
       "variants": {
         "outdoor": {
           "venue": "outdoor",
-          "summary": "105分行程預算，只測一次；首段保守、後段漸進，記錄時間／曲柄瓦數／RPE／環境。"
+          "summary": "實際菜單：中社全力一次（18:29）→露營場維持有氧30分（上限190W）→下山，約103分。"
         },
         "rain": {
           "venue": "indoor",
