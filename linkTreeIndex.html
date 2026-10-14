@@ -3,7 +3,24 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SteveChuang</title>
+<title>SteveChuang · Full-Stack · Cyclist · Builder</title>
+<meta name="description" content="SteveChuang 的個人入口：全端工程師、單車手。把 Garmin 手錶的原始訓練檔自動變成每日訓練報告與計時成績，全部公開、純靜態。">
+<meta name="theme-color" content="#020408">
+<link rel="canonical" href="https://chenhan20.github.io/linkTree/linkTreeIndex.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="SteveChuang">
+<meta property="og:locale" content="zh_TW">
+<meta property="og:title" content="SteveChuang · Full-Stack · Cyclist · Builder">
+<meta property="og:description" content="手錶震一下，之後全部自動：Garmin → intervals.icu → GitHub Actions → 每日訓練報告與計時成績。">
+<meta property="og:url" content="https://chenhan20.github.io/linkTree/linkTreeIndex.html">
+<meta property="og:image" content="https://chenhan20.github.io/linkTree/assets/og/linktree-og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="深空背景裡的火箭與 SteveChuang、T-00:00:00 · ALL SYSTEMS GO">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="SteveChuang · Full-Stack · Cyclist · Builder">
+<meta name="twitter:description" content="手錶震一下，之後全部自動：Garmin → intervals.icu → GitHub Actions → 每日訓練報告與計時成績。">
+<meta name="twitter:image" content="https://chenhan20.github.io/linkTree/assets/og/linktree-og.jpg">
 <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
 <style>
 /* ── reset ── */
@@ -38,7 +55,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 @keyframes ember-rise{0%{transform:translate(0,0) scale(1);opacity:.9}100%{transform:translate(var(--dx),var(--dy)) scale(0);opacity:0}}
 
 /* ── app ── */
-#app{position:relative;z-index:1;min-height:100vh}
+#app{position:relative;z-index:1;min-height:100vh;min-height:100dvh}
 
 /* ── page transitions ── */
 .slide-enter-active{transition:transform .5s cubic-bezier(.22,1,.36,1),opacity .4s}
@@ -49,7 +66,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 /* ════════════════════════
    LINKTREE PAGE
 ════════════════════════ */
-.lt-page{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:3rem 1rem 2.5rem}
+.lt-page{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:3rem 1rem 2.5rem}
 .rocket-scene{position:relative;margin-bottom:1.4rem;animation:hover-bob 3.5s ease-in-out infinite}
 @keyframes hover-bob{0%,100%{transform:translateY(0) rotate(-.8deg)}50%{transform:translateY(-9px) rotate(.8deg)}}
 .rocket-svg-wrap{width:60px;height:150px;position:relative}
@@ -109,7 +126,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 /* ════════════════════════
    SHARED SUB-PAGE CHROME
 ════════════════════════ */
-.sub-page{min-height:100vh;background:rgba(2,4,10,.94);padding:0}
+.sub-page{min-height:100vh;min-height:100dvh;background:rgba(2,4,10,.94);padding:0}
 .sub-topbar{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:12px;padding:12px 20px;background:rgba(2,4,10,.96);border-bottom:1px solid rgba(55,138,221,.1);backdrop-filter:blur(8px)}
 .sub-back{display:flex;align-items:center;gap:5px;background:rgba(55,138,221,.08);border:1px solid rgba(55,138,221,.2);border-radius:20px;padding:5px 12px;color:#6090c0;font-size:12px;font-weight:500;cursor:pointer;transition:background .2s,color .2s;-webkit-tap-highlight-color:transparent;font-family:monospace;letter-spacing:.5px}
 .sub-back:hover{background:rgba(55,138,221,.15);color:#90c0e8}
@@ -275,6 +292,13 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 .sp-btn:hover .door-art img:nth-child(1),.sp-btn:active .door-art img:nth-child(1){transform:translateX(-3px)}
 .sp-btn:hover .door-art img:nth-child(3),.sp-btn:active .door-art img:nth-child(3){transform:translateX(3px)}
 .door-sub{display:block;font-style:normal;font-size:9.5px;letter-spacing:1px;color:rgba(150,150,190,.55);margin-top:3px}
+/* 首頁按鈕的即時副標：數字來自 data/home-stats.json（scripts/build-home-stats.py），抓不到就留寫死的靜態字。
+   靜態字與即時字同高，換字不會讓按鈕跳動。 */
+.btn-stat{display:block;font-style:normal;font-weight:400;font-size:9.5px;letter-spacing:.8px;line-height:1.4;margin-top:3px;
+  color:rgba(150,150,190,.58);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.btn-stat b{font-weight:600;color:rgba(205,200,245,.82)}
+.btn-stat.live{animation:stat-in .5s both}
+@keyframes stat-in{from{opacity:0}to{opacity:1}}
 /* 放映室這一頁 */
 .th-body{max-width:620px}
 .th-title{font:600 24px monospace;letter-spacing:8px;color:#e8e4ff;text-align:center;margin:.6rem 0 .4rem;padding-left:8px}
@@ -341,6 +365,7 @@ button.rd{background:none;border:0;cursor:pointer;font:inherit;width:100%}
 .rc-head{display:flex;align-items:center;gap:11px}
 .rc-title{display:flex;flex-direction:column;gap:2px;font-size:13px;font-weight:700;letter-spacing:1.6px;color:#ffe3c2}
 .rc-title i{font-style:normal;font-size:10px;font-weight:400;letter-spacing:.8px;color:rgba(255,205,160,.5)}
+.rc-title i b{font-weight:600;color:rgba(255,226,196,.86)}
 /* 主卡：車手電影 icon ＋ 背景預覽（壓暗、左側留給文字）＋ 橘金色亮邊 */
 .rc-card{position:relative;display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:6px;overflow:hidden;
   text-decoration:none;color:#ffe8d0;border:1px solid rgba(255,179,71,.45);background:#0b0f0e;
@@ -492,7 +517,7 @@ button.rd{background:none;border:0;cursor:pointer;font:inherit;width:100%}
             :style="{'--bc':'rgb('+link.rgb+')','--br':link.rgb,animationDelay:(0.28+i*0.07)+'s'}">
             <div class="rc-head">
               <span class="btn-seq">{{ String(i+1).padStart(2,'0') }}</span>
-              <span class="rc-title">{{ link.label }}<i>{{ link.sub }}</i></span>
+              <span class="rc-title">{{ link.label }}<i><template v-if="statSegs(link)"><template v-for="(g,k) in statSegs(link)" :key="k"><b v-if="g.b">{{ g.t }}</b><template v-else>{{ g.t }}</template></template></template><template v-else>{{ link.sub }}</template></i></span>
             </div>
             <a class="rc-card" :href="link.current.url" :style="{'--pv':'url('+link.current.preview+')'}">
               <span class="rc-pv" aria-hidden="true"></span>
@@ -525,7 +550,7 @@ button.rd{background:none;border:0;cursor:pointer;font:inherit;width:100%}
               <img v-if="link.img" class="btn-avatar" :src="link.img" alt="" width="32" height="32" loading="lazy" decoding="async">
               <svg v-else viewBox="0 0 24 24" :style="{fill:'rgb('+link.rgb+')'}"><path :d="link.icon"/></svg>
             </span>
-            <span class="btn-label">{{ link.label }}<span v-if="link.badge" class="btn-badge">{{ link.badge }}</span></span>
+            <span class="btn-label">{{ link.label }}<span v-if="link.badge" class="btn-badge">{{ link.badge }}</span><i v-if="link.sub" class="btn-stat" :class="{live:!!statSegs(link)}"><template v-if="statSegs(link)"><template v-for="(g,k) in statSegs(link)" :key="k"><b v-if="g.b">{{ g.t }}</b><template v-else>{{ g.t }}</template></template></template><template v-else>{{ link.sub }}</template></i></span>
             <span class="btn-arrow">→</span>
           </button>
         </template>
@@ -674,6 +699,30 @@ createApp({
     const skillsVisible = ref(false)
     const archiveOpen = ref(false)   // 歷代實驗版本預設收合
 
+    /* ── 首頁按鈕的即時副標 ──
+       data/home-stats.json 由 scripts/build-home-stats.py 產生（fit-sync 每班更新）；抓不到、或哪個欄位缺，
+       就退回 link.sub 那行寫死的靜態字。只在首頁用，所以不擋任何畫面。 */
+    const stats = ref(null)
+    const md = d => d ? (+d.slice(5,7)) + '/' + (+d.slice(8,10)) : ''
+    function statSegs(link) {
+      const s = stats.value
+      if (!s || !link.stat) return null
+      const t = (txt) => ({ t: txt, b: false }), b = (txt) => ({ t: txt, b: true })
+      if (link.stat === 'ride' && s.ride && s.last)
+        return [t('本月 '), b(s.ride.hours + ' h'), t(' · 最近 '), b(md(s.last.date)),
+                ...(s.last.km ? [t(' · '), b(s.last.km + ' km')] : [])]
+      if (link.stat === 'cinema' && s.ride)
+        return [t('本月 '), b(s.ride.hours + ' / ' + s.ride.breakeven_h + ' h'), t(' 損益線')]
+      if (link.stat === 'report' && s.report && s.report.date)
+        return [t('最新 '), b(md(s.report.date)), ...(s.report.score ? [t(' · '), b(s.report.score + (s.report.grade ? ' ' + s.report.grade : ''))] : []),
+                ...(s.report.count ? [t(' · 共 ' + s.report.count + ' 份')] : [])]
+      if (link.stat === 'github' && s.github && s.github.commits_30d != null)
+        return [t('近 30 天 '), b(s.github.commits_30d + ' commits'), ...(s.github.last_commit ? [t(' · 最近 '), b(md(s.github.last_commit))] : [])]
+      return null
+    }
+    fetch('data/home-stats.json', { cache: 'no-cache' })
+      .then(r => r.ok ? r.json() : null).then(j => { if (j) stats.value = j }).catch(() => {})
+
     /* ── links ── */
     const links = [
       { label:'Instagram', url:'https://www.instagram.com/chenhan20/', rgb:'225,48,108',
@@ -682,13 +731,13 @@ createApp({
         icon:'M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z' },
       { label:'Youtube', url:'https://www.youtube.com/user/chenhan20', rgb:'255,69,69',
         icon:'M23.495 6.205a3.007 3.007 0 0 0-2.088-2.088c-1.87-.501-9.396-.501-9.396-.501s-7.507-.01-9.396.501A3.007 3.007 0 0 0 .527 6.205a31.247 31.247 0 0 0-.522 5.805 31.247 31.247 0 0 0 .522 5.783 3.007 3.007 0 0 0 2.088 2.088c1.868.502 9.396.502 9.396.502s7.506 0 9.396-.502a3.007 3.007 0 0 0 2.088-2.088 31.247 31.247 0 0 0 .5-5.783 31.247 31.247 0 0 0-.5-5.805zM9.609 15.601V8.408l6.264 3.602z' },
-      { label:'Strava', url:'https://www.strava.com/athletes/161539959', rgb:'252,76,2',
+      { label:'Strava', sub:'單車爬坡與跑步紀錄', stat:'ride', url:'https://www.strava.com/athletes/161539959', rgb:'252,76,2',
         icon:'M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169' },
       // 放映室：三部片＋四套幻燈片（數據類：From zero to HERO、三部片連續放映、課表的解剖；漫畫類：ONE PIECE 航海誌）都收在自己的一頁，首頁只留這一扇門（見下面 films／slides）。
       { label:'放映室 · 影片與幻燈片', page:'theatre', rgb:'255,179,71', badge:'NEW' },
       // 現行主版本是 Taiwan Ride Cinema：一張帶車手電影 icon 與背景預覽的卡（這一列約七成的視覺重量）。
       // 四個歷代實驗版本收在 ARCHIVE 裡，預設收合、展開後是細小的灰色清單，不逐項寫「舊版」。
-      { label:'STEVE · RIDE CINEMA', sub:'個人騎行資料與訓練控制台', rgb:'255,179,71',
+      { label:'STEVE · RIDE CINEMA', sub:'個人騎行資料與訓練控制台', stat:'cinema', rgb:'255,179,71',
         current:{ title:'TAIWAN RIDE CINEMA', tag:'現行主版本 · CURRENT', url:'strava_cinema.html',
                   icon:'assets/strava-cinema/ride-cinema-icon.svg', preview:'assets/strava-cinema/hero-poster-lightning-v2-clean.jpg' },
         archive:[
@@ -698,7 +747,7 @@ createApp({
           { label:'記震紙',     sub:'HELICORDER', url:'strava_helicorder.html' },
         ] },
       // 每趟 TCX 自動產生的訓練分析頁：分圈、區間、爬坡、停等判讀與教練評語。
-      { label:'訓練報告', url:'rides/', rgb:'235,104,52', badge:'NEW',
+      { label:'訓練報告', sub:'單日報告與課表對帳', stat:'report', url:'rides/', rgb:'235,104,52', badge:'NEW',
         icon:'M3 3v16a2 2 0 0 0 2 2h16v-2H5V3H3zm5 14h2v-6H8v6zm4 0h2V7h-2v10zm4 0h2v-4h-2v4z' },
       { label:'奶嘴', url:'motionworld/', rgb:'255,122,162', badge:'NEW',
         icon:'M12 2a5 5 0 0 0-5 5c0 2.051 1.238 3.632 3 4.461V14H8a2 2 0 0 0-2 2v1a3 3 0 0 0 3 3h1.586A2 2 0 0 0 12 22h0a2 2 0 0 0 1.414-.586H15a3 3 0 0 0 3-3v-1a2 2 0 0 0-2-2h-2v-2.539c1.762-.829 3-2.41 3-4.461a5 5 0 0 0-5-5zm0 2a3 3 0 1 1 0 6a3 3 0 0 1 0-6zm-3 13h6v1a1 1 0 0 1-1 1H10a1 1 0 0 1-1-1v-1z' },
@@ -706,7 +755,7 @@ createApp({
         icon:'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM6 20V4h5v7h7v9H6z' },
       { label:'LinkedIn', url:'https://www.linkedin.com/in/%E6%89%BF%E7%BF%B0-%E8%8E%8A-4159b7139/', rgb:'91,168,245',
         icon:'M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z' },
-      { label:'GitHub', url:'https://github.com/chenhan20', rgb:'155,150,221',
+      { label:'GitHub', sub:'@chenhan20 · 專案與開源程式碼', stat:'github', url:'https://github.com/chenhan20', rgb:'155,150,221',
         icon:'M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12' },
     ]
 
@@ -831,7 +880,7 @@ createApp({
       else skillsVisible.value=false
     })
 
-    return { page, links, films, slides, slideKinds, archiveOpen, experience, projects, skills, education, interests,
+    return { page, links, stats, statSegs, films, slides, slideKinds, archiveOpen, experience, projects, skills, education, interests,
              skillsVisible, handleLink, openTheatre, closeTheatre, dlg, vid, cur, curSrc, openFilm, setFmt, vidStop }
   }
 }).mount('#app')

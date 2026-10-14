@@ -33,6 +33,7 @@ python3 scripts/build-distance-prs.py -q               # 各距離最快連續 N
 python3 scripts/estimate-indoor-distance.py            # 室內沒有距離，估等效平路里程（漏跑月里程會少一整趟）
 python3 scripts/build-coach-context.py                # 貼給外部 AI 的脈絡檔，漏跑就停在上次那天
 python3 scripts/build-chronicle.py                    # 運動編年史動畫的資料（strava_chronicle.html）
+python3 scripts/build-home-stats.py                 # 首頁按鈕的即時副標（本月小時、最近一趟、最新報告、commit 數）
 python3 scripts/build-tasks.py                        # 最後：把上面產生的新代辦收進清單
 ```
 

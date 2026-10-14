@@ -165,6 +165,12 @@ jobs:
           # 要排在 ITT 回補之後：最後一段「中社路歷來每一次同場」讀的是剛回補完的 itt-segments.json。
           python scripts/build-chronicle.py || \
             echo "::warning::編年史資料重建失敗，這班先跳過"
+          # 首頁按鈕的即時副標（Strava／訓練報告／GitHub／RIDE CINEMA 四顆，linkTreeIndex.html 只 fetch
+          # 這一個小檔）。純本機現算、不打 API、沒有金鑰。GitHub 那顆要看 commit 歷史，checkout 是淺層的，
+          # 所以先只把近 35 天補回來（不是整份歷史）；補不到也不擋，腳本會沿用上一次的數字。
+          git fetch --quiet --shallow-since="35 days ago" origin master || true
+          python scripts/build-home-stats.py || \
+            echo "::warning::首頁即時副標資料重建失敗，這班先跳過"
           # 代辦清單（現況頁那張卡，AI 開場也讀同一份）。純本機推導、不打 API。
           # 一定要排在最後：它要看這一班剛產出的報告、評分與 itt-segments.json 才算得準。
           python scripts/build-tasks.py || \
@@ -172,7 +178,8 @@ jobs:
           git add data/itt-segments.json data/strava.json athlete/coach-context.md \
                   data/fit/_est_distance.json data/tasks.json data/training-block.json \
                   data/itt-conditions.json data/weather data/fit-extras.json data/pacing.json \
-                  data/chronicle.json data/distance-prs.json data/fit/_distance_efforts.json data/itt-progress.json
+                  data/chronicle.json data/distance-prs.json data/fit/_distance_efforts.json data/itt-progress.json \
+                  data/home-stats.json
           git diff --staged --quiet || \
             git commit -m "chore: 回補自建 ITT 成績 $(date -u '+%Y-%m-%d')"
           git push || (git pull --rebase --autostash && git push)
