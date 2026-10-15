@@ -57,3 +57,15 @@ python3 scripts/build-tasks.py                        # 最後：把上面產生
 - **`_wellness.json` 有未來日的推算值**，任何統計都要切到今天為止。
 - **DESIGN.md 只管 `strava.html`。** `strava_*.html` 是另外幾個視覺世界，
   設計指令永遠指定單一檔案，不要掃全 repo。
+
+## 四、騎乘回放影片
+
+每趟超過一小時的戶外騎乘各有一支 91 秒回放動畫（路線＋騎士＋速度／心率儀表）。**影片不進 repo**：
+放在 GitHub Release `ride-videos`（prerelease、不標 latest，只是儲存桶），repo 只放 `data/ride-videos.json`
+（intervals ID → 下載網址／海報／長度）和 `assets/ride-videos/posters/<id>.jpg`。頁面永遠只讀那個 json。
+
+- 渲染器在 `tools/ride-video/`（純 Python PIL + fitdecode + ffmpeg，用 macOS 字型），**本機手動跑、不進 CI**：
+  `batch_fast.py` 產母檔 → `compress_all.sh` 壓成 960×540 → `scripts/publish-ride-videos.py --src <dir>/small`
+  上傳缺的、抽海報、重建 json。壞檔用 `--clobber <id>` 重傳。
+- Release 附件的下載網址會 302 到一小時過期的簽章網址、沒有 CORS、沒有快取：海報一定要在本機抽好 commit，
+  播放端 `preload="auto"` 一次抓完 4 MB。
