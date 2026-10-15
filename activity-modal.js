@@ -10,6 +10,7 @@
 
   const STRAVA_JSON = 'data/strava.json'
   const RIDES_INDEX = 'rides/index.json'   // 由 tools/tcx/build_index.py 產生；沒有這個檔就不顯示報告鈕
+  const RIDE_VIDEOS = 'data/ride-videos.json'   // scripts/publish-ride-videos.py 產生；影片本體在 GitHub Release ride-videos
   const ICON_RIDE = '🚴'
   let dataPromise = null
   let reportMap = null   // date -> href，只有這天有訓練報告時才注入「報告」鈕
@@ -17,6 +18,8 @@
   let ittSource = null  // strava.json 本體，ITT 成就列要用
   let ittByAct = null   // activity id → 成就列（第一次開彈窗時才算）
   let _routeStream = null   // 目前彈窗的 route_stream（供動畫 + 重播）
+  let videoByDate = null    // date → [{id,start,url,poster,…}]；抓不到就空 Map
+  let _videoMode = false    // 彈窗左半邊目前是「影片」還是「動畫」；同一個 session 裡記住上次的選擇
   let _animTimer    = null   // JS 逐點動畫計時器
 
   function loadData() {
@@ -70,11 +73,17 @@
     el.classList.add('open')
     document.body.style.overflow = 'hidden'
     if (_animTimer) { clearTimeout(_animTimer); _animTimer = null }
-    if (_routeStream) startRouteAnim()
+    // 上次選影片而這趟也有影片 → 直接進影片；否則照舊跑動畫
+    if (_videoMode && el.querySelector('.am-video')) setMediaMode('video')
+    else if (_routeStream) startRouteAnim()
   }
   function closeModal() {
     const el = document.getElementById('am-overlay')
-    if (el) el.classList.remove('open')
+    if (el) {
+      el.classList.remove('open')
+      // 關掉彈窗要把影片停掉並卸載：不然它會在背景繼續播（有聲音）、也繼續下載
+      el.querySelectorAll('video').forEach(v => { try { v.pause(); v.removeAttribute('src'); v.load() } catch (e) {} })
+    }
     document.body.style.overflow = ''
     if (_animTimer) { clearTimeout(_animTimer); _animTimer = null }
     _routeStream = null
@@ -363,9 +372,44 @@
       zone.className = `am-gauge-zone-lbl am-gz-${z.toLowerCase()}`
     }
   }
+  /* ── 回放影片：data/ride-videos.json 用 intervals ID 當鍵、這裡的活動是 Strava ID，
+     兩邊只能靠「同一天 + 開始時間差 10 分內」對上（一天兩趟的日子有 14 天，不能只看日期）。 ── */
+  function videoFor(a) {
+    if (!videoByDate || !a || !a.date) return null
+    const list = videoByDate.get(a.date)
+    if (!list || !list.length) return null
+    const m = /^(\d{1,2}):(\d{2})/.exec(a.time || '')
+    if (!m) return list.length === 1 ? list[0] : null
+    const t = +m[1] * 60 + +m[2]
+    let best = null, bestGap = 11
+    list.forEach(v => {
+      const vm = /T(\d{2}):(\d{2})/.exec(v.start || '')
+      if (!vm) return
+      const gap = Math.abs(+vm[1] * 60 + +vm[2] - t)
+      if (gap < bestGap) { bestGap = gap; best = v }
+    })
+    return best
+  }
+  function videoHtml(vid) {
+    // src 先不給：切到「影片」那一刻才掛上，沒切過去就不會下載那 4 MB。
+    // Release 附件的下載網址會 302 到一小時過期的簽章網址，所以 preload=auto 一次抓完，
+    // 拖進度條才不會打到過期的網址；真的 error 了就重掛一次 src 拿新簽章（只重試一次）。
+    return `<div class="am-video" data-src="${esc(vid.url)}">
+        <video class="am-video-el" controls playsinline preload="auto" poster="${esc(vid.poster || '')}"
+          onerror="if(this.dataset.retried)return;this.dataset.retried='1';const s=this.src;this.removeAttribute('src');this.load();this.src=s"></video>
+      </div>`
+  }
+  function modeToggle(vid, hasAnim) {
+    if (!vid || !hasAnim) return ''
+    return `<div class="am-mode" role="group" aria-label="左邊顯示什麼">
+        <button type="button" class="am-mode-btn on" data-mode="anim" onclick="setRideMediaMode('anim')">動畫</button>
+        <button type="button" class="am-mode-btn" data-mode="video" onclick="setRideMediaMode('video')">影片 <small>91s</small></button>
+      </div>`
+  }
   function routeBlock(a) {
     const stat = (v, u, l) => v == null || v === '' ? '' :
       `<div class="am-rs"><div class="v">${esc(v)}${u ? `<small>${esc(u)}</small>` : ''}</div><div class="l">${esc(l)}</div></div>`
+    const vid = videoFor(a)
 
     // ── 有 route_stream → 左星座 + 右儀表板（JS 動畫）──
     if (a.route_stream && a.route_stream.length >= 2) {
@@ -380,8 +424,10 @@
         <div class="am-route">
           <div class="am-route-left">
             <div class="am-route-canvas">${routeSvg(a.route_stream)}</div>
+            ${vid ? videoHtml(vid) : ''}
             <div class="am-route-footer">
               <span class="am-route-brand">★ RIDE CONSTELLATION</span>
+              ${modeToggle(vid, true)}
               <button class="am-replay-btn" type="button" onclick="replayRouteAnim()">▶ 重播</button>
             </div>
           </div>
@@ -399,11 +445,13 @@
     // ── Fallback：只有 polyline（舊 CSS 動畫，無儀表板）──
     if (a.polyline) {
       const pts = decodePolyline(a.polyline)
-      if (pts.length < 2) { _routeStream = null; return '' }
+      if (pts.length < 2) { _routeStream = null; return vid ? videoOnlyBlock(vid) : '' }
       _routeStream = null
       return `
         <div class="am-route">
           <div class="am-route-canvas">${routeSvgLegacy(pts)}</div>
+          ${vid ? videoHtml(vid) : ''}
+          ${vid ? `<div class="am-route-footer">${modeToggle(vid, true)}</div>` : ''}
           <div class="am-route-stats">
             ${stat(a.distance_km, 'km', '距離')}
             ${stat(a.elevation_m, 'm', '爬升')}
@@ -414,8 +462,40 @@
     }
 
     _routeStream = null
-    return ''
+    return vid ? videoOnlyBlock(vid) : ''
   }
+  // 沒有軌跡可畫（舊活動、或 strava.json 裡沒 stream）但有影片：左半邊只有影片，沒有切換
+  function videoOnlyBlock(vid) {
+    return `
+        <div class="am-route is-video is-video-only">
+          <div class="am-route-left">
+            ${videoHtml(vid)}
+            <div class="am-route-footer"><span class="am-route-brand">▶ RIDE REPLAY</span></div>
+          </div>
+        </div>`
+  }
+  /* 切換左半邊：動畫 ⇄ 影片。影片模式把右邊的儀表板一起收掉（影片裡自己有速度／心率），
+     讓 16:9 的畫面吃滿寬；切回動畫就重播星座。 */
+  function setMediaMode(mode) {
+    const overlay = document.getElementById('am-overlay')
+    const route = overlay && overlay.querySelector('.am-route')
+    if (!route) return
+    const box = route.querySelector('.am-video')
+    const toVideo = mode === 'video' && !!box
+    _videoMode = toVideo
+    route.classList.toggle('is-video', toVideo || route.classList.contains('is-video-only'))
+    route.querySelectorAll('.am-mode-btn').forEach(b => b.classList.toggle('on', (b.dataset.mode === 'video') === toVideo))
+    const v = box && box.querySelector('video')
+    if (toVideo) {
+      if (_animTimer) { clearTimeout(_animTimer); _animTimer = null }
+      if (v && !v.getAttribute('src')) v.src = box.dataset.src
+      if (v) v.play().catch(() => {})
+    } else {
+      if (v) v.pause()
+      if (_routeStream) window.replayRouteAnim()
+    }
+  }
+  window.setRideMediaMode = setMediaMode
 
 
   /* ── 內容渲染：單車 ── */
@@ -511,7 +591,8 @@
     `
   }
 
-  function openRide(id) {
+  function openRide(id, opts) {
+    if (opts && opts.video != null) _videoMode = !!opts.video
     loadData().then(() => {
       const a = rideMap && rideMap.get(String(id))
       if (!a) {
@@ -573,6 +654,23 @@
           openRide(id)
         })
         link.parentNode.insertBefore(btn, link)
+
+        // 這趟有回放影片 → 「▶ 影片」鈕：既是記號（哪幾趟有片）也是捷徑（直接開到影片）
+        const vid = videoFor(ride)
+        if (vid) {
+          const vb = document.createElement('button')
+          vb.type = 'button'
+          vb.className = 'act-video-btn'
+          vb.title = '91 秒回放動畫：路線、速度、心率'
+          vb.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg><span>影片</span>`
+          vb.setAttribute('data-act-id', id)
+          vb.addEventListener('click', e => {
+            e.preventDefault()
+            e.stopPropagation()
+            openRide(id, { video: true })
+          })
+          link.parentNode.insertBefore(vb, link)
+        }
       }
 
       // 這天有訓練報告的話，再補一顆連過去的鈕
@@ -649,8 +747,25 @@
       })
   }
 
+  /* ── 載入回放影片清單；抓不到就沒有影片鈕與切換，其餘照常 ── */
+  function loadVideos() {
+    return fetchJSON(RIDE_VIDEOS, 2)
+      .then(j => {
+        videoByDate = new Map()
+        Object.entries((j && j.videos) || {}).forEach(([id, v]) => {
+          if (!v || !v.date || !v.url) return
+          if (!videoByDate.has(v.date)) videoByDate.set(v.date, [])
+          videoByDate.get(v.date).push(Object.assign({ id }, v))
+        })
+      })
+      .catch(err => {
+        console.warn('[activity-modal] 抓不到 ' + RIDE_VIDEOS + '，這次不會有影片', err)
+        videoByDate = new Map()
+      })
+  }
+
   function init() {
-    Promise.all([loadData(), loadReports()]).then(() => {
+    Promise.all([loadData(), loadReports(), loadVideos()]).then(() => {
       injectButtons()
       const obs = new MutationObserver(() => injectButtons())
       obs.observe(document.body, { childList: true, subtree: true })

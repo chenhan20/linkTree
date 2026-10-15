@@ -540,3 +540,51 @@
   border-color:var(--am-border);
   background:transparent;
 }
+
+/* ── 回放影片（2026-10-15）：左半邊可以在「動畫」與「影片」之間切換 ──
+   影片在 GitHub Release，src 到切換那一刻才掛上；影片模式把右邊儀表板收掉讓 16:9 吃滿寬。 */
+.am-video{ display:none; width:100%; }
+.am-video-el{
+  display:block; width:100%; aspect-ratio:16/9;
+  border-radius:10px; background:#000;
+  box-shadow:0 0 0 1px rgba(125,150,255,.18), 0 8px 30px rgba(0,0,0,.45);
+}
+.am-route.is-video .am-route-canvas{ display:none }
+.am-route.is-video .am-video{ display:block }
+.am-route.is-video .am-route-right{ display:none }
+.am-route.is-video .am-replay-btn{ display:none }
+.am-route-footer{ gap:8px; flex-wrap:wrap }
+.am-route-footer .am-route-brand{ margin-right:auto }
+.am-mode{
+  display:inline-flex; border:1px solid rgba(125,150,255,.3); border-radius:6px; overflow:hidden;
+}
+.am-mode-btn{
+  font-size:10px;font-weight:800;letter-spacing:1.5px;
+  color:#7d96ff;opacity:.55;background:none;border:0;
+  padding:2px 9px;cursor:pointer;font-family:inherit;white-space:nowrap;
+  transition:opacity .15s, background .15s, color .15s;
+}
+.am-mode-btn + .am-mode-btn{ border-left:1px solid rgba(125,150,255,.3) }
+.am-mode-btn small{ font-size:9px;font-weight:700;opacity:.75;letter-spacing:0 }
+.am-mode-btn:hover{ opacity:1 }
+.am-mode-btn.on{ opacity:1; background:rgba(125,150,255,.22); color:#dfe6ff }
+
+/* 列上的「▶ 影片」鈕：跟「報告」同一級（外框、不閃），只有真的有片的那幾趟才長出來 */
+.act-video-btn{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:6px 12px;margin-right:8px;
+  font-size:12.5px;font-weight:700;letter-spacing:.6px;
+  color:var(--am-accent);
+  background:transparent;
+  border:1.5px solid color-mix(in srgb, var(--am-accent) 55%, transparent);
+  border-radius:6px;cursor:pointer;
+  font-family:inherit;line-height:1.4;vertical-align:middle;
+  transition:background .15s ease, border-color .15s ease, transform .15s ease;
+}
+.act-video-btn svg{width:13px;height:13px;flex-shrink:0}
+.act-video-btn:hover{
+  background:color-mix(in srgb, var(--am-accent) 14%, transparent);
+  border-color:var(--am-accent);
+  transform:translateY(-1px);
+}
+.act-video-btn:active{transform:translateY(0) scale(.98)}
