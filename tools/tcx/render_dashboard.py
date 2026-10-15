@@ -48,6 +48,8 @@ level 的四個值是與 notes 檔的契約，不要改名。
 import argparse
 import json
 import os
+import re
+from html import escape as html_escape
 
 TEMPLATE = r"""<!DOCTYPE html>
 <html lang="zh-TW">
@@ -173,6 +175,26 @@ h1{font-size:34px;font-weight:700;letter-spacing:-.024em;line-height:1.16;margin
  font-variant-numeric:tabular-nums}
 .cap{font-size:12px;color:var(--ink-3);margin-top:10px;line-height:1.6;max-width:78ch}
 .cap b{color:var(--ink-2)}
+
+/* ── 回放影片（2026-10-15）：量測列下面一張海報，點了才載影片（GitHub Release，約 4 MB）。
+   整頁唯一的飽和色塊，所以用黑框把它框成「一張圖」，不做 UI 強調；影片裡自己有速度／心率。 */
+.replay{margin:26px 0 0}
+.rp-play{display:block;width:100%;aspect-ratio:16/9;padding:0;border:0;margin:0;position:relative;
+ background:#000;border-radius:6px;overflow:hidden;cursor:pointer;box-shadow:0 0 0 1px var(--rule-2)}
+.rp-play img,.rp-play video{display:block;width:100%;height:100%;object-fit:cover}
+.rp-play img{transition:transform .5s ease,opacity .3s}
+.rp-play:hover img{transform:scale(1.015)}
+.rp-play:focus-visible{outline:2px solid var(--s2);outline-offset:3px}
+.rp-badge{position:absolute;left:14px;bottom:12px;display:inline-flex;align-items:center;gap:8px;
+ padding:7px 12px 7px 10px;border-radius:4px;background:rgba(8,8,6,.72);color:#fff;
+ font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;
+ backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.rp-badge svg{width:11px;height:11px;fill:currentColor}
+.rp-badge .t{opacity:.72;letter-spacing:.08em}
+.rp-play.is-on .rp-badge{display:none}
+.replay .cap{margin-top:9px}
+@media(max-width:560px){.replay{margin:0 -20px;width:calc(100% + 40px)}.rp-play{border-radius:0;box-shadow:none}
+ .rp-badge{left:12px;bottom:10px}.replay .cap{padding:0 20px}}
 
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:0 44px}
 .g2>div+div{border-left:1px solid var(--rule);padding-left:44px}
@@ -445,6 +467,7 @@ footer{color:var(--ink-3);font-size:11.5px;margin-top:56px;padding-top:18px;bord
   <p class="finding" id="finding" hidden></p>
   <div class="strip" id="strip"></div>
 </header>
+__REPLAY__
 
 <section class="sec" id="s-assess" data-label="Assessment" hidden>
   <div class="sec-h"><div class="sec-n"></div><div>
@@ -1937,6 +1960,17 @@ if(REPS){
    很多節是有資料才出現，所以編號只能在最後依「真的顯示出來的」重編。 */
 (function(){
   const secs=[...document.querySelectorAll('section.sec')].filter(s=>!s.hidden);
+  const rp=document.getElementById('rp-play');
+  if(rp)rp.addEventListener('click',function(){
+    if(rp.classList.contains('is-on'))return;
+    rp.classList.add('is-on');
+    const v=document.createElement('video');
+    v.controls=true;v.playsInline=true;v.setAttribute('playsinline','');v.preload='auto';
+    v.poster=rp.dataset.poster;v.src=rp.dataset.src;
+    v.addEventListener('error',function(){if(v.dataset.retried)return;v.dataset.retried='1';const s=v.src;v.removeAttribute('src');v.load();v.src=s;v.play().catch(()=>{})});
+    rp.replaceChildren(v);
+    v.play().catch(()=>{});
+  },{passive:true});
   const nav=document.getElementById('tb-nav');
   secs.forEach((s,i)=>{
     const n=String(i+1).padStart(2,'0');
@@ -2026,6 +2060,43 @@ def slim_score(score):
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 ITT_FILE = os.path.join(ROOT, "data", "itt-segments.json")
 RIDES_DIR = os.path.join(ROOT, "rides")
+
+
+VIDEOS_JSON = os.path.join(ROOT, "data", "ride-videos.json")
+AID_RE = re.compile(r"^\d{4}-\d{2}-\d{2}_([^_]+)_")
+
+
+def replay_block(fit_path=None):
+    """回放影片（scripts/publish-ride-videos.py 產的 data/ride-videos.json）。
+    報告是從某一個 FIT 產的，檔名裡就有 intervals id，所以直接用 id 對，不用日期：
+    一天兩趟的日子（14 天）用日期會掛錯趟。沒影片、沒 FIT、沒 json 都回空字串，頁面維持原樣。
+    影片本體在 GitHub Release，這裡只放海報（repo 裡）和下載網址；點了才載。"""
+    if not fit_path:
+        return ""
+    m = AID_RE.match(os.path.basename(fit_path))
+    if not m or not os.path.exists(VIDEOS_JSON):
+        return ""
+    try:
+        vids = json.load(open(VIDEOS_JSON, encoding="utf-8")).get("videos") or {}
+    except (OSError, json.JSONDecodeError):
+        return ""
+    v = vids.get(m.group(1))
+    if not v or not v.get("url") or not v.get("poster"):
+        return ""
+    dur = int(round(v.get("duration_s") or 91))
+    mmss = f"{dur // 60}:{dur % 60:02d}"
+    mb = (v.get("bytes") or 0) / 1e6
+    poster = "../" + v["poster"]          # rides/<date>.html → repo 根目錄
+    return f"""
+<figure class="replay" id="replay">
+  <button class="rp-play" id="rp-play" type="button" aria-label="播放 {mmss} 的騎乘回放"
+    data-src="{html_escape(v['url'])}" data-poster="{html_escape(poster)}">
+    <img src="{html_escape(poster)}" alt="" width="{v.get('w') or 960}" height="{v.get('h') or 540}" loading="lazy" decoding="async">
+    <span class="rp-badge"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l13-7.5z"/></svg>回放 <span class="t">{mmss}</span></span>
+  </button>
+  <figcaption class="cap">{mmss} 的回放：路線、速度、心率，全程加速到看得完。點了才下載（約 {mb:.0f} MB）。</figcaption>
+</figure>
+"""
 
 
 def route_context(ride, fit_path=None):
@@ -2129,6 +2200,7 @@ def main():
     if score and not score.get("scored"):
         score = None
     route = route_context(ride, a.fit)
+    replay = replay_block(a.fit)
 
     w = ride["when"]
     title = a.title or notes.get("title") or f"{w['date']} 訓練報告"
@@ -2144,6 +2216,7 @@ def main():
             .replace("__EYEBROW__", eyebrow)
             .replace("__H1__", title)
             .replace("__LEDE__", lede)
+            .replace("__REPLAY__", replay)
             .replace("__RIDE__", json.dumps(slim(ride), ensure_ascii=False, separators=(",", ":")))
             .replace("__CHART__", json.dumps(chart, ensure_ascii=False, separators=(",", ":")))
             .replace("__NOTES__", json.dumps(notes, ensure_ascii=False, separators=(",", ":")))

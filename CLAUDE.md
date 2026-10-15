@@ -70,3 +70,6 @@ python3 scripts/build-tasks.py                        # 最後：把上面產生
   上傳缺的、抽海報、重建 json。壞檔用 `--clobber <id>` 重傳。
 - Release 附件的下載網址會 302 到一小時過期的簽章網址、沒有 CORS、沒有快取：海報一定要在本機抽好 commit，
   播放端 `preload="auto"` 一次抓完 4 MB。
+- 露出的地方：`activity-modal.js` 詳情彈窗「動畫／影片」切換＋紀錄列「▶ 影片」鈕（strava.html 與 strava_cinema.html
+  等所有載這支的主題都有）；報告頁量測列下的回放海報（`tools/tcx/render_dashboard.py` 從 `--fit` 檔名取 id 對 json，
+  新報告自動長，舊的要逐日 `--overwrite --only`）。回歸腳本在 `docs/review/ride-video-modal.mjs`、`ride-report-replay.mjs`。
