@@ -75,3 +75,11 @@ python3 scripts/build-tasks.py                        # 最後：把上面產生
 - 露出的地方：`activity-modal.js` 詳情彈窗「動畫／影片」切換＋紀錄列「▶ 影片」鈕（strava.html 與 strava_cinema.html
   等所有載這支的主題都有）；報告頁量測列下的回放海報（`tools/tcx/render_dashboard.py` 從 `--fit` 檔名取 id 對 json，
   新報告自動長，舊的要逐日 `--overwrite --only`）。回歸腳本在 `docs/review/ride-video-modal.mjs`、`ride-report-replay.mjs`。
+
+## 五、自訂 ITT 路段（從 LAP 切）
+
+Strava 不用了，新路段不再靠它建。`python3 scripts/make-lap-segment.py --fit <fit> --lap <N> --name <名> --label 全段`
+把那一圈的起終點當計時閘門、軌跡當參考折線，寫進 `segment-streams.json` 與 `itt-config.json`（id 從 9000000001 起，
+標 `custom: true` 與來源）。接著 `backfill-itt-efforts.py --only <id>`、`build-segment-grades.py --only <id>`、
+`node scripts/fetch-segment-terrain.js`（沒補 3D 測量檯是空的）。LAP 是手按的，兩端就是按鍵位置，建完先看一眼；
+只有同方向走完整條才算成績（先過終點後過起點＝下坡，不算）。目前一條：9000000001 露營場 全段（2026-10-20 第二圈）。
