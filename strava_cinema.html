@@ -6258,7 +6258,7 @@ function renderTimeline(list, type, expanded, pwrAchv, ittAllByAct) {
         const powerHtml = showPower
           ? `<div class="power-metrics">${a.if_score != null ? `<span class="pm-pill">IF ${a.if_score}</span>` : ''}${a.tss != null ? `<span class="pm-pill">TSS ${a.tss}</span>` : ''}</div>`
           : ''
-        const stravaLink = a.id ? `<a class="act-strava-link" href="https://www.strava.com/activities/${a.id}" target="_blank" rel="noopener">Strava ↗</a>` : ''
+        const stravaLink = /^\d+$/.test(String(a.id)) ? `<a class="act-strava-link" href="https://www.strava.com/activities/${a.id}" target="_blank" rel="noopener">Strava ↗</a>` : ''
         const route3dBtn = (aIsRide && a.id && a.route_stream && a.route_stream.length > 1)
           ? `<button class="r3d-trigger-btn" onclick="openRoute3D(${a.id})" title="3D 路線回放">🛰️ 3D</button>` : ''
         const pwrBadge = aIsRide ? powerAchvHTML(achvOf(a)) : ''

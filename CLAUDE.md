@@ -31,6 +31,7 @@ python3 scripts/build-pacing.py                       # 計時段最佳配速＋
 python3 scripts/build-itt-progress.py                # 爬坡路段的同功率換算時間（ITT 頁每段的進步趨勢；排在 build-pacing 之後）
 python3 scripts/build-distance-prs.py -q               # 各距離最快連續 N 公里（現況／ITT 頁的「距離最佳」；增量，首跑約兩分鐘）
 python3 scripts/estimate-indoor-distance.py            # 室內沒有距離，估等效平路里程（漏跑月里程會少一整趟）
+python3 scripts/build-recent-from-intervals.py        # 近期騎乘／重訓補進 strava.json（頁面的列表讀它；排在教練脈絡與 build-tasks 之前）
 python3 scripts/build-coach-context.py                # 貼給外部 AI 的脈絡檔，漏跑就停在上次那天
 python3 scripts/build-chronicle.py                    # 運動編年史動畫的資料（strava_chronicle.html）
 python3 scripts/build-home-stats.py                 # 首頁按鈕的即時副標（本月小時、最近一趟、最新報告、commit 數）
@@ -42,7 +43,8 @@ python3 scripts/build-tasks.py                        # 最後：把上面產生
 
 **Strava API 已於 2026-10-12 停用**（`Application Inactive`），所以這串不再有 `fetch-strava.js`，
 `strava-sync.yml` 也已拿掉排程。`data/strava.json` 只有 `segments`（ITT 成績）還會被 `tag-itt-sources.py`
-併 FIT 更新，其餘欄位（`recent_rides`／`summary`／`monthly_*`／`weekly_quest`／`power_prs`）凍結在 2026-10-11；
+併 FIT 更新；`recent_rides`／`recent_weights` 改由 `build-recent-from-intervals.py` 從 intervals 補（id 是 `i…` 字串，
+帶 `source:'intervals'`，頁面的「Strava ↗」連結只給純數字 id）；其餘欄位（`summary`／`monthly_*`／`weekly_quest`／`power_prs`）凍結在 2026-10-11；
 腳本與 Secrets 都留著，細節與復活方式在 `.github/workflows/strava-sync.yml` 檔頭。
 
 有新的**戶外** FIT 而且含 ITT 路段時，再多跑一支 `python3 scripts/build-segment-grades.py`

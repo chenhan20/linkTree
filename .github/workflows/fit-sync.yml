@@ -121,6 +121,11 @@ jobs:
           # --autostash 是安全網：萬一又有哪支腳本寫了沒被 stage 的檔，
           # 也不要讓整條 rebase 直接躺平（真正的修法還是把該 commit 的檔 commit 掉）
           git pull --rebase --autostash || echo "::warning::rebase 失敗，改用當前 itt-segments.json 回補"
+          # Strava 停用後，近期騎乘／重訓列表（strava.json 的 recent_rides／recent_weights）改由這支
+          # 從 intervals 的活動清單＋FIT 補。排在 tag-itt-sources 與 build-coach-context／build-tasks 之前
+          # （它們都讀 recent_rides）。純本機、冪等。
+          python scripts/build-recent-from-intervals.py || \
+            echo "::warning::近期活動補寫失敗，這班先跳過"
           # 自建偵測器算 ITT 計時：不需要 Strava 訂閱，跟官方 91 筆逐筆吻合（平均差 0.75s）。
           # 純本機運算、不打任何 API；FIT 端的成績是整批重算，改演算法就會自動修正歷史。
           python scripts/backfill-itt-efforts.py --quiet || \
