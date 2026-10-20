@@ -4,6 +4,7 @@ a snack-stop bubble, a generated beat, and a confetti summary card.
 usage: python3 make_ride_bike.py <in.fit> <out.mp4> <title> <dateline>   （通常由 batch_fast.py 呼叫）
 """
 import math
+import os
 import random
 import subprocess
 import sys
@@ -365,19 +366,20 @@ for _ in range(150):
 
 bg_rgba = bg.convert('RGBA')
 bike_cache = {}
-BIKE_DIR = 'bike/frames'
+BIKE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'bike', 'frames')   # 由 make_bike_frames.py 產生（跟著 repo 走，不要放在別處）
 BIKE_K, BIKE_SC = 64, 2
 BIKE_X0, BIKE_Y0 = -160, -262
 BIKE_W = 170
-_probe = Image.open(f'{BIKE_DIR}/b000.png')
+_probe = Image.open(os.path.join(BIKE_DIR, 'b000.png'))
 BIKE_S = BIKE_W / _probe.width
 bike_frames = []
 for k in range(BIKE_K):
-    im = Image.open(f'{BIKE_DIR}/b{k:03d}.png').convert('RGBA')
+    im = Image.open(os.path.join(BIKE_DIR, f'b{k:03d}.png')).convert('RGBA')
     bike_frames.append(im.resize((BIKE_W, round(im.height * BIKE_S)), Image.LANCZOS))
 # the point on the bike that sits on the route: mid-body, between the wheels
-BIKE_AX = (0 - BIKE_X0) * BIKE_SC * BIKE_S
-BIKE_AY = (-40 - BIKE_Y0) * BIKE_SC * BIKE_S
+# 錨點：make_bike_frames.py 的版面約定——170×150 的圖裡，貼在路線上的點在 (85, 118)（兩輪軸心中間偏上）
+BIKE_AX = 85 * BIKE_S
+BIKE_AY = 118 * BIKE_S
 bike_state = {'phi': 0.0}
 # facing with hysteresis: judge direction over +-300 ride-seconds and only flip after a clear
 # reversal, so the bike turns around once at the far end instead of twitching on every wobble
