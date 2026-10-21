@@ -82,4 +82,4 @@ Strava 不用了，新路段不再靠它建。`python3 scripts/make-lap-segment.
 把那一圈的起終點當計時閘門、軌跡當參考折線，寫進 `segment-streams.json` 與 `itt-config.json`（id 從 9000000001 起，
 標 `custom: true` 與來源）。接著 `backfill-itt-efforts.py --only <id>`、`build-segment-grades.py --only <id>`、
 `node scripts/fetch-segment-terrain.js`（沒補 3D 測量檯是空的）。LAP 是手按的，兩端就是按鍵位置，建完先看一眼；
-只有同方向走完整條才算成績（先過終點後過起點＝下坡，不算）。目前一條：9000000001 露營場 全段（2026-10-20 第二圈）。
+只有同方向走完整條才算成績（先過終點後過起點＝下坡，不算）。目前兩條：9000000001 露營場 全段（2026-10-20 第二圈，歷史只有一筆）、9000000002 露營場接風櫃嘴 全段（同日第四圈，歷史 15 筆，PR 23:55）。

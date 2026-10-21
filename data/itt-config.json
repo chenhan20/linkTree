@@ -663,6 +663,66 @@
       ],
       "custom": true,
       "source": "2026-10-20_i199277427_內湖區-公路車.fit#lap2"
+    },
+    {
+      "id": 9000000002,
+      "group": "luying-fongguizui",
+      "nameZh": "露營場接風櫃嘴 全段",
+      "label": "全段",
+      "nameApi": "露營場接風櫃嘴 全段",
+      "type": "CLIMB",
+      "accent": "#e6c95a",
+      "note": "休息後從風櫃嘴路中段（海拔 254 m）一路爬到山頂，由 10/20 第四圈切出。",
+      "avgGrade": 6.4,
+      "maxGrade": 13.0,
+      "profile": [
+        [
+          0.0,
+          39.7
+        ],
+        [
+          10.0,
+          39.2
+        ],
+        [
+          20.0,
+          35.9
+        ],
+        [
+          30.0,
+          34.6
+        ],
+        [
+          40.0,
+          28.8
+        ],
+        [
+          50.0,
+          23.5
+        ],
+        [
+          60.0,
+          18.9
+        ],
+        [
+          70.0,
+          15.5
+        ],
+        [
+          80.0,
+          11.3
+        ],
+        [
+          90.0,
+          7.3
+        ],
+        [
+          100.0,
+          3.0
+        ]
+      ],
+      "custom": true,
+      "source": "2026-10-20_i199277427_內湖區-公路車.fit#lap4"
     }
   ],
   "_groups": "groups[] 是母路線，segments[] 是它底下的分段。沒有 group 欄位的路段自成一張卡（河濱那四條是四條各自獨立的路線，不是同一條的分段，刻意不分組）。segments 刻意保持扁平，這樣 fetch-strava.js / fetch-segment-streams.js / fetch-segment-terrain.js / merge-harvested-streams.js 既有的 map(s => s.id) 讀法完全不用改。",
@@ -758,6 +818,13 @@
       "type": "CLIMB",
       "accent": "#8fd694",
       "note": "內湖到露營場的爬坡，中間翻稜線有一段下坡，由 10/20 第二圈切出。"
+    },
+    {
+      "id": "luying-fongguizui",
+      "nameZh": "露營場接風櫃嘴",
+      "type": "CLIMB",
+      "accent": "#e6c95a",
+      "note": "休息後從風櫃嘴路中段（海拔 254 m）一路爬到山頂，由 10/20 第四圈切出。"
     }
   ]
 }
